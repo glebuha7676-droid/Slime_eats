@@ -7,9 +7,9 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="styles.css?v=30" />
   <link rel="stylesheet" href="food-cards.css?v=3" />
-  <link rel="stylesheet" href="home-layout.css?v=2" />
+  <link rel="stylesheet" href="home-layout.css?v=3" />
 </head>
 <body>
   <div id="app" class="app">
@@ -86,10 +86,10 @@
           <div id="buffList" class="buff-list"></div>
         </section>
 
-        <section class="loadout-card card" aria-label="Желудок и запуск">
-          <div class="loadout-main">
-            <div class="loadout-label"><img src="assets/ui/stomach.webp" alt="" aria-hidden="true"><small>ЖЕЛУДОК</small></div>
-            <div id="stomachSlots" class="stomach-slots" aria-label="Слоты желудка"></div>
+        <section class="level-start-card card" aria-label="Выбор уровня и запуск">
+          <div class="level-picker">
+            <div class="level-picker-head"><small>УРОВЕНЬ</small><b id="levelDepthLabel">45 М</b></div>
+            <div id="levelButtons" class="level-buttons" aria-label="Уровни мира"></div>
           </div>
           <button id="startDropBtn" class="launch-btn" type="button">
             <img src="assets/ui/launch.webp" alt="" aria-hidden="true">
@@ -175,6 +175,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="game.js?v=29"></script>
+  <script src="game.js?v=30"></script>
 </body>
 </html>

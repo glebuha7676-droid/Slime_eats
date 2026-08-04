@@ -1,10 +1,12 @@
 (() => {
   'use strict';
 
-  const SAVE_KEY = 'slime_feed_and_fall_v8';
-  const LEGACY_SAVE_KEYS = ['slime_feed_and_fall_v7', 'slime_feed_and_fall_v6', 'slime_feed_and_fall_v5', 'slime_feed_and_fall_v4', 'slime_feed_and_fall_v3'];
+  const SAVE_KEY = 'slime_feed_and_fall_v9';
+  const LEGACY_SAVE_KEYS = ['slime_feed_and_fall_v8', 'slime_feed_and_fall_v7', 'slime_feed_and_fall_v6', 'slime_feed_and_fall_v5', 'slime_feed_and_fall_v4', 'slime_feed_and_fall_v3'];
   const VIEW_W = 440;
   const VIEW_H = 650;
+  const LEVEL_COUNT = 5;
+  const LEVEL_DEPTH_RATIOS = [.36, .52, .68, .84, 1];
 
   const WORLDS = [
     {
@@ -233,10 +235,12 @@
   };
 
   const defaultSave = {
-    schemaVersion: 8,
+    schemaVersion: 9,
     coins: 20,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    selectedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
+    unlockedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
     stomachLevel: 1,
     conveyorLevel: 1,
     rerollLevel: 0,
@@ -260,7 +264,7 @@
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
     menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
     foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), buffList: $('#buffList'), massLabel: $('#massLabel'), powerLabel: $('#powerLabel'),
-    defenseLabel: $('#defenseLabel'), bounceLabel: $('#bounceLabel'), stomachSlots: $('#stomachSlots'),
+    defenseLabel: $('#defenseLabel'), bounceLabel: $('#bounceLabel'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
     massCompare: $('#massCompare'), powerCompare: $('#powerCompare'), defenseCompare: $('#defenseCompare'), bounceCompare: $('#bounceCompare'),
     startDropLabel: $('#startDropLabel'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
@@ -339,7 +343,7 @@
 
   function normalizeSave(value) {
     const merged = { ...structuredClone(defaultSave), ...value };
-    merged.schemaVersion = 8;
+    merged.schemaVersion = 9;
     merged.coins = Math.max(0, Number.isFinite(+merged.coins) ? +merged.coins : defaultSave.coins);
     merged.world = clamp(Math.round(+merged.world || 1), 1, WORLDS.length);
     merged.stomachLevel = clamp(Math.round(+merged.stomachLevel || 1), 1, UPGRADE_DATA.stomachLevel.max);
@@ -349,6 +353,18 @@
     merged.totalRuns = Math.max(0, Math.round(+merged.totalRuns || 0));
     merged.worldBest = { ...defaultSave.worldBest };
     for (const world of WORLDS) merged.worldBest[world.id] = clamp(+(value.worldBest?.[world.id] || 0), 0, world.targetDepth);
+    merged.selectedLevels = { ...defaultSave.selectedLevels };
+    merged.unlockedLevels = { ...defaultSave.unlockedLevels };
+    for (const world of WORLDS) {
+      let inferredUnlocked = 1;
+      for (let level = 1; level < LEVEL_COUNT; level += 1) {
+        if (merged.worldBest[world.id] >= levelTargetDepth(world, level)) inferredUnlocked = level + 1;
+      }
+      const unlocked = clamp(Math.max(inferredUnlocked, Math.round(+(value.unlockedLevels?.[world.id] || 1))), 1, LEVEL_COUNT);
+      const requested = value.selectedLevels?.[world.id] ?? inferredUnlocked;
+      merged.unlockedLevels[world.id] = unlocked;
+      merged.selectedLevels[world.id] = clamp(Math.round(+requested || 1), 1, unlocked);
+    }
     merged.unlockedSkins = Array.isArray(value.unlockedSkins) ? [...new Set(value.unlockedSkins.filter(id => SKINS.some(skin => skin.id === id)))] : ['classic'];
     if (!merged.unlockedSkins.includes('classic')) merged.unlockedSkins.unshift('classic');
     if (!SKINS.some(skin => skin.id === merged.selectedSkin)) merged.selectedSkin = 'classic';
@@ -412,6 +428,17 @@
   function rand(min, max) { return min + Math.random() * (max - min); }
   function round1(value) { return Math.round(value * 10) / 10; }
   function foodGrowthScale(foodCount) { return 1 + Math.max(0, foodCount) * .05; }
+  function levelTargetDepth(world, level) {
+    const ratio = LEVEL_DEPTH_RATIOS[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)];
+    return Math.max(20, Math.round(world.targetDepth * ratio / 5) * 5);
+  }
+  function selectedLevelForWorld(worldId = save.world) {
+    const unlocked = clamp(Math.round(save.unlockedLevels?.[worldId] || 1), 1, LEVEL_COUNT);
+    return clamp(Math.round(save.selectedLevels?.[worldId] || 1), 1, unlocked);
+  }
+  function levelReward(world, level) {
+    return Math.max(10, Math.round(world.reward * (.15 + level * .17)));
+  }
   function todayKey(date = new Date()) {
     const pad = value => String(value).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -516,21 +543,64 @@
     if (navigator.vibrate) navigator.vibrate(pattern);
   }
 
+  function renderLevelPicker() {
+    if (!els.levelButtons) return;
+    const world = currentWorld();
+    const selected = selectedLevelForWorld(world.id);
+    const unlocked = clamp(Math.round(save.unlockedLevels?.[world.id] || 1), 1, LEVEL_COUNT);
+    const best = save.worldBest[world.id] || 0;
+    if (els.levelDepthLabel) els.levelDepthLabel.textContent = `${levelTargetDepth(world, selected)} М`;
+    els.levelButtons.replaceChildren();
+    for (let level = 1; level <= LEVEL_COUNT; level += 1) {
+      const button = document.createElement('button');
+      const locked = level > unlocked;
+      const completed = best >= levelTargetDepth(world, level);
+      button.type = 'button';
+      button.className = `level-btn${level === selected ? ' active' : ''}${locked ? ' locked' : ''}${completed ? ' completed' : ''}`;
+      button.dataset.level = String(level);
+      button.setAttribute('aria-label', locked
+        ? `Уровень ${level} закрыт. Пройдите предыдущий уровень`
+        : `Выбрать уровень ${level}`);
+      button.setAttribute('aria-pressed', String(level === selected));
+      button.innerHTML = `<span>${level}</span>${completed && !locked ? '<i aria-hidden="true">✓</i>' : ''}${locked ? '<img src="assets/ui/level-lock.png" alt="" aria-hidden="true">' : ''}`;
+      els.levelButtons.appendChild(button);
+    }
+  }
+
+  function selectLevel(level) {
+    const world = currentWorld();
+    const unlocked = clamp(Math.round(save.unlockedLevels?.[world.id] || 1), 1, LEVEL_COUNT);
+    if (level > unlocked) {
+      sound('tap');
+      feedback(8);
+      showToast('Пройдите предыдущий уровень');
+      return;
+    }
+    save.selectedLevels[world.id] = level;
+    sound('tap');
+    feedback(5);
+    persist();
+    renderLevelPicker();
+  }
+
   function updatePersistentUI() {
     els.coinsLabel.textContent = Math.floor(save.coins).toLocaleString('ru-RU');
     const world = currentWorld();
     document.body.dataset.world = String(world.id);
     ensureWorldSprites(world.id);
-    const best = Math.floor(save.worldBest[world.id] || 0);
-    const worldProgress = clamp(best / world.targetDepth * 100, 0, 100);
-    const remaining = Math.max(0, world.targetDepth - best);
+    const level = selectedLevelForWorld(world.id);
+    const targetDepth = levelTargetDepth(world, level);
+    const best = Math.min(targetDepth, Math.floor(save.worldBest[world.id] || 0));
+    const worldProgress = clamp(best / targetDepth * 100, 0, 100);
+    const remaining = Math.max(0, targetDepth - best);
     els.worldLabel.textContent = `Мир ${world.id} · ${world.name}`;
     els.worldProgressText.textContent = `${best} м`;
     els.worldProgressBar.style.width = `${worldProgress}%`;
     if (els.worldProgressMarker) els.worldProgressMarker.style.left = `${worldProgress}%`;
     els.worldProgressBar.parentElement.setAttribute('aria-valuenow', String(Math.round(worldProgress)));
-    els.worldHint.textContent = remaining > 0 ? `ЕЩЁ ${remaining} М` : 'МИР ПРОЙДЕН';
+    els.worldHint.textContent = remaining > 0 ? `ЕЩЁ ${remaining} М` : (level >= LEVEL_COUNT ? 'МИР ПРОЙДЕН' : 'УРОВЕНЬ ПРОЙДЕН');
     if (els.adminWorldValue) els.adminWorldValue.textContent = `МИР ${world.id}`;
+    renderLevelPicker();
     applySkin();
   }
 
@@ -947,21 +1017,7 @@
     });
   }
 
-  // ===== ГЛАВНЫЙ ЭКРАН: желудок, эффекты и выдача еды =====
-  function renderStomachSlots(capacity) {
-    els.stomachSlots.replaceChildren();
-    for (let index = 0; index < capacity; index += 1) {
-      const slot = document.createElement('div');
-      const food = session.foods[index];
-      slot.className = `stomach-slot ${food ? `filled ${food.rarity}` : ''}`;
-      slot.innerHTML = food
-        ? `<span class="slot-art">${foodArtMarkup(food, 'food-mini-model')}</span>`
-        : `<span class="slot-plus">+</span>`;
-      slot.setAttribute('aria-label', food ? `Слот ${index + 1}: ${food.name}` : `Слот ${index + 1}: пусто`);
-      els.stomachSlots.appendChild(slot);
-    }
-  }
-
+  // ===== ГЛАВНЫЙ ЭКРАН: эффекты и выдача еды =====
   function renderSpecialBuffs() {
     els.buffList.replaceChildren();
     if (session.combo) {
@@ -1047,7 +1103,6 @@
     els.slime.style.width = `${124 * scale}px`;
     els.slime.style.height = `${124 * scale}px`;
 
-    renderStomachSlots(capacity);
     els.foodInside.replaceChildren();
     renderSpecialBuffs();
 
@@ -1308,7 +1363,13 @@
     }
     sound('tap');
     feedback([10, 25, 12]);
-    const world = currentWorld();
+    const baseWorld = currentWorld();
+    const level = selectedLevelForWorld(baseWorld.id);
+    const world = {
+      ...baseWorld,
+      targetDepth: levelTargetDepth(baseWorld, level),
+      reward: levelReward(baseWorld, level)
+    };
     const finishY = world.targetDepth * 10 + 180;
     const cellSize = world.cellSize || BALANCE.gridCell;
     const columns = Math.floor(VIEW_W / cellSize);
@@ -1320,6 +1381,7 @@
     const fedScale = foodGrowthScale(session.foods.length);
     run = {
       worldId: world.id,
+      level,
       world,
       finishY,
       cellSize,
@@ -1388,7 +1450,7 @@
     run.blocks = generateBlockField(run);
     prepareCanvas();
     showScreen('drop');
-    els.worldTargetBadge.textContent = `${world.icon} Финиш: ${world.targetDepth} м`;
+    els.worldTargetBadge.textContent = `${world.icon} Ур. ${level} · Финиш: ${world.targetDepth} м`;
     updateRunUI();
     run.animationId = requestAnimationFrame(gameFrame);
   }
@@ -3177,14 +3239,26 @@
   function finishWorld() {
     if (!run || run.ended) return;
     const world = run.world;
+    const level = clamp(Math.round(run.level || 1), 1, LEVEL_COUNT);
     save.worldBest[world.id] = Math.max(save.worldBest[world.id] || 0, world.targetDepth);
-    if (world.id === 1 && !save.unlockedSkins.includes('pink')) save.unlockedSkins.push('pink');
-    if (world.id === 2 && !save.unlockedSkins.includes('ice')) save.unlockedSkins.push('ice');
-    if (world.id === 4 && !save.unlockedSkins.includes('dark')) save.unlockedSkins.push('dark');
-    if (world.id < WORLDS.length) save.world = world.id + 1;
+    if (level < LEVEL_COUNT) {
+      save.unlockedLevels[world.id] = Math.max(save.unlockedLevels[world.id] || 1, level + 1);
+      save.selectedLevels[world.id] = level + 1;
+    } else {
+      save.unlockedLevels[world.id] = LEVEL_COUNT;
+      if (world.id === 1 && !save.unlockedSkins.includes('pink')) save.unlockedSkins.push('pink');
+      if (world.id === 2 && !save.unlockedSkins.includes('ice')) save.unlockedSkins.push('ice');
+      if (world.id === 4 && !save.unlockedSkins.includes('dark')) save.unlockedSkins.push('dark');
+      if (world.id < WORLDS.length) {
+        save.world = world.id + 1;
+        save.selectedLevels[save.world] = 1;
+      }
+    }
     run.coins += world.reward;
     sound('win');
-    endRun(true, `Портал мира «${world.name}» достигнут!`);
+    endRun(true, level < LEVEL_COUNT
+      ? `Уровень ${level} пройден! Открыт уровень ${level + 1}.`
+      : `Все уровни мира «${world.name}» пройдены!`);
   }
 
   function finishRunEarly() {
@@ -3205,8 +3279,10 @@
     run.awardedCoins = baseCoins;
     persist();
 
-    els.resultBadge.textContent = completed ? 'МИР ПРОЙДЕН' : 'ЗАБЕГ ОКОНЧЕН';
-    els.resultTitle.textContent = `Глубина: ${run.maxDepth} м`;
+    els.resultBadge.textContent = completed
+      ? (run.level >= LEVEL_COUNT ? 'МИР ПРОЙДЕН' : `УРОВЕНЬ ${run.level} ПРОЙДЕН`)
+      : 'ЗАБЕГ ОКОНЧЕН';
+    els.resultTitle.textContent = `Уровень ${run.level || 1} · ${run.maxDepth} м`;
     els.resultText.textContent = reason;
     els.resultCoins.textContent = `+${baseCoins}`;
     els.resultBlocks.textContent = run.blocksDestroyed;
@@ -3466,6 +3542,11 @@
   function bindEvents() {
     bindMenuSlimeInteractions();
     els.rerollBtn.addEventListener('click', rerollOffer);
+    els.levelButtons?.addEventListener('click', event => {
+      const button = event.target.closest('.level-btn');
+      if (!button) return;
+      selectLevel(Number(button.dataset.level));
+    });
     els.startDropBtn.addEventListener('click', startDrop);
     els.adminRestartBtn.addEventListener('click', restartDraftFromAdmin);
     els.adminPrevWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(-1));
