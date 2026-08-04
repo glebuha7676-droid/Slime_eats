@@ -143,8 +143,20 @@
     { id: 'emerald', label: 'ИЗУМРУД', min: .78, reward: 2.35 }
   ];
 
+  const FOOD_ART_OFFSETS = {
+    apple: [3.4, -5], blackHoleCandy: [5, -3.8], bun: [-5.6, -7.8], burger: [2.2, -.9], cheese: [0, -1.9],
+    diamondJelly: [3.1, 1.9], donut: [-1.9, -3.1], dragonRamen: [3.1, 2.8], giantMochi: [7.5, -1.6],
+    giantPizza: [-.9, 3.4], goldenFeast: [1.9, 6.2], gummy: [-5, 2.5], hotdog: [.9, -2.5], iceCream: [1.6, .9],
+    jellyShield: [0, -2.8], kingPudding: [5.9, -.9], magnetCandy: [-1.2, -3.1], moonMochi: [-1.9, -3.4],
+    pepper: [-2.5, -7.8], phoenixPepper: [-2.8, 0], popcorn: [-1.2, -4.1], powerPizza: [-.9, 1.2], prismApple: [5.9, 0],
+    prismBerry: [6.2, 8.1], prismPear: [10.9, 7.5], pudding: [-4.7, -2.5], rainbowCake: [1.6, 6.6],
+    rainbowHeart: [-1.2, 7.5], soda: [-3.4, .6], spicyBurger: [-2.8, .9], starFruit: [1.6, -1.9], steak: [1.2, -1.6],
+    voidFruit: [5.9, 7.5], yogurt: [-2.5, -6.6]
+  };
+
   function foodArtMarkup(food, className = 'food-model') {
-    return `<img class="${className}" src="${FOOD_ASSET_ROOT}${food.id}.webp" alt="" draggable="false" decoding="async">`;
+    const [x, y] = FOOD_ART_OFFSETS[food.id] || [0, 0];
+    return `<img class="${className}" src="${FOOD_ASSET_ROOT}${food.id}.webp" alt="" draggable="false" decoding="async" style="--food-x:${x}%;--food-y:${y}%">`;
   }
 
   function uiIconMarkup(name, className = 'ui-inline-icon') {
@@ -826,13 +838,6 @@
       : { key: 'mass', icon: uiIconMarkup('stat-mass', 'food-stat-icon'), label: 'Без бонуса' };
   }
 
-  function foodStatChips(food, omitKey = '') {
-    return foodStatItems(food)
-      .filter(item => item.key !== omitKey)
-      .map(item => `<span class="stat-chip ${item.key}">${uiIconMarkup(item.iconName, 'chip-stat-icon')}${item.display}</span>`)
-      .join('');
-  }
-
   function foodStatGridMarkup(food) {
     const items = foodStatItems(food).slice(0, 4);
     return Array.from({ length: 4 }, (_, index) => {
@@ -841,6 +846,15 @@
         ? `<span class="food-stat-cell ${item.key}" aria-label="${item.label}">${uiIconMarkup(item.iconName, 'card-stat-icon')}<b>${item.display}</b></span>`
         : '<span class="food-stat-cell empty" aria-hidden="true"></span>';
     }).join('');
+  }
+
+  function foodInfoStatMarkup(food) {
+    const items = foodStatItems(food).slice(0, 4);
+    const cells = items.map(item => `
+      <span class="food-info-stat ${item.key}" aria-label="${item.label}">
+        ${uiIconMarkup(item.iconName, 'food-info-stat-icon')}<b>${item.display}</b>
+      </span>`).join('');
+    return `<strong class="food-info-kind">${uiIconMarkup('stat-mass', 'food-info-kind-icon')}ХАРАКТЕРИСТИКИ</strong><span class="food-info-stat-grid count-${items.length}">${cells}</span>`;
   }
 
   function countCategories(foods) {
@@ -1002,19 +1016,22 @@
 
   function showFoodInfo(food, offerIndex, source) {
     if (!food || !els.foodInfo) return;
+    if (selectedFoodOfferIndex === offerIndex && !els.foodInfo.classList.contains('hidden')) {
+      hideFoodInfo();
+      return;
+    }
     selectedFoodOfferIndex = offerIndex;
     $$('.food-card.selected').forEach(card => card.classList.remove('selected'));
     source?.classList.add('selected');
     showFoodPreview(food);
     const cardType = foodCardType(food);
-    const primary = foodPrimaryStat(food);
     els.foodInfoIcon.innerHTML = foodArtMarkup(food, 'food-info-model');
     els.foodInfoName.textContent = food.name;
     els.foodInfoRarity.textContent = RARITY_LABELS[food.rarity];
     els.foodInfoStats.innerHTML = cardType === 'ability'
-      ? `<strong>${primary.icon} Эффект</strong>`
-      : `<strong>${uiIconMarkup('stat-mass', 'food-stat-icon')} Характеристики</strong>${foodStatChips(food)}`;
-    els.foodInfoEffect.textContent = food.effectText ? `✦ ${food.effectText}` : '';
+      ? `<strong class="food-info-kind">${uiIconMarkup('special', 'food-info-kind-icon')}ЭФФЕКТ</strong>`
+      : foodInfoStatMarkup(food);
+    els.foodInfoEffect.textContent = food.effectText || '';
     els.foodInfoEffect.classList.toggle('hidden', !food.effectText);
     els.foodInfo.className = `food-info ${food.rarity} food-type-${cardType}`;
     positionFoodInfoPopover(source);
