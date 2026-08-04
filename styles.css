@@ -38,11 +38,7 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .primary,.secondary,.ad-btn{min-height:44px;padding:10px 14px;border:3px solid var(--line);border-radius:14px;font-weight:1000;font-size:11px;box-shadow:0 3px 0 var(--line);transition:transform .08s ease,filter .12s ease}.primary{background:var(--purple);color:#fff}.secondary{background:#eee5d3}.ad-btn{background:var(--blue);color:#fff}.primary:active,.secondary:active,.ad-btn:active,.reroll-btn:active,.buy-btn:active{transform:translateY(3px);box-shadow:none}
 
 .conveyor{padding:10px;margin-bottom:10px;overflow:hidden}.conveyor-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 8px}.conveyor-head small{display:block;color:var(--purple-dark);font-size:9px;font-weight:1000;letter-spacing:.6px}.conveyor-head b{display:block;font-size:12px;margin-top:2px}.reroll-btn{flex:none;min-height:36px;padding:7px 9px;border:2px solid var(--line);border-radius:11px;background:#e8ddff;color:var(--purple-dark);box-shadow:0 2px 0 var(--line);font-size:9px;font-weight:1000}.reroll-btn.ad-mode{background:var(--blue);color:#fff}
-.belt-window{position:relative;overflow:hidden;border:3px solid var(--line);border-radius:16px;background:#d8caa9;padding:8px 6px 14px}.belt-track{position:relative;min-height:157px}.belt-stripes{position:absolute;left:-20px;right:-20px;bottom:-9px;height:22px;background:repeating-linear-gradient(90deg,#7d8290 0 17px,#c5c8ce 17px 34px);border-top:3px solid var(--line)}
-.food-choices{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.food-card{min-width:0;min-height:145px;padding:6px 4px 7px;display:flex;flex-direction:column;align-items:center;border:3px solid var(--line);border-radius:14px;background:#fffaf0;text-align:center;position:relative;overflow:hidden;touch-action:none;user-select:none;transition:transform .12s ease,opacity .15s ease}.food-card:hover{transform:translateY(-2px)}.food-card.arrive{animation:foodArrive .32s ease-out both}.food-card.leaving{animation:foodLeave .18s ease forwards}@keyframes foodArrive{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}@keyframes foodLeave{to{opacity:0;transform:translateY(7px) scale(.94)}}
-.food-card .rarity{width:100%;padding:3px;border-radius:7px;background:#e6e1d6;font-size:8px;font-weight:1000;line-height:1;text-transform:uppercase}.food-card .food-icon{display:block;font-size:31px;margin:4px 0 1px;pointer-events:none}.food-card .food-name{display:grid;place-items:center;min-height:24px;font-size:10px;font-weight:1000;line-height:1.08;pointer-events:none}.food-primary{display:block;width:100%;margin-top:3px;padding:5px 2px;border-radius:8px;background:#eee9dc;font-size:8px;font-weight:1000;line-height:1.05}.food-primary.mass{color:#19764e}.food-primary.power{color:#b43f48}.food-primary.defense{color:#246d9e}.food-primary.bounce{color:#6545b8}.food-primary.ability{color:#8a6410}.food-primary.coins{color:#8a6410}
-.food-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-top:4px;min-height:17px}.stat-chip{padding:3px;border-radius:5px;background:var(--ink);color:#fff;font-size:7px;font-weight:900;line-height:1;white-space:nowrap}.food-effect{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;font-size:7px;line-height:1.15;color:#694aa9;font-weight:900;min-height:16px}
-.food-card.common{border-color:#69748a}.food-card.rare{border-color:#268dc9;background:#eef9ff}.food-card.epic{border-color:#8b55d9;background:#f7efff}.food-card.legendary{border-color:#c88b10;background:#fff4bf}.food-card.prismatic{border-color:#7d4dc8;background:linear-gradient(145deg,#f6eaff,#e7fbff,#ecffe9)}.food-card.secret{border-color:#3e2c6c;background:#32264d;color:#fff}.food-card.secret .food-primary{background:#211a32}.food-card.secret .rarity{background:#171321;color:#f3a9ff}.food-card.locked{opacity:.38;pointer-events:none}.food-card.drag-source{opacity:.25}.food-card.empty{display:grid;place-items:center;align-content:center;border-style:dashed;background:#e8dfcc;color:var(--muted);pointer-events:none}.food-card.empty .food-icon{font-size:25px}
+.belt-window{position:relative;overflow:hidden;border:3px solid var(--line);border-radius:16px;background:#d8caa9;padding:8px 6px 14px}.belt-stripes{position:absolute;left:-20px;right:-20px;bottom:-9px;height:22px;background:repeating-linear-gradient(90deg,#7d8290 0 17px,#c5c8ce 17px 34px);border-top:3px solid var(--line)}
 .drag-ghost{position:fixed;z-index:500;width:104px;min-height:138px;pointer-events:none;transform:translate(-50%,-55%) rotate(-3deg) scale(1.03);transition:transform .1s ease,opacity .16s ease}.drag-ghost.accept{transform:translate(-50%,-55%) rotate(2deg) scale(1.1)}
 .draft-tip{margin:8px 3px 0;text-align:center;color:var(--muted);font-size:10px;line-height:1.3}
 
@@ -235,61 +231,22 @@ body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index
 .conveyor-head{justify-content:flex-start;padding:0 3px 7px;text-align:left}.conveyor-head small{color:#737b86}.conveyor-head b{font-size:12px}.conveyor-head b span{display:inline-block;margin-left:3px;padding:2px 5px;border-radius:7px;background:#e2e4e7;color:#4d5664}
 .reroll-btn{position:relative;z-index:10;left:auto;top:auto;width:58px;height:58px;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;margin:-15px auto 0;padding:4px;border:3px solid var(--line);border-radius:50%;background:#f7f6f2;color:#46505e;box-shadow:0 3px 0 #7a8088;transform:none;font-weight:1000}
 .reroll-btn>span{font-size:23px;line-height:20px}.reroll-btn>small{max-width:49px;font-size:6px;line-height:1.05}.reroll-btn:active{transform:translate(-50%,3px);box-shadow:none}.reroll-btn.ad-mode{background:#596a80;color:#fff}.reroll-btn:disabled{transform:translateX(-50%)!important}
-.reroll-btn:active{transform:translateY(3px)}.reroll-btn:disabled{transform:none!important}.food-info:not(.hidden)+.reroll-btn{margin-top:7px}
+.reroll-btn:active{transform:translateY(3px)}.reroll-btn:disabled{transform:none!important}
 .belt-window{margin-top:0;background:linear-gradient(#d9dbde 0 17px,#c1c4c8 17px);border-radius:14px;padding:10px 6px 17px}
-.belt-window:before,.belt-window:after{display:none}
-.belt-track{z-index:1;min-height:139px}.belt-track:before{content:"";position:absolute;z-index:4;left:23px;right:23px;top:-6px;height:7px;background:radial-gradient(circle,#5f6670 0 2px,transparent 3px) 0 0/32px 7px repeat-x;pointer-events:none}
+.belt-window:before,.belt-window:after{display:none}.belt-track:before{content:"";position:absolute;z-index:4;left:23px;right:23px;top:-6px;height:7px;background:radial-gradient(circle,#5f6670 0 2px,transparent 3px) 0 0/32px 7px repeat-x;pointer-events:none}
 .belt-tunnel{position:absolute;z-index:6;top:-3px;bottom:-3px;width:35px;border:3px solid var(--line);background:#737981;pointer-events:none}
 .belt-tunnel:before{content:"";position:absolute;top:7px;width:6px;height:6px;border:2px solid #3b4149;border-radius:50%;background:#b9bec4}
 .belt-tunnel i{position:absolute;top:17px;bottom:11px;width:23px;background:#080b0f;border:3px solid #343a43;border-radius:14px 14px 11px 11px}
 .tunnel-left{left:-3px;border-radius:12px 5px 5px 12px}.tunnel-left:before{left:6px}.tunnel-left i{right:-9px}
 .tunnel-right{right:-3px;border-radius:5px 12px 12px 5px}.tunnel-right:before{right:6px}.tunnel-right i{left:-9px}
-.food-choices{margin:0 18px;gap:5px}
-.conveyor-gap{min-width:0;min-height:125px;pointer-events:none}
 .belt-stripes{height:25px;bottom:-12px;background:repeating-linear-gradient(100deg,#555d68 0 15px,#aeb3b9 15px 30px);background-size:60px 100%;animation:none}
 .conveyor.is-running .belt-stripes{animation:beltMove .64s linear infinite;will-change:background-position}
-.conveyor.is-running .food-card{will-change:transform}
-.food-card{min-height:125px;padding:5px 4px 6px}.food-card.tunnel-enter{animation:foodTunnelIn .66s cubic-bezier(.2,.8,.25,1) both}.food-card.leaving{animation:foodTunnelOut .66s cubic-bezier(.55,.08,.8,.45) both;pointer-events:none}
-.food-card .food-icon{font-size:29px;margin:3px 0 0}.food-card .food-name{min-height:21px;font-size:9px}.food-card .food-chips{display:none}.food-card .food-effect{display:block;min-height:0;margin-top:3px;padding:3px 4px;border-radius:6px;background:#eee7ff;color:#6b4bb0;font-size:6.5px;line-height:1.05}.food-primary{padding:4px 2px;font-size:7.5px}.food-card.selected{border-color:#169b61;outline:3px solid rgba(22,155,97,.2);transform:translateY(-2px)}
 .drag-ghost.returning{transition:left .22s cubic-bezier(.3,.75,.25,1),top .22s cubic-bezier(.3,.75,.25,1),transform .22s ease,opacity .18s ease}
 @keyframes beltMove{to{background-position:60px 0}}
-@keyframes foodTunnelOut{0%{opacity:1;transform:translateX(0) rotate(0)}12%{transform:translateX(4px) rotate(-2deg)}22%{transform:translateX(-2px) rotate(2deg)}100%{opacity:.75;transform:translateX(390%) rotate(5deg)}}
-@keyframes foodTunnelIn{0%{opacity:.2;transform:translateX(-390%) rotate(-5deg)}72%{opacity:1;transform:translateX(5px) rotate(1deg)}86%{transform:translateX(-3px) rotate(-1deg)}100%{opacity:1;transform:translateX(0) rotate(0)}}
-
-/* Карточки становятся выразительнее вместе с редкостью, без тяжёлых фильтров. */
-.food-card{isolation:isolate}
-.food-card>span{position:relative;z-index:2}
-.food-card.common{background:#fffdf5;border-color:#677386}
-.food-card.common .rarity{background:#e8e5dc;color:#536071}
-.food-card.rare{border-color:#258fd0;background:linear-gradient(155deg,#f8fdff,#dff4ff)}
-.food-card.rare .rarity{background:#50b9ea;color:#fff}
-.food-card.rare:after{content:"";position:absolute;z-index:1;inset:26px 0 0;background:radial-gradient(circle at 18% 85%,rgba(80,185,234,.34) 0 4px,transparent 5px),radial-gradient(circle at 84% 48%,rgba(80,185,234,.26) 0 3px,transparent 4px);animation:rareBubbles 2.8s ease-in-out infinite alternate;pointer-events:none}
-.food-card.epic{border-color:#8751d6;background:linear-gradient(150deg,#fcf8ff,#eadcff)}
-.food-card.epic .rarity{background:#8751d6;color:#fff}
-.food-card.epic:before{content:"";position:absolute;z-index:1;inset:24px 4px 4px;border-radius:10px;background:radial-gradient(circle at 50% 43%,rgba(179,119,244,.34),transparent 62%);animation:epicAura 1.8s ease-in-out infinite alternate;pointer-events:none}
-.food-card.legendary{border-color:#cf8b08;background:linear-gradient(150deg,#fffdf1,#ffeda0)}
-.food-card.legendary .rarity{background:#e9a817;color:#4f3600}
-.food-card.legendary:after{content:"";position:absolute;z-index:1;top:-35%;bottom:-35%;left:-65%;width:35%;transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);animation:legendShine 2.4s ease-in-out infinite;pointer-events:none}
-.food-card.prismatic{border-color:#744cc4;background:linear-gradient(145deg,#f7eaff,#e7fbff,#efffe6)}
-.food-card.prismatic .rarity{background:linear-gradient(90deg,#9a63dd,#45aee8,#4ec68a,#e7a526);color:#fff}
-.food-card.prismatic:before{content:"";position:absolute;z-index:1;inset:-70%;background:conic-gradient(from 30deg,transparent,rgba(201,132,255,.24),rgba(92,215,255,.28),rgba(113,231,157,.25),rgba(255,211,91,.25),transparent 70%);animation:prismTurn 5s linear infinite;pointer-events:none}
-.food-card.secret{border-color:#171321;background:#29203f;color:#fff}
-.food-card.secret .rarity{background:#171321;color:#f2a6ff;border:1px solid #a474e8}
-.food-card.secret:after{content:"✦  ·  ✧";position:absolute;z-index:1;inset:31px 4px auto;color:#d99bff;font-size:13px;letter-spacing:18px;opacity:.45;animation:secretStars 1.5s steps(2) infinite;pointer-events:none}
-@keyframes rareBubbles{to{transform:translateY(-7px);opacity:.65}}
-@keyframes epicAura{from{transform:scale(.88);opacity:.45}to{transform:scale(1.08);opacity:1}}
-@keyframes legendShine{0%,35%{left:-65%}72%,100%{left:135%}}
-@keyframes prismTurn{to{transform:rotate(1turn)}}
-@keyframes secretStars{50%{opacity:.9;transform:translateX(3px)}}
-
-/* Короткая карточка подробностей появляется только по запросу игрока. */
-.food-info{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;margin:7px 1px 0;padding:7px 8px;border:2px solid var(--line);border-radius:13px;background:#fff}
-.food-info-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:#edf0f2;font-size:24px}.food-info-copy{min-width:0}.food-info-copy>div{display:flex;align-items:baseline;gap:6px}.food-info-copy b{font-size:10px}.food-info-copy small{font-size:6px;font-weight:1000;color:#69748a;text-transform:uppercase}.food-info p{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin:3px 0 0;font-size:7px;line-height:1.15}.food-info p strong{font-size:8px;color:#27334a}.food-info .stat-chip{font-size:6px}.food-info-effect{color:#6849ad;font-weight:900}.food-info>button{min-height:36px;padding:7px;border:2px solid var(--line);border-radius:10px;background:#55c88a;color:#143d2d;font-size:7px;font-weight:1000;box-shadow:0 2px 0 var(--line)}
-.food-info.rare{background:#eef9ff}.food-info.epic{background:#f6efff}.food-info.legendary{background:#fff6c9}.food-info.prismatic{background:linear-gradient(135deg,#f8eeff,#eafcff,#efffe9)}.food-info.secret{background:#29203f;color:#fff}.food-info.secret p strong{color:#fff}
 
 @media(min-width:700px){body{background:linear-gradient(180deg,#8bdcca 0 130px,var(--bg) 130px 100%)}.app{padding-top:8px}.overlay{align-items:center}}
-@media(max-width:370px){.app{padding-left:7px;padding-right:7px}.brand strong{font-size:12px}.brand small{max-width:180px}.currency{min-width:56px;padding:7px 8px}.mission-icon{display:none}.slime-hero-layout{grid-template-columns:70px minmax(132px,1fr) 70px;gap:4px;min-height:184px}.slime-playground{height:180px}.stat-rail{gap:6px}.stat-rail .stat-pill{min-height:70px;padding:5px 2px}.stat-rail .stat-icon{width:26px;height:26px}.stat-copy>small{font-size:6.7px}.stat-rail .stat-values b{font-size:11px}.loadout-card{grid-template-columns:minmax(0,1fr) 124px;padding:8px}.stomach-slot{width:34px;height:34px}.launch-btn{padding:6px}.food-choices{gap:4px;margin-left:17px;margin-right:17px}.food-card{min-height:118px;padding:5px 3px}.food-card .food-icon{font-size:26px}.food-card .food-name{font-size:8.5px}.food-primary{font-size:7px}.food-card .food-effect{font-size:6px}.conveyor-gap{min-height:118px}.belt-track{min-height:132px}.bottom-actions small{display:none}}
-@media(max-height:720px){.slime-hero-layout{min-height:172px}.slime-playground{height:168px}.stat-rail .stat-pill{min-height:66px}.food-card{min-height:116px}.food-card .food-icon{font-size:25px}.food-card .food-effect{display:none}.conveyor-gap{min-height:116px}.belt-track{min-height:130px}.bottom-actions button{padding-top:6px;padding-bottom:6px}.shaft{min-height:350px}}
+@media(max-width:370px){.app{padding-left:7px;padding-right:7px}.brand strong{font-size:12px}.brand small{max-width:180px}.currency{min-width:56px;padding:7px 8px}.mission-icon{display:none}.slime-hero-layout{grid-template-columns:70px minmax(132px,1fr) 70px;gap:4px;min-height:184px}.slime-playground{height:180px}.stat-rail{gap:6px}.stat-rail .stat-pill{min-height:70px;padding:5px 2px}.stat-rail .stat-icon{width:26px;height:26px}.stat-copy>small{font-size:6.7px}.stat-rail .stat-values b{font-size:11px}.loadout-card{grid-template-columns:minmax(0,1fr) 124px;padding:8px}.stomach-slot{width:34px;height:34px}.launch-btn{padding:6px}.bottom-actions small{display:none}}
+@media(max-height:720px){.slime-hero-layout{min-height:172px}.slime-playground{height:168px}.stat-rail .stat-pill{min-height:66px}.bottom-actions button{padding-top:6px;padding-bottom:6px}.shaft{min-height:350px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
 /* === V12: цельная игровая еда, ясные пиктограммы и управление забегом === */
@@ -315,49 +272,6 @@ body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index
 .reroll-btn>span{width:25px;height:25px;display:grid;place-items:center;font-size:0;line-height:1}
 .reroll-btn svg{grid-area:1/1;width:23px;height:23px;display:block;fill:currentColor}
 .reroll-btn .reroll-ad{display:none;width:20px;height:20px}.reroll-btn.ad-mode .reroll-refresh{display:none}.reroll-btn.ad-mode .reroll-ad{display:block}
-
-.food-card{
-  min-height:136px;padding:5px 4px 6px;overflow:visible;border-width:3px;border-radius:15px;
-  background:#fff8e9;box-shadow:0 3px 0 rgba(57,67,86,.22),inset 0 0 0 2px rgba(255,255,255,.62);
-}
-.food-choices{margin-left:22px;margin-right:22px}
-.food-card>span{position:relative;z-index:3}
-.food-card .rarity{
-  min-height:18px;display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 3px;
-  border-radius:8px;font-size:6.7px;letter-spacing:.15px;color:#fff;background:#747d8c;
-  border:1px solid rgba(40,48,63,.28);
-}
-.food-card .rarity i{width:6px;height:6px;flex:none;border-radius:2px;background:currentColor;transform:rotate(45deg)}
-.food-model-wrap{width:100%;height:58px;display:grid;place-items:center;margin:-1px 0 -2px;pointer-events:none}
-.food-model{width:66px;height:66px;display:block;object-fit:contain;pointer-events:none;user-select:none}
-.food-card .food-name{min-height:22px;padding:0 1px;font-size:8.7px;line-height:1.02;color:#2f384b}
-.food-card .food-primary{margin-top:2px;padding:5px 2px;border:1px solid rgba(52,61,78,.16);background:#f1eadc;font-size:7.3px}
-.food-card .food-effect{margin-top:3px;padding:3px 2px;background:#e8e0f7;color:#6547a3;font-size:6px}
-
-.food-card.common{border-color:#687386;background:#fff9eb}.food-card.common:before,.food-card.common:after{content:none}
-.food-card.common .rarity{background:#747d8c;color:#fff}
-.food-card.rare{border-color:#1688c9;background:linear-gradient(160deg,#fffdf4,#dff5ff)}
-.food-card.rare .rarity{background:#1688c9}.food-card.rare:before{content:none}
-.food-card.rare:after{content:"✦";position:absolute;z-index:4;left:-3px;top:42px;inset:auto;color:#fff;font-size:10px;text-shadow:74px -13px #7bd9ff,80px 23px #fff,6px 49px #55bce9;animation:foodRareSparkle 1.8s ease-in-out infinite;pointer-events:none}
-.food-card.epic{border-color:#8050cf;background:linear-gradient(155deg,#fffaf0,#eadcff);box-shadow:0 3px 0 #7144b6,inset 0 0 0 2px rgba(255,255,255,.66)}
-.food-card.epic .rarity{background:#8050cf}.food-card.epic:after{content:"◆";position:absolute;z-index:4;left:-5px;top:35px;inset:auto;color:#c994ff;font-size:9px;text-shadow:82px 2px #7043c5,76px 53px #c994ff,7px 72px #7043c5;animation:foodEpicPulse 1.55s ease-in-out infinite;pointer-events:none}
-.food-card.epic:before{content:"";position:absolute;z-index:1;inset:22px 5px 5px;border:1px solid rgba(128,80,207,.22);border-radius:11px;background:radial-gradient(circle at 50% 45%,rgba(177,117,235,.22),transparent 62%);animation:none;pointer-events:none}
-.food-card.legendary{border-color:#be7900;background:linear-gradient(155deg,#fffdf1,#ffefa4);box-shadow:0 3px 0 #a76c06,inset 0 0 0 2px rgba(255,255,255,.65)}
-.food-card.legendary .rarity{background:#e5a414;color:#513500}.food-card.legendary:before{content:none}
-.food-card.legendary:after{content:"✦";position:absolute;z-index:4;left:-6px;top:31px;inset:auto;color:#fff4a1;font-size:13px;text-shadow:82px -4px #f5b817,77px 49px #fff4a1,8px 76px #f5b817;animation:foodLegendTwinkle 1.45s ease-in-out infinite;pointer-events:none}
-.food-card.prismatic{border-color:#6840b0;background:linear-gradient(140deg,#ffe5f4,#e3f8ff 36%,#e8ffe0 68%,#fff0aa);box-shadow:0 3px 0 #6840b0,inset 0 0 0 2px rgba(255,255,255,.72)}
-.food-card.prismatic .rarity{background:linear-gradient(90deg,#d64a9d,#7658dc,#2d9fd2,#2caa6c,#d39b14);color:#fff}.food-card.prismatic:before{content:none}
-.food-card.prismatic:after{content:"✦";position:absolute;z-index:4;left:-7px;top:27px;inset:auto;color:#fff;font-size:14px;text-shadow:84px -2px #ff67b9,78px 34px #58cfff,5px 62px #73df8f,67px 87px #ffd450;animation:foodPrismOrbit 1.3s ease-in-out infinite alternate;pointer-events:none}
-.food-card.secret{border-color:#160d29;background:linear-gradient(145deg,#2e1d48,#181124);box-shadow:-2px 2px 0 #ef54d9,2px 3px 0 #3fcbe5}
-.food-card.secret .food-name{color:#fff}.food-card.secret .rarity{background:#120b20;color:#fff;border-color:#bc74f0}.food-card.secret:before{content:none}
-.food-card.secret:after{content:"◆";position:absolute;z-index:4;left:-7px;top:34px;inset:auto;color:#ef54d9;font-size:10px;text-shadow:84px -8px #42d7ed,77px 48px #ef54d9,7px 72px #42d7ed;animation:foodSecretGlitch 1.1s steps(3) infinite;pointer-events:none}
-@keyframes foodRareSparkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
-@keyframes foodEpicPulse{0%,100%{opacity:.42;transform:translateY(1px)}50%{opacity:1;transform:translateY(-2px)}}
-@keyframes foodLegendTwinkle{0%,100%{opacity:.4;transform:rotate(-8deg) scale(.8)}50%{opacity:1;transform:rotate(8deg) scale(1.15)}}
-@keyframes foodPrismOrbit{to{transform:translate(2px,-2px) rotate(10deg);opacity:.7}}
-@keyframes foodSecretGlitch{50%{transform:translateX(3px);opacity:.55}}
-
-.food-info-icon{overflow:hidden;padding:2px;background:#f7efe1}.food-info-model{width:43px;height:43px;display:block;object-fit:contain}
 .stomach-slot{overflow:visible}.slot-art{width:100%;height:100%;display:grid!important;place-items:center}.food-mini-model{width:42px;height:42px;display:block;object-fit:contain}
 .food-buff-model{width:31px;height:31px;display:block;object-fit:contain}
 .swallow-fruit{width:52px;height:52px;display:grid;place-items:center;font-size:0}.swallow-model{width:52px;height:52px;display:block;object-fit:contain}
@@ -371,8 +285,6 @@ body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index
 
 @media(max-width:370px){
   .admin-restart-btn{padding:5px 6px}.admin-restart-btn b{font-size:6px}
-  .food-choices{margin-left:21px;margin-right:21px}.food-card{min-height:132px;padding-left:3px;padding-right:3px}.food-model-wrap{height:54px}.food-model{width:61px;height:61px}
-  .food-card .food-name{font-size:8px}.food-card .rarity{font-size:6px}.conveyor-gap{min-height:132px}.belt-track{min-height:145px}
 }
 
 /* Админ-панель для быстрой проверки миров и сохранения. */
@@ -409,7 +321,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .reroll-copy small{max-width:118px;font-size:8px;line-height:1.05;color:#f8f1ff;font-weight:1000;text-shadow:0 1px #503188}
 .reroll-btn.ad-mode{background:transparent url("assets/ui/reroll-button.webp") center/100% 100% no-repeat;color:#fff}
 .reroll-btn:active{transform:translateY(2px);box-shadow:none}.reroll-btn:disabled{transform:none!important;filter:grayscale(.35)}
-.food-info:not(.hidden)+.reroll-btn{margin-top:8px}
 
 .loadout-card{grid-template-columns:minmax(0,1fr) 132px}.stomach-slots{gap:5px}
 .stomach-slot{width:40px;height:40px;overflow:hidden;border-radius:12px}
@@ -417,88 +328,12 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .food-mini-model{width:36px;height:36px;display:block;object-fit:contain}
 .stomach-slot .slot-plus{font-size:21px;line-height:1;color:#8d96a6}
 
-.food-card{height:158px;min-height:158px;max-height:158px}
-.food-model-wrap{height:51px;min-height:51px}.food-model{width:55px;height:55px}
-.food-card .food-name{height:26px;min-height:26px;font-size:8.6px;line-height:1.08}
-.food-card .food-primary{
-  height:24px;min-height:24px;padding:3px 2px;border-width:2px;border-style:solid;border-radius:8px;
-  background:#fff;font-size:7.2px;font-weight:1000;color:#2d384c;
-}
-.food-card .food-primary.mass{border-color:#49aa78;background:#e5f8ed;color:#196943}
-.food-card .food-primary.power{border-color:#db5a62;background:#ffebeb;color:#a52f38}
-.food-card .food-primary.defense{border-color:#459bc9;background:#e6f5fc;color:#1f648a}
-.food-card .food-primary.bounce{border-color:#8965d0;background:#f0e9ff;color:#5a3aa1}
-.food-card .food-primary.ability{border-color:#d3a72c;background:#fff6cd;color:#785d09}
-.food-card .food-primary.coins{border-color:#d3a72c;background:#fff2bf;color:#785d09}
-.food-stat-icon{width:17px;height:17px}.food-card .food-effect{height:17px;min-height:17px;font-size:6px}
-.conveyor-gap{height:158px;min-height:158px}.belt-track{height:172px;min-height:172px}
-
-/* Редкости используют разные, простые для мобильного рендера сигналы. */
-.food-card.common:before,.food-card.common:after{content:none}
-.food-card.rare:before{content:"";position:absolute;z-index:1;inset:22px 4px 4px;border:2px solid rgba(53,164,218,.32);border-radius:11px;background:radial-gradient(circle at 50% 34%,rgba(88,195,240,.24),transparent 62%);animation:rareGlowV14 1.8s ease-in-out infinite;pointer-events:none}
-.food-card.rare:after{content:"✦";position:absolute;z-index:4;inset:auto auto auto 5px;top:28px;color:#fff;font-size:12px;text-shadow:0 0 0 #fff;animation:rareSparkV14 1.3s ease-in-out infinite;pointer-events:none}
-.food-card.epic:before{content:"";position:absolute;z-index:1;inset:21px 3px 3px;border:2px solid rgba(135,79,214,.48);border-radius:12px;background:radial-gradient(circle at 50% 43%,rgba(179,116,244,.28),transparent 66%);animation:epicAuraV14 1.5s ease-in-out infinite;pointer-events:none}
-.food-card.epic:after{content:"◆";position:absolute;z-index:4;inset:auto 2px auto auto;top:30px;color:#be8cf3;font-size:10px;text-shadow:-78px 52px #7d4fc6;animation:epicRuneV14 1.7s ease-in-out infinite;pointer-events:none}
-.food-card.legendary:before{content:"";position:absolute;z-index:1;inset:22px 4px 4px;border-radius:11px;background:repeating-conic-gradient(from 0deg at 50% 44%,rgba(255,205,55,.2) 0 10deg,transparent 10deg 28deg);animation:legendRaysV14 4s linear infinite;pointer-events:none}
-.food-card.legendary:after{content:"";position:absolute;z-index:2;inset:22px 4px 4px;border-radius:11px;background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.75) 45%,transparent 62%);background-size:240% 100%;animation:legendShineV14 2.2s ease-in-out infinite;pointer-events:none}
-.food-card.prismatic:before{content:"";position:absolute;z-index:1;inset:2px;border:2px solid #e55fae;border-radius:12px;box-shadow:inset 2px 0 #5ac9ed,inset -2px 0 #79d989;animation:prismBorderV14 1.8s steps(4) infinite;pointer-events:none}
-.food-card.prismatic:after{content:"✦";position:absolute;z-index:4;inset:auto 2px auto auto;top:29px;color:#fff;font-size:12px;text-shadow:-77px 15px #63cbed,-8px 63px #78dc91;animation:prismSparkV14 1.2s ease-in-out infinite alternate;pointer-events:none}
-.food-card.secret:before{content:"";position:absolute;z-index:1;inset:22px 4px 4px;border:1px solid #7347a6;border-radius:11px;background:radial-gradient(circle at 50% 46%,#4c2770 0,rgba(32,20,49,.15) 62%);animation:secretVoidV14 1.4s ease-in-out infinite;pointer-events:none}
-.food-card.secret:after{content:"◆";position:absolute;z-index:4;inset:auto -2px auto auto;top:28px;color:#f05bff;font-size:11px;text-shadow:-82px 9px #49d8ff,-7px 69px #49d8ff;animation:secretGlitchV14 1s steps(3) infinite;pointer-events:none}
-@keyframes rareGlowV14{50%{border-color:rgba(53,164,218,.7);opacity:.7}}
-@keyframes rareSparkV14{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.15) rotate(12deg)}}
-@keyframes epicAuraV14{50%{box-shadow:inset 0 0 0 3px rgba(157,95,221,.15);transform:scale(.98)}}
-@keyframes epicRuneV14{50%{opacity:.55;transform:translateY(-2px) rotate(18deg)}}
-@keyframes legendShineV14{0%,30%{background-position:180% 0}80%,100%{background-position:-80% 0}}
-@keyframes prismBorderV14{25%{border-color:#6bcbed}50%{border-color:#72d88e}75%{border-color:#f1bd3d}}
-@keyframes prismSparkV14{to{opacity:.55;transform:translateY(-2px) rotate(15deg)}}
-@keyframes secretVoidV14{50%{opacity:.65;box-shadow:inset 0 0 0 3px rgba(73,216,255,.08)}}
-@keyframes secretGlitchV14{50%{transform:translateX(3px);opacity:.5}}
-
-/* Редкости V16: те же мотивы, что и в реакции слайма. */
-.food-card.rare:before{inset:22px 4px 4px;border:2px solid rgba(45,158,215,.42);background:radial-gradient(circle at 50% 35%,rgba(105,211,255,.28),transparent 64%);animation:rareGlowV16 1.8s ease-in-out infinite}
-.food-card.rare:after{content:"✦";left:6px;right:auto;top:29px;color:#fff;text-shadow:72px 42px #67cfff;animation:rareSparkV16 1.5s ease-in-out infinite}
-.food-card.epic:before{inset:22px 4px 4px;border:2px solid rgba(132,72,211,.62);background:linear-gradient(180deg,rgba(215,169,255,.16),rgba(119,63,188,.3));animation:epicLiftV16 1.6s ease-in-out infinite}
-.food-card.epic:after{content:"◆";right:6px;top:34px;color:#dba6ff;text-shadow:-72px 34px #8b55d4,-9px 64px #c98cff;animation:epicGemV16 1.6s ease-in-out infinite}
-.food-card.legendary:before{inset:21px 3px 3px;border:2px solid #e0a81d;border-radius:12px;background:repeating-conic-gradient(from -8deg at 50% 43%,rgba(255,210,52,.34) 0 8deg,rgba(255,248,189,.08) 8deg 24deg);animation:legendSunV16 1.8s ease-in-out infinite}
-.food-card.legendary:after{content:"✦";z-index:4;inset:auto 7px auto auto;top:28px;background:none;color:#fff7a7;font-size:14px;text-shadow:-72px 48px #ffc928;animation:legendSparkV16 1.3s ease-in-out infinite}
-.food-card.prismatic:before{inset:2px;border:2px solid rgba(130,90,220,.8);background:linear-gradient(120deg,rgba(255,118,180,.2),rgba(255,222,83,.2),rgba(88,220,151,.2),rgba(87,195,255,.24),rgba(166,113,255,.22));background-size:260% 100%;box-shadow:none;animation:prismFlowV16 2.4s ease-in-out infinite}
-.food-card.prismatic:after{content:"✦";right:5px;top:28px;color:#fff;text-shadow:-76px 15px #58d9ff,-8px 66px #ff76b4;animation:prismSparkV16 1.4s ease-in-out infinite}
-.food-card.secret:before{left:4px;right:4px;top:25px;bottom:4px;inset:25px 4px 4px;border:2px solid #8e4cd0;background:radial-gradient(ellipse at 50% 75%,rgba(199,95,255,.5),transparent 46%),linear-gradient(180deg,rgba(45,20,72,.18),rgba(35,13,58,.6));clip-path:polygon(0 100%,4% 42%,18% 55%,25% 16%,40% 42%,51% 0,63% 43%,80% 18%,88% 55%,100% 32%,100% 100%);animation:secretFlameV16 1.55s ease-in-out infinite}
-.food-card.secret:after{content:"✦";right:6px;top:29px;color:#e9b4ff;text-shadow:-75px 9px #75efff,-8px 66px #c15cff;animation:secretSparkV16 1.45s ease-in-out infinite}
-@keyframes rareGlowV16{50%{border-color:rgba(45,158,215,.78);background-color:rgba(105,211,255,.08)}}
-@keyframes rareSparkV16{0%,100%{opacity:.35;transform:scale(.82)}50%{opacity:1;transform:translateY(-2px) scale(1.08)}}
-@keyframes epicLiftV16{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px);border-color:#ac78ed}}
-@keyframes epicGemV16{0%,100%{opacity:.4;transform:translateY(2px) rotate(45deg)}50%{opacity:1;transform:translateY(-3px) rotate(45deg)}}
-@keyframes legendSunV16{0%,100%{opacity:.72}50%{opacity:1}}
-@keyframes legendSparkV16{0%,100%{opacity:.45;transform:scale(.85)}50%{opacity:1;transform:scale(1.12)}}
-@keyframes prismFlowV16{0%,100%{background-position:0 0}50%{background-position:100% 0}}
-@keyframes prismSparkV16{0%,100%{opacity:.45;transform:translateY(1px) scale(.85)}50%{opacity:1;transform:translateY(-3px) scale(1.1)}}
-@keyframes secretFlameV16{0%,100%{transform:scaleY(.96);opacity:.76}50%{transform:translateY(-2px) scaleY(1.04);opacity:1}}
-@keyframes secretSparkV16{0%,100%{opacity:.4;transform:scale(.82)}50%{opacity:1;transform:translateY(-3px) scale(1.08)}}
-
-.food-info{
-  --popover-bg:#fff;--popover-border:#3a4660;position:fixed!important;z-index:850;width:min(312px,calc(100vw - 16px));
-  grid-template-columns:46px minmax(0,1fr) 82px;gap:8px;margin:0!important;padding:8px 9px;
-  border:3px solid var(--popover-border);border-radius:16px;background:var(--popover-bg);box-shadow:0 5px 0 rgba(38,51,74,.22);
-}
-.food-info:before{content:"";position:absolute;left:var(--caret-x,50%);bottom:-9px;width:15px;height:15px;transform:translateX(-50%) rotate(45deg);background:var(--popover-bg);border-right:3px solid var(--popover-border);border-bottom:3px solid var(--popover-border)}
-.food-info.below:before{top:-9px;bottom:auto;border:0;border-left:3px solid var(--popover-border);border-top:3px solid var(--popover-border)}
-.food-info.rare{--popover-bg:#eaf8ff;--popover-border:#258fd0}.food-info.epic{--popover-bg:#f3eaff;--popover-border:#8751d6}
-.food-info.legendary{--popover-bg:#fff3b5;--popover-border:#c48708}.food-info.prismatic{--popover-bg:#eff8ff;--popover-border:#8c55cf;background:linear-gradient(135deg,#f8e9ff,#e7fbff,#efffe9)}
-.food-info.secret{--popover-bg:#29203f;--popover-border:#b36fe8;background:#29203f;color:#fff}
-.food-info-icon{width:44px;height:44px;border:2px solid var(--popover-border);border-radius:12px}.food-info-model{width:43px;height:43px}
-.food-info-copy b{font-size:10.5px}.food-info-copy small{font-size:6.5px}.food-info p{font-size:7.5px;line-height:1.2}.food-info p strong{display:flex;align-items:center;gap:3px;font-size:8px}.food-info .stat-chip{font-size:6.5px}
-
 @media(max-width:430px){
   .loadout-card{grid-template-columns:1fr;gap:8px}.loadout-main{width:100%}.stomach-slots{gap:6px;margin-top:5px}
   .stomach-slot{width:43px;height:43px;border-radius:13px}.food-mini-model{width:39px;height:39px}.launch-btn{width:100%;min-height:54px}
 }
 @media(max-width:370px){
-  .food-card{height:155px;min-height:155px;max-height:155px}.food-card .food-primary{font-size:6.7px}.food-model-wrap{height:49px;min-height:49px}
-  .conveyor-gap{height:155px;min-height:155px}.belt-track{height:169px;min-height:169px}
   .stomach-slots{gap:5px}.stomach-slot{width:42px;height:42px}.food-mini-model{width:38px;height:38px}
-  .food-info{grid-template-columns:43px minmax(0,1fr) 76px;gap:6px;padding:7px}.food-info-icon{width:41px;height:41px}.food-info-model{width:40px;height:40px}
 }
 
 /* === V13: сгенерированный UI-kit и фиксированная геометрия карточек === */
@@ -524,35 +359,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .reroll-btn>span{width:28px;height:28px}.reroll-btn>span img{width:28px;height:28px;display:block;object-fit:contain}
 .reroll-btn svg{display:none}.reroll-btn.ad-mode .reroll-refresh,.reroll-btn.ad-mode .reroll-ad{display:none}
 
-.food-card{
-  height:148px;min-height:148px;max-height:148px;flex:none;align-self:start;
-  transition:border-color .12s ease,opacity .15s ease;
-}
-.food-card:hover,.food-card.selected{transform:none}
-.food-card .rarity{height:18px;min-height:18px;flex:none}
-.food-model-wrap{height:52px;min-height:52px;flex:none;margin:0 0 -1px}
-.food-model{width:57px;height:57px}
-.food-card .food-name{
-  height:25px;min-height:25px;flex:none;display:-webkit-box;place-items:initial;padding:2px 1px 0;
-  overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:8.3px;line-height:1.05;
-}
-.food-card .food-primary{
-  height:20px;min-height:20px;flex:none;display:flex;align-items:center;justify-content:center;gap:2px;
-  margin-top:1px;padding:2px;font-size:6.8px;white-space:nowrap;
-}
-.food-card .food-effect{height:16px;min-height:16px;flex:none;display:grid;place-items:center;margin-top:2px;padding:2px;font-size:5.8px}
-.food-card .food-effect.empty-effect{visibility:hidden}
-.food-stat-icon{width:15px;height:15px;flex:none;display:block;object-fit:contain}
-.stat-chip{display:inline-flex;align-items:center;gap:2px}.chip-stat-icon{width:11px;height:11px;display:block;object-fit:contain}
-.conveyor-gap{height:148px;min-height:148px}.belt-track{height:162px;min-height:162px}
-
-.food-info>button{
-  min-width:76px;min-height:40px;display:flex;align-items:center;justify-content:center;gap:3px;padding:5px 7px;
-  border:0;border-radius:12px;background:transparent url("assets/ui/button-success.webp") center/100% 100% no-repeat;
-  box-shadow:none;color:#244633;
-}
-.food-info>button img{width:24px;height:24px;display:block;object-fit:contain}.food-info>button span{font-size:6.7px;font-weight:1000}
-
 .section-heading-icon{width:35px;height:35px;display:block;object-fit:contain}
 .loadout-label{display:flex;align-items:center;gap:5px;color:#69748a}
 .loadout-label img{width:25px;height:25px;display:block;object-fit:contain}.loadout-label small{font-size:8px;font-weight:1000;letter-spacing:.7px}
@@ -564,7 +370,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   background:transparent url("assets/ui/button-primary.webp") center/100% 100% no-repeat;box-shadow:none;
 }
 .launch-btn{color:#3e2468}.launch-btn img{width:35px;height:35px;display:block;object-fit:contain}.launch-btn b{font-size:13px;text-shadow:none}
-.launch-btn:active,.admin-restart-btn:active,.food-info>button:active{transform:translateY(2px);box-shadow:none}
 
 .bottom-actions button{
   min-height:70px;border:0!important;background:transparent url("assets/ui/button-navigation.webp") center/100% 100% no-repeat!important;box-shadow:none!important;
@@ -587,8 +392,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   .mission-icon{display:grid!important;width:35px;height:35px;flex-basis:35px}.mission-icon img{width:37px;height:37px}
   .stat-rail .stat-icon,.stat-rail .stat-icon img{width:29px;height:29px}
   .conveyor-title{gap:3px}.conveyor-title>img{width:30px;height:30px}.admin-restart-btn{min-width:86px;padding:4px 6px}.admin-restart-btn img{width:22px;height:22px}.admin-restart-btn b{font-size:5.8px}
-  .food-card{height:145px;min-height:145px;max-height:145px}.food-model-wrap{height:50px;min-height:50px}.food-model{width:54px;height:54px}.food-card .food-name{font-size:7.8px}.food-card .food-primary{font-size:6.2px}.food-stat-icon{width:14px;height:14px}
-  .conveyor-gap{height:145px;min-height:145px}.belt-track{height:159px;min-height:159px}
   .loadout-card{grid-template-columns:minmax(0,1fr) 118px;gap:7px}.stomach-slots{gap:3px}.stomach-slot{width:30px;height:30px}.food-mini-model{width:27px;height:27px}.launch-btn{min-height:54px;padding:5px 8px}.launch-btn img{width:31px;height:31px}
 }
 
@@ -596,18 +399,10 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .reroll-btn>.reroll-copy{width:auto;height:auto;display:flex;place-items:initial;font-size:inherit;line-height:normal}
 .loadout-card{grid-template-columns:minmax(0,1fr) 132px}.stomach-slots{gap:5px}
 .stomach-slot{width:40px;height:40px;overflow:hidden}.food-mini-model{width:36px;height:36px}
-.food-card{height:158px;min-height:158px;max-height:158px}.food-model-wrap{height:51px;min-height:51px}.food-model{width:55px;height:55px}
-.food-card .food-name{height:26px;min-height:26px;font-size:8.6px;line-height:1.08}
-.food-card .food-primary{height:24px;min-height:24px;padding:3px 2px;font-size:7.2px}.food-stat-icon{width:17px;height:17px}
-.food-card .food-effect{height:17px;min-height:17px;font-size:6px}.conveyor-gap{height:158px;min-height:158px}.belt-track{height:172px;min-height:172px}
-@keyframes legendRaysV14{50%{opacity:.55;transform:scale(.97)}}
 @media(max-width:430px){
   .loadout-card{grid-template-columns:1fr;gap:8px}.stomach-slots{gap:6px}.stomach-slot{width:43px;height:43px}.food-mini-model{width:39px;height:39px}.launch-btn{width:100%}
 }
 @media(max-width:370px){
-  .food-card{height:155px;min-height:155px;max-height:155px}.food-model-wrap{height:49px;min-height:49px}.food-model{width:54px;height:54px}
-  .food-card .food-name{height:26px;min-height:26px;font-size:8.2px}.food-card .food-primary{height:24px;min-height:24px;font-size:6.7px}.food-stat-icon{width:17px;height:17px}
-  .food-card .food-effect{height:17px;min-height:17px}.conveyor-gap{height:155px;min-height:155px}.belt-track{height:169px;min-height:169px}
   .stomach-slots{gap:5px}.stomach-slot{width:42px;height:42px}.food-mini-model{width:38px;height:38px}
 }
 
@@ -645,355 +440,3 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .stomach-slot .slot-plus:after{width:1.5px;height:12px}
 
 .stat-rail .stat-icon{transform:translateX(-2px)}
-
-/* === V18: два типа еды, единый размер карточки === */
-.food-card{
-  height:162px;min-height:162px;max-height:162px;padding:5px 4px 6px;
-}
-.conveyor-gap{height:162px;min-height:162px}.belt-track{height:176px;min-height:176px}
-.food-card .rarity{
-  height:19px;min-height:19px;display:flex;align-items:center;justify-content:space-between;gap:3px;padding:3px 4px;
-}
-.rarity-name{min-width:0;display:flex;align-items:center;gap:3px;overflow:hidden;font-size:5.8px;white-space:nowrap}
-.food-card .rarity-name i{width:5px;height:5px;flex:none}
-.food-kind{flex:none;padding:2px 3px;border-radius:5px;background:rgba(255,255,255,.9);color:#344055;font-size:4.9px;font-weight:1000;letter-spacing:.2px}
-.food-type-ability .food-kind{background:#fff0b6;color:#674b08}.food-type-stats .food-kind{background:#dffff0;color:#176747}
-.food-card .food-model-wrap{height:47px;min-height:47px;margin:0}.food-card .food-model{width:51px;height:51px}
-.food-card .food-name{height:24px;min-height:24px;padding-top:1px;font-size:8.2px;line-height:1.06}
-.food-stat-grid,.food-ability-copy{height:57px;min-height:57px;margin-top:2px}
-.food-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,25px);gap:3px}
-.food-stat-cell{min-width:0;display:flex;align-items:center;justify-content:center;gap:2px;padding:2px;border:1.5px solid #536178;border-radius:7px;background:#fff;color:#26334a}
-.food-stat-cell.empty{visibility:hidden}.card-stat-icon{width:15px;height:15px;flex:none;display:block;object-fit:contain}.food-stat-cell b{font-size:7.3px;line-height:1;white-space:nowrap}
-.food-stat-cell.mass{border-color:#2d9667;background:#e6fff1}.food-stat-cell.power{border-color:#d74d59;background:#ffebed}.food-stat-cell.defense{border-color:#338ec3;background:#e8f7ff}.food-stat-cell.bounce{border-color:#7957c4;background:#f1ebff}.food-stat-cell.ability{border-color:#c79819;background:#fff6cb}.food-stat-cell.coins{border-color:#c88716;background:#fff0b8}
-.food-ability-copy{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:3px;padding:5px 5px 4px;border:2px solid #8260b8;border-radius:9px;background:linear-gradient(145deg,#f4ecff,#e6dcf8);text-align:left}
-.food-ability-copy b{display:flex;align-items:center;justify-content:center;gap:3px;color:#5e3c92;font-size:6px;letter-spacing:.35px}.ability-kind-icon{width:15px;height:15px;display:block;object-fit:contain}
-.food-ability-copy em{display:-webkit-box;overflow:hidden;color:#3f3650;font-size:6.4px;font-style:normal;font-weight:900;line-height:1.15;-webkit-box-orient:vertical;-webkit-line-clamp:3}
-.food-card.secret .food-ability-copy{border-color:#b772e8;background:linear-gradient(145deg,#382151,#21142f)}.food-card.secret .food-ability-copy b{color:#f0c9ff}.food-card.secret .food-ability-copy em{color:#fff}
-.food-card.food-type-ability{outline:2px solid rgba(129,86,183,.16);outline-offset:-5px}.food-card.food-type-stats{outline:2px solid rgba(43,145,96,.12);outline-offset:-5px}
-.drag-ghost .food-stat-grid,.drag-ghost .food-ability-copy{pointer-events:none}
-@media(max-width:370px){
-  .food-card{height:159px;min-height:159px;max-height:159px}.conveyor-gap{height:159px;min-height:159px}.belt-track{height:173px;min-height:173px}
-  .food-card .food-model-wrap{height:45px;min-height:45px}.food-card .food-model{width:49px;height:49px}.food-card .food-name{height:23px;min-height:23px;font-size:7.8px}
-  .food-stat-grid,.food-ability-copy{height:57px;min-height:57px}.food-stat-cell b{font-size:6.8px}.food-ability-copy em{font-size:6px}
-}
-
-/* === V22: чистые самоцветы, контрастные фоны редкости и живой секретный глаз === */
-.food-card{
-  --rarity-color:#717b8b;--rarity-deep:#4e5765;--card-top:#fffaf0;--card-bottom:#e9fff3;--card-shadow:#4b5568;
-  height:168px;min-height:168px;max-height:168px;padding:3px 5px 5px;overflow:visible;
-  border:3px solid var(--rarity-color);border-radius:15px;outline:0!important;
-  background:linear-gradient(180deg,var(--card-top) 0 61%,var(--card-bottom) 61% 100%)!important;
-  box-shadow:0 4px 0 var(--card-shadow),inset 0 0 0 1px rgba(255,255,255,.8);
-  transition:border-color .15s ease,opacity .15s ease;
-}
-.food-card.food-type-stats{--card-bottom:var(--stats-bg,#e6faee)}
-.food-card.food-type-ability{--card-bottom:var(--effect-bg,#eee5fb)}
-.food-card:hover{transform:translateY(-1px)}
-.food-card.selected{transform:translateY(-2px) scale(1.018)}
-.food-card:active{transform:translateY(2px) scale(.985)}
-.food-card:after{content:""!important;position:absolute;z-index:2;display:none!important;pointer-events:none;text-shadow:none!important}
-.food-card:before{
-  content:""!important;position:absolute;z-index:1;inset:0;border-radius:11px;pointer-events:none;
-  opacity:1;transform:none;clip-path:none;animation:none;
-}
-.food-card.common:before,.food-card.rare:before,.food-card.epic:before,.food-card.legendary:before,.food-card.prismatic:before,.food-card.secret:before{
-  inset:0!important;border:0!important;border-radius:11px!important;box-shadow:none!important;text-shadow:none!important;
-  clip-path:none;transform:none;
-}
-.food-card.common:after,.food-card.rare:after,.food-card.epic:after,.food-card.legendary:after,.food-card.prismatic:after,.food-card.secret:after{
-  content:""!important;left:50%!important;right:auto!important;top:-5px!important;bottom:auto!important;inset:auto;
-  width:32px;height:32px;display:none!important;background:none;border:0;box-shadow:none!important;
-  opacity:0;transform:translateX(-50%);clip-path:none;text-shadow:none!important;animation:none!important;
-}
-
-.food-card .rarity{
-  width:100%;height:30px;min-height:30px;display:flex;align-items:flex-start;justify-content:center;
-  padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--rarity-deep)!important;
-  overflow:visible;font-size:inherit;line-height:1;
-}
-.food-card .rarity-name{
-  width:100%;height:29px;min-width:0;display:grid;grid-template-rows:19px 8px;place-items:center;row-gap:2px;
-  overflow:visible;color:inherit;font-size:6px;font-weight:1000;letter-spacing:.4px;line-height:1;white-space:nowrap;
-}
-.food-card .rarity-name i{
-  position:relative;width:18px;height:18px;place-self:center;border:0;border-radius:50%;
-  background:linear-gradient(145deg,var(--rarity-color) 0 58%,var(--rarity-deep) 59% 100%);
-  box-shadow:0 1px 0 rgba(37,46,63,.38),inset 0 0 0 1px rgba(255,255,255,.35);transform:none;clip-path:none;
-}
-.food-card .rarity-name i:after{
-  content:"";position:absolute;left:4px;top:3px;width:4px;height:4px;border-radius:1px;
-  background:rgba(255,255,255,.62);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
-}
-.food-card .rarity-name>span{height:8px;display:grid;place-items:center}
-.food-kind{display:none!important}
-
-.food-card .food-model-wrap{height:43px;min-height:43px;margin:0;display:grid;place-items:center}
-.food-card .food-model{width:48px;height:48px}
-.food-card .food-name{
-  width:100%;height:24px;min-height:24px;display:grid;place-items:center;padding:1px 1px 0;
-  color:#29354a;font-size:8.2px;line-height:1.04;
-}
-
-.food-stat-block,.food-ability-copy{
-  width:100%;height:63px;min-height:63px;display:grid;grid-template-rows:16px 47px;margin-top:0;padding:0 3px 1px;position:relative;z-index:3;
-}
-.card-section-title,.food-ability-copy b{
-  width:100%;height:16px;min-height:16px;display:flex;align-items:center;justify-content:center;gap:3px;margin:0;
-  color:#25845b;font-size:5.8px;font-weight:1000;letter-spacing:.5px;line-height:1;text-align:center;
-}
-.food-stat-grid{
-  width:100%;height:47px;min-height:47px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-  grid-template-rows:repeat(2,23px);gap:1px 5px;margin:0;padding:0;
-}
-.food-stat-cell{
-  min-width:0;display:flex;align-items:center;justify-content:center;gap:2px;padding:1px 0;
-  border:0!important;border-radius:0!important;border-top:1px solid rgba(48,84,70,.2)!important;
-  background:transparent!important;color:#24334a;
-}
-.food-stat-cell:nth-child(-n+2){border-top-color:rgba(48,84,70,.28)!important}
-.food-stat-cell.empty{visibility:hidden}
-.card-stat-icon{width:16px;height:16px;flex:none;display:block;object-fit:contain}
-.food-stat-cell b{font-size:7.4px;line-height:1;white-space:nowrap}
-.food-stat-grid.count-1{grid-template-columns:1fr;grid-template-rows:47px;padding:0 12px}
-.food-stat-grid.count-2{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:47px}
-.food-stat-grid.count-1 .food-stat-cell:not(.empty),.food-stat-grid.count-2 .food-stat-cell:not(.empty){font-size:8px}
-.food-stat-grid.count-1 .food-stat-cell.empty,.food-stat-grid.count-2 .food-stat-cell.empty{display:none}
-.food-stat-grid.count-3 .food-stat-cell:nth-child(3){width:50%;grid-column:1 / 3;justify-self:center}
-.food-stat-grid.count-3 .food-stat-cell:nth-child(4){display:none}
-
-.food-ability-copy{
-  gap:0;border:0!important;border-radius:0!important;background:transparent!important;text-align:center;
-}
-.food-ability-copy b{color:#7448aa;font-size:6px}
-.ability-kind-icon{width:16px;height:16px;display:block;object-fit:contain}
-.food-ability-copy em{
-  width:100%;height:47px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:3px 2px 1px;
-  border-top:1px solid rgba(105,68,151,.3);color:#3e3550;font-size:6.6px;font-style:normal;font-weight:900;line-height:1.16;text-align:center;
-}
-
-/* Каждый уровень редкости получает собственную огранку и спокойный фон, без летящих звёзд и бликов. */
-.food-card.common{
-  --rarity-color:#929ba7;--rarity-deep:#58616d;--card-shadow:#606977;
-  --card-top:#fff9ec;--stats-bg:#edf7e9;--effect-bg:#f2edf7;
-}
-.food-card.common:before{background:linear-gradient(135deg,rgba(117,126,139,.1),transparent 42%),repeating-linear-gradient(135deg,transparent 0 12px,rgba(102,112,126,.035) 12px 13px)}
-
-.food-card.rare{
-  --rarity-color:#36c5f0;--rarity-deep:#087aa9;--card-shadow:#176f96;
-  --card-top:#eaf9ff;--stats-bg:#dcf7ef;--effect-bg:#deefff;
-}
-.food-card.rare .rarity-name i{border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
-.food-card.rare .rarity-name i:after{
-  left:-8px;top:7px;width:13px;height:3px;border-radius:2px;clip-path:none;background:#fff;opacity:0;
-  animation:cardRareGemGleamV24 2.8s ease-in-out infinite;
-}
-.food-card.rare:before{
-  background:linear-gradient(90deg,rgba(70,196,235,.16),transparent 18% 82%,rgba(70,196,235,.16)),linear-gradient(155deg,rgba(255,255,255,.5) 0 18%,transparent 18% 100%);
-  animation:none!important;
-}
-.food-card.rare .food-name,.food-card.rare .food-stat-cell,.food-card.rare .food-ability-copy em{color:#17465d}
-.food-card.rare .food-ability-copy b{color:#176a9d}
-
-.food-card.epic{
-  --rarity-color:#ad68e8;--rarity-deep:#672a9f;--card-shadow:#6a329b;
-  --card-top:#f4ecfa;--stats-bg:#e9f3ee;--effect-bg:#ece4f5;
-}
-.food-card.epic .rarity-name i{border-radius:0;clip-path:polygon(50% 0,98% 35%,80% 100%,20% 100%,2% 35%);animation:cardEpicGemJoltV23 3.6s ease-in-out infinite}
-.food-card.epic:before{background:none;animation:none!important}
-.food-card.epic .food-name,.food-card.epic .food-stat-cell,.food-card.epic .food-ability-copy em{color:#47245e}
-.food-card.epic .food-ability-copy b{color:#722ea2}
-
-.food-card.legendary{
-  --rarity-color:#e9be3e;--rarity-deep:#95620c;--card-shadow:#aa790f;
-  --card-top:#fffbed;--stats-bg:#f7f6e9;--effect-bg:#fbf3db;
-}
-.food-card.legendary .rarity-name i{
-  border-radius:0;clip-path:polygon(25% 7%,75% 7%,100% 50%,75% 93%,25% 93%,0 50%);
-  background:linear-gradient(110deg,#d69b13,#fff2a0,#f0be35,#fff8c7,#d69b13);background-size:260% 100%;animation:cardLegendGemFlowV23 2.2s ease-in-out infinite;
-}
-.food-card.legendary:before{background:none;animation:none!important}
-.food-card.legendary .food-name,.food-card.legendary .food-stat-cell,.food-card.legendary .food-ability-copy em{color:#583b0c}
-.food-card.legendary .card-section-title{color:#4e702b}.food-card.legendary .food-ability-copy b{color:#885300}
-
-.food-card.prismatic{
-  --rarity-color:#8359e0;--rarity-deep:#513092;--card-shadow:#6139a5;
-  --card-top:#ffe5f6;--stats-bg:#dffaf0;--effect-bg:#eaddff;
-}
-.food-card.prismatic .rarity-name i{
-  border-radius:0;background:linear-gradient(90deg,#ff5fad,#ffd947,#5ee293,#4dceff,#9a65ee,#ff5fad);background-size:500% 100%;
-  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);animation:cardPrismGemV24 2s linear infinite;
-}
-.food-card.prismatic:before{
-  background:linear-gradient(125deg,rgba(255,81,165,.3),rgba(255,217,65,.24),rgba(68,224,142,.25),rgba(64,195,250,.3),rgba(157,79,232,.32));
-  animation:none!important;
-}
-.food-card.prismatic .food-name,.food-card.prismatic .food-stat-cell,.food-card.prismatic .food-ability-copy em{color:#3c3156}
-.food-card.prismatic .food-ability-copy b{color:#653a9b}
-
-.food-card.secret{
-  --rarity-color:#e06cff;--rarity-deep:#8a37ba;--card-shadow:#351149;
-  --card-top:#20102c;--stats-bg:#173b37;--effect-bg:#38194a;
-}
-.food-card.secret .rarity-name{color:#f0c8ff}
-.food-card.secret .rarity-name i{
-  width:24px;height:14px;border:2px solid #d77af3;border-radius:50%;clip-path:none;
-  background:#efe8ff;box-shadow:inset 0 -2px 0 rgba(105,40,135,.2);transform-origin:center;
-  animation:cardSecretBlinkV22 4.2s ease-in-out infinite;
-}
-.food-card.secret .rarity-name i:after{
-  left:8px;top:1px;width:5px;height:8px;border-radius:50%;clip-path:none;background:#291037;
-  box-shadow:inset 1px 1px 0 #80edf2;opacity:1;animation:cardSecretLookV22 4.2s ease-in-out infinite;
-}
-.food-card.secret:before{
-  inset:0!important;background:radial-gradient(ellipse at 50% 18%,rgba(69,226,240,.2),transparent 42%),radial-gradient(ellipse at 50% 88%,rgba(231,55,212,.18),transparent 52%);
-  clip-path:none;animation:none!important;
-}
-.food-card.secret .food-name,.food-card.secret .food-stat-cell,.food-card.secret .food-ability-copy em{color:#fff}
-.food-card.secret .card-section-title{color:#8de3c4}
-.food-card.secret .food-ability-copy b{color:#e1a7fa}
-.food-card.secret .food-stat-cell{border-top-color:rgba(255,255,255,.2)!important}
-.food-card.secret .food-ability-copy em{border-top-color:rgba(235,177,255,.3)}
-.food-card.secret .food-model-wrap{position:relative}
-.food-card.secret .food-model-wrap:before{
-  content:"";position:absolute;z-index:0;width:48px;height:36px;border-radius:50%;
-  background:radial-gradient(ellipse,rgba(255,255,255,.3) 0,rgba(73,221,232,.2) 48%,transparent 72%);pointer-events:none;
-}
-.food-card.secret .food-model{position:relative;z-index:1}
-
-@keyframes cardSecretBlinkV22{0%,42%,46%,78%,82%,100%{transform:scaleY(1)}44%,80%{transform:scaleY(.12)}}
-@keyframes cardSecretLookV22{0%,12%,44%,56%,80%,100%{transform:translateX(0)}20%,34%{transform:translateX(-5px)}62%,75%{transform:translateX(5px)}}
-
-/* Рамка становится главным сигналом высоких редкостей — без полос и свечения за моделью еды. */
-.food-card.legendary:after,.food-card.prismatic:after,.food-card.secret:after{
-  left:-3px!important;right:-3px!important;top:-3px!important;bottom:-3px!important;inset:-3px!important;
-  width:auto;height:auto;display:block!important;border:3px solid var(--rarity-color);border-radius:15px;background:transparent;
-  opacity:1;transform:none;clip-path:none;pointer-events:none;
-}
-.food-card.legendary:after{animation:cardLegendFrameV23 2.2s ease-in-out infinite!important}
-.food-card.prismatic:after{animation:cardPrismFrameV23 2s linear infinite!important}
-.food-card.secret:after{
-  inset:-2px!important;left:-2px!important;right:-2px!important;top:-2px!important;bottom:-2px!important;padding:2px;border:0!important;border-radius:15px;
-  background:linear-gradient(90deg,#40edff,#ff48d5,#8c60ff,#40edff);background-size:260% 100%;
-  box-shadow:0 0 0 1px rgba(77,229,243,.24)!important;
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
-  animation:cardSecretLivingEdgeV24 2.4s linear infinite!important;
-}
-
-@keyframes cardRareGemGleamV24{0%,62%,100%{opacity:0;transform:translateX(0) rotate(-45deg)}70%{opacity:1;transform:translateX(8px) rotate(-45deg)}78%{opacity:0;transform:translateX(15px) rotate(-45deg)}}
-@keyframes cardEpicGemJoltV23{0%,68%,100%{transform:translateX(0) rotate(0)}72%{transform:translateX(-1px) rotate(-4deg)}75%{transform:translateX(1px) rotate(4deg)}78%{transform:translateX(-1px) rotate(-2deg)}81%{transform:translateX(0) rotate(0)}}
-@keyframes cardLegendGemFlowV23{0%,100%{background-position:0 0}50%{background-position:100% 0}}
-@keyframes cardLegendFrameV23{0%,100%{border-color:#d7aa2f;box-shadow:0 0 0 0 rgba(255,235,145,0)}50%{border-color:#fff0a0;box-shadow:0 0 0 2px rgba(240,190,52,.22)}}
-@keyframes cardPrismFrameV23{0%,100%{border-color:#ff65ac}25%{border-color:#f2c43e}50%{border-color:#4fd7a0}75%{border-color:#4fc7ef}}
-@keyframes cardPrismGemV24{to{background-position:100% 0}}
-@keyframes cardSecretLivingEdgeV24{to{background-position:100% 0}}
-
-.drag-ghost .food-stat-block,.drag-ghost .food-stat-grid,.drag-ghost .food-ability-copy{pointer-events:none}
-
-.conveyor-gap{height:168px;min-height:168px}.belt-track{height:182px;min-height:182px}
-
-@media(max-width:370px){
-  .food-card{height:164px;min-height:164px;max-height:164px;padding-left:4px;padding-right:4px}
-  .food-card .rarity{height:29px;min-height:29px}.food-card .food-model-wrap{height:41px;min-height:41px}.food-card .food-model{width:46px;height:46px}
-  .food-card .food-name{height:23px;min-height:23px;font-size:7.7px}
-  .food-stat-block,.food-ability-copy{height:62px;min-height:62px;grid-template-rows:15px 47px}.card-section-title,.food-ability-copy b{height:15px;min-height:15px}.food-stat-grid{height:47px;min-height:47px;grid-template-rows:repeat(2,23px)}
-  .food-stat-cell b{font-size:6.9px}.card-stat-icon{width:15px;height:15px}.food-ability-copy em{font-size:6.25px}
-  .conveyor-gap{height:164px;min-height:164px}.belt-track{height:178px;min-height:178px}
-}
-
-/* === V23: оптическое центрирование еды и единая всплывающая карточка === */
-.food-model,.food-info-model,.food-mini-model,.food-buff-model,.swallow-model{
-  transform:translate(var(--food-x,0),var(--food-y,0));transform-origin:center;
-}
-
-.food-info{
-  --popover-bg:#fffaf0;--popover-border:#667181;--popover-text:#28344a;--popover-button:#65cf91;--popover-button-text:#183e2b;
-  position:fixed!important;z-index:850;width:min(330px,calc(100vw - 16px));height:132px;min-height:132px;max-height:132px;
-  grid-template-columns:58px minmax(0,1fr) 82px;gap:8px;align-items:center;margin:0!important;padding:8px 9px;
-  border:3px solid var(--popover-border);border-radius:17px;background:var(--popover-bg)!important;color:var(--popover-text);
-  box-shadow:0 5px 0 rgba(38,51,74,.22);animation:foodInfoPopV23 .2s cubic-bezier(.2,.9,.35,1.18) both;
-}
-.food-info:before{background:var(--popover-bg)!important;border-color:var(--popover-border)!important}
-.food-info-icon{
-  width:56px;height:56px;display:grid;place-items:center;overflow:hidden;padding:2px;border:2px solid var(--popover-border);
-  border-radius:15px;background:rgba(255,255,255,.7);
-}
-.food-info-model{width:52px;height:52px;display:block;object-fit:contain}
-.food-info-copy{height:100%;min-width:0;display:grid;grid-template-rows:27px 1fr;align-items:stretch}
-.food-info-copy>div{min-width:0;display:flex;align-items:baseline;justify-content:center;gap:5px;text-align:center}
-.food-info-copy>div b{max-width:100%;overflow:hidden;color:var(--popover-text);font-size:10.5px;line-height:1.08;text-overflow:ellipsis;white-space:nowrap}
-.food-info-copy>div small{flex:none;color:var(--popover-border);font-size:6px;font-weight:1000;text-transform:uppercase}
-.food-info-copy>p{width:100%;min-width:0;margin:0!important}
-#foodInfoStats{display:grid;grid-template-rows:18px 1fr;align-items:stretch}
-.food-info-kind{display:flex!important;align-items:center;justify-content:center;gap:3px;color:var(--popover-border)!important;font-size:6.5px!important;letter-spacing:.45px}
-.food-info-kind-icon{width:17px;height:17px;display:block;object-fit:contain}
-.food-info-stat-grid{height:60px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,29px);gap:2px 4px}
-.food-info-stat{
-  min-width:0;display:flex;align-items:center;justify-content:center;gap:3px;padding:2px;
-  border:1.5px solid rgba(63,79,100,.3);border-radius:9px;background:rgba(255,255,255,.66);
-}
-.food-info-stat-icon{width:21px;height:21px;flex:none;display:block;object-fit:contain}.food-info-stat b{color:var(--popover-text);font-size:9px;line-height:1;white-space:nowrap}
-.food-info-stat-grid.count-1{grid-template-columns:1fr;grid-template-rows:60px;padding:0 22px}.food-info-stat-grid.count-2{grid-template-rows:60px}
-.food-info-stat-grid.count-3 .food-info-stat:nth-child(3){width:50%;grid-column:1 / 3;justify-self:center}
-
-.food-info.food-type-ability .food-info-copy{grid-template-rows:27px 18px 1fr}
-.food-info.food-type-ability #foodInfoStats{display:flex;align-items:center;justify-content:center}
-.food-info-effect{
-  min-height:0;display:flex!important;align-items:center;justify-content:center;padding:5px 6px;border:1.5px solid rgba(81,62,111,.22);border-radius:10px;
-  background:rgba(255,255,255,.62);color:var(--popover-text)!important;font-size:9px!important;font-weight:1000;line-height:1.18!important;text-align:center;
-}
-.food-info-effect.hidden{display:none!important}
-
-.food-info>button{
-  width:82px;min-width:82px;min-height:50px;display:flex;align-items:center;justify-content:center;gap:3px;padding:6px;
-  border:2px solid var(--popover-border)!important;border-radius:13px;background:var(--popover-button)!important;color:var(--popover-button-text)!important;
-  box-shadow:0 3px 0 var(--popover-border)!important;
-}
-.food-info>button img{width:27px;height:27px}.food-info>button span{font-size:6.8px;font-weight:1000}
-
-.food-info.common{--popover-bg:#fffaf0;--popover-border:#667181;--popover-text:#28344a}
-.food-info.rare{--popover-bg:#e8f9ff;--popover-border:#178bbd;--popover-text:#143e55;--popover-button:#65d2ee;--popover-button-text:#103f54}
-.food-info.epic{--popover-bg:#f3eafa;--popover-border:#7e42b1;--popover-text:#45245d;--popover-button:#bd80e4;--popover-button-text:#3b1557}
-.food-info.legendary{--popover-bg:#fff9e8;--popover-border:#b47b11;--popover-text:#573a08;--popover-button:#f2cb57;--popover-button-text:#553900;animation:foodInfoPopV23 .2s cubic-bezier(.2,.9,.35,1.18) both,foodInfoLegendFrameV23 2.2s ease-in-out infinite}
-.food-info.prismatic{--popover-bg:#f5f3ff;--popover-border:#7b4dbd;--popover-text:#3e3157;--popover-button:#8edcc8;--popover-button-text:#203e42;animation:foodInfoPopV23 .2s cubic-bezier(.2,.9,.35,1.18) both,foodInfoPrismFrameV23 2s linear infinite}
-.food-info.secret{--popover-bg:#21122f;--popover-border:#43e1ed;--popover-text:#fff;--popover-button:#f15bd2;--popover-button-text:#351038;animation:foodInfoPopV23 .2s cubic-bezier(.2,.9,.35,1.18) both,foodInfoSecretFrameV23 1.8s ease-in-out infinite}
-.food-info.secret .food-info-copy>div b,.food-info.secret .food-info-stat b{color:#fff}.food-info.secret .food-info-copy>div small{color:#8df4f4}
-.food-info.secret .food-info-effect,.food-info.secret .food-info-stat{background:rgba(255,255,255,.1);border-color:rgba(113,235,242,.34)}
-
-@keyframes foodInfoPopV23{from{opacity:0;transform:translateY(7px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes foodInfoLegendFrameV23{0%,100%{border-color:#b47b11}50%{border-color:#f1ca55}}
-@keyframes foodInfoPrismFrameV23{0%,100%{border-color:#f05b9f}25%{border-color:#e2b739}50%{border-color:#43c98f}75%{border-color:#4aaddc}}
-@keyframes foodInfoSecretFrameV23{0%,100%{border-color:#43e1ed}50%{border-color:#f24bd1}}
-
-@media(max-width:370px){
-  .food-info{width:calc(100vw - 12px);height:128px;min-height:128px;max-height:128px;grid-template-columns:52px minmax(0,1fr) 72px;gap:6px;padding:7px}
-  .food-info-icon{width:50px;height:50px}.food-info-model{width:47px;height:47px}.food-info>button{width:72px;min-width:72px;min-height:48px;padding:4px}.food-info>button img{width:24px;height:24px}
-  .food-info-copy>div b{font-size:9.5px}.food-info-copy>div small{font-size:5.5px}.food-info-effect{font-size:8.2px!important}.food-info-stat b{font-size:8.3px}
-}
-
-/* === V24: компактное информационное окно без лишних действий === */
-.food-card .food-name{font-size:8.6px;font-weight:1000}
-.card-section-title,.food-ability-copy b{font-size:6.2px;letter-spacing:.55px}
-.food-stat-cell b{font-size:7.8px}.food-ability-copy em{font-size:6.9px;line-height:1.18}
-
-.food-info{
-  width:min(286px,calc(100vw - 16px));height:112px;min-height:112px;max-height:112px;
-  grid-template-columns:minmax(0,1fr);gap:0;padding:9px 11px;border-width:3px;
-}
-.food-info-icon,.food-info-copy>div,.food-info>button{display:none!important}
-.food-info-copy{width:100%;height:100%;display:grid;grid-template-rows:1fr}
-#foodInfoStats{height:100%;display:grid;grid-template-rows:23px 1fr;align-items:stretch}
-.food-info-kind{font-size:8px!important;letter-spacing:.65px}.food-info-kind-icon{width:19px;height:19px}
-.food-info-stat-grid{height:69px;grid-template-rows:repeat(2,33px);gap:3px 5px}
-.food-info-stat{border-width:2px;border-radius:10px}.food-info-stat-icon{width:24px;height:24px}.food-info-stat b{font-size:10.5px}
-.food-info-stat-grid.count-1{grid-template-rows:69px;padding:0 34px}.food-info-stat-grid.count-2{grid-template-rows:69px}
-.food-info.food-type-ability .food-info-copy{grid-template-rows:23px 1fr}
-.food-info.food-type-ability #foodInfoStats{height:23px;display:flex}
-.food-info-effect{height:69px;padding:7px 10px;border-width:2px;border-radius:11px;font-size:10px!important;line-height:1.22!important}
-.food-info.secret{border-width:2px}
-
-@media(max-width:370px){
-  .food-info{width:min(280px,calc(100vw - 12px));height:108px;min-height:108px;max-height:108px;grid-template-columns:1fr;padding:8px 10px}
-  .food-info-stat-grid{height:66px;grid-template-rows:repeat(2,31.5px)}.food-info-stat-grid.count-1,.food-info-stat-grid.count-2{grid-template-rows:66px}
-  .food-info-effect{height:66px;font-size:9.2px!important}.food-info-kind{font-size:7.5px!important}
-}

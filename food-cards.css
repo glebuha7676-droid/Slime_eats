@@ -1,0 +1,254 @@
+/* Food cards: one authoritative module for cards, rarity motion and the info popover. */
+
+.food-choices{
+  position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;margin-inline:22px;
+}
+.conveyor-gap{height:176px;min-height:176px;pointer-events:none}
+.belt-track{position:relative;z-index:1;height:190px;min-height:190px}
+
+.food-card{
+  --rarity:#8793a1;--rarity-deep:#525d6a;--shadow:#596372;
+  --top:#fff9ed;--stats:#edf7e9;--effect:#f2edf7;
+  position:relative;isolation:isolate;min-width:0;height:176px;min-height:176px;max-height:176px;
+  display:flex;flex-direction:column;align-items:center;padding:4px 5px 5px;overflow:visible;
+  border:3px solid var(--rarity);border-radius:15px;background:linear-gradient(180deg,var(--top) 0 61%,var(--bottom) 61% 100%);
+  box-shadow:0 4px 0 var(--shadow),inset 0 0 0 1px rgba(255,255,255,.8);
+  color:#29354a;text-align:center;touch-action:none;user-select:none;
+  transition:transform .12s ease,opacity .15s ease;
+}
+.food-card.food-type-stats{--bottom:var(--stats)}
+.food-card.food-type-ability{--bottom:var(--effect)}
+.food-card:hover{transform:translateY(-1px)}
+.food-card.selected{transform:translateY(-2px) scale(1.018)}
+.food-card:active{transform:translateY(2px) scale(.985)}
+.food-card.locked{opacity:.38;pointer-events:none}
+.food-card.drag-source{opacity:.25}
+.food-card>span{position:relative;z-index:2}
+.food-card.tunnel-enter{animation:foodCardTunnelIn .66s cubic-bezier(.2,.8,.25,1) both}
+.food-card.leaving{animation:foodCardTunnelOut .66s cubic-bezier(.55,.08,.8,.45) both;pointer-events:none}
+
+.food-card .rarity{
+  width:100%;height:25px;min-height:25px;display:grid;place-items:start center;padding:0;
+  color:var(--rarity-deep);font-size:inherit;line-height:1;text-transform:uppercase;
+}
+.rarity-name{
+  width:100%;height:25px;display:grid;grid-template-rows:18px 6px;place-items:center;row-gap:1px;
+  color:inherit;font-size:6.8px;font-weight:1000;letter-spacing:.3px;white-space:nowrap;
+}
+.rarity-name>span{height:6px;display:grid;place-items:center}
+.rarity-name i{
+  position:relative;width:18px;height:18px;place-self:center;border-radius:50%;
+  background:linear-gradient(145deg,var(--rarity) 0 58%,var(--rarity-deep) 59% 100%);
+  box-shadow:0 1px 0 rgba(37,46,63,.35),inset 0 0 0 1px rgba(255,255,255,.34);
+}
+.rarity-name i:after{
+  content:"";position:absolute;left:4px;top:3px;width:4px;height:4px;border-radius:1px;
+  background:rgba(255,255,255,.62);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+}
+
+.food-model-wrap{width:100%;height:45px;min-height:45px;display:grid;place-items:center;margin:0;pointer-events:none}
+.food-model{width:50px;height:50px;display:block;object-fit:contain;pointer-events:none;user-select:none}
+.food-model,.food-mini-model,.food-buff-model,.swallow-model{transform:translate(var(--food-x,0),var(--food-y,0));transform-origin:center}
+.food-name{
+  width:100%;height:24px;min-height:24px;display:grid;place-items:center;padding:1px 1px 0;
+  overflow:hidden;color:inherit;font-size:9.4px;font-weight:1000;line-height:1.03;pointer-events:none;
+}
+
+.food-stat-block,.food-ability-copy{
+  width:100%;height:68px;min-height:68px;display:grid;grid-template-rows:17px 51px;margin:0;padding:0 2px 1px;
+}
+.card-section-title,.food-ability-copy b{
+  width:100%;height:17px;display:flex;align-items:center;justify-content:center;gap:3px;margin:0;
+  color:#217653;font-size:7.1px;font-weight:1000;letter-spacing:.42px;line-height:1;
+}
+.food-stat-grid{
+  width:100%;height:51px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,25px);gap:1px 5px;
+}
+.food-stat-cell{
+  min-width:0;display:flex;align-items:center;justify-content:center;gap:2px;padding:1px 0;
+  border:0;border-top:1px solid rgba(48,84,70,.28);background:transparent;color:inherit;
+}
+.food-stat-cell.empty{visibility:hidden}
+.card-stat-icon{width:21px;height:21px;flex:none;display:block;object-fit:contain}
+.food-stat-cell b{font-size:9.2px;font-weight:1000;line-height:1;white-space:nowrap}
+.food-stat-grid.count-1{grid-template-columns:1fr;grid-template-rows:51px;padding-inline:11px}
+.food-stat-grid.count-2{grid-template-rows:51px}
+.food-stat-grid.count-1 .food-stat-cell.empty,.food-stat-grid.count-2 .food-stat-cell.empty{display:none}
+.food-stat-grid.count-1 .card-stat-icon,.food-stat-grid.count-2 .card-stat-icon{width:24px;height:24px}
+.food-stat-grid.count-1 .food-stat-cell b,.food-stat-grid.count-2 .food-stat-cell b{font-size:10.2px}
+.food-stat-grid.count-3 .food-stat-cell:nth-child(3){width:50%;grid-column:1 / 3;justify-self:center}
+.food-stat-grid.count-3 .food-stat-cell:nth-child(4){display:none}
+
+.food-ability-copy{gap:0;border:0;background:transparent;text-align:center}
+.food-ability-copy b{color:#7448aa}.ability-kind-icon{width:18px;height:18px;display:block;object-fit:contain}
+.food-ability-copy em{
+  width:100%;height:51px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:4px 3px 2px;
+  border-top:1px solid rgba(105,68,151,.3);color:#3e3550;font-size:8.15px;font-style:normal;font-weight:1000;line-height:1.15;text-align:center;
+}
+
+/* Rarity palettes and compact, intentional motion. */
+.food-card.common{--rarity:#929ba7;--rarity-deep:#58616d;--shadow:#606977;--top:#fff9ec;--stats:#edf7e9;--effect:#f2edf7}
+.food-card.common:before{
+  content:"";position:absolute;z-index:1;inset:0;border-radius:11px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(117,126,139,.09),transparent 42%);
+}
+
+.food-card.rare{--rarity:#36c5f0;--rarity-deep:#087aa9;--shadow:#176f96;--top:#eaf9ff;--stats:#dcf7ef;--effect:#deefff;color:#17465d}
+.food-card.rare:before{
+  content:"";position:absolute;z-index:1;inset:0;border-radius:11px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(70,196,235,.14),transparent 18% 82%,rgba(70,196,235,.14));
+}
+.food-card.rare .rarity-name i{border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.food-card.rare .rarity-name i:after{
+  left:-8px;top:7px;width:13px;height:3px;border-radius:2px;clip-path:none;background:#fff;opacity:0;
+  animation:rareGemGleam 2.8s ease-in-out infinite;
+}
+.food-card.rare .food-ability-copy b{color:#176a9d}
+
+.food-card.epic{--rarity:#ad68e8;--rarity-deep:#672a9f;--shadow:#6a329b;--top:#f4ecfa;--stats:#e9f3ee;--effect:#ece4f5;color:#47245e}
+.food-card.epic .rarity-name i{border-radius:0;clip-path:polygon(50% 0,98% 35%,80% 100%,20% 100%,2% 35%);animation:epicGemJolt 3.6s ease-in-out infinite}
+.food-card.epic .food-ability-copy b{color:#722ea2}
+
+.food-card.legendary{--rarity:#e9be3e;--rarity-deep:#95620c;--shadow:#aa790f;--top:#fffbed;--stats:#f7f6e9;--effect:#fbf3db;color:#583b0c}
+.food-card.legendary .rarity-name i{
+  border-radius:0;clip-path:polygon(25% 7%,75% 7%,100% 50%,75% 93%,25% 93%,0 50%);
+  background:linear-gradient(110deg,#d69b13,#fff2a0,#f0be35,#fff8c7,#d69b13);background-size:260% 100%;animation:legendGemFlow 2.2s ease-in-out infinite;
+}
+.food-card.legendary .card-section-title{color:#4e702b}.food-card.legendary .food-ability-copy b{color:#885300}
+.food-card.legendary:after{
+  content:"";position:absolute;z-index:3;inset:-3px;border:3px solid #d7aa2f;border-radius:15px;pointer-events:none;
+  animation:legendFrameFlow 2.2s ease-in-out infinite;
+}
+
+.food-card.prismatic{--rarity:#8359e0;--rarity-deep:#513092;--shadow:#6139a5;--top:#ffe1f5;--stats:#dcfaee;--effect:#e8d8ff;color:#3c3156}
+.food-card.prismatic:before{
+  content:"";position:absolute;z-index:1;inset:0;border-radius:11px;pointer-events:none;
+  background:linear-gradient(125deg,rgba(255,64,151,.43),rgba(255,218,48,.36),rgba(51,230,137,.35),rgba(43,190,255,.42),rgba(164,62,239,.45));
+  animation:prismCardBreath 3s ease-in-out infinite;
+}
+.food-card.prismatic .rarity-name i{
+  border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  background:repeating-linear-gradient(90deg,#ff55a8 0%,#ffd83f 10%,#50df91 20%,#45caff 30%,#9661eb 40%,#ff55a8 50%);
+  background-size:200% 100%;box-shadow:0 0 5px rgba(128,91,232,.42);animation:prismFlow 3s linear infinite;
+}
+.food-card.prismatic:after{
+  content:"";position:absolute;z-index:3;inset:-3px;padding:3px;border-radius:15px;pointer-events:none;
+  background:repeating-linear-gradient(90deg,#ff55a8 0%,#ffd83f 10%,#50df91 20%,#45caff 30%,#9661eb 40%,#ff55a8 50%);background-size:200% 100%;
+  filter:drop-shadow(0 0 2px rgba(111,85,229,.42));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
+  animation:prismFlow 3s linear infinite;
+}
+.food-card.prismatic .food-ability-copy b{color:#653a9b}
+
+.food-card.secret{--rarity:#d66cf0;--rarity-deep:#8a37ba;--shadow:#351149;--top:#20102c;--stats:#173b37;--effect:#38194a;color:#fff}
+.food-card.secret:before{
+  content:"";position:absolute;z-index:1;inset:0;border-radius:11px;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 18%,rgba(69,226,240,.18),transparent 42%),radial-gradient(ellipse at 50% 88%,rgba(231,55,212,.16),transparent 52%);
+}
+.food-card.secret:after{
+  content:"";position:absolute;z-index:3;inset:-2px;padding:2px;border-radius:15px;pointer-events:none;
+  background:repeating-linear-gradient(90deg,#68dfe8 0%,#967fe1 17%,#df72be 25%,#967fe1 33%,#68dfe8 50%);background-size:200% 100%;
+  box-shadow:0 0 4px rgba(92,214,230,.24);filter:drop-shadow(0 0 1px rgba(218,103,194,.3));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
+  animation:secretContourFlow 7s linear infinite;
+}
+.food-card.secret .rarity-name{color:#f0c8ff}
+.food-card.secret .rarity-name i{
+  width:24px;height:14px;border:2px solid #d77af3;border-radius:50%;background:#efe8ff;
+  box-shadow:inset 0 -2px 0 rgba(105,40,135,.2);transform-origin:center;animation:secretEyeBlink 4.2s ease-in-out infinite;
+}
+.food-card.secret .rarity-name i:after{
+  left:8px;top:1px;width:5px;height:8px;border-radius:50%;clip-path:none;background:#291037;
+  box-shadow:inset 1px 1px 0 #80edf2;opacity:1;animation:secretEyeLook 4.2s ease-in-out infinite;
+}
+.food-card.secret .card-section-title{color:#8de3c4}.food-card.secret .food-ability-copy b{color:#e1a7fa}
+.food-card.secret .food-stat-cell{border-top-color:rgba(255,255,255,.22)}
+.food-card.secret .food-ability-copy em{color:#fff;border-top-color:rgba(235,177,255,.3)}
+.food-card.secret .food-model-wrap{position:relative}
+.food-card.secret .food-model-wrap:before{
+  content:"";position:absolute;z-index:0;width:50px;height:38px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(255,255,255,.3),rgba(73,221,232,.18) 48%,transparent 72%);
+}
+.food-card.secret .food-model{position:relative;z-index:1}
+
+.drag-ghost .food-stat-block,.drag-ghost .food-stat-grid,.drag-ghost .food-ability-copy{pointer-events:none}
+
+/* Information-only popover. */
+.food-info{
+  --popover-bg:#fffaf0;--popover-border:#667181;--popover-text:#28344a;
+  position:fixed;z-index:850;width:min(292px,calc(100vw - 16px));height:116px;min-height:116px;max-height:116px;
+  display:grid;grid-template-columns:minmax(0,1fr);padding:9px 11px;margin:0;border:3px solid var(--popover-border);border-radius:17px;
+  background:var(--popover-bg);color:var(--popover-text);box-shadow:0 5px 0 rgba(38,51,74,.2);
+  animation:foodInfoPop .2s cubic-bezier(.2,.9,.35,1.18) both;
+}
+.food-info:before{
+  content:"";position:absolute;left:var(--caret-x,50%);bottom:-9px;width:15px;height:15px;
+  transform:translateX(-50%) rotate(45deg);background:var(--popover-bg);border-right:3px solid var(--popover-border);border-bottom:3px solid var(--popover-border);
+}
+.food-info.below:before{top:-9px;bottom:auto;border:0;border-left:3px solid var(--popover-border);border-top:3px solid var(--popover-border)}
+.food-info-copy{width:100%;height:100%;min-width:0;display:grid;grid-template-rows:1fr}
+.food-info-copy>p{width:100%;min-width:0;margin:0}
+#foodInfoStats{height:100%;display:grid;grid-template-rows:25px 1fr;align-items:stretch}
+.food-info-kind{display:flex;align-items:center;justify-content:center;gap:4px;color:var(--popover-border);font-size:8.5px;font-weight:1000;letter-spacing:.65px}
+.food-info-kind-icon{width:20px;height:20px;display:block;object-fit:contain}
+.food-info-stat-grid{height:72px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,35px);gap:3px 5px}
+.food-info-stat{
+  min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;padding:2px;
+  border:2px solid rgba(63,79,100,.3);border-radius:10px;background:rgba(255,255,255,.68);
+}
+.food-info-stat-icon{width:26px;height:26px;flex:none;display:block;object-fit:contain}
+.food-info-stat b{color:var(--popover-text);font-size:11px;font-weight:1000;line-height:1;white-space:nowrap}
+.food-info-stat-grid.count-1{grid-template-columns:1fr;grid-template-rows:72px;padding-inline:36px}
+.food-info-stat-grid.count-2{grid-template-rows:72px}
+.food-info-stat-grid.count-3 .food-info-stat:nth-child(3){width:50%;grid-column:1 / 3;justify-self:center}
+.food-info.food-type-ability .food-info-copy{grid-template-rows:25px 1fr}
+.food-info.food-type-ability #foodInfoStats{height:25px;display:flex;align-items:center;justify-content:center}
+.food-info-effect{
+  height:72px;display:flex;align-items:center;justify-content:center;padding:7px 10px;overflow:hidden;
+  border:2px solid rgba(81,62,111,.22);border-radius:11px;background:rgba(255,255,255,.64);
+  color:var(--popover-text);font-size:10.5px;font-weight:1000;line-height:1.22;text-align:center;
+}
+.food-info-effect.hidden{display:none}
+.food-info.common{--popover-bg:#fffaf0;--popover-border:#667181;--popover-text:#28344a}
+.food-info.rare{--popover-bg:#e8f9ff;--popover-border:#178bbd;--popover-text:#143e55}
+.food-info.epic{--popover-bg:#f3eafa;--popover-border:#7e42b1;--popover-text:#45245d}
+.food-info.legendary{--popover-bg:#fff9e8;--popover-border:#b47b11;--popover-text:#573a08;animation:foodInfoPop .2s cubic-bezier(.2,.9,.35,1.18) both,infoLegendFrame 2.2s ease-in-out infinite}
+.food-info.prismatic{--popover-bg:#f5f3ff;--popover-border:#7b4dbd;--popover-text:#3e3157;animation:foodInfoPop .2s cubic-bezier(.2,.9,.35,1.18) both,infoPrismFrame 3s linear infinite}
+.food-info.secret{--popover-bg:#21122f;--popover-border:#55dfe9;--popover-text:#fff;border-width:2px;box-shadow:0 4px 0 #351149}
+.food-info.secret .food-info-effect,.food-info.secret .food-info-stat{background:rgba(255,255,255,.1);border-color:rgba(113,235,242,.34)}
+
+@keyframes foodCardTunnelOut{0%{opacity:1;transform:translateX(0) rotate(0)}12%{transform:translateX(4px) rotate(-2deg)}22%{transform:translateX(-2px) rotate(2deg)}100%{opacity:.75;transform:translateX(390%) rotate(5deg)}}
+@keyframes foodCardTunnelIn{0%{opacity:.2;transform:translateX(-390%) rotate(-5deg)}72%{opacity:1;transform:translateX(5px) rotate(1deg)}86%{transform:translateX(-3px) rotate(-1deg)}100%{opacity:1;transform:translateX(0) rotate(0)}}
+@keyframes rareGemGleam{0%,62%,100%{opacity:0;transform:translateX(0) rotate(-45deg)}70%{opacity:1;transform:translateX(8px) rotate(-45deg)}78%{opacity:0;transform:translateX(15px) rotate(-45deg)}}
+@keyframes epicGemJolt{0%,68%,100%{transform:translateX(0) rotate(0)}72%{transform:translateX(-1px) rotate(-4deg)}75%{transform:translateX(1px) rotate(4deg)}78%{transform:translateX(-1px) rotate(-2deg)}81%{transform:translateX(0) rotate(0)}}
+@keyframes legendGemFlow{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+@keyframes legendFrameFlow{0%,100%{border-color:#d7aa2f;box-shadow:0 0 0 0 rgba(255,235,145,0)}50%{border-color:#fff0a0;box-shadow:0 0 0 2px rgba(240,190,52,.2)}}
+@keyframes prismFlow{to{background-position:100% 0}}
+@keyframes prismCardBreath{0%,100%{opacity:.82}50%{opacity:1}}
+@keyframes secretContourFlow{to{background-position:100% 0}}
+@keyframes secretEyeBlink{0%,42%,46%,78%,82%,100%{transform:scaleY(1)}44%,80%{transform:scaleY(.12)}}
+@keyframes secretEyeLook{0%,12%,44%,56%,80%,100%{transform:translateX(0)}20%,34%{transform:translateX(-5px)}62%,75%{transform:translateX(5px)}}
+@keyframes foodInfoPop{from{opacity:0;transform:translateY(7px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes infoLegendFrame{0%,100%{border-color:#b47b11}50%{border-color:#f1ca55}}
+@keyframes infoPrismFrame{0%,100%{border-color:#f05b9f}25%{border-color:#e2b739}50%{border-color:#43c98f}75%{border-color:#4aaddc}}
+
+@media(max-width:370px){
+  .food-choices{gap:4px;margin-inline:21px}
+  .food-card{height:172px;min-height:172px;max-height:172px;padding-inline:4px}
+  .conveyor-gap{height:172px;min-height:172px}.belt-track{height:186px;min-height:186px}
+  .food-model-wrap{height:43px;min-height:43px}.food-model{width:48px;height:48px}.food-name{font-size:8.8px}
+  .food-stat-block,.food-ability-copy{height:67px;min-height:67px;grid-template-rows:16px 51px}
+  .card-section-title,.food-ability-copy b{height:16px;font-size:6.6px}.food-ability-copy em{font-size:7.6px}
+  .card-stat-icon{width:20px;height:20px}.food-stat-cell b{font-size:8.7px}
+  .food-info{width:min(286px,calc(100vw - 12px));height:112px;min-height:112px;max-height:112px;padding:8px 10px}
+  #foodInfoStats{grid-template-rows:24px 1fr}.food-info-kind{font-size:8px}.food-info-kind-icon{width:19px;height:19px}
+  .food-info-stat-grid{height:70px;grid-template-rows:repeat(2,34px)}.food-info-stat-grid.count-1,.food-info-stat-grid.count-2{grid-template-rows:70px}
+  .food-info-stat-icon{width:24px;height:24px}.food-info-stat b{font-size:10.2px}.food-info-effect{height:70px;font-size:9.8px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .food-card .rarity-name i,.food-card:after,.food-info{animation-duration:.01ms!important;animation-iteration-count:1!important}
+}

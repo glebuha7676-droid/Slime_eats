@@ -7,7 +7,8 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Накорми и Пробей</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=25" />
+  <link rel="stylesheet" href="styles.css?v=26" />
+  <link rel="stylesheet" href="food-cards.css?v=1" />
 </head>
 <body>
   <div id="app" class="app">
@@ -94,9 +95,7 @@
             <div class="belt-tunnel tunnel-right" aria-hidden="true"><i></i></div>
           </div>
           <div id="foodInfo" class="food-info hidden" role="region" aria-live="polite">
-            <span id="foodInfoIcon" class="food-info-icon" aria-hidden="true"></span>
-            <div class="food-info-copy"><div><b id="foodInfoName"></b><small id="foodInfoRarity"></small></div><p id="foodInfoStats"></p><p id="foodInfoEffect" class="food-info-effect"></p></div>
-            <button id="feedSelectedBtn" type="button"><img src="assets/ui/feed.webp" alt="" aria-hidden="true"><span>СКОРМИТЬ</span></button>
+            <div class="food-info-copy"><p id="foodInfoStats"></p><p id="foodInfoEffect" class="food-info-effect"></p></div>
           </div>
           <button id="rerollBtn" class="reroll-btn" type="button">
             <img class="reroll-icon" src="assets/ui/reroll.webp" alt="" aria-hidden="true">
@@ -187,6 +186,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="game.js?v=25"></script>
+  <script src="game.js?v=26"></script>
 </body>
 </html>

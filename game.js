@@ -266,8 +266,7 @@
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
     adminWorldValue: $('#adminWorldValue'), adminResetProgressBtn: $('#adminResetProgressBtn'),
     conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'), pickCounter: $('#pickCounter'),
-    foodInfo: $('#foodInfo'), foodInfoIcon: $('#foodInfoIcon'), foodInfoName: $('#foodInfoName'), foodInfoRarity: $('#foodInfoRarity'),
-    foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'), feedSelectedBtn: $('#feedSelectedBtn'), buffShelf: $('#buffShelf'),
+    foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'), buffShelf: $('#buffShelf'),
     startDropBtn: $('#startDropBtn'),
     depthLabel: $('#depthLabel'), runMassLabel: $('#runMassLabel'), flightLabel: $('#flightLabel'), runCoinsLabel: $('#runCoinsLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'), worldTargetBadge: $('#worldTargetBadge'),
@@ -830,14 +829,6 @@
     ].filter(item => item.value > 0).sort((a, b) => b.score - a.score);
   }
 
-  function foodPrimaryStat(food) {
-    if (foodCardType(food) === 'ability') return { key: 'special', icon: uiIconMarkup('special', 'food-stat-icon'), label: 'Особая способность' };
-    const primary = foodStatItems(food)[0];
-    return primary
-      ? { ...primary, icon: uiIconMarkup(primary.iconName, 'food-stat-icon') }
-      : { key: 'mass', icon: uiIconMarkup('stat-mass', 'food-stat-icon'), label: 'Без бонуса' };
-  }
-
   function foodStatGridMarkup(food) {
     const items = foodStatItems(food).slice(0, 4);
     return Array.from({ length: 4 }, (_, index) => {
@@ -1025,9 +1016,6 @@
     source?.classList.add('selected');
     showFoodPreview(food);
     const cardType = foodCardType(food);
-    els.foodInfoIcon.innerHTML = foodArtMarkup(food, 'food-info-model');
-    els.foodInfoName.textContent = food.name;
-    els.foodInfoRarity.textContent = RARITY_LABELS[food.rarity];
     els.foodInfoStats.innerHTML = cardType === 'ability'
       ? `<strong class="food-info-kind">${uiIconMarkup('special', 'food-info-kind-icon')}ЭФФЕКТ</strong>`
       : foodInfoStatMarkup(food);
@@ -3478,11 +3466,6 @@
     els.adminPrevWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(-1));
     els.adminNextWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(1));
     els.adminResetProgressBtn?.addEventListener('click', resetProgressFromAdmin);
-    els.feedSelectedBtn.addEventListener('click', () => {
-      if (selectedFoodOfferIndex === null) return;
-      const source = $(`.food-card[data-offer-index="${selectedFoodOfferIndex}"]`);
-      chooseFood(selectedFoodOfferIndex, source);
-    });
     els.abilityBtn.addEventListener('click', activateAbility);
     els.endRunBtn.addEventListener('click', finishRunEarly);
     els.doubleBtn.addEventListener('click', doubleRunCoins);
