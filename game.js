@@ -477,13 +477,13 @@
     if (attempt?.catch) attempt.catch(() => fallbackSound(kind));
   }
 
-  function sound(kind = 'tap') {
+  function sound(kind = 'tap', timing = {}) {
     if (!save.sound) return;
     if (kind === 'eat' || kind === 'eatSlow') {
       mealSoundTimers.forEach(clearTimeout);
       mealSoundTimers = [];
-      const biteDelay = kind === 'eatSlow' ? 720 : 190;
-      const swallowDelay = kind === 'eatSlow' ? 2160 : 520;
+      const biteDelay = timing.biteDelay ?? (kind === 'eatSlow' ? 720 : 210);
+      const swallowDelay = timing.swallowDelay ?? (kind === 'eatSlow' ? 2530 : 720);
       mealSoundTimers.push(setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatBite'); }, biteDelay));
       mealSoundTimers.push(setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatSwallow'); }, swallowDelay));
       return;
@@ -1168,16 +1168,19 @@
     session.foods.push(food);
     session.offer[offerIndex] = null;
     const mealReaction = {
-      common: { catchMs: 160, chewMs: 480, chewTime: '.24s', chews: 2, happyMs: 260 },
-      rare: { catchMs: 170, chewMs: 720, chewTime: '.24s', chews: 3, happyMs: 320 },
-      epic: { catchMs: 180, chewMs: 720, chewTime: '.24s', chews: 3, happyMs: 480 },
-      legendary: { catchMs: 190, chewMs: 960, chewTime: '.24s', chews: 4, happyMs: 520 },
-      prismatic: { catchMs: 200, chewMs: 1200, chewTime: '.24s', chews: 5, happyMs: 620 },
-      secret: { catchMs: 800, chewMs: 1440, chewTime: '.24s', chews: 6, happyMs: 1100 }
-    }[food.rarity] || { catchMs: 160, chewMs: 480, chewTime: '.24s', chews: 2, happyMs: 260 };
+      common: { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, happyMs: 350 },
+      rare: { catchMs: 210, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 420 },
+      epic: { catchMs: 230, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 620 },
+      legendary: { catchMs: 250, chewMs: 1200, chewTime: '.3s', chews: 4, happyMs: 680 },
+      prismatic: { catchMs: 270, chewMs: 1500, chewTime: '.3s', chews: 5, happyMs: 820 },
+      secret: { catchMs: 800, chewMs: 1800, chewTime: '.3s', chews: 6, happyMs: 1300 }
+    }[food.rarity] || { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, happyMs: 350 };
     document.body.classList.remove('secret-feast', 'secret-reveal');
     if (food.rarity === 'secret') document.body.classList.add('secret-feast');
-    sound(food.rarity === 'secret' ? 'eatSlow' : 'eat');
+    sound(food.rarity === 'secret' ? 'eatSlow' : 'eat', {
+      biteDelay: food.rarity === 'secret' ? 720 : Math.max(180, mealReaction.catchMs - 20),
+      swallowDelay: mealReaction.catchMs + mealReaction.chewMs - 70
+    });
     clearTimeout(menuEmotionTimer);
     els.slime.classList.remove('eat', 'chewing', 'pleased', ...MEAL_REACTION_CLASSES);
     els.slime.classList.add(`meal-${food.rarity}`);
@@ -2730,7 +2733,15 @@
       targetCtx.save();
       targetCtx.translate(x, y);
       if (aura === 'epic') {
-        targetCtx.globalAlpha = .72;
+        const auraPulse = 1 + Math.sin(timestamp / 180) * .04;
+        const epicGlow = targetCtx.createRadialGradient(0, 0, radius * .58, 0, 0, radius + 19);
+        epicGlow.addColorStop(0, 'rgba(155,83,238,.5)');
+        epicGlow.addColorStop(.58, 'rgba(180,108,255,.32)');
+        epicGlow.addColorStop(1, 'rgba(141,68,225,0)');
+        targetCtx.globalAlpha = .9;
+        targetCtx.fillStyle = epicGlow;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, (radius + 19) * auraPulse, 0, Math.PI * 2); targetCtx.fill();
+        targetCtx.globalAlpha = .82;
         for (let index = 0; index < 7; index += 1) {
           const side = index % 2 ? 1 : -1;
           const phase = (timestamp / 780 + index * .19) % 1;
@@ -2837,16 +2848,18 @@
     const eyeY = -radius * .12;
     const eyeX = radius * .245;
     const outline = '#26334a';
-    const chewPulse = (Math.sin(timestamp / 82 - Math.PI / 2) + 1) / 2;
+    const chewPulse = (Math.sin(timestamp / 48 - Math.PI / 2) + 1) / 2;
     const chewSquint = emotion === 'chewing';
+    const anticipationSquint = emotion === 'anticipating';
     const closedHappy = emotion === 'petting' || emotion === 'pleased';
     targetCtx.lineCap = 'round';
     targetCtx.lineJoin = 'round';
 
-    targetCtx.globalAlpha = alpha * (closedHappy ? .68 : chewSquint ? .58 + chewPulse * .1 : .48);
+    const cheekPuff = chewSquint ? 1 + (1 - chewPulse) * .16 : 1;
+    targetCtx.globalAlpha = alpha * (closedHappy ? .68 : chewSquint ? .58 + (1 - chewPulse) * .12 : .48);
     targetCtx.fillStyle = '#f78591';
-    targetCtx.beginPath(); targetCtx.ellipse(-radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); targetCtx.fill();
-    targetCtx.beginPath(); targetCtx.ellipse(radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); targetCtx.fill();
+    targetCtx.beginPath(); targetCtx.ellipse(-radius * .45, radius * .14, radius * .14 * cheekPuff, radius * .075 * cheekPuff, 0, 0, Math.PI * 2); targetCtx.fill();
+    targetCtx.beginPath(); targetCtx.ellipse(radius * .45, radius * .14, radius * .14 * cheekPuff, radius * .075 * cheekPuff, 0, 0, Math.PI * 2); targetCtx.fill();
     targetCtx.globalAlpha = alpha;
 
     if (emotion === 'hurt') {
@@ -2865,7 +2878,7 @@
         targetCtx.lineWidth = Math.max(2.5, radius * .08);
         targetCtx.beginPath(); targetCtx.moveTo(-eyeX - radius * .11, eyeY - radius * .03); targetCtx.lineTo(-eyeX + radius * .11, eyeY + radius * .06); targetCtx.stroke();
         targetCtx.beginPath(); targetCtx.moveTo(eyeX + radius * .11, eyeY - radius * .03); targetCtx.lineTo(eyeX - radius * .11, eyeY + radius * .06); targetCtx.stroke();
-      } else if (blink || closedHappy || chewSquint) {
+      } else if (blink || closedHappy || chewSquint || anticipationSquint) {
         targetCtx.strokeStyle = outline;
         targetCtx.lineWidth = Math.max(2.5, radius * .075);
         for (const side of [-1, 1]) {
@@ -2902,15 +2915,21 @@
           targetCtx.beginPath(); targetCtx.ellipse(0, radius * .35, radius * .07, radius * .04, 0, 0, Math.PI * 2); targetCtx.fill();
         }
       } else if (emotion === 'chewing') {
-        const mouthOpen = .25 + chewPulse * .75;
-        const mouthShift = Math.sin(timestamp / 164) * radius * .016;
-        targetCtx.beginPath();
-        targetCtx.ellipse(mouthShift, radius * (.235 + chewPulse * .014), radius * (.075 + mouthOpen * .04), radius * (.025 + mouthOpen * .075), 0, 0, Math.PI * 2);
-        targetCtx.fill();
-        if (chewPulse > .5) {
-          targetCtx.fillStyle = '#f78591';
-          targetCtx.beginPath(); targetCtx.ellipse(mouthShift, radius * .292, radius * .06, radius * .028, 0, 0, Math.PI * 2); targetCtx.fill();
+        const mouthOpen = Math.max(0, (chewPulse - .46) / .54);
+        if (mouthOpen < .08) {
+          targetCtx.beginPath();
+          targetCtx.arc(0, radius * .18, radius * .13, .16, Math.PI - .16);
+          targetCtx.stroke();
+        } else {
+          const easedOpen = mouthOpen * mouthOpen * (3 - 2 * mouthOpen);
+          targetCtx.beginPath();
+          targetCtx.ellipse(0, radius * (.225 + easedOpen * .018), radius * (.075 + easedOpen * .035), radius * (.018 + easedOpen * .078), 0, 0, Math.PI * 2);
+          targetCtx.fill();
         }
+      } else if (emotion === 'anticipating') {
+        targetCtx.beginPath();
+        targetCtx.arc(0, radius * .15, radius * .13, .18, Math.PI - .18);
+        targetCtx.stroke();
       } else if (emotion === 'joy' || closedHappy) {
         targetCtx.beginPath(); targetCtx.ellipse(0, radius * .25, radius * .19, radius * .145, 0, 0, Math.PI * 2); targetCtx.fill();
         targetCtx.fillStyle = '#f78591';
@@ -2928,6 +2947,7 @@
     if (els.slime.classList.contains('petting') || els.slime.classList.contains('petted')) return 'petting';
     if (els.slime.classList.contains('pleased')) return 'pleased';
     if (els.slime.classList.contains('chewing')) return 'chewing';
+    if (els.slime.classList.contains('meal-secret') && (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food'))) return 'anticipating';
     if (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food')) return 'hungry';
     if (els.slime.classList.contains('booped')) return 'surprised';
     return 'focused';

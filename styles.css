@@ -157,7 +157,7 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .menu-slime-mouth-target{position:absolute;z-index:5;left:50%;top:61%;width:20px;height:22px;transform:translate(-50%,-50%);pointer-events:none}
 @keyframes slimeWait{0%,100%{transform:translateY(0) scale(1)}42%{transform:translateY(-3px) scaleX(.985) scaleY(1.018)}50%{transform:translateY(0) scaleX(1.018) scaleY(.985)}58%{transform:translateY(-1px) scale(1)}}
 .slime.eat{animation:slimeCatch var(--catch-time,.3s) cubic-bezier(.3,.7,.25,1)}
-.slime.chewing{animation:slimeChew var(--chew-time,.24s) ease-in-out var(--chew-count,2)}
+.slime.chewing{animation:slimeChew var(--chew-time,.3s) ease-in-out var(--chew-count,2)}
 .slime.pleased{animation:slimeHappy var(--happy-time,.42s) cubic-bezier(.2,.78,.24,1)}
 @keyframes slimeCatch{0%,100%{transform:scale(1)}42%{transform:translateY(-2px) scaleX(.96) scaleY(1.04)}74%{transform:translateY(1px) scaleX(1.025) scaleY(.98)}}
 @keyframes slimeChew{0%,100%{transform:scale(1)}50%{transform:scaleX(1.022) scaleY(.982)}}
@@ -177,16 +177,16 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 @keyframes slimeEpicHappy{0%,100%{transform:scale(1)}18%{transform:translateY(2px) scale(1.045,.965)}48%{transform:translateY(-13px) scale(.965,1.045)}76%{transform:translateY(1px) scale(1.025,.985)}}
 @keyframes slimeLegendHappy{0%,100%{transform:scale(1)}36%{transform:translateY(-3px) scale(.985,1.025)}68%{transform:translateY(1px) scale(1.025,.985)}}
 @keyframes slimePrismHappy{0%,100%{transform:scale(1)}35%{transform:translateY(-4px) scale(.985,1.025)}72%{transform:translateY(1px) scale(1.025,.985)}}
-@keyframes slimeSecretHappy{0%,100%{transform:scale(1)}24%{transform:translateY(-7px) scale(.96,1.06)}55%{transform:translateY(1px) scale(1.04,.975)}78%{transform:translateY(-2px) scale(.99,1.015)}}
+@keyframes slimeSecretHappy{0%,100%{transform:scale(1)}22%{transform:translateY(-3px) scale(.975,1.035)}48%{transform:translateY(1px) scale(1.025,.985)}72%{transform:translateY(-1px) scale(.995,1.01)}}
 
 /* Секретная еда — короткая постановка без тяжёлых blur-фильтров. */
 body.secret-feast{overflow-x:hidden}
-body.secret-feast #homeScreen{transform-origin:50% 190px;animation:secretCameraPush 3.34s ease-in-out both}
-body.secret-feast:after{content:"";position:fixed;inset:0;z-index:650;pointer-events:none;background:radial-gradient(ellipse at 50% 35%,transparent 14%,rgba(18,6,31,.18) 40%,rgba(7,2,15,.92) 100%);animation:secretVignette 3.34s ease-in-out both}
-body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index:651;pointer-events:none;background:radial-gradient(circle at 50% 34%,rgba(255,255,255,.94) 0 4%,rgba(198,116,255,.76) 13%,rgba(105,46,203,.42) 31%,transparent 62%);animation:secretReveal .65s cubic-bezier(.12,.72,.2,1) both}
-@keyframes secretCameraPush{0%,14%{transform:scale(1)}64%,68%{transform:scale(1.085)}77%,100%{transform:scale(1)}}
-@keyframes secretVignette{0%,16%{opacity:0}55%{opacity:.64}65%,68%{opacity:1}77%{opacity:.06}100%{opacity:0}}
-@keyframes secretReveal{0%{opacity:0}11%{opacity:1}32%{opacity:.82}100%{opacity:0}}
+body.secret-feast #homeScreen{transform-origin:50% 190px;animation:secretCameraPush 3.9s ease-in-out both}
+body.secret-feast:after{content:"";position:fixed;inset:0;z-index:650;pointer-events:none;background:radial-gradient(ellipse at 50% 35%,transparent 16%,rgba(18,6,31,.14) 42%,rgba(7,2,15,.86) 100%);animation:secretVignette 3.9s ease-in-out both}
+body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index:651;pointer-events:none;background:radial-gradient(circle at 50% 34%,rgba(231,183,255,.68) 0 7%,rgba(170,86,240,.4) 18%,rgba(93,42,169,.18) 34%,transparent 58%);animation:secretReveal .72s ease-out both}
+@keyframes secretCameraPush{0%,12%{transform:scale(1)}62%{transform:scale(1.04)}66%,69%{transform:scale(1.06)}84%{transform:scale(1.005)}100%{transform:scale(1)}}
+@keyframes secretVignette{0%,15%{opacity:0}57%{opacity:.58}66%,69%{opacity:.9}84%{opacity:.06}100%{opacity:0}}
+@keyframes secretReveal{0%{opacity:0}18%{opacity:.9}48%{opacity:.45}100%{opacity:0}}
 
 .stat-rail{display:grid;gap:8px;position:relative;z-index:8}
 .stat-rail .stat-pill{min-width:0;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:7px 4px;border:2px solid var(--line);border-radius:16px;text-align:center;background:#fff;transition:.14s ease}
