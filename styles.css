@@ -29,7 +29,7 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .slime{width:142px;height:112px;max-width:100%;justify-self:center;align-self:end;margin-bottom:37px;position:relative;transition:width .22s ease,height .22s ease,transform .14s ease;z-index:3;animation:slimeIdle 2.4s ease-in-out infinite;touch-action:none;user-select:none;transform-origin:50% 100%}
 @keyframes slimeIdle{0%,100%{transform:scaleX(1) scaleY(1) translateY(0)}45%{transform:scaleX(1.025) scaleY(.985) translateY(2px)}55%{transform:scaleX(.985) scaleY(1.02) translateY(-1px)}}
 .slime.drop-ready,.slime.expect-food{transform:scale(1.07) translateY(-2px)}
-.rarity-bursts{position:absolute;left:50%;top:0;z-index:12;pointer-events:none}.rarity-burst{position:absolute;left:0;bottom:8px;width:max-content;max-width:180px;padding:5px 9px;border:3px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-size:9px;font-weight:1000;letter-spacing:.45px;white-space:nowrap}.rarity-burst.common{animation:titleCommon 1.05s ease-out forwards}.rarity-burst.rare{background:#dff4ff;color:#246d9e;animation:titleRare 1.2s ease-out forwards}.rarity-burst.epic{background:#eee0ff;color:#6740b4;animation:titleEpic 1.35s cubic-bezier(.18,.82,.2,1.15) forwards}.rarity-burst.legendary{background:#ffe36a;color:#624000;animation:titleLegend 1.55s cubic-bezier(.18,.84,.24,1.1) forwards}.rarity-burst.prismatic{background:linear-gradient(90deg,#f4b8ff,#aeeeff,#baffaa,#ffe36a,#ffb5ce);color:#482170;animation:titlePrism 1.65s cubic-bezier(.18,.84,.2,1.08) forwards}.rarity-burst.secret{background:#211333;color:#fff;border-color:#73f0ff;animation:titleSecret 1.7s cubic-bezier(.16,.82,.2,1) forwards}
+.rarity-bursts{position:absolute;left:50%;top:0;z-index:12;pointer-events:none}.rarity-burst{position:absolute;left:0;bottom:8px;width:max-content;max-width:180px;padding:5px 9px;border:3px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-size:9px;font-weight:1000;letter-spacing:.45px;white-space:nowrap}.rarity-burst.common{animation:titleCommon 1.05s ease-out forwards}.rarity-burst.rare{background:#dff4ff;color:#246d9e;animation:titleRare 1.2s ease-out forwards}.rarity-burst.epic{background:#eee0ff;color:#6740b4;animation:titleEpic 1.35s cubic-bezier(.18,.82,.2,1.15) forwards}.rarity-burst.legendary{background:#ffe36a;color:#624000;animation:titleLegend 1.55s cubic-bezier(.18,.84,.24,1.1) forwards}.rarity-burst.prismatic{background:linear-gradient(90deg,#f4b8ff,#aeeeff,#baffaa,#ffe36a,#ffb5ce);color:#482170;animation:titlePrism 1.65s cubic-bezier(.18,.84,.2,1.08) forwards}.rarity-burst.secret{background:#211333;color:#fff;border-color:#73f0ff;animation:titleSecret 1.15s cubic-bezier(.16,.82,.2,1) forwards}
 @keyframes titleCommon{0%{opacity:0;transform:translate(-50%,12px) scale(.7)}20%{opacity:1;transform:translate(-50%,-3px) scale(1.05)}100%{opacity:0;transform:translate(-50%,-44px)}}@keyframes titleRare{0%{opacity:0;transform:translate(-50%,8px) rotate(-8deg)}22%{opacity:1;transform:translate(-50%,-7px) rotate(5deg)}45%{transform:translate(-50%,-13px) rotate(-3deg)}100%{opacity:0;transform:translate(-50%,-49px)}}@keyframes titleEpic{0%{opacity:0;transform:translate(-50%,6px) scale(.2) rotate(-16deg)}28%{opacity:1;transform:translate(-50%,-12px) scale(1.18) rotate(5deg)}100%{opacity:0;transform:translate(-50%,-57px) scale(.95)}}@keyframes titleLegend{0%{opacity:0;transform:translate(-50%,8px) scale(.5)}18%{opacity:1;transform:translate(-50%,-14px) scale(1.25)}35%{transform:translate(-50%,-9px) scale(.98)}100%{opacity:0;transform:translate(-50%,-64px) scale(1.08)}}@keyframes titlePrism{0%{opacity:0;transform:translate(-50%,5px) rotate(-12deg)}25%{opacity:1;transform:translate(-50%,-14px) rotate(9deg) scale(1.15)}48%{transform:translate(-50%,-21px) rotate(-5deg)}100%{opacity:0;transform:translate(-50%,-70px) rotate(4deg)}}@keyframes titleSecret{0%{opacity:0;transform:translate(-55%,0)}20%{opacity:1;transform:translate(-45%,-13px)}40%{transform:translate(-53%,-20px)}100%{opacity:0;transform:translate(-50%,-72px)}}
 .food-inside{display:none}.swallow-fruit{position:fixed;z-index:700;transform:translate(-50%,-50%) scale(1);font-size:34px;pointer-events:none;transition:left var(--swallow-time,.34s) cubic-bezier(.22,.72,.25,1),top var(--swallow-time,.34s) cubic-bezier(.22,.72,.25,1),transform var(--swallow-time,.34s) ease,opacity var(--swallow-time,.34s) ease}.swallow-fruit.swallowed{transform:translate(-50%,-50%) scale(.22) rotate(18deg);opacity:.15}.drop-label{position:absolute;left:50%;bottom:-28px;transform:translateX(-50%);font-size:8px;font-weight:1000;letter-spacing:.65px;color:#fff;white-space:nowrap}
 .buff-column,.stat-column{position:relative;z-index:4}.buff-column{display:flex;flex-direction:column;gap:4px;align-self:center}.buff-chip{padding:5px 3px;border:2px solid var(--line);border-radius:9px;background:#fffaf0;font-size:8px;font-weight:900;text-align:center;line-height:1.1}.stat-column{display:flex;flex-direction:column;gap:4px}.stat-pill{padding:5px 6px;border:2px solid var(--line);border-radius:10px;background:#fffaf0}.stat-pill span{display:block;color:var(--muted);font-size:8px;font-weight:800}.stat-pill b{display:block;font-size:12px;margin-top:1px}
@@ -157,10 +157,10 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .menu-slime-mouth-target{position:absolute;z-index:5;left:50%;top:61%;width:20px;height:22px;transform:translate(-50%,-50%);pointer-events:none}
 @keyframes slimeWait{0%,100%{transform:translateY(0) scale(1)}42%{transform:translateY(-3px) scaleX(.985) scaleY(1.018)}50%{transform:translateY(0) scaleX(1.018) scaleY(.985)}58%{transform:translateY(-1px) scale(1)}}
 .slime.eat{animation:slimeCatch var(--catch-time,.3s) cubic-bezier(.3,.7,.25,1)}
-.slime.chewing{animation:slimeChew var(--chew-time,.2s) cubic-bezier(.45,.05,.55,.95) var(--chew-count,3)}
-.slime.pleased{animation:slimeHappy var(--happy-time,.58s) ease}
-@keyframes slimeCatch{0%{transform:scale(1)}38%{transform:translateY(-5px) scaleX(.88) scaleY(1.1)}72%{transform:translateY(1px) scaleX(1.075) scaleY(.93)}100%{transform:scale(1)}}
-@keyframes slimeChew{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(2px) scaleX(1.045) scaleY(.965)}68%{transform:translateY(-1px) scaleX(.985) scaleY(1.025)}}
+.slime.chewing{animation:slimeChew var(--chew-time,.24s) ease-in-out var(--chew-count,2)}
+.slime.pleased{animation:slimeHappy var(--happy-time,.42s) cubic-bezier(.2,.78,.24,1)}
+@keyframes slimeCatch{0%,100%{transform:scale(1)}42%{transform:translateY(-2px) scaleX(.96) scaleY(1.04)}74%{transform:translateY(1px) scaleX(1.025) scaleY(.98)}}
+@keyframes slimeChew{0%,100%{transform:scale(1)}50%{transform:scaleX(1.022) scaleY(.982)}}
 @keyframes slimeHappy{0%,100%{transform:scale(1)}38%{transform:translateY(-7px) scaleX(.94) scaleY(1.06)}68%{transform:translateY(2px) scaleX(1.04) scaleY(.97)}}
 
 /* Тактильные реакции героя в меню. */
@@ -174,19 +174,19 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 /* По нарастающей: от короткой реакции до редких праздничных вспышек. */
 .slime.meal-rare.pleased{animation-name:slimeRareHappy}.slime.meal-epic.pleased{animation-name:slimeEpicHappy}.slime.meal-legendary.pleased{animation-name:slimeLegendHappy}.slime.meal-prismatic.pleased{animation-name:slimePrismHappy}.slime.meal-secret.pleased{animation-name:slimeSecretHappy}
 @keyframes slimeRareHappy{0%,100%{transform:scale(1)}40%{transform:translateY(-8px) scale(.96,1.06)}70%{transform:scale(1.04,.97)}}
-@keyframes slimeEpicHappy{0%,100%{transform:scale(1) rotate(0)}28%{transform:translateY(-9px) scale(.93,1.08) rotate(-3deg)}55%{transform:translateY(-4px) rotate(3deg)}78%{transform:scale(1.05,.96)}}
-@keyframes slimeLegendHappy{0%,100%{transform:scale(1) rotate(0)}22%{transform:translateY(3px) scale(1.09,.91)}44%{transform:translateY(-15px) scale(.9,1.12) rotate(-5deg)}68%{transform:translateY(-5px) rotate(4deg)}84%{transform:translateY(1px) scale(1.04,.97)}}
-@keyframes slimePrismHappy{0%,100%{transform:scale(1) rotate(0)}20%{transform:translateY(2px) scale(1.08,.93)}42%{transform:translateY(-16px) scale(.92,1.1) rotate(-6deg)}64%{transform:translateY(-8px) rotate(6deg)}82%{transform:translateY(-2px) rotate(-3deg)}}
-@keyframes slimeSecretHappy{0%,100%{transform:scale(1)}8%{transform:translateY(3px) scale(1.13,.84)}20%{transform:translateY(-10px) scale(.9,1.14)}42%{transform:translateY(-5px) scale(1.05,.96)}70%{transform:translateY(-2px) scale(.98,1.03)}}
+@keyframes slimeEpicHappy{0%,100%{transform:scale(1)}18%{transform:translateY(2px) scale(1.045,.965)}48%{transform:translateY(-13px) scale(.965,1.045)}76%{transform:translateY(1px) scale(1.025,.985)}}
+@keyframes slimeLegendHappy{0%,100%{transform:scale(1)}36%{transform:translateY(-3px) scale(.985,1.025)}68%{transform:translateY(1px) scale(1.025,.985)}}
+@keyframes slimePrismHappy{0%,100%{transform:scale(1)}35%{transform:translateY(-4px) scale(.985,1.025)}72%{transform:translateY(1px) scale(1.025,.985)}}
+@keyframes slimeSecretHappy{0%,100%{transform:scale(1)}24%{transform:translateY(-7px) scale(.96,1.06)}55%{transform:translateY(1px) scale(1.04,.975)}78%{transform:translateY(-2px) scale(.99,1.015)}}
 
 /* Секретная еда — короткая постановка без тяжёлых blur-фильтров. */
 body.secret-feast{overflow-x:hidden}
-body.secret-feast #homeScreen{transform-origin:50% 190px;animation:secretCameraPush 4.12s cubic-bezier(.22,.68,.22,1) both}
-body.secret-feast:after{content:"";position:fixed;inset:0;z-index:650;pointer-events:none;background:radial-gradient(ellipse at 50% 35%,transparent 14%,rgba(18,6,31,.18) 40%,rgba(7,2,15,.92) 100%);animation:secretVignette 4.12s ease-in-out both}
-body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index:651;pointer-events:none;background:radial-gradient(circle at 50% 34%,rgba(255,255,255,.96) 0 5%,rgba(103,244,255,.82) 12%,rgba(190,79,255,.48) 30%,transparent 62%);animation:secretReveal .72s cubic-bezier(.12,.72,.2,1) both}
-@keyframes secretCameraPush{0%,16%{transform:scale(1)}55%{transform:scale(1.075)}59%,62%{transform:scale(1.09)}69%,100%{transform:scale(1)}}
-@keyframes secretVignette{0%,14%{opacity:0}48%{opacity:.62}59%,62%{opacity:1}69%{opacity:.08}100%{opacity:0}}
-@keyframes secretReveal{0%{opacity:0}12%{opacity:1}34%{opacity:.85}100%{opacity:0}}
+body.secret-feast #homeScreen{transform-origin:50% 190px;animation:secretCameraPush 3.34s ease-in-out both}
+body.secret-feast:after{content:"";position:fixed;inset:0;z-index:650;pointer-events:none;background:radial-gradient(ellipse at 50% 35%,transparent 14%,rgba(18,6,31,.18) 40%,rgba(7,2,15,.92) 100%);animation:secretVignette 3.34s ease-in-out both}
+body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index:651;pointer-events:none;background:radial-gradient(circle at 50% 34%,rgba(255,255,255,.94) 0 4%,rgba(198,116,255,.76) 13%,rgba(105,46,203,.42) 31%,transparent 62%);animation:secretReveal .65s cubic-bezier(.12,.72,.2,1) both}
+@keyframes secretCameraPush{0%,14%{transform:scale(1)}64%,68%{transform:scale(1.085)}77%,100%{transform:scale(1)}}
+@keyframes secretVignette{0%,16%{opacity:0}55%{opacity:.64}65%,68%{opacity:1}77%{opacity:.06}100%{opacity:0}}
+@keyframes secretReveal{0%{opacity:0}11%{opacity:1}32%{opacity:.82}100%{opacity:0}}
 
 .stat-rail{display:grid;gap:8px;position:relative;z-index:8}
 .stat-rail .stat-pill{min-width:0;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:7px 4px;border:2px solid var(--line);border-radius:16px;text-align:center;background:#fff;transition:.14s ease}
@@ -197,6 +197,7 @@ body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index
 
 /* Титулы живут в верхней половине сцены и не обрезаются. */
 .rarity-bursts{top:-3px;z-index:40}.rarity-burst{max-width:230px;padding:7px 11px;border-width:2px;border-radius:12px;font-size:10px;letter-spacing:.55px;box-shadow:0 3px 0 rgba(38,51,74,.18)}
+.rarity-burst.secret{padding:9px 15px;border-color:#9df6ff;background:linear-gradient(135deg,#2a1745,#60308c);color:#fff;font-size:14px;letter-spacing:1px;box-shadow:0 4px 0 rgba(25,8,45,.5)}
 .rarity-burst.common{animation:titleCommonV11 1.35s ease-out forwards}.rarity-burst.rare{animation:titleRareV11 1.5s ease-out forwards}.rarity-burst.epic{animation:titleEpicV11 1.7s cubic-bezier(.18,.82,.2,1.1) forwards}.rarity-burst.legendary{animation:titleLegendV11 1.75s ease-out forwards}
 .rarity-burst.prismatic{border-color:#fff;background:linear-gradient(90deg,#ff86ca,#a98cff,#69c8ff,#69e6a2,#ffe36e,#ff9d70,#ff86ca);background-size:300% 100%;color:#392153;text-shadow:0 1px rgba(255,255,255,.7);box-shadow:0 0 0 3px rgba(179,119,244,.25),0 4px 0 rgba(83,53,121,.25);animation:titlePrismV11 2.15s cubic-bezier(.18,.82,.2,1.08) forwards,prismTitleFlow .7s linear infinite}
 .rarity-burst.prismatic:before,.rarity-burst.prismatic:after{content:"✦";position:absolute;top:50%;font-size:16px;color:#fff;text-shadow:0 0 5px #8f5bd5}.rarity-burst.prismatic:before{left:-17px;animation:prismStar .55s ease-in-out infinite alternate}.rarity-burst.prismatic:after{right:-17px;animation:prismStar .55s .2s ease-in-out infinite alternate}
@@ -451,6 +452,28 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 @keyframes prismSparkV14{to{opacity:.55;transform:translateY(-2px) rotate(15deg)}}
 @keyframes secretVoidV14{50%{opacity:.65;box-shadow:inset 0 0 0 3px rgba(73,216,255,.08)}}
 @keyframes secretGlitchV14{50%{transform:translateX(3px);opacity:.5}}
+
+/* Редкости V16: те же мотивы, что и в реакции слайма. */
+.food-card.rare:before{inset:22px 4px 4px;border:2px solid rgba(45,158,215,.42);background:radial-gradient(circle at 50% 35%,rgba(105,211,255,.28),transparent 64%);animation:rareGlowV16 1.8s ease-in-out infinite}
+.food-card.rare:after{content:"✦";left:6px;right:auto;top:29px;color:#fff;text-shadow:72px 42px #67cfff;animation:rareSparkV16 1.5s ease-in-out infinite}
+.food-card.epic:before{inset:22px 4px 4px;border:2px solid rgba(132,72,211,.62);background:linear-gradient(180deg,rgba(215,169,255,.16),rgba(119,63,188,.3));animation:epicLiftV16 1.6s ease-in-out infinite}
+.food-card.epic:after{content:"◆";right:6px;top:34px;color:#dba6ff;text-shadow:-72px 34px #8b55d4,-9px 64px #c98cff;animation:epicGemV16 1.6s ease-in-out infinite}
+.food-card.legendary:before{inset:21px 3px 3px;border:2px solid #e0a81d;border-radius:12px;background:repeating-conic-gradient(from -8deg at 50% 43%,rgba(255,210,52,.34) 0 8deg,rgba(255,248,189,.08) 8deg 24deg);animation:legendSunV16 1.8s ease-in-out infinite}
+.food-card.legendary:after{content:"✦";z-index:4;inset:auto 7px auto auto;top:28px;background:none;color:#fff7a7;font-size:14px;text-shadow:-72px 48px #ffc928;animation:legendSparkV16 1.3s ease-in-out infinite}
+.food-card.prismatic:before{inset:2px;border:2px solid rgba(130,90,220,.8);background:linear-gradient(120deg,rgba(255,118,180,.2),rgba(255,222,83,.2),rgba(88,220,151,.2),rgba(87,195,255,.24),rgba(166,113,255,.22));background-size:260% 100%;box-shadow:none;animation:prismFlowV16 2.4s ease-in-out infinite}
+.food-card.prismatic:after{content:"✦";right:5px;top:28px;color:#fff;text-shadow:-76px 15px #58d9ff,-8px 66px #ff76b4;animation:prismSparkV16 1.4s ease-in-out infinite}
+.food-card.secret:before{left:4px;right:4px;top:25px;bottom:4px;inset:25px 4px 4px;border:2px solid #8e4cd0;background:radial-gradient(ellipse at 50% 75%,rgba(199,95,255,.5),transparent 46%),linear-gradient(180deg,rgba(45,20,72,.18),rgba(35,13,58,.6));clip-path:polygon(0 100%,4% 42%,18% 55%,25% 16%,40% 42%,51% 0,63% 43%,80% 18%,88% 55%,100% 32%,100% 100%);animation:secretFlameV16 1.55s ease-in-out infinite}
+.food-card.secret:after{content:"✦";right:6px;top:29px;color:#e9b4ff;text-shadow:-75px 9px #75efff,-8px 66px #c15cff;animation:secretSparkV16 1.45s ease-in-out infinite}
+@keyframes rareGlowV16{50%{border-color:rgba(45,158,215,.78);background-color:rgba(105,211,255,.08)}}
+@keyframes rareSparkV16{0%,100%{opacity:.35;transform:scale(.82)}50%{opacity:1;transform:translateY(-2px) scale(1.08)}}
+@keyframes epicLiftV16{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px);border-color:#ac78ed}}
+@keyframes epicGemV16{0%,100%{opacity:.4;transform:translateY(2px) rotate(45deg)}50%{opacity:1;transform:translateY(-3px) rotate(45deg)}}
+@keyframes legendSunV16{0%,100%{opacity:.72}50%{opacity:1}}
+@keyframes legendSparkV16{0%,100%{opacity:.45;transform:scale(.85)}50%{opacity:1;transform:scale(1.12)}}
+@keyframes prismFlowV16{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+@keyframes prismSparkV16{0%,100%{opacity:.45;transform:translateY(1px) scale(.85)}50%{opacity:1;transform:translateY(-3px) scale(1.1)}}
+@keyframes secretFlameV16{0%,100%{transform:scaleY(.96);opacity:.76}50%{transform:translateY(-2px) scaleY(1.04);opacity:1}}
+@keyframes secretSparkV16{0%,100%{opacity:.4;transform:scale(.82)}50%{opacity:1;transform:translateY(-3px) scale(1.08)}}
 
 .food-info{
   --popover-bg:#fff;--popover-border:#3a4660;position:fixed!important;z-index:850;width:min(312px,calc(100vw - 16px));

@@ -277,6 +277,8 @@
   let lastFocusedElement = null;
   let menuEmotionTimer = null;
   let menuGazeTimer = null;
+  let foodFlyerToken = 0;
+  let mealSoundTimers = [];
   let slimeInteractionTimer = null;
   let slimePointer = null;
   let menuSlimeAnimationId = 0;
@@ -418,13 +420,13 @@
     if (!els.rarityBursts) return;
     const titles = {
       common: 'НЯМ!', rare: 'ОГО, РЕДКОЕ!', epic: 'ЭПИЧНО!', legendary: 'ЛЕГЕНДАРНО!',
-      prismatic: 'РАДУЖНЫЙ ВКУС!', secret: 'СЕКРЕТНЫЙ ВКУС!'
+      prismatic: 'РАДУЖНЫЙ ВКУС!', secret: 'БОЖЕСТВЕННО!'
     };
     const burst = document.createElement('span');
     burst.className = `rarity-burst ${food.rarity}`;
     burst.textContent = titles[food.rarity] || 'ВКУСНО!';
     els.rarityBursts.replaceChildren(burst);
-    setTimeout(() => burst.remove(), food.rarity === 'secret' ? 2400 : food.rarity === 'prismatic' ? 2200 : 1750);
+    setTimeout(() => burst.remove(), food.rarity === 'secret' ? 1250 : food.rarity === 'prismatic' ? 1900 : 1500);
   }
 
   function fallbackSound(kind = 'tap') {
@@ -478,16 +480,20 @@
   function sound(kind = 'tap') {
     if (!save.sound) return;
     if (kind === 'eat' || kind === 'eatSlow') {
-      const biteDelay = kind === 'eatSlow' ? 720 : 220;
-      const swallowDelay = kind === 'eatSlow' ? 2320 : 480;
-      setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatBite'); }, biteDelay);
-      setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatSwallow'); }, swallowDelay);
+      mealSoundTimers.forEach(clearTimeout);
+      mealSoundTimers = [];
+      const biteDelay = kind === 'eatSlow' ? 720 : 190;
+      const swallowDelay = kind === 'eatSlow' ? 2160 : 520;
+      mealSoundTimers.push(setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatBite'); }, biteDelay));
+      mealSoundTimers.push(setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatSwallow'); }, swallowDelay));
       return;
     }
     playSoundAsset(kind);
   }
 
   function stopAllSounds() {
+    mealSoundTimers.forEach(clearTimeout);
+    mealSoundTimers = [];
     soundPools.forEach(pool => pool.forEach(audio => {
       audio.pause();
       audio.currentTime = 0;
@@ -526,6 +532,7 @@
     const from = source.getBoundingClientRect();
     const mouth = els.menuSlimeMouth?.getBoundingClientRect();
     if (!mouth) return;
+    const flyerToken = ++foodFlyerToken;
     setMenuGazePoint(from.left + from.width / 2, from.top + from.height / 2);
     els.slime.classList.add('tracking-food', 'expect-food');
     const flyer = document.createElement('span');
@@ -544,8 +551,10 @@
     });
     setTimeout(() => {
       flyer.remove();
-      els.slime.classList.remove('tracking-food', 'expect-food');
-      resetMenuGaze(180);
+      if (flyerToken === foodFlyerToken) {
+        els.slime.classList.remove('tracking-food', 'expect-food');
+        resetMenuGaze(180);
+      }
     }, swallowMs + 60);
   }
 
@@ -1145,6 +1154,10 @@
   }
 
   function chooseFood(offerIndex, source = null) {
+    if (document.body.classList.contains('secret-feast')) {
+      showToast('Секретный вкус нельзя торопить');
+      return;
+    }
     if (session.foods.length >= save.stomachLevel) return;
     const food = session.offer[offerIndex];
     if (!food) return;
@@ -1155,13 +1168,13 @@
     session.foods.push(food);
     session.offer[offerIndex] = null;
     const mealReaction = {
-      common: { catchMs: 250, chewMs: 340, chewTime: '.15s', chews: 2, happyMs: 430 },
-      rare: { catchMs: 290, chewMs: 460, chewTime: '.16s', chews: 3, happyMs: 560 },
-      epic: { catchMs: 350, chewMs: 650, chewTime: '.18s', chews: 4, happyMs: 820 },
-      legendary: { catchMs: 430, chewMs: 820, chewTime: '.19s', chews: 4, happyMs: 1100 },
-      prismatic: { catchMs: 500, chewMs: 940, chewTime: '.2s', chews: 5, happyMs: 1320 },
-      secret: { catchMs: 820, chewMs: 1600, chewTime: '.25s', chews: 6, happyMs: 1700 }
-    }[food.rarity] || { catchMs: 250, chewMs: 340, chewTime: '.15s', chews: 2, happyMs: 430 };
+      common: { catchMs: 160, chewMs: 480, chewTime: '.24s', chews: 2, happyMs: 260 },
+      rare: { catchMs: 170, chewMs: 720, chewTime: '.24s', chews: 3, happyMs: 320 },
+      epic: { catchMs: 180, chewMs: 720, chewTime: '.24s', chews: 3, happyMs: 480 },
+      legendary: { catchMs: 190, chewMs: 960, chewTime: '.24s', chews: 4, happyMs: 520 },
+      prismatic: { catchMs: 200, chewMs: 1200, chewTime: '.24s', chews: 5, happyMs: 620 },
+      secret: { catchMs: 800, chewMs: 1440, chewTime: '.24s', chews: 6, happyMs: 1100 }
+    }[food.rarity] || { catchMs: 160, chewMs: 480, chewTime: '.24s', chews: 2, happyMs: 260 };
     document.body.classList.remove('secret-feast', 'secret-reveal');
     if (food.rarity === 'secret') document.body.classList.add('secret-feast');
     sound(food.rarity === 'secret' ? 'eatSlow' : 'eat');
@@ -1174,7 +1187,7 @@
     els.slime.style.setProperty('--happy-time', `${mealReaction.happyMs}ms`);
     void els.slime.offsetWidth;
     els.slime.classList.add('eat');
-    showRarityBurst(food);
+    if (food.rarity !== 'secret') showRarityBurst(food);
     menuEmotionTimer = setTimeout(() => {
       els.slime.classList.remove('eat', 'expect-food', 'tracking-food');
       els.slime.classList.add('chewing');
@@ -1182,7 +1195,10 @@
       menuEmotionTimer = setTimeout(() => {
         els.slime.classList.remove('chewing');
         els.slime.classList.add('pleased');
-        if (food.rarity === 'secret') document.body.classList.add('secret-reveal');
+        if (food.rarity === 'secret') {
+          document.body.classList.add('secret-reveal');
+          showRarityBurst(food);
+        }
         sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
         menuEmotionTimer = setTimeout(() => {
           els.slime.classList.remove('pleased', ...MEAL_REACTION_CLASSES);
@@ -1198,6 +1214,10 @@
 
 
   async function rerollOffer() {
+    if (document.body.classList.contains('secret-feast')) {
+      showToast('Секретный вкус нельзя торопить');
+      return;
+    }
     if (session.foods.length >= save.stomachLevel || session.rerollPending || adInFlight) return;
     session.rerollPending = true;
     hideFoodInfo();
@@ -2703,56 +2723,71 @@
   function drawSlimeAvatar(targetCtx, {
     x, y, radius, emotion = 'focused', colors = SKINS[0].colors,
     scaleX = 1, scaleY = 1, rotation = 0, alpha = 1,
-    gazeX = 0, gazeY = 0, blink = false, aura = '', petPoint = null,
+    gazeX = 0, gazeY = 0, blink = false, aura = '', petPoint = null, tipSway = 0,
     timestamp = performance.now()
   }) {
     if (aura) {
       targetCtx.save();
       targetCtx.translate(x, y);
       if (aura === 'epic') {
-        targetCtx.globalAlpha = .34 + Math.sin(timestamp / 170) * .08;
-        targetCtx.strokeStyle = '#9b72ff';
-        targetCtx.lineWidth = 6;
-        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 9 + Math.sin(timestamp / 190) * 3, 0, Math.PI * 2); targetCtx.stroke();
+        targetCtx.globalAlpha = .72;
+        for (let index = 0; index < 7; index += 1) {
+          const side = index % 2 ? 1 : -1;
+          const phase = (timestamp / 780 + index * .19) % 1;
+          const px = side * radius * (.55 + (index % 3) * .16);
+          const py = radius * .45 - phase * radius * 1.55;
+          const size = 2.5 + (1 - phase) * 2.5;
+          targetCtx.fillStyle = index % 3 === 0 ? '#f0c4ff' : '#9f6cff';
+          targetCtx.save(); targetCtx.translate(px, py); targetCtx.rotate(Math.PI / 4 + phase); targetCtx.fillRect(-size, -size, size * 2, size * 2); targetCtx.restore();
+        }
       } else if (aura === 'legendary') {
-        const pulse = 1 + Math.sin(timestamp / 180) * .07;
-        targetCtx.globalAlpha = .58;
+        const pulse = 1 + Math.sin(timestamp / 240) * .045;
+        targetCtx.globalAlpha = .76;
         targetCtx.strokeStyle = '#ffc83d';
-        targetCtx.fillStyle = '#fff4a8';
-        targetCtx.lineWidth = 4;
-        for (let index = 0; index < 10; index += 1) {
-          const angle = index / 10 * Math.PI * 2 + timestamp / 1450;
-          const inner = (radius + 7) * pulse;
-          const outer = (radius + 17) * pulse;
+        targetCtx.lineCap = 'round';
+        for (let index = 0; index < 12; index += 1) {
+          const angle = index / 12 * Math.PI * 2 + timestamp / 2600;
+          const inner = (radius + 4) * pulse;
+          const outer = (radius + (index % 2 ? 10 : 16)) * pulse;
+          targetCtx.lineWidth = index % 2 ? 3 : 5;
           targetCtx.beginPath(); targetCtx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner); targetCtx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer); targetCtx.stroke();
-          if (index % 2 === 0) {
-            targetCtx.beginPath(); targetCtx.arc(Math.cos(angle) * (radius + 20), Math.sin(angle) * (radius + 20), 3.5, 0, Math.PI * 2); targetCtx.fill();
-          }
         }
       } else if (aura === 'prismatic') {
         const rainbow = ['#ff6fae', '#ffb84d', '#ffe45c', '#59dc86', '#55c8ff', '#9a7cff'];
-        targetCtx.globalAlpha = .78;
-        targetCtx.lineWidth = 7;
+        targetCtx.globalAlpha = .86;
         rainbow.forEach((color, index) => {
-          const start = timestamp / 760 + index / rainbow.length * Math.PI * 2;
-          targetCtx.strokeStyle = color;
-          targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 11 + Math.sin(timestamp / 210 + index) * 2, start, start + Math.PI / 2.25); targetCtx.stroke();
+          const phase = timestamp / 520 + index * 1.17;
+          const px = Math.sin(phase) * (radius + 14);
+          const py = Math.cos(phase * .83) * (radius * .72);
+          const size = 3 + (index % 2) * 1.5;
+          targetCtx.fillStyle = color;
+          targetCtx.beginPath(); targetCtx.arc(px, py, size, 0, Math.PI * 2); targetCtx.fill();
+          targetCtx.fillStyle = '#fff';
+          targetCtx.beginPath(); targetCtx.arc(px - 1, py - 1, Math.max(1, size * .3), 0, Math.PI * 2); targetCtx.fill();
         });
       } else if (aura === 'secret') {
-        targetCtx.globalAlpha = .78;
-        targetCtx.strokeStyle = '#5ce9ff';
-        targetCtx.lineWidth = 4;
-        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 10 + Math.sin(timestamp / 190) * 4, 0, Math.PI * 2); targetCtx.stroke();
-        targetCtx.strokeStyle = '#c46bff';
-        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 17 - Math.sin(timestamp / 190) * 2, 0, Math.PI * 2); targetCtx.stroke();
-        for (let index = 0; index < 6; index += 1) {
-          const angle = index / 6 * Math.PI * 2 - timestamp / 920;
-          const orbit = radius + 19;
-          const px = Math.cos(angle) * orbit;
-          const py = Math.sin(angle) * orbit;
-          targetCtx.fillStyle = index % 2 ? '#c46bff' : '#5ce9ff';
-          targetCtx.save(); targetCtx.translate(px, py); targetCtx.rotate(angle + timestamp / 1100); targetCtx.fillRect(-4, -4, 8, 8); targetCtx.restore();
-        }
+        const flamePulse = 1 + Math.sin(timestamp / 115) * .035;
+        targetCtx.scale(flamePulse, flamePulse);
+        const flame = targetCtx.createLinearGradient(0, radius * .7, 0, -radius * 1.25);
+        flame.addColorStop(0, 'rgba(92,31,168,.72)');
+        flame.addColorStop(.55, 'rgba(176,62,255,.88)');
+        flame.addColorStop(1, 'rgba(104,238,255,.74)');
+        targetCtx.fillStyle = flame;
+        targetCtx.beginPath();
+        targetCtx.moveTo(-radius * .78, radius * .62);
+        targetCtx.bezierCurveTo(-radius * .86, radius * .05, -radius * .55, -radius * .25, -radius * .42, -radius * .58);
+        targetCtx.bezierCurveTo(-radius * .34, -radius * .3, -radius * .13, -radius * .72, -radius * .05, -radius * 1.22);
+        targetCtx.bezierCurveTo(radius * .12, -radius * .88, radius * .14, -radius * .55, radius * .25, -radius * .38);
+        targetCtx.bezierCurveTo(radius * .39, -radius * .78, radius * .68, -radius * .5, radius * .57, -radius * .12);
+        targetCtx.bezierCurveTo(radius * .87, radius * .12, radius * .78, radius * .48, radius * .7, radius * .62);
+        targetCtx.closePath(); targetCtx.fill();
+        targetCtx.globalAlpha = .72;
+        targetCtx.fillStyle = '#d9a2ff';
+        targetCtx.beginPath();
+        targetCtx.moveTo(-radius * .34, radius * .48);
+        targetCtx.bezierCurveTo(-radius * .42, 0, -radius * .12, -radius * .28, 0, -radius * .72);
+        targetCtx.bezierCurveTo(radius * .08, -radius * .36, radius * .4, -.05 * radius, radius * .32, radius * .48);
+        targetCtx.closePath(); targetCtx.fill();
       }
       targetCtx.restore();
     }
@@ -2770,14 +2805,15 @@
     targetCtx.fillStyle = gradient;
     targetCtx.strokeStyle = '#26334a';
     targetCtx.lineWidth = Math.max(2.7, radius * .09);
+    const tipX = tipSway * radius;
     targetCtx.beginPath();
-    targetCtx.moveTo(0, -radius);
-    targetCtx.bezierCurveTo(radius * .15, -radius * .99, radius * .16, -radius * .86, radius * .26, -radius * .79);
+    targetCtx.moveTo(tipX, -radius);
+    targetCtx.bezierCurveTo(tipX + radius * .15, -radius * .99, radius * .16, -radius * .86, radius * .26, -radius * .79);
     targetCtx.bezierCurveTo(radius * .67, -radius * .68, radius * .93, -radius * .31, radius * .91, radius * .16);
     targetCtx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
     targetCtx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
     targetCtx.bezierCurveTo(-radius * .93, -radius * .31, -radius * .67, -radius * .68, -radius * .26, -radius * .79);
-    targetCtx.bezierCurveTo(-radius * .16, -radius * .86, -radius * .15, -radius * .99, 0, -radius);
+    targetCtx.bezierCurveTo(-radius * .16, -radius * .86, tipX - radius * .15, -radius * .99, tipX, -radius);
     targetCtx.closePath();
     targetCtx.fill();
     targetCtx.stroke();
@@ -2802,12 +2838,12 @@
     const eyeX = radius * .245;
     const outline = '#26334a';
     const chewPulse = (Math.sin(timestamp / 82 - Math.PI / 2) + 1) / 2;
-    const chewBlink = emotion === 'chewing' && chewPulse > .72;
+    const chewSquint = emotion === 'chewing';
     const closedHappy = emotion === 'petting' || emotion === 'pleased';
     targetCtx.lineCap = 'round';
     targetCtx.lineJoin = 'round';
 
-    targetCtx.globalAlpha = alpha * (closedHappy ? .68 : .48);
+    targetCtx.globalAlpha = alpha * (closedHappy ? .68 : chewSquint ? .58 + chewPulse * .1 : .48);
     targetCtx.fillStyle = '#f78591';
     targetCtx.beginPath(); targetCtx.ellipse(-radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); targetCtx.fill();
     targetCtx.beginPath(); targetCtx.ellipse(radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); targetCtx.fill();
@@ -2829,7 +2865,7 @@
         targetCtx.lineWidth = Math.max(2.5, radius * .08);
         targetCtx.beginPath(); targetCtx.moveTo(-eyeX - radius * .11, eyeY - radius * .03); targetCtx.lineTo(-eyeX + radius * .11, eyeY + radius * .06); targetCtx.stroke();
         targetCtx.beginPath(); targetCtx.moveTo(eyeX + radius * .11, eyeY - radius * .03); targetCtx.lineTo(eyeX - radius * .11, eyeY + radius * .06); targetCtx.stroke();
-      } else if (blink || closedHappy || chewBlink) {
+      } else if (blink || closedHappy || chewSquint) {
         targetCtx.strokeStyle = outline;
         targetCtx.lineWidth = Math.max(2.5, radius * .075);
         for (const side of [-1, 1]) {
@@ -2910,19 +2946,26 @@
     menuSlimeCtx.clearRect(0, 0, 180, 180);
     const emotion = menuSlimeEmotion();
     const rarity = MEAL_REACTION_CLASSES.find(name => els.slime.classList.contains(name))?.replace('meal-', '') || '';
+    const isChewing = els.slime.classList.contains('chewing');
+    const isPleased = els.slime.classList.contains('pleased');
     const blinkPhase = timestamp % 4700;
     const hue = Math.floor(timestamp / 12) % 360;
-    const menuColors = rarity === 'prismatic'
+    const prismaticActive = rarity === 'prismatic' && (isChewing || isPleased);
+    const menuColors = prismaticActive
       ? [`hsl(${(hue + 48) % 360} 94% 82%)`, `hsl(${hue} 82% 58%)`, `hsl(${(hue + 285) % 360} 72% 42%)`]
-      : rarity === 'secret' && els.slime.classList.contains('pleased')
-        ? ['#bafaff', '#55d7c8', '#6540a5']
-        : SKINS[0].colors;
+      : SKINS[0].colors;
+    let aura = '';
+    if (rarity === 'epic' && isPleased) aura = 'epic';
+    else if (rarity === 'legendary' && isPleased) aura = 'legendary';
+    else if (prismaticActive) aura = 'prismatic';
+    else if (rarity === 'secret' && isPleased) aura = 'secret';
     drawSlimeAvatar(menuSlimeCtx, {
       x: 90, y: 91, radius: 66, emotion,
       colors: menuColors,
       gazeX: menuGaze.x, gazeY: menuGaze.y,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
-      aura: rarityRank(rarity) >= 2 ? rarity : '',
+      aura,
+      tipSway: prismaticActive ? Math.sin(timestamp / 210) * .16 : 0,
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
       timestamp
     });
