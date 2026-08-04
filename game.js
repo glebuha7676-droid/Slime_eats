@@ -1012,7 +1012,7 @@
     els.foodInfoName.textContent = food.name;
     els.foodInfoRarity.textContent = RARITY_LABELS[food.rarity];
     els.foodInfoStats.innerHTML = cardType === 'ability'
-      ? `<strong>${primary.icon} Способность</strong>`
+      ? `<strong>${primary.icon} Эффект</strong>`
       : `<strong>${uiIconMarkup('stat-mass', 'food-stat-icon')} Характеристики</strong>${foodStatChips(food)}`;
     els.foodInfoEffect.textContent = food.effectText ? `✦ ${food.effectText}` : '';
     els.foodInfoEffect.classList.toggle('hidden', !food.effectText);
@@ -1059,15 +1059,15 @@
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
       const cardBody = cardType === 'ability'
-        ? `<span class="food-ability-copy"><b>${uiIconMarkup('special', 'ability-kind-icon')} СПОСОБНОСТЬ</b><em>${food.effectText}</em></span>`
-        : `<span class="food-stat-grid">${foodStatGridMarkup(food)}</span>`;
+        ? `<span class="food-ability-copy"><b>${uiIconMarkup('special', 'ability-kind-icon')} ЭФФЕКТ</b><em>${food.effectText}</em></span>`
+        : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid">${foodStatGridMarkup(food)}</span></span>`;
       button.innerHTML = `
-        <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i>${RARITY_LABELS[food.rarity]}</span><span class="food-kind">${cardType === 'ability' ? 'ЭФФЕКТ' : 'СТАТЫ'}</span></span>
+        <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span>
         <span class="food-model-wrap">${foodArtMarkup(food)}</span>
         <span class="food-name">${food.name}</span>
         ${cardBody}`;
       button.type = 'button';
-      const cardSummary = cardType === 'ability' ? `Способность: ${food.effectText}` : foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
+      const cardSummary = cardType === 'ability' ? `Эффект: ${food.effectText}` : foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
       button.setAttribute('aria-label', `${food.name}. ${cardSummary}. Открыть описание`);
       button.addEventListener('pointerdown', event => beginFoodDrag(event, food, index, button));
       button.addEventListener('pointerenter', () => showFoodPreview(food));
