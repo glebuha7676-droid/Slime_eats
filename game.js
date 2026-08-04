@@ -580,7 +580,7 @@
   const MEAL_REACTION_CLASSES = ['meal-common', 'meal-rare', 'meal-epic', 'meal-legendary', 'meal-prismatic', 'meal-secret'];
 
   function menuSlimeIsBusy() {
-    return ['eat', 'chewing', 'expect-food', 'tracking-food'].some(name => els.slime.classList.contains(name));
+    return ['eat', 'chewing', 'savoring', 'expect-food', 'tracking-food'].some(name => els.slime.classList.contains(name));
   }
 
   function clearMenuSlimeInteraction() {
@@ -803,31 +803,49 @@
     persist();
   }
 
-  function foodPrimaryStat(food) {
-    const options = [
-      { key: 'mass', value: food.mass || 0, score: (food.mass || 0) / 12, icon: uiIconMarkup('stat-mass', 'food-stat-icon'), label: `+${food.mass || 0} массы` },
-      { key: 'power', value: food.power || 0, score: (food.power || 0) / .7, icon: uiIconMarkup('stat-power', 'food-stat-icon'), label: `+${round1(food.power || 0)} силы` },
-      { key: 'defense', value: food.defense || 0, score: (food.defense || 0) / .14, icon: uiIconMarkup('stat-defense', 'food-stat-icon'), label: `+${Math.round((food.defense || 0) * 100)}% защиты` },
-      { key: 'bounce', value: food.elasticity || 0, score: (food.elasticity || 0) / .22, icon: uiIconMarkup('stat-bounce', 'food-stat-icon'), label: `+${Math.round((food.elasticity || 0) * 100)}% отскока` },
-      { key: 'ability', value: food.ability || 0, score: (food.ability || 0) / 16, icon: uiIconMarkup('buff', 'food-stat-icon'), label: `+${food.ability || 0}% заряда` },
-      { key: 'coins', value: food.coinMultiplier || 0, score: (food.coinMultiplier || 0) / .45, icon: uiIconMarkup('coin', 'food-stat-icon'), label: `+${Math.round((food.coinMultiplier || 0) * 100)}% монет` }
+  function foodCardType(food) {
+    return food.effect && food.effectText ? 'ability' : 'stats';
+  }
+
+  function foodStatItems(food) {
+    return [
+      { key: 'mass', value: food.mass || 0, score: (food.mass || 0) / 12, iconName: 'stat-mass', display: `+${food.mass || 0}`, label: `+${food.mass || 0} массы` },
+      { key: 'power', value: food.power || 0, score: (food.power || 0) / .7, iconName: 'stat-power', display: `+${round1(food.power || 0)}`, label: `+${round1(food.power || 0)} силы` },
+      { key: 'defense', value: food.defense || 0, score: (food.defense || 0) / .14, iconName: 'stat-defense', display: `+${Math.round((food.defense || 0) * 100)}%`, label: `+${Math.round((food.defense || 0) * 100)}% защиты` },
+      { key: 'bounce', value: food.elasticity || 0, score: (food.elasticity || 0) / .22, iconName: 'stat-bounce', display: `+${Math.round((food.elasticity || 0) * 100)}%`, label: `+${Math.round((food.elasticity || 0) * 100)}% отскока` },
+      { key: 'ability', value: food.ability || 0, score: (food.ability || 0) / 16, iconName: 'buff', display: `+${food.ability || 0}%`, label: `+${food.ability || 0}% заряда` },
+      { key: 'coins', value: food.coinMultiplier || 0, score: (food.coinMultiplier || 0) / .45, iconName: 'coin', display: `+${Math.round((food.coinMultiplier || 0) * 100)}%`, label: `+${Math.round((food.coinMultiplier || 0) * 100)}% монет` }
     ].filter(item => item.value > 0).sort((a, b) => b.score - a.score);
-    return options[0] || { key: 'magic', icon: uiIconMarkup('special', 'food-stat-icon'), label: 'Особый эффект' };
+  }
+
+  function foodPrimaryStat(food) {
+    if (foodCardType(food) === 'ability') return { key: 'special', icon: uiIconMarkup('special', 'food-stat-icon'), label: 'Особая способность' };
+    const primary = foodStatItems(food)[0];
+    return primary
+      ? { ...primary, icon: uiIconMarkup(primary.iconName, 'food-stat-icon') }
+      : { key: 'mass', icon: uiIconMarkup('stat-mass', 'food-stat-icon'), label: 'Без бонуса' };
   }
 
   function foodStatChips(food, omitKey = '') {
-    const parts = [];
-    if (food.mass && omitKey !== 'mass') parts.push(`<span class="stat-chip mass">${uiIconMarkup('stat-mass', 'chip-stat-icon')}${food.mass}</span>`);
-    if (food.power && omitKey !== 'power') parts.push(`<span class="stat-chip power">${uiIconMarkup('stat-power', 'chip-stat-icon')}${round1(food.power)}</span>`);
-    if (food.defense && omitKey !== 'defense') parts.push(`<span class="stat-chip defense">${uiIconMarkup('stat-defense', 'chip-stat-icon')}${Math.round(food.defense * 100)}%</span>`);
-    if (food.elasticity && omitKey !== 'bounce') parts.push(`<span class="stat-chip bounce">${uiIconMarkup('stat-bounce', 'chip-stat-icon')}${Math.round(food.elasticity * 100)}%</span>`);
-    if (food.ability && omitKey !== 'ability') parts.push(`<span class="stat-chip ability">${uiIconMarkup('buff', 'chip-stat-icon')}${food.ability}%</span>`);
-    if (food.coinMultiplier && omitKey !== 'coins') parts.push(`<span class="stat-chip coins">${uiIconMarkup('coin', 'chip-stat-icon')}${Math.round(food.coinMultiplier * 100)}%</span>`);
-    return parts.join('');
+    return foodStatItems(food)
+      .filter(item => item.key !== omitKey)
+      .map(item => `<span class="stat-chip ${item.key}">${uiIconMarkup(item.iconName, 'chip-stat-icon')}${item.display}</span>`)
+      .join('');
+  }
+
+  function foodStatGridMarkup(food) {
+    const items = foodStatItems(food).slice(0, 4);
+    return Array.from({ length: 4 }, (_, index) => {
+      const item = items[index];
+      return item
+        ? `<span class="food-stat-cell ${item.key}" aria-label="${item.label}">${uiIconMarkup(item.iconName, 'card-stat-icon')}<b>${item.display}</b></span>`
+        : '<span class="food-stat-cell empty" aria-hidden="true"></span>';
+    }).join('');
   }
 
   function countCategories(foods) {
     return foods.reduce((acc, food) => {
+      if (foodCardType(food) !== 'stats') return acc;
       acc[food.category] = (acc[food.category] || 0) + 1;
       return acc;
     }, { mass: 0, power: 0, defense: 0, bounce: 0, magic: 0 });
@@ -851,18 +869,20 @@
     const counts = countCategories(foods);
 
     for (const food of foods) {
-      stats.mass += food.mass || 0;
-      stats.power += food.power || 0;
-      stats.defense += food.defense || 0;
-      stats.elasticity += food.elasticity || 0;
-      stats.ability += food.ability || 0;
-      stats.coinMultiplier += food.coinMultiplier || 0;
+      if (foodCardType(food) === 'stats') {
+        stats.mass += food.mass || 0;
+        stats.power += food.power || 0;
+        stats.defense += food.defense || 0;
+        stats.elasticity += food.elasticity || 0;
+        stats.ability += food.ability || 0;
+        stats.coinMultiplier += food.coinMultiplier || 0;
+      }
       if (food.effect) effects[food.effect] = food.effect === 'freeBounces' ? 3 : true;
     }
 
     if (effects.rainbow || effects.prismFlow) {
       const boost = effects.prismFlow ? 1.12 : 1.10;
-      stats.mass *= boost;
+      stats.mass = 8 + (stats.mass - 8) * boost;
       stats.power = 1 + (stats.power - 1) * boost;
       stats.defense *= boost;
       stats.elasticity = 1 + (stats.elasticity - 1) * boost;
@@ -904,15 +924,16 @@
     if (!food || session.foods.length >= save.stomachLevel) return clearFoodPreview();
     const next = calculateStatsForFoods([...session.foods, food]).stats;
     const comparisons = [
-      [els.massCompare, next.mass, session.stats.mass, value => Math.round(value)],
-      [els.powerCompare, next.power, session.stats.power, value => `×${value.toFixed(1)}`],
-      [els.defenseCompare, next.defense, session.stats.defense, value => `${Math.round(value * 100)}%`],
-      [els.bounceCompare, next.elasticity, session.stats.elasticity, value => `×${value.toFixed(1)}`]
+      [els.massCompare, next.mass, session.stats.mass, delta => `+${Math.round(delta)}`],
+      [els.powerCompare, next.power, session.stats.power, delta => `+${round1(delta)}`],
+      [els.defenseCompare, next.defense, session.stats.defense, delta => `+${Math.round(delta * 100)}%`],
+      [els.bounceCompare, next.elasticity, session.stats.elasticity, delta => `+${Math.round(delta * 100)}%`]
     ];
     comparisons.forEach(([element, value, current, format]) => {
       if (!element) return;
-      const changed = Math.abs(value - current) > .001;
-      element.textContent = changed ? `→ ${format(value)}` : '';
+      const delta = value - current;
+      const changed = delta > .001;
+      element.textContent = changed ? format(delta) : '';
       element.closest('.stat-pill')?.classList.toggle('previewing', changed);
     });
   }
@@ -956,6 +977,7 @@
     els.foodInfo?.style.removeProperty('left');
     els.foodInfo?.style.removeProperty('top');
     $$('.food-card.selected').forEach(card => card.classList.remove('selected'));
+    clearFoodPreview();
   }
 
   function positionFoodInfoPopover(source) {
@@ -983,14 +1005,18 @@
     selectedFoodOfferIndex = offerIndex;
     $$('.food-card.selected').forEach(card => card.classList.remove('selected'));
     source?.classList.add('selected');
+    showFoodPreview(food);
+    const cardType = foodCardType(food);
     const primary = foodPrimaryStat(food);
     els.foodInfoIcon.innerHTML = foodArtMarkup(food, 'food-info-model');
     els.foodInfoName.textContent = food.name;
     els.foodInfoRarity.textContent = RARITY_LABELS[food.rarity];
-    els.foodInfoStats.innerHTML = `<strong>${primary.icon} ${primary.label}</strong>${foodStatChips(food, primary.key)}`;
+    els.foodInfoStats.innerHTML = cardType === 'ability'
+      ? `<strong>${primary.icon} Способность</strong>`
+      : `<strong>${uiIconMarkup('stat-mass', 'food-stat-icon')} Характеристики</strong>${foodStatChips(food)}`;
     els.foodInfoEffect.textContent = food.effectText ? `✦ ${food.effectText}` : '';
     els.foodInfoEffect.classList.toggle('hidden', !food.effectText);
-    els.foodInfo.className = `food-info ${food.rarity}`;
+    els.foodInfo.className = `food-info ${food.rarity} food-type-${cardType}`;
     positionFoodInfoPopover(source);
   }
 
@@ -1027,20 +1053,22 @@
         return;
       }
       const button = document.createElement('button');
-      button.className = `food-card ${food.rarity} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${full ? 'locked' : ''}`;
+      const cardType = foodCardType(food);
+      button.className = `food-card ${food.rarity} food-type-${cardType} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${full ? 'locked' : ''}`;
       button.style.animationDelay = offerMotion === 'enter' ? `${index * 90}ms` : '0ms';
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
-      const primary = foodPrimaryStat(food);
+      const cardBody = cardType === 'ability'
+        ? `<span class="food-ability-copy"><b>${uiIconMarkup('special', 'ability-kind-icon')} СПОСОБНОСТЬ</b><em>${food.effectText}</em></span>`
+        : `<span class="food-stat-grid">${foodStatGridMarkup(food)}</span>`;
       button.innerHTML = `
-        <span class="rarity"><i aria-hidden="true"></i>${RARITY_LABELS[food.rarity]}</span>
+        <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i>${RARITY_LABELS[food.rarity]}</span><span class="food-kind">${cardType === 'ability' ? 'ЭФФЕКТ' : 'СТАТЫ'}</span></span>
         <span class="food-model-wrap">${foodArtMarkup(food)}</span>
         <span class="food-name">${food.name}</span>
-        <span class="food-primary ${primary.key}">${primary.icon} ${primary.label}</span>
-        <span class="food-chips">${foodStatChips(food)}</span>
-        ${food.effectText ? '<span class="food-effect">✦ Особый эффект</span>' : '<span class="food-effect empty-effect" aria-hidden="true"></span>'}`;
+        ${cardBody}`;
       button.type = 'button';
-      button.setAttribute('aria-label', `${food.name}. ${primary.label}. Открыть описание`);
+      const cardSummary = cardType === 'ability' ? `Способность: ${food.effectText}` : foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
+      button.setAttribute('aria-label', `${food.name}. ${cardSummary}. Открыть описание`);
       button.addEventListener('pointerdown', event => beginFoodDrag(event, food, index, button));
       button.addEventListener('pointerenter', () => showFoodPreview(food));
       button.addEventListener('pointerleave', clearFoodPreview);
@@ -1070,6 +1098,7 @@
   function beginFoodDrag(event, food, offerIndex, source) {
     if (session.foods.length >= save.stomachLevel || event.button > 0) return;
     event.preventDefault();
+    showFoodPreview(food);
     els.slime.classList.add('expect-food', 'tracking-food');
     const sourceRectAtStart = source.getBoundingClientRect();
     setMenuGazePoint(sourceRectAtStart.left + sourceRectAtStart.width / 2, sourceRectAtStart.top + sourceRectAtStart.height / 2);
@@ -1096,8 +1125,7 @@
       const accepted = pointInsideElement(moveEvent.clientX, moveEvent.clientY, els.slime);
       ghost.classList.toggle('accept', accepted);
       els.slime.classList.toggle('drop-ready', accepted);
-      if (accepted) showFoodPreview(food);
-      else clearFoodPreview();
+      showFoodPreview(food);
     };
 
     const onUp = upEvent => {
@@ -1173,8 +1201,8 @@
       epic: { catchMs: 230, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 620 },
       legendary: { catchMs: 250, chewMs: 1200, chewTime: '.3s', chews: 4, happyMs: 680 },
       prismatic: { catchMs: 270, chewMs: 1500, chewTime: '.3s', chews: 5, happyMs: 820 },
-      secret: { catchMs: 800, chewMs: 1800, chewTime: '.3s', chews: 6, happyMs: 1300 }
-    }[food.rarity] || { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, happyMs: 350 };
+      secret: { catchMs: 800, chewMs: 1800, chewTime: '.3s', chews: 6, revealDelayMs: 220, happyMs: 1300 }
+    }[food.rarity] || { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, revealDelayMs: 0, happyMs: 350 };
     document.body.classList.remove('secret-feast', 'secret-reveal');
     if (food.rarity === 'secret') document.body.classList.add('secret-feast');
     sound(food.rarity === 'secret' ? 'eatSlow' : 'eat', {
@@ -1182,7 +1210,7 @@
       swallowDelay: mealReaction.catchMs + mealReaction.chewMs - 70
     });
     clearTimeout(menuEmotionTimer);
-    els.slime.classList.remove('eat', 'chewing', 'pleased', ...MEAL_REACTION_CLASSES);
+    els.slime.classList.remove('eat', 'chewing', 'savoring', 'pleased', ...MEAL_REACTION_CLASSES);
     els.slime.classList.add(`meal-${food.rarity}`);
     els.slime.style.setProperty('--catch-time', `${mealReaction.catchMs}ms`);
     els.slime.style.setProperty('--chew-time', mealReaction.chewTime);
@@ -1197,16 +1225,23 @@
       resetMenuGaze();
       menuEmotionTimer = setTimeout(() => {
         els.slime.classList.remove('chewing');
-        els.slime.classList.add('pleased');
-        if (food.rarity === 'secret') {
-          document.body.classList.add('secret-reveal');
-          showRarityBurst(food);
-        }
-        sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
-        menuEmotionTimer = setTimeout(() => {
-          els.slime.classList.remove('pleased', ...MEAL_REACTION_CLASSES);
-          document.body.classList.remove('secret-feast', 'secret-reveal');
-        }, mealReaction.happyMs);
+        const revealMeal = () => {
+          els.slime.classList.remove('savoring');
+          els.slime.classList.add('pleased');
+          if (food.rarity === 'secret') {
+            document.body.classList.add('secret-reveal');
+            showRarityBurst(food);
+          }
+          sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
+          menuEmotionTimer = setTimeout(() => {
+            els.slime.classList.remove('pleased', 'savoring', ...MEAL_REACTION_CLASSES);
+            document.body.classList.remove('secret-feast', 'secret-reveal');
+          }, mealReaction.happyMs);
+        };
+        if (mealReaction.revealDelayMs) {
+          els.slime.classList.add('savoring');
+          menuEmotionTimer = setTimeout(revealMeal, mealReaction.revealDelayMs);
+        } else revealMeal();
       }, mealReaction.chewMs);
     }, mealReaction.catchMs);
     renderDraft();
@@ -2850,7 +2885,7 @@
     const outline = '#26334a';
     const chewPulse = (Math.sin(timestamp / 48 - Math.PI / 2) + 1) / 2;
     const chewSquint = emotion === 'chewing';
-    const anticipationSquint = emotion === 'anticipating';
+    const anticipationSquint = emotion === 'anticipating' || emotion === 'savoring';
     const closedHappy = emotion === 'petting' || emotion === 'pleased';
     targetCtx.lineCap = 'round';
     targetCtx.lineJoin = 'round';
@@ -2926,7 +2961,7 @@
           targetCtx.ellipse(0, radius * (.225 + easedOpen * .018), radius * (.075 + easedOpen * .035), radius * (.018 + easedOpen * .078), 0, 0, Math.PI * 2);
           targetCtx.fill();
         }
-      } else if (emotion === 'anticipating') {
+      } else if (emotion === 'anticipating' || emotion === 'savoring') {
         targetCtx.beginPath();
         targetCtx.arc(0, radius * .15, radius * .13, .18, Math.PI - .18);
         targetCtx.stroke();
@@ -2947,6 +2982,7 @@
     if (els.slime.classList.contains('petting') || els.slime.classList.contains('petted')) return 'petting';
     if (els.slime.classList.contains('pleased')) return 'pleased';
     if (els.slime.classList.contains('chewing')) return 'chewing';
+    if (els.slime.classList.contains('savoring')) return 'savoring';
     if (els.slime.classList.contains('meal-secret') && (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food'))) return 'anticipating';
     if (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food')) return 'hungry';
     if (els.slime.classList.contains('booped')) return 'surprised';
