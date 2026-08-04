@@ -1,5 +1,6 @@
 # Local and generated files
 .DS_Store
+tmp/
 Thumbs.db
 .qa-*.png
 *.log

@@ -278,6 +278,23 @@
   let menuGazeTimer = null;
   let toastTimer = null;
   let audioCtx = null;
+  const soundPools = new Map();
+  const SOUND_ROOT = 'assets/audio/';
+  const SOUND_ASSETS = {
+    tap: { file: 'button.ogg', volume: .34, size: 3 },
+    eatBite: { file: 'eat-bite.ogg', volume: .42, size: 2 },
+    eatSwallow: { file: 'eat-swallow.ogg', volume: .38, size: 2 },
+    happy: { file: 'happy.ogg', volume: .36, size: 2 },
+    reroll: { file: 'reroll.ogg', volume: .32, size: 2 },
+    hit: { file: 'slime-hit.ogg', volume: .42, size: 3 },
+    hitHard: { file: 'slime-hit-hard.ogg', volume: .46, size: 3 },
+    break: { file: 'block-break.ogg', volume: .38, size: 3 },
+    bounce: { file: 'bounce.ogg', volume: .36, size: 2 },
+    epic: { file: 'epic.ogg', volume: .38, size: 2 },
+    coin: { file: 'coin.ogg', volume: .34, size: 3 },
+    fail: { file: 'fail.ogg', volume: .35, size: 1 },
+    win: { file: 'win.ogg', volume: .38, size: 1 }
+  };
   let dragState = null;
   let selectedFoodOfferIndex = null;
   const ctx = els.canvas.getContext('2d');
@@ -401,16 +418,17 @@
     setTimeout(() => burst.remove(), food.rarity === 'secret' ? 2400 : food.rarity === 'prismatic' ? 2200 : 1750);
   }
 
-  function sound(kind = 'tap') {
-    if (!save.sound) return;
+  function fallbackSound(kind = 'tap') {
     try {
       audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       const oscillator = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       const now = audioCtx.currentTime;
       const configs = {
-        tap: [300, .035, 'sine'], eat: [520, .09, 'sine'], reroll: [220, .08, 'triangle'],
-        hit: [105, .075, 'square'], break: [145, .09, 'sawtooth'], bounce: [260, .055, 'sine'],
+        tap: [300, .035, 'sine'], eatBite: [520, .09, 'sine'], eatSwallow: [420, .08, 'sine'],
+        happy: [680, .13, 'sine'], reroll: [220, .08, 'triangle'],
+        hit: [105, .075, 'square'], hitHard: [82, .11, 'square'], break: [145, .09, 'sawtooth'], bounce: [260, .055, 'sine'],
         epic: [760, .18, 'sine'], coin: [900, .06, 'sine'], fail: [110, .22, 'sawtooth'], win: [620, .32, 'triangle']
       };
       const [frequency, duration, type] = configs[kind] || configs.tap;
@@ -421,6 +439,49 @@
       oscillator.connect(gain).connect(audioCtx.destination);
       oscillator.start(now); oscillator.stop(now + duration);
     } catch (_) { /* optional audio */ }
+  }
+
+  function getSoundPool(kind) {
+    const config = SOUND_ASSETS[kind];
+    if (!config || typeof Audio === 'undefined') return null;
+    if (soundPools.has(kind)) return soundPools.get(kind);
+    const pool = Array.from({ length: config.size }, () => {
+      const audio = new Audio(new URL(`${SOUND_ROOT}${config.file}`, document.baseURI).href);
+      audio.preload = 'auto';
+      audio.volume = config.volume;
+      return audio;
+    });
+    pool.cursor = 0;
+    soundPools.set(kind, pool);
+    return pool;
+  }
+
+  function playSoundAsset(kind) {
+    const pool = getSoundPool(kind);
+    if (!pool) return fallbackSound(kind);
+    const audio = pool[pool.cursor++ % pool.length];
+    audio.pause();
+    audio.currentTime = 0;
+    const attempt = audio.play();
+    if (attempt?.catch) attempt.catch(() => fallbackSound(kind));
+  }
+
+  function sound(kind = 'tap') {
+    if (!save.sound) return;
+    if (kind === 'eat') {
+      playSoundAsset('eatBite');
+      setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatSwallow'); }, 145);
+      return;
+    }
+    playSoundAsset(kind);
+  }
+
+  function stopAllSounds() {
+    soundPools.forEach(pool => pool.forEach(audio => {
+      audio.pause();
+      audio.currentTime = 0;
+    }));
+    if (audioCtx?.state === 'running') audioCtx.suspend().catch(() => {});
   }
 
   function feedback(pattern = 8) {
@@ -991,7 +1052,7 @@
     const previousCombo = session.combo?.name || '';
     session.foods.push(food);
     session.offer[offerIndex] = null;
-    sound(food.rarity === 'epic' || food.rarity === 'legendary' ? 'epic' : 'eat');
+    sound('eat');
     clearTimeout(menuEmotionTimer);
     els.slime.classList.remove('eat', 'chewing', 'pleased');
     void els.slime.offsetWidth;
@@ -1004,6 +1065,7 @@
       menuEmotionTimer = setTimeout(() => {
         els.slime.classList.remove('chewing');
         els.slime.classList.add('pleased');
+        sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
         menuEmotionTimer = setTimeout(() => els.slime.classList.remove('pleased'), 620);
       }, 620);
     }, 330);
@@ -1717,7 +1779,7 @@
         : block.hazard
           ? `ОПАСНЫЙ БЛОК · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`
           : `РИКОШЕТ · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`);
-    sound('bounce');
+    sound(block.special === 'spring' ? 'bounce' : block.hazard || block.isPortalWall ? 'hitHard' : 'hit');
     createDebris(block, 3, false);
 
     if (run.mass <= 0 && !tryRevive()) endRun(false, 'Слайм израсходовал всю массу');
@@ -3020,6 +3082,7 @@
     });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
+        stopAllSounds();
         persist();
         if (run && !run.ended) run.lastTime = 0;
       }
