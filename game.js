@@ -476,9 +476,10 @@
 
   function sound(kind = 'tap') {
     if (!save.sound) return;
-    if (kind === 'eat') {
+    if (kind === 'eat' || kind === 'eatSlow') {
       playSoundAsset('eatBite');
-      setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatSwallow'); }, 145);
+      const swallowDelay = kind === 'eatSlow' ? 500 : 145;
+      setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatSwallow'); }, swallowDelay);
       return;
     }
     playSoundAsset(kind);
@@ -527,6 +528,8 @@
     els.slime.classList.add('tracking-food', 'expect-food');
     const flyer = document.createElement('span');
     flyer.className = `swallow-fruit ${food.rarity}`;
+    const swallowMs = food.rarity === 'secret' ? 780 : 340;
+    flyer.style.setProperty('--swallow-time', `${swallowMs}ms`);
     flyer.innerHTML = foodArtMarkup(food, 'swallow-model');
     flyer.style.left = `${from.left + from.width / 2}px`;
     flyer.style.top = `${from.top + from.height / 2}px`;
@@ -541,7 +544,7 @@
       flyer.remove();
       els.slime.classList.remove('tracking-food', 'expect-food');
       resetMenuGaze(180);
-    }, 390);
+    }, swallowMs + 60);
   }
 
   function setMenuGazePoint(clientX, clientY) {
@@ -655,6 +658,7 @@
   }
 
   function newDraft() {
+    document.body.classList.remove('secret-feast', 'secret-reveal');
     const bonusEpic = save.pendingEpicBoost || 0;
     const bonusMass = save.pendingMassBoost || 0;
     const bonusRerolls = save.pendingExtraRerolls || 0;
@@ -995,8 +999,8 @@
     els.rerollBtn.disabled = full;
 
     const scale = clamp(1 + session.stats.mass / 190, 1.03, 1.24);
-    els.slime.style.width = `${110 * scale}px`;
-    els.slime.style.height = `${110 * scale}px`;
+    els.slime.style.width = `${124 * scale}px`;
+    els.slime.style.height = `${124 * scale}px`;
 
     renderStomachSlots(capacity);
     els.foodInside.replaceChildren();
@@ -1152,11 +1156,13 @@
       common: { catchMs: 250, chewMs: 340, chewTime: '.15s', chews: 2, happyMs: 430 },
       rare: { catchMs: 290, chewMs: 460, chewTime: '.16s', chews: 3, happyMs: 560 },
       epic: { catchMs: 350, chewMs: 650, chewTime: '.18s', chews: 4, happyMs: 820 },
-      legendary: { catchMs: 390, chewMs: 740, chewTime: '.18s', chews: 4, happyMs: 980 },
-      prismatic: { catchMs: 440, chewMs: 820, chewTime: '.19s', chews: 4, happyMs: 1120 },
-      secret: { catchMs: 480, chewMs: 920, chewTime: '.18s', chews: 5, happyMs: 1260 }
+      legendary: { catchMs: 430, chewMs: 820, chewTime: '.19s', chews: 4, happyMs: 1100 },
+      prismatic: { catchMs: 500, chewMs: 940, chewTime: '.2s', chews: 5, happyMs: 1320 },
+      secret: { catchMs: 820, chewMs: 1600, chewTime: '.25s', chews: 6, happyMs: 1700 }
     }[food.rarity] || { catchMs: 250, chewMs: 340, chewTime: '.15s', chews: 2, happyMs: 430 };
-    sound('eat');
+    document.body.classList.remove('secret-feast', 'secret-reveal');
+    if (food.rarity === 'secret') document.body.classList.add('secret-feast');
+    sound(food.rarity === 'secret' ? 'eatSlow' : 'eat');
     clearTimeout(menuEmotionTimer);
     els.slime.classList.remove('eat', 'chewing', 'pleased', ...MEAL_REACTION_CLASSES);
     els.slime.classList.add(`meal-${food.rarity}`);
@@ -1174,8 +1180,12 @@
       menuEmotionTimer = setTimeout(() => {
         els.slime.classList.remove('chewing');
         els.slime.classList.add('pleased');
+        if (food.rarity === 'secret') document.body.classList.add('secret-reveal');
         sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
-        menuEmotionTimer = setTimeout(() => els.slime.classList.remove('pleased', ...MEAL_REACTION_CLASSES), mealReaction.happyMs);
+        menuEmotionTimer = setTimeout(() => {
+          els.slime.classList.remove('pleased', ...MEAL_REACTION_CLASSES);
+          document.body.classList.remove('secret-feast', 'secret-reveal');
+        }, mealReaction.happyMs);
       }, mealReaction.chewMs);
     }, mealReaction.catchMs);
     renderDraft();
@@ -1221,6 +1231,10 @@
 
   // ===== ЗАБЕГ: запуск и физическая сцена =====
   function startDrop() {
+    if (menuSlimeIsBusy() || document.body.classList.contains('secret-feast')) {
+      showToast('Слайм ещё доедает');
+      return;
+    }
     sound('tap');
     feedback([10, 25, 12]);
     const world = currentWorld();
@@ -2688,18 +2702,54 @@
     timestamp = performance.now()
   }) {
     if (aura) {
-      const auraColors = { epic: '#9b72ff', legendary: '#ffc83d', prismatic: '#78d7ff', secret: '#5ce9ff' };
-      const auraColor = auraColors[aura];
-      if (auraColor) {
-        targetCtx.save();
-        targetCtx.globalAlpha = .2 + Math.sin(timestamp / 120) * .05;
-        targetCtx.strokeStyle = auraColor;
-        targetCtx.lineWidth = aura === 'secret' || aura === 'prismatic' ? 7 : 5;
-        targetCtx.beginPath();
-        targetCtx.arc(x, y, radius + 8 + Math.sin(timestamp / 150) * 2, 0, Math.PI * 2);
-        targetCtx.stroke();
-        targetCtx.restore();
+      targetCtx.save();
+      targetCtx.translate(x, y);
+      if (aura === 'epic') {
+        targetCtx.globalAlpha = .22 + Math.sin(timestamp / 120) * .05;
+        targetCtx.strokeStyle = '#9b72ff';
+        targetCtx.lineWidth = 5;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 8 + Math.sin(timestamp / 150) * 2, 0, Math.PI * 2); targetCtx.stroke();
+      } else if (aura === 'legendary') {
+        const pulse = 1 + Math.sin(timestamp / 115) * .08;
+        targetCtx.globalAlpha = .38;
+        targetCtx.strokeStyle = '#ffc83d';
+        targetCtx.fillStyle = '#fff1a3';
+        targetCtx.lineWidth = 3;
+        for (let index = 0; index < 8; index += 1) {
+          const angle = index / 8 * Math.PI * 2 + timestamp / 1200;
+          const inner = (radius + 8) * pulse;
+          const outer = (radius + 17) * pulse;
+          targetCtx.beginPath(); targetCtx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner); targetCtx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer); targetCtx.stroke();
+          if (index % 2 === 0) {
+            targetCtx.beginPath(); targetCtx.arc(Math.cos(angle) * (radius + 22), Math.sin(angle) * (radius + 22), 3, 0, Math.PI * 2); targetCtx.fill();
+          }
+        }
+      } else if (aura === 'prismatic') {
+        const rainbow = ['#ff6fae', '#ffb84d', '#ffe45c', '#59dc86', '#55c8ff', '#9a7cff'];
+        targetCtx.globalAlpha = .55;
+        targetCtx.lineWidth = 5;
+        rainbow.forEach((color, index) => {
+          const start = timestamp / 520 + index / rainbow.length * Math.PI * 2;
+          targetCtx.strokeStyle = color;
+          targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 10, start, start + Math.PI / 2.5); targetCtx.stroke();
+        });
+      } else if (aura === 'secret') {
+        targetCtx.globalAlpha = .58;
+        targetCtx.strokeStyle = '#5ce9ff';
+        targetCtx.lineWidth = 3;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 11 + Math.sin(timestamp / 130) * 3, 0, Math.PI * 2); targetCtx.stroke();
+        targetCtx.strokeStyle = '#c46bff';
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 18 - Math.sin(timestamp / 130) * 2, 0, Math.PI * 2); targetCtx.stroke();
+        for (let index = 0; index < 5; index += 1) {
+          const angle = index / 5 * Math.PI * 2 - timestamp / 700;
+          const orbit = radius + 24;
+          const px = Math.cos(angle) * orbit;
+          const py = Math.sin(angle) * orbit;
+          targetCtx.fillStyle = index % 2 ? '#c46bff' : '#5ce9ff';
+          targetCtx.save(); targetCtx.translate(px, py); targetCtx.rotate(angle); targetCtx.fillRect(-3, -3, 6, 6); targetCtx.restore();
+        }
       }
+      targetCtx.restore();
     }
 
     targetCtx.save();
@@ -2809,8 +2859,15 @@
           targetCtx.beginPath(); targetCtx.ellipse(0, radius * .35, radius * .07, radius * .04, 0, 0, Math.PI * 2); targetCtx.fill();
         }
       } else if (emotion === 'chewing') {
-        const chewSide = Math.sin(timestamp / 75) > 0 ? 1 : -1;
-        targetCtx.beginPath(); targetCtx.ellipse(chewSide * radius * .055, radius * .24, radius * .105, radius * .075, chewSide * .16, 0, Math.PI * 2); targetCtx.fill();
+        const chewWave = (Math.sin(timestamp / 62) + 1) / 2;
+        const chewSide = Math.sin(timestamp / 125) > 0 ? 1 : -1;
+        targetCtx.beginPath();
+        targetCtx.ellipse(chewSide * radius * .045, radius * (.235 + chewWave * .018), radius * (.08 + chewWave * .035), radius * (.045 + chewWave * .065), chewSide * .13, 0, Math.PI * 2);
+        targetCtx.fill();
+        if (chewWave > .58) {
+          targetCtx.fillStyle = '#f78591';
+          targetCtx.beginPath(); targetCtx.ellipse(chewSide * radius * .04, radius * .29, radius * .055, radius * .026, 0, 0, Math.PI * 2); targetCtx.fill();
+        }
       } else if (emotion === 'joy' || closedHappy) {
         targetCtx.beginPath(); targetCtx.ellipse(0, radius * .25, radius * .19, radius * .145, 0, 0, Math.PI * 2); targetCtx.fill();
         targetCtx.fillStyle = '#f78591';
@@ -2847,11 +2904,18 @@
     const emotion = menuSlimeEmotion();
     const rarity = MEAL_REACTION_CLASSES.find(name => els.slime.classList.contains(name))?.replace('meal-', '') || '';
     const blinkPhase = timestamp % 4700;
+    const hue = Math.floor(timestamp / 12) % 360;
+    const menuColors = rarity === 'prismatic'
+      ? [`hsl(${(hue + 48) % 360} 94% 82%)`, `hsl(${hue} 82% 58%)`, `hsl(${(hue + 285) % 360} 72% 42%)`]
+      : rarity === 'secret' && els.slime.classList.contains('pleased')
+        ? ['#bafaff', '#55d7c8', '#6540a5']
+        : SKINS[0].colors;
     drawSlimeAvatar(menuSlimeCtx, {
       x: 90, y: 91, radius: 66, emotion,
+      colors: menuColors,
       gazeX: menuGaze.x, gazeY: menuGaze.y,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
-      aura: els.slime.classList.contains('pleased') ? rarity : '',
+      aura: rarityRank(rarity) >= 2 ? rarity : '',
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
       timestamp
     });

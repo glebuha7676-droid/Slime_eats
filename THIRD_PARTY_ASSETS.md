@@ -14,13 +14,13 @@ Attribution is not required; it is included here to keep the project provenance 
 | Project file | Original file | Pack |
 |---|---|---|
 | `button.ogg` | `click_003.ogg` | Interface Sounds |
-| `eat-bite.ogg` | `pluck_001.ogg` | Interface Sounds |
-| `eat-swallow.ogg` | `drop_003.ogg` | Interface Sounds |
-| `happy.ogg` | `confirmation_004.ogg` | Interface Sounds |
+| `eat-bite.ogg` | `impactSoft_medium_001.ogg` | Impact Sounds |
+| `eat-swallow.ogg` | `drop_001.ogg` | Interface Sounds |
+| `happy.ogg` | `impactSoft_medium_004.ogg` | Impact Sounds |
 | `reroll.ogg` | `scroll_002.ogg` | Interface Sounds |
 | `coin.ogg` | `confirmation_001.ogg` | Interface Sounds |
 | `epic.ogg` | `maximize_003.ogg` | Interface Sounds |
-| `bounce.ogg` | `bong_001.ogg` | Interface Sounds |
+| `bounce.ogg` | `impactSoft_medium_003.ogg` | Impact Sounds |
 | `win.ogg` | `maximize_005.ogg` | Interface Sounds |
 | `fail.ogg` | `error_004.ogg` | Interface Sounds |
 | `slime-hit.ogg` | `impactSoft_medium_000.ogg` | Impact Sounds |
