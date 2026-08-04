@@ -1060,7 +1060,7 @@
       button.dataset.offerIndex = String(index);
       const cardBody = cardType === 'ability'
         ? `<span class="food-ability-copy"><b>${uiIconMarkup('special', 'ability-kind-icon')} ЭФФЕКТ</b><em>${food.effectText}</em></span>`
-        : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid">${foodStatGridMarkup(food)}</span></span>`;
+        : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid count-${Math.min(foodStatItems(food).length, 4)}">${foodStatGridMarkup(food)}</span></span>`;
       button.innerHTML = `
         <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span>
         <span class="food-model-wrap">${foodArtMarkup(food)}</span>
