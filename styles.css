@@ -783,7 +783,10 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   --card-top:#eaf9ff;--stats-bg:#dcf7ef;--effect-bg:#deefff;
 }
 .food-card.rare .rarity-name i{border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
-.food-card.rare .rarity-name i:after{opacity:0;animation:cardRareGemGleamV23 3.4s ease-in-out infinite}
+.food-card.rare .rarity-name i:after{
+  left:-8px;top:7px;width:13px;height:3px;border-radius:2px;clip-path:none;background:#fff;opacity:0;
+  animation:cardRareGemGleamV24 2.8s ease-in-out infinite;
+}
 .food-card.rare:before{
   background:linear-gradient(90deg,rgba(70,196,235,.16),transparent 18% 82%,rgba(70,196,235,.16)),linear-gradient(155deg,rgba(255,255,255,.5) 0 18%,transparent 18% 100%);
   animation:none!important;
@@ -814,14 +817,14 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 
 .food-card.prismatic{
   --rarity-color:#8359e0;--rarity-deep:#513092;--card-shadow:#6139a5;
-  --card-top:#fff1fa;--stats-bg:#e5f8f0;--effect-bg:#eee3fb;
+  --card-top:#ffe5f6;--stats-bg:#dffaf0;--effect-bg:#eaddff;
 }
 .food-card.prismatic .rarity-name i{
-  border-radius:0;background:linear-gradient(120deg,#ff5fad,#ffd947,#5ee293,#4dceff,#9a65ee,#ff5fad);background-size:300% 100%;
-  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);animation:cardPrismGemV21 1.45s linear infinite;
+  border-radius:0;background:linear-gradient(90deg,#ff5fad,#ffd947,#5ee293,#4dceff,#9a65ee,#ff5fad);background-size:500% 100%;
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);animation:cardPrismGemV24 2s linear infinite;
 }
 .food-card.prismatic:before{
-  background:linear-gradient(120deg,rgba(255,105,178,.2),rgba(255,218,84,.17),rgba(83,218,145,.18),rgba(77,194,241,.2),rgba(149,91,222,.22));
+  background:linear-gradient(125deg,rgba(255,81,165,.3),rgba(255,217,65,.24),rgba(68,224,142,.25),rgba(64,195,250,.3),rgba(157,79,232,.32));
   animation:none!important;
 }
 .food-card.prismatic .food-name,.food-card.prismatic .food-stat-cell,.food-card.prismatic .food-ability-copy em{color:#3c3156}
@@ -857,7 +860,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 }
 .food-card.secret .food-model{position:relative;z-index:1}
 
-@keyframes cardPrismGemV21{to{background-position:100% 0}}
 @keyframes cardSecretBlinkV22{0%,42%,46%,78%,82%,100%{transform:scaleY(1)}44%,80%{transform:scaleY(.12)}}
 @keyframes cardSecretLookV22{0%,12%,44%,56%,80%,100%{transform:translateX(0)}20%,34%{transform:translateX(-5px)}62%,75%{transform:translateX(5px)}}
 
@@ -869,14 +871,22 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 }
 .food-card.legendary:after{animation:cardLegendFrameV23 2.2s ease-in-out infinite!important}
 .food-card.prismatic:after{animation:cardPrismFrameV23 2s linear infinite!important}
-.food-card.secret:after{animation:cardSecretFrameV23 1.8s ease-in-out infinite!important}
+.food-card.secret:after{
+  inset:-2px!important;left:-2px!important;right:-2px!important;top:-2px!important;bottom:-2px!important;padding:2px;border:0!important;border-radius:15px;
+  background:linear-gradient(90deg,#40edff,#ff48d5,#8c60ff,#40edff);background-size:260% 100%;
+  box-shadow:0 0 0 1px rgba(77,229,243,.24)!important;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
+  animation:cardSecretLivingEdgeV24 2.4s linear infinite!important;
+}
 
-@keyframes cardRareGemGleamV23{0%,72%,100%{opacity:0;transform:translate(-1px,1px) scale(.55)}80%{opacity:.95;transform:translate(4px,-3px) scale(1.05)}86%{opacity:0;transform:translate(6px,-5px) scale(.7)}}
+@keyframes cardRareGemGleamV24{0%,62%,100%{opacity:0;transform:translateX(0) rotate(-45deg)}70%{opacity:1;transform:translateX(8px) rotate(-45deg)}78%{opacity:0;transform:translateX(15px) rotate(-45deg)}}
 @keyframes cardEpicGemJoltV23{0%,68%,100%{transform:translateX(0) rotate(0)}72%{transform:translateX(-1px) rotate(-4deg)}75%{transform:translateX(1px) rotate(4deg)}78%{transform:translateX(-1px) rotate(-2deg)}81%{transform:translateX(0) rotate(0)}}
 @keyframes cardLegendGemFlowV23{0%,100%{background-position:0 0}50%{background-position:100% 0}}
 @keyframes cardLegendFrameV23{0%,100%{border-color:#d7aa2f;box-shadow:0 0 0 0 rgba(255,235,145,0)}50%{border-color:#fff0a0;box-shadow:0 0 0 2px rgba(240,190,52,.22)}}
 @keyframes cardPrismFrameV23{0%,100%{border-color:#ff65ac}25%{border-color:#f2c43e}50%{border-color:#4fd7a0}75%{border-color:#4fc7ef}}
-@keyframes cardSecretFrameV23{0%,100%{border-color:#40e6f2;box-shadow:0 0 0 1px rgba(64,230,242,.3)}50%{border-color:#ff4ed5;box-shadow:0 0 0 2px rgba(255,78,213,.28)}}
+@keyframes cardPrismGemV24{to{background-position:100% 0}}
+@keyframes cardSecretLivingEdgeV24{to{background-position:100% 0}}
 
 .drag-ghost .food-stat-block,.drag-ghost .food-stat-grid,.drag-ghost .food-ability-copy{pointer-events:none}
 
@@ -959,4 +969,31 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   .food-info{width:calc(100vw - 12px);height:128px;min-height:128px;max-height:128px;grid-template-columns:52px minmax(0,1fr) 72px;gap:6px;padding:7px}
   .food-info-icon{width:50px;height:50px}.food-info-model{width:47px;height:47px}.food-info>button{width:72px;min-width:72px;min-height:48px;padding:4px}.food-info>button img{width:24px;height:24px}
   .food-info-copy>div b{font-size:9.5px}.food-info-copy>div small{font-size:5.5px}.food-info-effect{font-size:8.2px!important}.food-info-stat b{font-size:8.3px}
+}
+
+/* === V24: компактное информационное окно без лишних действий === */
+.food-card .food-name{font-size:8.6px;font-weight:1000}
+.card-section-title,.food-ability-copy b{font-size:6.2px;letter-spacing:.55px}
+.food-stat-cell b{font-size:7.8px}.food-ability-copy em{font-size:6.9px;line-height:1.18}
+
+.food-info{
+  width:min(286px,calc(100vw - 16px));height:112px;min-height:112px;max-height:112px;
+  grid-template-columns:minmax(0,1fr);gap:0;padding:9px 11px;border-width:3px;
+}
+.food-info-icon,.food-info-copy>div,.food-info>button{display:none!important}
+.food-info-copy{width:100%;height:100%;display:grid;grid-template-rows:1fr}
+#foodInfoStats{height:100%;display:grid;grid-template-rows:23px 1fr;align-items:stretch}
+.food-info-kind{font-size:8px!important;letter-spacing:.65px}.food-info-kind-icon{width:19px;height:19px}
+.food-info-stat-grid{height:69px;grid-template-rows:repeat(2,33px);gap:3px 5px}
+.food-info-stat{border-width:2px;border-radius:10px}.food-info-stat-icon{width:24px;height:24px}.food-info-stat b{font-size:10.5px}
+.food-info-stat-grid.count-1{grid-template-rows:69px;padding:0 34px}.food-info-stat-grid.count-2{grid-template-rows:69px}
+.food-info.food-type-ability .food-info-copy{grid-template-rows:23px 1fr}
+.food-info.food-type-ability #foodInfoStats{height:23px;display:flex}
+.food-info-effect{height:69px;padding:7px 10px;border-width:2px;border-radius:11px;font-size:10px!important;line-height:1.22!important}
+.food-info.secret{border-width:2px}
+
+@media(max-width:370px){
+  .food-info{width:min(280px,calc(100vw - 12px));height:108px;min-height:108px;max-height:108px;grid-template-columns:1fr;padding:8px 10px}
+  .food-info-stat-grid{height:66px;grid-template-rows:repeat(2,31.5px)}.food-info-stat-grid.count-1,.food-info-stat-grid.count-2{grid-template-rows:66px}
+  .food-info-effect{height:66px;font-size:9.2px!important}.food-info-kind{font-size:7.5px!important}
 }

@@ -1129,6 +1129,7 @@
       const distance = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
       if (!moved && distance > 7) {
         moved = true;
+        hideFoodInfo();
         ghost = source.cloneNode(true);
         ghost.classList.add('drag-ghost');
         ghost.classList.remove('tunnel-enter', 'leaving');
@@ -3493,7 +3494,11 @@
     $$('[data-panel]').forEach(button => button.addEventListener('click', () => renderPanel(button.dataset.panel)));
     document.addEventListener('pointerdown', event => {
       if (els.foodInfo.classList.contains('hidden')) return;
-      if (event.target.closest('#foodInfo') || event.target.closest('.food-card')) return;
+      if (event.target.closest('#foodInfo')) {
+        hideFoodInfo();
+        return;
+      }
+      if (event.target.closest('.food-card')) return;
       hideFoodInfo();
     });
     document.addEventListener('visibilitychange', () => {
