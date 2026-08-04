@@ -24,6 +24,15 @@
 .food-card:active{transform:translateY(2px) scale(.985)}
 .food-card.locked{opacity:.38;pointer-events:none}
 .food-card.drag-source{opacity:.25}
+.food-card.drag-ghost{
+  position:fixed;z-index:700;left:0;top:0;width:124px;min-width:124px;max-width:124px;
+  height:176px;min-height:176px;max-height:176px;margin:0;pointer-events:none;
+  transform:translate(-50%,-55%) rotate(-3deg) scale(1.03);transform-origin:center;
+  opacity:.97;box-shadow:0 7px 0 rgba(41,51,70,.28),inset 0 0 0 1px rgba(255,255,255,.8);
+  transition:transform .1s ease,opacity .16s ease;will-change:left,top,transform;
+}
+.food-card.drag-ghost.accept{transform:translate(-50%,-55%) rotate(2deg) scale(1.1)}
+.food-card.drag-ghost.returning{transition:left .22s cubic-bezier(.3,.75,.25,1),top .22s cubic-bezier(.3,.75,.25,1),transform .22s ease,opacity .18s ease}
 .food-card>span{position:relative;z-index:2}
 .food-card.tunnel-enter{animation:foodCardTunnelIn .66s cubic-bezier(.2,.8,.25,1) both}
 .food-card.leaving{animation:foodCardTunnelOut .66s cubic-bezier(.55,.08,.8,.45) both;pointer-events:none}
@@ -238,6 +247,7 @@
 @media(max-width:370px){
   .food-choices{gap:4px;margin-inline:21px}
   .food-card{height:172px;min-height:172px;max-height:172px;padding-inline:4px}
+  .food-card.drag-ghost{width:116px;min-width:116px;max-width:116px;height:172px;min-height:172px;max-height:172px}
   .conveyor-gap{height:172px;min-height:172px}.belt-track{height:186px;min-height:186px}
   .food-model-wrap{height:43px;min-height:43px}.food-model{width:48px;height:48px}.food-name{font-size:8.8px}
   .food-stat-block,.food-ability-copy{height:67px;min-height:67px;grid-template-rows:16px 51px}

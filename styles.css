@@ -39,7 +39,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 
 .conveyor{padding:10px;margin-bottom:10px;overflow:hidden}.conveyor-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 8px}.conveyor-head small{display:block;color:var(--purple-dark);font-size:9px;font-weight:1000;letter-spacing:.6px}.conveyor-head b{display:block;font-size:12px;margin-top:2px}.reroll-btn{flex:none;min-height:36px;padding:7px 9px;border:2px solid var(--line);border-radius:11px;background:#e8ddff;color:var(--purple-dark);box-shadow:0 2px 0 var(--line);font-size:9px;font-weight:1000}.reroll-btn.ad-mode{background:var(--blue);color:#fff}
 .belt-window{position:relative;overflow:hidden;border:3px solid var(--line);border-radius:16px;background:#d8caa9;padding:8px 6px 14px}.belt-stripes{position:absolute;left:-20px;right:-20px;bottom:-9px;height:22px;background:repeating-linear-gradient(90deg,#7d8290 0 17px,#c5c8ce 17px 34px);border-top:3px solid var(--line)}
-.drag-ghost{position:fixed;z-index:500;width:104px;min-height:138px;pointer-events:none;transform:translate(-50%,-55%) rotate(-3deg) scale(1.03);transition:transform .1s ease,opacity .16s ease}.drag-ghost.accept{transform:translate(-50%,-55%) rotate(2deg) scale(1.1)}
 .draft-tip{margin:8px 3px 0;text-align:center;color:var(--muted);font-size:10px;line-height:1.3}
 
 .bottom-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.bottom-actions button{min-width:0;padding:9px 4px 8px;border:3px solid var(--line);border-radius:16px;background:var(--paper);box-shadow:var(--lift)}.bottom-actions .action-icon{display:block;font-size:20px}.bottom-actions b{display:block;font-size:10px;margin-top:2px}.bottom-actions small{display:block;font-size:7.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bottom-actions .locked-action{background:#dfd9cb;color:#737b89;border-style:dashed;box-shadow:none;opacity:.82}.bottom-actions .locked-action .action-icon{filter:grayscale(1)}
@@ -192,6 +191,8 @@ body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index
 .stat-rail .mass .stat-icon{background:#20a66b}.stat-rail .power .stat-icon{background:#dc565d}.stat-rail .defense .stat-icon{background:#338bc0}.stat-rail .bounce .stat-icon{background:#7555c6}
 .stat-copy{min-width:0;display:block}.stat-copy>small{display:block;color:#536071;font-size:7.5px;font-weight:1000;letter-spacing:.35px}.stat-rail .stat-values{min-height:17px;margin-top:2px}.stat-rail .stat-values b{font-size:13px;color:var(--ink)}.stat-rail .stat-values em{font-size:7px}
 .stat-rail .mass{background:#edfff5}.stat-rail .power{background:#fff0ed}.stat-rail .defense{background:#edf8ff}.stat-rail .bounce{background:#f3edff}.stat-rail .stat-pill.previewing{border-color:#20a768;background:#e3fff0;transform:scale(1.035)}
+.food-dragging .stat-rail .stat-pill.previewing{z-index:2;border-width:3px;border-color:#13985a;background:#d9ffea;transform:scale(1.075)}
+.food-dragging .stat-rail .stat-values em:not(:empty){min-width:29px;padding:3px 5px;border-radius:999px;background:#159c5d;color:#fff;font-size:10px;line-height:1;box-shadow:0 2px 0 #0c7142}
 
 /* Титулы живут в верхней половине сцены и не обрезаются. */
 .rarity-bursts{top:-3px;z-index:40}.rarity-burst{max-width:230px;padding:7px 11px;border-width:2px;border-radius:12px;font-size:10px;letter-spacing:.55px;box-shadow:0 3px 0 rgba(38,51,74,.18)}
@@ -241,7 +242,6 @@ body.secret-feast.secret-reveal:before{content:"";position:fixed;inset:0;z-index
 .tunnel-right{right:-3px;border-radius:5px 12px 12px 5px}.tunnel-right:before{right:6px}.tunnel-right i{left:-9px}
 .belt-stripes{height:25px;bottom:-12px;background:repeating-linear-gradient(100deg,#555d68 0 15px,#aeb3b9 15px 30px);background-size:60px 100%;animation:none}
 .conveyor.is-running .belt-stripes{animation:beltMove .64s linear infinite;will-change:background-position}
-.drag-ghost.returning{transition:left .22s cubic-bezier(.3,.75,.25,1),top .22s cubic-bezier(.3,.75,.25,1),transform .22s ease,opacity .18s ease}
 @keyframes beltMove{to{background-position:60px 0}}
 
 @media(min-width:700px){body{background:linear-gradient(180deg,#8bdcca 0 130px,var(--bg) 130px 100%)}.app{padding-top:8px}.overlay{align-items:center}}

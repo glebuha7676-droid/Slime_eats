@@ -918,7 +918,8 @@
     session.combo = result.combo;
   }
 
-  function clearFoodPreview() {
+  function clearFoodPreview(force = false) {
+    if (force !== true && document.body.classList.contains('food-dragging')) return;
     [els.massCompare, els.powerCompare, els.defenseCompare, els.bounceCompare].forEach(element => {
       if (element) element.textContent = '';
     });
@@ -1103,6 +1104,7 @@
   function beginFoodDrag(event, food, offerIndex, source) {
     if (session.foods.length >= save.stomachLevel || event.button > 0) return;
     event.preventDefault();
+    document.body.classList.add('food-dragging');
     showFoodPreview(food);
     els.slime.classList.add('expect-food', 'tracking-food');
     const sourceRectAtStart = source.getBoundingClientRect();
@@ -1138,8 +1140,9 @@
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       document.removeEventListener('pointercancel', onUp);
+      document.body.classList.remove('food-dragging');
       els.slime.classList.remove('drop-ready', 'expect-food', 'tracking-food');
-      clearFoodPreview();
+      clearFoodPreview(true);
       const cancelled = upEvent.type === 'pointercancel';
       const accepted = !cancelled && moved && pointInsideElement(upEvent.clientX, upEvent.clientY, els.slime);
       if (moved) suppressFoodClickUntil = performance.now() + 400;
