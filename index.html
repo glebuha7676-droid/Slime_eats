@@ -7,7 +7,7 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Накорми и Пробей</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body>
   <div id="app" class="app">
@@ -62,14 +62,8 @@
             <div class="slime-playground">
               <div id="slime" class="slime skin-classic" role="button" tabindex="0" aria-label="Слайм. Нажми или погладь его">
                 <div id="rarityBursts" class="rarity-bursts" aria-live="polite"></div>
-                <div class="slime-tip" aria-hidden="true"></div>
-                <div class="slime-pet-glow" aria-hidden="true"></div>
-                <div class="slime-face" aria-hidden="true">
-                  <div class="slime-brow slime-brow-left"></div><div class="slime-brow slime-brow-right"></div>
-                  <div class="slime-eye slime-eye-left"><i></i></div><div class="slime-eye slime-eye-right"><i></i></div>
-                  <div class="slime-cheek slime-cheek-left"></div><div class="slime-cheek slime-cheek-right"></div>
-                  <div class="slime-mouth"><i></i></div>
-                </div>
+                <canvas id="menuSlimeCanvas" class="menu-slime-canvas" width="180" height="180" aria-hidden="true"></canvas>
+                <div id="menuSlimeMouth" class="menu-slime-mouth-target" aria-hidden="true"></div>
                 <div id="foodInside" class="food-inside"></div>
               </div>
             </div>
@@ -193,6 +187,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="game.js"></script>
+  <script src="game.js?v=13"></script>
 </body>
 </html>

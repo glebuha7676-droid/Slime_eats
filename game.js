@@ -246,6 +246,7 @@
     coinsLabel: $('#coinsLabel'), worldLabel: $('#worldLabel'), worldProgressText: $('#worldProgressText'),
     worldProgressBar: $('#worldProgressBar'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
+    menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
     foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), buffList: $('#buffList'), massLabel: $('#massLabel'), powerLabel: $('#powerLabel'),
     defenseLabel: $('#defenseLabel'), bounceLabel: $('#bounceLabel'), stomachSlots: $('#stomachSlots'),
     massCompare: $('#massCompare'), powerCompare: $('#powerCompare'), defenseCompare: $('#defenseCompare'), bounceCompare: $('#bounceCompare'),
@@ -278,6 +279,10 @@
   let menuGazeTimer = null;
   let slimeInteractionTimer = null;
   let slimePointer = null;
+  let menuSlimeAnimationId = 0;
+  let menuSlimeLastFrame = 0;
+  const menuGaze = { x: 0, y: 0 };
+  const menuPetPoint = { x: 0, y: 0 };
   let toastTimer = null;
   let audioCtx = null;
   const soundPools = new Map();
@@ -300,6 +305,7 @@
   let dragState = null;
   let selectedFoodOfferIndex = null;
   const ctx = els.canvas.getContext('2d');
+  const menuSlimeCtx = els.menuSlimeCanvas.getContext('2d');
 
   function loadSave() {
     try {
@@ -515,7 +521,7 @@
   function animateFoodToMouth(food, source) {
     if (!source?.isConnected) return;
     const from = source.getBoundingClientRect();
-    const mouth = els.slime.querySelector('.slime-mouth')?.getBoundingClientRect();
+    const mouth = els.menuSlimeMouth?.getBoundingClientRect();
     if (!mouth) return;
     setMenuGazePoint(from.left + from.width / 2, from.top + from.height / 2);
     els.slime.classList.add('tracking-food', 'expect-food');
@@ -544,15 +550,15 @@
     const dy = clientY - (rect.top + rect.height * .43);
     const distance = Math.max(1, Math.hypot(dx, dy));
     const strength = Math.min(1, distance / 70);
-    els.slime.style.setProperty('--gaze-x', `${dx / distance * 3.2 * strength}px`);
-    els.slime.style.setProperty('--gaze-y', `${dy / distance * 2.4 * strength}px`);
+    menuGaze.x = dx / distance * strength;
+    menuGaze.y = dy / distance * strength;
   }
 
   function resetMenuGaze(delay = 0) {
     clearTimeout(menuGazeTimer);
     menuGazeTimer = setTimeout(() => {
-      els.slime.style.setProperty('--gaze-x', '0px');
-      els.slime.style.setProperty('--gaze-y', '0px');
+      menuGaze.x = 0;
+      menuGaze.y = 0;
     }, delay);
   }
 
@@ -617,8 +623,8 @@
       }
       if (slimePointer.petting) {
         const rect = els.slime.getBoundingClientRect();
-        els.slime.style.setProperty('--pet-x', `${clamp((event.clientX - rect.left) / rect.width * 100, 18, 82)}%`);
-        els.slime.style.setProperty('--pet-y', `${clamp((event.clientY - rect.top) / rect.height * 100, 12, 58)}%`);
+        menuPetPoint.x = clamp((event.clientX - rect.left) / rect.width * 2 - 1, -.64, .64);
+        menuPetPoint.y = clamp((event.clientY - rect.top) / rect.height * 2 - 1, -.72, .18);
       } else setMenuGazePoint(event.clientX, event.clientY);
     });
 
@@ -641,6 +647,11 @@
   function showScreen(name) {
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
+    if (name === 'home') startMenuSlimeLoop();
+    else if (menuSlimeAnimationId) {
+      cancelAnimationFrame(menuSlimeAnimationId);
+      menuSlimeAnimationId = 0;
+    }
   }
 
   function newDraft() {
@@ -984,8 +995,8 @@
     els.rerollBtn.disabled = full;
 
     const scale = clamp(1 + session.stats.mass / 190, 1.03, 1.24);
-    els.slime.style.width = `${98 * scale}px`;
-    els.slime.style.height = `${108 * scale}px`;
+    els.slime.style.width = `${110 * scale}px`;
+    els.slime.style.height = `${110 * scale}px`;
 
     renderStomachSlots(capacity);
     els.foodInside.replaceChildren();
@@ -1085,7 +1096,7 @@
       if (moved) suppressFoodClickUntil = performance.now() + 400;
       if (ghost) {
         if (accepted) {
-          const rect = els.slime.querySelector('.slime-mouth')?.getBoundingClientRect() || els.slime.getBoundingClientRect();
+          const rect = els.menuSlimeMouth?.getBoundingClientRect() || els.slime.getBoundingClientRect();
           ghost.style.transition = 'left .18s ease,top .18s ease,transform .18s ease,opacity .18s ease';
           ghost.style.left = `${rect.left + rect.width / 2}px`;
           ghost.style.top = `${rect.top + rect.height / 2}px`;
@@ -1110,7 +1121,7 @@
         source.classList.remove('drag-source');
       }
       if (accepted) {
-        const mouthRect = els.slime.querySelector('.slime-mouth')?.getBoundingClientRect();
+        const mouthRect = els.menuSlimeMouth?.getBoundingClientRect();
         if (mouthRect) setMenuGazePoint(mouthRect.left + mouthRect.width / 2, mouthRect.top + mouthRect.height / 2);
         resetMenuGaze(300);
         chooseFood(offerIndex);
@@ -2670,6 +2681,200 @@
     return `rgb(${r},${g},${b})`;
   }
 
+  function drawSlimeAvatar(targetCtx, {
+    x, y, radius, emotion = 'focused', colors = SKINS[0].colors,
+    scaleX = 1, scaleY = 1, rotation = 0, alpha = 1,
+    gazeX = 0, gazeY = 0, blink = false, aura = '', petPoint = null,
+    timestamp = performance.now()
+  }) {
+    if (aura) {
+      const auraColors = { epic: '#9b72ff', legendary: '#ffc83d', prismatic: '#78d7ff', secret: '#5ce9ff' };
+      const auraColor = auraColors[aura];
+      if (auraColor) {
+        targetCtx.save();
+        targetCtx.globalAlpha = .2 + Math.sin(timestamp / 120) * .05;
+        targetCtx.strokeStyle = auraColor;
+        targetCtx.lineWidth = aura === 'secret' || aura === 'prismatic' ? 7 : 5;
+        targetCtx.beginPath();
+        targetCtx.arc(x, y, radius + 8 + Math.sin(timestamp / 150) * 2, 0, Math.PI * 2);
+        targetCtx.stroke();
+        targetCtx.restore();
+      }
+    }
+
+    targetCtx.save();
+    targetCtx.globalAlpha = alpha;
+    targetCtx.translate(x, y);
+    targetCtx.rotate(rotation);
+    targetCtx.scale(scaleX, scaleY);
+
+    const gradient = targetCtx.createRadialGradient(-radius * .25, -radius * .35, radius * .12, 0, 0, radius * 1.1);
+    gradient.addColorStop(0, colors[0]);
+    gradient.addColorStop(.58, colors[1]);
+    gradient.addColorStop(1, colors[2]);
+    targetCtx.fillStyle = gradient;
+    targetCtx.strokeStyle = '#26334a';
+    targetCtx.lineWidth = Math.max(2.7, radius * .09);
+    targetCtx.beginPath();
+    targetCtx.moveTo(0, -radius);
+    targetCtx.bezierCurveTo(radius * .15, -radius * .99, radius * .16, -radius * .86, radius * .26, -radius * .79);
+    targetCtx.bezierCurveTo(radius * .67, -radius * .68, radius * .93, -radius * .31, radius * .91, radius * .16);
+    targetCtx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
+    targetCtx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
+    targetCtx.bezierCurveTo(-radius * .93, -radius * .31, -radius * .67, -radius * .68, -radius * .26, -radius * .79);
+    targetCtx.bezierCurveTo(-radius * .16, -radius * .86, -radius * .15, -radius * .99, 0, -radius);
+    targetCtx.closePath();
+    targetCtx.fill();
+    targetCtx.stroke();
+
+    targetCtx.globalAlpha = alpha * .25;
+    targetCtx.fillStyle = '#fff';
+    targetCtx.beginPath();
+    targetCtx.ellipse(-radius * .28, -radius * .32, radius * .23, radius * .13, -.5, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.globalAlpha = alpha;
+
+    if (petPoint) {
+      targetCtx.globalAlpha = alpha * .62;
+      targetCtx.fillStyle = '#fff';
+      targetCtx.beginPath();
+      targetCtx.ellipse(petPoint.x * radius, petPoint.y * radius, radius * .13, radius * .075, -.45, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.globalAlpha = alpha;
+    }
+
+    const eyeY = -radius * .12;
+    const eyeX = radius * .245;
+    const outline = '#26334a';
+    const closedHappy = emotion === 'petting' || emotion === 'pleased';
+    targetCtx.lineCap = 'round';
+    targetCtx.lineJoin = 'round';
+
+    targetCtx.globalAlpha = alpha * (closedHappy ? .68 : .48);
+    targetCtx.fillStyle = '#f78591';
+    targetCtx.beginPath(); targetCtx.ellipse(-radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); targetCtx.fill();
+    targetCtx.beginPath(); targetCtx.ellipse(radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); targetCtx.fill();
+    targetCtx.globalAlpha = alpha;
+
+    if (emotion === 'hurt') {
+      targetCtx.strokeStyle = outline;
+      targetCtx.lineWidth = Math.max(2.5, radius * .085);
+      for (const side of [-1, 1]) {
+        const eyeCenter = eyeX * side;
+        targetCtx.beginPath(); targetCtx.moveTo(eyeCenter - radius * .09, eyeY - radius * .08); targetCtx.lineTo(eyeCenter + radius * .09, eyeY + radius * .08); targetCtx.stroke();
+        targetCtx.beginPath(); targetCtx.moveTo(eyeCenter + radius * .09, eyeY - radius * .08); targetCtx.lineTo(eyeCenter - radius * .09, eyeY + radius * .08); targetCtx.stroke();
+      }
+      targetCtx.beginPath(); targetCtx.arc(0, radius * .29, radius * .17, Math.PI + .18, Math.PI * 2 - .18); targetCtx.stroke();
+    } else {
+      const squint = emotion === 'impact' || emotion === 'power';
+      if (squint) {
+        targetCtx.strokeStyle = outline;
+        targetCtx.lineWidth = Math.max(2.5, radius * .08);
+        targetCtx.beginPath(); targetCtx.moveTo(-eyeX - radius * .11, eyeY - radius * .03); targetCtx.lineTo(-eyeX + radius * .11, eyeY + radius * .06); targetCtx.stroke();
+        targetCtx.beginPath(); targetCtx.moveTo(eyeX + radius * .11, eyeY - radius * .03); targetCtx.lineTo(eyeX - radius * .11, eyeY + radius * .06); targetCtx.stroke();
+      } else if (blink || closedHappy) {
+        targetCtx.strokeStyle = outline;
+        targetCtx.lineWidth = Math.max(2.5, radius * .075);
+        for (const side of [-1, 1]) {
+          targetCtx.beginPath();
+          targetCtx.arc(eyeX * side, eyeY + radius * .05, radius * .14, Math.PI + .12, Math.PI * 2 - .12);
+          targetCtx.stroke();
+        }
+      } else {
+        const wide = emotion === 'joy' || emotion === 'surprised' || emotion === 'hungry';
+        const eyeW = radius * (wide ? .185 : .17);
+        const eyeH = radius * (wide ? .225 : .205);
+        targetCtx.strokeStyle = outline;
+        targetCtx.lineWidth = Math.max(2.2, radius * .07);
+        for (const side of [-1, 1]) {
+          const eyeCenter = eyeX * side;
+          targetCtx.fillStyle = '#fff';
+          targetCtx.beginPath(); targetCtx.ellipse(eyeCenter, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
+          const pupilX = eyeCenter + gazeX * radius * .055;
+          const pupilY = eyeY + radius * .015 + gazeY * radius * .05;
+          targetCtx.fillStyle = outline;
+          targetCtx.beginPath(); targetCtx.ellipse(pupilX, pupilY, radius * .065, radius * .095, 0, 0, Math.PI * 2); targetCtx.fill();
+          targetCtx.fillStyle = '#fff';
+          targetCtx.beginPath(); targetCtx.arc(pupilX - radius * .018, pupilY - radius * .03, Math.max(1, radius * .018), 0, Math.PI * 2); targetCtx.fill();
+        }
+      }
+
+      targetCtx.strokeStyle = outline;
+      targetCtx.fillStyle = outline;
+      targetCtx.lineWidth = Math.max(2.3, radius * .075);
+      if (emotion === 'surprised' || emotion === 'hungry') {
+        targetCtx.beginPath(); targetCtx.ellipse(0, radius * .27, radius * .115, radius * (emotion === 'hungry' ? .18 : .16), 0, 0, Math.PI * 2); targetCtx.fill();
+        if (emotion === 'hungry') {
+          targetCtx.fillStyle = '#f78591';
+          targetCtx.beginPath(); targetCtx.ellipse(0, radius * .35, radius * .07, radius * .04, 0, 0, Math.PI * 2); targetCtx.fill();
+        }
+      } else if (emotion === 'chewing') {
+        const chewSide = Math.sin(timestamp / 75) > 0 ? 1 : -1;
+        targetCtx.beginPath(); targetCtx.ellipse(chewSide * radius * .055, radius * .24, radius * .105, radius * .075, chewSide * .16, 0, Math.PI * 2); targetCtx.fill();
+      } else if (emotion === 'joy' || closedHappy) {
+        targetCtx.beginPath(); targetCtx.ellipse(0, radius * .25, radius * .19, radius * .145, 0, 0, Math.PI * 2); targetCtx.fill();
+        targetCtx.fillStyle = '#f78591';
+        targetCtx.beginPath(); targetCtx.ellipse(0, radius * .32, radius * .105, radius * .05, 0, 0, Math.PI * 2); targetCtx.fill();
+      } else if (squint) {
+        targetCtx.beginPath(); targetCtx.arc(0, radius * .16, radius * .19, .12, Math.PI - .12); targetCtx.stroke();
+      } else {
+        targetCtx.beginPath(); targetCtx.arc(0, radius * .15, radius * .165, .12, Math.PI - .12); targetCtx.stroke();
+      }
+    }
+    targetCtx.restore();
+  }
+
+  function menuSlimeEmotion() {
+    if (els.slime.classList.contains('petting') || els.slime.classList.contains('petted')) return 'petting';
+    if (els.slime.classList.contains('pleased')) return 'pleased';
+    if (els.slime.classList.contains('chewing')) return 'chewing';
+    if (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food')) return 'hungry';
+    if (els.slime.classList.contains('booped')) return 'surprised';
+    return 'focused';
+  }
+
+  function prepareMenuSlimeCanvas() {
+    const lowPower = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    const dpr = Math.min(lowPower ? 1.15 : 1.5, window.devicePixelRatio || 1);
+    els.menuSlimeCanvas.width = Math.round(180 * dpr);
+    els.menuSlimeCanvas.height = Math.round(180 * dpr);
+    menuSlimeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    menuSlimeCtx.imageSmoothingEnabled = true;
+  }
+
+  function drawMenuSlime(timestamp) {
+    menuSlimeCtx.clearRect(0, 0, 180, 180);
+    const emotion = menuSlimeEmotion();
+    const rarity = MEAL_REACTION_CLASSES.find(name => els.slime.classList.contains(name))?.replace('meal-', '') || '';
+    const blinkPhase = timestamp % 4700;
+    drawSlimeAvatar(menuSlimeCtx, {
+      x: 90, y: 91, radius: 66, emotion,
+      gazeX: menuGaze.x, gazeY: menuGaze.y,
+      blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
+      aura: els.slime.classList.contains('pleased') ? rarity : '',
+      petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
+      timestamp
+    });
+  }
+
+  function menuSlimeFrame(timestamp) {
+    if (!els.homeScreen.classList.contains('active')) {
+      menuSlimeAnimationId = 0;
+      return;
+    }
+    menuSlimeAnimationId = requestAnimationFrame(menuSlimeFrame);
+    if (document.hidden || timestamp - menuSlimeLastFrame < 32) return;
+    menuSlimeLastFrame = timestamp;
+    drawMenuSlime(timestamp);
+  }
+
+  function startMenuSlimeLoop() {
+    if (menuSlimeAnimationId) return;
+    prepareMenuSlimeCanvas();
+    drawMenuSlime(performance.now());
+    menuSlimeAnimationId = requestAnimationFrame(menuSlimeFrame);
+  }
+
   function drawSlime(timestamp) {
     const s = run.slime;
     const screenY = s.y - run.cameraY;
@@ -2717,100 +2922,18 @@
       ctx.restore();
     }
 
-    ctx.save();
-    ctx.globalAlpha = run.portalEntry ? Math.pow(1 - vanishProgress, 1.35) : 1;
-    ctx.translate(s.x, screenY);
-    ctx.rotate(clamp(s.vx / 850, -.24, .24) + portalProgress * 1.15);
-    ctx.scale(scaleX * portalScale, scaleY * portalScale);
-
-    const gradient = ctx.createRadialGradient(-radius * .25, -radius * .35, radius * .12, 0, 0, radius * 1.1);
-    gradient.addColorStop(0, selected.colors[0]);
-    gradient.addColorStop(.58, selected.colors[1]);
-    gradient.addColorStop(1, selected.colors[2]);
-    ctx.fillStyle = gradient;
-    ctx.strokeStyle = '#26334a';
-    ctx.lineWidth = Math.max(2.7, radius * .09);
-    ctx.beginPath();
-    ctx.moveTo(0, -radius);
-    ctx.bezierCurveTo(radius * .15, -radius * .99, radius * .16, -radius * .86, radius * .26, -radius * .79);
-    ctx.bezierCurveTo(radius * .67, -radius * .68, radius * .93, -radius * .31, radius * .91, radius * .16);
-    ctx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
-    ctx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
-    ctx.bezierCurveTo(-radius * .93, -radius * .31, -radius * .67, -radius * .68, -radius * .26, -radius * .79);
-    ctx.bezierCurveTo(-radius * .16, -radius * .86, -radius * .15, -radius * .99, 0, -radius);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.globalAlpha = .25;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.ellipse(-radius * .28, -radius * .32, radius * .23, radius * .13, -.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    const eyeY = -radius * .12;
-    const eyeX = radius * .245;
-    const outline = '#26334a';
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    // Щёчки.
-    ctx.globalAlpha = .48;
-    ctx.fillStyle = '#f78591';
-    ctx.beginPath(); ctx.ellipse(-radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-
-    if (emotion === 'hurt') {
-      ctx.strokeStyle = outline;
-      ctx.lineWidth = Math.max(2.5, radius * .085);
-      for (const side of [-1, 1]) {
-        const x = eyeX * side;
-        ctx.beginPath(); ctx.moveTo(x - radius * .09, eyeY - radius * .08); ctx.lineTo(x + radius * .09, eyeY + radius * .08); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x + radius * .09, eyeY - radius * .08); ctx.lineTo(x - radius * .09, eyeY + radius * .08); ctx.stroke();
-      }
-      ctx.beginPath(); ctx.arc(0, radius * .29, radius * .17, Math.PI + .18, Math.PI * 2 - .18); ctx.stroke();
-    } else {
-      const squint = emotion === 'impact' || emotion === 'power';
-      if (squint) {
-        ctx.strokeStyle = outline;
-        ctx.lineWidth = Math.max(2.5, radius * .08);
-        ctx.beginPath(); ctx.moveTo(-eyeX - radius * .11, eyeY - radius * .03); ctx.lineTo(-eyeX + radius * .11, eyeY + radius * .06); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(eyeX + radius * .11, eyeY - radius * .03); ctx.lineTo(eyeX - radius * .11, eyeY + radius * .06); ctx.stroke();
-      } else {
-        const wide = emotion === 'joy' || emotion === 'surprised';
-        const eyeW = radius * (wide ? .185 : .17);
-        const eyeH = radius * (wide ? .225 : .205);
-        ctx.fillStyle = '#fff';
-        ctx.strokeStyle = outline;
-        ctx.lineWidth = Math.max(2.2, radius * .07);
-        for (const side of [-1, 1]) {
-          const x = eyeX * side;
-          ctx.beginPath(); ctx.ellipse(x, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = outline;
-          ctx.beginPath(); ctx.ellipse(x, eyeY + radius * .015, radius * .065, radius * .095, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(x - radius * .018, eyeY - radius * .015, Math.max(1, radius * .018), 0, Math.PI * 2); ctx.fill();
-        }
-      }
-
-      ctx.strokeStyle = outline;
-      ctx.fillStyle = outline;
-      ctx.lineWidth = Math.max(2.3, radius * .075);
-      if (emotion === 'surprised') {
-        ctx.beginPath(); ctx.ellipse(0, radius * .27, radius * .115, radius * .16, 0, 0, Math.PI * 2); ctx.fill();
-      } else if (emotion === 'joy') {
-        ctx.beginPath(); ctx.ellipse(0, radius * .25, radius * .19, radius * .145, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f78591';
-        ctx.beginPath(); ctx.ellipse(0, radius * .32, radius * .105, radius * .05, 0, 0, Math.PI * 2); ctx.fill();
-      } else if (emotion === 'impact' || emotion === 'power') {
-        ctx.beginPath(); ctx.arc(0, radius * .16, radius * .19, .12, Math.PI - .12); ctx.stroke();
-      } else {
-        ctx.beginPath(); ctx.arc(0, radius * .15, radius * .165, .12, Math.PI - .12); ctx.stroke();
-      }
-    }
-    ctx.restore();
+    drawSlimeAvatar(ctx, {
+      x: s.x,
+      y: screenY,
+      radius,
+      emotion,
+      colors: selected.colors,
+      scaleX: scaleX * portalScale,
+      scaleY: scaleY * portalScale,
+      rotation: clamp(s.vx / 850, -.24, .24) + portalProgress * 1.15,
+      alpha: run.portalEntry ? Math.pow(1 - vanishProgress, 1.35) : 1,
+      timestamp
+    });
 
     if (!run.portalEntry) drawMassBar(s.x, screenY - radius * .98 - 22, radius);
 
