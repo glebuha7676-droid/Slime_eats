@@ -256,7 +256,7 @@
   const $$ = selector => [...document.querySelectorAll(selector)];
   const els = {
     coinsLabel: $('#coinsLabel'), worldLabel: $('#worldLabel'), worldProgressText: $('#worldProgressText'),
-    worldProgressBar: $('#worldProgressBar'), worldHint: $('#worldHint'),
+    worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
     menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
     foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), buffList: $('#buffList'), massLabel: $('#massLabel'), powerLabel: $('#powerLabel'),
@@ -265,7 +265,7 @@
     startDropLabel: $('#startDropLabel'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
     adminWorldValue: $('#adminWorldValue'), adminResetProgressBtn: $('#adminResetProgressBtn'),
-    conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'), pickCounter: $('#pickCounter'),
+    conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
     foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'), buffShelf: $('#buffShelf'),
     startDropBtn: $('#startDropBtn'),
     depthLabel: $('#depthLabel'), runMassLabel: $('#runMassLabel'), flightLabel: $('#flightLabel'), runCoinsLabel: $('#runCoinsLabel'),
@@ -522,13 +522,14 @@
     document.body.dataset.world = String(world.id);
     ensureWorldSprites(world.id);
     const best = Math.floor(save.worldBest[world.id] || 0);
+    const worldProgress = clamp(best / world.targetDepth * 100, 0, 100);
+    const remaining = Math.max(0, world.targetDepth - best);
     els.worldLabel.textContent = `Мир ${world.id} · ${world.name}`;
-    els.worldProgressText.textContent = `${best} / ${world.targetDepth} м`;
-    els.worldProgressBar.style.width = `${clamp(best / world.targetDepth * 100, 0, 100)}%`;
-    els.worldProgressBar.parentElement.setAttribute('aria-valuenow', String(Math.round(clamp(best / world.targetDepth * 100, 0, 100))));
-    els.worldHint.textContent = best > 0
-      ? `До портала осталось ${Math.max(0, world.targetDepth - best)} м`
-      : 'Доберись до портала внизу мира';
+    els.worldProgressText.textContent = `${best} м`;
+    els.worldProgressBar.style.width = `${worldProgress}%`;
+    if (els.worldProgressMarker) els.worldProgressMarker.style.left = `${worldProgress}%`;
+    els.worldProgressBar.parentElement.setAttribute('aria-valuenow', String(Math.round(worldProgress)));
+    els.worldHint.textContent = remaining > 0 ? `ЕЩЁ ${remaining} М` : 'МИР ПРОЙДЕН';
     if (els.adminWorldValue) els.adminWorldValue.textContent = `МИР ${world.id}`;
     applySkin();
   }
@@ -670,8 +671,10 @@
   }
 
   function showScreen(name) {
+    document.body.dataset.screen = name;
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
+    window.scrollTo(0, 0);
     if (name === 'home') startMenuSlimeLoop();
     else if (menuSlimeAnimationId) {
       cancelAnimationFrame(menuSlimeAnimationId);
@@ -1036,7 +1039,6 @@
     els.powerLabel.textContent = `×${session.stats.power.toFixed(1)}`;
     els.defenseLabel.textContent = `${Math.round(session.stats.defense * 100)}%`;
     els.bounceLabel.textContent = `×${session.stats.elasticity.toFixed(1)}`;
-    els.pickCounter.textContent = `${session.foods.length} / ${capacity}`;
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
     clearFoodPreview();
     els.rerollBtn.disabled = full;
@@ -1386,7 +1388,7 @@
     run.blocks = generateBlockField(run);
     prepareCanvas();
     showScreen('drop');
-    els.worldTargetBadge.textContent = `${world.icon} Портал: ${world.targetDepth} м`;
+    els.worldTargetBadge.textContent = `${world.icon} Финиш: ${world.targetDepth} м`;
     updateRunUI();
     run.animationId = requestAnimationFrame(gameFrame);
   }

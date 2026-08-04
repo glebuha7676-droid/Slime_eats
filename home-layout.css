@@ -1,0 +1,94 @@
+/* Main-screen layout: world summary, compact conveyor and bottom admin tools. */
+
+.topbar.world-summary{
+  min-height:0;display:block;margin:7px 0 10px;padding:9px 11px 10px;
+  border:2px solid #35415a;border-radius:18px;background:linear-gradient(135deg,#30b77d,#238e78);
+  box-shadow:0 3px 0 rgba(53,65,90,.22);color:#fff;
+}
+.world-summary-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.world-summary-head> b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;line-height:1.1;letter-spacing:.15px}
+.world-summary .currency{
+  min-width:70px;min-height:38px;display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 8px;
+  border:2px solid #35415a;border-radius:13px;background:#fff8e8;box-shadow:0 2px 0 rgba(53,65,90,.22);color:#28344a;font-size:13px;
+}
+.world-summary .currency-icon{width:27px;height:27px}
+.world-progress-copy{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:7px 2px 5px}
+.world-progress-copy span{font-size:7.5px;font-weight:1000;letter-spacing:.55px;color:rgba(255,255,255,.86)}
+.world-progress-copy span strong{margin-left:3px;color:#fff;font-size:13px;letter-spacing:0}
+.world-progress-copy>b{font-size:8.5px;letter-spacing:.35px;color:#fff7b2;white-space:nowrap}
+.world-progress-track{
+  position:relative;height:11px;border:2px solid rgba(36,47,68,.9);border-radius:999px;
+  background:rgba(31,51,67,.3);overflow:visible;
+}
+.world-progress-track .world-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#ffe06b,#fff1a7)}
+.world-record-marker{
+  position:absolute;z-index:3;top:-4px;bottom:-4px;width:3px;margin-left:-1px;border-radius:3px;
+  background:#fff;box-shadow:0 0 0 1px rgba(43,53,75,.38);transition:left .3s ease;
+}
+.world-record-marker:after{content:"";position:absolute;left:50%;top:-3px;width:7px;height:7px;border:1px solid rgba(43,53,75,.45);background:#fff;transform:translateX(-50%) rotate(45deg)}
+
+body[data-world="2"] .world-summary{background:linear-gradient(135deg,#43a7d8,#3384c3)}
+body[data-world="2"] .world-progress-track .world-fill{background:linear-gradient(90deg,#b9f1ff,#eefcff)}
+body[data-world="3"] .world-summary{background:linear-gradient(135deg,#ed76b5,#d957a1)}
+body[data-world="3"] .world-progress-track .world-fill{background:linear-gradient(90deg,#fff0a6,#fff9d7)}
+body[data-world="4"] .world-summary{background:linear-gradient(135deg,#eb7546,#c9493e)}
+body[data-world="4"] .world-progress-track .world-fill{background:linear-gradient(90deg,#ffd168,#fff0a1)}
+
+body[data-screen="drop"] .topbar.world-summary{margin-bottom:7px;padding:7px 9px}
+body[data-screen="drop"] .world-progress-copy,
+body[data-screen="drop"] .world-progress-track{display:none}
+body[data-screen="drop"] .world-summary-head>b{font-size:12px}
+body[data-screen="drop"] .world-summary .currency{min-height:34px}
+
+#homeScreen .conveyor{
+  position:relative;margin-bottom:8px;padding:6px 6px 4px;overflow:visible;background:#f4f3ef;
+}
+#homeScreen .belt-window{margin:0;padding:5px 5px 13px;border-radius:14px;background:linear-gradient(#d9dbde 0 13px,#c1c4c8 13px)}
+#homeScreen .belt-track{height:184px;min-height:184px}
+#homeScreen .reroll-btn,
+#homeScreen .reroll-btn.ad-mode{
+  position:relative;z-index:12;left:auto;top:auto;width:158px;height:44px;min-height:44px;
+  display:flex;align-items:center;justify-content:center;gap:7px;margin:-14px auto 1px;padding:4px 11px;
+  border:3px solid #35415a;border-radius:15px;background:#815fd4;background-image:linear-gradient(180deg,#9d79e4,#7955c9);
+  box-shadow:0 3px 0 #35415a;transform:none;color:#fff;text-align:left;
+}
+#homeScreen .reroll-btn.ad-mode{background-image:linear-gradient(180deg,#648eb5,#4f759b)}
+#homeScreen .reroll-btn .reroll-icon{width:30px;height:30px;flex:0 0 30px;display:block;object-fit:contain}
+#homeScreen .reroll-btn>.reroll-copy{width:auto;min-width:0;height:auto;display:flex;align-items:flex-start;justify-content:center;gap:2px}
+#homeScreen .reroll-copy b{font-size:9px;line-height:1;letter-spacing:.4px;color:#fff;text-shadow:none}
+#homeScreen .reroll-copy small{max-width:94px;font-size:6.8px;line-height:1;color:#f8f2ff;text-shadow:none;white-space:nowrap}
+#homeScreen .reroll-btn:active{transform:translateY(3px);box-shadow:none}
+#homeScreen .reroll-btn:disabled{transform:none!important;filter:saturate(.55)}
+
+.bottom-actions{margin-bottom:8px}
+.admin-tools{
+  min-height:48px;margin:0;padding:5px 6px;display:grid;
+  grid-template-columns:52px minmax(112px,132px) minmax(78px,1fr) minmax(82px,1fr);align-items:center;gap:5px;
+  background:#edf5f3!important;border-color:#52636c!important;box-shadow:none!important;
+}
+.admin-tools-title small{display:block;color:#348873;font-size:6px;font-weight:1000;letter-spacing:.9px}
+.admin-tools-title b{display:block;margin-top:1px;font-size:8px;letter-spacing:.4px}
+.admin-world-switch{height:34px;display:grid;grid-template-columns:30px minmax(48px,1fr) 30px;align-items:center;border:2px solid #52636c;border-radius:10px;background:#fff}
+.admin-world-switch button{height:30px;padding:0;background:#d8efea;color:#244c4e;font-size:21px;font-weight:1000;line-height:1}
+.admin-world-switch button:first-child{border-radius:7px 0 0 7px}.admin-world-switch button:last-child{border-radius:0 7px 7px 0}
+.admin-world-switch strong{text-align:center;font-size:7px;letter-spacing:.35px;white-space:nowrap}
+.admin-restart-btn,.admin-reset-progress{
+  min-width:0;min-height:34px;height:34px;display:flex;align-items:center;justify-content:center;gap:3px;padding:3px 5px;
+  border:2px solid #52636c;border-radius:10px;background:#d9e9ff;background-image:none;box-shadow:none;color:#36516f;font-weight:1000;
+}
+.admin-restart-btn img{width:22px;height:22px;flex:none;display:block;object-fit:contain}.admin-restart-btn b{font-size:6px;line-height:1.05;letter-spacing:.2px}
+.admin-reset-progress{border-color:#8b4b55;background:#ffe5e2;color:#852f3e;font-size:5.9px;line-height:1.05;letter-spacing:.15px}
+.admin-world-switch button:active,.admin-restart-btn:active,.admin-reset-progress:active{transform:translateY(1px);filter:brightness(.95)}
+
+@media(max-width:370px){
+  .topbar.world-summary{margin-top:5px;padding:8px 9px 9px}.world-summary-head>b{font-size:12.5px}
+  .world-summary .currency{min-width:64px;padding-inline:6px}.world-progress-copy span strong{font-size:12px}
+  #homeScreen .conveyor{padding-inline:4px}#homeScreen .belt-track{height:180px;min-height:180px}
+  #homeScreen .food-choices{margin-inline:16px}
+  #homeScreen .belt-tunnel{width:29px}
+  #homeScreen .tunnel-left i{right:-7px}#homeScreen .tunnel-right i{left:-7px}
+  #homeScreen .reroll-btn,#homeScreen .reroll-btn.ad-mode{width:150px;height:42px;min-height:42px;margin-top:-13px}
+  .admin-tools{grid-template-columns:38px minmax(98px,112px) minmax(68px,1fr) minmax(72px,1fr);gap:3px;padding:4px}
+  .admin-tools-title b{font-size:7px}.admin-world-switch{grid-template-columns:27px minmax(44px,1fr) 27px}
+  .admin-restart-btn img{width:19px;height:19px}.admin-restart-btn b,.admin-reset-progress{font-size:5.3px}
+}

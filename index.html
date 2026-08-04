@@ -5,49 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#7757d8" />
   <meta name="color-scheme" content="light" />
-  <title>Слайм: Накорми и Пробей</title>
+  <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=27" />
-  <link rel="stylesheet" href="food-cards.css?v=2" />
+  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="food-cards.css?v=3" />
+  <link rel="stylesheet" href="home-layout.css?v=2" />
 </head>
 <body>
   <div id="app" class="app">
-    <header class="topbar">
-      <div class="brand" aria-label="Слайм: Накорми и Пробей">
-        <span class="brand-mascot" aria-hidden="true"><img src="assets/ui/slime.webp" alt=""></span>
-        <div class="brand-copy">
-          <strong>НАКОРМИ И ПРОБЕЙ</strong>
-          <small id="worldLabel">Мир 1 · Зелёные глубины</small>
-        </div>
+    <header class="topbar world-summary" aria-label="Мир, рекорд и монеты">
+      <div class="world-summary-head">
+        <b id="worldLabel">Мир 1 · Зелёные глубины</b>
+        <div class="currency" aria-label="Монеты"><img class="currency-icon" src="assets/ui/coin.webp" alt="" aria-hidden="true"><b id="coinsLabel">0</b></div>
       </div>
-      <div class="currency" aria-label="Монеты"><img class="currency-icon" src="assets/ui/coin.webp" alt="" aria-hidden="true"><b id="coinsLabel">0</b></div>
+      <div class="world-progress-copy">
+        <span>ВЫ ПРОШЛИ <strong id="worldProgressText">0 м</strong></span>
+        <b id="worldHint">ЕЩЁ 120 М</b>
+      </div>
+      <div class="progress-track world-progress-track" role="progressbar" aria-label="Рекорд глубины в мире" aria-valuemin="0" aria-valuemax="100">
+        <div id="worldProgressBar" class="progress-fill world-fill"></div>
+        <i id="worldProgressMarker" class="world-record-marker" aria-hidden="true"></i>
+      </div>
     </header>
 
     <main class="game-shell">
       <section id="homeScreen" class="screen active" aria-label="Подготовка слайма">
-        <section class="mission-card card" aria-label="Текущее задание">
-          <div class="mission-icon" aria-hidden="true"><img src="assets/ui/quest.webp" alt=""></div>
-          <div class="mission-main">
-            <small>ЗАДАНИЕ МИРА</small>
-            <div class="mission-title-row">
-              <b>Найди портал</b>
-              <strong id="worldProgressText">0 / 120 м</strong>
-            </div>
-            <div class="progress-track" role="progressbar" aria-label="Прогресс задания" aria-valuemin="0" aria-valuemax="100"><div id="worldProgressBar" class="progress-fill world-fill"></div></div>
-            <p id="worldHint">Доберись до портала внизу мира</p>
-          </div>
-        </section>
-
-        <section class="admin-tools card" aria-label="Админ-инструменты">
-          <div class="admin-tools-title"><small>ADMIN</small><b>Тест мира</b></div>
-          <div class="admin-world-switch" aria-label="Переключение мира">
-            <button id="adminPrevWorldBtn" type="button" aria-label="Предыдущий мир">‹</button>
-            <strong id="adminWorldValue">МИР 1</strong>
-            <button id="adminNextWorldBtn" type="button" aria-label="Следующий мир">›</button>
-          </div>
-          <button id="adminResetProgressBtn" class="admin-reset-progress" type="button">СБРОСИТЬ ПРОГРЕСС</button>
-        </section>
-
         <section id="slimeStage" class="slime-stage card" aria-label="Слайм и его характеристики">
           <div class="slime-hero-layout">
             <div class="stat-rail stat-rail-left">
@@ -82,10 +64,6 @@
         </section>
 
         <div id="conveyor" class="conveyor card">
-          <div class="conveyor-head">
-            <div class="conveyor-title"><img src="assets/ui/conveyor.webp" alt="" aria-hidden="true"><div><small>ВЫБЕРИ ЕДУ</small><b>Конвейер <span id="pickCounter">0 / 1</span></b></div></div>
-            <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><b>НОВЫЙ ЗАБЕГ</b></button>
-          </div>
           <div class="belt-window">
             <div class="belt-tunnel tunnel-left" aria-hidden="true"><i></i></div>
             <div class="belt-track">
@@ -124,6 +102,17 @@
           <button class="locked-action" type="button" disabled aria-label="Облики появятся позже"><span class="action-icon"><img src="assets/ui/lock.webp" alt=""></span><b>Облики</b><small>Скоро</small></button>
           <button data-panel="rewards" type="button"><span class="action-icon"><img src="assets/ui/gift.webp" alt=""></span><b>Бонусы</b><small>Забрать награду</small></button>
         </nav>
+
+        <section class="admin-tools card" aria-label="Админ-инструменты">
+          <div class="admin-tools-title"><small>ADMIN</small><b>ТЕСТ</b></div>
+          <div class="admin-world-switch" aria-label="Переключение мира">
+            <button id="adminPrevWorldBtn" type="button" aria-label="Предыдущий мир">‹</button>
+            <strong id="adminWorldValue">МИР 1</strong>
+            <button id="adminNextWorldBtn" type="button" aria-label="Следующий мир">›</button>
+          </div>
+          <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><b>НОВЫЙ ЗАБЕГ</b></button>
+          <button id="adminResetProgressBtn" class="admin-reset-progress" type="button">СБРОСИТЬ ПРОГРЕСС</button>
+        </section>
       </section>
 
       <section id="dropScreen" class="screen" aria-label="Забег">
@@ -186,6 +175,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="game.js?v=27"></script>
+  <script src="game.js?v=29"></script>
 </body>
 </html>
