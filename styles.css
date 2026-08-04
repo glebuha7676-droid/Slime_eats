@@ -161,27 +161,53 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .slime-playground{height:190px;margin:0;overflow:visible;border:2px solid #8195a6;border-radius:18px;background:linear-gradient(180deg,#dce8f8 0 68%,#b8d2c9 68% 72%,#d7e6df 72%)}
 .slime-playground:before{display:none}
 .slime-playground:after{bottom:17px;width:132px;height:18px;border-color:#607c70;background:#a9c9bc}
-.slime-playground .slime{margin-bottom:27px;border-radius:50%;background:radial-gradient(circle at 30% 24%,#a7f3d0 0,#39d991 48%,#159b61 100%);animation:slimeWait 3.4s ease-in-out infinite;transform-origin:50% 88%}
-@keyframes slimeWait{0%,100%{transform:translateY(0) scale(1)}44%{transform:translateY(-3px) scaleX(.99) scaleY(1.018)}52%{transform:translateY(0) scaleX(1.015) scaleY(.987)}60%{transform:translateY(-1px) scale(1)}}
-.slime-playground .slime-eye{top:34%;width:18px;height:23px;animation:menuBlink 4.8s ease-in-out infinite;transform-origin:50% 55%}
-.slime-playground .slime-eye-left{left:29%}.slime-playground .slime-eye-right{right:29%}
-.slime-playground .slime-eye i{left:5px;top:6px;width:6px;height:10px;transform:translate(var(--gaze-x,0),var(--gaze-y,0));transition:transform .1s ease-out}
+.slime-playground .slime{margin-bottom:25px;border-radius:46% 54% 48% 52%/54% 56% 44% 46%;border-color:#29445a;background:radial-gradient(circle at 31% 22%,#e9ff9c 0 7%,#a9ee49 24%,#65cf3f 62%,#36a943 100%);box-shadow:inset -7px -8px 0 rgba(35,116,49,.1);animation:slimeWait 3.4s ease-in-out infinite;transform-origin:50% 88%;cursor:pointer;isolation:isolate}
+.slime-playground .slime:focus-visible{outline:4px solid rgba(80,200,139,.34);outline-offset:3px}
+.slime-tip{position:absolute;z-index:3;left:50%;top:-10px;width:20px;height:20px;transform:translateX(-50%) rotate(45deg);border:0;border-top:3px solid #29445a;border-right:3px solid #29445a;border-radius:5px 9px 3px 9px;background:#a9ee49;pointer-events:none}
+@keyframes slimeWait{0%,100%{transform:translateY(0) scale(1)}42%{transform:translateY(-3px) scaleX(.985) scaleY(1.018)}50%{transform:translateY(0) scaleX(1.018) scaleY(.985)}58%{transform:translateY(-1px) scale(1)}}
+.slime-playground .slime-eye{top:35%;width:19px;height:24px;animation:menuBlink 4.8s ease-in-out infinite;transform-origin:50% 55%;border-color:#29445a}
+.slime-playground .slime-eye-left{left:30%}.slime-playground .slime-eye-right{right:30%}
+.slime-playground .slime-eye i{left:5px;top:6px;width:6px;height:10px;background:#29445a;transform:translate(var(--gaze-x,0),var(--gaze-y,0));transition:transform .1s ease-out}
 @keyframes menuBlink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.1)}}
-.slime-playground .slime-brow{top:27%;opacity:.28}.slime-playground .slime-brow-left{left:29%}.slime-playground .slime-brow-right{right:29%}
-.slime-playground .slime-cheek{top:58%;width:15px;height:7px}.slime-playground .slime-cheek-left{left:20%}.slime-playground .slime-cheek-right{right:20%}
-.slime-playground .slime-mouth{top:57%;width:29px;height:16px;border-bottom-width:3px}
+.slime-playground .slime-brow{top:28%;opacity:.2}.slime-playground .slime-brow-left{left:30%}.slime-playground .slime-brow-right{right:30%}
+.slime-playground .slime-cheek{top:59%;width:15px;height:7px;background:#ff8898;opacity:.55}.slime-playground .slime-cheek-left{left:20%}.slime-playground .slime-cheek-right{right:20%}
+.slime-playground .slime-mouth{top:58%;width:24px;height:13px;border-color:#29445a;border-bottom-width:3px}
+.slime-pet-glow{position:absolute;z-index:3;left:var(--pet-x,32%);top:var(--pet-y,19%);width:19px;height:12px;transform:translate(-50%,-50%) rotate(-25deg);border-radius:50%;background:rgba(255,255,255,.65);opacity:0;pointer-events:none;transition:opacity .14s ease,left .08s linear,top .08s linear}
 .slime.expect-food .slime-eye,.slime.tracking-food .slime-eye{animation:none;transform:scale(1.08)}
-.slime-playground .slime.expect-food .slime-mouth,.slime-playground .slime.eat .slime-mouth{top:51%;width:28px;height:32px;border:3px solid var(--ink);border-radius:50%;background:var(--ink)}
+.slime-playground .slime.expect-food .slime-mouth,.slime-playground .slime.eat .slime-mouth{top:50%;width:27px;height:31px;border:3px solid #29445a;border-radius:50%;background:#29445a}
 .slime.eat .slime-mouth i,.slime.expect-food .slime-mouth i{opacity:1}
-.slime.eat{animation:slimeCatch .33s cubic-bezier(.3,.7,.25,1)}
-.slime.chewing{animation:slimeChew .2s ease-in-out 3}
-.slime.pleased{animation:slimeHappy .58s ease}
-@keyframes slimeCatch{0%{transform:scale(1)}45%{transform:translateY(-4px) scaleX(.9) scaleY(1.09)}100%{transform:scaleX(1.06) scaleY(.94)}}
-@keyframes slimeChew{0%,100%{transform:scale(1)}50%{transform:scaleX(1.045) scaleY(.97) rotate(.6deg)}}
-@keyframes slimeHappy{0%,100%{transform:scale(1)}42%{transform:translateY(-7px) scaleX(.95) scaleY(1.05)}72%{transform:translateY(1px) scaleX(1.03) scaleY(.98)}}
-.slime-playground .slime.chewing .slime-mouth{animation:menuChewMouth .2s ease-in-out 3}
+.slime.eat{animation:slimeCatch var(--catch-time,.3s) cubic-bezier(.3,.7,.25,1)}
+.slime.chewing{animation:slimeChew var(--chew-time,.18s) ease-in-out var(--chew-count,3)}
+.slime.pleased{animation:slimeHappy var(--happy-time,.58s) ease}
+@keyframes slimeCatch{0%{transform:scale(1)}38%{transform:translateY(-5px) scaleX(.88) scaleY(1.1)}72%{transform:translateY(1px) scaleX(1.075) scaleY(.93)}100%{transform:scale(1)}}
+@keyframes slimeChew{0%,100%{transform:scale(1) rotate(0)}45%{transform:translateX(-1px) scaleX(1.045) scaleY(.97) rotate(-1deg)}75%{transform:translateX(1px) scaleX(1.035) scaleY(.98) rotate(1deg)}}
+@keyframes slimeHappy{0%,100%{transform:scale(1)}38%{transform:translateY(-7px) scaleX(.94) scaleY(1.06)}68%{transform:translateY(2px) scaleX(1.04) scaleY(.97)}}
+.slime-playground .slime.chewing .slime-mouth{animation:menuChewMouth var(--chew-time,.18s) ease-in-out var(--chew-count,3)}
 .slime-playground .slime.pleased .slime-eye{top:40%;height:9px;animation:none}.slime-playground .slime.pleased .slime-mouth{top:60%;width:34px}
-@keyframes menuChewMouth{0%,100%{top:59%;width:24px;height:12px;border:0;border-bottom:3px solid var(--ink);background:transparent}50%{top:55%;width:18px;height:18px;border:3px solid var(--ink);border-radius:50%;background:var(--ink)}}
+@keyframes menuChewMouth{0%,100%{top:59%;width:21px;height:11px;border:0;border-bottom:3px solid #29445a;background:transparent}50%{top:55%;width:16px;height:17px;border:3px solid #29445a;border-radius:50%;background:#29445a}}
+
+/* Тактильные реакции героя в меню. */
+.slime.booped{animation:slimeBoop .58s cubic-bezier(.2,.82,.2,1)}
+.slime.booped .slime-eye{animation:none;transform:scale(1.12)}
+.slime-playground .slime.booped .slime-mouth{top:57%;width:15px;height:18px;border:3px solid #29445a;border-radius:50%;background:#29445a}
+@keyframes slimeBoop{0%,100%{transform:scale(1)}20%{transform:translateY(3px) scaleX(1.1) scaleY(.89)}48%{transform:translateY(-8px) scaleX(.92) scaleY(1.1)}72%{transform:translateY(1px) scaleX(1.035) scaleY(.98)}}
+.slime.petting{animation:slimePet .36s ease-in-out infinite alternate}
+.slime.petting .slime-pet-glow{opacity:.9}
+.slime.petting .slime-eye{top:40%;height:9px;border:0;border-top:4px solid #29445a;background:transparent;animation:none}
+.slime.petting .slime-eye i{display:none}.slime.petting .slime-cheek{opacity:.82;transform:scale(1.1)}
+.slime-playground .slime.petting .slime-mouth{top:60%;width:27px;height:14px}
+@keyframes slimePet{from{transform:translateX(-1px) scaleX(1.018) scaleY(.988)}to{transform:translateX(1px) scaleX(.99) scaleY(1.012)}}
+.slime.petted{animation:slimePetted .72s ease}
+.slime.petted .slime-eye{top:40%;height:9px;border:0;border-top:4px solid #29445a;background:transparent;animation:none}.slime.petted .slime-eye i{display:none}
+@keyframes slimePetted{0%,100%{transform:scale(1)}35%{transform:translateY(-5px) scaleX(.95) scaleY(1.055)}62%{transform:translateY(1px) scaleX(1.035) scaleY(.98)}}
+
+/* По нарастающей: от короткой реакции до редких праздничных вспышек. */
+.slime.meal-rare.pleased{animation-name:slimeRareHappy}.slime.meal-epic.pleased{animation-name:slimeEpicHappy;outline:4px solid rgba(139,92,246,.28)}.slime.meal-legendary.pleased{animation-name:slimeLegendHappy;outline:5px solid rgba(255,191,46,.35)}.slime.meal-prismatic.pleased{animation-name:slimePrismHappy;outline:6px solid rgba(135,102,255,.34)}.slime.meal-secret.pleased{animation-name:slimeSecretHappy;outline:6px solid rgba(44,224,255,.35)}
+@keyframes slimeRareHappy{0%,100%{transform:scale(1)}40%{transform:translateY(-8px) scale(.96,1.06)}70%{transform:scale(1.04,.97)}}
+@keyframes slimeEpicHappy{0%,100%{transform:scale(1) rotate(0)}28%{transform:translateY(-9px) scale(.93,1.08) rotate(-3deg)}55%{transform:translateY(-4px) rotate(3deg)}78%{transform:scale(1.05,.96)}}
+@keyframes slimeLegendHappy{0%,100%{transform:scale(1) rotate(0)}24%{transform:translateY(-10px) scale(.92,1.09) rotate(-4deg)}48%{transform:translateY(-6px) rotate(4deg)}72%{transform:translateY(-3px) rotate(-2deg)}}
+@keyframes slimePrismHappy{0%,100%{transform:scale(1)}25%{transform:translateY(-11px) rotate(-4deg)}50%{transform:translateY(-7px) rotate(4deg)}75%{transform:translateY(-3px) rotate(-2deg)}}
+@keyframes slimeSecretHappy{0%,100%{transform:scale(1)}22%{transform:translateY(-8px) scale(.9,1.1)}44%{transform:translate(-4px,-5px) rotate(-3deg)}66%{transform:translate(4px,-5px) rotate(3deg)}82%{transform:scale(1.06,.95)}}
 
 .stat-rail{display:grid;gap:8px;position:relative;z-index:8}
 .stat-rail .stat-pill{min-width:0;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:7px 4px;border:2px solid var(--line);border-radius:16px;text-align:center;background:#fff;transition:.14s ease}

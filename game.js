@@ -195,7 +195,7 @@
   ];
 
   const SKINS = [
-    { id: 'classic', name: 'Классический', className: 'skin-classic', icon: '🟢', condition: 'Доступен сразу', colors: ['#a7f3d0', '#34d399', '#16a34a'] },
+    { id: 'classic', name: 'Классический', className: 'skin-classic', icon: '🟢', condition: 'Доступен сразу', colors: ['#e9ff9c', '#67d348', '#2fa345'] },
     { id: 'pink', name: 'Котослайм', className: 'skin-pink', icon: '🐱', world: 2, condition: 'Пройди Мир 1', colors: ['#fecdd3', '#fb7185', '#db2777'] },
     { id: 'ice', name: 'Аксолотль', className: 'skin-ice', icon: '🫧', world: 3, condition: 'Пройди Мир 2', colors: ['#cffafe', '#22d3ee', '#0284c7'] },
     { id: 'gold', name: 'Золотой', className: 'skin-gold', icon: '👑', cost: 1500, condition: 'Купить за 1500 монет', colors: ['#fef3c7', '#facc15', '#ca8a04'] },
@@ -276,6 +276,8 @@
   let lastFocusedElement = null;
   let menuEmotionTimer = null;
   let menuGazeTimer = null;
+  let slimeInteractionTimer = null;
+  let slimePointer = null;
   let toastTimer = null;
   let audioCtx = null;
   const soundPools = new Map();
@@ -552,6 +554,88 @@
       els.slime.style.setProperty('--gaze-x', '0px');
       els.slime.style.setProperty('--gaze-y', '0px');
     }, delay);
+  }
+
+  const MENU_SLIME_STATES = ['booped', 'petting', 'petted'];
+  const MEAL_REACTION_CLASSES = ['meal-common', 'meal-rare', 'meal-epic', 'meal-legendary', 'meal-prismatic', 'meal-secret'];
+
+  function menuSlimeIsBusy() {
+    return ['eat', 'chewing', 'expect-food', 'tracking-food'].some(name => els.slime.classList.contains(name));
+  }
+
+  function clearMenuSlimeInteraction() {
+    clearTimeout(slimeInteractionTimer);
+    els.slime.classList.remove(...MENU_SLIME_STATES);
+    slimePointer = null;
+    resetMenuGaze();
+  }
+
+  function finishMenuSlimeReaction(kind) {
+    els.slime.classList.remove(...MENU_SLIME_STATES);
+    void els.slime.offsetWidth;
+    els.slime.classList.add(kind);
+    if (kind === 'booped') {
+      sound('bounce');
+      feedback(9);
+    } else {
+      sound('happy');
+      feedback([6, 22, 7]);
+    }
+    slimeInteractionTimer = setTimeout(() => els.slime.classList.remove(kind), kind === 'booped' ? 580 : 740);
+    resetMenuGaze(220);
+  }
+
+  function bindMenuSlimeInteractions() {
+    els.slime.addEventListener('pointerdown', event => {
+      if (menuSlimeIsBusy() || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      event.preventDefault();
+      clearMenuSlimeInteraction();
+      els.slime.setPointerCapture?.(event.pointerId);
+      slimePointer = {
+        id: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        lastX: event.clientX,
+        lastY: event.clientY,
+        distance: 0,
+        petting: false
+      };
+      setMenuGazePoint(event.clientX, event.clientY);
+    });
+
+    els.slime.addEventListener('pointermove', event => {
+      if (!slimePointer || slimePointer.id !== event.pointerId || menuSlimeIsBusy()) return;
+      event.preventDefault();
+      slimePointer.distance += Math.hypot(event.clientX - slimePointer.lastX, event.clientY - slimePointer.lastY);
+      slimePointer.lastX = event.clientX;
+      slimePointer.lastY = event.clientY;
+      if (!slimePointer.petting && slimePointer.distance >= 9) {
+        slimePointer.petting = true;
+        els.slime.classList.remove('booped', 'petted');
+        els.slime.classList.add('petting');
+        feedback(5);
+      }
+      if (slimePointer.petting) {
+        const rect = els.slime.getBoundingClientRect();
+        els.slime.style.setProperty('--pet-x', `${clamp((event.clientX - rect.left) / rect.width * 100, 18, 82)}%`);
+        els.slime.style.setProperty('--pet-y', `${clamp((event.clientY - rect.top) / rect.height * 100, 12, 58)}%`);
+      } else setMenuGazePoint(event.clientX, event.clientY);
+    });
+
+    const endPointer = event => {
+      if (!slimePointer || slimePointer.id !== event.pointerId) return;
+      const wasPetting = slimePointer.petting;
+      try { els.slime.releasePointerCapture?.(event.pointerId); } catch (_) { /* pointer already released */ }
+      slimePointer = null;
+      finishMenuSlimeReaction(wasPetting ? 'petted' : 'booped');
+    };
+    els.slime.addEventListener('pointerup', endPointer);
+    els.slime.addEventListener('pointercancel', () => clearMenuSlimeInteraction());
+    els.slime.addEventListener('keydown', event => {
+      if (!['Enter', ' '].includes(event.key) || menuSlimeIsBusy()) return;
+      event.preventDefault();
+      finishMenuSlimeReaction('booped');
+    });
   }
 
   function showScreen(name) {
@@ -900,8 +984,8 @@
     els.rerollBtn.disabled = full;
 
     const scale = clamp(1 + session.stats.mass / 190, 1.03, 1.24);
-    els.slime.style.width = `${112 * scale}px`;
-    els.slime.style.height = `${96 * scale}px`;
+    els.slime.style.width = `${98 * scale}px`;
+    els.slime.style.height = `${108 * scale}px`;
 
     renderStomachSlots(capacity);
     els.foodInside.replaceChildren();
@@ -1048,13 +1132,27 @@
     const food = session.offer[offerIndex];
     if (!food) return;
     hideFoodInfo();
+    clearMenuSlimeInteraction();
     animateFoodToMouth(food, source);
     const previousCombo = session.combo?.name || '';
     session.foods.push(food);
     session.offer[offerIndex] = null;
+    const mealReaction = {
+      common: { catchMs: 250, chewMs: 340, chewTime: '.15s', chews: 2, happyMs: 430 },
+      rare: { catchMs: 290, chewMs: 460, chewTime: '.16s', chews: 3, happyMs: 560 },
+      epic: { catchMs: 350, chewMs: 650, chewTime: '.18s', chews: 4, happyMs: 820 },
+      legendary: { catchMs: 390, chewMs: 740, chewTime: '.18s', chews: 4, happyMs: 980 },
+      prismatic: { catchMs: 440, chewMs: 820, chewTime: '.19s', chews: 4, happyMs: 1120 },
+      secret: { catchMs: 480, chewMs: 920, chewTime: '.18s', chews: 5, happyMs: 1260 }
+    }[food.rarity] || { catchMs: 250, chewMs: 340, chewTime: '.15s', chews: 2, happyMs: 430 };
     sound('eat');
     clearTimeout(menuEmotionTimer);
-    els.slime.classList.remove('eat', 'chewing', 'pleased');
+    els.slime.classList.remove('eat', 'chewing', 'pleased', ...MEAL_REACTION_CLASSES);
+    els.slime.classList.add(`meal-${food.rarity}`);
+    els.slime.style.setProperty('--catch-time', `${mealReaction.catchMs}ms`);
+    els.slime.style.setProperty('--chew-time', mealReaction.chewTime);
+    els.slime.style.setProperty('--chew-count', String(mealReaction.chews));
+    els.slime.style.setProperty('--happy-time', `${mealReaction.happyMs}ms`);
     void els.slime.offsetWidth;
     els.slime.classList.add('eat');
     showRarityBurst(food);
@@ -1066,9 +1164,9 @@
         els.slime.classList.remove('chewing');
         els.slime.classList.add('pleased');
         sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
-        menuEmotionTimer = setTimeout(() => els.slime.classList.remove('pleased'), 620);
-      }, 620);
-    }, 330);
+        menuEmotionTimer = setTimeout(() => els.slime.classList.remove('pleased', ...MEAL_REACTION_CLASSES), mealReaction.happyMs);
+      }, mealReaction.chewMs);
+    }, mealReaction.catchMs);
     renderDraft();
     persist();
     feedback(food.rarity === 'legendary' || food.rarity === 'prismatic' || food.rarity === 'secret' ? [12, 30, 18] : 8);
@@ -2633,7 +2731,14 @@
     ctx.strokeStyle = '#26334a';
     ctx.lineWidth = Math.max(2.7, radius * .09);
     ctx.beginPath();
-    ctx.ellipse(0, 0, radius, radius * .86, 0, 0, Math.PI * 2);
+    ctx.moveTo(0, -radius);
+    ctx.bezierCurveTo(radius * .15, -radius * .99, radius * .16, -radius * .86, radius * .26, -radius * .79);
+    ctx.bezierCurveTo(radius * .67, -radius * .68, radius * .93, -radius * .31, radius * .91, radius * .16);
+    ctx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
+    ctx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
+    ctx.bezierCurveTo(-radius * .93, -radius * .31, -radius * .67, -radius * .68, -radius * .26, -radius * .79);
+    ctx.bezierCurveTo(-radius * .16, -radius * .86, -radius * .15, -radius * .99, 0, -radius);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
@@ -2644,8 +2749,8 @@
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    const eyeY = -radius * .13;
-    const eyeX = radius * .28;
+    const eyeY = -radius * .12;
+    const eyeX = radius * .245;
     const outline = '#26334a';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -2653,8 +2758,8 @@
     // Щёчки.
     ctx.globalAlpha = .48;
     ctx.fillStyle = '#f78591';
-    ctx.beginPath(); ctx.ellipse(-radius * .49, radius * .13, radius * .15, radius * .08, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(radius * .49, radius * .13, radius * .15, radius * .08, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
 
     if (emotion === 'hurt') {
@@ -2675,8 +2780,8 @@
         ctx.beginPath(); ctx.moveTo(eyeX + radius * .11, eyeY - radius * .03); ctx.lineTo(eyeX - radius * .11, eyeY + radius * .06); ctx.stroke();
       } else {
         const wide = emotion === 'joy' || emotion === 'surprised';
-        const eyeW = radius * (wide ? .18 : .16);
-        const eyeH = radius * (wide ? .22 : .19);
+        const eyeW = radius * (wide ? .185 : .17);
+        const eyeH = radius * (wide ? .225 : .205);
         ctx.fillStyle = '#fff';
         ctx.strokeStyle = outline;
         ctx.lineWidth = Math.max(2.2, radius * .07);
@@ -2694,15 +2799,15 @@
       ctx.fillStyle = outline;
       ctx.lineWidth = Math.max(2.3, radius * .075);
       if (emotion === 'surprised') {
-        ctx.beginPath(); ctx.ellipse(0, radius * .28, radius * .13, radius * .18, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0, radius * .27, radius * .115, radius * .16, 0, 0, Math.PI * 2); ctx.fill();
       } else if (emotion === 'joy') {
-        ctx.beginPath(); ctx.ellipse(0, radius * .26, radius * .22, radius * .16, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0, radius * .25, radius * .19, radius * .145, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#f78591';
-        ctx.beginPath(); ctx.ellipse(0, radius * .34, radius * .12, radius * .055, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0, radius * .32, radius * .105, radius * .05, 0, 0, Math.PI * 2); ctx.fill();
       } else if (emotion === 'impact' || emotion === 'power') {
-        ctx.beginPath(); ctx.arc(0, radius * .16, radius * .22, .12, Math.PI - .12); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, radius * .16, radius * .19, .12, Math.PI - .12); ctx.stroke();
       } else {
-        ctx.beginPath(); ctx.arc(0, radius * .14, radius * .19, .12, Math.PI - .12); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, radius * .15, radius * .165, .12, Math.PI - .12); ctx.stroke();
       }
     }
     ctx.restore();
@@ -3055,6 +3160,7 @@
   }
 
   function bindEvents() {
+    bindMenuSlimeInteractions();
     els.rerollBtn.addEventListener('click', rerollOffer);
     els.startDropBtn.addEventListener('click', startDrop);
     els.adminRestartBtn.addEventListener('click', restartDraftFromAdmin);
