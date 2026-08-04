@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7757d8" />
+  <meta name="color-scheme" content="light" />
+  <title>Слайм: Накорми и Пробей</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="topbar">
+      <div class="brand" aria-label="Слайм: Накорми и Пробей">
+        <span class="brand-mascot" aria-hidden="true"><img src="assets/ui/slime.webp" alt=""></span>
+        <div class="brand-copy">
+          <strong>НАКОРМИ И ПРОБЕЙ</strong>
+          <small id="worldLabel">Мир 1 · Зелёные глубины</small>
+        </div>
+      </div>
+      <div class="currency" aria-label="Монеты"><img class="currency-icon" src="assets/ui/coin.webp" alt="" aria-hidden="true"><b id="coinsLabel">0</b></div>
+    </header>
+
+    <main class="game-shell">
+      <section id="homeScreen" class="screen active" aria-label="Подготовка слайма">
+        <section class="mission-card card" aria-label="Текущее задание">
+          <div class="mission-icon" aria-hidden="true"><img src="assets/ui/quest.webp" alt=""></div>
+          <div class="mission-main">
+            <small>ЗАДАНИЕ МИРА</small>
+            <div class="mission-title-row">
+              <b>Найди портал</b>
+              <strong id="worldProgressText">0 / 120 м</strong>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="Прогресс задания" aria-valuemin="0" aria-valuemax="100"><div id="worldProgressBar" class="progress-fill world-fill"></div></div>
+            <p id="worldHint">Доберись до портала внизу мира</p>
+          </div>
+        </section>
+
+        <section class="admin-tools card" aria-label="Админ-инструменты">
+          <div class="admin-tools-title"><small>ADMIN</small><b>Тест мира</b></div>
+          <div class="admin-world-switch" aria-label="Переключение мира">
+            <button id="adminPrevWorldBtn" type="button" aria-label="Предыдущий мир">‹</button>
+            <strong id="adminWorldValue">МИР 1</strong>
+            <button id="adminNextWorldBtn" type="button" aria-label="Следующий мир">›</button>
+          </div>
+          <button id="adminResetProgressBtn" class="admin-reset-progress" type="button">СБРОСИТЬ ПРОГРЕСС</button>
+        </section>
+
+        <section id="slimeStage" class="slime-stage card" aria-label="Слайм и его характеристики">
+          <div class="slime-hero-layout">
+            <div class="stat-rail stat-rail-left">
+              <div class="stat-pill mass">
+                <span class="stat-icon"><img src="assets/ui/stat-mass.webp" alt="" aria-hidden="true"></span>
+                <span class="stat-copy"><small>МАССА</small><span class="stat-values"><b id="massLabel">0</b><em id="massCompare"></em></span></span>
+              </div>
+              <div class="stat-pill power">
+                <span class="stat-icon"><img src="assets/ui/stat-power.webp" alt="" aria-hidden="true"></span>
+                <span class="stat-copy"><small>СИЛА</small><span class="stat-values"><b id="powerLabel">×1.0</b><em id="powerCompare"></em></span></span>
+              </div>
+            </div>
+            <div class="slime-playground">
+              <div id="slime" class="slime skin-classic" role="img" aria-label="Слайм">
+                <div id="rarityBursts" class="rarity-bursts" aria-live="polite"></div>
+                <div class="slime-face" aria-hidden="true">
+                  <div class="slime-brow slime-brow-left"></div><div class="slime-brow slime-brow-right"></div>
+                  <div class="slime-eye slime-eye-left"><i></i></div><div class="slime-eye slime-eye-right"><i></i></div>
+                  <div class="slime-cheek slime-cheek-left"></div><div class="slime-cheek slime-cheek-right"></div>
+                  <div class="slime-mouth"><i></i></div>
+                </div>
+                <div id="foodInside" class="food-inside"></div>
+              </div>
+            </div>
+            <div class="stat-rail stat-rail-right">
+              <div class="stat-pill defense">
+                <span class="stat-icon"><img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true"></span>
+                <span class="stat-copy"><small>ЗАЩИТА</small><span class="stat-values"><b id="defenseLabel">0%</b><em id="defenseCompare"></em></span></span>
+              </div>
+              <div class="stat-pill bounce">
+                <span class="stat-icon"><img src="assets/ui/stat-bounce.webp" alt="" aria-hidden="true"></span>
+                <span class="stat-copy"><small>ОТСКОК</small><span class="stat-values"><b id="bounceLabel">×1.0</b><em id="bounceCompare"></em></span></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="conveyor" class="conveyor card">
+          <div class="conveyor-head">
+            <div class="conveyor-title"><img src="assets/ui/conveyor.webp" alt="" aria-hidden="true"><div><small>ВЫБЕРИ ЕДУ</small><b>Конвейер <span id="pickCounter">0 / 1</span></b></div></div>
+            <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><b>НОВЫЙ ЗАБЕГ</b></button>
+          </div>
+          <div class="belt-window">
+            <div class="belt-tunnel tunnel-left" aria-hidden="true"><i></i></div>
+            <div class="belt-track">
+              <div class="belt-stripes" aria-hidden="true"></div>
+              <div id="foodChoices" class="food-choices" aria-label="Доступная еда"></div>
+            </div>
+            <div class="belt-tunnel tunnel-right" aria-hidden="true"><i></i></div>
+          </div>
+          <div id="foodInfo" class="food-info hidden" role="region" aria-live="polite">
+            <span id="foodInfoIcon" class="food-info-icon" aria-hidden="true"></span>
+            <div class="food-info-copy"><div><b id="foodInfoName"></b><small id="foodInfoRarity"></small></div><p id="foodInfoStats"></p><p id="foodInfoEffect" class="food-info-effect"></p></div>
+            <button id="feedSelectedBtn" type="button"><img src="assets/ui/feed.webp" alt="" aria-hidden="true"><span>СКОРМИТЬ</span></button>
+          </div>
+          <button id="rerollBtn" class="reroll-btn" type="button">
+            <img class="reroll-icon" src="assets/ui/reroll.webp" alt="" aria-hidden="true">
+            <span class="reroll-copy"><b id="rerollTitle">ОБНОВИТЬ</b><small id="rerollText">Бесплатно ×1</small></span>
+          </button>
+        </div>
+
+        <section id="buffShelf" class="buff-shelf card hidden" aria-label="Особые эффекты сборки">
+          <div class="section-heading"><div><small>ЭФФЕКТЫ СБОРКИ</small><b>Активные бонусы</b></div><img class="section-heading-icon" src="assets/ui/special.webp" alt="" aria-hidden="true"></div>
+          <div id="buffList" class="buff-list"></div>
+        </section>
+
+        <section class="loadout-card card" aria-label="Желудок и запуск">
+          <div class="loadout-main">
+            <div class="loadout-label"><img src="assets/ui/stomach.webp" alt="" aria-hidden="true"><small>ЖЕЛУДОК</small></div>
+            <div id="stomachSlots" class="stomach-slots" aria-label="Слоты желудка"></div>
+          </div>
+          <button id="startDropBtn" class="launch-btn" type="button">
+            <img src="assets/ui/launch.webp" alt="" aria-hidden="true">
+            <b id="startDropLabel">СТАРТ</b>
+          </button>
+        </section>
+
+        <nav class="bottom-actions" aria-label="Развитие">
+          <button data-panel="upgrades" type="button"><span class="action-icon"><img src="assets/ui/upgrade.webp" alt=""></span><b>Прокачка</b><small>Стать сильнее</small></button>
+          <button class="locked-action" type="button" disabled aria-label="Облики появятся позже"><span class="action-icon"><img src="assets/ui/lock.webp" alt=""></span><b>Облики</b><small>Скоро</small></button>
+          <button data-panel="rewards" type="button"><span class="action-icon"><img src="assets/ui/gift.webp" alt=""></span><b>Бонусы</b><small>Забрать награду</small></button>
+        </nav>
+      </section>
+
+      <section id="dropScreen" class="screen" aria-label="Забег">
+        <div class="run-hud card compact">
+          <div><small>Глубина</small><b id="depthLabel">0 м</b></div>
+          <div><small>Масса</small><b id="runMassLabel">0</b></div>
+          <div><small>Разгон</small><b id="flightLabel">0 м · ×1.0</b></div>
+          <div><small>Монеты</small><b id="runCoinsLabel">0</b></div>
+        </div>
+
+        <div class="shaft" id="shaft">
+          <canvas id="physicsCanvas" aria-label="Слайм падает через блоки"></canvas>
+          <button id="endRunBtn" class="run-exit-btn" type="button"><img src="assets/ui/finish.webp" alt="" aria-hidden="true"><span>ЗАКОНЧИТЬ</span></button>
+          <div id="impactText" class="impact-text" aria-live="polite"></div>
+          <div id="worldTargetBadge" class="target-badge">Портал: 120 м</div>
+        </div>
+
+        <div class="ability-wrap card compact">
+          <img class="ability-art" src="assets/ui/buff.webp" alt="" aria-hidden="true">
+          <div class="ability-info">
+            <b>ЖЕЛЕ-ИМПУЛЬС</b>
+            <small id="abilityText">Ломай блоки, чтобы зарядить усиление</small>
+          </div>
+          <button id="abilityBtn" class="ability-btn" type="button" aria-label="Активировать желе-импульс" disabled><span id="abilityPercent">0%</span></button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="panelOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
+    <div class="modal panel-modal" tabindex="-1">
+      <div class="modal-head"><h2 id="panelTitle">Прокачка</h2><button class="icon-btn" id="closePanelBtn" type="button" aria-label="Закрыть">✕</button></div>
+      <div id="panelContent" class="panel-content"></div>
+    </div>
+  </div>
+
+  <div id="resultOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modal result-modal" tabindex="-1">
+      <div id="resultBadge" class="result-badge">ЗАБЕГ ОКОНЧЕН</div>
+      <h2 id="resultTitle">Глубина: 0 м</h2>
+      <p id="resultText">Слайм остановился.</p>
+      <div class="result-grid three">
+        <div><small>Монеты</small><b id="resultCoins">0</b></div>
+        <div><small>Блоков</small><b id="resultBlocks">0</b></div>
+        <div><small>Разгон</small><b id="resultFlight">0 м</b></div>
+      </div>
+      <button id="doubleBtn" class="ad-btn" type="button">▶ Удвоить монеты</button>
+      <button id="continueBtn" class="primary" type="button">Продолжить</button>
+    </div>
+  </div>
+
+  <div id="adOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adTitle">
+    <div class="modal ad-modal" tabindex="-1">
+      <div class="ad-tag">ДЕМО РЕКЛАМЫ</div>
+      <h2 id="adTitle">Награда за просмотр</h2>
+      <p id="adReason">После подключения SDK здесь откроется rewarded-реклама.</p>
+      <button id="adRewardBtn" class="ad-btn" type="button">Получить награду</button>
+      <button id="adCancelBtn" class="secondary" type="button">Отмена</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="game.js"></script>
+</body>
+</html>

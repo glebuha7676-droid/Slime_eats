@@ -1,0 +1,19 @@
+# Local and generated files
+.DS_Store
+Thumbs.db
+.qa-*.png
+*.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Dependency/build output (not used by the current prototype)
+node_modules/
+coverage/
+dist/
+
+# Editor settings
+.idea/
+.vscode/
