@@ -398,6 +398,7 @@
   function lerp(a, b, t) { return a + (b - a) * t; }
   function rand(min, max) { return min + Math.random() * (max - min); }
   function round1(value) { return Math.round(value * 10) / 10; }
+  function foodGrowthScale(foodCount) { return 1 + Math.max(0, foodCount) * .05; }
   function todayKey(date = new Date()) {
     const pad = value => String(value).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -477,8 +478,9 @@
   function sound(kind = 'tap') {
     if (!save.sound) return;
     if (kind === 'eat' || kind === 'eatSlow') {
-      playSoundAsset('eatBite');
-      const swallowDelay = kind === 'eatSlow' ? 500 : 145;
+      const biteDelay = kind === 'eatSlow' ? 720 : 220;
+      const swallowDelay = kind === 'eatSlow' ? 2320 : 480;
+      setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatBite'); }, biteDelay);
       setTimeout(() => { if (save.sound && !document.hidden) playSoundAsset('eatSwallow'); }, swallowDelay);
       return;
     }
@@ -998,7 +1000,7 @@
     clearFoodPreview();
     els.rerollBtn.disabled = full;
 
-    const scale = clamp(1 + session.stats.mass / 190, 1.03, 1.24);
+    const scale = foodGrowthScale(session.foods.length);
     els.slime.style.width = `${124 * scale}px`;
     els.slime.style.height = `${124 * scale}px`;
 
@@ -1246,6 +1248,7 @@
       ? Math.floor(columns / 2)
       : Math.floor(columns / 2) - (Math.random() < .5 ? 1 : 0);
     const startX = gridOffsetX + startLane * cellSize + cellSize / 2;
+    const fedScale = foodGrowthScale(session.foods.length);
     run = {
       worldId: world.id,
       world,
@@ -1262,9 +1265,10 @@
         y: 78,
         vx: rand(-65, 65),
         vy: 40,
-        radius: clamp(25 + session.stats.mass * .17, 27, 47),
+        radius: 28 * fedScale,
         wobble: 0
       },
+      fedScale,
       mass: session.stats.mass,
       startMass: session.stats.mass,
       maxMass: Math.max(1, Math.round(session.stats.mass)),
@@ -1664,7 +1668,8 @@
     }
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt * 20);
     run.visualMass = lerp(run.visualMass, Math.max(0, run.mass), clamp(dt * 11, 0, 1));
-    s.radius = lerp(s.radius, clamp(24 + Math.max(0, run.mass) * .17, 23, 47), clamp(dt * 5.5, 0, 1));
+    const healthScale = .82 + .18 * Math.sqrt(clamp(run.mass / Math.max(1, run.startMass), 0, 1));
+    s.radius = lerp(s.radius, 28 * run.fedScale * healthScale, clamp(dt * 5.5, 0, 1));
     if (run.massFlashTime > 0) run.massFlashTime = Math.max(0, run.massFlashTime - dt);
 
     const speedNow = Math.hypot(s.vx, s.vy);
@@ -2705,48 +2710,48 @@
       targetCtx.save();
       targetCtx.translate(x, y);
       if (aura === 'epic') {
-        targetCtx.globalAlpha = .22 + Math.sin(timestamp / 120) * .05;
+        targetCtx.globalAlpha = .34 + Math.sin(timestamp / 170) * .08;
         targetCtx.strokeStyle = '#9b72ff';
-        targetCtx.lineWidth = 5;
-        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 8 + Math.sin(timestamp / 150) * 2, 0, Math.PI * 2); targetCtx.stroke();
+        targetCtx.lineWidth = 6;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 9 + Math.sin(timestamp / 190) * 3, 0, Math.PI * 2); targetCtx.stroke();
       } else if (aura === 'legendary') {
-        const pulse = 1 + Math.sin(timestamp / 115) * .08;
-        targetCtx.globalAlpha = .38;
+        const pulse = 1 + Math.sin(timestamp / 180) * .07;
+        targetCtx.globalAlpha = .58;
         targetCtx.strokeStyle = '#ffc83d';
-        targetCtx.fillStyle = '#fff1a3';
-        targetCtx.lineWidth = 3;
-        for (let index = 0; index < 8; index += 1) {
-          const angle = index / 8 * Math.PI * 2 + timestamp / 1200;
-          const inner = (radius + 8) * pulse;
+        targetCtx.fillStyle = '#fff4a8';
+        targetCtx.lineWidth = 4;
+        for (let index = 0; index < 10; index += 1) {
+          const angle = index / 10 * Math.PI * 2 + timestamp / 1450;
+          const inner = (radius + 7) * pulse;
           const outer = (radius + 17) * pulse;
           targetCtx.beginPath(); targetCtx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner); targetCtx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer); targetCtx.stroke();
           if (index % 2 === 0) {
-            targetCtx.beginPath(); targetCtx.arc(Math.cos(angle) * (radius + 22), Math.sin(angle) * (radius + 22), 3, 0, Math.PI * 2); targetCtx.fill();
+            targetCtx.beginPath(); targetCtx.arc(Math.cos(angle) * (radius + 20), Math.sin(angle) * (radius + 20), 3.5, 0, Math.PI * 2); targetCtx.fill();
           }
         }
       } else if (aura === 'prismatic') {
         const rainbow = ['#ff6fae', '#ffb84d', '#ffe45c', '#59dc86', '#55c8ff', '#9a7cff'];
-        targetCtx.globalAlpha = .55;
-        targetCtx.lineWidth = 5;
+        targetCtx.globalAlpha = .78;
+        targetCtx.lineWidth = 7;
         rainbow.forEach((color, index) => {
-          const start = timestamp / 520 + index / rainbow.length * Math.PI * 2;
+          const start = timestamp / 760 + index / rainbow.length * Math.PI * 2;
           targetCtx.strokeStyle = color;
-          targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 10, start, start + Math.PI / 2.5); targetCtx.stroke();
+          targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 11 + Math.sin(timestamp / 210 + index) * 2, start, start + Math.PI / 2.25); targetCtx.stroke();
         });
       } else if (aura === 'secret') {
-        targetCtx.globalAlpha = .58;
+        targetCtx.globalAlpha = .78;
         targetCtx.strokeStyle = '#5ce9ff';
-        targetCtx.lineWidth = 3;
-        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 11 + Math.sin(timestamp / 130) * 3, 0, Math.PI * 2); targetCtx.stroke();
+        targetCtx.lineWidth = 4;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 10 + Math.sin(timestamp / 190) * 4, 0, Math.PI * 2); targetCtx.stroke();
         targetCtx.strokeStyle = '#c46bff';
-        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 18 - Math.sin(timestamp / 130) * 2, 0, Math.PI * 2); targetCtx.stroke();
-        for (let index = 0; index < 5; index += 1) {
-          const angle = index / 5 * Math.PI * 2 - timestamp / 700;
-          const orbit = radius + 24;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 17 - Math.sin(timestamp / 190) * 2, 0, Math.PI * 2); targetCtx.stroke();
+        for (let index = 0; index < 6; index += 1) {
+          const angle = index / 6 * Math.PI * 2 - timestamp / 920;
+          const orbit = radius + 19;
           const px = Math.cos(angle) * orbit;
           const py = Math.sin(angle) * orbit;
           targetCtx.fillStyle = index % 2 ? '#c46bff' : '#5ce9ff';
-          targetCtx.save(); targetCtx.translate(px, py); targetCtx.rotate(angle); targetCtx.fillRect(-3, -3, 6, 6); targetCtx.restore();
+          targetCtx.save(); targetCtx.translate(px, py); targetCtx.rotate(angle + timestamp / 1100); targetCtx.fillRect(-4, -4, 8, 8); targetCtx.restore();
         }
       }
       targetCtx.restore();
@@ -2796,6 +2801,8 @@
     const eyeY = -radius * .12;
     const eyeX = radius * .245;
     const outline = '#26334a';
+    const chewPulse = (Math.sin(timestamp / 82 - Math.PI / 2) + 1) / 2;
+    const chewBlink = emotion === 'chewing' && chewPulse > .72;
     const closedHappy = emotion === 'petting' || emotion === 'pleased';
     targetCtx.lineCap = 'round';
     targetCtx.lineJoin = 'round';
@@ -2822,7 +2829,7 @@
         targetCtx.lineWidth = Math.max(2.5, radius * .08);
         targetCtx.beginPath(); targetCtx.moveTo(-eyeX - radius * .11, eyeY - radius * .03); targetCtx.lineTo(-eyeX + radius * .11, eyeY + radius * .06); targetCtx.stroke();
         targetCtx.beginPath(); targetCtx.moveTo(eyeX + radius * .11, eyeY - radius * .03); targetCtx.lineTo(eyeX - radius * .11, eyeY + radius * .06); targetCtx.stroke();
-      } else if (blink || closedHappy) {
+      } else if (blink || closedHappy || chewBlink) {
         targetCtx.strokeStyle = outline;
         targetCtx.lineWidth = Math.max(2.5, radius * .075);
         for (const side of [-1, 1]) {
@@ -2859,14 +2866,14 @@
           targetCtx.beginPath(); targetCtx.ellipse(0, radius * .35, radius * .07, radius * .04, 0, 0, Math.PI * 2); targetCtx.fill();
         }
       } else if (emotion === 'chewing') {
-        const chewWave = (Math.sin(timestamp / 62) + 1) / 2;
-        const chewSide = Math.sin(timestamp / 125) > 0 ? 1 : -1;
+        const mouthOpen = .25 + chewPulse * .75;
+        const mouthShift = Math.sin(timestamp / 164) * radius * .016;
         targetCtx.beginPath();
-        targetCtx.ellipse(chewSide * radius * .045, radius * (.235 + chewWave * .018), radius * (.08 + chewWave * .035), radius * (.045 + chewWave * .065), chewSide * .13, 0, Math.PI * 2);
+        targetCtx.ellipse(mouthShift, radius * (.235 + chewPulse * .014), radius * (.075 + mouthOpen * .04), radius * (.025 + mouthOpen * .075), 0, 0, Math.PI * 2);
         targetCtx.fill();
-        if (chewWave > .58) {
+        if (chewPulse > .5) {
           targetCtx.fillStyle = '#f78591';
-          targetCtx.beginPath(); targetCtx.ellipse(chewSide * radius * .04, radius * .29, radius * .055, radius * .026, 0, 0, Math.PI * 2); targetCtx.fill();
+          targetCtx.beginPath(); targetCtx.ellipse(mouthShift, radius * .292, radius * .06, radius * .028, 0, 0, Math.PI * 2); targetCtx.fill();
         }
       } else if (emotion === 'joy' || closedHappy) {
         targetCtx.beginPath(); targetCtx.ellipse(0, radius * .25, radius * .19, radius * .145, 0, 0, Math.PI * 2); targetCtx.fill();
