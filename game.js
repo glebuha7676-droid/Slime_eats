@@ -8,14 +8,31 @@
   const LEVEL_COUNT = 5;
   const LEVEL_DEPTH_RATIOS = [.36, .52, .68, .84, 1];
 
+  // Конфигурация уровней хранится отдельно от миров: так проще наращивать
+  // кампанию, не размазывая условия открытия механик по генератору.
+  const WORLD_LEVELS = {
+    1: [
+      { depth: 85,  features: { dynamite: false, medkit: false, hazards: false, boss: false }, utilityCadence: 0,
+        sections: ['tutorial', 'flow', 'ore', 'flow', 'ore', 'flow', 'final'] },
+      { depth: 150, features: { dynamite: true,  medkit: false, hazards: false, boss: false }, utilityCadence: 8,
+        sections: ['tutorial', 'flow', 'bomb', 'ore', 'flow', 'bomb', 'flow', 'final'] },
+      { depth: 250, features: { dynamite: true,  medkit: true,  hazards: false, boss: false }, utilityCadence: 7,
+        sections: ['tutorial', 'flow', 'bomb', 'recovery', 'ore', 'flow', 'bomb', 'recovery', 'final'] },
+      { depth: 350, features: { dynamite: true,  medkit: true,  hazards: true,  boss: false }, utilityCadence: 7,
+        sections: ['tutorial', 'flow', 'bomb', 'recovery', 'challenge', 'ore', 'bomb', 'challenge', 'final'] },
+      { depth: 500, features: { dynamite: true,  medkit: true,  hazards: true,  boss: true }, utilityCadence: 6,
+        sections: ['tutorial', 'flow', 'bomb', 'recovery', 'challenge', 'ore', 'bomb', 'recovery', 'boss', 'final'] }
+    ]
+  };
+
   const WORLDS = [
     {
-      id: 1, name: 'Зелёные глубины', targetDepth: 120, reward: 300, hardness: .58,
+      id: 1, name: 'Зелёные глубины', targetDepth: 500, reward: 300, hardness: .58,
       expectedDamage: 19, pathWidth: 3, minPathWidth: 3, turnRate: .08,
       hardCap: .08, reinforcedCap: .018, oreChance: .075, specialChance: .16,
       sky: '#63825b', earth: '#3b3027', deep: '#171c20', accent: '#54d7b0', icon: '🌿',
       materials: ['dirt', 'packedDirt', 'stone'], palette: 'earth', depthRamp: .22,
-      cellSize: 72, hazardChance: .055, portalWallStrength: 5.4
+      cellSize: 72, hazardChance: .055
     },
     {
       id: 2, name: 'Ледяная пещера', targetDepth: 200, reward: 700, hardness: .88,
@@ -23,7 +40,7 @@
       hardCap: .15, reinforcedCap: .02, oreChance: .06, specialChance: .115,
       sky: '#4b7f97', earth: '#244452', deep: '#10232d', accent: '#67e8f9', icon: '🧊',
       materials: ['iceLight', 'snowPacked', 'glacier'], palette: 'ice', depthRamp: .30,
-      cellSize: 72, hazardChance: .075, portalWallStrength: 5.1
+      cellSize: 72, hazardChance: .075
     },
     {
       id: 3, name: 'Конфетная фабрика', targetDepth: 300, reward: 1550, hardness: 1.18,
@@ -92,7 +109,7 @@
     'dirt-grass', 'dirt-packed', 'stone', 'stone-reinforced', 'stone-hazard',
     'ore-coal', 'ore-iron', 'ore-copper', 'ore-gold', 'ore-redstone',
     'ore-lapis', 'ore-diamond', 'ore-emerald', 'dynamite', 'spring', 'heal',
-    'portal', 'wall-intact', 'wall-cracked', 'rubble'
+    'portal'
   ];
   const WORLD1_SPRITE_NAMES = [
     ...WORLD1_TILE_NAMES,
@@ -102,8 +119,7 @@
   const WORLD2_TILE_NAMES = [
     'ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes',
     'ore-coal', 'ore-iron', 'ore-copper', 'ore-gold', 'ore-redstone', 'ore-lapis',
-    'ore-diamond', 'ore-emerald', 'freeze', 'blizzard', 'heal', 'portal',
-    'wall-intact', 'wall-cracked'
+    'ore-diamond', 'ore-emerald', 'freeze', 'blizzard', 'heal', 'portal'
   ];
   const WORLD2_SPRITE_NAMES = [
     ...WORLD2_TILE_NAMES,
@@ -113,8 +129,7 @@
   const WORLD3_TILE_NAMES = [
     'candy-light', 'cookie-packed', 'candy-reinforced', 'candy-hazard',
     'ore-coal', 'ore-iron', 'ore-copper', 'ore-gold', 'ore-redstone', 'ore-lapis',
-    'ore-diamond', 'ore-emerald', 'dynamite', 'spring', 'heal', 'portal',
-    'wall-intact', 'wall-cracked', 'rubble'
+    'ore-diamond', 'ore-emerald', 'dynamite', 'spring', 'heal', 'portal'
   ];
   const WORLD3_SPRITE_NAMES = [
     ...WORLD3_TILE_NAMES,
@@ -428,7 +443,19 @@
   function rand(min, max) { return min + Math.random() * (max - min); }
   function round1(value) { return Math.round(value * 10) / 10; }
   function foodGrowthScale(foodCount) { return 1 + Math.max(0, foodCount) * .05; }
+  function levelConfig(world, level) {
+    const entries = WORLD_LEVELS[world.id];
+    return entries?.[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)] || null;
+  }
+
+  function levelFeatures(world, level) {
+    const configured = levelConfig(world, level)?.features;
+    return configured || { dynamite: true, medkit: true, hazards: true, boss: false };
+  }
+
   function levelTargetDepth(world, level) {
+    const configured = levelConfig(world, level);
+    if (configured?.depth) return configured.depth;
     const ratio = LEVEL_DEPTH_RATIOS[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)];
     return Math.max(20, Math.round(world.targetDepth * ratio / 5) * 5);
   }
@@ -1387,9 +1414,8 @@
       cellSize,
       columns,
       gridOffsetX,
-      portalWallY: finishY - cellSize * 1.65,
-      // Keep the portal clearly below the fortress wall instead of overlapping it.
-      portalY: finishY + cellSize * 1.15,
+      // Портал — самостоятельный финал. Крепостной стены перед ним больше нет.
+      portalY: finishY + cellSize * .35,
       blocks: [], particles: [], trails: [],
       slime: {
         x: startX,
@@ -1471,9 +1497,10 @@
     const columns = runState.columns || Math.floor(VIEW_W / cell);
     const gridOffsetX = runState.gridOffsetX || 0;
     const startY = 190;
-    const portalWallY = runState.portalWallY || finishY - cell * 1.65;
-    const rows = Math.max(8, Math.floor((portalWallY - startY) / cell));
-    const plan = createSectionPlan(world, rows);
+    // Оставляем перед порталом чистый вход: последний ряд блоков не заменяется стеной.
+    const rows = Math.max(8, Math.floor((finishY - cell - startY) / cell));
+    const unlocks = levelFeatures(world, runState.level);
+    const plan = createSectionPlan(world, rows, runState.level);
     let id = 0;
     let pathCenter = Math.floor(columns / 2);
     let previousSection = '';
@@ -1491,6 +1518,7 @@
 
       let pathWidth = clamp(Math.round(lerp(world.pathWidth, world.minPathWidth, progress)), 1, 3);
       if (meta.kind === 'tutorial' || meta.kind === 'recovery' || meta.kind === 'final') pathWidth = Math.max(pathWidth, world.id === 1 ? 3 : 2);
+      if (meta.kind === 'boss') pathWidth = 1;
       const pathStart = clamp(Math.round(pathCenter - (pathWidth - 1) / 2), 0, columns - pathWidth);
       let pathColumns = Array.from({ length: pathWidth }, (_, index) => pathStart + index);
       pathCenter = pathStart + (pathWidth - 1) / 2;
@@ -1514,21 +1542,25 @@
         let special = null;
 
         if (keyRow) {
-          if (meta.kind === 'recovery' && col === pathColumns[0]) special = 'gel';
-          if (meta.kind === 'reward' && col === pathColumns[pathColumns.length - 1]) special = Math.random() < .58 ? 'coin' : 'gel';
-          if (meta.kind === 'bomb' && col === pathColumns[Math.floor(pathColumns.length / 2)]) special = world.id === 2 ? 'freeze' : 'bomb';
-          if (meta.kind === 'bounce' && pathColumns.length > 1 && col === pathColumns[0]) special = world.id === 2 ? 'blizzard' : 'spring';
+          if (world.id === 1 && meta.kind === 'boss' && unlocks.boss && col === pathColumns[0]) special = 'boss';
+          if (world.id !== 1) {
+            if (meta.kind === 'recovery' && col === pathColumns[0]) special = 'gel';
+            if (meta.kind === 'reward' && col === pathColumns[pathColumns.length - 1]) special = Math.random() < .58 ? 'coin' : 'gel';
+            if (meta.kind === 'bomb' && col === pathColumns[Math.floor(pathColumns.length / 2)]) special = world.id === 2 ? 'freeze' : 'bomb';
+            if (meta.kind === 'bounce' && pathColumns.length > 1 && col === pathColumns[0]) special = world.id === 2 ? 'blizzard' : 'spring';
+          }
         }
         if (meta.kind === 'ore' && col === clamp(pathColumns[pathColumns.length - 1] + 1, 0, columns - 1)) tier = 'ore';
         if (meta.kind === 'fork' && col === riskyCol && keyRow) tier = 'ore';
 
         // Небольшая органическая примесь специальных блоков, но не в обучении.
-        if (!special && row > 4 && meta.kind !== 'tutorial' && Math.random() < world.specialChance * (inPath ? .20 : .07)) {
+        if (world.id !== 1 && !special && row > 4 && meta.kind !== 'tutorial' && Math.random() < world.specialChance * (inPath ? .20 : .07)) {
           special = chooseSpecialBlock(world, row, progress, inPath);
         }
         if (!special && tier !== 'ore' && !inPath && row > 4 && Math.random() < world.oreChance * .42) tier = 'ore';
 
-        const hazard = Boolean(world.hazardChance) && !special && tier !== 'ore' && row > 4
+        const hazardsUnlocked = world.id !== 1 || unlocks.hazards;
+        const hazard = hazardsUnlocked && Boolean(world.hazardChance) && !special && tier !== 'ore' && row > 4
           && Math.random() < world.hazardChance * (inPath ? .22 : 1) * lerp(.55, 1, progress);
         const hazardVariant = hazard && world.id === 2 ? (Math.random() < .5 ? 'shards' : 'spikes') : null;
         if (hazard) tier = tier === 'reinforced' ? 'reinforced' : 'hard';
@@ -1540,6 +1572,7 @@
         if (special === 'spring') maxHp *= 1.10;
         if (special === 'freeze') maxHp *= .72;
         if (special === 'blizzard') maxHp *= 1.08;
+        if (special === 'boss') maxHp *= 4.4;
         maxHp = Math.max(1, Math.round(maxHp));
 
         const material = hazard ? (world.id === 2 ? 'iceHazard' : 'hazard') : chooseMaterial(world, progress, special, finalTier);
@@ -1576,30 +1609,19 @@
       blocks.push(...rowBlocks);
     }
 
-    // Каждый мир заканчивается настоящей крепостной стеной. Для прохода достаточно
-    // пробить один сегмент, но вся линия физически перекрывает путь к порталу.
-    const wallHp = Math.round(world.expectedDamage * (world.portalWallStrength || 4.8));
-    for (let col = 0; col < columns; col += 1) {
-      blocks.push({
-        id: id++, row: rows + 1, col,
-        x: gridOffsetX + col * cell, y: portalWallY, w: cell, h: cell,
-        hp: wallHp, maxHp: wallHp, material: 'portalWall', special: null,
-        tier: 'reinforced', dead: false, path: false, segment: 'portal-wall',
-        hazard: false, oreType: null, isPortalWall: true, coins: 0
-      });
-    }
+    if (world.id === 1) populateWorldOneUtilities(blocks, runState, rows, unlocks);
     return blocks;
   }
 
-  function createSectionPlan(world, rows) {
+  function createSectionPlan(world, rows, level) {
     const sequences = {
       1: ['tutorial', 'flow', 'bounce', 'recovery', 'reward', 'flow', 'bomb', 'bounce', 'ore', 'final'],
       2: ['tutorial', 'flow', 'fork', 'reward', 'bounce', 'ore', 'recovery', 'bomb', 'challenge', 'final'],
       3: ['tutorial', 'flow', 'fork', 'bounce', 'ore', 'challenge', 'recovery', 'bomb', 'challenge', 'final'],
       4: ['tutorial', 'flow', 'challenge', 'fork', 'ore', 'bounce', 'challenge', 'bomb', 'recovery', 'challenge', 'final']
     };
-    const baseLength = { tutorial: 4, flow: 4, fork: 4, bounce: 3, recovery: 3, reward: 3, bomb: 3, ore: 4, challenge: 4, final: 3 };
-    const sequence = sequences[world.id] || sequences[4];
+    const baseLength = { tutorial: 4, flow: 4, fork: 4, bounce: 3, recovery: 3, reward: 3, bomb: 3, ore: 4, challenge: 4, boss: 5, final: 3 };
+    const sequence = levelConfig(world, level)?.sections || sequences[world.id] || sequences[4];
     const minimums = sequence.map((kind, index) => index === 0 ? 2 : 1);
     const lengths = [...minimums];
     let remaining = Math.max(0, rows - lengths.reduce((a, b) => a + b, 0));
@@ -1624,6 +1646,45 @@
     return plan.slice(0, rows);
   }
 
+  // Мир 1 знакомит с механиками по одной. Вместо редкого случайного шанса
+  // полезные блоки ставятся с ограниченным интервалом прямо на маршруте.
+  // Поэтому у игрока не бывает длинного участка без взрывчатки/лечения.
+  function populateWorldOneUtilities(blocks, runState, rows, unlocks) {
+    const config = levelConfig(runState.world, runState.level);
+    const cadence = config?.utilityCadence || 0;
+    if (!unlocks.dynamite || !cadence) return;
+
+    const lastUtilityRow = Math.max(7, rows - 4);
+    let row = 6 + Math.floor(Math.random() * 2);
+    let nextType = 'bomb';
+
+    while (row < lastUtilityRow) {
+      const candidates = blocks.filter(block => block.row === row && block.path && !block.special && !block.hazard
+        && block.segment !== 'tutorial' && block.segment !== 'final' && block.segment !== 'boss');
+      if (candidates.length) {
+        const block = candidates[Math.floor(Math.random() * candidates.length)];
+        const progress = clamp(row / Math.max(1, rows - 1), 0, 1);
+        configureWorldOneUtility(block, nextType, runState.world, progress, row);
+        if (unlocks.medkit) nextType = nextType === 'bomb' ? 'gel' : 'bomb';
+      }
+      row += cadence + Math.floor(Math.random() * 2);
+    }
+  }
+
+  function configureWorldOneUtility(block, special, world, progress, row) {
+    const specialHpScale = special === 'gel' ? .44 : .68;
+    const maxHp = Math.max(1, Math.round(blockHpForTier('special', world, progress, row, block.col, true) * specialHpScale));
+    const tierData = BLOCK_TIERS.special;
+    block.special = special;
+    block.tier = 'special';
+    block.material = special;
+    block.hazard = false;
+    block.hazardVariant = null;
+    block.maxHp = maxHp;
+    block.hp = maxHp;
+    block.coins = Math.max(1, Math.round(maxHp * tierData.coin * rand(.48, .82)));
+  }
+
   function chooseTemplatePathTier(world, progress, meta, col, riskyCol, keyRow) {
     if (meta.kind === 'tutorial') return Math.random() < .92 ? 'soft' : 'dense';
     if (meta.kind === 'recovery' || meta.kind === 'reward' || meta.kind === 'final') return Math.random() < .84 ? 'soft' : 'dense';
@@ -1641,6 +1702,7 @@
     }
     if (meta.kind === 'bomb') return keyRow ? 'dense' : (Math.random() < .62 ? 'soft' : 'dense');
     if (meta.kind === 'ore') return Math.random() < .65 ? 'soft' : 'dense';
+    if (meta.kind === 'boss') return keyRow ? 'reinforced' : 'dense';
     if (meta.kind === 'challenge') {
       if (keyRow) {
         if (world.id >= 3 && Math.random() < world.reinforcedCap) return 'reinforced';
@@ -1816,7 +1878,7 @@
   }
 
   function getPortalGeometry() {
-    const anchorY = run.portalY ?? run.finishY + run.cellSize * 1.15;
+    const anchorY = run.portalY ?? run.finishY + run.cellSize * .35;
     if (run.worldId === 3) {
       const centerY = anchorY - 27;
       return { type: 'circle', x: VIEW_W / 2, y: centerY, radius: 67, bottom: centerY + 67 };
@@ -1840,10 +1902,10 @@
   function applyPortalAttraction(dt) {
     if (run.worldId !== 3) return;
     const s = run.slime;
-    const wallBottom = run.portalWallY + run.cellSize;
     const portal = getPortalGeometry();
-    if (s.y + s.radius < wallBottom - 8 || s.y > portal.bottom + 60) return;
-    const pull = clamp((s.y + s.radius - wallBottom + 16) / 90, .18, 1);
+    const approachY = portal.y - run.cellSize;
+    if (s.y + s.radius < approachY - 8 || s.y > portal.bottom + 60) return;
+    const pull = clamp((s.y + s.radius - approachY + 16) / 90, .18, 1);
     s.vx += (portal.x - s.x) * 10 * pull * dt;
     s.vx *= Math.max(.72, 1 - dt * 2.4);
   }
@@ -1988,7 +2050,7 @@
       }
 
       const flightMeters = run.flightDistance / 10;
-      if (!block.special && !block.isPortalWall) impact(flightMeters >= 9
+      if (!block.special) impact(flightMeters >= 9
         ? `ПРОБОЙ ×${flightMultiplier.toFixed(1)} · −${round1(massLoss)}`
         : `ПРОБОЙ · −${round1(massLoss)} массы`);
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
@@ -2033,12 +2095,12 @@
       ? `ПРУЖИНА · −${round1(massLoss)}`
       : block.special === 'blizzard'
         ? `ВЬЮГА · БОКОВОЙ БРОСОК · −${round1(massLoss)}`
-      : block.isPortalWall
-        ? `КРЕПОСТНАЯ СТЕНА · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`
+      : block.special === 'boss'
+        ? `СТРАЖ НЕДР · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`
         : block.hazard
           ? `ОПАСНЫЙ БЛОК · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`
           : `РИКОШЕТ · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`);
-    sound(block.special === 'spring' ? 'bounce' : block.hazard || block.isPortalWall ? 'hitHard' : 'hit');
+    sound(block.special === 'spring' ? 'bounce' : block.hazard || block.special === 'boss' ? 'hitHard' : 'hit');
     createDebris(block, 3, false);
 
     if (run.mass <= 0 && !tryRevive()) endRun(false, 'Слайм израсходовал всю массу');
@@ -2115,10 +2177,7 @@
     addAbilityCharge({ soft: 2.2, dense: 3.1, hard: 4.2, reinforced: 5.2, ore: 4.0, special: 3.0 }[block.tier] || 2.5);
     createDebris(block, block.special === 'bomb' ? 18 : 9, true);
 
-    if (block.isPortalWall) {
-      impact('ПРОЛОМ В СТЕНЕ — ПОРТАЛ ОТКРЫТ!');
-      run.shake = Math.max(run.shake, 9);
-    } else if (block.tier === 'ore' || block.frozenOre) {
+    if (block.tier === 'ore' || block.frozenOre) {
       const ore = block.oreType || ORE_TYPES[0];
       const oreReward = Math.round((10 + block.maxHp * .45) * ore.reward);
       run.coins += oreReward * run.coinMultiplier;
@@ -2141,6 +2200,10 @@
       impact('ВЬЮГА СОРВАЛА СЛАЙМА В СТОРОНУ!');
     } else if (block.special === 'bomb') {
       explodeBomb(block);
+    } else if (block.special === 'boss') {
+      run.shake = Math.max(run.shake, 10);
+      impact('СТРАЖ НЕДР ПОБЕЖДЁН!');
+      sound('epic');
     }
   }
 
@@ -2150,7 +2213,7 @@
     const radius = 138;
     let weakened = 0;
     for (const block of run.blocks) {
-      if (block.dead || block === source || block.isPortalWall || block.special) continue;
+      if (block.dead || block === source || block.special) continue;
       const distance = Math.hypot(block.x + block.w / 2 - centerX, block.y + block.h / 2 - centerY);
       if (distance > radius) continue;
       const easyHp = Math.max(2, Math.round(run.world.expectedDamage * rand(.18, .28)));
@@ -2187,11 +2250,6 @@
       const dx = block.x + block.w / 2 - x;
       const dy = block.y + block.h / 2 - y;
       if (Math.hypot(dx, dy) < radius) {
-        if (block.isPortalWall) {
-          block.hp = Math.max(1, block.hp - block.maxHp * .28);
-          createDebris(block, 7, true);
-          continue;
-        }
         block.dead = true;
         run.blocksDestroyed += 1;
         run.coins += block.coins * rewardScale * run.coinMultiplier;
@@ -2600,9 +2658,26 @@
       ctx.beginPath();
       ctx.arc(block.x + block.w / 2, sy + block.h / 2, 17, 0, Math.PI * 2);
       ctx.stroke();
+    } else if (special === 'boss') {
+      const cx = block.x + block.w / 2;
+      const cy = sy + block.h / 2;
+      ctx.fillStyle = 'rgba(40,20,72,.58)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 23, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffe56b';
+      ctx.beginPath();
+      ctx.arc(cx - 8, cy - 4, 4, 0, Math.PI * 2);
+      ctx.arc(cx + 8, cy - 4, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff5b5';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 12, cy + 11); ctx.lineTo(cx, cy + 15); ctx.lineTo(cx + 12, cy + 11);
+      ctx.stroke();
     }
 
-    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', freeze: '❄', blizzard: '≋' }[special] || '•';
+    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', freeze: '❄', blizzard: '≋', boss: '!' }[special] || '•';
     ctx.fillStyle = '#fff';
     ctx.font = special === 'gel' ? '1000 28px system-ui' : '1000 23px system-ui';
     ctx.textAlign = 'center';
@@ -2610,14 +2685,15 @@
     ctx.fillText(symbol, block.x + block.w / 2, sy + block.h / 2 - 2);
     ctx.font = '1000 9px system-ui';
     ctx.fillStyle = 'rgba(255,255,255,.94)';
-    ctx.fillText(`${Math.max(1, Math.ceil(block.hp))} HP`, block.x + block.w / 2, sy + block.h - 7);
+    ctx.fillText(special === 'boss' ? `БОСС · ${Math.max(1, Math.ceil(block.hp))}` : `${Math.max(1, Math.ceil(block.hp))} HP`, block.x + block.w / 2, sy + block.h - 7);
     ctx.restore();
   }
 
   function drawWorldSprite(block, sy, hpRatio) {
+    // Босс рисуется кодом, а не обычной плиткой: у него свои глаза и лицо.
+    if (block.special === 'boss') return false;
     let spriteName;
-    if (block.isPortalWall) spriteName = 'wall-intact';
-    else if (block.hazard && run.worldId === 2) spriteName = block.hazardVariant === 'spikes' ? 'ice-spikes' : 'ice-shards';
+    if (block.hazard && run.worldId === 2) spriteName = block.hazardVariant === 'spikes' ? 'ice-spikes' : 'ice-shards';
     else if (block.hazard && run.worldId === 3) spriteName = 'candy-hazard';
     else if (block.hazard) spriteName = 'stone-hazard';
     else if (block.special === 'bomb') spriteName = 'dynamite';
@@ -2656,10 +2732,10 @@
 
     const label = Math.max(1, Math.ceil(block.hp)).toString();
     const badgeWidth = Math.max(29, 15 + label.length * 7);
-    ctx.fillStyle = block.isPortalWall ? 'rgba(19,25,32,.92)' : 'rgba(22,28,38,.80)';
+    ctx.fillStyle = 'rgba(22,28,38,.80)';
     roundedRect(ctx, block.x + block.w / 2 - badgeWidth / 2, sy + block.h - 18, badgeWidth, 14, 7);
     ctx.fill();
-    ctx.strokeStyle = block.isPortalWall ? '#91f5df' : 'rgba(255,255,255,.48)';
+    ctx.strokeStyle = 'rgba(255,255,255,.48)';
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.fillStyle = '#fff';
@@ -2816,7 +2892,7 @@
       iceLight: '#bdefff', snowPacked: '#e7f8ff', glacier: '#65b9e7', iceHazard: '#168bd2',
       basalt: '#53505b', lavaRock: '#b84a2e', metal: '#677383', ore: '#9b7cff',
       coin: '#eab308', spring: '#22d3ee', bomb: '#ef4444', gel: '#34d399',
-      hazard: '#403c49', portalWall: '#3e4651', freeze: '#54dff5', blizzard: '#378ed8'
+      hazard: '#403c49', freeze: '#54dff5', blizzard: '#378ed8', boss: '#8a4fd2'
     };
     const base = colors[material] || world.accent;
     if (ratio >= .99) return base;
