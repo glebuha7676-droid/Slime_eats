@@ -187,8 +187,12 @@
   }
 
   function foodArtMarkup(food, className = 'food-model') {
-    const [x, y] = FOOD_ART_OFFSETS[food.id] || [0, 0];
-    return `<img class="${className}" src="${escapeAttribute(foodImageSource(food))}" alt="" draggable="false" decoding="async" style="--food-x:${x}%;--food-y:${y}%">`;
+    const [baseX, baseY] = FOOD_ART_OFFSETS[food.id] || [0, 0];
+    const clampArt = (value, fallback, min, max) => Number.isFinite(Number(value)) ? Math.max(min, Math.min(max, Number(value))) : fallback;
+    const x = clampArt(food.artX, baseX, -30, 30);
+    const y = clampArt(food.artY, baseY, -30, 30);
+    const scale = clampArt(food.artScale, 1, .55, 1.6);
+    return `<img class="${className}" src="${escapeAttribute(foodImageSource(food))}" alt="" draggable="false" decoding="async" style="--food-x:${x}%;--food-y:${y}%;--food-scale:${scale}">`;
   }
 
   function uiIconMarkup(name, className = 'ui-inline-icon') {
@@ -204,6 +208,7 @@
     const rarity = FOOD_RARITIES.has(value.rarity) ? value.rarity : 'common';
     const category = FOOD_CATEGORIES.has(value.category) ? value.category : 'mass';
     const image = String(value.image || '').trim();
+    const hasArtTransform = ['artX', 'artY', 'artScale'].some(key => Object.hasOwn(value, key));
     return {
       id, name, icon: String(value.icon || '🍓').slice(0, 8), rarity, category,
       minConveyor: Math.round(clampNumber(value.minConveyor || 1, 1, 5)),
@@ -211,7 +216,12 @@
       defense: clampNumber(value.defense, 0, 9.99), elasticity: clampNumber(value.elasticity, 0, 9.99),
       ability: clampNumber(value.ability, 0, 999), coinMultiplier: clampNumber(value.coinMultiplier, 0, 99),
       effect: String(value.effect || '').trim(), effectText: String(value.effectText || '').trim(),
-      ...(image ? { image } : {})
+      ...(image ? { image } : {}),
+      ...(hasArtTransform ? {
+        artX: clampNumber(value.artX, -30, 30),
+        artY: clampNumber(value.artY, -30, 30),
+        artScale: clampNumber(value.artScale || 1, .55, 1.6)
+      } : {})
     };
   }
 

@@ -60,6 +60,7 @@
       mass: number(source.mass, 0, 999), power: number(source.power, 0, 99),
       defense: number(source.defense, 0, 9.99), elasticity: number(source.elasticity, 0, 9.99),
       ability: number(source.ability, 0, 999), coinMultiplier: number(source.coinMultiplier, 0, 99),
+      artX: number(source.artX, -30, 30), artY: number(source.artY, -30, 30), artScale: number(source.artScale || 1, .55, 1.6),
       effect: String(source.effect || '').trim(), effectText: String(source.effectText || '').trim()
     };
     const image = String(source.image || '').trim();
@@ -139,6 +140,7 @@
     els.state.textContent = isNew ? 'НОВАЯ КАРТОЧКА' : `РЕДАКТИРОВАНИЕ · ${rarityLabel(data.rarity).toUpperCase()}`;
     els.remove.disabled = isNew;
     dirty = false;
+    syncArtOutputs();
     renderSaveState();
     renderPreview();
   }
@@ -146,7 +148,7 @@
     let index = 1;
     let id = 'newFood';
     while (catalog.some(food => food.id === id)) { index += 1; id = `newFood${index}`; }
-    return { id, name: 'Новая еда', icon: '🍓', rarity: 'common', category: 'mass', minConveyor: 1, mass: 6, power: 0, defense: 0, elasticity: 0, ability: 0, coinMultiplier: 0, effect: '', effectText: '', image: '' };
+    return { id, name: 'Новая еда', icon: '🍓', rarity: 'common', category: 'mass', minConveyor: 1, mass: 6, power: 0, defense: 0, elasticity: 0, ability: 0, coinMultiplier: 0, artX: 0, artY: 0, artScale: 1, effect: '', effectText: '', image: '' };
   }
   function formFood() {
     const data = Object.fromEntries(new FormData(els.form).entries());
@@ -172,12 +174,22 @@
     els.previewImage.onload = () => { els.previewImage.style.display = 'block'; els.previewEmoji.style.display = 'none'; };
     els.previewImage.onerror = () => { els.previewImage.removeAttribute('src'); els.previewEmoji.style.display = 'block'; };
     els.previewImage.src = source;
+    els.previewImage.style.transform = `translate(${food.artX}%, ${food.artY}%) scale(${food.artScale})`;
     const stats = STAT_META.filter(([key]) => Number(food[key]) > 0).slice(0, 4);
     els.previewStats.innerHTML = stats.map(([key, label, formatter]) => `<span class="preview-stat">${label}<br><b>${formatter(food[key])}</b></span>`).join('') || '<span class="preview-stat">БЕЗ СТАТОВ</span>';
     els.previewEffect.textContent = food.effectText || '';
     els.previewEffect.classList.toggle('hidden', !food.effect);
     els.previewStats.classList.toggle('hidden', Boolean(food.effect));
     els.title.textContent = food.name || 'Новая еда';
+  }
+  function syncArtOutputs() {
+    ['artX', 'artY', 'artScale'].forEach(name => {
+      const input = els.form.elements.namedItem(name);
+      const output = document.querySelector(`[data-art-output="${name}"]`);
+      if (!input || !output) return;
+      const value = Number(input.value) || 0;
+      output.textContent = name === 'artScale' ? `${Math.round(value * 100)}%` : `${value}%`;
+    });
   }
   function renderSaveState() {
     els.saveState.textContent = dirty ? 'НЕ СОХРАНЕНО' : 'СОХРАНЕНО';
@@ -292,7 +304,7 @@
     };
     reader.readAsDataURL(file);
   }
-  function markDirty() { dirty = true; renderSaveState(); renderPreview(); }
+  function markDirty() { dirty = true; syncArtOutputs(); renderSaveState(); renderPreview(); }
 
   setupSelects();
   renderList();

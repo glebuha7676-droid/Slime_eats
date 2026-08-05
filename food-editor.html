@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#8b62d5">
   <title>Редактор еды · Слайм</title>
-  <link rel="stylesheet" href="food-editor.css?v=1">
+  <link rel="stylesheet" href="food-editor.css?v=2">
 </head>
 <body>
   <main class="editor-shell">
@@ -60,6 +60,11 @@
                 <label>Эмодзи-запасной вариант<input name="icon" maxlength="8" placeholder="🍓"></label>
                 <label class="file-label">Загрузить файл<input id="imageUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden><span>ВЫБРАТЬ PNG / WEBP</span></label>
               </div>
+              <div class="art-controls" aria-label="Положение картинки на карточке">
+                <label class="art-control"><span class="art-control-head">Сдвиг влево / вправо <output data-art-output="artX">0%</output></span><input name="artX" type="range" min="-30" max="30" step="1" value="0"></label>
+                <label class="art-control"><span class="art-control-head">Сдвиг вверх / вниз <output data-art-output="artY">0%</output></span><input name="artY" type="range" min="-30" max="30" step="1" value="0"></label>
+                <label class="art-control"><span class="art-control-head">Размер картинки <output data-art-output="artScale">100%</output></span><input name="artScale" type="range" min="0.55" max="1.6" step="0.05" value="1"></label>
+              </div>
               <p class="field-hint">Файлы до 1,5 МБ сохраняются в браузере вместе с каталогом. Для финальной версии лучше положить WebP в <code>assets/food/</code> и указать путь.</p>
             </fieldset>
 
@@ -110,6 +115,6 @@
 
   <div id="editorToast" class="editor-toast" role="status" aria-live="polite"></div>
   <script src="food-catalog.js?v=1"></script>
-  <script src="food-editor.js?v=2"></script>
+  <script src="food-editor.js?v=3"></script>
 </body>
 </html>
