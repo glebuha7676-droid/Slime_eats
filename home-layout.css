@@ -47,18 +47,18 @@ body[data-screen="drop"] .world-summary .currency{min-height:34px}
 #homeScreen .belt-track{height:184px;min-height:184px}
 #homeScreen .reroll-btn,
 #homeScreen .reroll-btn.ad-mode{
-  position:relative;z-index:12;left:auto;top:auto;width:158px;height:44px;min-height:44px;
-  display:flex;align-items:center;justify-content:center;gap:7px;margin:-14px auto 1px;padding:4px 11px;
-  border:3px solid #35415a;border-radius:15px;background:#815fd4;background-image:linear-gradient(180deg,#9d79e4,#7955c9);
-  box-shadow:0 3px 0 #35415a;transform:none;color:#fff;text-align:left;
+  position:relative;z-index:12;left:auto;top:auto;width:168px;height:52px;min-height:52px;
+  display:flex;align-items:center;justify-content:center;gap:6px;margin:-16px auto -1px;padding:7px 17px 10px;
+  border:0;border-radius:17px;background:transparent url("assets/ui/button-primary.webp") center/100% 100% no-repeat;
+  box-shadow:none;transform:none;color:#3d256c;text-align:left;
 }
-#homeScreen .reroll-btn.ad-mode{background-image:linear-gradient(180deg,#648eb5,#4f759b)}
-#homeScreen .reroll-btn .reroll-icon{width:30px;height:30px;flex:0 0 30px;display:block;object-fit:contain}
+#homeScreen .reroll-btn.ad-mode{background-image:url("assets/ui/button-primary.webp")}
+#homeScreen .reroll-btn .reroll-icon{width:31px;height:31px;flex:0 0 31px;display:block;object-fit:contain}
 #homeScreen .reroll-btn>.reroll-copy{width:auto;min-width:0;height:auto;display:flex;align-items:flex-start;justify-content:center;gap:2px}
-#homeScreen .reroll-copy b{font-size:9px;line-height:1;letter-spacing:.4px;color:#fff;text-shadow:none}
-#homeScreen .reroll-copy small{max-width:94px;font-size:6.8px;line-height:1;color:#f8f2ff;text-shadow:none;white-space:nowrap}
-#homeScreen .reroll-btn:active{transform:translateY(3px);box-shadow:none}
-#homeScreen .reroll-btn:disabled{transform:none!important;filter:saturate(.55)}
+#homeScreen .reroll-copy b{font-size:9.5px;line-height:1;letter-spacing:.35px;color:#3d256c;text-shadow:0 1px rgba(255,255,255,.45)}
+#homeScreen .reroll-copy small{max-width:94px;font-size:7px;line-height:1;color:#654494;text-shadow:0 1px rgba(255,255,255,.4);white-space:nowrap}
+#homeScreen .reroll-btn:active{transform:translateY(2px) scale(.985)}
+#homeScreen .reroll-btn:disabled{transform:none!important;filter:grayscale(.55) saturate(.55);opacity:.72}
 
 .level-start-card{
   display:grid;grid-template-columns:minmax(0,1fr) 132px;align-items:center;gap:9px;
@@ -70,27 +70,37 @@ body[data-screen="drop"] .world-summary .currency{min-height:34px}
 .level-picker-head b{color:#586479;font-size:8px;letter-spacing:.35px}
 .level-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
 .level-btn{
-  position:relative;isolation:isolate;height:48px;min-width:0;display:grid;place-items:center;padding:0;
-  border:2px solid #46536d;border-radius:14px;background:linear-gradient(180deg,#f4ebff,#dfd2f4);
-  box-shadow:0 3px 0 #8b81a2;color:#4c3a71;transition:transform .1s ease,filter .12s ease;
+  position:relative;isolation:isolate;height:50px;min-width:0;display:grid;place-items:center;padding:0 0 3px;
+  border:2px solid #35415a;border-radius:15px;
+  background:linear-gradient(180deg,#fff8df 0%,#ffeab2 72%,#f3cc76 73%,#f8dd9a 100%);
+  box-shadow:0 3px 0 #35415a,inset 0 0 0 2px rgba(255,255,255,.4);
+  color:#623c16;transition:transform .1s ease,filter .12s ease;
 }
-.level-btn>span{position:relative;z-index:2;font-size:17px;font-weight:1000;line-height:1}
+.level-btn:before{
+  content:"";position:absolute;z-index:1;left:7px;top:5px;width:15px;height:6px;border-radius:999px;
+  background:rgba(255,255,255,.82);transform:rotate(-12deg);pointer-events:none;
+}
+.level-btn>span{position:relative;z-index:2;font-size:18px;font-weight:1000;line-height:1;text-shadow:0 1px rgba(255,255,255,.72)}
 .level-btn.active{
-  border-width:3px;background:linear-gradient(180deg,#a984eb,#7a56cd);box-shadow:0 3px 0 #46356f;
-  color:#fff;transform:translateY(-2px);
+  background:linear-gradient(180deg,#e2a8f4 0%,#ca7ee9 70%,#9b56cd 71%,#ba6dde 100%);
+  box-shadow:0 3px 0 #35415a,inset 0 0 0 2px rgba(255,255,255,.28);
+  color:#3d256c;transform:translateY(-2px) scale(1.035);
 }
-.level-btn.active>span{text-shadow:0 1px #493572}
+.level-btn.active>span{text-shadow:0 1px rgba(255,255,255,.48)}
 .level-btn.completed>i{
   position:absolute;z-index:3;right:2px;bottom:2px;width:13px;height:13px;display:grid;place-items:center;
   border:1px solid #246d4d;border-radius:50%;background:#55d58f;color:#173f30;font-size:8px;font-style:normal;font-weight:1000;
 }
-.level-btn.locked{background:linear-gradient(180deg,#dedddf,#c6c5ca);box-shadow:0 3px 0 #888b93;color:#777b84}
+.level-btn.locked{
+  background:linear-gradient(180deg,#eee9df 0%,#d5d0c9 72%,#aaa6a3 73%,#c2beb8 100%);
+  box-shadow:0 3px 0 #5b6270,inset 0 0 0 2px rgba(255,255,255,.32);color:#777b84;
+}
 .level-btn.locked>span{opacity:.28}
 .level-btn.locked>img{
   position:absolute;z-index:4;left:50%;top:50%;width:37px;height:37px;display:block;object-fit:contain;
   transform:translate(-50%,-50%);filter:saturate(.72);
 }
-.level-btn:not(.locked):active{transform:translateY(2px);box-shadow:none}
+.level-btn:not(.locked):active{transform:translateY(2px) scale(.98);box-shadow:0 1px 0 #35415a}
 .level-start-card .launch-btn{height:58px;min-height:58px}
 
 .bottom-actions{margin-bottom:8px}
@@ -120,8 +130,8 @@ body[data-screen="drop"] .world-summary .currency{min-height:34px}
   #homeScreen .food-choices{margin-inline:16px}
   #homeScreen .belt-tunnel{width:29px}
   #homeScreen .tunnel-left i{right:-7px}#homeScreen .tunnel-right i{left:-7px}
-  #homeScreen .reroll-btn,#homeScreen .reroll-btn.ad-mode{width:150px;height:42px;min-height:42px;margin-top:-13px}
-  .level-start-card{grid-template-columns:1fr;gap:8px;padding:8px}.level-buttons{gap:4px}.level-btn{height:46px;border-radius:13px}
+  #homeScreen .reroll-btn,#homeScreen .reroll-btn.ad-mode{width:160px;height:49px;min-height:49px;margin-top:-15px}
+  .level-start-card{grid-template-columns:1fr;gap:8px;padding:8px}.level-buttons{gap:4px}.level-btn{height:48px;border-radius:14px}
   .level-start-card .launch-btn{width:100%;height:54px;min-height:54px}
   .admin-tools{grid-template-columns:38px minmax(98px,112px) minmax(68px,1fr) minmax(72px,1fr);gap:3px;padding:4px}
   .admin-tools-title b{font-size:7px}.admin-world-switch{grid-template-columns:27px minmax(44px,1fr) 27px}
