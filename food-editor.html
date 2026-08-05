@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#8b62d5">
+  <title>Редактор еды · Слайм</title>
+  <link rel="stylesheet" href="food-editor.css?v=1">
+</head>
+<body>
+  <main class="editor-shell">
+    <header class="editor-topbar">
+      <a class="back-link" href="index.html" aria-label="Вернуться в игру">←</a>
+      <div><small>СЛАЙМ · ИНСТРУМЕНТ ДЛЯ РАЗРАБОТКИ</small><h1>Редактор карточек еды</h1></div>
+      <span id="catalogCount" class="catalog-count">0 КАРТОЧЕК</span>
+    </header>
+
+    <section class="editor-note" aria-label="Как работает редактор">
+      <b>Сохраняется сразу в пул игры</b>
+      <span>После сохранения перезагрузи игру — новая еда появится в конвейере. Изображение можно выбрать файлом или указать путь из <code>assets/food/</code>.</span>
+    </section>
+
+    <div class="editor-layout">
+      <aside class="catalog-panel">
+        <div class="catalog-actions">
+          <button id="addFoodBtn" class="button primary" type="button">＋ НОВАЯ ЕДА</button>
+          <button id="exportBtn" class="button soft" type="button">ЭКСПОРТ</button>
+        </div>
+        <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Найти еду"></label>
+        <div id="rarityFilters" class="rarity-filters" aria-label="Фильтр по редкости"></div>
+        <div id="foodList" class="food-list" aria-label="Каталог еды"></div>
+        <div class="catalog-bottom">
+          <label class="button soft import-label">ИМПОРТ JSON<input id="importInput" type="file" accept="application/json,.json" hidden></label>
+          <button id="resetCatalogBtn" class="text-button" type="button">Вернуть базовый каталог</button>
+        </div>
+      </aside>
+
+      <section class="work-panel">
+        <div class="work-heading"><div><small id="editorState">НОВАЯ КАРТОЧКА</small><h2 id="editorTitle">Новая еда</h2></div><span id="saveState" class="save-state">НЕ СОХРАНЕНО</span></div>
+
+        <div class="work-grid">
+          <form id="foodForm" class="food-form" novalidate>
+            <fieldset>
+              <legend>ОСНОВА</legend>
+              <div class="field-grid two">
+                <label>Название<input name="name" maxlength="32" required placeholder="Например, Ягодный пирог"></label>
+                <label>ID карточки<input name="id" maxlength="48" required pattern="[a-z][A-Za-z0-9_-]*" placeholder="berryCake"></label>
+              </div>
+              <div class="field-grid three">
+                <label>Редкость<select name="rarity" id="raritySelect"></select></label>
+                <label>Категория<select name="category" id="categorySelect"></select></label>
+                <label>Открыть с конвейера<select name="minConveyor" id="conveyorSelect"></select></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>КАРТИНКА</legend>
+              <div class="field-grid image-fields">
+                <label>Путь к картинке<input name="image" id="imagePath" maxlength="10000" placeholder="assets/food/my-food.webp"></label>
+                <label>Эмодзи-запасной вариант<input name="icon" maxlength="8" placeholder="🍓"></label>
+                <label class="file-label">Загрузить файл<input id="imageUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden><span>ВЫБРАТЬ PNG / WEBP</span></label>
+              </div>
+              <p class="field-hint">Файлы до 1,5 МБ сохраняются в браузере вместе с каталогом. Для финальной версии лучше положить WebP в <code>assets/food/</code> и указать путь.</p>
+            </fieldset>
+
+            <fieldset>
+              <legend>ХАРАКТЕРИСТИКИ</legend>
+              <div class="field-grid stats-grid">
+                <label>Масса<input name="mass" type="number" min="0" max="999" step="1"></label>
+                <label>Сила<input name="power" type="number" min="0" max="99" step="0.01"></label>
+                <label>Защита<input name="defense" type="number" min="0" max="9" step="0.01"></label>
+                <label>Отскок<input name="elasticity" type="number" min="0" max="9" step="0.01"></label>
+                <label>Заряд<input name="ability" type="number" min="0" max="999" step="1"></label>
+                <label>Монеты<input name="coinMultiplier" type="number" min="0" max="99" step="0.01"></label>
+              </div>
+              <p class="field-hint">На самой карточке показываются 4 самые заметные характеристики. Все значения работают в расчёте забега.</p>
+            </fieldset>
+
+            <fieldset>
+              <legend>ОСОБЫЙ ЭФФЕКТ</legend>
+              <label>Механика<select name="effect" id="effectSelect"></select></label>
+              <label>Описание эффекта<textarea name="effectText" maxlength="120" rows="2" placeholder="Коротко объясни, что делает способность"></textarea></label>
+              <p class="field-hint">Выбирай механику из списка: именно они уже поддерживаются игрой. Если эффект выбран, карточка станет карточкой способности.</p>
+            </fieldset>
+
+            <div class="form-actions">
+              <button id="saveFoodBtn" class="button primary wide" type="submit">СОХРАНИТЬ В ПУЛ ИГРЫ</button>
+              <button id="deleteFoodBtn" class="button danger" type="button">УДАЛИТЬ</button>
+            </div>
+          </form>
+
+          <aside class="preview-panel" aria-label="Предпросмотр карточки">
+            <small>ПРЕДПРОСМОТР В КОНВЕЙЕРЕ</small>
+            <article id="cardPreview" class="preview-card common">
+              <span class="preview-rarity">ОБЫЧНОЕ</span>
+              <div class="preview-image-wrap"><img id="previewImage" alt=""><span id="previewEmoji">🍓</span></div>
+              <b id="previewName">Новая еда</b>
+              <div id="previewStats" class="preview-stats"></div>
+              <p id="previewEffect" class="preview-effect hidden"></p>
+            </article>
+            <div class="preview-checks">
+              <b>ПРОВЕРКА</b>
+              <p id="validationText">Заполни название и ID.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="editorToast" class="editor-toast" role="status" aria-live="polite"></div>
+  <script src="food-catalog.js?v=1"></script>
+  <script src="food-editor.js?v=2"></script>
+</body>
+</html>
