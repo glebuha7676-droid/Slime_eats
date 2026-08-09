@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Редактор баланса · Копай глубже</title>
+  <link rel="stylesheet" href="balance.css?v=1">
+</head>
+<body>
+  <main class="balance-shell">
+    <header class="topbar">
+      <a class="back" href="../index.html">← ИГРА</a>
+      <div><small>КОПАЙ ГЛУБЖЕ · ИНСТРУМЕНТ РАЗРАБОТКИ</small><h1>Редактор баланса</h1></div>
+      <nav><a href="../editors/food/food-editor.html">ЕДА</a><a href="../editors/world/world-editor.html">МИРЫ</a><a class="active" href="index.html">БАЛАНС</a></nav>
+    </header>
+
+    <section class="notice">
+      <b>Каждый уровень делится на начало, середину и конец.</b>
+      <span>В каждой зоне сумма основных блоков, руд и второстепенных блоков должна отдельно равняться 100%.</span>
+    </section>
+
+    <section class="selector-card">
+      <div><small>МИР</small><div id="worldTabs" class="tabs"></div></div>
+      <div><small>УРОВЕНЬ</small><div id="levelTabs" class="tabs"></div></div>
+      <div class="save-group"><span id="saveState">Изменений нет</span><button id="saveBalance" type="button">СОХРАНИТЬ</button></div>
+    </section>
+
+    <section id="zoneEditor" class="zone-grid"></section>
+
+    <section class="properties-card">
+      <div class="section-heading"><div><small>ОБЩИЕ СВОЙСТВА</small><h2>Прочность, награды и специальные блоки</h2></div><button id="resetBalance" class="reset" type="button">СБРОСИТЬ БАЛАНС</button></div>
+      <div id="propertyEditor" class="properties-grid"></div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="balance-catalog.js?v=2"></script>
+  <script src="balance-editor.js?v=2"></script>
+</body>
+</html>

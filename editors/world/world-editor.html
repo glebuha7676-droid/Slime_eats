@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Редактор миров</title>
+  <link rel="stylesheet" href="../food/food-editor.css?v=2">
+  <link rel="stylesheet" href="world-editor.css?v=1">
+</head>
+<body>
+  <main class="editor-shell">
+    <header class="editor-topbar">
+      <a class="back-link" href="../../index.html">←</a>
+      <div><small>СЛАЙМ · ИНСТРУМЕНТ ДЛЯ РАЗРАБОТКИ</small><h1>Редактор миров</h1></div>
+      <nav class="editor-tabs"><a href="../food/food-editor.html">ЕДА</a><a class="active" href="world-editor.html">МИРЫ</a><a href="../../balance/index.html">БАЛАНС</a></nav>
+    </header>
+    <section class="editor-note">
+      <b>Сохраняется в реальные настройки игры</b>
+      <span>После сохранения обнови страницу игры: глубина, фон, блоки и их свойства применятся сразу.</span>
+    </section>
+    <section class="world-layout">
+      <aside class="world-side">
+        <small>ВЫБЕРИ МИР</small>
+        <div id="worldList" class="world-list"></div>
+        <button id="resetWorlds">СБРОСИТЬ</button>
+      </aside>
+      <section class="world-work">
+        <div class="world-toolbar">
+          <div><small>УРОВЕНЬ</small><div id="levelTabs" class="level-tabs"></div></div>
+          <button class="save-action" id="saveWorlds">СОХРАНИТЬ В ИГРУ</button>
+        </div>
+        <div class="world-grid">
+          <article class="editor-card">
+            <h2>Глубина и спавн</h2>
+            <label>Глубина, м<input id="levelDepth" type="number" min="20" max="2000"></label>
+            <p>Отмечай, какие блоки могут появиться. Вес — их частота.</p>
+            <div id="spawnList" class="spawn-list"></div>
+          </article>
+          <article class="editor-card">
+            <h2>Фон уровня</h2>
+            <div class="color-row"><label>Верх<input id="bgTop" type="color"></label><label>Низ<input id="bgBottom" type="color"></label><label>Акцент<input id="worldAccent" type="color"></label></div>
+            <label>Картинка фона<input id="bgImage" type="file" accept="image/png,image/jpeg,image/webp"></label>
+            <div class="range-row"><label>X<input id="bgX" type="range" min="-45" max="45"></label><output id="bgXValue"></output></div>
+            <div class="range-row"><label>Y<input id="bgY" type="range" min="-45" max="45"></label><output id="bgYValue"></output></div>
+            <div class="range-row"><label>Масштаб<input id="bgScale" type="range" min="55" max="180"></label><output id="bgScaleValue"></output></div>
+            <div id="backgroundPreview" class="background-preview"></div>
+          </article>
+        </div>
+        <article class="editor-card">
+          <div class="card-heading"><h2 id="blocksTitle">Все блоки</h2><label>Название мира<input id="worldName" maxlength="32"></label></div>
+          <div id="blockList" class="block-list"></div>
+        </article>
+        <article class="editor-card">
+          <h2 id="blockTitle">Настройка блока</h2>
+          <div id="blockControls" class="block-controls empty">Выбери блок выше.</div>
+        </article>
+      </section>
+    </section>
+  </main>
+  <script src="../../world-catalog.js?v=5"></script>
+  <script src="world-editor.js?v=3"></script>
+</body>
+</html>

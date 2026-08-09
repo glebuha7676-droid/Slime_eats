@@ -5,3 +5,5 @@
 
 .art-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:8px;padding:7px;border:2px solid #d9d2e6;border-radius:11px;background:#f7f2ff}.art-control{gap:5px}.art-control-head{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:6.8px}.art-control output{flex:none;padding:2px 4px;border-radius:6px;background:#7148b5;color:#fff;font-size:6.8px;letter-spacing:0}.art-control input[type="range"]{height:18px;padding:0;border:0;background:transparent;accent-color:#8c5fd2;box-shadow:none}.preview-image-wrap{overflow:hidden}.preview-image-wrap img{transition:transform .08s linear}
 @media(max-width:610px){.art-controls{grid-template-columns:1fr 1fr}.art-control:last-child{grid-column:span 2}}
+/* Общая навигация редакторов контента. */
+.editor-tabs{display:flex;gap:7px;align-items:center}.editor-tabs a{padding:7px 10px;border:2px solid #35425d;border-radius:11px;background:#fff6de;color:#35425d;font-weight:1000;font-size:11px;text-decoration:none}.editor-tabs a.active{background:#b88af4;color:#fff}

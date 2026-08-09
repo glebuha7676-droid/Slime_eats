@@ -44,7 +44,8 @@
   function escapeHtml(value) { return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function imageSource(food) {
     const image = String(food.image || '').trim();
-    return image || `assets/food/${food.id}.webp`;
+    const source = image || `assets/food/${food.id}.webp`;
+    return /^(?:data:|https?:|blob:)/i.test(source) ? source : `../../${source.replace(/^\.\//, '')}`;
   }
   function normalizeFood(source) {
     if (!source || typeof source !== 'object') return null;

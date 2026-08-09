@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const SAVE_KEY = 'slime_feed_and_fall_v9';
-  const LEGACY_SAVE_KEYS = ['slime_feed_and_fall_v8', 'slime_feed_and_fall_v7', 'slime_feed_and_fall_v6', 'slime_feed_and_fall_v5', 'slime_feed_and_fall_v4', 'slime_feed_and_fall_v3'];
+  const SAVE_KEY = 'slime_feed_and_fall_v10';
+  const LEGACY_SAVE_KEYS = ['slime_feed_and_fall_v9', 'slime_feed_and_fall_v8', 'slime_feed_and_fall_v7', 'slime_feed_and_fall_v6', 'slime_feed_and_fall_v5', 'slime_feed_and_fall_v4', 'slime_feed_and_fall_v3'];
   const VIEW_W = 440;
   const VIEW_H = 650;
   const LEVEL_COUNT = 5;
@@ -31,7 +31,7 @@
       expectedDamage: 19, pathWidth: 3, minPathWidth: 3, turnRate: .08,
       hardCap: .08, reinforcedCap: .018, oreChance: .075, specialChance: .16,
       sky: '#63825b', earth: '#3b3027', deep: '#171c20', accent: '#54d7b0', icon: '🌿',
-      materials: ['dirt', 'packedDirt', 'stone'], palette: 'earth', depthRamp: .22,
+      materials: ['packedDirt', 'stone', 'obsidian'], palette: 'earth', depthRamp: .22,
       cellSize: 72, hazardChance: .055
     },
     {
@@ -59,6 +59,25 @@
       cellSize: 72
     }
   ];
+
+  // Данные из встроенного редактора миров. Значения остаются безопасными:
+  // если редактор ещё не использовался, игра работает на исходных настройках.
+  const EDITOR_WORLDS = window.SlimeWorldCatalog?.load?.() || { worlds: [] };
+  let GAME_BALANCE = window.SlimeBalance?.load?.() || window.SlimeBalance?.defaults?.() || null;
+  function editorWorld(worldId) { return EDITOR_WORLDS.worlds?.find(item => +item.id === +worldId) || null; }
+  function editorBlock(worldId, id) { return editorWorld(worldId)?.blocks?.find(item => item.id === id) || null; }
+  function editorLevel(worldId, level) { return editorWorld(worldId)?.levels?.[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)] || null; }
+  function gameplayZone(worldId, level, progress) { return window.SlimeBalance?.getZone?.(GAME_BALANCE, worldId, level, progress) || null; }
+  WORLDS.forEach(world => {
+    const edited = editorWorld(world.id);
+    if (!edited) return;
+    world.name = edited.name || world.name;
+    world.accent = edited.accent || world.accent;
+    world.sky = edited.background?.top || world.sky;
+    world.earth = edited.background?.top || world.earth;
+    world.deep = edited.background?.bottom || world.deep;
+    world.editorBackground = edited.background || null;
+  });
 
 
   // Центральные параметры физики и баланса. Их можно менять независимо от остальной логики.
@@ -106,9 +125,8 @@
   const FOOD_ASSET_ROOT = 'assets/food/';
   const UI_ASSET_ROOT = 'assets/ui/';
   const WORLD1_TILE_NAMES = [
-    'dirt-grass', 'dirt-packed', 'stone', 'stone-reinforced', 'stone-hazard',
-    'ore-coal', 'ore-iron', 'ore-copper', 'ore-gold', 'ore-redstone',
-    'ore-lapis', 'ore-diamond', 'ore-emerald', 'dynamite', 'spring', 'heal',
+    'dirt-grass', 'stone', 'stone-reinforced', 'stone-hazard',
+    'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'spring', 'heal',
     'portal'
   ];
   const WORLD1_SPRITE_NAMES = [
@@ -118,8 +136,7 @@
   ];
   const WORLD2_TILE_NAMES = [
     'ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes',
-    'ore-coal', 'ore-iron', 'ore-copper', 'ore-gold', 'ore-redstone', 'ore-lapis',
-    'ore-diamond', 'ore-emerald', 'freeze', 'blizzard', 'heal', 'portal'
+    'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'freeze', 'blizzard', 'heal', 'portal'
   ];
   const WORLD2_SPRITE_NAMES = [
     ...WORLD2_TILE_NAMES,
@@ -128,8 +145,7 @@
   ];
   const WORLD3_TILE_NAMES = [
     'candy-light', 'cookie-packed', 'candy-reinforced', 'candy-hazard',
-    'ore-coal', 'ore-iron', 'ore-copper', 'ore-gold', 'ore-redstone', 'ore-lapis',
-    'ore-diamond', 'ore-emerald', 'dynamite', 'spring', 'heal', 'portal'
+    'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'spring', 'heal', 'portal'
   ];
   const WORLD3_SPRITE_NAMES = [
     ...WORLD3_TILE_NAMES,
@@ -140,24 +156,26 @@
   const WORLD_SPRITES = {};
   function ensureWorldSprites(worldId) {
     if (WORLD_SPRITES[worldId] || !WORLD_SPRITE_NAMES[worldId]) return WORLD_SPRITES[worldId] || null;
-    const extension = worldId === 3 ? 'png' : 'webp';
     WORLD_SPRITES[worldId] = Object.fromEntries(WORLD_SPRITE_NAMES[worldId].map(name => {
       const image = new Image();
+      const extension = worldId === 3 ? 'png' : 'webp';
       image.src = `assets/world${worldId}/${name}.${extension}`;
       return [name, image];
     }));
     return WORLD_SPRITES[worldId];
   }
+  const EDITOR_SPRITES = {};
+  function editorSprite(source) {
+    if (!source) return null;
+    if (!EDITOR_SPRITES[source]) { const image = new Image(); image.src = source; EDITOR_SPRITES[source] = image; }
+    return EDITOR_SPRITES[source];
+  }
 
   const ORE_TYPES = [
-    { id: 'coal', label: 'УГОЛЬ', min: 0, reward: .62 },
-    { id: 'iron', label: 'ЖЕЛЕЗО', min: .08, reward: .82 },
-    { id: 'copper', label: 'МЕДЬ', min: .16, reward: .76 },
-    { id: 'gold', label: 'ЗОЛОТО', min: .28, reward: 1.22 },
-    { id: 'redstone', label: 'КРАСНЫЙ КРИСТАЛЛ', min: .38, reward: 1.36 },
-    { id: 'lapis', label: 'ЛАЗУРИТ', min: .46, reward: 1.48 },
-    { id: 'diamond', label: 'АЛМАЗ', min: .64, reward: 2.05 },
-    { id: 'emerald', label: 'ИЗУМРУД', min: .78, reward: 2.35 }
+    { id: 'coal', label: 'УГОЛЬ', min: 0, reward: .72, hp: [10, 16] },
+    { id: 'iron', label: 'ЖЕЛЕЗО', min: .12, reward: 1.02, hp: [17, 24] },
+    { id: 'gold', label: 'ЗОЛОТО', min: .32, reward: 1.48, hp: [25, 32] },
+    { id: 'diamond', label: 'АЛМАЗ', min: .58, reward: 2.10, hp: [33, 40] }
   ];
 
   const FOOD_ART_OFFSETS = {
@@ -193,6 +211,63 @@
     const y = clampArt(food.artY, baseY, -30, 30);
     const scale = clampArt(food.artScale, 1, .55, 1.6);
     return `<img class="${className}" src="${escapeAttribute(foodImageSource(food))}" alt="" draggable="false" decoding="async" style="--food-x:${x}%;--food-y:${y}%;--food-scale:${scale}">`;
+  }
+
+  const foodThumbnailFitCache = new Map();
+
+  function centerFoodThumbnail(image) {
+    if (!image) return;
+    const applyFit = fit => {
+      image.style.setProperty('--food-thumb-x', `${fit.x}%`);
+      image.style.setProperty('--food-thumb-y', `${fit.y}%`);
+      image.style.setProperty('--food-thumb-scale', String(fit.scale));
+    };
+    const analyze = () => {
+      const source = image.currentSrc || image.src;
+      const cached = foodThumbnailFitCache.get(source);
+      if (cached) return applyFit(cached);
+      if (!image.naturalWidth || !image.naturalHeight) return;
+      try {
+        const sampleEdge = 96;
+        const ratio = sampleEdge / Math.max(image.naturalWidth, image.naturalHeight);
+        const width = Math.max(1, Math.round(image.naturalWidth * ratio));
+        const height = Math.max(1, Math.round(image.naturalHeight * ratio));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        context.drawImage(image, 0, 0, width, height);
+        const pixels = context.getImageData(0, 0, width, height).data;
+        let minX = width, minY = height, maxX = -1, maxY = -1;
+        for (let y = 0; y < height; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            if (pixels[(y * width + x) * 4 + 3] < 18) continue;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+        if (maxX < minX || maxY < minY) return;
+        const edge = Math.max(width, height);
+        const visibleWidth = (maxX - minX + 1) / edge;
+        const visibleHeight = (maxY - minY + 1) / edge;
+        const centerX = ((minX + maxX + 1) / 2 - width / 2) / edge;
+        const centerY = ((minY + maxY + 1) / 2 - height / 2) / edge;
+        const scale = clamp(.88 / Math.max(visibleWidth, visibleHeight), .72, 1.55);
+        const fit = {
+          scale: Math.round(scale * 1000) / 1000,
+          x: Math.round(-centerX * scale * 1000) / 10,
+          y: Math.round(-centerY * scale * 1000) / 10
+        };
+        foodThumbnailFitCache.set(source, fit);
+        applyFit(fit);
+      } catch (_) {
+        applyFit({ x: 0, y: 0, scale: 1 });
+      }
+    };
+    if (image.complete && image.naturalWidth) analyze();
+    else image.addEventListener('load', analyze, { once: true });
   }
 
   function uiIconMarkup(name, className = 'ui-inline-icon') {
@@ -250,9 +325,9 @@
 
   const UPGRADE_DATA = {
     stomachLevel: {
-      name: 'Желудок', icon: 'stomach', max: 5,
-      description: 'Вместимость: от 1 до 5 блюд. Главный источник разнообразия билдов.',
-      costs: [0, 45, 180, 650, 2100]
+      name: 'Желудок', icon: 'stomach', max: 6,
+      description: 'Вместимость: от 2 до 6 блюд. Главный источник разнообразия билдов.',
+      costs: [0, 0, 45, 180, 650, 2100]
     },
     conveyorLevel: {
       name: 'Конвейер', icon: 'conveyor', max: 5,
@@ -267,13 +342,13 @@
   };
 
   const defaultSave = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     coins: 20,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
     selectedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
     unlockedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
-    stomachLevel: 1,
+    stomachLevel: 2,
     conveyorLevel: 1,
     rerollLevel: 0,
     bestDepth: 0,
@@ -295,14 +370,15 @@
     worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
     menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
-    foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), buffList: $('#buffList'), massLabel: $('#massLabel'), powerLabel: $('#powerLabel'),
+    foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), massLabel: $('#massLabel'), powerLabel: $('#powerLabel'),
     defenseLabel: $('#defenseLabel'), bounceLabel: $('#bounceLabel'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
     massCompare: $('#massCompare'), powerCompare: $('#powerCompare'), defenseCompare: $('#defenseCompare'), bounceCompare: $('#bounceCompare'),
     startDropLabel: $('#startDropLabel'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
     adminWorldValue: $('#adminWorldValue'), adminResetProgressBtn: $('#adminResetProgressBtn'),
     conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
-    foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'), buffShelf: $('#buffShelf'),
+    foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'),
+    stomachQuickSlots: $('#stomachQuickSlots'),
     startDropBtn: $('#startDropBtn'),
     depthLabel: $('#depthLabel'), runMassLabel: $('#runMassLabel'), flightLabel: $('#flightLabel'), runCoinsLabel: $('#runCoinsLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'), worldTargetBadge: $('#worldTargetBadge'),
@@ -353,6 +429,7 @@
   };
   let dragState = null;
   let selectedFoodOfferIndex = null;
+  let selectedFoodInfoKey = null;
   const ctx = els.canvas.getContext('2d');
   const menuSlimeCtx = els.menuSlimeCanvas.getContext('2d');
 
@@ -366,7 +443,7 @@
         }
       }
       if (!parsed) return structuredClone(defaultSave);
-      return normalizeSave({ ...structuredClone(defaultSave), ...parsed });
+      return normalizeSave(parsed);
     } catch (error) {
       console.warn('Save reset:', error);
       return structuredClone(defaultSave);
@@ -374,11 +451,13 @@
   }
 
   function normalizeSave(value) {
+    const sourceSchema = Math.max(0, Math.round(+value.schemaVersion || 0));
+    const sourceStomachLevel = Math.round(+value.stomachLevel || (sourceSchema >= 10 ? 2 : 1));
     const merged = { ...structuredClone(defaultSave), ...value };
-    merged.schemaVersion = 9;
+    merged.schemaVersion = 10;
     merged.coins = Math.max(0, Number.isFinite(+merged.coins) ? +merged.coins : defaultSave.coins);
     merged.world = clamp(Math.round(+merged.world || 1), 1, WORLDS.length);
-    merged.stomachLevel = clamp(Math.round(+merged.stomachLevel || 1), 1, UPGRADE_DATA.stomachLevel.max);
+    merged.stomachLevel = clamp(sourceSchema < 10 ? sourceStomachLevel + 1 : sourceStomachLevel, 2, UPGRADE_DATA.stomachLevel.max);
     merged.conveyorLevel = clamp(Math.round(+merged.conveyorLevel || 1), 1, UPGRADE_DATA.conveyorLevel.max);
     merged.rerollLevel = clamp(Math.round(+merged.rerollLevel || 0), 0, UPGRADE_DATA.rerollLevel.max);
     merged.bestDepth = Math.max(0, +merged.bestDepth || 0);
@@ -462,7 +541,18 @@
   function foodGrowthScale(foodCount) { return 1 + Math.max(0, foodCount) * .05; }
   function levelConfig(world, level) {
     const entries = WORLD_LEVELS[world.id];
-    return entries?.[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)] || null;
+    const index = clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1);
+    const fallback = entries?.[index] || null;
+    const edited = editorLevel(world.id, level);
+    if (!edited) return fallback;
+    const enabled = Array.isArray(edited.enabled) ? edited.enabled : [];
+    return {
+      ...(fallback || {}), depth: edited.depth || fallback?.depth,
+      features: {
+        ...(fallback?.features || { boss: false }),
+        dynamite: enabled.includes('bomb'), medkit: enabled.includes('heal'), hazards: enabled.includes('hazard')
+      }
+    };
   }
 
   function levelFeatures(world, level) {
@@ -1062,30 +1152,47 @@
   }
 
   // ===== ГЛАВНЫЙ ЭКРАН: эффекты и выдача еды =====
-  function renderSpecialBuffs() {
-    els.buffList.replaceChildren();
-    if (session.combo) {
-      const combo = document.createElement('div');
-      combo.className = 'buff-chip combo';
-      combo.innerHTML = `<span>${session.combo.icon}</span><div><b>${session.combo.name}</b><small>Комбо сборки</small></div>`;
-      els.buffList.appendChild(combo);
+  function createStomachSlot(food, index, compact = false) {
+    const slot = document.createElement('button');
+    slot.type = 'button';
+    slot.className = `${compact ? 'stomach-quick-slot' : 'stomach-slot'} ${food ? `filled ${food.rarity}` : ''}`;
+    if (food) {
+      const effectStar = compact && food.effectText
+        ? '<span class="slot-effect-star" aria-hidden="true">★</span>'
+        : '';
+      slot.innerHTML = `${effectStar}<span class="slot-art">${foodArtMarkup(food, 'food-mini-model')}</span>${compact ? '' : `<i>${index + 1}</i>`}`;
+      centerFoodThumbnail(slot.querySelector('.food-mini-model'));
+      slot.setAttribute('aria-label', `${index + 1}. ${food.name}. ${RARITY_LABELS[food.rarity]}${food.effectText ? '. Есть особый эффект' : ''}. Показать свойства`);
+      slot.title = `${food.name}${food.effectText ? ' · ★ эффект' : ''}`;
+      if (compact) slot.addEventListener('click', () => showStomachFoodInfo(food, index, slot));
+    } else {
+      slot.innerHTML = '<span class="slot-plus" aria-hidden="true"></span>';
+      slot.setAttribute('aria-label', `${index + 1}. Пустая ячейка желудка`);
+      slot.setAttribute('aria-disabled', 'true');
+      slot.tabIndex = -1;
     }
-    session.foods.filter(food => food.effectText).forEach(food => {
-      const buff = document.createElement('div');
-      buff.className = `buff-chip special ${food.rarity}`;
-      buff.innerHTML = `<span>${foodArtMarkup(food, 'food-buff-model')}</span><div><b>${food.name}</b><small>${food.effectText}</small></div>`;
-      els.buffList.appendChild(buff);
-    });
-    els.buffShelf?.classList.toggle('hidden', !els.buffList.children.length);
+    return slot;
+  }
+
+  function renderStomachSlots() {
+    const capacity = save.stomachLevel;
+    els.stomachQuickSlots?.replaceChildren();
+    if (els.stomachQuickSlots) els.stomachQuickSlots.dataset.slots = String(capacity);
+    for (let index = 0; index < capacity; index += 1) {
+      const food = session.foods[index];
+      els.stomachQuickSlots?.appendChild(createStomachSlot(food, index, true));
+    }
+    els.stomachQuickSlots?.classList.toggle('is-full', session.foods.length >= capacity);
   }
 
   function hideFoodInfo() {
     selectedFoodOfferIndex = null;
+    selectedFoodInfoKey = null;
     els.foodInfo?.classList.add('hidden');
     els.foodInfo?.classList.remove('below');
     els.foodInfo?.style.removeProperty('left');
     els.foodInfo?.style.removeProperty('top');
-    $$('.food-card.selected').forEach(card => card.classList.remove('selected'));
+    $$('.food-info-source.selected').forEach(source => source.classList.remove('selected', 'food-info-source'));
     clearFoodPreview();
   }
 
@@ -1109,16 +1216,18 @@
     });
   }
 
-  function showFoodInfo(food, offerIndex, source) {
+  function presentFoodInfo(food, key, source, { offerIndex = null, preview = false } = {}) {
     if (!food || !els.foodInfo) return;
-    if (selectedFoodOfferIndex === offerIndex && !els.foodInfo.classList.contains('hidden')) {
+    if (selectedFoodInfoKey === key && !els.foodInfo.classList.contains('hidden')) {
       hideFoodInfo();
       return;
     }
+    selectedFoodInfoKey = key;
     selectedFoodOfferIndex = offerIndex;
-    $$('.food-card.selected').forEach(card => card.classList.remove('selected'));
-    source?.classList.add('selected');
-    showFoodPreview(food);
+    $$('.food-info-source.selected').forEach(item => item.classList.remove('selected', 'food-info-source'));
+    source?.classList.add('selected', 'food-info-source');
+    if (preview) showFoodPreview(food);
+    else clearFoodPreview();
     const cardType = foodCardType(food);
     els.foodInfoStats.innerHTML = cardType === 'ability'
       ? `<strong class="food-info-kind">${uiIconMarkup('special', 'food-info-kind-icon')}ЭФФЕКТ</strong>`
@@ -1127,6 +1236,14 @@
     els.foodInfoEffect.classList.toggle('hidden', !food.effectText);
     els.foodInfo.className = `food-info ${food.rarity} food-type-${cardType}`;
     positionFoodInfoPopover(source);
+  }
+
+  function showFoodInfo(food, offerIndex, source) {
+    presentFoodInfo(food, `offer:${offerIndex}`, source, { offerIndex, preview: true });
+  }
+
+  function showStomachFoodInfo(food, stomachIndex, source) {
+    presentFoodInfo(food, `stomach:${stomachIndex}`, source);
   }
 
   function renderDraft({ offerMotion = 'static' } = {}) {
@@ -1148,7 +1265,7 @@
     els.slime.style.height = `${124 * scale}px`;
 
     els.foodInside.replaceChildren();
-    renderSpecialBuffs();
+    renderStomachSlots();
 
     els.foodChoices.innerHTML = '';
     session.offer.forEach((food, index) => {
@@ -1161,12 +1278,19 @@
       }
       const button = document.createElement('button');
       const cardType = foodCardType(food);
+      const tunnelInDistance = 112 + index * 110;
+      const tunnelOutDistance = 112 + (session.offer.length - 1 - index) * 110;
       button.className = `food-card ${food.rarity} food-type-${cardType} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${full ? 'locked' : ''}`;
-      button.style.animationDelay = offerMotion === 'enter' ? `${index * 90}ms` : '0ms';
+      button.style.animationDelay = offerMotion === 'enter' ? `${index * 70}ms` : '0ms';
+      button.style.setProperty('--tunnel-in-distance', `${tunnelInDistance}%`);
+      button.style.setProperty('--tunnel-in-mouth', `${Math.round(tunnelInDistance * .94)}%`);
+      button.style.setProperty('--tunnel-out-cruise', `${Math.round(tunnelOutDistance * .72)}%`);
+      button.style.setProperty('--tunnel-out-mouth', `${Math.round(tunnelOutDistance * .94)}%`);
+      button.style.setProperty('--tunnel-out-distance', `${tunnelOutDistance}%`);
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
       const cardBody = cardType === 'ability'
-        ? `<span class="food-ability-copy"><b>${uiIconMarkup('special', 'ability-kind-icon')} ЭФФЕКТ</b><em>${food.effectText}</em></span>`
+        ? `<span class="food-ability-copy"><b><span class="effect-title-star" aria-hidden="true">★</span>ЭФФЕКТ</b><em>${food.effectText}</em></span>`
         : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid count-${Math.min(foodStatItems(food).length, 4)}">${foodStatGridMarkup(food)}</span></span>`;
       button.innerHTML = `
         <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span>
@@ -1189,11 +1313,11 @@
 
     if (session.freeRerolls > 0) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ОБНОВИТЬ';
-      if (els.rerollText) els.rerollText.textContent = `Бесплатно ×${session.freeRerolls}`;
+      if (els.rerollText) els.rerollText.textContent = `БЕСПЛАТНО ×${session.freeRerolls}`;
       els.rerollBtn.classList.remove('ad-mode');
     } else {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ОБНОВИТЬ';
-      if (els.rerollText) els.rerollText.textContent = 'За рекламу · Эпик +10%';
+      if (els.rerollText) els.rerollText.textContent = '▶ ЭПИК +10%';
       els.rerollBtn.classList.add('ad-mode');
       els.rerollBtn.disabled = full;
     }
@@ -1383,15 +1507,16 @@
       sound(rollBoost >= 10 ? 'epic' : 'reroll');
       feedback(6);
       els.conveyor.classList.add('is-running');
-      $$('.food-card').forEach((card, index) => {
-        card.style.animationDelay = `${index * 70}ms`;
+      $$('.food-card').forEach(card => {
+        const offerIndex = Number(card.dataset.offerIndex || 0);
+        card.style.animationDelay = `${Math.max(0, session.offer.length - 1 - offerIndex) * 70}ms`;
         card.classList.add('leaving');
       });
-      await new Promise(resolve => setTimeout(resolve, 660));
+      await new Promise(resolve => setTimeout(resolve, 840));
       generateOffer(rollBoost);
       renderDraft({ offerMotion: 'enter' });
       persist();
-      await new Promise(resolve => setTimeout(resolve, 760));
+      await new Promise(resolve => setTimeout(resolve, 900));
     } finally {
       session.rerollPending = false;
       els.conveyor.classList.remove('is-running');
@@ -1401,6 +1526,7 @@
 
   // ===== ЗАБЕГ: запуск и физическая сцена =====
   function startDrop() {
+    GAME_BALANCE = window.SlimeBalance?.load?.() || GAME_BALANCE;
     if (menuSlimeIsBusy() || document.body.classList.contains('secret-feast')) {
       showToast('Слайм ещё доедает');
       return;
@@ -1433,7 +1559,7 @@
       gridOffsetX,
       // Портал — самостоятельный финал. Крепостной стены перед ним больше нет.
       portalY: finishY + cellSize * .35,
-      blocks: [], particles: [], trails: [],
+      blocks: [], particles: [], trails: [], specialEffects: [],
       slime: {
         x: startX,
         y: 78,
@@ -1468,6 +1594,9 @@
       abilityCooldownMax: session.effects.cooldownCut ? 3.5 : BALANCE.abilityCooldown,
       abilityChargeMultiplier: session.effects.chargeBoost ? 1.25 : 1,
       coins: 0,
+      comboCount: 0,
+      comboMultiplier: 1,
+      comboRows: new Set(),
       depth: 0,
       maxDepth: 0,
       flightDistance: 0,
@@ -1505,6 +1634,26 @@
     els.canvas.height = VIEW_H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
+  }
+
+  function weightedKey(distribution, fallback) {
+    const entries = Object.entries(distribution || {}).filter(([, weight]) => +weight > 0);
+    const total = entries.reduce((sum, [, weight]) => sum + +weight, 0);
+    if (!total) return fallback;
+    let roll = Math.random() * total;
+    return entries.find(([, weight]) => (roll -= +weight) <= 0)?.[0] || fallback;
+  }
+
+  function chooseBalancedCell(world, level, progress) {
+    const zone = gameplayZone(world.id, level, progress);
+    const category = weightedKey(zone?.blocks, 'weak');
+    if (category === 'weak') return { tier:'dense', special:null, zone };
+    if (category === 'normal') return { tier:'hard', special:null, zone };
+    if (category === 'strong') return { tier:'reinforced', special:null, zone };
+    if (category === 'ore') return { tier:'ore', special:null, zone };
+    const selected = weightedKey(zone?.secondary, 'heal');
+    const special = selected === 'heal' ? 'gel' : selected;
+    return { tier:'special', special, zone };
   }
 
   function generateBlockField(runState) {
@@ -1553,80 +1702,70 @@
       const rowBlocks = [];
       for (let col = 0; col < columns; col += 1) {
         const inPath = pathColumns.includes(col);
-        let tier = inPath
-          ? chooseTemplatePathTier(world, progress, meta, col, riskyCol, keyRow)
-          : chooseOffPathTier(world, progress);
-        let special = null;
-
-        if (keyRow) {
-          if (world.id === 1 && meta.kind === 'boss' && unlocks.boss && col === pathColumns[0]) special = 'boss';
-          if (world.id !== 1) {
-            if (meta.kind === 'recovery' && col === pathColumns[0]) special = 'gel';
-            if (meta.kind === 'reward' && col === pathColumns[pathColumns.length - 1]) special = Math.random() < .58 ? 'coin' : 'gel';
-            if (meta.kind === 'bomb' && col === pathColumns[Math.floor(pathColumns.length / 2)]) special = world.id === 2 ? 'freeze' : 'bomb';
-            if (meta.kind === 'bounce' && pathColumns.length > 1 && col === pathColumns[0]) special = world.id === 2 ? 'blizzard' : 'spring';
-          }
-        }
-        if (meta.kind === 'ore' && col === clamp(pathColumns[pathColumns.length - 1] + 1, 0, columns - 1)) tier = 'ore';
-        if (meta.kind === 'fork' && col === riskyCol && keyRow) tier = 'ore';
-
-        // Небольшая органическая примесь специальных блоков, но не в обучении.
-        if (world.id !== 1 && !special && row > 4 && meta.kind !== 'tutorial' && Math.random() < world.specialChance * (inPath ? .20 : .07)) {
-          special = chooseSpecialBlock(world, row, progress, inPath);
-        }
-        if (!special && tier !== 'ore' && !inPath && row > 4 && Math.random() < world.oreChance * .42) tier = 'ore';
-
-        const hazardsUnlocked = world.id !== 1 || unlocks.hazards;
-        const hazard = hazardsUnlocked && Boolean(world.hazardChance) && !special && tier !== 'ore' && row > 4
-          && Math.random() < world.hazardChance * (inPath ? .22 : 1) * lerp(.55, 1, progress);
-        const hazardVariant = hazard && world.id === 2 ? (Math.random() < .5 ? 'shards' : 'spikes') : null;
-        if (hazard) tier = tier === 'reinforced' ? 'reinforced' : 'hard';
+        const balanced = chooseBalancedCell(world, runState.level, progress);
+        let tier = balanced.tier;
+        let special = balanced.special;
+        const hazard = false;
+        const hazardVariant = null;
         const finalTier = special ? 'special' : tier;
+        const customVisuals = editorWorld(world.id)?.blocks?.filter(item => item.type === 'custom' && item.spawnType === finalTier && editorAllows(world, runState.level, item.id)) || [];
+        const customVisual = customVisuals.length ? customVisuals[Math.floor(Math.random() * customVisuals.length)] : null;
+        const oreType = finalTier === 'ore' ? chooseOreType(progress, world, balanced.zone) : null;
         let maxHp = blockHpForTier(finalTier, world, progress, row, col, inPath);
         if (special === 'coin') maxHp *= .66;
-        if (special === 'gel') maxHp *= .44;
-        if (special === 'bomb') maxHp *= .68;
-        if (special === 'spring') maxHp *= 1.10;
+        if (special === 'spring') maxHp = 1;
         if (special === 'freeze') maxHp *= .72;
         if (special === 'blizzard') maxHp *= 1.08;
         if (special === 'boss') maxHp *= 4.4;
+        const editedBlock = customVisual || editorBlock(world.id, special === 'gel' ? 'heal' : special || (hazard ? 'hazard' : finalTier));
+        if (customVisual) maxHp *= editedBlock?.hp || 1;
+        const coreRange = durabilityRange(finalTier);
+        if (coreRange && !special && !hazard) maxHp = clamp(maxHp, coreRange[0], coreRange[1]);
+        if (oreType) {
+          const oreBalance = GAME_BALANCE?.ores?.[oreType.id];
+          maxHp = rand(oreBalance?.min ?? oreType.hp[0], oreBalance?.max ?? oreType.hp[1]);
+        }
+        // Fixed values for gameplay-critical blocks. Editor multipliers never
+        // make a medkit, dynamite or hazard unexpectedly tougher.
+        if (hazard) maxHp = 30;
+        if (special === 'bomb' || special === 'gel') maxHp = 5;
+        if (special === 'spring') maxHp = 1;
         maxHp = Math.max(1, Math.round(maxHp));
 
         const material = hazard ? (world.id === 2 ? 'iceHazard' : 'hazard') : chooseMaterial(world, progress, special, finalTier);
-        const oreType = finalTier === 'ore' ? chooseOreType(progress) : null;
-        const tierData = BLOCK_TIERS[finalTier] || BLOCK_TIERS.dense;
         rowBlocks.push({
           id: id++, row, col, x: gridOffsetX + col * cell, y, w: cell, h: cell,
           hp: maxHp, maxHp, material, special, tier: finalTier, dead: false,
-          path: inPath, segment: meta.kind, hazard, hazardVariant, oreType, frozen: false,
-          topGrass: world.id === 1 && row < 3 && !special && finalTier === 'soft',
-          coins: Math.max(1, Math.round(maxHp * tierData.coin * rand(.48, .82)))
+          path: inPath, segment: meta.kind, hazard, hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
+          // Grass belongs only to the surface layer of World 1.
+          topGrass: world.id === 1 && row === 0 && !special && finalTier === 'soft',
+          coins: special
+            ? 0
+            : oreType
+              ? Math.max(0, Math.round(GAME_BALANCE?.ores?.[oreType.id]?.coins ?? (10 + maxHp * .45) * oreType.reward))
+              : blockRewardForTier(finalTier)
         });
       }
 
-      // Мир 1 мягко обучает: первые 4 ряда и финал пробиваются почти всегда.
-      if (row < 4 || (world.id === 1 && meta.kind === 'final')) {
+      // The first row is purely decorative surface. Below it, the same weak
+      // strength uses the world's normal ground texture; surface art never
+      // appears underground.
+      if (row === 0) {
         for (const block of rowBlocks) {
-          if (!block.special && block.tier !== 'ore') {
-            block.tier = 'soft';
-            block.topGrass = world.id === 1 && row < 3;
-            if (world.id === 1) block.material = block.topGrass ? 'dirt' : 'packedDirt';
-            block.maxHp = block.hp = Math.max(2, Math.round(world.expectedDamage * (.26 + row * .025) * rand(.82, 1.03)));
-          }
+          block.tier = 'soft';
+          block.special = null;
+          block.hazard = false;
+          block.hazardVariant = null;
+          block.oreType = null;
+          block.editorVisualId = '';
+          block.topGrass = world.id === 1;
+          if (world.id === 1) block.material = 'grass';
+          block.maxHp = block.hp = blockHpForTier(block.tier, world, progress, row, block.col, true);
+          block.coins = blockRewardForTier('soft');
         }
-      }
-
-      // В каждом ряду остаётся хотя бы одна разумная точка продолжения.
-      const safe = rowBlocks.filter(block => block.path && !block.special && block.tier !== 'ore');
-      if (safe.length && safe.every(block => ['hard', 'reinforced'].includes(block.tier))) {
-        const block = safe[Math.floor(Math.random() * safe.length)];
-        block.tier = progress < .55 ? 'soft' : 'dense';
-        block.maxHp = block.hp = Math.round(blockHpForTier(block.tier, world, progress, row, block.col, true) * .84);
       }
       blocks.push(...rowBlocks);
     }
-
-    if (world.id === 1) populateWorldOneUtilities(blocks, runState, rows, unlocks);
     return blocks;
   }
 
@@ -1663,113 +1802,28 @@
     return plan.slice(0, rows);
   }
 
-  // Мир 1 знакомит с механиками по одной. Вместо редкого случайного шанса
-  // полезные блоки ставятся с ограниченным интервалом прямо на маршруте.
-  // Поэтому у игрока не бывает длинного участка без взрывчатки/лечения.
-  function populateWorldOneUtilities(blocks, runState, rows, unlocks) {
-    const config = levelConfig(runState.world, runState.level);
-    const cadence = config?.utilityCadence || 0;
-    if (!unlocks.dynamite || !cadence) return;
-
-    const lastUtilityRow = Math.max(7, rows - 4);
-    let row = 6 + Math.floor(Math.random() * 2);
-    let nextType = 'bomb';
-
-    while (row < lastUtilityRow) {
-      const candidates = blocks.filter(block => block.row === row && block.path && !block.special && !block.hazard
-        && block.segment !== 'tutorial' && block.segment !== 'final' && block.segment !== 'boss');
-      if (candidates.length) {
-        const block = candidates[Math.floor(Math.random() * candidates.length)];
-        const progress = clamp(row / Math.max(1, rows - 1), 0, 1);
-        configureWorldOneUtility(block, nextType, runState.world, progress, row);
-        if (unlocks.medkit) nextType = nextType === 'bomb' ? 'gel' : 'bomb';
-      }
-      row += cadence + Math.floor(Math.random() * 2);
-    }
-  }
-
-  function configureWorldOneUtility(block, special, world, progress, row) {
-    const specialHpScale = special === 'gel' ? .44 : .68;
-    const maxHp = Math.max(1, Math.round(blockHpForTier('special', world, progress, row, block.col, true) * specialHpScale));
-    const tierData = BLOCK_TIERS.special;
-    block.special = special;
-    block.tier = 'special';
-    block.material = special;
-    block.hazard = false;
-    block.hazardVariant = null;
-    block.maxHp = maxHp;
-    block.hp = maxHp;
-    block.coins = Math.max(1, Math.round(maxHp * tierData.coin * rand(.48, .82)));
-  }
-
-  function chooseTemplatePathTier(world, progress, meta, col, riskyCol, keyRow) {
-    if (meta.kind === 'tutorial') return Math.random() < .92 ? 'soft' : 'dense';
-    if (meta.kind === 'recovery' || meta.kind === 'reward' || meta.kind === 'final') return Math.random() < .84 ? 'soft' : 'dense';
-    if (meta.kind === 'flow') {
-      const softChance = world.id === 1 ? lerp(.82, .68, progress) : lerp(.72, .48, progress);
-      return Math.random() < softChance ? 'soft' : 'dense';
-    }
-    if (meta.kind === 'fork') {
-      if (col === riskyCol) return keyRow ? 'ore' : (Math.random() < .52 ? 'dense' : 'hard');
-      return Math.random() < (world.id === 2 ? .72 : .62) ? 'soft' : 'dense';
-    }
-    if (meta.kind === 'bounce') {
-      if (keyRow) return 'hard';
-      return Math.random() < (world.id === 1 ? .76 : .58) ? 'soft' : 'dense';
-    }
-    if (meta.kind === 'bomb') return keyRow ? 'dense' : (Math.random() < .62 ? 'soft' : 'dense');
-    if (meta.kind === 'ore') return Math.random() < .65 ? 'soft' : 'dense';
-    if (meta.kind === 'boss') return keyRow ? 'reinforced' : 'dense';
-    if (meta.kind === 'challenge') {
-      if (keyRow) {
-        if (world.id >= 3 && Math.random() < world.reinforcedCap) return 'reinforced';
-        return 'hard';
-      }
-      return Math.random() < (world.id === 2 ? .55 : .36) ? 'dense' : 'hard';
-    }
-    return 'dense';
-  }
-
-  function chooseOffPathTier(world, progress) {
-    const hardChance = world.hardCap * lerp(.25, 1, progress);
-    const reinforcedChance = world.reinforcedCap * lerp(.10, 1, progress);
-    const roll = Math.random();
-    if (roll < reinforcedChance) return 'reinforced';
-    if (roll < reinforcedChance + hardChance) return 'hard';
-    return Math.random() < (world.id === 1 ? .38 : lerp(.27, .12, progress)) ? 'soft' : 'dense';
-  }
-
-  function chooseSpecialBlock(world, row, progress, inPath) {
-    if (row < 4) return null;
-    const roll = Math.random();
-    if (world.id === 2) {
-      if (inPath && roll < .24) return 'gel';
-      if (roll < .44) return 'coin';
-      if (roll < .74) return 'freeze';
-      return row > 6 ? 'blizzard' : null;
-    }
-    if (inPath && roll < (world.id === 1 ? .42 : .25)) return 'gel';
-    if (roll < .52) return 'coin';
-    if (roll < .82 && row > 5) return 'bomb';
-    if (row > 6 && world.id > 1) return 'spring';
-    return null;
+  function editorAllows(world, level, id) {
+    const edited = editorLevel(world.id, level);
+    return !edited || !Array.isArray(edited.enabled) || edited.enabled.includes(id);
   }
 
   function blockHpForTier(tier, world, progress, row, col, inPath = false) {
-    const depthScale = 1 + progress * world.depthRamp;
-    const wave = 1 + Math.sin(row * .47 + col * .73) * .045;
-    const ranges = {
-      soft: [.18, .42],
-      dense: [.48, .82],
-      hard: [.95, 1.38],
-      reinforced: [1.55, 2.25],
-      ore: [.68, 1.15],
-      special: [.34, .72]
-    };
-    const [min, max] = ranges[tier] || ranges.dense;
-    let base = world.expectedDamage * rand(min, max) * depthScale * wave;
-    if (inPath) base *= tier === 'soft' ? .86 : .93;
-    return Math.max(1, base);
+    const [min, max] = durabilityRange(tier) || [5, 15];
+    return Math.round(rand(min, max));
+  }
+
+  function durabilityRange(tier) {
+    const id = tier === 'hard' ? 'normal' : tier === 'reinforced' ? 'strong' : (tier === 'soft' || tier === 'dense') ? 'weak' : null;
+    if (!id) return tier === 'ore' ? [10, 40] : tier === 'special' ? [5, 5] : null;
+    const range = GAME_BALANCE?.durability?.[id];
+    return [range?.min ?? (id === 'weak' ? 5 : id === 'normal' ? 15 : 35), range?.max ?? (id === 'weak' ? 15 : id === 'normal' ? 35 : 55)];
+  }
+
+  function blockRewardForTier(tier) {
+    const id = tier === 'hard' ? 'normal' : tier === 'reinforced' ? 'strong' : (tier === 'soft' || tier === 'dense') ? 'weak' : null;
+    if (!id) return 0;
+    const fallback = id === 'weak' ? 4 : id === 'normal' ? 10 : 22;
+    return Math.max(0, Math.round(GAME_BALANCE?.rewards?.[id] ?? fallback));
   }
 
   function chooseMaterial(world, progress, special, tier = 'dense') {
@@ -1780,10 +1834,9 @@
     return Math.random() < .72 ? world.materials[2] : world.materials[1];
   }
 
-  function chooseOreType(progress) {
-    const available = ORE_TYPES.filter(ore => ore.min <= progress + .08);
-    const index = Math.floor(Math.pow(Math.random(), 1.55) * available.length);
-    return available[Math.min(index, available.length - 1)] || ORE_TYPES[0];
+  function chooseOreType(progress, world, zone) {
+    const id = weightedKey(zone?.ores, 'coal');
+    return ORE_TYPES.find(ore => ore.id === id) || ORE_TYPES[0];
   }
 
   function gameFrame(timestamp) {
@@ -1796,6 +1849,7 @@
     const substeps = clamp(Math.ceil(speed * dt / Math.max(10, run.slime.radius * .42)), 1, 5);
     for (let i = 0; i < substeps; i += 1) updatePhysics(dt / substeps, timestamp);
     updateParticles(dt);
+    updateSpecialEffects(dt);
     renderCanvas(timestamp);
     updateRunUI();
     if (!run.ended) run.animationId = requestAnimationFrame(gameFrame);
@@ -1994,6 +2048,8 @@
 
   function resolveBlockHit(block, collision, timestamp = performance.now()) {
     const s = run.slime;
+    if (block.special === 'spring') return activateSpring(block, collision, timestamp);
+    const isFalling = s.vy > 0;
     const tierData = BLOCK_TIERS[block.tier] || BLOCK_TIERS.dense;
     const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
     const flightMultiplier = 1 + Math.min(run.flightDistance / 285, 1.35);
@@ -2006,12 +2062,16 @@
     const rawDamage = baseImpact * run.power * flightMultiplier * speedMultiplier * healthFactor * abilityMultiplier;
     let damage = Math.max(1, rawDamage * tierData.chip);
     const hpBefore = block.hp;
+    // Utility blocks are collected on the very first contact, regardless of
+    // current speed or an old editor durability multiplier.
+    const breaksOnTouch = block.special === 'bomb' || block.special === 'gel';
+    if (breaksOnTouch) damage = hpBefore;
     if (run.effects.voidBreaker && !run.voidBreakerUsed && ['hard', 'reinforced'].includes(block.tier) && damage < hpBefore) {
       damage = hpBefore + 1;
       run.voidBreakerUsed = true;
       impact('ПУСТОТА ПОГЛОТИЛА БЛОК!');
     }
-    const destroysImmediately = damage >= hpBefore;
+    const destroysImmediately = breaksOnTouch || damage >= hpBefore;
     const sameImpactCluster = timestamp - run.lastMassDamageAt < BALANCE.impactClusterMs;
 
     let massLoss;
@@ -2049,6 +2109,7 @@
     
     if (destroysImmediately) {
       block.hp = 0;
+      const comboAdvanced = isFalling && registerComboLayer(block.row);
       destroyBlock(block, damage);
       const drag = block.tier === 'soft' ? BALANCE.weakBreakDrag : BALANCE.denseBreakDrag;
       s.vy = Math.max(110, s.vy * drag * tierData.drag);
@@ -2066,17 +2127,16 @@
         impact('ДРАКОНИЙ ВЗРЫВ!');
       }
 
-      const flightMeters = run.flightDistance / 10;
-      if (!block.special) impact(flightMeters >= 9
-        ? `ПРОБОЙ ×${flightMultiplier.toFixed(1)} · −${round1(massLoss)}`
-        : `ПРОБОЙ · −${round1(massLoss)} массы`);
+      if (isFalling && run.comboCount > 0) comboImpact(run.comboMultiplier, run.comboCount, comboAdvanced);
+      else if (!block.special) impact(`УДАР · −${round1(massLoss)} массы`);
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
       if (run.mass <= 0 && !tryRevive()) endRun(false, 'Слайм израсходовал всю массу');
       return false;
     }
 
+    resetCombo();
     block.hp = Math.max(.05, block.hp - damage);
-    const springBoost = block.special === 'spring' ? 1.35 : 1;
+    const springBoost = block.special === 'spring' ? (GAME_BALANCE?.special?.spring?.push || 1.35) : 1;
     const resistance = clamp(hpBefore / Math.max(1, damage), 1, 5);
     const bounceBase = 74 + impactSpeed * .10 + run.flightDistance * .11 + resistance * 7;
     const bounce = clamp(bounceBase * run.elasticity * springBoost, BALANCE.bounceMin, BALANCE.bounceMax);
@@ -2088,7 +2148,7 @@
     s.x += collision.nx * (collision.penetration + 2.4);
     s.y += collision.ny * (collision.penetration + 2.4);
     const dot = s.vx * collision.nx + s.vy * collision.ny;
-    const restitution = block.special === 'spring' ? 1.34 : 1.06;
+    const restitution = block.special === 'spring' ? 1 + (GAME_BALANCE?.special?.spring?.push || 1.35) * .25 : 1.06;
     s.vx -= restitution * dot * collision.nx;
     s.vy -= restitution * dot * collision.ny;
 
@@ -2121,6 +2181,36 @@
     createDebris(block, 3, false);
 
     if (run.mass <= 0 && !tryRevive()) endRun(false, 'Слайм израсходовал всю массу');
+    return true;
+  }
+
+  function activateSpring(block, collision, timestamp) {
+    const s = run.slime;
+    const impactSpeed = Math.max(180, Math.hypot(s.vx, s.vy));
+    const configuredPush = GAME_BALANCE?.special?.spring?.push || 1.35;
+    const push = clamp((330 + impactSpeed * .62) * configuredPush / 1.35, 180, 900);
+    const nx = Math.abs(collision.nx) + Math.abs(collision.ny) > .1 ? collision.nx : 0;
+    const ny = Math.abs(collision.nx) + Math.abs(collision.ny) > .1 ? collision.ny : -1;
+
+    // Push directly away from the side the slime touched, then remove the
+    // spring immediately so it can never trigger twice.
+    s.x += nx * (collision.penetration + 7);
+    s.y += ny * (collision.penetration + 7);
+    s.vx = clamp(s.vx * .16 + nx * push, -560, 560);
+    s.vy = clamp(s.vy * .16 + ny * push, -600, 600);
+    run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
+    run.flightDistance = 0;
+    resetCombo();
+    run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + 110;
+    run.emotion = 'joy';
+    run.emotionUntil = timestamp + 360;
+    run.shake = Math.max(run.shake, 5);
+    block.hp = 0;
+    destroyBlock(block);
+    spawnSpecialBurst('spring', block.x + block.w / 2, block.y + block.h / 2, nx, ny);
+    impact('ПРУЖИНА · МОЩНЫЙ ТОЛЧОК!');
+    sound('bounce');
+    feedback([8, 18, 8]);
     return true;
   }
 
@@ -2187,26 +2277,42 @@
     run.abilityCharge = clamp(run.abilityCharge + amount * run.abilityChargeMultiplier, 0, 100);
   }
 
+  function registerComboLayer(row) {
+    if (!run || run.ended || run.comboRows.has(row)) return false;
+    run.comboRows.add(row);
+    run.comboCount += 1;
+    run.comboMultiplier = 1 + run.comboCount * .5;
+    return true;
+  }
+
+  function resetCombo() {
+    if (!run) return;
+    run.comboCount = 0;
+    run.comboMultiplier = 1;
+    run.comboRows.clear();
+  }
+
   function destroyBlock(block) {
     block.dead = true;
     run.blocksDestroyed += 1;
-    run.coins += block.coins * run.coinMultiplier;
+    const reward = block.coins * run.comboMultiplier * run.coinMultiplier;
+    run.coins += reward;
     addAbilityCharge({ soft: 2.2, dense: 3.1, hard: 4.2, reinforced: 5.2, ore: 4.0, special: 3.0 }[block.tier] || 2.5);
     createDebris(block, block.special === 'bomb' ? 18 : 9, true);
 
     if (block.tier === 'ore' || block.frozenOre) {
       const ore = block.oreType || ORE_TYPES[0];
-      const oreReward = Math.round((10 + block.maxHp * .45) * ore.reward);
-      run.coins += oreReward * run.coinMultiplier;
+      const oreReward = Math.round(reward);
       if (run.effects.oreHeal) healRun(Math.max(2, run.maxMass * .035), ore.label);
       else impact(`${ore.label} +${oreReward}`);
     } else if (block.special === 'coin') {
-      run.coins += 18 + run.worldId * 8;
       if (run.effects.oreHeal) healRun(Math.max(2, run.maxMass * .03), 'ЗОЛОТОЙ ПИР');
-      else impact('МОНЕТНЫЙ БЛОК!');
+      else impact('БЛОК РАЗРУШЕН');
     } else if (block.special === 'gel') {
+      spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
       const multiplier = run.effects.healBoost ? 2 : 1;
-      const heal = Math.max(5, Math.round((run.maxMass * .16 + run.worldId) * multiplier));
+      const configuredHeal = GAME_BALANCE?.special?.heal?.amount;
+      const heal = Math.max(1, Math.round((configuredHeal ?? (run.maxMass * .16 + run.worldId)) * multiplier));
       healRun(heal, run.effects.healBoost ? 'КОРОЛЕВСКОЕ ЛЕЧЕНИЕ' : 'ЛЕЧЕНИЕ');
     } else if (block.special === 'spring') {
       addAbilityCharge(5);
@@ -2233,7 +2339,7 @@
       if (block.dead || block === source || block.special) continue;
       const distance = Math.hypot(block.x + block.w / 2 - centerX, block.y + block.h / 2 - centerY);
       if (distance > radius) continue;
-      const easyHp = Math.max(2, Math.round(run.world.expectedDamage * rand(.18, .28)));
+      const easyHp = blockHpForTier('soft', run.world, 0, block.row, block.col, true);
       block.frozenOre = block.frozenOre || block.tier === 'ore';
       block.tier = 'soft';
       block.material = 'iceLight';
@@ -2260,13 +2366,20 @@
     impact(`${label} +${Math.ceil(healed)}`);
   }
 
-  function explodeAt(x, y, radius = 125, rewardScale = .6) {
+  function explodeAt(x, y, radius = 125, rewardScale = .6, damage = Infinity) {
     let destroyed = 0;
     for (const block of run.blocks) {
       if (block.dead) continue;
       const dx = block.x + block.w / 2 - x;
       const dy = block.y + block.h / 2 - y;
-      if (Math.hypot(dx, dy) < radius) {
+      const distance = Math.hypot(dx, dy);
+      if (distance < radius) {
+        const appliedDamage = damage === Infinity ? Infinity : damage * (1 - distance / radius * .45);
+        if (block.hp > appliedDamage) {
+          block.hp = Math.max(.05, block.hp - appliedDamage);
+          createDebris(block, 3, false);
+          continue;
+        }
         block.dead = true;
         run.blocksDestroyed += 1;
         run.coins += block.coins * rewardScale * run.coinMultiplier;
@@ -2279,8 +2392,12 @@
   }
 
   function explodeBomb(source) {
-    const destroyed = explodeAt(source.x + source.w / 2, source.y + source.h / 2, 125, .6);
+    const radius = GAME_BALANCE?.special?.bomb?.radius || 125;
+    const damage = GAME_BALANCE?.special?.bomb?.damage || 45;
+    spawnSpecialBurst('bomb', source.x + source.w / 2, source.y + source.h / 2);
+    const destroyed = explodeAt(source.x + source.w / 2, source.y + source.h / 2, radius, .6, damage);
     impact(`БА-БАХ ×${Math.max(1, destroyed)}`);
+    sound('epic');
   }
 
   function createDebris(block, count, strong) {
@@ -2326,6 +2443,38 @@
       p.life -= dt;
     }
     run.particles = run.particles.filter(p => p.life > 0);
+  }
+
+  function spawnSpecialBurst(type, x, y, nx = 0, ny = -1) {
+    if (!run) return;
+    const config = {
+      spring: { colors: ['#d9ffff', '#4ee7ff', '#ffffff'], count: 14, life: .42 },
+      bomb: { colors: ['#fff3a4', '#ff9a4b', '#ff4f58'], count: 24, life: .56 },
+      heal: { colors: ['#efffd0', '#72f0a7', '#ffffff'], count: 16, life: .58 }
+    }[type];
+    if (!config) return;
+    run.specialEffects.push({ type, x, y, nx, ny, life: config.life, maxLife: config.life });
+    for (let i = 0; i < config.count; i += 1) {
+      const angle = type === 'spring'
+        ? Math.atan2(ny, nx) + rand(-.72, .72)
+        : Math.PI * 2 * i / config.count + rand(-.16, .16);
+      const speed = type === 'bomb' ? rand(105, 235) : type === 'spring' ? rand(120, 215) : rand(65, 155);
+      run.particles.push({
+        kind: 'special', x, y,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        gravity: type === 'bomb' ? 135 : 40,
+        life: rand(config.life * .66, config.life), maxLife: config.life,
+        size: rand(2.5, type === 'bomb' ? 6.5 : 5.5), color: config.colors[i % config.colors.length]
+      });
+    }
+    if (run.specialEffects.length > 12) run.specialEffects.shift();
+    if (run.particles.length > 180) run.particles.splice(0, run.particles.length - 180);
+  }
+
+  function updateSpecialEffects(dt) {
+    if (!run?.specialEffects) return;
+    for (const effect of run.specialEffects) effect.life -= dt;
+    run.specialEffects = run.specialEffects.filter(effect => effect.life > 0);
   }
 
   function activateAbility() {
@@ -2391,18 +2540,18 @@
       drawBlock(block, sy, timestamp);
     }
 
-    // Every biome gets a soft shared edge, so the shaft reads as a continuous
-    // material instead of a rigid checkerboard of independent sprites.
+    // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions();
+    drawSpecialEffects();
 
     for (const p of run.particles) {
       const sy = p.y - run.cameraY;
       if (sy < -30 || sy > VIEW_H + 30) continue;
       ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
       ctx.fillStyle = p.color;
-      if (p.kind === 'portal') {
+      if (p.kind === 'portal' || p.kind === 'special') {
         ctx.shadowColor = p.color;
-        ctx.shadowBlur = 9;
+        ctx.shadowBlur = p.kind === 'portal' ? 9 : 6;
         ctx.beginPath();
         ctx.arc(p.x, sy, p.size, 0, Math.PI * 2);
         ctx.fill();
@@ -2417,7 +2566,71 @@
     ctx.restore();
   }
 
+  function drawSpecialEffects() {
+    if (!run.specialEffects?.length) return;
+    ctx.save();
+    for (const effect of run.specialEffects) {
+      const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
+      const alpha = Math.pow(1 - progress, 1.45);
+      const y = effect.y - run.cameraY;
+      ctx.save();
+      if (effect.type === 'bomb') {
+        ctx.globalAlpha = alpha * .28;
+        ctx.fillStyle = '#ff743d';
+        ctx.beginPath();
+        ctx.arc(effect.x, y, 18 + progress * 72, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha * .9;
+        ctx.strokeStyle = '#fff1a4';
+        ctx.lineWidth = 3 - progress * 1.5;
+        ctx.beginPath();
+        ctx.arc(effect.x, y, 10 + progress * 84, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (effect.type === 'heal') {
+        ctx.globalAlpha = alpha * .55;
+        ctx.strokeStyle = '#9dffbd';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(effect.x, y, 13 + progress * 34, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#efffd0';
+        ctx.fillRect(effect.x - 3, y - 15 - progress * 8, 6, 30 + progress * 16);
+        ctx.fillRect(effect.x - 15 - progress * 8, y - 3, 30 + progress * 16, 6);
+      } else if (effect.type === 'spring') {
+        const length = 18 + progress * 72;
+        const sideX = -effect.ny;
+        const sideY = effect.nx;
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#c8fbff';
+        ctx.lineWidth = 4 - progress * 1.5;
+        ctx.lineCap = 'round';
+        for (const offset of [-13, 0, 13]) {
+          ctx.beginPath();
+          ctx.moveTo(effect.x + sideX * offset, y + sideY * offset);
+          ctx.lineTo(effect.x + effect.nx * length + sideX * offset * .28, y + effect.ny * length + sideY * offset * .28);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
   function drawBackground(world) {
+    const background = world.editorBackground;
+    const artwork = background?.image ? editorSprite(background.image) : null;
+    if (artwork?.complete && artwork.naturalWidth) {
+      const scale = background.scale || 1;
+      const width = VIEW_W * scale;
+      const height = VIEW_H * scale;
+      const x = (VIEW_W - width) / 2 + VIEW_W * (background.x || 0) / 100;
+      const y = (VIEW_H - height) / 2 + VIEW_H * (background.y || 0) / 100;
+      ctx.save();
+      ctx.globalAlpha = .55;
+      ctx.drawImage(artwork, x, y, width, height);
+      ctx.restore();
+    }
     const stripe = 80;
     const offset = -(run.cameraY % stripe);
     for (let y = offset; y < VIEW_H + stripe; y += stripe) {
@@ -2722,28 +2935,60 @@
     else if (block.tier === 'ore' || block.frozenOre) spriteName = `ore-${block.oreType?.id || 'coal'}`;
     else if (run.worldId === 2) {
       if (block.frozen || block.tier === 'soft') spriteName = 'ice-light';
-      else if (block.tier === 'dense') spriteName = block.material === 'snowPacked' ? 'snow-packed' : 'glacier';
+      else if (block.tier === 'dense') spriteName = 'snow-packed';
+      else if (block.tier === 'hard') spriteName = 'glacier';
       else spriteName = 'ice-reinforced';
     } else if (run.worldId === 3) {
       if (block.tier === 'reinforced' || block.tier === 'hard') spriteName = 'candy-reinforced';
       else if (block.tier === 'dense') spriteName = 'cookie-packed';
       else spriteName = 'candy-light';
-    } else if (block.tier === 'reinforced' || block.tier === 'hard') spriteName = 'stone-reinforced';
-    else if (block.tier === 'dense') spriteName = block.material === 'packedDirt' ? 'dirt-packed' : 'stone';
-    else spriteName = block.topGrass ? 'dirt-grass' : 'dirt-packed';
+    } else if (block.tier === 'reinforced') spriteName = 'stone-reinforced';
+    else if (block.tier === 'hard') spriteName = 'stone';
+    // `soft` is the surface decoration; `dense` is the same weak gameplay
+    // category rendered with the ground texture assigned in the editor.
+    else if (block.tier === 'soft') spriteName = 'dirt-grass';
+    else spriteName = 'stone';
 
+    const editorId = block.editorVisualId || (block.special === 'gel' ? 'heal' : block.special || (block.hazard ? 'hazard' : block.tier));
+    const edited = editorBlock(run.worldId, editorId);
+    if (edited?.type === 'custom' && edited.sprite) spriteName = edited.sprite;
+    const oreArtwork = (block.tier === 'ore' || block.frozenOre) ? edited?.oreTextures?.[block.oreType?.id || 'coal'] : null;
+    const artwork = oreArtwork?.image ? oreArtwork : edited;
+    const customSprite = artwork?.image ? editorSprite(artwork.image) : null;
     const sprites = WORLD_SPRITES[run.worldId];
     const damagedName = `${spriteName}-cracked`;
-    const sprite = hpRatio < .58 && sprites?.[damagedName]?.complete
+    const sprite = customSprite?.complete && customSprite.naturalWidth ? customSprite : (hpRatio < .58 && sprites?.[damagedName]?.complete
       ? sprites[damagedName]
-      : sprites?.[spriteName];
+      : sprites?.[spriteName]);
     if (!sprite?.complete || !sprite.naturalWidth) return false;
 
-    // A tiny sprite bleed removes hairline gaps from browser canvas scaling.
-    // The transition pass below keeps the bleed from looking like a hard overlap.
-    const bleed = run.worldId === 2 ? 1 : 0;
+    // Leave a single-pixel gutter for the grid instead of letting tiles overlap.
+    const gutter = .5;
     ctx.globalAlpha = (run.worldId === 2 ? .94 : 1) * (.72 + hpRatio * .28);
-    ctx.drawImage(sprite, block.x - bleed, sy - bleed, block.w + bleed * 2, block.h + bleed * 2);
+    const scale = customSprite ? (artwork.scale || 1) : 1;
+    const width = Math.max(1, block.w * scale - gutter * 2);
+    const height = Math.max(1, block.h * scale - gutter * 2);
+    const offsetX = customSprite ? block.w * (artwork.x || 0) / 100 : 0;
+    const offsetY = customSprite ? block.h * (artwork.y || 0) / 100 : 0;
+    const drawX = block.x + (block.w - width) / 2 + offsetX;
+    const drawY = sy + (block.h - height) / 2 + offsetY;
+    if (block.special === 'bomb' || block.special === 'gel' || block.special === 'spring') {
+      const time = performance.now();
+      const phase = time / (block.special === 'bomb' ? 160 : block.special === 'gel' ? 330 : 250) + block.id;
+      const pulse = block.special === 'bomb'
+        ? 1 + Math.sin(phase) * .045
+        : block.special === 'gel'
+          ? 1 + Math.sin(phase) * .035
+          : 1 + Math.sin(phase) * .025;
+      ctx.save();
+      ctx.translate(block.x + block.w / 2 + offsetX, sy + block.h / 2 + offsetY);
+      if (block.special === 'bomb') ctx.rotate(Math.sin(phase * .5) * .022);
+      ctx.scale(pulse, block.special === 'spring' ? 1 - Math.sin(phase) * .035 : pulse);
+      ctx.drawImage(sprite, -width / 2, -height / 2, width, height);
+      ctx.restore();
+    } else {
+      ctx.drawImage(sprite, drawX, drawY, width, height);
+    }
     ctx.globalAlpha = 1;
     if (hpRatio < .72 && run.worldId > 2) drawCracks(block, sy, hpRatio);
 
@@ -2763,89 +3008,24 @@
     return true;
   }
 
-  const SEAM_STYLES = {
-    1: { color: '194,158,112', opacity: .12, vein: '255,232,183', width: 4 },
-    2: { color: '224,249,255', opacity: .19, vein: '255,255,255', width: 6 },
-    3: { color: '255,214,239', opacity: .18, vein: '255,242,206', width: 5 }
-  };
-
   function drawBlockTransitions() {
-    const style = SEAM_STYLES[run.worldId];
-    if (!style) return;
-
     const liveBlocks = new Map();
     for (const block of run.blocks) {
       if (!block.dead) liveBlocks.set(`${block.row}:${block.col}`, block);
     }
 
     ctx.save();
+    // A single neutral grid line separates tiles. Unlike the old colour blends,
+    // it never spills onto the artwork or makes the shaft look connected by bands.
+    ctx.fillStyle = 'rgba(20, 26, 35, .72)';
     for (const block of liveBlocks.values()) {
       const sy = block.y - run.cameraY;
       if (sy < -run.cellSize || sy > VIEW_H + run.cellSize) continue;
 
       const right = liveBlocks.get(`${block.row}:${block.col + 1}`);
       const below = liveBlocks.get(`${block.row + 1}:${block.col}`);
-      if (right) drawBlockSeam(block, right, sy, 'vertical', style);
-      if (below) drawBlockSeam(block, below, sy + block.h, 'horizontal', style);
-    }
-    ctx.restore();
-  }
-
-  function drawBlockSeam(block, neighbour, edge, orientation, style) {
-    const includesFeature = block.special || neighbour.special || block.tier === 'ore' || neighbour.tier === 'ore';
-    const width = includesFeature ? Math.max(2.8, style.width * .58) : style.width;
-    const opacity = includesFeature ? style.opacity * .55 : style.opacity;
-    const translucent = (alpha) => `rgba(${style.color},${alpha})`;
-
-    // A broad, low-opacity gradient makes neighbouring material layers share
-    // colour while preserving the hierarchy of special blocks and ores.
-    let gradient;
-    if (orientation === 'vertical') {
-      const x = block.x + block.w;
-      gradient = ctx.createLinearGradient(x - width, 0, x + width, 0);
-      gradient.addColorStop(0, translucent(0));
-      gradient.addColorStop(.42, translucent(opacity));
-      gradient.addColorStop(.58, translucent(opacity));
-      gradient.addColorStop(1, translucent(0));
-      ctx.fillStyle = gradient;
-      ctx.fillRect(x - width, edge, width * 2, block.h);
-      drawSeamVeins(x, edge, block.h, block.id + neighbour.id, true, includesFeature, style);
-    } else {
-      const y = edge;
-      gradient = ctx.createLinearGradient(0, y - width, 0, y + width);
-      gradient.addColorStop(0, translucent(0));
-      gradient.addColorStop(.42, translucent(opacity));
-      gradient.addColorStop(.58, translucent(opacity));
-      gradient.addColorStop(1, translucent(0));
-      ctx.fillStyle = gradient;
-      ctx.fillRect(block.x, y - width, block.w, width * 2);
-      drawSeamVeins(block.x, y, block.w, block.id + neighbour.id, false, includesFeature, style);
-    }
-  }
-
-  function drawSeamVeins(x, y, length, seed, vertical, subtle, style) {
-    // Short, offset accents break a perfectly straight seam: frost in ice,
-    // caramel-like highlights in candy, and dim embers in the molten world.
-    const pieces = subtle ? 2 : 3;
-    ctx.save();
-    ctx.strokeStyle = `rgba(${style.vein},${subtle ? .08 : .15})`;
-    ctx.lineWidth = subtle ? .7 : 1;
-    ctx.lineCap = 'round';
-    for (let index = 0; index < pieces; index += 1) {
-      const progress = (index + .5) / pieces;
-      const offset = Math.sin(seed * 1.71 + index * 4.3) * 3;
-      const span = 7 + Math.abs(Math.sin(seed * .41 + index)) * 6;
-      ctx.beginPath();
-      if (vertical) {
-        const py = y + length * progress;
-        ctx.moveTo(x - span, py - 2);
-        ctx.quadraticCurveTo(x + offset, py, x + span, py + 2);
-      } else {
-        const px = x + length * progress;
-        ctx.moveTo(px - 2, y - span);
-        ctx.quadraticCurveTo(px + offset, y, px + 2, y + span);
-      }
-      ctx.stroke();
+      if (right) ctx.fillRect(block.x + block.w - .5, sy, 1, block.h);
+      if (below) ctx.fillRect(block.x, sy + block.h - .5, block.w, 1);
     }
     ctx.restore();
   }
@@ -3214,6 +3394,7 @@
   function drawSlime(timestamp) {
     const s = run.slime;
     const screenY = s.y - run.cameraY;
+    if (els.impactText.classList.contains('combo-impact')) positionComboImpact();
     const selected = SKINS[0];
     const portalProgress = run.portalEntry
       ? clamp((timestamp - run.portalEntry.startedAt) / run.portalEntry.duration, 0, 1)
@@ -3323,10 +3504,50 @@
   }
 
   function impact(text) {
+    els.impactText.className = 'impact-text';
+    els.impactText.removeAttribute('style');
     els.impactText.textContent = text;
-    els.impactText.classList.remove('show');
     void els.impactText.offsetWidth;
     els.impactText.classList.add('show');
+  }
+
+  function comboImpact(multiplier, count, advanced = true) {
+    const ratings = [
+      'СУПЕР!',
+      'ОТЛИЧНО!',
+      'ВОСХИТИТЕЛЬНО!',
+      'НЕВЕРОЯТНО!',
+      'ФАНТАСТИКА!',
+      'НЕВОЗМОЖНО!',
+      'БОЖЕСТВЕННО!',
+      'ЛЕГЕНДАРНО!'
+    ];
+    const tier = Math.min(ratings.length - 1, Math.max(0, count - 1));
+    run.comboDisplaySide = run.slime.x > VIEW_W * .68 ? -1 : 1;
+    els.impactText.className = `impact-text combo-impact combo-tier-${Math.min(7, tier + 1)}`;
+    els.impactText.style.setProperty('--combo-power', String(Math.min(1.42, 1 + tier * .055)));
+    positionComboImpact();
+    els.impactText.innerHTML = `<span class="combo-rating">${ratings[tier]}</span><span class="combo-line"><small>КОМБО</small><b>×${multiplier.toFixed(1)}</b></span>`;
+    void els.impactText.offsetWidth;
+    els.impactText.classList.add(advanced ? 'combo-show' : 'combo-repeat');
+    if (!advanced) return;
+    els.shaft.classList.remove('combo-burst');
+    void els.shaft.offsetWidth;
+    els.shaft.classList.add('combo-burst');
+    run.shake = Math.max(run.shake, Math.min(8.5, 2.2 + count * .72));
+    feedback(count >= 6 ? [10, 18, 12, 18, 16] : count >= 3 ? [7, 16, 10] : [5, 10, 7]);
+  }
+
+  function positionComboImpact() {
+    if (!run?.slime) return;
+    const side = run.comboDisplaySide || (run.slime.x > VIEW_W * .68 ? -1 : 1);
+    const radius = run.slime.radius || 28;
+    const x = clamp(run.slime.x + side * (radius + 39), 54, VIEW_W - 54);
+    const y = clamp(run.slime.y - run.cameraY - radius * 1.12, 38, VIEW_H - 52);
+    els.impactText.style.left = `${x / VIEW_W * 100}%`;
+    els.impactText.style.top = `${y / VIEW_H * 100}%`;
+    els.shaft.style.setProperty('--combo-x', `${x / VIEW_W * 100}%`);
+    els.shaft.style.setProperty('--combo-y', `${y / VIEW_H * 100}%`);
   }
 
   function finishWorld() {
@@ -3660,7 +3881,7 @@
         hideFoodInfo();
         return;
       }
-      if (event.target.closest('.food-card')) return;
+      if (event.target.closest('.food-card,.stomach-quick-slot')) return;
       hideFoodInfo();
     });
     document.addEventListener('visibilitychange', () => {
@@ -3693,7 +3914,7 @@
       reset: () => { localStorage.removeItem(SAVE_KEY); location.reload(); },
       addCoins: (amount = 1000) => { save.coins += amount; persist(); },
       unlockFood: () => { save.conveyorLevel = 5; persist(); newDraft(); },
-      maxStomach: () => { save.stomachLevel = 5; persist(); newDraft(); },
+      maxStomach: () => { save.stomachLevel = 6; persist(); newDraft(); },
       maxRerolls: () => { save.rerollLevel = 3; persist(); newDraft(); },
       setNextBonuses: ({ epic = 0, mass = 0, rerolls = 0 } = {}) => {
         save.pendingEpicBoost = clamp(Math.round(epic), 0, 10);
