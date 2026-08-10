@@ -17,15 +17,15 @@
     </header>
 
     <section class="editor-note" aria-label="Как работает редактор">
-      <b>Сохраняется сразу в пул игры</b>
-      <span>После сохранения перезагрузи игру — новая еда появится в конвейере. Изображение можно выбрать файлом или указать путь из <code>assets/food/</code>.</span>
+      <b>Сохранение локальное</b>
+      <span>Кнопка сохранения меняет игру только в этом браузере. Чтобы перенести каталог на все устройства, нажми «Экспорт для публикации» и добавь полученный файл в GitHub.</span>
     </section>
 
     <div class="editor-layout">
       <aside class="catalog-panel">
         <div class="catalog-actions">
           <button id="addFoodBtn" class="button primary" type="button">＋ НОВАЯ ЕДА</button>
-          <button id="exportBtn" class="button soft" type="button">ЭКСПОРТ</button>
+          <button id="exportBtn" class="button soft" type="button">ЭКСПОРТ ДЛЯ ПУБЛИКАЦИИ</button>
         </div>
         <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Найти еду"></label>
         <div id="rarityFilters" class="rarity-filters" aria-label="Фильтр по редкости"></div>
@@ -90,7 +90,7 @@
             </fieldset>
 
             <div class="form-actions">
-              <button id="saveFoodBtn" class="button primary wide" type="submit">СОХРАНИТЬ В ПУЛ ИГРЫ</button>
+              <button id="saveFoodBtn" class="button primary wide" type="submit">СОХРАНИТЬ В ЭТОМ БРАУЗЕРЕ</button>
               <button id="deleteFoodBtn" class="button danger" type="button">УДАЛИТЬ</button>
             </div>
           </form>
@@ -115,7 +115,8 @@
   </main>
 
   <div id="editorToast" class="editor-toast" role="status" aria-live="polite"></div>
-  <script src="../../food-catalog.js?v=1"></script>
-  <script src="food-editor.js?v=4"></script>
+  <script src="../../published/food.js?v=1"></script>
+  <script src="../../food-catalog.js?v=2"></script>
+  <script src="food-editor.js?v=5"></script>
 </body>
 </html>

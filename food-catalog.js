@@ -62,4 +62,8 @@
     { id: 'voidBreaker', label: 'Пробой Пустоты' },
     { id: 'rainbowHeart', label: 'Сердце Радуги' }
   ];
+
+  if (Array.isArray(window.SLIME_PUBLISHED_FOOD_CATALOG) && window.SLIME_PUBLISHED_FOOD_CATALOG.length) {
+    window.SLIME_FOOD_CATALOG = window.SLIME_PUBLISHED_FOOD_CATALOG;
+  }
 })();

@@ -267,9 +267,9 @@
     const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url; link.download = 'slime-food-catalog.json'; link.click();
+    link.href = url; link.download = 'slime-food-publish.json'; link.click();
     URL.revokeObjectURL(url);
-    showToast('JSON-каталог скачан');
+    showToast('Файл еды скачан — отправь его для публикации в GitHub');
   }
   function importCatalog(event) {
     const file = event.target.files?.[0];

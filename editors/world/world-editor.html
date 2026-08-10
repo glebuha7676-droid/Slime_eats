@@ -15,19 +15,21 @@
       <nav class="editor-tabs"><a href="../food/food-editor.html">ЕДА</a><a class="active" href="world-editor.html">МИРЫ</a><a href="../../balance/index.html">БАЛАНС</a></nav>
     </header>
     <section class="editor-note">
-      <b>Сохраняется в реальные настройки игры</b>
-      <span>После сохранения обнови страницу игры: глубина, фон, блоки и их свойства применятся сразу.</span>
+      <b>Сохранение локальное</b>
+      <span>Изменения сразу работают только в этом браузере. Для одинаковой игры на телефоне и компьютере экспортируй миры и опубликуй файл в GitHub.</span>
     </section>
     <section class="world-layout">
       <aside class="world-side">
         <small>ВЫБЕРИ МИР</small>
         <div id="worldList" class="world-list"></div>
+        <button id="exportWorlds" class="world-export" type="button">ЭКСПОРТ ДЛЯ ПУБЛИКАЦИИ</button>
+        <label class="world-import">ИМПОРТ JSON<input id="importWorlds" type="file" accept="application/json,.json" hidden></label>
         <button id="resetWorlds">СБРОСИТЬ</button>
       </aside>
       <section class="world-work">
         <div class="world-toolbar">
           <div><small>УРОВЕНЬ</small><div id="levelTabs" class="level-tabs"></div></div>
-          <button class="save-action" id="saveWorlds">СОХРАНИТЬ В ИГРУ</button>
+          <button class="save-action" id="saveWorlds">СОХРАНИТЬ В ЭТОМ БРАУЗЕРЕ</button>
         </div>
         <div class="world-grid">
           <article class="editor-card">
@@ -57,7 +59,8 @@
       </section>
     </section>
   </main>
-  <script src="../../world-catalog.js?v=5"></script>
-  <script src="world-editor.js?v=3"></script>
+  <script src="../../published/worlds.js?v=1"></script>
+  <script src="../../world-catalog.js?v=6"></script>
+  <script src="world-editor.js?v=4"></script>
 </body>
 </html>
