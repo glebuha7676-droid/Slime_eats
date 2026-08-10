@@ -124,6 +124,12 @@
 
   const FOOD_ASSET_ROOT = 'assets/food/';
   const UI_ASSET_ROOT = 'assets/ui/';
+  const ASSET_REVISION = '20260810-2';
+  function versionedAsset(source) {
+    const value = String(source || '');
+    if (!/^assets\//i.test(value)) return value;
+    return `${value}${value.includes('?') ? '&' : '?'}v=${ASSET_REVISION}`;
+  }
   const WORLD1_TILE_NAMES = [
     'dirt-grass', 'stone', 'stone-reinforced', 'stone-hazard',
     'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'spring', 'heal',
@@ -159,7 +165,7 @@
     WORLD_SPRITES[worldId] = Object.fromEntries(WORLD_SPRITE_NAMES[worldId].map(name => {
       const image = new Image();
       const extension = worldId === 3 ? 'png' : 'webp';
-      image.src = `assets/world${worldId}/${name}.${extension}`;
+      image.src = versionedAsset(`assets/world${worldId}/${name}.${extension}`);
       return [name, image];
     }));
     return WORLD_SPRITES[worldId];
@@ -167,7 +173,7 @@
   const EDITOR_SPRITES = {};
   function editorSprite(source) {
     if (!source) return null;
-    if (!EDITOR_SPRITES[source]) { const image = new Image(); image.src = source; EDITOR_SPRITES[source] = image; }
+    if (!EDITOR_SPRITES[source]) { const image = new Image(); image.src = versionedAsset(source); EDITOR_SPRITES[source] = image; }
     return EDITOR_SPRITES[source];
   }
 
@@ -197,7 +203,8 @@
     const customImage = String(food.image || '').trim();
     const isEmbeddedImage = /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(customImage);
     const isProjectAsset = /^assets\/food\/[a-z0-9_./-]+\.(?:png|jpe?g|webp|gif)$/i.test(customImage);
-    return isEmbeddedImage || isProjectAsset ? customImage : `${FOOD_ASSET_ROOT}${food.id}.webp`;
+    if (isEmbeddedImage) return customImage;
+    return versionedAsset(isProjectAsset ? customImage : `${FOOD_ASSET_ROOT}${food.id}.webp`);
   }
 
   function escapeAttribute(value) {
@@ -697,7 +704,7 @@
         ? `Уровень ${level} закрыт. Пройдите предыдущий уровень`
         : `Выбрать уровень ${level}`);
       button.setAttribute('aria-pressed', String(level === selected));
-      button.innerHTML = `<span>${level}</span>${completed && !locked ? '<i aria-hidden="true">✓</i>' : ''}${locked ? '<img src="assets/ui/level-lock.png" alt="" aria-hidden="true">' : ''}`;
+      button.innerHTML = `<span>${level}</span>${completed && !locked ? '<i aria-hidden="true">✓</i>' : ''}${locked ? `<img src="${versionedAsset('assets/ui/level-lock.png')}" alt="" aria-hidden="true">` : ''}`;
       els.levelButtons.appendChild(button);
     }
   }
