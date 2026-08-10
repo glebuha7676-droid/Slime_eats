@@ -543,3 +543,28 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   100%{opacity:0;transform:translate(-50%,-13px) scale(1)}
 }
 @media(max-width:430px){.impact-text.combo-impact{gap:1px}.combo-impact .combo-line{gap:4px;padding:3px 7px 4px}.combo-impact .combo-line:before{left:-12px}.combo-impact .combo-line:after{right:-12px}}
+
+/* Мягкое управление траекторией во время падения. */
+.fall-controls{position:absolute;z-index:10;inset:0;pointer-events:none}
+.fall-stick{
+  position:absolute;bottom:16px;width:62px;height:62px;padding:0;display:grid;place-items:center;
+  border:2px solid rgba(235,247,255,.46);border-radius:50%;background:rgba(25,39,57,.22);
+  box-shadow:inset 0 0 0 7px rgba(236,248,255,.07),0 2px 8px rgba(8,15,25,.16);
+  color:rgba(255,255,255,.76);opacity:.48;pointer-events:auto;touch-action:none;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .12s ease,transform .12s cubic-bezier(.2,.8,.2,1),background .12s ease,border-color .12s ease;
+}
+.fall-stick-left{left:14px}.fall-stick-right{right:14px}
+.fall-stick:before{
+  content:"";position:absolute;inset:13px;border:2px solid rgba(255,255,255,.46);border-radius:50%;
+  background:rgba(225,242,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.24);
+  transition:transform .12s ease,background .12s ease;
+}
+.fall-stick span{position:relative;z-index:1;margin-top:-3px;font-size:31px;font-weight:900;line-height:1;text-shadow:0 1px 2px rgba(9,18,29,.45)}
+.fall-stick.is-pressed,.fall-stick:active{opacity:.9;transform:scale(1.09);border-color:rgba(255,255,255,.82);background:rgba(83,157,211,.38)}
+.fall-stick-left.is-pressed:before,.fall-stick-left:active:before{transform:translateX(-3px);background:rgba(225,242,255,.24)}
+.fall-stick-right.is-pressed:before,.fall-stick-right:active:before{transform:translateX(3px);background:rgba(225,242,255,.24)}
+@media(max-width:370px){
+  .fall-stick{bottom:12px;width:58px;height:58px}
+  .fall-stick-left{left:10px}.fall-stick-right{right:10px}
+}

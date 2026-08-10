@@ -58,7 +58,7 @@
 
 .food-model-wrap{width:100%;height:45px;min-height:45px;display:grid;place-items:center;margin:0;pointer-events:none}
 .food-model{width:50px;height:50px;display:block;object-fit:contain;pointer-events:none;user-select:none}
-.food-model,.food-mini-model,.food-buff-model,.swallow-model{transform:translate(var(--food-x,0),var(--food-y,0)) scale(var(--food-scale,1));transform-origin:center}
+.food-model,.food-mini-model,.food-buff-model,.swallow-model{transform:translate(var(--food-x,0%),calc(var(--food-y,0%) - 1px)) scale(var(--food-scale,1));transform-origin:center}
 .food-name{
   width:100%;height:24px;min-height:24px;display:grid;place-items:center;padding:1px 1px 0;
   overflow:hidden;color:inherit;font-size:9.4px;font-weight:1000;line-height:1.03;pointer-events:none;

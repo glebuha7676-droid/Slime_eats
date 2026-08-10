@@ -7,8 +7,8 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=32" />
-  <link rel="stylesheet" href="food-cards.css?v=33" />
+  <link rel="stylesheet" href="styles.css?v=33" />
+  <link rel="stylesheet" href="food-cards.css?v=34" />
   <link rel="stylesheet" href="home-layout.css?v=17" />
 </head>
 <body>
@@ -130,6 +130,10 @@
           <button id="endRunBtn" class="run-exit-btn" type="button"><img src="assets/ui/finish.webp" alt="" aria-hidden="true"><span>ЗАКОНЧИТЬ</span></button>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div id="worldTargetBadge" class="target-badge">Портал: 120 м</div>
+          <div class="fall-controls" aria-label="Управление траекторией слайма">
+            <button id="steerLeftBtn" class="fall-stick fall-stick-left" type="button" aria-label="Направлять слайма влево" aria-pressed="false"><span aria-hidden="true">‹</span></button>
+            <button id="steerRightBtn" class="fall-stick fall-stick-right" type="button" aria-label="Направлять слайма вправо" aria-pressed="false"><span aria-hidden="true">›</span></button>
+          </div>
         </div>
 
         <div class="ability-wrap card compact">
@@ -180,6 +184,6 @@
   <script src="food-catalog.js?v=1"></script>
   <script src="world-catalog.js?v=5"></script>
   <script src="balance/balance-catalog.js?v=2"></script>
-  <script src="game.js?v=49"></script>
+  <script src="game.js?v=50"></script>
 </body>
 </html>

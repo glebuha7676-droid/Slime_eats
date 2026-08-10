@@ -382,6 +382,7 @@
     startDropBtn: $('#startDropBtn'),
     depthLabel: $('#depthLabel'), runMassLabel: $('#runMassLabel'), flightLabel: $('#flightLabel'), runCoinsLabel: $('#runCoinsLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'), worldTargetBadge: $('#worldTargetBadge'),
+    steerLeftBtn: $('#steerLeftBtn'), steerRightBtn: $('#steerRightBtn'),
     abilityBtn: $('#abilityBtn'), abilityPercent: $('#abilityPercent'), abilityText: $('#abilityText'), endRunBtn: $('#endRunBtn'),
     panelOverlay: $('#panelOverlay'), panelTitle: $('#panelTitle'), panelContent: $('#panelContent'), closePanelBtn: $('#closePanelBtn'),
     resultOverlay: $('#resultOverlay'), resultBadge: $('#resultBadge'), resultTitle: $('#resultTitle'), resultText: $('#resultText'),
@@ -878,6 +879,7 @@
     document.body.dataset.screen = name;
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
+    if (name !== 'drop') clearFallSteering();
     window.scrollTo(0, 0);
     if (name === 'home') startMenuSlimeLoop();
     else if (menuSlimeAnimationId) {
@@ -1568,6 +1570,7 @@
         radius: 28 * fedScale,
         wobble: 0
       },
+      steer: { left: false, right: false },
       fedScale,
       mass: session.stats.mass,
       startMass: session.stats.mass,
@@ -1867,6 +1870,7 @@
 
     const terminalSpeed = BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld;
     s.vy = Math.min(terminalSpeed, s.vy + worldGravity * dt);
+    applyFallSteering(s, dt);
     s.x += s.vx * dt;
     s.y += s.vy * dt;
     s.wobble += dt * (4 + Math.abs(s.vy) / 180);
@@ -1946,6 +1950,19 @@
     }
 
     if (run.mass <= 0 && !tryRevive()) endRun(false, 'Слайм израсходовал всю массу');
+  }
+
+  function applyFallSteering(slime, dt) {
+    if (!run?.steer || run.portalEntry) return;
+    const direction = Number(run.steer.right) - Number(run.steer.left);
+    if (!direction) return;
+    const controlSpeed = 235;
+    const acceleration = 180;
+    if (Math.sign(slime.vx) === direction && Math.abs(slime.vx) >= controlSpeed) return;
+    const nextVx = slime.vx + direction * acceleration * dt;
+    slime.vx = Math.sign(nextVx) === direction
+      ? direction * Math.min(Math.abs(nextVx), controlSpeed)
+      : nextVx;
   }
 
   function getPortalGeometry() {
@@ -3584,6 +3601,7 @@
     if (!run || run.ended) return;
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
     run.ended = true;
+    clearFallSteering();
     cancelAnimationFrame(run.animationId);
     save.totalRuns += 1;
     save.bestDepth = Math.max(save.bestDepth, run.maxDepth);
@@ -3853,6 +3871,45 @@
     if (lastFocusedElement?.focus) lastFocusedElement.focus();
   }
 
+  function bindFallStick(button, side) {
+    if (!button) return;
+    const setPressed = (pressed, pointerId = null) => {
+      if (run?.steer) run.steer[side] = pressed;
+      button.classList.toggle('is-pressed', pressed);
+      button.setAttribute('aria-pressed', String(pressed));
+      if (pressed && pointerId !== null) {
+        try { button.setPointerCapture(pointerId); } catch (_) { /* capture is optional */ }
+      }
+    };
+    button.addEventListener('pointerdown', event => {
+      if (!run || run.ended) return;
+      event.preventDefault();
+      setPressed(true, event.pointerId);
+      feedback(4);
+    });
+    const release = event => {
+      setPressed(false);
+      if (event?.pointerId !== undefined) {
+        try { button.releasePointerCapture(event.pointerId); } catch (_) { /* pointer already released */ }
+      }
+    };
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', () => setPressed(false));
+  }
+
+  function clearFallSteering() {
+    if (run?.steer) {
+      run.steer.left = false;
+      run.steer.right = false;
+    }
+    [els.steerLeftBtn, els.steerRightBtn].forEach(button => {
+      if (!button) return;
+      button.classList.remove('is-pressed');
+      button.setAttribute('aria-pressed', 'false');
+    });
+  }
+
   function bindEvents() {
     bindMenuSlimeInteractions();
     els.rerollBtn.addEventListener('click', rerollOffer);
@@ -3867,6 +3924,8 @@
     els.adminNextWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(1));
     els.adminResetProgressBtn?.addEventListener('click', resetProgressFromAdmin);
     els.abilityBtn.addEventListener('click', activateAbility);
+    bindFallStick(els.steerLeftBtn, 'left');
+    bindFallStick(els.steerRightBtn, 'right');
     els.endRunBtn.addEventListener('click', finishRunEarly);
     els.doubleBtn.addEventListener('click', doubleRunCoins);
     els.continueBtn.addEventListener('click', continueAfterRun);
