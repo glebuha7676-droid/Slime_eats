@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'slime_food_catalog_v1';
+  const STORAGE_KEY = 'slime_food_catalog_v2';
   const RARITIES = [
     ['common', 'Обычное'], ['rare', 'Редкое'], ['epic', 'Эпическое'],
     ['legendary', 'Легендарное'], ['prismatic', 'Призматическое'], ['secret', 'Секретное']
@@ -44,7 +44,7 @@
   function escapeHtml(value) { return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function imageSource(food) {
     const image = String(food.image || '').trim();
-    const source = image || `assets/food/${food.id}.webp`;
+    const source = image || `assets/ЕДА/Общий пул/${food.id}.webp`;
     return /^(?:data:|https?:|blob:)/i.test(source) ? source : `../../${source.replace(/^\.\//, '')}`;
   }
   function normalizeFood(source) {
@@ -66,6 +66,7 @@
     };
     const image = String(source.image || '').trim();
     if (image) result.image = image;
+    if (Array.isArray(source.worlds)) result.worlds = source.worlds.map(Number).filter(worldId => worldId >= 1 && worldId <= 4);
     return result;
   }
   function normalizeCatalog(value) {
@@ -153,7 +154,10 @@
   }
   function formFood() {
     const data = Object.fromEntries(new FormData(els.form).entries());
-    return normalizeFood(data);
+    const normalized = normalizeFood(data);
+    const sourceWorlds = activeFood()?.worlds;
+    if (normalized && Array.isArray(sourceWorlds)) normalized.worlds = [...sourceWorlds];
+    return normalized;
   }
   function validateDraft(food) {
     if (!food) return 'ID: латиница, цифры, _ или -, начиная с буквы.';
@@ -294,7 +298,7 @@
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (file.size > 1_500_000) { showToast('Картинка больше 1,5 МБ. Сожми её или положи WebP в assets/food/.'); return; }
+    if (file.size > 1_500_000) { showToast('Картинка больше 1,5 МБ. Сожми её или положи WebP в assets/ЕДА/.'); return; }
     const reader = new FileReader();
     reader.onload = () => {
       els.form.elements.image.value = String(reader.result);

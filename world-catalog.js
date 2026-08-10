@@ -2,6 +2,25 @@
   'use strict';
   const STORAGE_KEY = 'slime_world_catalog_v1';
   const ORE_IDS = ['coal','iron','gold','diamond'];
+  const WORLD1_ASSETS = {
+    'dirt-grass': 'assets/Мир 1/Трава (непрочный блок).webp',
+    'ground-weak': 'assets/Мир 1/непрочный блок.webp',
+    'stone': 'assets/Мир 1/Обычный блок.webp',
+    'stone-reinforced': 'assets/Мир 1/Прочный блок.webp',
+    'stone-hazard': 'assets/Мир 1/Опасный блок.webp',
+    'ore-coal': 'assets/Мир 1/Уголь.webp',
+    'ore-iron': 'assets/Мир 1/Железо.webp',
+    'ore-gold': 'assets/Мир 1/Золото.webp',
+    'ore-diamond': 'assets/Мир 1/Алмазы.webp',
+    'dynamite': 'assets/Мир 1/Динамит.webp',
+    'spring': 'assets/Мир 1/Пружина.webp',
+    'heal': 'assets/Мир 1/Аптечка.webp'
+  };
+  const assetSource = (worldId, sprite) => {
+    if (+worldId === 1 && WORLD1_ASSETS[sprite]) return WORLD1_ASSETS[sprite];
+    const extension = +worldId === 3 ? 'png' : 'webp';
+    return `assets/world${worldId}/${sprite}.${extension}`;
+  };
   const clamp = (v, a, b, d) => Number.isFinite(+v) ? Math.max(a, Math.min(b, +v)) : d;
   const block = (id, label, type, sprite, extra = {}) => ({ id, label, type, sprite, hp: 1, x: 0, y: 0, scale: 1, ...extra });
   const level = (depth, enabled) => ({ depth, enabled, weights: { soft: 0, dense: 48, hard: 42, reinforced: 4, ore: 8, hazard: 5, bomb: 4, spring: 3, heal: 3, freeze: 3, blizzard: 2 } });
@@ -9,7 +28,7 @@
     const earth = id === 1, ice = id === 2, candy = id === 3;
     return [
       block('soft', ice ? 'Верхний снежный декор' : candy ? 'Верхний сладкий декор' : 'Трава · только верхний ряд', 'soft', ice ? 'ice-light' : candy ? 'candy-light' : 'dirt-grass'),
-      block('dense', ice ? 'Непрочный лёд' : candy ? 'Непрочная карамель' : 'Земля · непрочная', 'dense', ice ? 'snow-packed' : candy ? 'cookie-packed' : 'stone'),
+      block('dense', ice ? 'Непрочный лёд' : candy ? 'Непрочная карамель' : 'Земля · непрочная', 'dense', ice ? 'snow-packed' : candy ? 'cookie-packed' : 'ground-weak'),
       block('hard', ice ? 'Обычный лёд' : candy ? 'Обычная карамель' : 'Камень · обычный', 'hard', ice ? 'glacier' : candy ? 'candy-reinforced' : 'stone'),
       block('reinforced', ice ? 'Прочный лёд' : candy ? 'Прочная карамель' : 'Обсидиан · прочный', 'reinforced', ice ? 'ice-reinforced' : candy ? 'candy-reinforced' : 'stone-reinforced'),
       block('ore', 'Рудный блок', 'ore', 'ore-diamond', { oreVariant: 'random', oreEnabled: [...ORE_IDS], oreTextures: Object.fromEntries(ORE_IDS.map(id => [id, { image:'', x:0, y:0, scale:1 }])) }),
@@ -52,5 +71,5 @@
   const defaults = () => window.SLIME_PUBLISHED_WORLD_CATALOG ? fromExport(window.SLIME_PUBLISHED_WORLD_CATALOG) : builtInDefaults();
   const load = () => { try { const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)); return stored ? restoreLevelSelection(mergeCustom(normalize(stored), JSON.parse(localStorage.getItem(CUSTOM_KEY))), stored) : defaults(); } catch { return defaults(); } };
   const save = value => { const customs = { worlds:(value.worlds || []).map(world => ({ id:world.id, blocks:(world.blocks || []).filter(block => block.type === 'custom'), hidden:(world.blocks || []).filter(block => block.previewEnabled === false).map(block => block.id) })) }; localStorage.setItem(STORAGE_KEY, JSON.stringify(restoreLevelSelection(normalize(value), value))); localStorage.setItem(CUSTOM_KEY, JSON.stringify(customs)); };
-  window.SlimeWorldCatalog = { STORAGE_KEY, defaults, load, save, normalize, fromExport };
+  window.SlimeWorldCatalog = { STORAGE_KEY, defaults, load, save, normalize, fromExport, assetSource };
 })();

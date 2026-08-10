@@ -122,31 +122,25 @@
     prismatic: 'Призматическое', secret: 'Секретное'
   };
 
-  const FOOD_ASSET_ROOT = 'assets/food/';
+  const FOOD_ASSET_ROOT = 'assets/ЕДА/Общий пул/';
   const UI_ASSET_ROOT = 'assets/ui/';
-  const ASSET_REVISION = '20260810-2';
+  const ASSET_REVISION = '20260810-3';
   function versionedAsset(source) {
     const value = String(source || '');
     if (!/^assets\//i.test(value)) return value;
     return `${value}${value.includes('?') ? '&' : '?'}v=${ASSET_REVISION}`;
   }
   const WORLD1_TILE_NAMES = [
-    'dirt-grass', 'stone', 'stone-reinforced', 'stone-hazard',
+    'dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard',
     'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'spring', 'heal',
-    'portal'
   ];
-  const WORLD1_SPRITE_NAMES = [
-    ...WORLD1_TILE_NAMES,
-    ...WORLD1_TILE_NAMES.map(name => `${name}-cracked`),
-    'portal-line'
-  ];
+  const WORLD1_SPRITE_NAMES = [...WORLD1_TILE_NAMES];
   const WORLD2_TILE_NAMES = [
     'ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes',
     'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'freeze', 'blizzard', 'heal', 'portal'
   ];
   const WORLD2_SPRITE_NAMES = [
     ...WORLD2_TILE_NAMES,
-    ...WORLD2_TILE_NAMES.map(name => `${name}-cracked`),
     'portal-line'
   ];
   const WORLD3_TILE_NAMES = [
@@ -155,7 +149,6 @@
   ];
   const WORLD3_SPRITE_NAMES = [
     ...WORLD3_TILE_NAMES,
-    ...WORLD3_TILE_NAMES.map(name => `${name}-cracked`),
     'portal-line'
   ];
   const WORLD_SPRITE_NAMES = { 1: WORLD1_SPRITE_NAMES, 2: WORLD2_SPRITE_NAMES, 3: WORLD3_SPRITE_NAMES };
@@ -165,11 +158,18 @@
     WORLD_SPRITES[worldId] = Object.fromEntries(WORLD_SPRITE_NAMES[worldId].map(name => {
       const image = new Image();
       const extension = worldId === 3 ? 'png' : 'webp';
-      image.src = versionedAsset(`assets/world${worldId}/${name}.${extension}`);
+      const catalogSource = window.SlimeWorldCatalog?.assetSource?.(worldId, name);
+      image.src = versionedAsset(catalogSource || `assets/world${worldId}/${name}.${extension}`);
       return [name, image];
     }));
     return WORLD_SPRITES[worldId];
   }
+  const CRACK_STAGE_SPRITES = [null, 1, 2, 3].map(stage => {
+    if (!stage) return null;
+    const image = new Image();
+    image.src = versionedAsset(`assets/Трещины/${stage} стадия.webp`);
+    return image;
+  });
   const EDITOR_SPRITES = {};
   function editorSprite(source) {
     if (!source) return null;
@@ -195,14 +195,14 @@
     voidFruit: [5.9, 7.5], yogurt: [-2.5, -6.6]
   };
 
-  const FOOD_EDITOR_STORAGE_KEY = 'slime_food_catalog_v1';
+  const FOOD_EDITOR_STORAGE_KEY = 'slime_food_catalog_v2';
   const FOOD_RARITIES = new Set(['common', 'rare', 'epic', 'legendary', 'prismatic', 'secret']);
   const FOOD_CATEGORIES = new Set(['mass', 'power', 'defense', 'bounce', 'magic']);
 
   function foodImageSource(food) {
     const customImage = String(food.image || '').trim();
     const isEmbeddedImage = /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(customImage);
-    const isProjectAsset = /^assets\/food\/[a-z0-9_./-]+\.(?:png|jpe?g|webp|gif)$/i.test(customImage);
+    const isProjectAsset = /^assets\/(?:ЕДА|food)\/[\p{L}\p{N} _()./-]+\.(?:png|jpe?g|webp|gif)$/iu.test(customImage);
     if (isEmbeddedImage) return customImage;
     return versionedAsset(isProjectAsset ? customImage : `${FOOD_ASSET_ROOT}${food.id}.webp`);
   }
@@ -298,6 +298,7 @@
       defense: clampNumber(value.defense, 0, 9.99), elasticity: clampNumber(value.elasticity, 0, 9.99),
       ability: clampNumber(value.ability, 0, 999), coinMultiplier: clampNumber(value.coinMultiplier, 0, 99),
       effect: String(value.effect || '').trim(), effectText: String(value.effectText || '').trim(),
+      ...(Array.isArray(value.worlds) ? { worlds:value.worlds.map(Number).filter(worldId => worldId >= 1 && worldId <= 4) } : {}),
       ...(image ? { image } : {}),
       ...(hasArtTransform ? {
         artX: clampNumber(value.artX, -30, 30),
@@ -985,15 +986,19 @@
     return { common: 0, rare: 1, epic: 2, legendary: 3, prismatic: 4, secret: 5 }[rarity] ?? 0;
   }
 
+  function foodAvailableInWorld(food) {
+    return !Array.isArray(food.worlds) || !food.worlds.length || food.worlds.includes(save.world);
+  }
+
   function randomFood(exclude = [], minimumRarity = null, rollBoost = 0) {
     let rarity = weightedRarity(rarityWeights(rollBoost));
     if (minimumRarity && rarityRank(rarity) < rarityRank(minimumRarity)) rarity = minimumRarity;
-    let pool = FOODS.filter(food => food.rarity === rarity && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
+    let pool = FOODS.filter(food => foodAvailableInWorld(food) && food.rarity === rarity && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
     if (!pool.length) {
       const order = ['secret', 'prismatic', 'legendary', 'epic', 'rare', 'common'];
       const allowed = minimumRarity ? order.filter(r => rarityRank(r) >= rarityRank(minimumRarity)) : order;
       for (const fallback of allowed) {
-        pool = FOODS.filter(food => food.rarity === fallback && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
+        pool = FOODS.filter(food => foodAvailableInWorld(food) && food.rarity === fallback && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
         if (pool.length) break;
       }
     }
@@ -2858,7 +2863,7 @@
         ctx.stroke();
       }
 
-      if (hpRatio < .78) drawCracks(block, sy, hpRatio);
+      if (!drawCrackStage(block, sy, hpRatio) && crackStageFor(hpRatio)) drawCracks(block, sy, hpRatio);
       ctx.fillStyle = '#fff';
       ctx.font = tier === 'reinforced' ? '1000 13px system-ui' : '1000 12px system-ui';
       ctx.textAlign = 'center';
@@ -2943,6 +2948,26 @@
     ctx.restore();
   }
 
+  function crackStageFor(hpRatio) {
+    const damageRatio = 1 - clamp(hpRatio, 0, 1);
+    if (damageRatio >= .9) return 3;
+    if (damageRatio >= .6) return 2;
+    if (damageRatio >= .4) return 1;
+    return 0;
+  }
+
+  function drawCrackStage(block, sy, hpRatio) {
+    const stage = crackStageFor(hpRatio);
+    const sprite = CRACK_STAGE_SPRITES[stage];
+    if (!stage || !sprite?.complete || !sprite.naturalWidth) return false;
+    const gutter = .5;
+    ctx.save();
+    ctx.globalAlpha = .94;
+    ctx.drawImage(sprite, block.x + gutter, sy + gutter, block.w - gutter * 2, block.h - gutter * 2);
+    ctx.restore();
+    return true;
+  }
+
   function drawWorldSprite(block, sy, hpRatio) {
     // Босс рисуется кодом, а не обычной плиткой: у него свои глаза и лицо.
     if (block.special === 'boss') return false;
@@ -2966,10 +2991,13 @@
       if (block.tier === 'reinforced' || block.tier === 'hard') spriteName = 'candy-reinforced';
       else if (block.tier === 'dense') spriteName = 'cookie-packed';
       else spriteName = 'candy-light';
+    } else if (run.worldId === 1) {
+      if (block.tier === 'soft') spriteName = 'dirt-grass';
+      else if (block.tier === 'dense') spriteName = 'ground-weak';
+      else if (block.tier === 'hard') spriteName = 'stone';
+      else spriteName = 'stone-reinforced';
     } else if (block.tier === 'reinforced') spriteName = 'stone-reinforced';
     else if (block.tier === 'hard') spriteName = 'stone';
-    // `soft` is the surface decoration; `dense` is the same weak gameplay
-    // category rendered with the ground texture assigned in the editor.
     else if (block.tier === 'soft') spriteName = 'dirt-grass';
     else spriteName = 'stone';
 
@@ -2980,10 +3008,7 @@
     const artwork = oreArtwork?.image ? oreArtwork : edited;
     const customSprite = artwork?.image ? editorSprite(artwork.image) : null;
     const sprites = WORLD_SPRITES[run.worldId];
-    const damagedName = `${spriteName}-cracked`;
-    const sprite = customSprite?.complete && customSprite.naturalWidth ? customSprite : (hpRatio < .58 && sprites?.[damagedName]?.complete
-      ? sprites[damagedName]
-      : sprites?.[spriteName]);
+    const sprite = customSprite?.complete && customSprite.naturalWidth ? customSprite : sprites?.[spriteName];
     if (!sprite?.complete || !sprite.naturalWidth) return false;
 
     // Leave a single-pixel gutter for the grid instead of letting tiles overlap.
@@ -3014,7 +3039,7 @@
       ctx.drawImage(sprite, drawX, drawY, width, height);
     }
     ctx.globalAlpha = 1;
-    if (hpRatio < .72 && run.worldId > 2) drawCracks(block, sy, hpRatio);
+    drawCrackStage(block, sy, hpRatio);
 
     const label = Math.max(1, Math.ceil(block.hp)).toString();
     const badgeWidth = Math.max(29, 15 + label.length * 7);

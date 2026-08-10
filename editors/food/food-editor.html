@@ -57,7 +57,7 @@
             <fieldset>
               <legend>КАРТИНКА</legend>
               <div class="field-grid image-fields">
-                <label>Путь к картинке<input name="image" id="imagePath" maxlength="10000" placeholder="assets/food/my-food.webp"></label>
+                <label>Путь к картинке<input name="image" id="imagePath" maxlength="10000" placeholder="assets/ЕДА/Общий пул/Моя еда.webp"></label>
                 <label>Эмодзи-запасной вариант<input name="icon" maxlength="8" placeholder="🍓"></label>
                 <label class="file-label">Загрузить файл<input id="imageUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden><span>ВЫБРАТЬ PNG / WEBP</span></label>
               </div>
@@ -66,7 +66,7 @@
                 <label class="art-control"><span class="art-control-head">Сдвиг вверх / вниз <output data-art-output="artY">0%</output></span><input name="artY" type="range" min="-30" max="30" step="1" value="0"></label>
                 <label class="art-control"><span class="art-control-head">Размер картинки <output data-art-output="artScale">100%</output></span><input name="artScale" type="range" min="0.55" max="1.6" step="0.05" value="1"></label>
               </div>
-              <p class="field-hint">Файлы до 1,5 МБ сохраняются в браузере вместе с каталогом. Для финальной версии лучше положить WebP в <code>assets/food/</code> и указать путь.</p>
+              <p class="field-hint">Файлы до 1,5 МБ сохраняются в браузере вместе с каталогом. Для финальной версии лучше положить WebP в <code>assets/ЕДА/</code> и указать путь.</p>
             </fieldset>
 
             <fieldset>
@@ -116,7 +116,7 @@
 
   <div id="editorToast" class="editor-toast" role="status" aria-live="polite"></div>
   <script src="../../published/food.js?v=1"></script>
-  <script src="../../food-catalog.js?v=2"></script>
+  <script src="../../food-catalog.js?v=3"></script>
   <script src="food-editor.js?v=5"></script>
 </body>
 </html>
