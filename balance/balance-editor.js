@@ -7,7 +7,10 @@
     start:'НАЧАЛО', middle:'СЕРЕДИНА', end:'КОНЕЦ',
     weak:'Непрочные', normal:'Обычные', strong:'Прочные', ore:'Рудные / монетные', secondary:'Второстепенные',
     coal:'Уголь', iron:'Железо', gold:'Золото', diamond:'Алмаз',
-    heal:'Аптечка', bomb:'Динамит', spring:'Отбрасыватель'
+    heal:'Аптечка', bomb:'Динамит', spring:'Отбрасыватель',
+    cryo:'Крио-блок', snowflake:'Блок снежинки',
+    appleMint:'Мятное яблоко', appleRed:'Красное яблоко',
+    geyser:'Вулканический гейзер', seismic:'Вулканический разлом'
   };
   let data = api.load();
   let worldIndex = 0;
@@ -33,8 +36,11 @@
     const level = currentLevel();
     $('zoneEditor').innerHTML = api.ZONE_IDS.map((zoneId,index) => {
       const zone = level.zones[zoneId];
-      const description = index === 0 ? 'Первый ряд всегда декоративный. Проценты применяются ниже него.' : index === 1 ? 'Основная глубина уровня.' : 'Финальная треть перед порталом.';
-      return `<article class="zone-card"><header><small>ЗОНА ${index+1}</small><h2>${labels[zoneId]}</h2><p>${description}</p></header>${distribution('Типы блоков','blocks',zone.blocks,api.BLOCK_IDS,zoneId)}${distribution('Разновидности руды','ores',zone.ores,api.ORE_IDS,zoneId)}${distribution('Второстепенные блоки','secondary',zone.secondary,api.SPECIAL_IDS,zoneId)}</article>`;
+      const description = index === 0
+        ? ([2,4].includes(currentWorld().id) ? 'Верхний ряд использует тот же непрочный блок мира.' : 'Первый ряд всегда декоративный. Проценты применяются ниже него.')
+        : index === 1 ? 'Основная глубина уровня.' : 'Финальная треть перед порталом.';
+      const specialIds = api.specialIdsForWorld(currentWorld().id);
+      return `<article class="zone-card"><header><small>ЗОНА ${index+1}</small><h2>${labels[zoneId]}</h2><p>${description}</p></header>${distribution('Типы блоков','blocks',zone.blocks,api.BLOCK_IDS,zoneId)}${distribution('Разновидности руды','ores',zone.ores,api.ORE_IDS,zoneId)}${distribution('Второстепенные блоки','secondary',zone.secondary,specialIds,zoneId)}</article>`;
     }).join('');
   }
 
@@ -44,12 +50,20 @@
 
   function renderProperties() {
     const d = data.durability, r = data.rewards, o = data.ores, s = data.special;
+    const healProperties = `<section class="property-group" data-property-group><h3>Аптечка</h3>${numberField('Восстановление здоровья',s.heal.amount,'special.heal.amount',1,500)}<p class="field-error">Значение вышло за допустимый диапазон.</p></section>`;
+    const worldSpecialProperties = currentWorld().id === 2
+      ? `${healProperties}<section class="property-group" data-property-group><h3>Крио-блок</h3>${numberField('Размер области, блоков',s.cryo.area,'special.cryo.area',2,8)}<p class="property-note">Превращает блоки в выбранной области в непрочные.</p><p class="field-error">Значение вышло за допустимый диапазон.</p></section><section class="property-group" data-property-group><h3>Блок снежинки</h3>${numberField('Заморозка, секунд',s.snowflake.duration,'special.snowflake.duration',1,10,.5)}<p class="property-note">Слайм теряет прыгучесть и не получает урон.</p><p class="field-error">Значение вышло за допустимый диапазон.</p></section>`
+      : currentWorld().id === 3
+        ? `${healProperties}<section class="property-group" data-property-group><h3>Мятное яблоко</h3>${numberField('Изменение размера, %',s.appleMint.size,'special.appleMint.size',-50,0)}${numberField('Защита, %',s.appleMint.defense,'special.appleMint.defense',0,100)}${numberField('Прыгучесть, %',s.appleMint.bounce,'special.appleMint.bounce',0,100)}<p class="property-note">Уменьшает слайма, повышает защиту и отскок.</p><p class="field-error">Значение вышло за допустимый диапазон.</p></section><section class="property-group" data-property-group><h3>Красное яблоко</h3>${numberField('Увеличение размера, %',s.appleRed.size,'special.appleRed.size',0,100)}${numberField('Урон, %',s.appleRed.power,'special.appleRed.power',0,100)}${numberField('Защита, %',s.appleRed.defense,'special.appleRed.defense',0,100)}<p class="property-note">Увеличивает слайма и усиливает его удар и защиту.</p><p class="field-error">Значение вышло за допустимый диапазон.</p></section>`
+        : currentWorld().id === 4
+          ? `${healProperties}<section class="property-group" data-property-group><h3>Вулканический гейзер</h3>${numberField('Сила выстрела',s.geyser.launch,'special.geyser.launch',.6,2,.05)}<p class="property-note">Даёт 3 секунды на выбор направления и гарантированно пробивает следующие 5 блоков. Затем обычный урон возвращается.</p><p class="field-error">Значение вышло за допустимый диапазон.</p></section><section class="property-group" data-property-group><h3>Вулканический разлом</h3>${numberField('Ослабление блоков, %',s.seismic.damage,'special.seismic.damage',40,90)}${numberField('Количество рядов',s.seismic.rows,'special.seismic.rows',1,5)}<p class="property-note">Вызывает землетрясение и глубоко повреждает обычные блоки поперёк шахты, не разрушая их автоматически.</p><p class="field-error">Значение вышло за допустимый диапазон.</p></section>`
+          : `<section class="property-group" data-property-group><h3>Динамит</h3>${numberField('Радиус взрыва',s.bomb.radius,'special.bomb.radius',30,400)}${numberField('Урон блокам',s.bomb.damage,'special.bomb.damage',1,500)}<p class="property-note">В Мире 1 динамит всегда уничтожает квадрат 3×3.</p><p class="field-error">Значение вышло за допустимый диапазон.</p></section>${healProperties}<section class="property-group" data-property-group><h3>Отбрасыватель</h3>${numberField('Сила отталкивания',s.spring.push,'special.spring.push',.4,4,.05)}<p class="field-error">Значение вышло за допустимый диапазон.</p></section>`;
     $('propertyEditor').innerHTML = `
       <section class="property-group" data-property-group><h3>Стоимость основных блоков</h3>
         ${numberField('Монет за непрочный блок',r.weak,'rewards.weak',0,10000)}
         ${numberField('Монет за обычный блок',r.normal,'rewards.normal',0,10000)}
         ${numberField('Монет за прочный блок',r.strong,'rewards.strong',0,10000)}
-        <p class="property-note">Трава использует цену непрочного блока. Аптечка, динамит и отбрасыватель не дают монет.</p>
+        <p class="property-note">Трава использует цену непрочного блока. Все второстепенные блоки не дают монет.</p>
         <p class="field-error">Значение вышло за допустимый диапазон.</p>
       </section>
       <section class="property-group" data-property-group><h3>Прочность основных блоков</h3>
@@ -59,9 +73,7 @@
         <p class="field-error">Минимум не может быть больше максимума.</p>
       </section>
       ${api.ORE_IDS.map(id => `<section class="property-group" data-property-group><h3>${labels[id]}</h3>${numberField('Прочность · минимум',o[id].min,`ores.${id}.min`,1,500)}${numberField('Прочность · максимум',o[id].max,`ores.${id}.max`,1,500)}${numberField('Монет за блок',o[id].coins,`ores.${id}.coins`,0,10000)}<p class="field-error">Проверь диапазон значений.</p></section>`).join('')}
-      <section class="property-group" data-property-group><h3>Динамит</h3>${numberField('Радиус взрыва',s.bomb.radius,'special.bomb.radius',30,400)}${numberField('Урон блокам',s.bomb.damage,'special.bomb.damage',1,500)}<p class="field-error">Значение вышло за допустимый диапазон.</p></section>
-      <section class="property-group" data-property-group><h3>Аптечка</h3>${numberField('Восстановление массы',s.heal.amount,'special.heal.amount',1,500)}<p class="field-error">Значение вышло за допустимый диапазон.</p></section>
-      <section class="property-group" data-property-group><h3>Отбрасыватель</h3>${numberField('Сила отталкивания',s.spring.push,'special.spring.push',.4,4,.05)}<p class="field-error">Значение вышло за допустимый диапазон.</p></section>`;
+      ${worldSpecialProperties}`;
   }
 
   function renderTabs() {

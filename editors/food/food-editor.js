@@ -6,9 +6,9 @@
     ['common', 'Обычное'], ['rare', 'Редкое'], ['epic', 'Эпическое'],
     ['legendary', 'Легендарное'], ['prismatic', 'Призматическое'], ['secret', 'Секретное']
   ];
-  const CATEGORIES = [['mass', 'Масса'], ['power', 'Сила'], ['defense', 'Защита'], ['bounce', 'Отскок'], ['magic', 'Заряд']];
+  const CATEGORIES = [['mass', 'Здоровье'], ['power', 'Сила'], ['defense', 'Защита'], ['bounce', 'Отскок'], ['magic', 'Заряд']];
   const STAT_META = [
-    ['mass', 'МАССА', value => `+${formatNumber(value)}`],
+    ['mass', 'ЗДОРОВЬЕ', value => `+${formatNumber(value)}`],
     ['power', 'СИЛА', value => `+${formatNumber(value)}`],
     ['defense', 'ЗАЩИТА', value => `+${formatPercent(value)}`],
     ['elasticity', 'ОТСКОК', value => `+${formatPercent(value)}`],
@@ -110,7 +110,7 @@
   }
   function rarityLabel(rarity) { return RARITIES.find(([id]) => id === rarity)?.[1] || 'Обычное'; }
   function rarityColor(rarity) { return ({ common: '#73b86f', rare: '#3ba9d2', epic: '#9d69db', legendary: '#dfa520', prismatic: '#7f73e8', secret: '#ff62ad' })[rarity] || '#97a1af'; }
-  function categoryLabel(category) { return CATEGORIES.find(([id]) => id === category)?.[1] || 'Масса'; }
+  function categoryLabel(category) { return CATEGORIES.find(([id]) => id === category)?.[1] || 'Здоровье'; }
   function visibleFoods() {
     const query = els.search.value.trim().toLocaleLowerCase('ru');
     return catalog.filter(food => (!query || `${food.name} ${food.id}`.toLocaleLowerCase('ru').includes(query)) && (activeFilter === 'all' || food.rarity === activeFilter));

@@ -14,47 +14,208 @@
     'ore-diamond': 'assets/Мир 1/Алмазы.webp',
     'dynamite': 'assets/Мир 1/Динамит.webp',
     'spring': 'assets/Мир 1/Пружина.webp',
-    'heal': 'assets/Мир 1/Аптечка.webp'
+    'heal': 'assets/Мир 1/Аптечка.webp',
+    'portal': 'assets/ui/portals/world-1.png'
+  };
+  const WORLD2_ASSETS = {
+    'ice-light': 'assets/Мир 2/Непрочный блок.webp',
+    'snow-packed': 'assets/Мир 2/Непрочный блок.webp',
+    'glacier': 'assets/Мир 2/Обычный блок.webp',
+    'ice-reinforced': 'assets/Мир 2/Прочный блок.webp',
+    'ice-shards': 'assets/Мир 2/Опасный блок.webp',
+    'ice-spikes': 'assets/Мир 2/Опасный блок.webp',
+    'ore-coal': 'assets/Мир 2/Уголь.webp',
+    'ore-iron': 'assets/Мир 2/Железо.webp',
+    'ore-gold': 'assets/Мир 2/Золото.webp',
+    'ore-diamond': 'assets/Мир 2/Алмазы.webp',
+    'cryo': 'assets/Мир 2/Крио блок.webp',
+    'snowflake': 'assets/Мир 2/Заморозка.webp',
+    'heal': 'assets/Мир 2/Аптечка.webp',
+    'portal': 'assets/ui/portals/world-2.png'
+  };
+  const WORLD3_ASSETS = {
+    'candy-light': 'assets/Мир 3/Непрочный блок.webp',
+    'cookie-packed': 'assets/Мир 3/Непрочный блок.webp',
+    'candy-normal': 'assets/Мир 3/обычный блок.webp',
+    'candy-reinforced': 'assets/Мир 3/Прочный блок.webp',
+    'candy-hazard': 'assets/Мир 3/опасный блок.webp',
+    'ore-coal': 'assets/Мир 3/Уголь.webp',
+    'ore-iron': 'assets/Мир 3/Карамель.webp',
+    'ore-gold': 'assets/Мир 3/Золото.webp',
+    'ore-diamond': 'assets/Мир 3/Алмазы.webp',
+    'apple-mint': 'assets/Мир 3/Уменьшающее яблоко.webp',
+    'apple-red': 'assets/Мир 3/Увеличивающее яблоко.webp',
+    'heal': 'assets/Мир 3/Хилка.webp',
+    'portal': 'assets/ui/portals/world-3.png'
+  };
+  const WORLD4_ASSETS = {
+    'ash': 'assets/Мир 4/Непрочный блок.webp',
+    'volcanic-earth': 'assets/Мир 4/Обычный блок.webp',
+    'basalt': 'assets/Мир 4/Прочный блок.webp',
+    'lava-hazard': 'assets/Мир 4/Опасный блок.webp',
+    'ore-coal': 'assets/Мир 4/Уголь.webp',
+    'ore-iron': 'assets/Мир 4/Железо.webp',
+    'ore-gold': 'assets/Мир 4/Золото.webp',
+    'ore-diamond': 'assets/Мир 4/Алмазы.webp',
+    'geyser': 'assets/Мир 4/Гейзер-заметный.webp',
+    'seismic': 'assets/Мир 4/Вулканический разлом.webp',
+    'heal': 'assets/Мир 4/Аптечка.webp',
+    'portal': 'assets/ui/portals/world-4.png'
   };
   const assetSource = (worldId, sprite) => {
     if (+worldId === 1 && WORLD1_ASSETS[sprite]) return WORLD1_ASSETS[sprite];
-    const extension = +worldId === 3 ? 'png' : 'webp';
-    return `assets/world${worldId}/${sprite}.${extension}`;
+    if (+worldId === 2 && WORLD2_ASSETS[sprite]) return WORLD2_ASSETS[sprite];
+    if (+worldId === 3 && WORLD3_ASSETS[sprite]) return WORLD3_ASSETS[sprite];
+    if (+worldId === 4 && WORLD4_ASSETS[sprite]) return WORLD4_ASSETS[sprite];
+    return `assets/world${worldId}/${sprite}.webp`;
   };
   const clamp = (v, a, b, d) => Number.isFinite(+v) ? Math.max(a, Math.min(b, +v)) : d;
   const block = (id, label, type, sprite, extra = {}) => ({ id, label, type, sprite, hp: 1, x: 0, y: 0, scale: 1, ...extra });
-  const level = (depth, enabled) => ({ depth, enabled, weights: { soft: 0, dense: 48, hard: 42, reinforced: 4, ore: 8, hazard: 5, bomb: 4, spring: 3, heal: 3, freeze: 3, blizzard: 2 } });
+  const level = (depth, enabled) => ({ depth, enabled, weights: { soft: 0, dense: 48, hard: 42, reinforced: 4, ore: 8, hazard: 5, bomb: 4, spring: 3, heal: 3, cryo: 3, snowflake: 3, appleMint: 3, appleRed: 3, geyser: 3, seismic: 3 } });
   const blocksFor = id => {
-    const earth = id === 1, ice = id === 2, candy = id === 3;
+    const ice = id === 2, candy = id === 3, volcano = id === 4;
+    if (volcano) return [
+      block('dense', 'Вулканический пепел · непрочный', 'dense', 'ash'),
+      block('hard', 'Вулканическая земля · обычная', 'hard', 'volcanic-earth'),
+      block('reinforced', 'Базальт · прочный', 'reinforced', 'basalt'),
+      block('ore', 'Руда в базальте', 'ore', 'ore-diamond', { oreVariant: 'random', oreEnabled: [...ORE_IDS], oreTextures: Object.fromEntries(ORE_IDS.map(oreId => [oreId, { image:'', x:0, y:0, scale:1 }])) }),
+      block('hazard', 'Лава · опасный блок', 'hazard', 'lava-hazard', { hp: 1.2 }),
+      block('geyser', 'Вулканический гейзер', 'geyser', 'geyser', { hp: 1 }),
+      block('seismic', 'Вулканический разлом', 'seismic', 'seismic', { hp: 1 }),
+      block('heal', 'Вулканическая аптечка', 'gel', 'heal', { hp: .44, healAmount: 16 })
+    ];
     return [
-      block('soft', ice ? 'Верхний снежный декор' : candy ? 'Верхний сладкий декор' : 'Трава · только верхний ряд', 'soft', ice ? 'ice-light' : candy ? 'candy-light' : 'dirt-grass'),
+      ...(!ice ? [block('soft', candy ? 'Верхний сладкий декор' : 'Трава · только верхний ряд', 'soft', candy ? 'candy-light' : 'dirt-grass')] : []),
       block('dense', ice ? 'Непрочный лёд' : candy ? 'Непрочная карамель' : 'Земля · непрочная', 'dense', ice ? 'snow-packed' : candy ? 'cookie-packed' : 'ground-weak'),
-      block('hard', ice ? 'Обычный лёд' : candy ? 'Обычная карамель' : 'Камень · обычный', 'hard', ice ? 'glacier' : candy ? 'candy-reinforced' : 'stone'),
+      block('hard', ice ? 'Обычный лёд' : candy ? 'Обычная карамель' : 'Камень · обычный', 'hard', ice ? 'glacier' : candy ? 'candy-normal' : 'stone'),
       block('reinforced', ice ? 'Прочный лёд' : candy ? 'Прочная карамель' : 'Обсидиан · прочный', 'reinforced', ice ? 'ice-reinforced' : candy ? 'candy-reinforced' : 'stone-reinforced'),
       block('ore', 'Рудный блок', 'ore', 'ore-diamond', { oreVariant: 'random', oreEnabled: [...ORE_IDS], oreTextures: Object.fromEntries(ORE_IDS.map(id => [id, { image:'', x:0, y:0, scale:1 }])) }),
       block('hazard', ice ? 'Ледяные шипы' : candy ? 'Кислая карамель' : 'Опасный камень', 'hazard', ice ? 'ice-spikes' : candy ? 'candy-hazard' : 'stone-hazard', { hp: 1.2 }),
-      block('bomb', 'Динамит', 'bomb', 'dynamite', { hp: .68, explosionRadius: 125 }),
-      block('spring', 'Прыжинка', 'spring', 'spring', { hp: 1.1, push: 1.35 }),
+      ...(candy ? [
+        block('appleMint', 'Мятное яблоко', 'appleMint', 'apple-mint', { hp: 1 }),
+        block('appleRed', 'Красное яблоко', 'appleRed', 'apple-red', { hp: 1 })
+      ] : !ice ? [
+        block('bomb', 'Динамит', 'bomb', 'dynamite', { hp: .68, explosionRadius: 125 }),
+        block('spring', 'Прыжинка', 'spring', 'spring', { hp: 1.1, push: 1.35 })
+      ] : [
+        block('cryo', 'Крио-блок', 'cryo', 'cryo', { hp: 1 }),
+        block('snowflake', 'Блок снежинки', 'snowflake', 'snowflake', { hp: 1 })
+      ]),
       block('heal', 'Лечебный блок', 'gel', 'heal', { hp: .44, healAmount: 16 }),
-      ...(ice ? [block('freeze', 'Ледяная заморозка', 'freeze', 'freeze', { hp: .72 }), block('blizzard', 'Блок вьюги', 'blizzard', 'blizzard', { hp: 1.08, push: 1 })] : [])
     ];
   };
-  const world = (id, name, accent, top, bottom, depths) => ({ id, name, accent, background: { top, bottom, image: '', x: 0, y: 0, scale: 1 }, levels: depths.map((depth, i) => level(depth, i === 0 ? ['soft','dense','ore'] : i === 1 ? ['soft','dense','ore','bomb'] : i === 2 ? ['soft','dense','hard','ore','bomb','heal'] : ['soft','dense','hard','reinforced','ore','bomb','heal','hazard','spring'])), blocks: blocksFor(id) });
-  const builtInDefaults = () => ({ version: 1, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[85,150,250,350,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[120,210,320,440,580]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[140,240,360,490,640]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[160,280,410,560,720])] });
+  const enabledForLevel = (worldId, index) => {
+    if (worldId === 2) {
+      const enabled = ['dense', 'ore', 'cryo', 'snowflake', 'heal'];
+      if (index >= 1) enabled.push('hard');
+      if (index >= 2) enabled.push('reinforced');
+      if (index >= 3) enabled.push('hazard');
+      return enabled;
+    }
+    if (worldId === 3) {
+      const enabled = ['soft','dense','ore','appleMint','appleRed','heal'];
+      if (index >= 1) enabled.push('hard');
+      if (index >= 2) enabled.push('reinforced');
+      if (index >= 3) enabled.push('hazard');
+      return enabled;
+    }
+    if (worldId === 4) {
+      const enabled = ['dense','hard','ore','hazard','geyser','seismic','heal'];
+      if (index >= 1) enabled.push('reinforced');
+      return enabled;
+    }
+    if (index === 0) return ['soft','dense','ore'];
+    if (index === 1) return ['soft','dense','ore','bomb'];
+    if (index === 2) return ['soft','dense','hard','ore','bomb','heal'];
+    return ['soft','dense','hard','reinforced','ore','bomb','heal','hazard','spring'];
+  };
+  const world = (id, name, accent, top, bottom, depths) => ({ id, name, accent, background: { top, bottom, image: '', x: 0, y: 0, scale: 1 }, levels: depths.map((depth, index) => level(depth, enabledForLevel(id, index))), blocks: blocksFor(id) });
+  const builtInDefaults = () => ({ version: 6, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[85,150,250,350,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[120,210,320,440,580]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[140,240,360,490,640]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[160,280,410,560,720])] });
+  const WORLD2_LEGACY_IDS = { freeze:'cryo', blizzard:'snowflake', bomb:'cryo', spring:'snowflake' };
+  const WORLD3_LEGACY_IDS = { bomb:'appleRed', spring:'appleMint' };
+  const WORLD4_LEGACY_IDS = { bomb:'geyser', spring:'seismic' };
+  const normalizeEnabled = (worldId, values, validIds, legacyWorld2 = false, legacyWorld3 = false, legacyWorld4 = false) => {
+    const mapped = (Array.isArray(values) ? values : []).map(id => +worldId === 2
+      ? (WORLD2_LEGACY_IDS[id] || id)
+      : +worldId === 3
+        ? (WORLD3_LEGACY_IDS[id] || id)
+        : +worldId === 4
+          ? (WORLD4_LEGACY_IDS[id] || id)
+        : id);
+    if (+worldId === 2) {
+      const disallowed = new Set(['soft','bomb','spring','freeze','blizzard']);
+      for (let index = mapped.length - 1; index >= 0; index -= 1) if (disallowed.has(mapped[index])) mapped.splice(index, 1);
+      if (legacyWorld2) mapped.push('cryo', 'snowflake');
+    }
+    if (+worldId === 3) {
+      const disallowed = new Set(['bomb','spring']);
+      for (let index = mapped.length - 1; index >= 0; index -= 1) if (disallowed.has(mapped[index])) mapped.splice(index, 1);
+      if (legacyWorld3) mapped.push('appleMint', 'appleRed');
+    }
+    if (+worldId === 4) {
+      const disallowed = new Set(['soft','bomb','spring','cryo','snowflake','appleMint','appleRed']);
+      for (let index = mapped.length - 1; index >= 0; index -= 1) if (disallowed.has(mapped[index])) mapped.splice(index, 1);
+      if (legacyWorld4) mapped.push('geyser', 'seismic', 'hazard');
+    }
+    return [...new Set(mapped.filter(id => validIds.has(id)))];
+  };
   const normal = value => {
     const base = builtInDefaults(); if (!value || !Array.isArray(value.worlds)) return base;
-    base.worlds.forEach(fallback => { const src = value.worlds.find(x => +x.id === fallback.id); if (!src) return; fallback.name = String(src.name || fallback.name).slice(0,32); fallback.accent = String(src.accent || fallback.accent); const bg = src.background || {}; fallback.background = { top:String(bg.top || fallback.background.top), bottom:String(bg.bottom || fallback.background.bottom), image:String(bg.image || '').slice(0,1500000), x:clamp(bg.x,-45,45,0), y:clamp(bg.y,-45,45,0), scale:clamp(bg.scale,.5,1.8,1) }; fallback.levels.forEach((l,i) => { const s=src.levels?.[i]||{}; l.depth=Math.round(clamp(s.depth,20,2000,l.depth)); l.enabled=Array.isArray(s.enabled)?s.enabled.filter(id=>fallback.blocks.some(b=>b.id===id)):l.enabled; l.weights={...l.weights,...(s.weights||{}),soft:0}; }); fallback.blocks.forEach(b => { const s=src.blocks?.find(x=>x.id===b.id); if(!s)return; b.label=String(s.label||b.label).slice(0,32); b.image=String(s.image||'').slice(0,1500000); b.x=clamp(s.x,-45,45,0); b.y=clamp(s.y,-45,45,0); b.scale=clamp(s.scale,.55,1.55,1); b.hp=clamp(s.hp,.1,5,b.hp); if(b.type==='ore'){const allowed=['coal','iron','gold','diamond'];b.oreVariant=['random',...allowed].includes(s.oreVariant)?s.oreVariant:'random';const saved=Array.isArray(s.oreEnabled)?s.oreEnabled.filter(id=>allowed.includes(id)):allowed;b.oreEnabled=saved.length?saved:allowed;} if(b.type==='bomb')b.explosionRadius=clamp(s.explosionRadius,40,260,b.explosionRadius); if(b.type==='gel')b.healAmount=clamp(s.healAmount,1,100,b.healAmount); if(b.type==='spring'||b.type==='blizzard')b.push=clamp(s.push,.4,2.5,b.push); }); }); return base;
+    const legacyWorld2 = +value.version < 2;
+    const legacyWorld3 = +value.version < 3;
+    const legacyWorld3Assets = +value.version < 4;
+    const legacyWorld4 = +value.version < 5;
+    const legacyWorld4NaturalAssets = +value.version < 6;
+    base.worlds.forEach(fallback => {
+      const src = value.worlds.find(x => +x.id === fallback.id);
+      if (!src) return;
+      const validIds = new Set(fallback.blocks.map(block => block.id));
+      fallback.name = String(src.name || fallback.name).slice(0,32);
+      fallback.accent = String(src.accent || fallback.accent);
+      const bg = src.background || {};
+      fallback.background = { top:String(bg.top || fallback.background.top), bottom:String(bg.bottom || fallback.background.bottom), image:String(bg.image || '').slice(0,1500000), x:clamp(bg.x,-45,45,0), y:clamp(bg.y,-45,45,0), scale:clamp(bg.scale,.5,1.8,1) };
+      fallback.levels.forEach((level, index) => {
+        const saved = src.levels?.[index] || {};
+        level.depth = Math.round(clamp(saved.depth,20,2000,level.depth));
+        level.enabled = Array.isArray(saved.enabled) ? normalizeEnabled(fallback.id,saved.enabled,validIds,legacyWorld2,legacyWorld3,legacyWorld4) : level.enabled;
+        level.weights = {...level.weights,...(saved.weights||{}),soft:0};
+      });
+      fallback.blocks.forEach(block => {
+        const legacyIds = fallback.id === 2 && block.id === 'cryo' ? ['freeze','bomb']
+          : fallback.id === 2 && block.id === 'snowflake' ? ['blizzard','spring']
+            : fallback.id === 3 && block.id === 'appleRed' ? ['bomb']
+              : fallback.id === 3 && block.id === 'appleMint' ? ['spring']
+                : fallback.id === 4 && block.id === 'geyser' ? ['bomb']
+                  : fallback.id === 4 && block.id === 'seismic' ? ['spring']
+                : [];
+        const saved = src.blocks?.find(item=>item.id===block.id) || src.blocks?.find(item=>legacyIds.includes(item.id));
+        if (!saved) return;
+        const migratedSpecial = (fallback.id === 3 && legacyWorld3 || fallback.id === 4 && legacyWorld4) && legacyIds.includes(saved.id);
+        block.label = migratedSpecial || (fallback.id === 4 && legacyWorld4NaturalAssets) ? block.label : String(saved.label||block.label).slice(0,32);
+        const forceBuiltInCryo = fallback.id === 2 && block.id === 'cryo';
+        block.image = forceBuiltInCryo || (fallback.id === 2 && legacyWorld2) || (fallback.id === 3 && legacyWorld3Assets) || (fallback.id === 4 && legacyWorld4NaturalAssets) || migratedSpecial ? '' : String(saved.image||'').slice(0,1500000);
+        block.x=clamp(saved.x,-45,45,0); block.y=clamp(saved.y,-45,45,0); block.scale=clamp(saved.scale,.55,1.55,1); block.hp=clamp(saved.hp,.1,5,block.hp);
+        if(block.type==='ore'){const allowed=['coal','iron','gold','diamond'];block.oreVariant=['random',...allowed].includes(saved.oreVariant)?saved.oreVariant:'random';const selected=Array.isArray(saved.oreEnabled)?saved.oreEnabled.filter(id=>allowed.includes(id)):allowed;block.oreEnabled=selected.length?selected:allowed;}
+        if(block.type==='bomb')block.explosionRadius=clamp(saved.explosionRadius,40,260,block.explosionRadius);
+        if(block.type==='gel')block.healAmount=clamp(saved.healAmount,1,100,block.healAmount);
+        if(block.type==='spring')block.push=clamp(saved.push,.4,2.5,block.push);
+      });
+    });
+    return base;
   };
   const normalize = value => {
     const result = normal(value);
     const sourceWorlds = Array.isArray(value?.worlds) ? value.worlds : [];
+    const legacy = +(value?.version || 0) < 2;
+    const legacyWorld3Assets = +(value?.version || 0) < 4;
+    const legacyWorld4Assets = +(value?.version || 0) < 6;
     result.worlds.forEach(world => {
       const sourceOre = sourceWorlds.find(item => +item.id === +world.id)?.blocks?.find(block => block.id === 'ore');
       const ore = world.blocks.find(block => block.id === 'ore');
       ore.oreTextures = Object.fromEntries(ORE_IDS.map(id => {
         const saved = sourceOre?.oreTextures?.[id] || {};
         return [id, {
-          image: String(saved.image || '').slice(0, 1500000),
+          image: (world.id === 2 && legacy) || (world.id === 3 && legacyWorld3Assets) || (world.id === 4 && legacyWorld4Assets) ? '' : String(saved.image || '').slice(0, 1500000),
           x: clamp(saved.x, -45, 45, 0),
           y: clamp(saved.y, -45, 45, 0),
           scale: clamp(saved.scale, .55, 1.55, 1)
@@ -66,7 +227,7 @@
   const CUSTOM_KEY = `${STORAGE_KEY}_custom`;
   const validCustom = block => block && /^custom_[a-z0-9_]{3,48}$/i.test(block.id) && ['soft','dense','hard','reinforced','ore','special'].includes(block.spawnType);
   const mergeCustom = (base, raw) => { (raw?.worlds || []).forEach(entry => { const world = base.worlds.find(item => item.id === +entry.id); if (!world) return; (entry.hidden || []).forEach(id => { const block = world.blocks.find(item => item.id === id); if (block) block.previewEnabled = false; }); (entry.blocks || []).filter(validCustom).forEach(block => world.blocks.push({ id:block.id, label:String(block.label || 'Новый блок').slice(0,32), type:'custom', spawnType:block.spawnType, sprite:String(block.sprite || 'stone'), image:String(block.image || '').slice(0,1500000), x:clamp(block.x,-45,45,0), y:clamp(block.y,-45,45,0), scale:clamp(block.scale,.55,1.55,1), hp:clamp(block.hp,.1,5,1), previewEnabled:block.previewEnabled !== false })); }); return base; };
-  const restoreLevelSelection = (base, raw) => { (raw?.worlds || []).forEach(entry => { const target = base.worlds.find(item => item.id === +entry.id); if (!target) return; const validIds = new Set([...target.blocks.map(block => block.id), ...(entry.blocks || []).filter(validCustom).map(block => block.id)]); target.levels.forEach((level, index) => { const source = entry.levels?.[index]; if (!source) return; if (Array.isArray(source.enabled)) level.enabled = source.enabled.filter(id => validIds.has(id)); level.weights = { ...level.weights, ...(source.weights || {}), soft: 0 }; }); }); return base; };
+  const restoreLevelSelection = (base, raw) => { const legacyWorld2 = +(raw?.version || 0) < 2, legacyWorld3 = +(raw?.version || 0) < 3, legacyWorld4 = +(raw?.version || 0) < 5; (raw?.worlds || []).forEach(entry => { const target = base.worlds.find(item => item.id === +entry.id); if (!target) return; const validIds = new Set([...target.blocks.map(block => block.id), ...(entry.blocks || []).filter(validCustom).map(block => block.id)]); target.levels.forEach((level, index) => { const source = entry.levels?.[index]; if (!source) return; if (Array.isArray(source.enabled)) level.enabled = normalizeEnabled(target.id, source.enabled, validIds, legacyWorld2,legacyWorld3,legacyWorld4); level.weights = { ...level.weights, ...(source.weights || {}), soft: 0 }; }); }); return base; };
   const fromExport = value => restoreLevelSelection(mergeCustom(normalize(value), value), value);
   const defaults = () => window.SLIME_PUBLISHED_WORLD_CATALOG ? fromExport(window.SLIME_PUBLISHED_WORLD_CATALOG) : builtInDefaults();
   const load = () => { try { const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)); return stored ? restoreLevelSelection(mergeCustom(normalize(stored), JSON.parse(localStorage.getItem(CUSTOM_KEY))), stored) : defaults(); } catch { return defaults(); } };

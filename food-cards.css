@@ -5,7 +5,6 @@
   gap:6px;margin-inline:22px;
 }
 .conveyor-gap{height:176px;min-height:176px;pointer-events:none}
-.belt-track{position:relative;z-index:1;height:190px;min-height:190px}
 
 .food-card{
   --rarity:#8793a1;--rarity-deep:#525d6a;--shadow:#596372;
@@ -228,7 +227,7 @@
   .food-choices{gap:4px;margin-inline:21px}
   .food-card{height:172px;min-height:172px;max-height:172px;padding-inline:4px}
   .food-card.drag-ghost{width:116px;min-width:116px;max-width:116px;height:172px;min-height:172px;max-height:172px}
-  .conveyor-gap{height:172px;min-height:172px}.belt-track{height:186px;min-height:186px}
+  .conveyor-gap{height:172px;min-height:172px}
   .food-model-wrap{height:43px;min-height:43px}.food-model{width:48px;height:48px}.food-name{font-size:8.8px}
   .food-stat-block,.food-ability-copy{height:67px;min-height:67px;grid-template-rows:16px 51px}
   .card-section-title,.food-ability-copy b{height:16px;font-size:6.6px}.food-ability-copy em{font-size:7.6px}
@@ -398,10 +397,11 @@
 .food-stat-block,.food-ability-copy{position:relative;z-index:46}
 .food-ability-copy b{justify-content:center;gap:3px;text-align:center}
 .effect-title-star{
-  display:inline-grid;place-items:center;color:#ffd83d;font-size:10px;line-height:1;
+  display:inline-grid;place-items:center;height:10px;color:#ffd83d;font-size:10px;line-height:10px;
   text-shadow:1px 0 #785400,-1px 0 #785400,0 1px #785400,0 -1px #785400;
   filter:drop-shadow(0 1px 0 rgba(38,47,64,.35));
 }
+.effect-title-label{display:inline-flex;align-items:center;height:10px;line-height:10px;transform:translateY(1px)}
 
 .food-card.common{
   --header-art:linear-gradient(145deg,rgba(255,255,255,.82) 0 28%,transparent 29%),linear-gradient(180deg,#f2f4f6,#cbd2da 72%,#b9c1ca);
@@ -444,9 +444,7 @@
   left:-5px;right:-5px;top:-7px;height:42px;border-radius:12px 12px 9px 9px;
 }
 .food-card .rarity-name>span{top:4px}
-.food-card .rarity-name i,
-.food-card.legendary .rarity-name i,
-.food-card.prismatic .rarity-name i{
+.food-card .rarity-name i,.food-card.legendary .rarity-name i,.food-card.prismatic .rarity-name i{
   left:calc(50% - 10.5px);top:-17.5px;width:21px;height:21px;
 }
 .food-card.common .rarity-name i{
@@ -484,7 +482,10 @@
 .food-card.rare .rarity:before{background:#76cce7}
 .food-card.epic .rarity:before{background:#b36bd7}
 .food-card.legendary .rarity:before{background:#e7ad25}
-.food-card.prismatic .rarity:before{background:#9c79d4;animation:none}
+.food-card.prismatic .rarity:before{
+  background:linear-gradient(90deg,#ff73b8 0%,#ffd761 20%,#61dfa0 40%,#58cfff 60%,#9a70ed 80%,#ff73b8 100%);
+  background-size:220% 100%;animation:prismHeaderFlow 4.8s ease-in-out infinite alternate;
+}
 .food-card.secret .rarity:before{background:#4b0a17}
 .food-model{
   top:-2px;width:61px;height:61px;
@@ -535,6 +536,7 @@
 .food-name{margin-top:4px}
 @keyframes prismFrameDrift{from{background-position:0 0}to{background-position:220% 0}}
 @keyframes prismGemFlowSmooth{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes prismHeaderFlow{from{background-position:0 0}to{background-position:100% 0}}
 @keyframes secretFrameDrift{from{background-position:0 0}to{background-position:260% 0}}
 
 @media(max-width:370px){.food-card .rarity:before{top:-8px;height:50px}.food-model{top:-2px;width:58px;height:58px}.food-name{margin-top:3px}}

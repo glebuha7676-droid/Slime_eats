@@ -1,6 +1,8 @@
 # Local and generated files
 .DS_Store
 tmp/
+archive/
+assets/**/*.zip
 Thumbs.db
 .qa-*.png
 *.log

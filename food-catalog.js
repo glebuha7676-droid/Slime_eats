@@ -94,14 +94,14 @@
       { category:'bounce', mass:7, elasticity:.34 }, { category:'power', mass:11, power:.92 },
       { category:'defense', mass:9, defense:.21 }, { category:'magic', mass:6, coinMultiplier:.45 },
       { category:'power', mass:13, power:.66 }, { category:'defense', mass:15, defense:.12, elasticity:.13 },
-      { category:'power', mass:5, power:.95, ability:14, effect:'smallRevive', effectText:'Один раз спасает с 12% массы' },
+      { category:'power', mass:5, power:.95, ability:14, effect:'smallRevive', effectText:'Один раз спасает с 12% здоровья' },
       { category:'mass', mass:17, defense:.10 }, { category:'power', mass:10, power:.78 }
     ],
     legendary: [
       { category:'mass', mass:20, power:.38, defense:.10, effect:'rainbow', effectText:'+10% ко всем числовым бонусам' },
       { category:'mass', mass:27, effect:'momentum', effectText:'Пробитые блоки почти не гасят разгон' },
       { category:'power', mass:10, power:1.38, ability:14, effect:'dragonBlast', effectText:'Каждый 10-й пробитый блок взрывается' },
-      { category:'defense', mass:12, defense:.25, effect:'freeBounces', effectText:'Первые 3 рикошета не тратят массу' },
+      { category:'defense', mass:12, defense:.25, effect:'freeBounces', effectText:'Первые 3 рикошета не тратят здоровье' },
       { category:'magic', mass:9, elasticity:.35, ability:20, effect:'chargeBoost', effectText:'Импульс заряжается на 25% быстрее' },
       { category:'magic', mass:16, coinMultiplier:.75, ability:15, effect:'oreHeal', effectText:'Руда и монетные блоки лечат слайма' },
       { category:'magic', mass:14, power:.80, elasticity:.24, ability:18, effect:'cooldownCut', effectText:'Перезарядка импульса короче на 1,5 сек' },
@@ -111,11 +111,11 @@
     prismatic: [
       { category:'mass', mass:24, power:.55, defense:.12, effect:'prismFlow', effectText:'+12% ко всем числовым бонусам еды' },
       { category:'magic', mass:12, power:.45, ability:22, effect:'chargeBoost', effectText:'Импульс заряжается на 25% быстрее' },
-      { category:'defense', mass:18, defense:.20, effect:'freeBounces', effectText:'Первые 3 рикошета не тратят массу' }
+      { category:'defense', mass:18, defense:.20, effect:'freeBounces', effectText:'Первые 3 рикошета не тратят здоровье' }
     ],
     secret: [
       { category:'power', mass:22, power:1.15, defense:.12, effect:'voidBreaker', effectText:'Первый непробиваемый твёрдый блок исчезает' },
-      { category:'mass', mass:30, power:.75, defense:.18, effect:'rainbowHeart', effectText:'Один раз восстанавливает 30% массы' }
+      { category:'mass', mass:30, power:.75, defense:.18, effect:'rainbowHeart', effectText:'Один раз восстанавливает 30% здоровья' }
     ]
   };
 
