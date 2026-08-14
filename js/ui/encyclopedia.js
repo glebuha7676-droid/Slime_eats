@@ -19,7 +19,7 @@
     ],
     4: [
       { id: 'geyser', name: 'Вулканический гейзер', sprite: 'geyser', kind: 'ЗАПУСК' },
-      { id: 'seismic', name: 'Вулканический разлом', sprite: 'seismic', kind: 'РАЗЛОМ' },
+      { id: 'meteor', name: 'Метеоритный дождь', sprite: 'meteor', kind: 'МЕТЕОРИТ' },
       { id: 'heal', name: 'Вулканическая аптечка', sprite: 'heal', kind: 'ЛЕЧЕНИЕ' }
     ]
   });
@@ -53,7 +53,7 @@
       },
       4: {
         geyser: 'Затягивает слайма в центр. Нажми в любую сторону, чтобы выстрелить; первые 5 блоков на пути гарантированно ломаются. Через 3 сек направление выберется само.',
-        seismic: `Ослабляет обычные блоки в следующих ${Math.max(1, Math.round(special.seismic?.rows || 3))} рядах примерно на ${Math.round(special.seismic?.damage || 62)}%. Руда, лава и особые блоки не затрагиваются.`,
+        meteor: `Вызывает от ${Math.max(3, Math.round(special.meteor?.minCount || 3))} до ${Math.max(3, Math.round(special.meteor?.maxCount || 4))} последовательных метеоритов ниже слайма. Каждый удар уничтожает квадрат блоков 3×3.`,
         heal: `Ломается при первом касании и восстанавливает до ${heal} здоровья. Лишнее лечение не переносится.`
       }
     };
@@ -108,20 +108,23 @@
   }
 
   function unknownFoodCardMarkup(rarity, helpers) {
+    const secret = rarity === 'secret';
     return `<article class="food-card encyclopedia-food-card encyclopedia-food-unknown ${escapeHtml(rarity)} food-type-stats" aria-label="Неизвестная карточка. ${escapeHtml(helpers.rarityLabels[rarity])}">
       <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${escapeHtml(helpers.rarityLabels[rarity])}</span></span></span>
-      <span class="encyclopedia-unknown-mark" aria-hidden="true">?</span>
+      <span class="encyclopedia-unknown-mark" aria-hidden="true">${secret ? '???' : '?'}</span>
       <span class="encyclopedia-unknown-label">НЕ ОТКРЫТО</span>
     </article>`;
   }
 
   function foodsMarkup(options) {
     const discovered = new Set(options.discoveredFoods);
+    const revealedSecrets = new Set(options.revealedSecretFoods || []);
+    const isKnown = food => food.rarity === 'secret' ? revealedSecrets.has(food.id) : discovered.has(food.id);
     const available = options.foods;
-    const known = available.filter(food => discovered.has(food.id));
+    const known = available.filter(isKnown);
     const rarity = RARITY_ORDER.includes(options.activeRarity) ? options.activeRarity : RARITY_ORDER[0];
     const rarityFoods = available.filter(food => food.rarity === rarity);
-    const rarityKnown = rarityFoods.filter(food => discovered.has(food.id));
+    const rarityKnown = rarityFoods.filter(isKnown);
     const overallPercent = available.length ? Math.round(known.length / available.length * 100) : 0;
     const rarityPercent = rarityFoods.length ? Math.round(rarityKnown.length / rarityFoods.length * 100) : 0;
     return `${rarityTabsMarkup(rarity, available, options.discoveredFoods, options.rarityLabels)}<section class="encyclopedia-page encyclopedia-food-page" data-rarity="${rarity}">
@@ -135,7 +138,7 @@
       </div>
       <section class="encyclopedia-rarity-group ${rarity}">
         <div class="encyclopedia-rarity-head"><i aria-hidden="true"></i><b>${escapeHtml(options.rarityLabels[rarity])}</b><div class="encyclopedia-rarity-progress" style="--rarity-progress:${rarityPercent}%"><u></u></div><span>${rarityKnown.length} из ${rarityFoods.length}</span></div>
-        <div class="encyclopedia-food-viewport"><div class="encyclopedia-food-row">${rarityFoods.map(food => discovered.has(food.id) ? foodCardMarkup(food, options) : unknownFoodCardMarkup(rarity, options)).join('')}</div></div>
+        <div class="encyclopedia-food-viewport"><div class="encyclopedia-food-row">${rarityFoods.map(food => isKnown(food) ? foodCardMarkup(food, options) : unknownFoodCardMarkup(rarity, options)).join('')}</div></div>
       </section>
     </section>`;
   }

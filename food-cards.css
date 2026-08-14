@@ -339,14 +339,24 @@
 .food-card.secret .card-section-title{color:#ff8ca1}.food-card.secret .food-ability-copy b{color:#ff9db0}
 .food-card.secret .food-stat-cell{border-top-color:rgba(255,90,120,.3)}
 .food-card.secret .food-ability-copy em{border-top-color:rgba(255,90,120,.34)}
+.food-card.secret :is(.food-name,.card-section-title,.food-ability-copy b,.food-ability-copy em,.food-stat-cell,.food-stat-cell b){color:#fff!important;text-shadow:0 1px 2px rgba(30,0,8,.72)}
+.food-card.secret .food-ability-copy em{border-top-color:rgba(255,190,202,.34);background:rgba(22,0,7,.12)}
+.food-card.secret .food-stat-cell{border-top-color:rgba(255,190,202,.28)}
 .food-card.secret .food-model-wrap{position:relative}
 .food-card.secret .food-model-wrap:before{content:"";position:absolute;z-index:0;width:50px;height:38px;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,rgba(255,255,255,.22),rgba(255,36,76,.16) 48%,transparent 72%)}
 .food-card.secret .food-model{position:relative;z-index:1}
+.food-card.secret.secret-unknown{cursor:pointer;background:radial-gradient(circle at 50% 44%,rgba(255,53,91,.12),transparent 34%),linear-gradient(180deg,#170309,#24050d 62%,#120206);color:#ff8da2}
+.food-card.secret.secret-unknown .rarity-name i,.encyclopedia-food-unknown.secret .rarity-name i{left:calc(50% - 12px)!important;top:-15px!important;width:24px!important;height:16px!important;border:1px solid #8b001d!important;border-radius:50%!important;background:radial-gradient(ellipse at 50% 115%,#ffb5c3 0 7%,#ff5575 9% 14%,transparent 16%),linear-gradient(180deg,#a41636 0 44%,#5b091c 45% 100%)!important;box-shadow:inset 0 2px 2px rgba(255,174,190,.38),inset 0 -3px 3px rgba(50,0,12,.42),0 0 0 1px #ff4e70,0 0 8px #ff1747!important;filter:none!important;clip-path:none!important;animation:secretSleepingEye 3.4s ease-in-out infinite!important}
+.food-card.secret.secret-unknown .rarity-name i:before,.encyclopedia-food-unknown.secret .rarity-name i:before{content:""!important;position:absolute!important;display:block!important;left:3px!important;right:3px!important;top:4px!important;height:5px!important;border:0!important;border-bottom:2px solid #ffb0bf!important;border-radius:0 0 50% 50%!important;background:linear-gradient(180deg,rgba(255,82,112,.08),rgba(60,2,17,.38))!important;box-shadow:0 2px 2px -2px #ff3158!important}.food-card.secret.secret-unknown .rarity-name i:after,.encyclopedia-food-unknown.secret .rarity-name i:after{display:none!important}
+.secret-unknown-center{height:91px!important;display:grid!important;place-items:center;color:#ff496a;font-size:42px;font-weight:1000;letter-spacing:4px;line-height:1;text-shadow:0 0 8px rgba(255,24,67,.88),0 3px 0 #560011;animation:secretUnknownBreath 2.4s ease-in-out infinite}
+.secret-unknown-copy{display:grid!important;place-items:center;height:31px!important;border-top:1px solid rgba(255,85,116,.25);color:#ffdbe2;font-size:7px;font-weight:1000;letter-spacing:1.35px;text-shadow:0 0 6px rgba(255,49,88,.8)}
 .food-info.secret{--popover-bg:#25070e;--popover-border:#ff3158;--popover-text:#fff;box-shadow:0 4px 0 #350009,0 0 10px rgba(255,23,71,.3)}
 .food-info.secret .food-info-effect,.food-info.secret .food-info-stat{border-color:rgba(255,79,112,.38)}
 
 @keyframes rarityHeaderPrism{to{background-position:220% 0}}
 @keyframes secretRedNeonWave{to{background-position:260% 0}}
+@keyframes secretSleepingEye{0%,100%{transform:scaleX(.86) translateY(0);opacity:.72}50%{transform:scaleX(1) translateY(1px);opacity:1}}
+@keyframes secretUnknownBreath{0%,100%{transform:scale(.96);filter:brightness(.82)}50%{transform:scale(1.04);filter:brightness(1.18)}}
 
 /* Final crest alignment and conveyor stacking. */
 .food-choices{z-index:24}

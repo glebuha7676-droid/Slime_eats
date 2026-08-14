@@ -3,6 +3,118 @@
 
   const defaultColors = window.SlimeGameConfig?.SKINS?.[0]?.colors || ['#e9ff9c', '#67d348', '#2fa345'];
 
+  function traceSlimeBody(targetCtx, skinId, radius, tipX) {
+    targetCtx.beginPath();
+    if (skinId === 'dumpling') {
+      targetCtx.moveTo(0, -radius * .68);
+      targetCtx.bezierCurveTo(radius * .58, -radius * .67, radius * .9, -radius * .33, radius * .92, radius * .15);
+      targetCtx.bezierCurveTo(radius * .91, radius * .65, radius * .55, radius * .83, 0, radius * .84);
+      targetCtx.bezierCurveTo(-radius * .55, radius * .83, -radius * .91, radius * .65, -radius * .92, radius * .15);
+      targetCtx.bezierCurveTo(-radius * .9, -radius * .33, -radius * .58, -radius * .67, 0, -radius * .68);
+    } else if (skinId === 'ball') {
+      targetCtx.arc(0, 0, radius * .91, 0, Math.PI * 2);
+    } else if (skinId === 'cat') {
+      targetCtx.moveTo(0, -radius * .83);
+      targetCtx.bezierCurveTo(radius * .53, -radius * .84, radius * .91, -radius * .39, radius * .91, radius * .16);
+      targetCtx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
+      targetCtx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
+      targetCtx.bezierCurveTo(-radius * .91, -radius * .39, -radius * .53, -radius * .84, 0, -radius * .83);
+    } else if (skinId === 'water') {
+      targetCtx.moveTo(tipX, -radius * 1.08);
+      targetCtx.bezierCurveTo(radius * .12, -radius * .87, radius * .79, -radius * .57, radius * .91, radius * .13);
+      targetCtx.bezierCurveTo(radius * .95, radius * .64, radius * .5, radius * .94, 0, radius * .95);
+      targetCtx.bezierCurveTo(-radius * .5, radius * .94, -radius * .95, radius * .64, -radius * .91, radius * .13);
+      targetCtx.bezierCurveTo(-radius * .79, -radius * .57, -radius * .12, -radius * .87, tipX, -radius * 1.08);
+    } else {
+      targetCtx.moveTo(tipX, -radius);
+      targetCtx.bezierCurveTo(tipX + radius * .15, -radius * .99, radius * .16, -radius * .86, radius * .26, -radius * .79);
+      targetCtx.bezierCurveTo(radius * .67, -radius * .68, radius * .93, -radius * .31, radius * .91, radius * .16);
+      targetCtx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
+      targetCtx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
+      targetCtx.bezierCurveTo(-radius * .93, -radius * .31, -radius * .67, -radius * .68, -radius * .26, -radius * .79);
+      targetCtx.bezierCurveTo(-radius * .16, -radius * .86, tipX - radius * .15, -radius * .99, tipX, -radius);
+    }
+    targetCtx.closePath();
+  }
+
+  function drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp) {
+    if (aura !== 'prismatic' && aura !== 'secret') return;
+    targetCtx.save();
+    traceSlimeBody(targetCtx, skinId, radius, tipX);
+    targetCtx.clip();
+
+    if (aura === 'prismatic') {
+      const drift = timestamp / 950;
+      const dx = Math.cos(drift) * radius;
+      const dy = Math.sin(drift) * radius * .55;
+      const rainbow = targetCtx.createLinearGradient(-dx, -dy, dx, dy);
+      rainbow.addColorStop(0, '#ff4f91');
+      rainbow.addColorStop(.18, '#ff9e45');
+      rainbow.addColorStop(.36, '#ffe750');
+      rainbow.addColorStop(.54, '#48df8a');
+      rainbow.addColorStop(.72, '#4bc8ff');
+      rainbow.addColorStop(.88, '#8d75ff');
+      rainbow.addColorStop(1, '#ed65da');
+      targetCtx.globalAlpha = .46;
+      targetCtx.fillStyle = rainbow;
+      targetCtx.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4);
+
+      const sheenX = ((timestamp / 680) % 1) * radius * 3 - radius * 1.5;
+      const sheen = targetCtx.createLinearGradient(sheenX - radius * .32, 0, sheenX + radius * .32, 0);
+      sheen.addColorStop(0, 'rgba(255,255,255,0)');
+      sheen.addColorStop(.5, 'rgba(255,255,255,.62)');
+      sheen.addColorStop(1, 'rgba(255,255,255,0)');
+      targetCtx.globalAlpha = .46;
+      targetCtx.fillStyle = sheen;
+      targetCtx.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4);
+    } else {
+      const pulse = .5 + Math.sin(timestamp / 105) * .5;
+      const curse = targetCtx.createLinearGradient(-radius * .72, -radius, radius * .62, radius);
+      curse.addColorStop(0, `rgba(255,104,151,${.7 + pulse * .08})`);
+      curse.addColorStop(.48, `rgba(155,29,103,${.75 + pulse * .08})`);
+      curse.addColorStop(1, `rgba(61,11,81,${.82 + pulse * .08})`);
+      targetCtx.fillStyle = curse;
+      targetCtx.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4);
+
+      for (let index = 0; index < 2; index += 1) {
+        const angle = timestamp / (280 + index * 70) + index * Math.PI;
+        const omenX = Math.cos(angle) * radius * .34;
+        const omenY = Math.sin(angle * .82) * radius * .28;
+        const omen = targetCtx.createRadialGradient(omenX, omenY, 0, omenX, omenY, radius * (.48 + index * .08));
+        omen.addColorStop(0, index ? 'rgba(255,228,235,.48)' : 'rgba(255,91,143,.58)');
+        omen.addColorStop(.45, 'rgba(255,44,112,.25)');
+        omen.addColorStop(1, 'rgba(117,8,53,0)');
+        targetCtx.fillStyle = omen;
+        targetCtx.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4);
+      }
+    }
+    targetCtx.restore();
+
+    targetCtx.save();
+    traceSlimeBody(targetCtx, skinId, radius, tipX);
+    if (aura === 'prismatic') {
+      const outline = targetCtx.createLinearGradient(-radius, 0, radius, 0);
+      outline.addColorStop(0, '#ff4f91');
+      outline.addColorStop(.25, '#ffd84f');
+      outline.addColorStop(.5, '#4bdf91');
+      outline.addColorStop(.75, '#4fc8ff');
+      outline.addColorStop(1, '#b76fff');
+      targetCtx.strokeStyle = outline;
+      targetCtx.globalAlpha = .82;
+      targetCtx.shadowColor = '#fff';
+      targetCtx.shadowBlur = 5;
+    } else {
+      const pulse = .5 + Math.sin(timestamp / 105) * .5;
+      targetCtx.strokeStyle = `rgba(255,86,137,${.76 + pulse * .2})`;
+      targetCtx.globalAlpha = 1;
+      targetCtx.shadowColor = '#8c145c';
+      targetCtx.shadowBlur = 7 + pulse * 4;
+    }
+    targetCtx.lineWidth = Math.max(2.4, radius * .05);
+    targetCtx.stroke();
+    targetCtx.restore();
+  }
+
   function drawSlimeAvatar(targetCtx, {
     x, y, radius, emotion = 'focused', colors = defaultColors,
     skin = 'classic',
@@ -45,41 +157,46 @@
           targetCtx.beginPath(); targetCtx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner); targetCtx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer); targetCtx.stroke();
         }
       } else if (aura === 'prismatic') {
-        const rainbow = ['#ff6fae', '#ffb84d', '#ffe45c', '#59dc86', '#55c8ff', '#9a7cff'];
-        targetCtx.globalAlpha = .86;
+        const glow = targetCtx.createRadialGradient(0, 0, radius * .68, 0, 0, radius + 13);
+        glow.addColorStop(0, 'rgba(255,255,255,.12)');
+        glow.addColorStop(.66, 'rgba(105,217,255,.18)');
+        glow.addColorStop(1, 'rgba(173,99,255,0)');
+        targetCtx.fillStyle = glow;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 13, 0, Math.PI * 2); targetCtx.fill();
+        const rainbow = ['#ff5f9f', '#ffb24e', '#ffe45a', '#4ddd8a', '#4fcaff', '#a875ff'];
         rainbow.forEach((color, index) => {
-          const phase = timestamp / 520 + index * 1.17;
-          const px = Math.sin(phase) * (radius + 14);
-          const py = Math.cos(phase * .83) * (radius * .72);
-          const size = 3 + (index % 2) * 1.5;
+          const angle = index / rainbow.length * Math.PI * 2 + timestamp / 1500;
+          const twinkle = .55 + Math.sin(timestamp / 170 + index * 1.7) * .45;
+          const px = Math.cos(angle) * (radius + 7);
+          const py = Math.sin(angle) * (radius * .8 + 5);
+          const size = 1.8 + twinkle * 1.8;
+          targetCtx.globalAlpha = .58 + twinkle * .32;
           targetCtx.fillStyle = color;
           targetCtx.beginPath(); targetCtx.arc(px, py, size, 0, Math.PI * 2); targetCtx.fill();
           targetCtx.fillStyle = '#fff';
-          targetCtx.beginPath(); targetCtx.arc(px - 1, py - 1, Math.max(1, size * .3), 0, Math.PI * 2); targetCtx.fill();
+          targetCtx.beginPath(); targetCtx.arc(px - .7, py - .7, Math.max(.7, size * .25), 0, Math.PI * 2); targetCtx.fill();
         });
       } else if (aura === 'secret') {
-        const flamePulse = 1 + Math.sin(timestamp / 115) * .035;
-        targetCtx.scale(flamePulse, flamePulse);
-        const flame = targetCtx.createLinearGradient(0, radius * .7, 0, -radius * 1.25);
-        flame.addColorStop(0, 'rgba(92,31,168,.72)');
-        flame.addColorStop(.55, 'rgba(176,62,255,.88)');
-        flame.addColorStop(1, 'rgba(104,238,255,.74)');
-        targetCtx.fillStyle = flame;
-        targetCtx.beginPath();
-        targetCtx.moveTo(-radius * .78, radius * .62);
-        targetCtx.bezierCurveTo(-radius * .86, radius * .05, -radius * .55, -radius * .25, -radius * .42, -radius * .58);
-        targetCtx.bezierCurveTo(-radius * .34, -radius * .3, -radius * .13, -radius * .72, -radius * .05, -radius * 1.22);
-        targetCtx.bezierCurveTo(radius * .12, -radius * .88, radius * .14, -radius * .55, radius * .25, -radius * .38);
-        targetCtx.bezierCurveTo(radius * .39, -radius * .78, radius * .68, -radius * .5, radius * .57, -radius * .12);
-        targetCtx.bezierCurveTo(radius * .87, radius * .12, radius * .78, radius * .48, radius * .7, radius * .62);
-        targetCtx.closePath(); targetCtx.fill();
-        targetCtx.globalAlpha = .72;
-        targetCtx.fillStyle = '#d9a2ff';
-        targetCtx.beginPath();
-        targetCtx.moveTo(-radius * .34, radius * .48);
-        targetCtx.bezierCurveTo(-radius * .42, 0, -radius * .12, -radius * .28, 0, -radius * .72);
-        targetCtx.bezierCurveTo(radius * .08, -radius * .36, radius * .4, -.05 * radius, radius * .32, radius * .48);
-        targetCtx.closePath(); targetCtx.fill();
+        const pulse = .5 + Math.sin(timestamp / 125) * .5;
+        const glow = targetCtx.createRadialGradient(0, 0, radius * .7, 0, 0, radius + 14);
+        glow.addColorStop(0, `rgba(255,92,143,${.15 + pulse * .08})`);
+        glow.addColorStop(.7, `rgba(112,17,91,${.3 + pulse * .1})`);
+        glow.addColorStop(1, 'rgba(42,5,54,0)');
+        targetCtx.fillStyle = glow;
+        targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 14, 0, Math.PI * 2); targetCtx.fill();
+        targetCtx.shadowColor = '#c0185a';
+        targetCtx.shadowBlur = 7;
+        for (let index = 0; index < 6; index += 1) {
+          const phase = (timestamp / 820 + index * .17) % 1;
+          const angle = index / 6 * Math.PI * 2 + phase * .72;
+          const distance = radius + 15 - phase * 22;
+          const px = Math.cos(angle) * distance;
+          const py = Math.sin(angle) * distance * .82;
+          const size = 2.3 + (1 - phase) * 2.7;
+          targetCtx.globalAlpha = Math.sin(phase * Math.PI) * .82;
+          targetCtx.fillStyle = index % 3 === 0 ? '#ffe2ec' : index % 2 ? '#ff5b9f' : '#bd38a2';
+          targetCtx.beginPath(); targetCtx.arc(px, py, size, 0, Math.PI * 2); targetCtx.fill();
+        }
       }
       targetCtx.restore();
     }
@@ -126,39 +243,11 @@
     }
 
     targetCtx.fillStyle = gradient;
-    targetCtx.beginPath();
-    if (skinId === 'dumpling') {
-      targetCtx.moveTo(0, -radius * .68);
-      targetCtx.bezierCurveTo(radius * .58, -radius * .67, radius * .9, -radius * .33, radius * .92, radius * .15);
-      targetCtx.bezierCurveTo(radius * .91, radius * .65, radius * .55, radius * .83, 0, radius * .84);
-      targetCtx.bezierCurveTo(-radius * .55, radius * .83, -radius * .91, radius * .65, -radius * .92, radius * .15);
-      targetCtx.bezierCurveTo(-radius * .9, -radius * .33, -radius * .58, -radius * .67, 0, -radius * .68);
-    } else if (skinId === 'ball') {
-      targetCtx.arc(0, 0, radius * .91, 0, Math.PI * 2);
-    } else if (skinId === 'cat') {
-      targetCtx.moveTo(0, -radius * .83);
-      targetCtx.bezierCurveTo(radius * .53, -radius * .84, radius * .91, -radius * .39, radius * .91, radius * .16);
-      targetCtx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
-      targetCtx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
-      targetCtx.bezierCurveTo(-radius * .91, -radius * .39, -radius * .53, -radius * .84, 0, -radius * .83);
-    } else if (skinId === 'water') {
-      targetCtx.moveTo(tipX, -radius * 1.08);
-      targetCtx.bezierCurveTo(radius * .12, -radius * .87, radius * .79, -radius * .57, radius * .91, radius * .13);
-      targetCtx.bezierCurveTo(radius * .95, radius * .64, radius * .5, radius * .94, 0, radius * .95);
-      targetCtx.bezierCurveTo(-radius * .5, radius * .94, -radius * .95, radius * .64, -radius * .91, radius * .13);
-      targetCtx.bezierCurveTo(-radius * .79, -radius * .57, -radius * .12, -radius * .87, tipX, -radius * 1.08);
-    } else {
-      targetCtx.moveTo(tipX, -radius);
-      targetCtx.bezierCurveTo(tipX + radius * .15, -radius * .99, radius * .16, -radius * .86, radius * .26, -radius * .79);
-      targetCtx.bezierCurveTo(radius * .67, -radius * .68, radius * .93, -radius * .31, radius * .91, radius * .16);
-      targetCtx.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
-      targetCtx.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .16);
-      targetCtx.bezierCurveTo(-radius * .93, -radius * .31, -radius * .67, -radius * .68, -radius * .26, -radius * .79);
-      targetCtx.bezierCurveTo(-radius * .16, -radius * .86, tipX - radius * .15, -radius * .99, tipX, -radius);
-    }
-    targetCtx.closePath();
+    traceSlimeBody(targetCtx, skinId, radius, tipX);
     targetCtx.fill();
     targetCtx.stroke();
+
+    drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp);
 
     targetCtx.globalAlpha = alpha * .25;
     targetCtx.fillStyle = '#fff';

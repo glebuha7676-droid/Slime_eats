@@ -61,6 +61,7 @@
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const els = {
+    app: $('#app'),
     coinsLabel: $('#coinsLabel'), runCoinsGain: $('#runCoinsGain'), worldLabel: $('#worldLabel'), worldIcon: $('#worldIcon'),
     worldEyebrow: $('#worldEyebrow'), levelPassedBadge: $('#levelPassedBadge'), worldProgressText: $('#worldProgressText'),
     worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
@@ -69,25 +70,34 @@
     foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), massLabel: $('#massLabel'), powerLabel: $('#powerLabel'),
     defenseLabel: $('#defenseLabel'), bounceLabel: $('#bounceLabel'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
     massCompare: $('#massCompare'), powerCompare: $('#powerCompare'), defenseCompare: $('#defenseCompare'), bounceCompare: $('#bounceCompare'),
-    startDropLabel: $('#startDropLabel'), adminRestartBtn: $('#adminRestartBtn'),
+    startDropLabel: $('#startDropLabel'), adminMenuBtn: $('#adminMenuBtn'), adminToolsOverlay: $('#adminToolsOverlay'),
+    closeAdminToolsBtn: $('#closeAdminToolsBtn'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
     adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'), adminResetProgressBtn: $('#adminResetProgressBtn'),
     conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
     foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'),
     stomachQuickSlots: $('#stomachQuickSlots'),
-    startDropBtn: $('#startDropBtn'),
+    playSetupCard: $('#playSetupCard'), homeWorldSelect: $('#homeWorldSelect'), homeWorldPickerIcon: $('#homeWorldPickerIcon'),
+    homeWorldPickerEyebrow: $('#homeWorldPickerEyebrow'), homeWorldPickerName: $('#homeWorldPickerName'), homeWorldBest: $('#homeWorldBest'),
+    campaignModeBtn: $('#campaignModeBtn'), endlessModeBtn: $('#endlessModeBtn'),
+    campaignModePanel: $('#campaignModePanel'), endlessModePanel: $('#endlessModePanel'), endlessBestScore: $('#endlessBestScore'),
+    endlessBestDepth: $('#endlessBestDepth'), startDropBtn: $('#startDropBtn'), startEndlessBtn: $('#startEndlessBtn'),
     depthLabel: $('#depthLabel'), runMassLabel: $('#runMassLabel'), runHealthBar: $('#runHealthBar'),
     routeProgress: $('#routeProgress'), routeBestMarker: $('#routeBestMarker'), routeBestLabel: $('#routeBestLabel'),
     routeSlimeMarker: $('#routeSlimeMarker'), routeTargetLabel: $('#routeTargetLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'),
     steerLeftBtn: $('#steerLeftBtn'), steerRightBtn: $('#steerRightBtn'),
     abilityBtn: $('#abilityBtn'), abilityPercent: $('#abilityPercent'), abilityText: $('#abilityText'), endRunBtn: $('#endRunBtn'),
+    runMenuOverlay: $('#runMenuOverlay'), resumeRunBtn: $('#resumeRunBtn'), restartRunBtn: $('#restartRunBtn'),
+    finishRunBtn: $('#finishRunBtn'), toggleRunSoundBtn: $('#toggleRunSoundBtn'), runSoundIcon: $('#runSoundIcon'), runSoundLabel: $('#runSoundLabel'),
     panelOverlay: $('#panelOverlay'), panelTitle: $('#panelTitle'), panelContent: $('#panelContent'), closePanelBtn: $('#closePanelBtn'),
+    secretDiscoveryOverlay: $('#secretDiscoveryOverlay'), secretDiscoveryEye: $('#secretDiscoveryEye'), secretDiscoveryCard: $('#secretDiscoveryCard'),
     resultOverlay: $('#resultOverlay'), resultBadge: $('#resultBadge'), resultTitle: $('#resultTitle'), resultText: $('#resultText'),
     resultWorldIcon: $('#resultWorldIcon'), resultWorldName: $('#resultWorldName'), resultDepth: $('#resultDepth'), resultCoins: $('#resultCoins'),
     resultMultiplierLabel: $('#resultMultiplierLabel'), resultMultiplierTrack: $('#resultMultiplierTrack'),
     resultMultiplierNeedle: $('#resultMultiplierNeedle'), resultMultiplierHint: $('#resultMultiplierHint'),
     resultMultiplierBtn: $('#resultMultiplierBtn'), continueBtn: $('#continueBtn'),
+    gameCompleteOverlay: $('#gameCompleteOverlay'), gameCompleteHomeBtn: $('#gameCompleteHomeBtn'), playEndlessBtn: $('#playEndlessBtn'),
     adOverlay: $('#adOverlay'), adReason: $('#adReason'), adRewardBtn: $('#adRewardBtn'), adCancelBtn: $('#adCancelBtn'),
     toast: $('#toast')
   };
@@ -100,9 +110,15 @@
   let lastFocusedElement = null;
   let menuEmotionTimer = null;
   let menuGazeTimer = null;
+  let secretSequenceToken = 0;
+  let secretSequenceActive = false;
+  let secretRevealCanClose = false;
+  let secretRevealResolver = null;
   let foodFlyerToken = 0;
   let slimeInteractionTimer = null;
   let resultCoinAnimationId = 0;
+  let resultRevealToken = 0;
+  let autoResumeRunAfterVisibility = false;
   const RESULT_MULTIPLIERS = [.5, 1, 1.5, 2, 1.5, 1, .5];
   const RESULT_SWEEP_MS = 900;
   const TRAILS = Object.freeze([
@@ -213,16 +229,25 @@
     const sourceSchema = Math.max(0, Math.round(+value.schemaVersion || 0));
     const sourceStomachLevel = Math.round(+value.stomachLevel || (sourceSchema >= 10 ? 2 : 1));
     const merged = { ...structuredClone(defaultSave), ...value };
-    merged.schemaVersion = 10;
+    merged.schemaVersion = 13;
     merged.coins = Math.max(0, Number.isFinite(+merged.coins) ? +merged.coins : defaultSave.coins);
     merged.world = clamp(Math.round(+merged.world || 1), 1, WORLDS.length);
     merged.stomachLevel = clamp(sourceSchema < 10 ? sourceStomachLevel + 1 : sourceStomachLevel, 2, UPGRADE_DATA.stomachLevel.max);
     merged.conveyorLevel = clamp(Math.round(+merged.conveyorLevel || 1), 1, UPGRADE_DATA.conveyorLevel.max);
     merged.rerollLevel = clamp(Math.round(+merged.rerollLevel || 0), 0, UPGRADE_DATA.rerollLevel.max);
     merged.bestDepth = Math.max(0, +merged.bestDepth || 0);
+    merged.endlessBestScore = { ...defaultSave.endlessBestScore };
+    merged.endlessBestDepth = { ...defaultSave.endlessBestDepth };
+    for (const world of WORLDS) {
+      merged.endlessBestScore[world.id] = Math.max(0, Math.floor(+(value.endlessBestScore?.[world.id] || 0)));
+      merged.endlessBestDepth[world.id] = Math.max(0, Math.floor(+(value.endlessBestDepth?.[world.id] || 0)));
+    }
+    merged.homeMode = value.homeMode === 'endless' ? 'endless' : 'campaign';
     merged.totalRuns = Math.max(0, Math.round(+merged.totalRuns || 0));
     merged.worldBest = { ...defaultSave.worldBest };
     for (const world of WORLDS) merged.worldBest[world.id] = clamp(+(value.worldBest?.[world.id] || 0), 0, world.targetDepth);
+    const finalWorld = WORLDS[WORLDS.length - 1];
+    merged.gameCompleted = Boolean(value.gameCompleted || (finalWorld && merged.worldBest[finalWorld.id] >= finalWorld.targetDepth));
     merged.lastRunDepth = {};
     for (const world of WORLDS) {
       for (let level = 1; level <= LEVEL_COUNT; level += 1) {
@@ -255,6 +280,9 @@
     if (!TRAILS.some(trail => trail.id === merged.selectedTrail) || !merged.unlockedTrails.includes(merged.selectedTrail)) merged.selectedTrail = 'none';
     merged.discoveredFoods = Array.isArray(value.discoveredFoods)
       ? [...new Set(value.discoveredFoods.filter(id => FOODS.some(food => food.id === id)))]
+      : [];
+    merged.revealedSecretFoods = Array.isArray(value.revealedSecretFoods)
+      ? [...new Set(value.revealedSecretFoods.filter(id => FOODS.some(food => food.id === id && food.rarity === 'secret')))]
       : [];
     merged.foodPity = { ...defaultSave.foodPity };
     for (const key of Object.keys(merged.foodPity)) merged.foodPity[key] = clamp(Math.round(+(value.foodPity?.[key] || 0)), 0, 10000);
@@ -302,7 +330,9 @@
       stats: {}, effects: {}, combo: null,
       rerollPending: false
     };
-    discoverFoods([...foods, ...offer]);
+    const consumedSecrets = foods.filter(food => food.rarity === 'secret').map(food => food.id);
+    if (consumedSecrets.length) save.revealedSecretFoods = [...new Set([...(save.revealedSecretFoods || []), ...consumedSecrets])];
+    discoverFoods([...foods, ...offer.filter(food => food && food.rarity !== 'secret')]);
     return true;
   }
 
@@ -406,6 +436,73 @@
   }
 
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+
+  function formatCompactNumber(value) {
+    const number = Number.isFinite(+value) ? +value : 0;
+    const absolute = Math.abs(number);
+    const unit = absolute >= 1e9 ? [1e9, 'B'] : absolute >= 1e6 ? [1e6, 'M'] : absolute >= 1e3 ? [1e3, 'K'] : null;
+    if (!unit) return Math.floor(number).toLocaleString('ru-RU');
+    const scaled = number / unit[0];
+    const digits = Math.abs(scaled) >= 100 ? 0 : Math.abs(scaled) >= 10 ? 1 : 2;
+    const compact = scaled.toFixed(digits).replace(/\.0+$|(?<=\.[0-9])0$/u, '').replace('.', ',');
+    return `${compact}${unit[1]}`;
+  }
+
+  let mobilePerformanceMode = matchMedia('(pointer:coarse)').matches || window.innerWidth <= 540;
+  const lowPowerPerformanceMode = (navigator.deviceMemory && navigator.deviceMemory <= 4)
+    || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+
+  function isMobileDevice() { return mobilePerformanceMode; }
+
+  function isLowPowerDevice() { return lowPowerPerformanceMode; }
+
+  function effectDensity() {
+    return isLowPowerDevice() ? .58 : isMobileDevice() ? .74 : 1;
+  }
+
+  function scaledEffectCount(count, minimum = 1) {
+    return Math.min(count, Math.max(minimum, Math.round(count * effectDensity())));
+  }
+
+  function syncPerformanceMode() {
+    mobilePerformanceMode = matchMedia('(pointer:coarse)').matches || window.innerWidth <= 540;
+    document.documentElement.classList.toggle('mobile-lite', isMobileDevice());
+    document.documentElement.classList.toggle('low-power-device', isLowPowerDevice());
+  }
+
+  function visibleInteractionLayer() {
+    const viewer = document.querySelector('.encyclopedia-card-viewer');
+    if (viewer) return viewer;
+    return [els.secretDiscoveryOverlay, els.adOverlay, els.gameCompleteOverlay, els.runMenuOverlay, els.resultOverlay, els.adminToolsOverlay, els.panelOverlay]
+      .find(layer => layer && !layer.classList.contains('hidden')) || null;
+  }
+
+  function syncInteractionLayers() {
+    const activeLayer = visibleInteractionLayer();
+    const screen = document.body.dataset.screen || 'home';
+    const modalOpen = Boolean(activeLayer || adInFlight);
+    els.app.inert = modalOpen;
+    els.homeScreen.inert = modalOpen || screen !== 'home';
+    els.dropScreen.inert = modalOpen || screen !== 'drop';
+    [els.panelOverlay, els.adminToolsOverlay, els.secretDiscoveryOverlay, els.runMenuOverlay, els.resultOverlay, els.gameCompleteOverlay, els.adOverlay].forEach(layer => {
+      if (layer) layer.inert = layer !== activeLayer;
+    });
+    document.querySelectorAll('.encyclopedia-card-viewer').forEach(layer => { layer.inert = layer !== activeLayer; });
+    document.body.classList.toggle('ui-modal-open', modalOpen);
+    if (modalOpen && menuSlimeAnimationId) {
+      cancelAnimationFrame(menuSlimeAnimationId);
+      menuSlimeAnimationId = 0;
+    } else if (!modalOpen && screen === 'home') startMenuSlimeLoop();
+  }
+
+  function initializeInteractionLayers() {
+    const observer = new MutationObserver(syncInteractionLayers);
+    [els.panelOverlay, els.adminToolsOverlay, els.secretDiscoveryOverlay, els.runMenuOverlay, els.resultOverlay, els.gameCompleteOverlay, els.adOverlay].forEach(layer => {
+      if (layer) observer.observe(layer, { attributes: true, attributeFilter: ['class'] });
+    });
+    observer.observe(document.body, { childList: true });
+    syncInteractionLayers();
+  }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function rand(min, max) { return min + Math.random() * (max - min); }
   function round1(value) { return Math.round(value * 10) / 10; }
@@ -450,6 +547,13 @@
   }
   function yesterdayKey() { const d = new Date(); d.setDate(d.getDate() - 1); return todayKey(d); }
   function currentWorld() { return WORLDS[clamp(save.world - 1, 0, WORLDS.length - 1)]; }
+  function worldIsUnlocked(worldId) {
+    const world = WORLDS.find(item => item.id === Number(worldId));
+    if (!world) return false;
+    if (world.id === 1 || world.id <= save.world) return true;
+    const previous = WORLDS.find(item => item.id === world.id - 1);
+    return Boolean(previous && (save.worldBest?.[previous.id] || 0) >= previous.targetDepth);
+  }
   function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 
   function showToast(message) {
@@ -463,13 +567,120 @@
     if (!els.rarityBursts) return;
     const titles = {
       common: 'НЯМ!', rare: 'ОГО, РЕДКОЕ!', epic: 'ЭПИЧНО!', legendary: 'ЛЕГЕНДАРНО!',
-      prismatic: 'РАДУЖНЫЙ ВКУС!', secret: 'БОЖЕСТВЕННО!'
+      prismatic: 'РАДУЖНЫЙ ВКУС!', secret: 'СЕКРЕТ РАСКРЫТ!'
     };
     const burst = document.createElement('span');
     burst.className = `rarity-burst ${food.rarity}`;
     burst.textContent = titles[food.rarity] || 'ВКУСНО!';
     els.rarityBursts.replaceChildren(burst);
-    setTimeout(() => burst.remove(), food.rarity === 'secret' ? 1250 : food.rarity === 'prismatic' ? 1900 : 1500);
+    setTimeout(() => burst.remove(), food.rarity === 'secret' ? 2350 : food.rarity === 'prismatic' ? 1900 : 1500);
+  }
+
+  const waitForSecretPhase = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+  function escapeMarkup(value) {
+    return String(value ?? '').replace(/[&<>"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character]));
+  }
+
+  function secretCardMarkup(food) {
+    const cardType = foodCardType(food);
+    const cardBody = cardType === 'ability'
+      ? `<span class="food-ability-copy"><b><span class="effect-title-star" aria-hidden="true">★</span><span class="effect-title-label">ЭФФЕКТ</span></b><em>${escapeMarkup(food.effectText)}</em></span>`
+      : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid count-${Math.min(foodStatItems(food).length, 4)}">${foodStatGridMarkup(food)}</span></span>`;
+    return `<article class="food-card secret secret-revealed food-type-${cardType}"><span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>СЕКРЕТНОЕ</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span><span class="food-name">${escapeMarkup(food.name)}</span>${cardBody}</article>`;
+  }
+
+  function waitForSecretCardDismiss(food, token) {
+    revealSecretFood(food);
+    persist({ captureDraft: false });
+    els.secretDiscoveryCard.innerHTML = secretCardMarkup(food);
+    els.secretDiscoveryOverlay.classList.add('show-card');
+    els.secretDiscoveryCard.focus({ preventScroll: true });
+    secretRevealCanClose = false;
+    setTimeout(() => {
+      if (token === secretSequenceToken) secretRevealCanClose = true;
+    }, 480);
+    return new Promise(resolve => { secretRevealResolver = resolve; });
+  }
+
+  function dismissSecretDiscovery() {
+    if (!secretSequenceActive || !secretRevealCanClose || !secretRevealResolver) return false;
+    secretRevealCanClose = false;
+    const resolve = secretRevealResolver;
+    secretRevealResolver = null;
+    els.secretDiscoveryOverlay.classList.add('card-closing');
+    sound('tap');
+    feedback(10);
+    setTimeout(resolve, 360);
+    return true;
+  }
+
+  function cancelSecretDiscovery() {
+    secretSequenceToken += 1;
+    secretSequenceActive = false;
+    secretRevealCanClose = false;
+    const resolve = secretRevealResolver;
+    secretRevealResolver = null;
+    resolve?.();
+    document.body.classList.remove('secret-discovery-active');
+    els.secretDiscoveryOverlay?.classList.add('hidden');
+    if (els.secretDiscoveryOverlay) els.secretDiscoveryOverlay.className = 'secret-discovery-overlay hidden';
+    if (els.secretDiscoveryCard) els.secretDiscoveryCard.replaceChildren();
+    clearMenuMealReaction();
+    syncInteractionLayers();
+  }
+
+  async function playSecretDiscovery(food, offerIndex) {
+    if (secretSequenceActive) return;
+    secretSequenceActive = true;
+    const token = ++secretSequenceToken;
+    clearMenuMealReaction();
+    hideFoodInfo();
+    clearMenuSlimeInteraction();
+    document.body.classList.add('secret-discovery-active');
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-birth';
+    syncInteractionLayers();
+    sound('tap');
+    feedback(9);
+    await waitForSecretPhase(1050);
+    if (token !== secretSequenceToken) return;
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-open';
+    sound('epic');
+    feedback([15, 35, 24]);
+    await waitForSecretPhase(700);
+    if (token !== secretSequenceToken) return;
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-watch';
+    await waitForSecretPhase(1650);
+    if (token !== secretSequenceToken) return;
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-collapse';
+    feedback([10, 18, 12, 28]);
+    await waitForSecretPhase(1050);
+    if (token !== secretSequenceToken) return;
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-card';
+    await waitForSecretCardDismiss(food, token);
+    if (token !== secretSequenceToken) return;
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay hidden';
+    els.secretDiscoveryCard.replaceChildren();
+    document.body.classList.remove('secret-discovery-active');
+    clearMenuMealReaction();
+    renderDraft();
+    persist();
+    secretSequenceActive = false;
+    syncInteractionLayers();
+  }
+
+  function forceSecretDiscoveryForDebug(foodId = '', { play = false } = {}) {
+    const food = FOODS.find(item => item.rarity === 'secret' && (!foodId || item.id === foodId));
+    if (!food || secretSequenceActive || session.foods.length >= save.stomachLevel) return false;
+    const slot = session.offer.findIndex(Boolean);
+    if (slot < 0) return false;
+    session.offer[slot] = food;
+    save.revealedSecretFoods = (save.revealedSecretFoods || []).filter(id => id !== food.id);
+    save.discoveredFoods = (save.discoveredFoods || []).filter(id => id !== food.id);
+    renderDraft();
+    persist();
+    if (play) playSecretDiscovery(food, slot);
+    return true;
   }
 
   function feedback(pattern = 8) {
@@ -501,6 +712,82 @@
     }
   }
 
+  function renderHomePlaySetup() {
+    if (!els.playSetupCard) return;
+    const world = currentWorld();
+    if (els.homeWorldPickerIcon) els.homeWorldPickerIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
+    if (els.homeWorldPickerEyebrow) els.homeWorldPickerEyebrow.textContent = `МИР ${world.id}`;
+    if (els.homeWorldPickerName) els.homeWorldPickerName.textContent = world.name;
+    if (els.homeWorldBest) els.homeWorldBest.textContent = `${Math.floor(save.worldBest?.[world.id] || 0).toLocaleString('ru-RU')} М`;
+    if (els.homeWorldSelect) {
+      const selectedValue = String(world.id);
+      els.homeWorldSelect.replaceChildren(...WORLDS.map(item => {
+        const option = document.createElement('option');
+        const unlocked = worldIsUnlocked(item.id);
+        option.value = String(item.id);
+        option.disabled = !unlocked;
+        option.textContent = `${unlocked ? '' : '🔒 '}${item.id}. ${item.name}`;
+        return option;
+      }));
+      els.homeWorldSelect.value = selectedValue;
+    }
+
+    const endlessUnlocked = Boolean(save.gameCompleted);
+    const activeMode = save.homeMode === 'endless' && endlessUnlocked ? 'endless' : 'campaign';
+    if (!endlessUnlocked && save.homeMode === 'endless') save.homeMode = 'campaign';
+    els.playSetupCard.dataset.mode = activeMode;
+    els.campaignModeBtn?.classList.toggle('active', activeMode === 'campaign');
+    els.endlessModeBtn?.classList.toggle('active', activeMode === 'endless');
+    els.campaignModeBtn?.setAttribute('aria-selected', String(activeMode === 'campaign'));
+    els.endlessModeBtn?.setAttribute('aria-selected', String(activeMode === 'endless'));
+    if (els.endlessModeBtn) {
+      els.endlessModeBtn.disabled = !endlessUnlocked;
+      els.endlessModeBtn.title = endlessUnlocked ? 'Бесконечный режим' : 'Откроется после прохождения игры';
+    }
+    els.campaignModePanel?.classList.toggle('hidden', activeMode !== 'campaign');
+    els.endlessModePanel?.classList.toggle('hidden', activeMode !== 'endless');
+    if (els.endlessBestScore) els.endlessBestScore.textContent = formatCompactNumber(save.endlessBestScore?.[world.id] || 0);
+    if (els.endlessBestDepth) els.endlessBestDepth.textContent = `${Math.floor(save.endlessBestDepth?.[world.id] || 0).toLocaleString('ru-RU')} М`;
+  }
+
+  function selectHomeMode(mode) {
+    const nextMode = mode === 'endless' ? 'endless' : 'campaign';
+    if (nextMode === 'endless' && !save.gameCompleted) {
+      showToast('Бесконечный режим откроется после прохождения игры');
+      return;
+    }
+    if (save.homeMode === nextMode) return;
+    save.homeMode = nextMode;
+    sound('tap');
+    feedback(6);
+    renderHomePlaySetup();
+    persist();
+  }
+
+  function selectHomeWorld(worldId) {
+    const nextWorldId = Number(worldId);
+    if (!worldIsUnlocked(nextWorldId)) {
+      renderHomePlaySetup();
+      showToast('Сначала пройди предыдущий мир');
+      return;
+    }
+    if (nextWorldId === save.world) return;
+    if (session?.rerollPending || adInFlight) {
+      renderHomePlaySetup();
+      showToast('Дождись окончания обновления');
+      return;
+    }
+    save.world = nextWorldId;
+    save.activeDraft = null;
+    session = null;
+    selectedFoodOfferIndex = null;
+    hideFoodInfo();
+    sound('tap');
+    feedback(8);
+    newDraft();
+    showToast(`Мир ${nextWorldId} · ${currentWorld().name}`);
+  }
+
   function selectLevel(level) {
     const world = currentWorld();
     const unlocked = clamp(Math.round(save.unlockedLevels?.[world.id] || 1), 1, LEVEL_COUNT);
@@ -514,11 +801,12 @@
     sound('tap');
     feedback(5);
     persist();
-    renderLevelPicker();
+    updatePersistentUI();
   }
 
   function updatePersistentUI() {
-    els.coinsLabel.textContent = Math.floor(save.coins).toLocaleString('ru-RU');
+    els.coinsLabel.textContent = formatCompactNumber(save.coins);
+    els.coinsLabel.title = `${Math.floor(save.coins).toLocaleString('ru-RU')} монет`;
     const world = currentWorld();
     document.body.dataset.world = String(world.id);
     ensureWorldSprites(world.id);
@@ -534,6 +822,7 @@
     els.worldProgressBar.parentElement.setAttribute('aria-valuenow', String(Math.round(worldProgress)));
     els.worldHint.textContent = remaining > 0 ? `ЕЩЁ ${remaining} М` : (level >= LEVEL_COUNT ? 'МИР ПРОЙДЕН' : 'УРОВЕНЬ ПРОЙДЕН');
     if (els.adminWorldValue) els.adminWorldValue.textContent = `МИР ${world.id}`;
+    renderHomePlaySetup();
     renderLevelPicker();
     applySkin();
   }
@@ -546,9 +835,13 @@
     const savedRunDepth = Math.max(0, +(save.lastRunDepth?.[`${world.id}:${level}`] || 0));
     const completedBefore = savedRunDepth >= targetDepth || +(save.worldBest?.[world.id] || 0) >= targetDepth;
     els.worldLabel.textContent = world.name;
-    if (els.worldEyebrow) els.worldEyebrow.textContent = isDrop ? `МИР ${world.id} · УРОВЕНЬ ${level}` : `МИР ${world.id}`;
+    if (els.worldEyebrow) {
+      els.worldEyebrow.textContent = isDrop
+        ? (run?.endless ? `МИР ${world.id} · БЕСКОНЕЧНЫЙ РЕЖИМ` : `МИР ${world.id} · УРОВЕНЬ ${level}`)
+        : `МИР ${world.id}`;
+    }
     if (els.worldIcon) els.worldIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
-    if (els.levelPassedBadge) els.levelPassedBadge.hidden = !(isDrop && completedBefore);
+    if (els.levelPassedBadge) els.levelPassedBadge.hidden = !(isDrop && !run?.endless && completedBefore);
   }
 
   function applySkin() {
@@ -566,7 +859,7 @@
     els.slime.classList.add('tracking-food', 'expect-food');
     const flyer = document.createElement('span');
     flyer.className = `swallow-fruit ${food.rarity}`;
-    const swallowMs = food.rarity === 'secret' ? 780 : 340;
+    const swallowMs = food.rarity === 'secret' ? 300 : 340;
     flyer.style.setProperty('--swallow-time', `${swallowMs}ms`);
     flyer.innerHTML = foodArtMarkup(food, 'swallow-model');
     flyer.style.left = `${from.left + from.width / 2}px`;
@@ -607,6 +900,20 @@
 
   const MENU_SLIME_STATES = ['booped', 'petting', 'petted'];
   const MEAL_REACTION_CLASSES = ['meal-common', 'meal-rare', 'meal-epic', 'meal-legendary', 'meal-prismatic', 'meal-secret'];
+
+  function clearMenuMealReaction() {
+    clearTimeout(menuEmotionTimer);
+    els.slime?.classList.remove(
+      'eat', 'chewing', 'savoring', 'pleased', 'tracking-food', 'expect-food',
+      ...MEAL_REACTION_CLASSES
+    );
+    els.slime?.style.removeProperty('--catch-time');
+    els.slime?.style.removeProperty('--chew-time');
+    els.slime?.style.removeProperty('--chew-count');
+    els.slime?.style.removeProperty('--happy-time');
+    els.rarityBursts?.replaceChildren();
+    resetMenuGaze();
+  }
 
   function menuSlimeIsBusy() {
     return ['eat', 'chewing', 'savoring', 'expect-food', 'tracking-food'].some(name => els.slime.classList.contains(name));
@@ -688,6 +995,7 @@
   }
 
   function showScreen(name) {
+    if (name !== 'home' && secretSequenceActive) cancelSecretDiscovery();
     document.body.dataset.screen = name;
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
@@ -699,10 +1007,11 @@
       cancelAnimationFrame(menuSlimeAnimationId);
       menuSlimeAnimationId = 0;
     }
+    syncInteractionLayers();
   }
 
   function newDraft() {
-    document.body.classList.remove('secret-feast', 'secret-reveal');
+    cancelSecretDiscovery();
     const bonusEpic = save.pendingEpicBoost || 0;
     const bonusMass = save.pendingMassBoost || 0;
     const bonusRerolls = save.pendingExtraRerolls || 0;
@@ -779,7 +1088,7 @@
     save.rerollLevel = 3;
     save.unlockedSkins = SKINS.map(skin => skin.id);
     save.unlockedTrails = TRAILS.map(trail => trail.id);
-    save.discoveredFoods = FOODS.map(food => food.id);
+    save.gameCompleted = true;
     for (const world of WORLDS) {
       save.unlockedLevels[world.id] = LEVEL_COUNT;
       save.selectedLevels[world.id] = 1;
@@ -795,7 +1104,7 @@
     sound('coin');
     feedback([20, 35, 20]);
     newDraft();
-    showToast('Всё открыто · 9 999 999 монет');
+    showToast('Всё, кроме карточек, открыто · 9 999 999 монет');
   }
 
   function rarityWeights(boost = 0, rareBoost = 0) {
@@ -804,7 +1113,7 @@
       { common: 70, rare: 25, epic: 5, legendary: 0, prismatic: 0, secret: 0 },
       { common: 58, rare: 30, epic: 10, legendary: 2, prismatic: 0, secret: 0 },
       { common: 46, rare: 31, epic: 16, legendary: 5, prismatic: 2, secret: 0 },
-      { common: 36.7, rare: 31, epic: 20, legendary: 8, prismatic: 4, secret: 0.3 }
+      { common: 18.35, rare: 15.5, epic: 10, legendary: 4, prismatic: 2, secret: 50 }
     ];
     const base = { ...tables[save.conveyorLevel - 1] };
     const epicAdd = clamp(boost, 0, 10);
@@ -846,6 +1155,20 @@
     return true;
   }
 
+  function secretFoodIsRevealed(food) {
+    return food?.rarity !== 'secret' || (save.revealedSecretFoods || []).includes(food.id);
+  }
+
+  function revealSecretFood(food) {
+    if (!food?.id || food.rarity !== 'secret') return false;
+    const revealed = new Set(save.revealedSecretFoods || []);
+    const changed = !revealed.has(food.id);
+    revealed.add(food.id);
+    save.revealedSecretFoods = [...revealed];
+    discoverFoods([food]);
+    return changed;
+  }
+
   function randomFood(exclude = [], minimumRarity = null, rollBoost = 0, rareBoost = 0) {
     let rarity = weightedRarity(rarityWeights(rollBoost, rareBoost));
     if (minimumRarity && rarityRank(rarity) < rarityRank(minimumRarity)) rarity = minimumRarity;
@@ -880,7 +1203,7 @@
       used.push(food.id);
     }
     session.offer = offer;
-    discoverFoods(offer);
+    discoverFoods(offer.filter(food => food.rarity !== 'secret'));
     session.offersSeen += 1;
     session.commonOnlyStreak = offer.some(food => rarityRank(food.rarity) >= 1) ? 0 : session.commonOnlyStreak + 1;
 
@@ -1006,6 +1329,7 @@
 
   function showFoodPreview(food) {
     if (!food || session.foods.length >= save.stomachLevel) return clearFoodPreview();
+    if (!secretFoodIsRevealed(food)) return clearFoodPreview();
     const next = calculateStatsForFoods([...session.foods, food]).stats;
     const comparisons = [
       [els.massCompare, next.mass, session.stats.mass, delta => `+${Math.round(delta)}`],
@@ -1110,6 +1434,11 @@
   }
 
   function showFoodInfo(food, offerIndex, source) {
+    if (!secretFoodIsRevealed(food)) {
+      hideFoodInfo();
+      playSecretDiscovery(food, offerIndex);
+      return;
+    }
     presentFoodInfo(food, `offer:${offerIndex}`, source, { offerIndex, preview: true });
   }
 
@@ -1148,10 +1477,11 @@
         return;
       }
       const button = document.createElement('button');
+      const unknownSecret = !secretFoodIsRevealed(food);
       const cardType = foodCardType(food);
       const tunnelInDistance = 112 + index * 110;
       const tunnelOutDistance = 112 + (session.offer.length - 1 - index) * 110;
-      button.className = `food-card ${food.rarity} food-type-${cardType} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${full ? 'locked' : ''}`;
+      button.className = `food-card ${food.rarity} food-type-${cardType} ${unknownSecret ? 'secret-unknown' : ''} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${full ? 'locked' : ''}`;
       button.style.animationDelay = offerMotion === 'enter' ? `${index * 70}ms` : '0ms';
       button.style.setProperty('--tunnel-in-distance', `${tunnelInDistance}%`);
       button.style.setProperty('--tunnel-in-mouth', `${Math.round(tunnelInDistance * .94)}%`);
@@ -1161,16 +1491,14 @@
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
       const cardBody = cardType === 'ability'
-        ? `<span class="food-ability-copy"><b><span class="effect-title-star" aria-hidden="true">★</span><span class="effect-title-label">ЭФФЕКТ</span></b><em>${food.effectText}</em></span>`
+        ? `<span class="food-ability-copy"><b><span class="effect-title-star" aria-hidden="true">★</span><span class="effect-title-label">ЭФФЕКТ</span></b><em>${escapeMarkup(food.effectText)}</em></span>`
         : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid count-${Math.min(foodStatItems(food).length, 4)}">${foodStatGridMarkup(food)}</span></span>`;
-      button.innerHTML = `
-        <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span>
-        <span class="food-model-wrap">${foodArtMarkup(food)}</span>
-        <span class="food-name">${food.name}</span>
-        ${cardBody}`;
+      button.innerHTML = unknownSecret
+        ? `<span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>СЕКРЕТНОЕ</span></span></span><span class="secret-unknown-center" aria-hidden="true">???</span><span class="secret-unknown-copy">НАЖМИ</span>`
+        : `<span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span><span class="food-name">${escapeMarkup(food.name)}</span>${cardBody}`;
       button.type = 'button';
       const cardSummary = cardType === 'ability' ? `Эффект: ${food.effectText}` : foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
-      button.setAttribute('aria-label', `${food.name}. ${cardSummary}. Открыть описание`);
+      button.setAttribute('aria-label', unknownSecret ? 'Неизвестная секретная карта. Нажми, чтобы раскрыть' : `${food.name}. ${cardSummary}. Открыть описание`);
       button.addEventListener('pointerdown', event => beginFoodDrag(event, food, index, button));
       button.addEventListener('pointerenter', () => showFoodPreview(food));
       button.addEventListener('pointerleave', clearFoodPreview);
@@ -1198,7 +1526,8 @@
 
   // ===== КОРМЛЕНИЕ: клик, перетаскивание и эмоции =====
   function beginFoodDrag(event, food, offerIndex, source) {
-    if (session.foods.length >= save.stomachLevel || event.button > 0) return;
+    if (secretSequenceActive || session.foods.length >= save.stomachLevel || event.button > 0) return;
+    if (!secretFoodIsRevealed(food)) return;
     event.preventDefault();
     document.body.classList.add('food-dragging');
     showFoodPreview(food);
@@ -1287,13 +1616,17 @@
   }
 
   function chooseFood(offerIndex, source = null) {
-    if (document.body.classList.contains('secret-feast')) {
+    if (secretSequenceActive) {
       showToast('Секретный вкус нельзя торопить');
       return;
     }
     if (session.foods.length >= save.stomachLevel) return;
     const food = session.offer[offerIndex];
     if (!food) return;
+    if (food.rarity === 'secret' && !secretFoodIsRevealed(food)) {
+      showToast('Сначала нажми на карту и раскрой секрет');
+      return;
+    }
     discoverFoods([food]);
     hideFoodInfo();
     clearMenuSlimeInteraction();
@@ -1307,16 +1640,13 @@
       epic: { catchMs: 230, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 620 },
       legendary: { catchMs: 250, chewMs: 1200, chewTime: '.3s', chews: 4, happyMs: 680 },
       prismatic: { catchMs: 270, chewMs: 1500, chewTime: '.3s', chews: 5, happyMs: 820 },
-      secret: { catchMs: 800, chewMs: 1800, chewTime: '.3s', chews: 6, revealDelayMs: 220, happyMs: 1300 }
+      secret: { catchMs: 270, chewMs: 1500, chewTime: '.3s', chews: 5, revealDelayMs: 0, happyMs: 820 }
     }[food.rarity] || { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, revealDelayMs: 0, happyMs: 350 };
-    document.body.classList.remove('secret-feast', 'secret-reveal');
-    if (food.rarity === 'secret') document.body.classList.add('secret-feast');
-    sound(food.rarity === 'secret' ? 'eatSlow' : 'eat', {
-      biteDelay: food.rarity === 'secret' ? 720 : Math.max(180, mealReaction.catchMs - 20),
+    sound('eat', {
+      biteDelay: Math.max(180, mealReaction.catchMs - 20),
       swallowDelay: mealReaction.catchMs + mealReaction.chewMs - 70
     });
-    clearTimeout(menuEmotionTimer);
-    els.slime.classList.remove('eat', 'chewing', 'savoring', 'pleased', ...MEAL_REACTION_CLASSES);
+    clearMenuMealReaction();
     els.slime.classList.add(`meal-${food.rarity}`);
     els.slime.style.setProperty('--catch-time', `${mealReaction.catchMs}ms`);
     els.slime.style.setProperty('--chew-time', mealReaction.chewTime);
@@ -1334,14 +1664,10 @@
         const revealMeal = () => {
           els.slime.classList.remove('savoring');
           els.slime.classList.add('pleased');
-          if (food.rarity === 'secret') {
-            document.body.classList.add('secret-reveal');
-            showRarityBurst(food);
-          }
+          if (food.rarity === 'secret') feedback([14, 24, 12]);
           sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
           menuEmotionTimer = setTimeout(() => {
-            els.slime.classList.remove('pleased', 'savoring', ...MEAL_REACTION_CLASSES);
-            document.body.classList.remove('secret-feast', 'secret-reveal');
+            clearMenuMealReaction();
           }, mealReaction.happyMs);
         };
         if (mealReaction.revealDelayMs) {
@@ -1358,7 +1684,7 @@
 
 
   async function rerollOffer() {
-    if (document.body.classList.contains('secret-feast')) {
+    if (secretSequenceActive) {
       showToast('Секретный вкус нельзя торопить');
       return;
     }
@@ -1397,21 +1723,120 @@
     }
   }
 
-  // ===== ЗАБЕГ: запуск и физическая сцена =====
-  function startDrop() {
+  // ===== ЗАБЕГ: запуск, пауза и физическая сцена =====
+  function shiftRunClock(delta) {
+    if (!run || delta <= 0) return;
+    const timestampKeys = [
+      'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'appleGlowUntil', 'freezeUntil',
+      'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'lastMassDamageAt', 'bounceGraceUntil',
+      'softLandingUntil', 'lastBombPullAt', 'lastTrailSampleAt', 'lastUiUpdateAt'
+    ];
+    for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
+    if (run.geyserCapture) {
+      for (const key of ['startedAt', 'readyAt', 'autoLaunchAt']) if (run.geyserCapture[key] > 0) run.geyserCapture[key] += delta;
+    }
+    if (run.portalEntry?.startedAt > 0) run.portalEntry.startedAt += delta;
+    run.hitCooldowns = new Map([...run.hitCooldowns.entries()].map(([key, value]) => [key, value > 0 ? value + delta : value]));
+    for (const shower of run.meteorShowers || []) {
+      for (const strike of shower.strikes || []) {
+        for (const key of ['warnedAt', 'fallAt', 'impactAt', 'impactedAt']) if (strike[key] > 0) strike[key] += delta;
+      }
+    }
+  }
+
+  function updateRunSoundControl() {
+    if (!els.toggleRunSoundBtn) return;
+    els.toggleRunSoundBtn.classList.toggle('is-muted', !save.sound);
+    els.toggleRunSoundBtn.setAttribute('aria-pressed', String(!save.sound));
+    els.runSoundIcon.textContent = save.sound ? '♪' : '×';
+    els.runSoundLabel.textContent = save.sound ? 'ЗВУК ВКЛЮЧЁН' : 'ЗВУК ВЫКЛЮЧЕН';
+  }
+
+  function pauseRun({ allowPortal = false } = {}) {
+    if (!run || run.ended || run.paused || (!allowPortal && run.portalEntry) || run.portalTransitioning) return false;
+    run.paused = true;
+    run.pausedAt = performance.now();
+    cancelAnimationFrame(run.animationId);
+    run.animationId = 0;
+    run.lastTime = 0;
+    clearFallSteering();
+    return true;
+  }
+
+  function resumeRun() {
+    if (!run || run.ended || !run.paused || run.portalTransitioning) return false;
+    const pausedFor = Math.max(0, performance.now() - (run.pausedAt || performance.now()));
+    shiftRunClock(pausedFor);
+    run.paused = false;
+    run.pausedAt = 0;
+    run.lastTime = 0;
+    run.animationId = requestAnimationFrame(gameFrame);
+    return true;
+  }
+
+  function hideRunMenu() {
+    els.runMenuOverlay?.classList.add('hidden');
+    els.endRunBtn?.setAttribute('aria-expanded', 'false');
+    syncInteractionLayers();
+  }
+
+  function openRunMenu() {
+    if (!pauseRun()) return;
+    stopAllSounds();
+    updateRunSoundControl();
+    els.runMenuOverlay.classList.remove('hidden');
+    els.endRunBtn.setAttribute('aria-expanded', 'true');
+    syncInteractionLayers();
+    requestAnimationFrame(() => els.runMenuOverlay.querySelector('.run-menu-modal')?.focus());
+  }
+
+  function continueRunFromMenu() {
+    hideRunMenu();
+    sound('tap');
+    resumeRun();
+  }
+
+  function toggleRunSound() {
+    save.sound = !save.sound;
+    if (!save.sound) stopAllSounds();
+    persist();
+    updateRunSoundControl();
+    if (save.sound) sound('tap');
+    feedback(5);
+  }
+
+  function restartCurrentRun() {
+    if (!run || run.ended) return;
+    const endless = run.endless;
+    cancelAnimationFrame(run.animationId);
+    hideRunMenu();
+    run = null;
+    startDrop({ endless });
+  }
+
+  function finishRunFromMenu() {
+    if (!run || run.ended) return;
+    hideRunMenu();
+    finishRunEarly();
+  }
+
+  function startDrop(options = {}) {
+    const endless = options?.endless === true;
     GAME_BALANCE = window.SlimeBalance?.load?.() || GAME_BALANCE;
-    if (menuSlimeIsBusy() || document.body.classList.contains('secret-feast')) {
+    if (secretSequenceActive || menuSlimeIsBusy()) {
       showToast('Слайм ещё доедает');
       return;
     }
+    if (endless && !save.gameCompleted) return showToast('Бесконечный мир откроется после прохождения игры');
     sound('tap');
     feedback([10, 25, 12]);
     const baseWorld = currentWorld();
-    const level = selectedLevelForWorld(baseWorld.id);
+    const level = endless ? LEVEL_COUNT : selectedLevelForWorld(baseWorld.id);
     const world = {
       ...baseWorld,
       targetDepth: levelTargetDepth(baseWorld, level),
-      reward: levelReward(baseWorld, level)
+      reward: levelReward(baseWorld, level),
+      endlessScale: 1
     };
     const finishY = world.targetDepth * 10 + 180;
     const cellSize = world.cellSize || BALANCE.gridCell;
@@ -1426,14 +1851,19 @@
       worldId: world.id,
       level,
       world,
-      previousBest: Math.min(world.targetDepth, Math.max(0, Math.floor(save.lastRunDepth?.[`${world.id}:${level}`] || 0))),
+      previousBest: endless ? 0 : Math.min(world.targetDepth, Math.max(0, Math.floor(save.lastRunDepth?.[`${world.id}:${level}`] || 0))),
       finishY,
       cellSize,
       columns,
       gridOffsetX,
+      startX,
+      endless,
+      endlessLap: 1,
+      endlessDepthOffset: 0,
       // Портал — самостоятельный финал. Крепостной стены перед ним больше нет.
       portalY: finishY + cellSize * .35,
       blocks: [], particles: [], trails: [], specialEffects: [],
+      meteorShowers: [],
       slime: {
         x: startX,
         y: 78,
@@ -1489,6 +1919,9 @@
       maxFlight: 0,
       blocksDestroyed: 0,
       ended: false,
+      paused: false,
+      pausedAt: 0,
+      portalTransitioning: false,
       portalEntry: null,
       rewardClaimed: false,
       rewardPending: false,
@@ -1519,8 +1952,7 @@
   }
 
   function prepareCanvas() {
-    const lowPower = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-    const dpr = Math.min(lowPower ? 1.25 : 1.75, window.devicePixelRatio || 1);
+    const dpr = Math.min(isLowPowerDevice() ? 1 : isMobileDevice() ? 1.25 : 1.75, window.devicePixelRatio || 1);
     els.canvas.width = VIEW_W * dpr;
     els.canvas.height = VIEW_H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1548,7 +1980,7 @@
         : world.id === 3
           ? ['heal', 'appleMint', 'appleRed']
           : world.id === 4
-            ? ['heal', 'geyser', 'seismic']
+            ? ['heal', 'geyser', 'meteor']
           : ['heal', 'bomb', 'spring']);
     const enabledSecondary = Object.fromEntries(worldSpecialIds
       .filter(id => editorAllows(world, level, id))
@@ -1608,8 +2040,9 @@
         const balanced = chooseBalancedCell(world, runState.level, progress);
         let tier = balanced.tier;
         let special = balanced.special;
-        const hazard = world.id === 4
-          && !special
+        // Hazards are biome-wide mechanics. They used to be accidentally
+        // hard-locked to World 4 even when another world's level enabled them.
+        const hazard = !special
           && tier !== 'ore'
           && editorAllows(world, runState.level, 'hazard')
           && Math.random() < lerp(.035, .075, progress);
@@ -1633,7 +2066,7 @@
         // Fixed values for gameplay-critical blocks. Editor multipliers never
         // make a medkit, dynamite or hazard unexpectedly tougher.
         if (hazard) maxHp = 30;
-        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'snowflake' || special === 'appleMint' || special === 'appleRed' || special === 'geyser' || special === 'seismic') maxHp = 5;
+        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'snowflake' || special === 'appleMint' || special === 'appleRed' || special === 'geyser' || special === 'meteor') maxHp = 5;
         if (special === 'spring') maxHp = 1;
         maxHp = Math.max(1, Math.round(maxHp));
 
@@ -1716,7 +2149,7 @@
 
   function blockHpForTier(tier, world, progress, row, col, inPath = false) {
     const [min, max] = durabilityRange(tier) || [5, 15];
-    return Math.round(rand(min, max));
+    return Math.round(rand(min, max) * Math.max(1, world.endlessScale || 1));
   }
 
   function durabilityRange(tier) {
@@ -1753,7 +2186,7 @@
 
   // ===== ФИЗИКА И СТОЛКНОВЕНИЯ =====
   function gameFrame(timestamp) {
-    if (!run || run.ended) return;
+    if (!run || run.ended || run.paused || run.portalTransitioning) return;
     if (!run.lastTime) run.lastTime = timestamp;
     const dt = Math.min(.034, (timestamp - run.lastTime) / 1000);
     run.lastTime = timestamp;
@@ -1764,12 +2197,16 @@
     const safeTravel = Math.max(5, Math.min(run.slime.radius * .24, run.cellSize * .14));
     const substeps = clamp(Math.ceil(speed * dt / safeTravel), 1, 12);
     for (let i = 0; i < substeps; i += 1) updatePhysics(dt / substeps, timestamp);
+    updateMeteorShowers(timestamp);
     updateSlimeTrail(dt, timestamp);
     updateParticles(dt);
     updateSpecialEffects(dt);
     renderCanvas(timestamp);
-    updateRunUI();
-    if (!run.ended) run.animationId = requestAnimationFrame(gameFrame);
+    if (!run.lastUiUpdateAt || timestamp - run.lastUiUpdateAt >= (isMobileDevice() ? 90 : 70)) {
+      run.lastUiUpdateAt = timestamp;
+      updateRunUI();
+    }
+    if (!run.ended && !run.paused && !run.portalTransitioning) run.animationId = requestAnimationFrame(gameFrame);
   }
 
   function isSlimeFrozen(timestamp = performance.now()) {
@@ -1790,7 +2227,8 @@
     run.trailPoints = run.trailPoints.filter(point => point.life > 0);
     const trail = TRAILS.find(item => item.id === save.selectedTrail) || TRAILS[0];
     const bubbleTrail = trail.effect === 'bubbles';
-    const sampleInterval = bubbleTrail ? 58 : 34;
+    const density = effectDensity();
+    const sampleInterval = (bubbleTrail ? 58 : 34) / density;
     if (save.selectedTrail === 'none' || run.portalEntry || timestamp - run.lastTrailSampleAt < sampleInterval) return;
     const speed = Math.hypot(run.slime.vx, run.slime.vy);
     if (speed < 80) return;
@@ -1820,7 +2258,7 @@
         sparkleSide: Math.random() < .5 ? -1 : 1
       });
     }
-    const maxPoints = bubbleTrail ? 24 : 30;
+    const maxPoints = Math.max(14, Math.round((bubbleTrail ? 24 : 30) * density));
     if (run.trailPoints.length > maxPoints) run.trailPoints.splice(0, run.trailPoints.length - maxPoints);
   }
 
@@ -1860,7 +2298,7 @@
     const moved = Math.hypot(s.x - previousX, s.y - previousY);
     run.flightDistance += moved;
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
-    run.depth = Math.max(0, Math.floor((s.y - 80) / 10));
+    run.depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.floor((s.y - 80) / 10));
     run.maxDepth = Math.max(run.maxDepth, run.depth);
 
     if (run.effects.bombPull && timestamp - run.lastBombPullAt > 220) {
@@ -2083,17 +2521,19 @@
     const targetY = portal.type === 'circle' ? portal.y : portal.centerY;
     run.portalEntry = {
       startedAt: timestamp,
-      duration: 680,
+      duration: 760,
       startX: run.slime.x,
       startY: run.slime.y,
       targetX,
-      targetY
+      targetY,
+      startDistance: Math.max(14, Math.hypot(run.slime.x - targetX, run.slime.y - targetY)),
+      startAngle: Math.atan2(run.slime.y - targetY, run.slime.x - targetX)
     };
     run.slime.vx = 0;
     run.slime.vy = 0;
     run.emotion = 'joy';
     run.emotionUntil = timestamp + 700;
-    run.shake = Math.max(run.shake, 4);
+    run.shake = Math.max(run.shake, 5.5);
     spawnPortalBurst(targetX, targetY);
     sound('epic');
     feedback([10, 24, 10]);
@@ -2102,14 +2542,15 @@
   function updatePortalEntry(dt, timestamp) {
     const entry = run.portalEntry;
     const progress = clamp((timestamp - entry.startedAt) / entry.duration, 0, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const spiral = Math.sin(progress * Math.PI * 3) * (1 - progress) * 14;
-    run.slime.x = lerp(entry.startX, entry.targetX, eased) + spiral;
-    run.slime.y = lerp(entry.startY, entry.targetY, eased);
-    run.slime.wobble += dt * 16;
+    const eased = 1 - Math.pow(1 - progress, 2.45);
+    const orbitRadius = entry.startDistance * (1 - eased) + Math.sin(progress * Math.PI) * 7;
+    const orbitAngle = entry.startAngle + progress * Math.PI * 2.15;
+    run.slime.x = entry.targetX + Math.cos(orbitAngle) * orbitRadius;
+    run.slime.y = entry.targetY + Math.sin(orbitAngle) * orbitRadius * .72;
+    run.slime.wobble += dt * (15 + progress * 19);
     const targetCamera = clamp(run.slime.y - 250, 0, run.portalY - VIEW_H + 170);
     run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * 5, 0, 1));
-    run.shake = Math.max(0, run.shake - dt * 8);
+    run.shake = Math.max(0, run.shake - dt * 7);
     if (progress >= 1) finishWorld();
   }
 
@@ -2175,7 +2616,7 @@
     const hpBefore = block.hp;
     // Utility blocks are collected on the very first contact, regardless of
     // current speed or an old editor durability multiplier.
-    const breaksOnTouch = ['bomb', 'gel', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'seismic'].includes(block.special);
+    const breaksOnTouch = ['bomb', 'gel', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'meteor'].includes(block.special);
     if (breaksOnTouch) damage = hpBefore;
     if (run.effects.voidBreaker && !run.voidBreakerUsed && ['hard', 'reinforced'].includes(block.tier) && damage < hpBefore) {
       damage = hpBefore + 1;
@@ -2203,7 +2644,7 @@
     if (block.hazard) massLoss *= 1.75;
     if (run.abilityTime > 0) massLoss *= .18;
     if (run.effects.softLanding && timestamp < run.softLandingUntil) massLoss *= .45;
-    if (frozenSlime || block.special === 'snowflake' || block.special === 'appleMint' || block.special === 'appleRed' || block.special === 'seismic') massLoss = 0;
+    if (frozenSlime || block.special === 'snowflake' || block.special === 'appleMint' || block.special === 'appleRed' || block.special === 'meteor') massLoss = 0;
     if (!destroysImmediately && run.freeBouncesLeft > 0) {
       massLoss = 0;
       run.freeBouncesLeft -= 1;
@@ -2475,8 +2916,8 @@
       activateMintApple(block);
     } else if (block.special === 'appleRed') {
       activateRedApple(block);
-    } else if (block.special === 'seismic') {
-      activateSeismicCore(block);
+    } else if (block.special === 'meteor') {
+      activateMeteorShower(block);
     } else if (block.special === 'spring') {
       addAbilityCharge(5);
       impact('ПРУЖИНА СЛОМАНА!');
@@ -2501,10 +2942,11 @@
     run.sizeMultiplier = clamp((run.sizeMultiplier || 1) * (1 + sizeChange), .62, 2.25);
     run.defense = clamp(run.defense + defenseBoost, 0, .85);
     run.elasticity = clamp(run.elasticity + bounceBoost, .85, 2.6);
-    run.appleGlowUntil = performance.now() + 1000;
+    const timestamp = performance.now();
+    run.appleGlowUntil = timestamp + 1450;
     run.appleGlowType = 'mint';
     run.emotion = 'joy';
-    run.emotionUntil = performance.now() + 850;
+    run.emotionUntil = timestamp + 1050;
     run.shake = Math.max(run.shake, 4.5);
     spawnSpecialBurst('appleMint', source.x + source.w / 2, source.y + source.h / 2);
     impact(`МЯТНОЕ ЯБЛОКО · ${Math.round(sizeChange * 100)}% РАЗМЕР · +${Math.round(bounceBoost * 100)}% ОТСКОК`);
@@ -2520,10 +2962,11 @@
     run.sizeMultiplier = clamp((run.sizeMultiplier || 1) * (1 + sizeBoost), .62, 2.25);
     run.power = Math.min(12, run.power * (1 + powerBoost));
     run.defense = clamp(run.defense + defenseBoost, 0, .85);
-    run.appleGlowUntil = performance.now() + 1100;
+    const timestamp = performance.now();
+    run.appleGlowUntil = timestamp + 1650;
     run.appleGlowType = 'red';
     run.emotion = 'joy';
-    run.emotionUntil = performance.now() + 900;
+    run.emotionUntil = timestamp + 1150;
     run.shake = Math.max(run.shake, 6);
     spawnSpecialBurst('appleRed', source.x + source.w / 2, source.y + source.h / 2);
     impact(`КРАСНОЕ ЯБЛОКО · +${Math.round(sizeBoost * 100)}% РОСТ · +${Math.round(powerBoost * 100)}% УРОН`);
@@ -2578,27 +3021,103 @@
     feedback([8, 14, 8, 18]);
   }
 
-  function activateSeismicCore(source) {
-    const settings = GAME_BALANCE?.special?.seismic || {};
-    const damageRatio = clamp((settings.damage ?? 62) / 100, .4, .9);
-    const affectedRows = clamp(Math.round(settings.rows ?? 3), 1, 5);
-    let weakened = 0;
-    for (const block of run.blocks) {
-      if (block.dead || block === source || block.special || block.hazard || block.tier === 'ore') continue;
-      if (block.row < source.row || block.row >= source.row + affectedRows) continue;
-      const weakenedHp = Math.max(1, block.maxHp * (1 - damageRatio));
-      if (block.hp <= weakenedHp) continue;
-      block.hp = weakenedHp;
-      createDebris(block, 2, false);
-      weakened += 1;
-    }
-    const centerY = source.y + source.h / 2;
-    spawnSpecialBurst('seismic', VIEW_W / 2, centerY);
-    run.shake = Math.max(run.shake, 10.5);
-    preserveCombo(performance.now());
-    impact(`ВУЛКАНИЧЕСКИЙ РАЗЛОМ · ОСЛАБЛЕНО ${weakened}`);
+  function activateMeteorShower(source) {
+    const settings = GAME_BALANCE?.special?.meteor || {};
+    const minCount = clamp(Math.round(settings.minCount ?? 3), 3, 4);
+    const maxCount = clamp(Math.round(settings.maxCount ?? 4), minCount, 4);
+    const count = Math.floor(rand(minCount, maxCount + .999));
+    const delayMs = clamp(settings.delay ?? .42, .28, .7) * 1000;
+    const startRow = Math.max(source.row + 3, Math.floor((run.slime.y - 190) / run.cellSize) + 3);
+    const maxRow = Math.max(startRow, Math.max(...run.blocks.map(block => block.row)) - 1);
+    const firstRow = Math.min(startRow, maxRow);
+    const safeMinCol = run.columns > 2 ? 1 : 0;
+    const safeMaxCol = run.columns > 2 ? run.columns - 2 : run.columns - 1;
+    const used = new Set();
+    let previousCol = clamp(source.col, safeMinCol, safeMaxCol);
+    let targetRow = firstRow;
+    const now = performance.now();
+    const strikes = Array.from({ length: count }, (_, index) => {
+      if (index) targetRow = Math.min(maxRow, targetRow + 2 + Math.floor(Math.random() * 2));
+      const row = clamp(targetRow, 1, maxRow);
+      const candidates = Array.from({ length: Math.max(1, safeMaxCol - safeMinCol + 1) }, (_, offset) => safeMinCol + offset)
+        .filter(col => !used.has(`${row}:${col}`));
+      const varied = candidates.filter(col => Math.abs(col - previousCol) >= 2);
+      const pool = varied.length ? varied : candidates.length ? candidates : [previousCol];
+      const col = pool[Math.floor(Math.random() * pool.length)];
+      previousCol = col;
+      used.add(`${row}:${col}`);
+      const impactAt = now + 520 + index * delayMs;
+      return {
+        row, col,
+        x: run.gridOffsetX + col * run.cellSize + run.cellSize / 2,
+        y: 190 + row * run.cellSize + run.cellSize / 2,
+        warnedAt: impactAt - 420,
+        fallAt: impactAt - 250,
+        impactAt,
+        phase: 'waiting',
+        impactedAt: 0,
+        destroyed: 0,
+        angle: rand(-.08, .08)
+      };
+    });
+    run.meteorShowers.push({ strikes, createdAt: now });
+    preserveCombo(now);
+    run.shake = Math.max(run.shake, 4.8);
+    impact(`МЕТЕОРИТНЫЙ ДОЖДЬ · ${count} УДАРА`);
     sound('epic');
-    feedback([14, 28, 12, 22]);
+    feedback([12, 18, 10]);
+  }
+
+  function destroyMeteorGrid(row, col) {
+    let destroyed = 0;
+    for (const block of run.blocks) {
+      if (block.dead || Math.abs(block.row - row) > 1 || Math.abs(block.col - col) > 1) continue;
+      block.dead = true;
+      run.blocksDestroyed += 1;
+      run.coins += block.coins * .6 * run.coinMultiplier;
+      createDebris(block, 6, true);
+      destroyed += 1;
+    }
+    run.shake = Math.max(run.shake, 13.5);
+    return destroyed;
+  }
+
+  function updateMeteorShowers(timestamp) {
+    if (!run?.meteorShowers?.length) return;
+    for (const shower of run.meteorShowers) {
+      for (const strike of shower.strikes) {
+        if (!strike.impactedAt && timestamp >= strike.impactAt) {
+          strike.phase = 'impact';
+          strike.impactedAt = timestamp;
+          strike.destroyed = destroyMeteorGrid(strike.row, strike.col);
+          spawnMeteorImpactParticles(strike.x, strike.y);
+          preserveCombo(timestamp);
+          sound('epic');
+          feedback([14, 24, 9]);
+        } else if (!strike.impactedAt && timestamp >= strike.fallAt) strike.phase = 'falling';
+        else if (!strike.impactedAt && timestamp >= strike.warnedAt) strike.phase = 'warning';
+      }
+    }
+    run.meteorShowers = run.meteorShowers.filter(shower => shower.strikes.some(strike => !strike.impactedAt || timestamp - strike.impactedAt < 760));
+  }
+
+  function spawnMeteorImpactParticles(x, y) {
+    const colors = ['#fff2a3', '#ffd23d', '#ff832d', '#db3d26', '#4b3030'];
+    const particleCount = scaledEffectCount(16, 9);
+    for (let index = 0; index < particleCount; index += 1) {
+      const angle = Math.PI * 2 * index / particleCount + rand(-.16, .16);
+      const speed = rand(105, 255);
+      run.particles.push({
+        kind: 'special', x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 45,
+        gravity: 260,
+        life: rand(.38, .72), maxLife: .72,
+        size: rand(2.5, 6.5), color: colors[index % colors.length],
+        shape: index % 4 === 0 ? 'streak' : 'orb'
+      });
+    }
+    if (run.particles.length > 240) run.particles.splice(0, run.particles.length - 240);
   }
 
   function healRun(amount, label = 'ЛЕЧЕНИЕ') {
@@ -2691,7 +3210,8 @@
 
   function createDebris(block, count, strong) {
     const color = materialColor(block.material, run.world, 0);
-    for (let i = 0; i < count; i += 1) {
+    const particleCount = scaledEffectCount(count, 2);
+    for (let i = 0; i < particleCount; i += 1) {
       run.particles.push({
         x: block.x + rand(0, block.w), y: block.y + rand(0, block.h),
         vx: rand(-120, 120) * (strong ? 1.25 : .75), vy: rand(-170, 30) * (strong ? 1.2 : .8),
@@ -2702,30 +3222,48 @@
   }
 
   function spawnPortalBurst(x, y) {
-    const colors = run.worldId === 3
-      ? ['#ff8fbd', '#86f1df', '#fff2a8', '#ffffff']
-      : run.worldId === 2
-        ? ['#8ce8ff', '#d9f8ff', '#ffffff']
-        : ['#67f5dc', '#bfffee', '#ffffff'];
-    for (let i = 0; i < 26; i += 1) {
-      const angle = Math.PI * 2 * i / 26 + rand(-.14, .14);
-      const speed = rand(70, 190);
+    const palettes = {
+      1: ['#67f5dc', '#bfffee', '#fff2a8', '#ffffff'],
+      2: ['#54dfff', '#bdefff', '#eefcff', '#ffffff'],
+      3: ['#ff75ba', '#8af0df', '#fff0a0', '#ffffff'],
+      4: ['#ff6b35', '#ffbd55', '#ffe68c', '#ffffff']
+    };
+    const colors = palettes[run.worldId] || palettes[1];
+    const particleCount = scaledEffectCount(30, 16);
+    for (let i = 0; i < particleCount; i += 1) {
+      const angle = Math.PI * 2 * i / particleCount + rand(-.14, .14);
+      const radius = rand(62, 132);
       run.particles.push({
-        kind: 'portal', x, y,
-        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-        gravity: 0, life: rand(.42, .78), maxLife: .78,
-        size: rand(3, 7), color: colors[i % colors.length]
+        kind: 'portal', suction: true, centerX: x, centerY: y, angle, radius,
+        x: x + Math.cos(angle) * radius, y: y + Math.sin(angle) * radius,
+        vx: -Math.sin(angle) * 80, vy: Math.cos(angle) * 80,
+        angularSpeed: rand(5.2, 8.6) * (i % 2 ? 1 : -1), pullSpeed: rand(92, 158),
+        gravity: 0, life: rand(.62, .88), maxLife: .88,
+        size: rand(2.5, 6.5), color: colors[i % colors.length], shape: i % 4 === 0 ? 'streak' : 'orb'
       });
     }
+    if (run.particles.length > 210) run.particles.splice(0, run.particles.length - 210);
   }
 
   function updateParticles(dt) {
     if (!run) return;
     for (const p of run.particles) {
-      p.vy += (p.gravity ?? 470) * dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      if (p.kind === 'portal') {
+      if (p.kind === 'portal' && p.suction) {
+        const previousX = p.x;
+        const previousY = p.y;
+        p.angle += p.angularSpeed * dt;
+        p.radius = Math.max(0, p.radius - p.pullSpeed * dt * (1.12 + (1 - p.life / p.maxLife) * .8));
+        p.x = p.centerX + Math.cos(p.angle) * p.radius;
+        p.y = p.centerY + Math.sin(p.angle) * p.radius * .76;
+        p.vx = (p.x - previousX) / Math.max(.001, dt);
+        p.vy = (p.y - previousY) / Math.max(.001, dt);
+        p.size = Math.max(.8, p.size * Math.pow(.32, dt));
+      } else {
+        p.vy += (p.gravity ?? 470) * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      }
+      if (p.kind === 'portal' && !p.suction) {
         p.vx *= Math.max(0, 1 - dt * 2.8);
         p.vy *= Math.max(0, 1 - dt * 2.8);
       }
@@ -2743,36 +3281,32 @@
       heal: { colors: ['#effff4', '#8dffba', '#31d98b', '#ffffff'], count: 8, life: .9 },
       cryo: { colors: ['#effcff', '#a9efff', '#54cfff', '#ffffff'], count: 8, life: 1.05 },
       snowflake: { colors: ['#ffffff', '#c7f6ff', '#73dcff', '#3ba9ed'], count: 8, life: 1.1 },
-      appleMint: { colors: ['#f1fff9', '#a9ffe8', '#45e3b5', '#ffffff'], count: 7, life: .95 },
-      appleRed: { colors: ['#fff4bb', '#ffc54f', '#ff526d', '#ffffff'], count: 8, life: 1.0 },
+      appleMint: { colors: ['#f1fff9', '#a9ffe8', '#45e3b5', '#ffffff'], count: 10, life: 1.28 },
+      appleRed: { colors: ['#fff4bb', '#ffc54f', '#ff526d', '#ffffff'], count: 12, life: 1.45 },
       geyser: { colors: ['#fff4d0', '#ffbd45', '#ff6a2b', '#d9d9d4'], count: 4, life: .68 },
-      seismic: { colors: ['#ffe289', '#ff9a26', '#74433b', '#35313a'], count: 18, life: 1.0 }
     }[type];
     if (!config) return;
     run.specialEffects.push({
       type, x, y, nx, ny, life: config.life, maxLife: config.life
     });
-    for (let i = 0; i < config.count; i += 1) {
-      const bombSmoke = type === 'bomb' && i >= 14;
+    const particleCount = scaledEffectCount(config.count, 4);
+    for (let i = 0; i < particleCount; i += 1) {
+      const bombSmoke = type === 'bomb' && i >= Math.ceil(particleCount * .7);
       const angle = type === 'spring' || type === 'geyser'
         ? Math.atan2(ny, nx) + rand(-.58, .58)
-        : type === 'seismic'
-          ? (i % 2 ? 0 : Math.PI) + rand(-.28, .28)
-        : Math.PI * 2 * i / config.count + rand(-.16, .16);
+        : Math.PI * 2 * i / particleCount + rand(-.16, .16);
       const speed = type === 'bomb'
         ? (bombSmoke ? rand(32, 72) : rand(155, 265))
         : type === 'spring'
           ? rand(210, 345)
           : type === 'geyser'
             ? rand(105, 185)
-            : type === 'seismic'
-              ? rand(105, 235)
               : rand(55, 145);
       run.particles.push({
         kind: 'special', x, y,
         vx: bombSmoke ? rand(-52, 52) : Math.cos(angle) * speed,
         vy: bombSmoke ? rand(-88, -34) : Math.sin(angle) * speed,
-        gravity: bombSmoke ? -12 : type === 'bomb' ? 145 : type === 'heal' ? -42 : type === 'appleMint' ? -18 : type === 'appleRed' ? 52 : type === 'snowflake' ? 18 : type === 'geyser' ? -10 : type === 'seismic' ? 180 : 32,
+        gravity: bombSmoke ? -12 : type === 'bomb' ? 145 : type === 'heal' ? -42 : type === 'appleMint' ? -18 : type === 'appleRed' ? 52 : type === 'snowflake' ? 18 : type === 'geyser' ? -10 : 32,
         life: bombSmoke ? rand(.48, .7) : rand(config.life * .66, config.life), maxLife: config.life,
         size: bombSmoke ? rand(7, 11) : rand(2.5, type === 'bomb' ? 6.2 : 6),
         color: bombSmoke ? ['#4f3b46', '#76505a', '#a8675b'][i % 3] : config.colors[i % config.colors.length],
@@ -2782,8 +3316,6 @@
             ? 'streak'
           : type === 'heal' && i % 3 === 0
           ? 'plus'
-          : type === 'seismic' && i % 4 === 0
-            ? 'smoke'
           : type === 'geyser' && i % 4 === 0
             ? 'smoke'
           : type === 'geyser' && i % 3 === 0
@@ -2821,19 +3353,24 @@
     if (!run) return;
     const currentDepth = Math.max(0, Math.floor(run.maxDepth));
     const targetDepth = Math.max(1, run.world.targetDepth);
-    const routeRatio = clamp(currentDepth / targetDepth, 0, 1);
+    const segmentDepth = run.endless ? Math.max(0, currentDepth - (run.endlessDepthOffset || 0)) : currentDepth;
+    const routeRatio = clamp(segmentDepth / targetDepth, 0, 1);
     const routePosition = 3 + routeRatio * 94;
     const previousBest = Math.min(targetDepth, Math.max(0, run.previousBest || 0));
     const bestRatio = clamp(previousBest / targetDepth, 0, 1);
     const bestPosition = clamp(3 + bestRatio * 94, 3, 90);
     els.depthLabel.textContent = `${currentDepth} М`;
-    if (els.runCoinsGain) els.runCoinsGain.textContent = `+${Math.max(0, Math.floor(run.coins)).toLocaleString('ru-RU')}`;
+    if (els.runCoinsGain) {
+      const earnedCoins = Math.max(0, Math.floor(run.coins));
+      els.runCoinsGain.textContent = `+${formatCompactNumber(earnedCoins)}`;
+      els.runCoinsGain.title = `За забег: +${earnedCoins.toLocaleString('ru-RU')}`;
+    }
     els.routeProgress.style.width = `${routePosition}%`;
     els.routeSlimeMarker.style.left = `${routePosition}%`;
-    els.routeTargetLabel.textContent = `${targetDepth} М`;
+    els.routeTargetLabel.textContent = run.endless ? `∞ · КРУГ ${run.endlessLap}` : `${targetDepth} М`;
     els.routeBestLabel.textContent = previousBest > 0 ? `ПРОШЛЫЙ ${previousBest} М` : 'ПЕРВЫЙ ЗАБЕГ';
     els.routeBestMarker.style.left = `${bestPosition}%`;
-    els.routeBestMarker.classList.toggle('hidden', previousBest <= 0);
+    els.routeBestMarker.classList.toggle('hidden', run.endless || previousBest <= 0);
     els.runMassLabel.textContent = `${Math.max(0, Math.ceil(run.mass))}/${Math.ceil(run.maxMass)}`;
     els.runHealthBar.style.width = `${clamp(run.mass / Math.max(1, run.maxMass) * 100, 0, 100)}%`;
     els.runHealthBar.closest('.shaft-health')?.classList.toggle('is-low', run.mass / Math.max(1, run.maxMass) <= .3);
@@ -2885,7 +3422,8 @@
     // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions();
     drawGeyserCapture(timestamp);
-    drawSpecialEffects();
+    drawMeteorShowers(timestamp);
+    drawSpecialEffects(false);
 
     for (const p of run.particles) {
       const sy = p.y - run.cameraY;
@@ -2949,6 +3487,9 @@
 
     drawSelectedTrail(timestamp);
     drawSlime(timestamp);
+    // Size-change arrows must stay above the slime. A large red-apple slime
+    // previously covered most of the effect when it was rendered with blocks.
+    drawSpecialEffects(true);
     ctx.restore();
   }
 
@@ -3229,10 +3770,66 @@
     ctx.restore();
   }
 
-  function drawSpecialEffects() {
+  function drawMeteorShowers(timestamp) {
+    if (!run.meteorShowers?.length) return;
+    ctx.save();
+    for (const shower of run.meteorShowers) {
+      for (const strike of shower.strikes) {
+        const targetY = strike.y - run.cameraY;
+        if (targetY < -180 || targetY > VIEW_H + 190) continue;
+        if (!strike.impactedAt) {
+          const warningProgress = clamp((timestamp - strike.warnedAt) / Math.max(1, strike.impactAt - strike.warnedAt), 0, 1);
+          const pulse = .68 + Math.sin(timestamp / 55) * .22;
+          ctx.save();
+          ctx.translate(strike.x, targetY);
+          ctx.globalAlpha = .32 + warningProgress * .52;
+          ctx.strokeStyle = warningProgress > .68 ? '#fff09a' : '#ff7638';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([7, 5]);
+          ctx.lineDashOffset = -timestamp / 28;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 24 + pulse * 4, 11 + pulse * 2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = .12 + warningProgress * .18;
+          ctx.fillStyle = '#ff5b28';
+          ctx.beginPath(); ctx.ellipse(0, 0, 30, 14, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+
+          if (timestamp >= strike.fallAt) {
+            const fallProgress = clamp((timestamp - strike.fallAt) / Math.max(1, strike.impactAt - strike.fallAt), 0, 1);
+            const eased = fallProgress * fallProgress;
+            const meteorY = lerp(targetY - 250, targetY - 18, eased);
+            const meteorX = strike.x - (1 - eased) * 94;
+            const angle = .72 + strike.angle;
+            if (!drawVfxContained('meteor-flight', meteorX, meteorY, 124, 88, .96, angle, .86 + fallProgress * .16)) {
+              ctx.fillStyle = '#ff7b25';
+              ctx.beginPath(); ctx.arc(meteorX, meteorY, 17, 0, Math.PI * 2); ctx.fill();
+            }
+          }
+          continue;
+        }
+
+        const impactProgress = clamp((timestamp - strike.impactedAt) / 760, 0, 1);
+        const frame = impactProgress < .4 ? 1 : 2;
+        const alpha = frame === 1 ? 1 - impactProgress * .55 : Math.pow(1 - impactProgress, .72);
+        const size = frame === 1 ? 238 : 265 + impactProgress * 36;
+        if (!drawVfxSprite(`meteor-impact-${frame}`, strike.x, targetY, size, size, alpha, 0, .84 + Math.sin(impactProgress * Math.PI) * .17)) {
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = '#ff8a27';
+          ctx.beginPath(); ctx.arc(strike.x, targetY, 34 + impactProgress * 46, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawSpecialEffects(overlayOnly = false) {
     if (!run.specialEffects?.length) return;
     ctx.save();
     for (const effect of run.specialEffects) {
+      const slimeOverlay = effect.type === 'appleMint' || effect.type === 'appleRed';
+      if (slimeOverlay !== overlayOnly) continue;
       const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
       const alpha = Math.pow(1 - progress, .94);
       const y = effect.y - run.cameraY;
@@ -3288,17 +3885,39 @@
         const mint = effect.type === 'appleMint';
         const targetX = run.slime.x;
         const targetY = run.slime.y - run.cameraY;
-        const direction = mint ? 1 : -1;
-        const travel = clamp(progress / .82, 0, 1);
-        const arrowsY = targetY - direction * 38 + direction * travel * 78;
-        const arrowAlpha = alpha * Math.sin(clamp(travel, 0, 1) * Math.PI);
+        const radius = run.slime.radius;
+        const enter = clamp(progress / .12, 0, 1);
+        const leave = clamp((1 - progress) / .2, 0, 1);
+        const arrowAlpha = enter * leave;
+        const arrowSize = clamp(radius * 3.35, 154, 224);
+        const arrowsY = mint
+          ? targetY + radius + arrowSize * .33 + progress * 16
+          : targetY - radius - arrowSize * .33 - progress * 16;
+        const ringRadius = mint
+          ? radius + 48 - progress * 36
+          : radius + 10 + progress * 42;
+        const rgb = mint ? '54,231,174' : '255,72,75';
+        ctx.globalAlpha = arrowAlpha * .8;
+        ctx.strokeStyle = `rgba(${rgb},.96)`;
+        ctx.lineWidth = 4.2;
+        ctx.shadowColor = `rgb(${rgb})`;
+        ctx.shadowBlur = 13;
+        ctx.beginPath();
+        ctx.arc(targetX, targetY, Math.max(radius + 8, ringRadius), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = arrowAlpha * .32;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(targetX, targetY, Math.max(radius + 15, ringRadius + 12), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
         const spriteName = mint ? 'apple-shrink' : 'apple-grow';
-        if (!drawVfxSprite(spriteName, targetX, arrowsY, 132, 132, arrowAlpha * .98, 0, .9 + Math.sin(progress * Math.PI) * .18)) {
+        if (!drawVfxSprite(spriteName, targetX, arrowsY, arrowSize, arrowSize, arrowAlpha, 0, .96 + Math.sin(progress * Math.PI) * .12)) {
           ctx.globalAlpha = arrowAlpha;
           ctx.fillStyle = mint ? '#42dbad' : '#ff5b5e';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.font = '1000 44px system-ui';
+          ctx.font = `1000 ${Math.round(arrowSize * .35)}px system-ui`;
           ctx.fillText(mint ? '↓' : '↑', targetX, arrowsY);
         }
       } else if (effect.type === 'geyser') {
@@ -3316,16 +3935,6 @@
           ctx.globalAlpha = alpha * .72;
           ctx.fillStyle = '#ff8b2c';
           ctx.beginPath(); ctx.arc(blastX, blastY, 16 + progress * 18, 0, Math.PI * 2); ctx.fill();
-        }
-      } else if (effect.type === 'seismic') {
-        const frame = progress < .14 ? 1 : progress < .34 ? 2 : progress < .76 ? 3 : 4;
-        const maxWidth = frame <= 1 ? 156 : frame === 2 ? 230 : 430;
-        const maxHeight = frame <= 1 ? 156 : frame === 2 ? 205 : frame === 3 ? 215 : 165;
-        const frameAlpha = frame === 4 ? alpha * .76 : Math.min(1, alpha * 1.08);
-        if (!drawVfxContained(`seismic-${frame}`, effect.x, y, maxWidth, maxHeight, frameAlpha, 0, .92 + Math.sin(progress * Math.PI) * .11)) {
-          ctx.globalAlpha = alpha * .66;
-          ctx.fillStyle = '#ff9d2f';
-          ctx.beginPath(); ctx.ellipse(effect.x, y, 56 + progress * 150, 16 + progress * 22, 0, 0, Math.PI * 2); ctx.fill();
         }
       } else if (effect.type === 'spring') {
         const direction = Math.atan2(effect.ny, effect.nx);
@@ -3390,7 +3999,7 @@
       ctx.restore();
     }
 
-    const depth = Math.max(0, Math.floor((run.cameraY + 20) / 10));
+    const depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.floor((run.cameraY + 20) / 10));
     ctx.fillStyle = 'rgba(11,10,18,.42)';
     roundedRect(ctx, 10, 10, 72, 25, 12);
     ctx.fill();
@@ -3417,10 +4026,11 @@
     const portalSprite = WORLD_SPRITES[world.id]?.portal || null;
     if (portalSprite?.complete && portalSprite.naturalWidth) {
       const pulse = .92 + Math.sin(timestamp / 180) * .07;
-      const entryPulse = run.portalEntry
-        ? 1 + Math.sin(clamp((timestamp - run.portalEntry.startedAt) / 680, 0, 1) * Math.PI) * .38
-        : 1;
-      ctx.globalAlpha = .16 + Math.sin(timestamp / 210) * .045;
+      const entryProgress = run.portalEntry
+        ? clamp((timestamp - run.portalEntry.startedAt) / run.portalEntry.duration, 0, 1)
+        : 0;
+      const entryPulse = run.portalEntry ? 1 + Math.sin(entryProgress * Math.PI) * .42 : 1;
+      ctx.globalAlpha = .16 + Math.sin(timestamp / 210) * .045 + entryProgress * .14;
       ctx.fillStyle = palette.glow;
       ctx.beginPath();
       ctx.ellipse(centerX, centerY, 86 * pulse * entryPulse, 86 * pulse * entryPulse, 0, 0, Math.PI * 2);
@@ -3445,6 +4055,26 @@
         ctx.beginPath();
         ctx.arc(sparkleX, sparkleY, 2.4 + (i % 3), 0, Math.PI * 2);
         ctx.fill();
+      }
+      if (run.portalEntry) {
+        const suctionStrength = Math.sin(entryProgress * Math.PI);
+        for (let ring = 0; ring < 3; ring += 1) {
+          const contraction = (1 - entryProgress + ring / 3) % 1;
+          const ringRadius = 43 + contraction * 68;
+          ctx.globalAlpha = (.12 + suctionStrength * .34) * (1 - contraction * .55);
+          ctx.strokeStyle = ring % 2 ? palette.spark : palette.ring;
+          ctx.lineWidth = 2.5 + suctionStrength * 2;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, ringRadius, timestamp / 360 + ring, timestamp / 360 + ring + Math.PI * 1.35);
+          ctx.stroke();
+        }
+        const coreGlow = ctx.createRadialGradient(centerX, centerY, 2, centerX, centerY, 51);
+        coreGlow.addColorStop(0, `rgba(255,255,255,${.42 + entryProgress * .42})`);
+        coreGlow.addColorStop(.32, palette.glow);
+        coreGlow.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalAlpha = .22 + suctionStrength * .28;
+        ctx.fillStyle = coreGlow;
+        ctx.beginPath(); ctx.arc(centerX, centerY, 52 + suctionStrength * 8, 0, Math.PI * 2); ctx.fill();
       }
       ctx.globalAlpha = 1;
       ctx.save();
@@ -3629,7 +4259,7 @@
       ctx.stroke();
     }
 
-    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', cryo: '◇', snowflake: '❄', appleMint: '🍏', appleRed: '🍎', geyser: '◉', seismic: '◆', boss: '!' }[special] || '•';
+    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', cryo: '◇', snowflake: '❄', appleMint: '🍏', appleRed: '🍎', geyser: '◉', meteor: '☄', boss: '!' }[special] || '•';
     ctx.fillStyle = '#fff';
     ctx.font = special === 'gel' ? '1000 28px system-ui' : '1000 23px system-ui';
     ctx.textAlign = 'center';
@@ -3662,20 +4292,16 @@
   }
 
   function drawSpecialBlockAura(block, sy, timestamp) {
-    if (!['bomb', 'gel', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'seismic'].includes(block.special)) return;
+    const auraKey = block.hazard ? 'hazard' : block.special;
+    // Only universally important signals glow: green means healing, red means
+    // danger. Other utility blocks rely on their artwork and own animations.
+    if (auraKey !== 'gel' && auraKey !== 'hazard') return;
     const colors = {
-      bomb: [255, 45, 54],
       gel: [50, 225, 116],
-      spring: [74, 220, 242],
-      cryo: [64, 201, 235],
-      snowflake: [114, 220, 249],
-      appleMint: [57, 220, 164],
-      appleRed: [255, 76, 84],
-      geyser: [255, 119, 39],
-      seismic: [255, 164, 39]
+      hazard: [255, 60, 24]
     };
-    const [red, green, blue] = colors[block.special];
-    const phase = timestamp / (block.special === 'bomb' ? 125 : block.special === 'gel' ? 280 : 330) + block.id * .71;
+    const [red, green, blue] = colors[auraKey];
+    const phase = timestamp / (auraKey === 'hazard' ? 240 : 280) + block.id * .71;
     const pulse = .5 + Math.sin(phase) * .5;
     const cx = block.x + block.w / 2;
     const cy = sy + block.h / 2;
@@ -3683,15 +4309,26 @@
     ctx.beginPath();
     ctx.rect(block.x + 1, sy + 1, block.w - 2, block.h - 2);
     ctx.clip();
-    const radius = block.w * (block.special === 'bomb' ? .7 : .62);
+    const radius = block.w * (auraKey === 'hazard' ? .7 : .62);
     const glow = ctx.createRadialGradient(cx, cy, 2, cx, cy, radius);
-    const strength = block.special === 'bomb' ? .31 : block.special === 'gel' ? .26 : .18;
+    const strength = .3;
     glow.addColorStop(0, `rgba(${red},${green},${blue},${strength + pulse * .12})`);
     glow.addColorStop(.58, `rgba(${red},${green},${blue},${strength * .48})`);
     glow.addColorStop(1, `rgba(${red},${green},${blue},0)`);
     ctx.globalAlpha = .9;
     ctx.fillStyle = glow;
     ctx.fillRect(block.x + 1, sy + 1, block.w - 2, block.h - 2);
+    // Semantic lighting is deliberately reserved for these two block types.
+    {
+      ctx.globalAlpha = (auraKey === 'hazard' || auraKey === 'gel' ? .68 : .56) + pulse * .25;
+      ctx.strokeStyle = `rgba(${red},${green},${blue},.9)`;
+      ctx.shadowColor = `rgba(${red},${green},${blue},.92)`;
+      ctx.shadowBlur = 3.5 + pulse * 4.5;
+      ctx.lineWidth = auraKey === 'hazard' ? 2.6 : 2.15;
+      roundedRect(ctx, block.x + 2.1, sy + 2.1, block.w - 4.2, block.h - 4.2, 7);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
     ctx.restore();
   }
 
@@ -3710,7 +4347,7 @@
     else if (block.special === 'cryo') spriteName = 'cryo';
     else if (block.special === 'snowflake') spriteName = 'snowflake';
     else if (block.special === 'geyser') spriteName = 'geyser';
-    else if (block.special === 'seismic') spriteName = 'seismic';
+    else if (block.special === 'meteor') spriteName = 'meteor';
     else if (block.special === 'gel') spriteName = 'heal';
     else if (block.special === 'coin') spriteName = 'ore-gold';
     else if (block.frozen && run.worldId === 2) spriteName = 'snow-packed';
@@ -3763,7 +4400,7 @@
     const offsetY = customSprite ? block.h * (artwork.y || 0) / 100 : 0;
     const drawX = block.x + (block.w - width) / 2 + offsetX;
     const drawY = sy + (block.h - height) / 2 + offsetY;
-    if (['bomb', 'gel', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'seismic'].includes(block.special)) {
+    if (['bomb', 'gel', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'].includes(block.special)) {
       const time = performance.now();
       const phase = time / (block.special === 'bomb' ? 160 : block.special === 'gel' ? 330 : block.special === 'spring' ? 260 : 300) + block.id;
       const wave = Math.sin(phase);
@@ -3777,7 +4414,7 @@
               ? 1 + wave * .038
             : block.special === 'geyser'
               ? 1 + wave * .025
-              : block.special === 'seismic'
+              : block.special === 'meteor'
                 ? 1 + wave * .045
                 : 1;
       ctx.save();
@@ -3894,7 +4531,7 @@
       iceLight: '#bdefff', snowPacked: '#e7f8ff', glacier: '#65b9e7', iceHazard: '#168bd2',
       ash: '#55515b', volcanicEarth: '#8f3f2b', basalt: '#35343d', lavaRock: '#ef592b', metal: '#677383', ore: '#9b7cff',
       coin: '#eab308', spring: '#22d3ee', bomb: '#ef4444', gel: '#34d399',
-      hazard: '#403c49', cryo: '#54dff5', snowflake: '#378ed8', appleMint: '#50e8bd', appleRed: '#ff596d', geyser: '#ff762b', seismic: '#ff9a26', boss: '#8a4fd2'
+      hazard: '#403c49', cryo: '#54dff5', snowflake: '#378ed8', appleMint: '#50e8bd', appleRed: '#ff596d', geyser: '#ff762b', meteor: '#ff7e27', boss: '#8a4fd2'
     };
     return colors[material] || world.accent;
   }
@@ -3919,8 +4556,7 @@
   }
 
   function prepareMenuSlimeCanvas() {
-    const lowPower = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-    const dpr = Math.min(lowPower ? 1.15 : 1.5, window.devicePixelRatio || 1);
+    const dpr = Math.min(isLowPowerDevice() ? 1 : isMobileDevice() ? 1.2 : 1.5, window.devicePixelRatio || 1);
     els.menuSlimeCanvas.width = Math.round(180 * dpr);
     els.menuSlimeCanvas.height = Math.round(180 * dpr);
     menuSlimeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -3931,24 +4567,21 @@
     menuSlimeCtx.clearRect(0, 0, 180, 180);
     const emotion = menuSlimeEmotion();
     const rarity = MEAL_REACTION_CLASSES.find(name => els.slime.classList.contains(name))?.replace('meal-', '') || '';
-    const isChewing = els.slime.classList.contains('chewing');
+    const isEating = ['eat', 'chewing', 'savoring', 'pleased'].some(name => els.slime.classList.contains(name));
     const isPleased = els.slime.classList.contains('pleased');
     const blinkPhase = timestamp % 4700;
-    const hue = Math.floor(timestamp / 12) % 360;
-    const prismaticActive = rarity === 'prismatic' && (isChewing || isPleased);
+    const prismaticActive = rarity === 'prismatic' && isEating;
+    const secretActive = rarity === 'secret' && isEating;
     const selected = skinById(save.selectedSkin);
-    const menuColors = prismaticActive
-      ? [`hsl(${(hue + 48) % 360} 94% 82%)`, `hsl(${hue} 82% 58%)`, `hsl(${(hue + 285) % 360} 72% 42%)`]
-      : selected.colors;
     let aura = '';
     if (rarity === 'epic' && isPleased) aura = 'epic';
     else if (rarity === 'legendary' && isPleased) aura = 'legendary';
     else if (prismaticActive) aura = 'prismatic';
-    else if (rarity === 'secret' && isPleased) aura = 'secret';
+    else if (secretActive) aura = 'secret';
     drawSlimeAvatar(menuSlimeCtx, {
       x: 90, y: 91, radius: 66, emotion,
       skin: selected.id,
-      colors: menuColors,
+      colors: selected.colors,
       gazeX: menuGaze.x, gazeY: menuGaze.y,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
       aura,
@@ -3959,7 +4592,7 @@
   }
 
   function menuSlimeFrame(timestamp) {
-    if (!els.homeScreen.classList.contains('active')) {
+    if (!els.homeScreen.classList.contains('active') || document.body.classList.contains('ui-modal-open')) {
       menuSlimeAnimationId = 0;
       return;
     }
@@ -3987,8 +4620,8 @@
     const portalProgress = run.portalEntry
       ? clamp((timestamp - run.portalEntry.startedAt) / run.portalEntry.duration, 0, 1)
       : 0;
-    const vanishProgress = clamp(portalProgress / .52, 0, 1);
-    const portalScale = 1 - (1 - Math.pow(1 - vanishProgress, 3));
+    const vanishProgress = clamp((portalProgress - .08) / .92, 0, 1);
+    const portalScale = Math.pow(1 - vanishProgress, 1.12);
     if (run.portalEntry && portalScale <= .01) return;
     const speed = Math.hypot(s.vx, s.vy);
     const stretch = clamp(s.vy / 900, -.22, .3);
@@ -4042,15 +4675,38 @@
 
     if (timestamp < run.appleGlowUntil) {
       const mint = run.appleGlowType === 'mint';
-      const duration = mint ? 1000 : 1100;
+      const duration = mint ? 1450 : 1650;
       const appleProgress = clamp((run.appleGlowUntil - timestamp) / duration, 0, 1);
-      const appleGlow = ctx.createRadialGradient(s.x, screenY, radius * .35, s.x, screenY, radius + 17);
+      const pulse = .82 + Math.sin(timestamp / 72) * .18;
+      const appleGlow = ctx.createRadialGradient(s.x, screenY, radius * .18, s.x, screenY, radius + 46);
       const rgb = mint ? '58,220,168' : '255,77,83';
-      appleGlow.addColorStop(0, `rgba(${rgb},${appleProgress * .2})`);
+      appleGlow.addColorStop(0, `rgba(${rgb},${appleProgress * .38 * pulse})`);
+      appleGlow.addColorStop(.58, `rgba(${rgb},${appleProgress * .22 * pulse})`);
       appleGlow.addColorStop(1, `rgba(${rgb},0)`);
       ctx.save();
       ctx.fillStyle = appleGlow;
-      ctx.beginPath(); ctx.arc(s.x, screenY, radius + 17, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(s.x, screenY, radius + 46, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    if (run.portalEntry) {
+      const portalPalette = {
+        1: ['82,239,176', '221,255,231'],
+        2: ['84,219,255', '232,250,255'],
+        3: ['255,127,186', '255,240,166'],
+        4: ['255,107,40', '255,214,109']
+      }[run.worldId] || ['82,239,176', '221,255,231'];
+      const suctionGlow = ctx.createRadialGradient(s.x, screenY, radius * .12, s.x, screenY, radius * (1.7 + portalProgress * .45));
+      suctionGlow.addColorStop(0, `rgba(${portalPalette[1]},${.22 + portalProgress * .34})`);
+      suctionGlow.addColorStop(.48, `rgba(${portalPalette[0]},${.18 + portalProgress * .18})`);
+      suctionGlow.addColorStop(1, `rgba(${portalPalette[0]},0)`);
+      ctx.save();
+      ctx.fillStyle = suctionGlow;
+      ctx.beginPath(); ctx.arc(s.x, screenY, radius * (1.72 + portalProgress * .45), 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = (1 - vanishProgress) * .72;
+      ctx.strokeStyle = `rgba(${portalPalette[1]},.92)`;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.arc(s.x, screenY, radius * (1.15 - portalProgress * .35), timestamp / 180, timestamp / 180 + Math.PI * 1.35); ctx.stroke();
       ctx.restore();
     }
 
@@ -4067,8 +4723,8 @@
           : selected.colors,
       scaleX: scaleX * portalScale,
       scaleY: scaleY * portalScale,
-      rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.15,
-      alpha: run.portalEntry ? Math.pow(1 - vanishProgress, 1.35) : 1,
+      rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.8,
+      alpha: run.portalEntry ? Math.pow(1 - vanishProgress, .72) : 1,
       timestamp
     });
 
@@ -4231,7 +4887,44 @@
   }
 
   // ===== РЕЗУЛЬТАТ ЗАБЕГА И МЕТА-ПРОГРЕССИЯ =====
-  function finishWorld() {
+  function continueEndlessWorld() {
+    if (!run || run.ended) return;
+    const completedLap = run.endlessLap;
+    const segmentDepth = run.world.targetDepth;
+    const lapReward = Math.round(run.world.reward * (1 + Math.min(1.4, (completedLap - 1) * .14)));
+    run.coins += lapReward;
+    run.endlessDepthOffset += segmentDepth;
+    run.endlessLap += 1;
+    run.world.endlessScale = 1 + Math.min(.9, (run.endlessLap - 1) * .1);
+    run.mass = Math.min(run.maxMass, run.mass + Math.max(1, Math.ceil(run.maxMass * .12)));
+    run.portalEntry = null;
+    run.portalTransitioning = false;
+    run.blocks = generateBlockField(run);
+    run.particles = [];
+    run.specialEffects = [];
+    run.meteorShowers = [];
+    run.hitCooldowns.clear();
+    run.geyserCapture = null;
+    run.slime.x = run.startX;
+    run.slime.y = 78;
+    run.slime.vx = rand(-65, 65);
+    run.slime.vy = 55;
+    run.slime.wobble = 0;
+    run.cameraY = 0;
+    run.depth = run.endlessDepthOffset;
+    run.maxDepth = run.endlessDepthOffset;
+    run.flightDistance = 0;
+    run.lastPosition = { x: run.startX, y: 78 };
+    run.trailPoints = [];
+    run.lastTime = 0;
+    resetCombo();
+    updateRunUI();
+    sound('coin');
+    showToast(`КРУГ ${completedLap} · +${formatCompactNumber(lapReward)} МОНЕТ`);
+    run.animationId = requestAnimationFrame(gameFrame);
+  }
+
+  function finalizeWorldCompletion() {
     if (!run || run.ended) return;
     const world = run.world;
     const level = clamp(Math.round(run.level || 1), 1, LEVEL_COUNT);
@@ -4248,11 +4941,22 @@
         save.selectedLevels[save.world] = 1;
       }
     }
+    run.isFinalCompletion = world.id === WORLDS[WORLDS.length - 1].id && level === LEVEL_COUNT;
+    if (run.isFinalCompletion) save.gameCompleted = true;
     run.coins += world.reward;
     sound('win');
     endRun(true, level < LEVEL_COUNT
       ? `Уровень ${level} пройден! Открыт уровень ${level + 1}.`
       : `Все уровни мира «${world.name}» пройдены!`);
+  }
+
+  function finishWorld() {
+    if (!run || run.ended || run.portalTransitioning) return;
+    run.portalTransitioning = true;
+    clearFallSteering();
+    cancelAnimationFrame(run.animationId);
+    if (run.endless) continueEndlessWorld();
+    else finalizeWorldCompletion();
   }
 
   function finishRunEarly() {
@@ -4333,22 +5037,79 @@
     return meter.multiplier;
   }
 
-  function animateResultCoins(from, to) {
+  function animateResultNumber(element, from, to, duration, formatter) {
     cancelAnimationFrame(resultCoinAnimationId);
     const startedAt = performance.now();
-    const duration = 520;
-    const step = timestamp => {
-      const progress = clamp((timestamp - startedAt) / duration, 0, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const value = Math.round(from + (to - from) * eased);
-      els.resultCoins.textContent = `+${value.toLocaleString('ru-RU')}`;
-      if (progress < 1) resultCoinAnimationId = requestAnimationFrame(step);
-    };
-    resultCoinAnimationId = requestAnimationFrame(step);
+    return new Promise(resolve => {
+      const step = timestamp => {
+        const progress = clamp((timestamp - startedAt) / Math.max(1, duration), 0, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.round(from + (to - from) * eased);
+        element.textContent = formatter(value);
+        if (progress < 1) resultCoinAnimationId = requestAnimationFrame(step);
+        else resolve(value);
+      };
+      resultCoinAnimationId = requestAnimationFrame(step);
+    });
+  }
+
+  function animateResultCoins(from, to) {
+    const stat = els.resultCoins.closest('.result-stat');
+    stat?.classList.add('is-counting');
+    animateResultNumber(els.resultCoins, from, to, 520, value => `+${formatCompactNumber(value)}`).then(() => {
+      stat?.classList.remove('is-counting');
+      stat?.classList.add('is-complete');
+      setTimeout(() => stat?.classList.remove('is-complete'), 420);
+    });
+  }
+
+  async function revealResultSummary(depth, coins, token) {
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const modal = els.resultOverlay.querySelector('.result-modal');
+    const depthStat = els.resultDepth.closest('.result-stat');
+    const coinsStat = els.resultCoins.closest('.result-stat');
+    if (!reducedMotion) await new Promise(resolve => setTimeout(resolve, 330));
+    if (token !== resultRevealToken || !run) return;
+
+    depthStat?.classList.add('is-counting');
+    if (reducedMotion) els.resultDepth.textContent = `${depth.toLocaleString('ru-RU')} м`;
+    else await animateResultNumber(els.resultDepth, 0, depth, 580, value => `${value.toLocaleString('ru-RU')} м`);
+    if (token !== resultRevealToken || !run) return;
+    depthStat?.classList.remove('is-counting');
+    depthStat?.classList.add('is-complete');
+    feedback(5);
+
+    if (!reducedMotion) await new Promise(resolve => setTimeout(resolve, 120));
+    if (token !== resultRevealToken || !run) return;
+    depthStat?.classList.remove('is-complete');
+    coinsStat?.classList.add('is-counting');
+    sound('coin');
+    if (reducedMotion) els.resultCoins.textContent = `+${formatCompactNumber(coins)}`;
+    else await animateResultNumber(els.resultCoins, 0, coins, 620, value => `+${formatCompactNumber(value)}`);
+    if (token !== resultRevealToken || !run) return;
+    coinsStat?.classList.remove('is-counting');
+    coinsStat?.classList.add('is-complete');
+    feedback([5, 10, 5]);
+    setTimeout(() => coinsStat?.classList.remove('is-complete'), 430);
+
+    modal?.classList.remove('result-reveal-pending');
+    modal?.classList.add('result-reveal-ready');
+    els.resultMultiplierBtn.disabled = false;
+    els.continueBtn.disabled = false;
+    startResultMeter(true);
+  }
+
+  function calculateEndlessScore(currentRun) {
+    if (!currentRun?.endless) return 0;
+    const depthPoints = Math.max(0, Math.floor(currentRun.maxDepth || 0)) * 10;
+    const blockPoints = Math.max(0, Math.floor(currentRun.blocksDestroyed || 0)) * 75;
+    const coinPoints = Math.max(0, Math.floor(currentRun.coins || 0)) * 4;
+    return depthPoints + blockPoints + coinPoints;
   }
 
   function endRun(completed, reason) {
     if (!run || run.ended) return;
+    hideRunMenu();
     clearRunImpactFeedback();
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
     run.ended = true;
@@ -4356,8 +5117,14 @@
     cancelAnimationFrame(run.animationId);
     save.totalRuns += 1;
     save.bestDepth = Math.max(save.bestDepth, run.maxDepth);
-    save.worldBest[run.worldId] = Math.max(save.worldBest[run.worldId] || 0, Math.min(run.maxDepth, run.world.targetDepth));
-    save.lastRunDepth[`${run.worldId}:${run.level}`] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
+    if (run.endless) {
+      run.endlessScore = calculateEndlessScore(run);
+      save.endlessBestScore[run.worldId] = Math.max(save.endlessBestScore[run.worldId] || 0, run.endlessScore);
+      save.endlessBestDepth[run.worldId] = Math.max(save.endlessBestDepth[run.worldId] || 0, Math.max(0, Math.floor(run.maxDepth)));
+    } else {
+      save.worldBest[run.worldId] = Math.max(save.worldBest[run.worldId] || 0, Math.min(run.maxDepth, run.world.targetDepth));
+      save.lastRunDepth[`${run.worldId}:${run.level}`] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
+    }
     const baseCoins = Math.max(1, Math.floor(run.coins));
     save.coins += baseCoins;
     run.awardedCoins = baseCoins;
@@ -4368,26 +5135,35 @@
     persist();
 
     els.resultOverlay.dataset.world = String(run.worldId);
-    els.resultOverlay.querySelector('.result-modal')?.classList.remove('reward-locked', 'reward-claimed');
+    const resultModal = els.resultOverlay.querySelector('.result-modal');
+    resultModal?.classList.remove('reward-locked', 'reward-claimed', 'result-reveal-ready');
+    resultModal?.classList.add('result-reveal-pending');
+    els.resultDepth.closest('.result-stat')?.classList.remove('is-counting', 'is-complete');
+    els.resultCoins.closest('.result-stat')?.classList.remove('is-counting', 'is-complete');
     els.resultWorldIcon.src = versionedAsset(`assets/ui/world-icons/world-${run.worldId}.webp`);
     els.resultWorldName.textContent = run.world.name;
-    els.resultBadge.textContent = completed
+    els.resultBadge.textContent = run.endless
+      ? '∞ БЕСКОНЕЧНЫЙ ЗАБЕГ'
+      : completed
       ? (run.level >= LEVEL_COUNT ? 'МИР ПРОЙДЕН' : `УРОВЕНЬ ${run.level} ПРОЙДЕН`)
       : 'ЗАБЕГ ОКОНЧЕН';
-    els.resultTitle.textContent = 'Результат забега';
+    els.resultTitle.textContent = run.endless ? 'Бесконечный забег' : 'Результат забега';
     els.resultText.textContent = reason;
-    els.resultDepth.textContent = `${run.maxDepth.toLocaleString('ru-RU')} м`;
-    els.resultCoins.textContent = `+${baseCoins.toLocaleString('ru-RU')}`;
+    els.resultDepth.textContent = '0 м';
+    els.resultCoins.textContent = '+0';
     els.resultMultiplierLabel.textContent = formatResultMultiplier(RESULT_MULTIPLIERS[0]);
     els.resultMultiplierHint.textContent = 'Нажми, чтобы остановить стрелку';
-    els.resultMultiplierBtn.disabled = false;
+    els.resultMultiplierBtn.disabled = true;
     els.resultMultiplierBtn.innerHTML = '<span class="result-ad-play" aria-hidden="true">▶</span><span>УМНОЖИТЬ НАГРАДУ</span>';
-    els.continueBtn.disabled = false;
+    els.continueBtn.disabled = true;
     els.continueBtn.textContent = 'Продолжить без множителя';
-    els.resultOverlay.classList.remove('hidden');
+    els.resultOverlay.classList.remove('hidden', 'is-arriving');
+    syncInteractionLayers();
+    const revealToken = ++resultRevealToken;
     requestAnimationFrame(() => {
-      startResultMeter(true);
+      els.resultOverlay.classList.add('is-arriving');
       els.resultOverlay.querySelector('.modal')?.focus();
+      revealResultSummary(Math.max(0, Math.floor(run.maxDepth)), baseCoins, revealToken);
     });
     if (!completed) sound('fail');
   }
@@ -4404,7 +5180,7 @@
     els.resultMultiplierBtn.innerHTML = `<span class="result-ad-play" aria-hidden="true">▶</span><span>ПОЙМАНО ${formatResultMultiplier(multiplier)}</span>`;
     els.continueBtn.disabled = true;
     try {
-      const rewarded = await showRewardedAd(`Множитель ${formatResultMultiplier(multiplier)} · итог ${totalCoins} мон.`);
+      const rewarded = await showRewardedAd(`Множитель ${formatResultMultiplier(multiplier)} · итог ${formatCompactNumber(totalCoins)} мон.`);
       if (!rewarded) {
         els.resultOverlay.querySelector('.result-modal')?.classList.remove('reward-locked');
         els.resultMultiplierHint.textContent = 'Нажми, чтобы остановить стрелку';
@@ -4435,11 +5211,42 @@
     }
   }
 
+  function showGameComplete() {
+    els.gameCompleteOverlay.classList.remove('hidden');
+    updatePersistentUI();
+    syncInteractionLayers();
+    sound('epic');
+    feedback([12, 22, 12, 30, 16]);
+    requestAnimationFrame(() => els.gameCompleteOverlay.querySelector('.game-complete-modal')?.focus());
+  }
+
+  function closeGameCompleteToHome() {
+    els.gameCompleteOverlay.classList.add('hidden');
+    syncInteractionLayers();
+    run = null;
+    newDraft();
+  }
+
+  function startEndlessFromCompletion() {
+    els.gameCompleteOverlay.classList.add('hidden');
+    syncInteractionLayers();
+    run = null;
+    startDrop({ endless: true });
+  }
+
   function continueAfterRun() {
     if (run?.rewardPending) return;
+    const showFinale = Boolean(run?.isFinalCompletion && !run?.endless);
+    resultRevealToken += 1;
     stopResultMeter();
     cancelAnimationFrame(resultCoinAnimationId);
     els.resultOverlay.classList.add('hidden');
+    els.resultOverlay.classList.remove('is-arriving');
+    syncInteractionLayers();
+    if (showFinale) {
+      showGameComplete();
+      return;
+    }
     run = null;
     newDraft();
   }
@@ -4475,6 +5282,7 @@
     if (type === 'rewards') renderRewardsPanel();
     if (type === 'encyclopedia') renderEncyclopediaPanel(activeEncyclopediaTab, save.world);
     els.panelOverlay.classList.remove('hidden');
+    syncInteractionLayers();
     requestAnimationFrame(() => els.panelOverlay.querySelector('.modal')?.focus());
   }
 
@@ -4490,7 +5298,7 @@
           return `<div class="upgrade-card">
             <div class="upgrade-icon">${uiIconMarkup(data.icon, 'panel-ui-icon')}</div>
             <div><h4>${data.name} · ур. ${level}/${data.max}</h4><p>${data.description}</p></div>
-            <button class="buy-btn ${maxed ? 'owned' : ''}" data-upgrade="${key}">${maxed ? 'МАКС' : `● ${cost}`}</button>
+            <button class="buy-btn ${maxed ? 'owned' : ''}" data-upgrade="${key}">${maxed ? 'МАКС' : `● ${formatCompactNumber(cost)}`}</button>
           </div>`;
         }).join('')}
       </div>`;
@@ -4536,7 +5344,7 @@
         if (unlockedByWorld && !save.unlockedSkins.includes(skin.id)) save.unlockedSkins.push(skin.id);
         const unlocked = save.unlockedSkins.includes(skin.id);
         const selected = save.selectedSkin === skin.id;
-        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/coin.webp')}" alt="" aria-hidden="true"><b>${skin.cost.toLocaleString('ru-RU')}</b></span>` : '';
+        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/coin.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
         const reward = skin.world ? `<span class="shop-reward ${unlocked ? 'collected' : ''}"><b>${unlocked ? 'ПОЛУЧЕН' : 'НАГРАДА'}</b><i>МИР ${Math.max(1, skin.world - 1)}</i></span>` : '';
         const label = selected ? 'ВЫБРАН' : unlocked ? 'ВЫБРАТЬ' : skin.cost ? 'КУПИТЬ' : 'ЗАКРЫТ';
         return `<div class="skin-card ${selected ? 'selected' : ''}">
@@ -4603,7 +5411,7 @@
       ${TRAILS.map(trail => {
         const unlocked = save.unlockedTrails.includes(trail.id);
         const selected = save.selectedTrail === trail.id;
-        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/coin.webp')}" alt="" aria-hidden="true"><b>${trail.cost.toLocaleString('ru-RU')}</b></span>` : '';
+        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/coin.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(trail.cost)}</b></span>` : '';
         const previewAsset = trail.id === 'none' ? 'assets/ui/trail-none.png' : trail.asset;
         return `<div class="trail-card ${selected ? 'selected' : ''}">
           <div class="trail-preview"><img src="${versionedAsset(previewAsset)}" alt="" aria-hidden="true" loading="eager" decoding="async"></div>
@@ -4677,11 +5485,7 @@
   }
 
   function encyclopediaUnlockedWorldIds() {
-    return WORLDS.filter(world => {
-      if (world.id === 1 || world.id === save.world) return true;
-      const previous = WORLDS.find(item => item.id === world.id - 1);
-      return world.id <= save.world || Boolean(previous && (save.worldBest?.[previous.id] || 0) >= previous.targetDepth);
-    }).map(world => world.id);
+    return WORLDS.filter(world => worldIsUnlocked(world.id)).map(world => world.id);
   }
 
   function renderEncyclopediaPanel(tab = 'foods', worldId = save.world) {
@@ -4699,6 +5503,7 @@
       worlds: WORLDS,
       foods: FOODS,
       discoveredFoods: save.discoveredFoods || [],
+      revealedSecretFoods: save.revealedSecretFoods || [],
       rarityLabels: RARITY_LABELS,
       balance: GAME_BALANCE,
       versionedAsset,
@@ -4752,9 +5557,13 @@
     viewer.setAttribute('aria-label', `Карточка: ${food.name}`);
     viewer.innerHTML = `<div class="encyclopedia-card-viewer-stage"><button class="encyclopedia-card-viewer-close" type="button" aria-label="Закрыть крупную карточку">×</button><div class="encyclopedia-card-viewer-card">${encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup })}</div><small>Нажми ещё раз, чтобы закрыть</small></div>`;
     document.body.appendChild(viewer);
+    syncInteractionLayers();
     const close = () => {
       viewer.classList.add('closing');
-      window.setTimeout(() => viewer.remove(), 180);
+      window.setTimeout(() => {
+        viewer.remove();
+        syncInteractionLayers();
+      }, 180);
       sourceCard?.focus({ preventScroll: true });
     };
     viewer.addEventListener('click', close);
@@ -4831,9 +5640,11 @@
   function showRewardedAd(reason) {
     if (adInFlight) return Promise.resolve(false);
     adInFlight = true;
+    syncInteractionLayers();
     const finish = promise => promise.finally(() => {
       adInFlight = false;
       document.body.classList.remove('ad-busy');
+      syncInteractionLayers();
     });
     document.body.classList.add('ad-busy');
     if (window.ysdk?.adv?.showRewardedVideo) {
@@ -4850,18 +5661,41 @@
     }
     els.adReason.textContent = reason;
     els.adOverlay.classList.remove('hidden');
+    syncInteractionLayers();
     return finish(new Promise(resolve => { pendingAdResolver = resolve; }));
   }
 
   function resolveDemoAd(value) {
     els.adOverlay.classList.add('hidden');
+    syncInteractionLayers();
     const resolver = pendingAdResolver;
     pendingAdResolver = null;
     if (resolver) resolver(value);
   }
 
+  function openAdminTools() {
+    if (!els.adminToolsOverlay || !els.adminToolsOverlay.classList.contains('hidden')) return;
+    hideFoodInfo();
+    lastFocusedElement = document.activeElement;
+    els.adminToolsOverlay.classList.remove('hidden');
+    els.adminMenuBtn?.setAttribute('aria-expanded', 'true');
+    syncInteractionLayers();
+    requestAnimationFrame(() => els.adminToolsOverlay.querySelector('.admin-tools-modal')?.focus({ preventScroll: true }));
+    sound('tap');
+    feedback(5);
+  }
+
+  function closeAdminTools() {
+    if (!els.adminToolsOverlay || els.adminToolsOverlay.classList.contains('hidden')) return;
+    els.adminToolsOverlay.classList.add('hidden');
+    els.adminMenuBtn?.setAttribute('aria-expanded', 'false');
+    syncInteractionLayers();
+    if (lastFocusedElement?.focus) lastFocusedElement.focus({ preventScroll: true });
+  }
+
   function closePanel() {
     els.panelOverlay.classList.add('hidden');
+    syncInteractionLayers();
     if (lastFocusedElement?.focus) lastFocusedElement.focus();
   }
 
@@ -4914,7 +5748,14 @@
       if (!button) return;
       selectLevel(Number(button.dataset.level));
     });
+    els.homeWorldSelect?.addEventListener('change', event => selectHomeWorld(event.target.value));
+    els.campaignModeBtn?.addEventListener('click', () => selectHomeMode('campaign'));
+    els.endlessModeBtn?.addEventListener('click', () => selectHomeMode('endless'));
     els.startDropBtn.addEventListener('click', startDrop);
+    els.startEndlessBtn?.addEventListener('click', () => startDrop({ endless: true }));
+    els.adminMenuBtn?.addEventListener('click', openAdminTools);
+    els.closeAdminToolsBtn?.addEventListener('click', closeAdminTools);
+    els.adminToolsOverlay?.addEventListener('click', event => { if (event.target === els.adminToolsOverlay) closeAdminTools(); });
     els.adminRestartBtn.addEventListener('click', restartDraftFromAdmin);
     els.adminPrevWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(-1));
     els.adminNextWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(1));
@@ -4922,18 +5763,26 @@
     els.adminResetProgressBtn?.addEventListener('click', resetProgressFromAdmin);
     els.abilityBtn.addEventListener('click', activateAbility);
     els.shaft.addEventListener('pointerdown', event => {
-      if (!run?.geyserCapture || run.ended) return;
+      if (!run?.geyserCapture || run.ended || run.paused) return;
       if (event.target.closest?.('button')) return;
       event.preventDefault();
       launchGeyserTowardClientPoint(event.clientX, event.clientY, performance.now());
     });
     bindFallStick(els.steerLeftBtn, 'left');
     bindFallStick(els.steerRightBtn, 'right');
-    els.endRunBtn.addEventListener('click', finishRunEarly);
+    els.endRunBtn.addEventListener('click', openRunMenu);
+    els.resumeRunBtn?.addEventListener('click', continueRunFromMenu);
+    els.toggleRunSoundBtn?.addEventListener('click', toggleRunSound);
+    els.restartRunBtn?.addEventListener('click', restartCurrentRun);
+    els.finishRunBtn?.addEventListener('click', finishRunFromMenu);
+    els.runMenuOverlay?.addEventListener('click', event => { if (event.target === els.runMenuOverlay) continueRunFromMenu(); });
     els.resultMultiplierBtn.addEventListener('click', claimResultMultiplier);
     els.continueBtn.addEventListener('click', continueAfterRun);
+    els.gameCompleteHomeBtn?.addEventListener('click', closeGameCompleteToHome);
+    els.playEndlessBtn?.addEventListener('click', startEndlessFromCompletion);
     els.closePanelBtn.addEventListener('click', closePanel);
     els.panelOverlay.addEventListener('click', event => { if (event.target === els.panelOverlay) closePanel(); });
+    els.secretDiscoveryOverlay?.addEventListener('click', dismissSecretDiscovery);
     els.adRewardBtn.addEventListener('click', () => resolveDemoAd(true));
     els.adCancelBtn.addEventListener('click', () => resolveDemoAd(false));
     $$('[data-panel]').forEach(button => button.addEventListener('click', () => renderPanel(button.dataset.panel)));
@@ -4963,16 +5812,23 @@
         stopAllSounds();
         persist();
         flushCloudSave(true);
-        if (run && !run.ended) run.lastTime = 0;
+        autoResumeRunAfterVisibility = pauseRun({ allowPortal: true });
+      } else if (autoResumeRunAfterVisibility) {
+        autoResumeRunAfterVisibility = false;
+        resumeRun();
       }
     });
     window.addEventListener('pagehide', () => {
       persist();
       flushCloudSave(true);
     });
-    window.addEventListener('resize', () => { if (run && !run.ended) prepareCanvas(); });
+    window.addEventListener('resize', () => {
+      syncPerformanceMode();
+      if (run && !run.ended) prepareCanvas();
+      else if (els.homeScreen.classList.contains('active')) prepareMenuSlimeCanvas();
+    });
     document.addEventListener('keydown', event => {
-      if (run?.geyserCapture && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+      if (run?.geyserCapture && !run.paused && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
         event.preventDefault();
         const direction = {
           ArrowLeft: { x: -1, y: 0 },
@@ -4984,7 +5840,11 @@
         return;
       }
       if (event.key !== 'Escape') return;
-      if (!els.adOverlay.classList.contains('hidden')) resolveDemoAd(false);
+      if (secretSequenceActive && secretRevealCanClose) dismissSecretDiscovery();
+      else if (!els.adOverlay.classList.contains('hidden')) resolveDemoAd(false);
+      else if (!els.runMenuOverlay.classList.contains('hidden')) continueRunFromMenu();
+      else if (!els.gameCompleteOverlay.classList.contains('hidden')) closeGameCompleteToHome();
+      else if (!els.adminToolsOverlay.classList.contains('hidden')) closeAdminTools();
       else if (!els.panelOverlay.classList.contains('hidden')) closePanel();
       else hideFoodInfo();
     });
@@ -4992,6 +5852,8 @@
 
   async function init() {
     await initializeReliableSaves();
+    syncPerformanceMode();
+    initializeInteractionLayers();
     bindEvents();
     updatePersistentUI();
     if (save.pendingWheel) finishPendingWheel(false);
@@ -5010,6 +5872,7 @@
       },
       addCoins: (amount = 1000) => { save.coins += amount; persist(); },
       unlockFood: () => { save.conveyorLevel = 5; persist(); newDraft(); },
+      secretDiscovery: (foodId = '', play = false) => forceSecretDiscoveryForDebug(foodId, { play }),
       maxStomach: () => { save.stomachLevel = 6; persist(); newDraft(); },
       maxRerolls: () => { save.rerollLevel = 3; persist(); newDraft(); },
       setNextBonuses: ({ epic = 0, mass = 0, rerolls = 0 } = {}) => {
@@ -5025,9 +5888,14 @@
         persist();
       },
       specialFx: (type = 'bomb') => {
-        if (!run || run.ended || !['bomb', 'heal', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'seismic'].includes(type)) return false;
+        if (!run || run.ended || !['bomb', 'heal', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'].includes(type)) return false;
         const x = clamp(run.slime.x + (type === 'heal' ? 72 : 0), 50, VIEW_W - 50);
         const y = run.slime.y + 58;
+        if (type === 'meteor') {
+          const row = clamp(Math.floor((run.slime.y - 190) / run.cellSize) + 1, 0, Math.max(...run.blocks.map(block => block.row)));
+          activateMeteorShower({ row, col: clamp(Math.floor((x - run.gridOffsetX) / run.cellSize), 0, run.columns - 1) });
+          return true;
+        }
         spawnSpecialBurst(type, x, y, 0, -1);
         if (type === 'heal') {
           const timestamp = performance.now();
@@ -5036,7 +5904,7 @@
           run.freezeUntil = performance.now() + 3000;
           run.frozenEmotion = 'surprised';
         } else if (type === 'appleMint' || type === 'appleRed') {
-          run.appleGlowUntil = performance.now() + (type === 'appleMint' ? 1000 : 1100);
+          run.appleGlowUntil = performance.now() + (type === 'appleMint' ? 1450 : 1650);
           run.appleGlowType = type === 'appleMint' ? 'mint' : 'red';
         }
         return true;

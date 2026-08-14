@@ -5,7 +5,7 @@
   const ZONE_IDS = ['start', 'middle', 'end'];
   const BLOCK_IDS = ['weak', 'normal', 'strong', 'ore', 'secondary'];
   const ORE_IDS = ['coal', 'iron', 'gold', 'diamond'];
-  const SPECIAL_IDS = ['heal', 'bomb', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'seismic'];
+  const SPECIAL_IDS = ['heal', 'bomb', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'];
   const clamp = (value, min, max, fallback) => Number.isFinite(+value) ? Math.max(min, Math.min(max, +value)) : fallback;
   const copy = value => JSON.parse(JSON.stringify(value));
 
@@ -28,7 +28,7 @@
     : +worldId === 3
       ? ['heal', 'appleMint', 'appleRed']
       : +worldId === 4
-        ? ['heal', 'geyser', 'seismic']
+        ? ['heal', 'geyser', 'meteor']
       : ['heal', 'bomb', 'spring'];
   const secondaryDefaults = worldId => Object.fromEntries(SPECIAL_IDS.map(id => [id,
     specialIdsForWorld(worldId).includes(id) ? (id === 'heal' ? 34 : 33) : 0
@@ -65,7 +65,7 @@
       appleMint: { size:-20, defense:20, bounce:20 },
       appleRed: { size:50, power:20, defense:20 },
       geyser: { launch:1, wait:3 },
-      seismic: { damage:62, rows:3 }
+      meteor: { minCount:3, maxCount:4, delay:.42 }
     },
     worlds: Array.from({ length:4 }, (_, worldIndex) => ({
       id: worldIndex + 1,
@@ -108,8 +108,9 @@
     base.special.appleRed.defense = Math.round(clamp(value.special?.appleRed?.defense, 0, 100, base.special.appleRed.defense));
     base.special.geyser.launch = clamp(value.special?.geyser?.launch, .6, 2, base.special.geyser.launch);
     base.special.geyser.wait = 3;
-    base.special.seismic.damage = Math.round(clamp(value.special?.seismic?.damage, 40, 90, base.special.seismic.damage));
-    base.special.seismic.rows = Math.round(clamp(value.special?.seismic?.rows, 1, 5, base.special.seismic.rows));
+    base.special.meteor.minCount = Math.round(clamp(value.special?.meteor?.minCount, 3, 4, base.special.meteor.minCount));
+    base.special.meteor.maxCount = Math.round(clamp(value.special?.meteor?.maxCount, base.special.meteor.minCount, 4, base.special.meteor.maxCount));
+    base.special.meteor.delay = clamp(value.special?.meteor?.delay, .28, .7, base.special.meteor.delay);
 
     base.worlds.forEach(world => {
       const savedWorld = value.worlds?.find(item => +item.id === world.id);
@@ -127,7 +128,7 @@
             savedSecondary.appleMint = 0;
             savedSecondary.appleRed = 0;
             savedSecondary.geyser = 0;
-            savedSecondary.seismic = 0;
+            savedSecondary.meteor = 0;
           } else if (world.id === 3) {
             savedSecondary.appleRed ??= savedSecondary.bomb;
             savedSecondary.appleMint ??= savedSecondary.spring;
@@ -136,10 +137,10 @@
             savedSecondary.cryo = 0;
             savedSecondary.snowflake = 0;
             savedSecondary.geyser = 0;
-            savedSecondary.seismic = 0;
+            savedSecondary.meteor = 0;
           } else if (world.id === 4) {
             savedSecondary.geyser ??= savedSecondary.bomb;
-            savedSecondary.seismic ??= savedSecondary.spring;
+            savedSecondary.meteor ??= savedSecondary.seismic ?? savedSecondary.spring;
             savedSecondary.bomb = 0;
             savedSecondary.spring = 0;
             savedSecondary.cryo = 0;
@@ -152,7 +153,7 @@
             savedSecondary.appleMint = 0;
             savedSecondary.appleRed = 0;
             savedSecondary.geyser = 0;
-            savedSecondary.seismic = 0;
+            savedSecondary.meteor = 0;
           }
           level.zones[zoneId] = {
             blocks: normalizeDistribution(saved?.blocks, BLOCK_IDS, fallback.blocks),

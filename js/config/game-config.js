@@ -96,7 +96,7 @@
     1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'spring', 'heal', 'portal'],
     2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'cryo', 'snowflake', 'heal', 'portal'],
     3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'apple-mint', 'apple-red', 'heal', 'portal'],
-    4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'geyser', 'seismic', 'heal', 'portal']
+    4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'geyser', 'meteor', 'heal', 'portal']
   };
 
   const ORE_TYPES = [
@@ -145,7 +145,7 @@
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 10,
+    schemaVersion: 13,
     coins: 20,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
@@ -156,11 +156,15 @@
     conveyorLevel: 1,
     rerollLevel: 0,
     bestDepth: 0,
+    endlessBestScore: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    endlessBestDepth: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    homeMode: 'campaign',
     selectedSkin: 'classic',
     unlockedSkins: ['classic'],
     selectedTrail: 'none',
     unlockedTrails: ['none'],
     discoveredFoods: [],
+    revealedSecretFoods: [],
     lastDailyDate: '', dailyStreak: 0,
     lastWheelDate: '', wheelAdDate: '', wheelAdSpins: 0,
     pendingEpicBoost: 0, pendingMassBoost: 0, pendingExtraRerolls: 0,
@@ -168,6 +172,7 @@
     activeDraft: null,
     pendingWheel: null,
     totalRuns: 0,
+    gameCompleted: false,
     sound: true
   };
 
@@ -179,7 +184,7 @@
     VIEW_H: 650,
     LEVEL_COUNT: 5,
     LEVEL_DEPTH_RATIOS: [.36, .52, .68, .84, 1],
-    ASSET_REVISION: '20260813-18',
+    ASSET_REVISION: '20260813-20',
     FOOD_ASSET_ROOT: 'assets/ЕДА/Общий пул/',
     UI_ASSET_ROOT: 'assets/ui/',
     FOOD_EDITOR_STORAGE_KEY: 'slime_food_catalog_v2',

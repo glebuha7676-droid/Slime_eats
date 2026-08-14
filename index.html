@@ -7,9 +7,9 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=52" />
-  <link rel="stylesheet" href="food-cards.css?v=36" />
-  <link rel="stylesheet" href="home-layout.css?v=53" />
+  <link rel="stylesheet" href="styles.css?v=59" />
+  <link rel="stylesheet" href="food-cards.css?v=40" />
+  <link rel="stylesheet" href="home-layout.css?v=72" />
 </head>
 <body>
   <div id="app" class="app">
@@ -22,18 +22,13 @@
             <b id="worldLabel">Зелёные глубины</b>
           </span>
         </div>
+        <button id="adminMenuBtn" class="header-admin-btn" type="button" aria-label="Открыть админ-меню" aria-controls="adminToolsOverlay" aria-expanded="false">
+          <img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true">
+        </button>
         <div class="currency" aria-label="Монеты">
           <img class="currency-icon" src="assets/ui/coin.webp" alt="" aria-hidden="true">
           <div class="currency-values"><b id="coinsLabel">0</b><small id="runCoinsGain" aria-label="Монеты за забег">+0</small></div>
         </div>
-      </div>
-      <div class="world-progress-copy">
-        <span>ВЫ ПРОШЛИ <strong id="worldProgressText">0 м</strong></span>
-        <b id="worldHint">ЕЩЁ 120 М</b>
-      </div>
-      <div class="progress-track world-progress-track" role="progressbar" aria-label="Рекорд глубины в мире" aria-valuemin="0" aria-valuemax="100">
-        <div id="worldProgressBar" class="progress-fill world-fill"></div>
-        <i id="worldProgressMarker" class="world-record-marker" aria-hidden="true"></i>
       </div>
     </header>
 
@@ -96,38 +91,67 @@
           </div>
         </div>
 
-        <section class="level-start-card card" aria-label="Выбор уровня и запуск">
-          <div class="level-picker">
-            <div class="level-picker-head"><small>УРОВЕНЬ</small><b id="levelDepthLabel">45 М</b></div>
-            <div id="levelButtons" class="level-buttons" aria-label="Уровни мира"></div>
+        <section id="playSetupCard" class="play-setup-card card" aria-label="Выбор мира, режима и запуск">
+          <div class="play-setup-toolbar">
+            <div class="play-setup-control world-control">
+              <label class="home-world-picker" for="homeWorldSelect">
+                <span class="home-world-emblem"><img id="homeWorldPickerIcon" src="assets/ui/world-icons/world-1.webp" alt="" aria-hidden="true"></span>
+                <span class="home-world-copy">
+                  <b id="homeWorldPickerName">Зелёная долина</b>
+                </span>
+                <span class="home-world-chevron" aria-hidden="true">⌄</span>
+                <select id="homeWorldSelect" aria-label="Выбрать мир"></select>
+              </label>
+            </div>
+            <div class="play-setup-control mode-control">
+              <div class="home-mode-tabs" role="tablist" aria-label="Режим игры">
+                <button id="campaignModeBtn" class="home-mode-tab active" type="button" role="tab" aria-selected="true" aria-controls="campaignModePanel">
+                  <span>УРОВНИ</span>
+                </button>
+                <button id="endlessModeBtn" class="home-mode-tab" type="button" role="tab" aria-selected="false" aria-controls="endlessModePanel">
+                  <span>БЕСКОНЕЧНЫЙ</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <button id="startDropBtn" class="launch-btn" type="button">
-            <img src="assets/ui/launch.webp" alt="" aria-hidden="true">
-            <b id="startDropLabel">СТАРТ</b>
-          </button>
+
+          <div id="campaignModePanel" class="home-mode-panel campaign-mode-panel" role="tabpanel" aria-labelledby="campaignModeBtn">
+            <div class="level-picker">
+              <div id="levelButtons" class="level-buttons" aria-label="Уровни мира"></div>
+            </div>
+            <button id="startDropBtn" class="launch-btn" type="button">
+              <img src="assets/ui/falling-slime-start.png?v=20260814-1" alt="" aria-hidden="true">
+              <b id="startDropLabel">СТАРТ</b>
+            </button>
+          </div>
+
+          <div id="endlessModePanel" class="home-mode-panel endless-mode-panel hidden" role="tabpanel" aria-labelledby="endlessModeBtn">
+            <div class="endless-mode-records" aria-label="Рекорды бесконечного режима">
+              <span><i aria-hidden="true">★</i><small>ЛУЧШИЕ ОЧКИ</small><b id="endlessBestScore">0</b></span>
+              <span><i aria-hidden="true">↓</i><small>МАКС. ГЛУБИНА</small><b id="endlessBestDepth">0 М</b></span>
+            </div>
+            <button id="startEndlessBtn" class="endless-home-btn" type="button"><img src="assets/ui/endless-mode.png?v=2" alt="" aria-hidden="true"><span><small>НАЧАТЬ</small><b>ИГРАТЬ</b></span></button>
+          </div>
+
+          <div class="home-route-progress" aria-label="Прогресс выбранного уровня">
+            <div class="world-progress-copy">
+              <span>ВЫ ПРОШЛИ <strong id="worldProgressText">0 м</strong></span>
+              <b id="worldHint">ЕЩЁ 120 М</b>
+            </div>
+            <div class="progress-track world-progress-track" role="progressbar" aria-label="Рекорд глубины в мире" aria-valuemin="0" aria-valuemax="100">
+              <div id="worldProgressBar" class="progress-fill world-fill"></div>
+              <i id="worldProgressMarker" class="world-record-marker" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <nav class="bottom-actions home-tool-dock" aria-label="Развитие">
+            <button data-panel="upgrades" type="button"><span class="action-icon"><img src="assets/ui/upgrade.webp" alt=""></span><b>Прокачка</b></button>
+            <button data-panel="shop" type="button"><span class="action-icon"><img src="assets/ui/shop-cart.png?v=20260812-4" alt=""></span><b>Магазин</b></button>
+            <button data-panel="rewards" type="button"><span class="action-icon"><img src="assets/ui/gift.webp" alt=""></span><b>Бонусы</b></button>
+            <button data-panel="encyclopedia" type="button"><span class="action-icon"><img src="assets/ui/encyclopedia-book.png?v=20260813-1" alt=""></span><b>Энциклопедия</b></button>
+          </nav>
         </section>
 
-        <nav class="bottom-actions" aria-label="Развитие">
-          <button data-panel="upgrades" type="button"><span class="action-icon"><img src="assets/ui/upgrade.webp" alt=""></span><b>Прокачка</b></button>
-          <button data-panel="shop" type="button"><span class="action-icon"><img src="assets/ui/shop-cart.png?v=20260812-4" alt=""></span><b>Магазин</b></button>
-          <button data-panel="rewards" type="button"><span class="action-icon"><img src="assets/ui/gift.webp" alt=""></span><b>Бонусы</b></button>
-          <button data-panel="encyclopedia" type="button"><span class="action-icon"><img src="assets/ui/encyclopedia-book.png?v=20260813-1" alt=""></span><b>Энциклопедия</b></button>
-        </nav>
-
-        <section class="admin-tools card" aria-label="Админ-инструменты">
-          <div class="admin-tools-title"><small>ADMIN</small><b>ТЕСТ</b></div>
-          <div class="admin-world-switch" aria-label="Переключение мира">
-            <button id="adminPrevWorldBtn" type="button" aria-label="Предыдущий мир">‹</button>
-            <strong id="adminWorldValue">МИР 1</strong>
-            <button id="adminNextWorldBtn" type="button" aria-label="Следующий мир">›</button>
-          </div>
-          <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Открыть всё и выдать много монет" title="Открыть всё и выдать монеты">
-            <img src="assets/ui/coin.webp" alt="" aria-hidden="true"><i aria-hidden="true">+</i>
-          </button>
-          <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><b>НОВЫЙ ЗАБЕГ</b></button>
-          <button id="adminResetProgressBtn" class="admin-reset-progress" type="button">СБРОСИТЬ ПРОГРЕСС</button>
-          <div class="admin-editor-links"><a href="editors/world/world-editor.html">МИРЫ</a><a href="balance/index.html">БАЛАНС</a></div>
-        </section>
       </section>
 
       <section id="dropScreen" class="screen" aria-label="Забег">
@@ -149,7 +173,7 @@
 
         <div class="shaft" id="shaft">
           <canvas id="physicsCanvas" aria-label="Слайм падает через блоки"></canvas>
-          <button id="endRunBtn" class="run-exit-btn" type="button"><img src="assets/ui/finish.webp" alt="" aria-hidden="true"><span>ЗАКОНЧИТЬ</span></button>
+          <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true"><span>МЕНЮ</span></button>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div class="shaft-health" aria-label="Здоровье слайма">
             <img src="assets/ui/stat-health.webp" alt="" aria-hidden="true">
@@ -174,10 +198,61 @@
     </main>
   </div>
 
+  <div id="adminToolsOverlay" class="overlay admin-tools-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminToolsTitle">
+    <section class="modal admin-tools-modal" tabindex="-1">
+      <div class="admin-tools-heading">
+        <span class="admin-tools-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=1" alt=""></span>
+        <div><small>ИНСТРУМЕНТЫ ТЕСТИРОВАНИЯ</small><h2 id="adminToolsTitle">Админ-меню</h2></div>
+        <button id="closeAdminToolsBtn" class="icon-btn admin-tools-close" type="button" aria-label="Закрыть админ-меню">✕</button>
+      </div>
+      <div class="admin-tools-grid">
+        <div class="admin-tool-row admin-world-row">
+          <span><small>ТЕКУЩИЙ МИР</small><b>Переключение</b></span>
+          <div class="admin-world-switch" aria-label="Переключение мира">
+            <button id="adminPrevWorldBtn" type="button" aria-label="Предыдущий мир">‹</button>
+            <strong id="adminWorldValue">МИР 1</strong>
+            <button id="adminNextWorldBtn" type="button" aria-label="Следующий мир">›</button>
+          </div>
+        </div>
+        <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать монеты и открыть игровой прогресс" title="Выдать монеты и открыть игровой прогресс">
+          <img src="assets/ui/coin.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Монеты и прогресс</small></span><i aria-hidden="true">+</i>
+        </button>
+        <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
+        <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
+      </div>
+      <div class="admin-editor-links" aria-label="Редакторы"><a href="editors/world/world-editor.html">РЕДАКТОР МИРОВ</a><a href="balance/index.html">БАЛАНС</a></div>
+    </section>
+  </div>
+
   <div id="panelOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
     <div class="modal panel-modal" tabindex="-1">
       <div class="modal-head"><h2 id="panelTitle">Прокачка</h2><button class="icon-btn" id="closePanelBtn" type="button" aria-label="Закрыть">✕</button></div>
       <div id="panelContent" class="panel-content"></div>
+    </div>
+  </div>
+
+  <div id="secretDiscoveryOverlay" class="secret-discovery-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="secretDiscoveryTitle">
+    <div class="secret-discovery-veil" aria-hidden="true"></div>
+    <div id="secretDiscoveryEye" class="secret-discovery-eye" aria-hidden="true"><span><i></i></span></div>
+    <div class="secret-discovery-wave" aria-hidden="true"></div>
+    <div class="secret-discovery-particles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <h2 id="secretDiscoveryTitle" class="secret-discovery-title">СЕКРЕТ ОТКРЫТ</h2>
+    <div id="secretDiscoveryCard" class="secret-discovery-card" tabindex="-1"></div>
+    <p class="secret-discovery-hint">Нажми в любом месте, чтобы продолжить</p>
+  </div>
+
+  <div id="runMenuOverlay" class="overlay run-menu-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="runMenuTitle">
+    <div class="modal run-menu-modal" tabindex="-1">
+      <div class="run-menu-heading">
+        <span class="run-menu-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=1" alt=""></span>
+        <div><small>ЗАБЕГ ОСТАНОВЛЕН</small><h2 id="runMenuTitle">Меню</h2></div>
+      </div>
+      <button id="resumeRunBtn" class="run-menu-action run-menu-resume" type="button"><span aria-hidden="true">▶</span><b>ПРОДОЛЖИТЬ</b></button>
+      <button id="toggleRunSoundBtn" class="run-menu-action run-menu-sound" type="button"><span id="runSoundIcon" aria-hidden="true">♪</span><b id="runSoundLabel">ЗВУК ВКЛЮЧЁН</b></button>
+      <div class="run-menu-danger-zone">
+        <button id="restartRunBtn" class="run-menu-action run-menu-restart" type="button"><span aria-hidden="true">↻</span><b>НАЧАТЬ ЗАНОВО</b></button>
+        <button id="finishRunBtn" class="run-menu-action run-menu-finish" type="button"><span aria-hidden="true">■</span><b>ЗАКОНЧИТЬ ЗАБЕГ</b></button>
+      </div>
     </div>
   </div>
 
@@ -232,6 +307,20 @@
     </div>
   </div>
 
+  <div id="gameCompleteOverlay" class="overlay game-complete-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="gameCompleteTitle">
+    <div class="modal game-complete-modal" tabindex="-1">
+      <div class="game-complete-glow" aria-hidden="true"></div>
+      <div class="game-complete-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="game-complete-portal" aria-hidden="true"><img src="assets/ui/portals/world-4.png" alt=""><span><img src="assets/ui/slime.webp" alt=""></span></div>
+      <small class="game-complete-kicker">ВСЕ 4 МИРА ПРОЙДЕНЫ</small>
+      <h2 id="gameCompleteTitle">ВЫ ПРОШЛИ ИГРУ!</h2>
+      <p>Слайм добрался до последнего портала. Теперь открыт бесконечный мир.</p>
+      <button id="playEndlessBtn" class="game-complete-action game-complete-endless" type="button"><span aria-hidden="true"><img src="assets/ui/endless-mode.png?v=2" alt=""></span><b>БЕСКОНЕЧНЫЙ МИР</b><small>Новый круг — сложнее предыдущего</small></button>
+      <button id="gameCompleteHomeBtn" class="game-complete-action game-complete-home" type="button"><span aria-hidden="true">⌂</span><b>В МЕНЮ</b></button>
+      <button class="game-complete-action game-complete-soon" type="button" disabled><span aria-hidden="true">✦</span><b>ПРОДОЛЖЕНИЕ</b><small>СКОРО</small></button>
+    </div>
+  </div>
+
   <div id="adOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adTitle">
     <div class="modal ad-modal" tabindex="-1">
       <div class="ad-tag">ДЕМО РЕКЛАМЫ</div>
@@ -247,14 +336,14 @@
   <script src="published/food.js?v=1"></script>
   <script src="published/worlds.js?v=1"></script>
   <script src="food-catalog.js?v=4"></script>
-  <script src="world-catalog.js?v=16"></script>
-  <script src="balance/balance-catalog.js?v=6"></script>
-  <script src="js/config/game-config.js?v=29"></script>
+  <script src="world-catalog.js?v=18"></script>
+  <script src="balance/balance-catalog.js?v=7"></script>
+  <script src="js/config/game-config.js?v=37"></script>
   <script src="js/platform/yandex-platform.js?v=1"></script>
-  <script src="js/core/game-assets.js?v=9"></script>
+  <script src="js/core/game-assets.js?v=10"></script>
   <script src="js/core/audio.js?v=1"></script>
-  <script src="js/rendering/slime-avatar.js?v=4"></script>
-  <script src="js/ui/encyclopedia.js?v=3"></script>
-  <script src="game.js?v=108"></script>
+  <script src="js/rendering/slime-avatar.js?v=8"></script>
+  <script src="js/ui/encyclopedia.js?v=7"></script>
+  <script src="game.js?v=132"></script>
 </body>
 </html>
