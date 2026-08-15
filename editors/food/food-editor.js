@@ -6,11 +6,11 @@
     ['common', 'Обычное'], ['rare', 'Редкое'], ['epic', 'Эпическое'],
     ['legendary', 'Легендарное'], ['prismatic', 'Призматическое'], ['secret', 'Секретное']
   ];
-  const CATEGORIES = [['mass', 'Здоровье'], ['power', 'Сила'], ['defense', 'Защита'], ['bounce', 'Отскок'], ['magic', 'Заряд']];
+  const CATEGORIES = [['mass', 'Здоровье'], ['power', 'Урон'], ['defense', 'Защита'], ['bounce', 'Отскок'], ['magic', 'Заряд']];
   const STAT_META = [
     ['mass', 'ЗДОРОВЬЕ', value => `+${formatNumber(value)}`],
-    ['power', 'СИЛА', value => `+${formatNumber(value)}`],
-    ['defense', 'ЗАЩИТА', value => `+${formatPercent(value)}`],
+    ['power', 'УРОН', value => `+${formatNumber(value)}`],
+    ['defense', 'ЗАЩИТА', value => `+${formatNumber(value)}`],
     ['elasticity', 'ОТСКОК', value => `+${formatPercent(value)}`],
     ['ability', 'ЗАРЯД', value => `+${formatNumber(value)}%`],
     ['coinMultiplier', 'МОНЕТЫ', value => `+${formatPercent(value)}`]
@@ -55,11 +55,13 @@
     const number = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0));
     const rarity = RARITIES.some(([key]) => key === source.rarity) ? source.rarity : 'common';
     const category = CATEGORIES.some(([key]) => key === source.category) ? source.category : 'mass';
+    const numericStats = Number(source.statVersion) >= 2;
     const result = {
       id, name, icon: String(source.icon || '🍓').slice(0, 8), rarity, category,
       minConveyor: Math.round(number(source.minConveyor || 1, 1, 5)),
-      mass: number(source.mass, 0, 999), power: number(source.power, 0, 99),
-      defense: number(source.defense, 0, 9.99), elasticity: number(source.elasticity, 0, 9.99),
+      statVersion: 2,
+      mass: number(source.mass, 0, 999), power: number(numericStats ? source.power : Number(source.power || 0) * 10, 0, 999),
+      defense: number(numericStats ? source.defense : Number(source.defense || 0) * 100, 0, 999), elasticity: number(source.elasticity, 0, 9.99),
       ability: number(source.ability, 0, 999), coinMultiplier: number(source.coinMultiplier, 0, 99),
       artX: number(source.artX, -30, 30), artY: number(source.artY, -30, 30), artScale: number(source.artScale || 1, .55, 1.6),
       effect: String(source.effect || '').trim(), effectText: String(source.effectText || '').trim()
@@ -150,10 +152,11 @@
     let index = 1;
     let id = 'newFood';
     while (catalog.some(food => food.id === id)) { index += 1; id = `newFood${index}`; }
-    return { id, name: 'Новая еда', icon: '🍓', rarity: 'common', category: 'mass', minConveyor: 1, mass: 6, power: 0, defense: 0, elasticity: 0, ability: 0, coinMultiplier: 0, artX: 0, artY: 0, artScale: 1, effect: '', effectText: '', image: '' };
+    return { id, name: 'Новая еда', icon: '🍓', rarity: 'common', category: 'mass', minConveyor: 1, statVersion: 2, mass: 6, power: 0, defense: 0, elasticity: 0, ability: 0, coinMultiplier: 0, artX: 0, artY: 0, artScale: 1, effect: '', effectText: '', image: '' };
   }
   function formFood() {
     const data = Object.fromEntries(new FormData(els.form).entries());
+    data.statVersion = 2;
     const normalized = normalizeFood(data);
     const sourceWorlds = activeFood()?.worlds;
     if (normalized && Array.isArray(sourceWorlds)) normalized.worlds = [...sourceWorlds];

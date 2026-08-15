@@ -102,15 +102,15 @@
       { category:'mass', mass:27, effect:'momentum', effectText:'Пробитые блоки почти не гасят разгон' },
       { category:'power', mass:10, power:1.38, ability:14, effect:'dragonBlast', effectText:'Каждый 10-й пробитый блок взрывается' },
       { category:'defense', mass:12, defense:.25, effect:'freeBounces', effectText:'Первые 3 рикошета не тратят здоровье' },
-      { category:'magic', mass:9, elasticity:.35, ability:20, effect:'chargeBoost', effectText:'Импульс заряжается на 25% быстрее' },
+      { category:'magic', mass:9, elasticity:.35, ability:20, effect:'chargeBoost', effectText:'Барьер заряжается на 25% быстрее' },
       { category:'magic', mass:16, coinMultiplier:.75, ability:15, effect:'oreHeal', effectText:'Руда и монетные блоки лечат слайма' },
-      { category:'magic', mass:14, power:.80, elasticity:.24, ability:18, effect:'cooldownCut', effectText:'Перезарядка импульса короче на 1,5 сек' },
+      { category:'magic', mass:14, power:.80, elasticity:.24, ability:18, effect:'cooldownCut', effectText:'Барьер заряжается ещё на 15% быстрее' },
       { category:'bounce', mass:17, defense:.12, elasticity:.34, effect:'softLanding', effectText:'После рикошета 1 секунда сниженного урона' },
       { category:'defense', mass:19, defense:.24, effect:'healBoost', effectText:'Лечащие блоки восстанавливают вдвое больше' }
     ],
     prismatic: [
       { category:'mass', mass:24, power:.55, defense:.12, effect:'prismFlow', effectText:'+12% ко всем числовым бонусам еды' },
-      { category:'magic', mass:12, power:.45, ability:22, effect:'chargeBoost', effectText:'Импульс заряжается на 25% быстрее' },
+      { category:'magic', mass:12, power:.45, ability:22, effect:'chargeBoost', effectText:'Барьер заряжается на 25% быстрее' },
       { category:'defense', mass:18, defense:.20, effect:'freeBounces', effectText:'Первые 3 рикошета не тратят здоровье' }
     ],
     secret: [
@@ -124,15 +124,21 @@
   const catalog = Object.entries(ASSETS).flatMap(([rarity, assets]) => assets.map((asset, index) => {
     const [id, name, relativePath, worldId] = asset;
     const stats = STATS[rarity][index % STATS[rarity].length];
+    const numericStats = {
+      ...stats,
+      statVersion: 2,
+      power: Math.round((stats.power || 0) * 10),
+      defense: Math.round((stats.defense || 0) * 100)
+    };
     return {
       id,
       name,
-      icon: iconFor(stats.category),
+      icon: iconFor(numericStats.category),
       rarity,
       minConveyor: MIN_CONVEYOR[rarity],
       image: `${ROOT}/${relativePath}`,
       ...(worldId ? { worlds:[worldId] } : {}),
-      ...stats
+      ...numericStats
     };
   }));
 
@@ -147,7 +153,7 @@
     { id: 'freeBounces', label: 'Бесплатные рикошеты' },
     { id: 'chargeBoost', label: 'Ускоренная зарядка' },
     { id: 'oreHeal', label: 'Лечение от руды' },
-    { id: 'cooldownCut', label: 'Короткая перезарядка' },
+    { id: 'cooldownCut', label: 'Дополнительная зарядка барьера' },
     { id: 'softLanding', label: 'Мягкое приземление' },
     { id: 'healBoost', label: 'Усиление лечения' },
     { id: 'bombPull', label: 'Притяжение взрывов' },

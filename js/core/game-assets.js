@@ -195,6 +195,7 @@
     const category = foodCategories.has(value.category) ? value.category : 'mass';
     const image = String(value.image || '').trim();
     const hasArtTransform = ['artX', 'artY', 'artScale'].some(key => Object.hasOwn(value, key));
+    const numericStats = Number(value.statVersion) >= 2;
     return {
       id,
       name,
@@ -203,8 +204,9 @@
       category,
       minConveyor: Math.round(clampNumber(value.minConveyor || 1, 1, 5)),
       mass: clampNumber(value.mass, 0, 999),
-      power: clampNumber(value.power, 0, 99),
-      defense: clampNumber(value.defense, 0, 9.99),
+      statVersion: 2,
+      power: clampNumber(numericStats ? value.power : Number(value.power || 0) * 10, 0, 999),
+      defense: clampNumber(numericStats ? value.defense : Number(value.defense || 0) * 100, 0, 999),
       elasticity: clampNumber(value.elasticity, 0, 9.99),
       ability: clampNumber(value.ability, 0, 999),
       coinMultiplier: clampNumber(value.coinMultiplier, 0, 99),
@@ -221,7 +223,11 @@
   }
 
   function loadFoodCatalog() {
-    const baseCatalog = Array.isArray(window.SLIME_FOOD_CATALOG) ? window.SLIME_FOOD_CATALOG : [];
+    const rawBaseCatalog = Array.isArray(window.SLIME_FOOD_CATALOG) ? window.SLIME_FOOD_CATALOG : [];
+    const baseIds = new Set();
+    const baseCatalog = rawBaseCatalog
+      .map(normalizeEditorFood)
+      .filter(food => food && !baseIds.has(food.id) && baseIds.add(food.id));
     try {
       const savedCatalog = JSON.parse(localStorage.getItem(FOOD_EDITOR_STORAGE_KEY) || 'null');
       if (!Array.isArray(savedCatalog) || !savedCatalog.length) return baseCatalog;

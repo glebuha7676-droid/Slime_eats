@@ -47,8 +47,8 @@
         heal: `Ломается при первом касании и восстанавливает до ${heal} здоровья. Лишнее лечение не переносится.`
       },
       3: {
-        appleMint: `Уменьшает слайма на ${Math.abs(Math.round(special.appleMint?.size ?? -20))}%, добавляет ${Math.round(special.appleMint?.defense ?? 20)}% защиты и ${Math.round(special.appleMint?.bounce ?? 20)}% прыгучести.`,
-        appleRed: `Увеличивает слайма на ${Math.round(special.appleRed?.size ?? 50)}%, добавляет ${Math.round(special.appleRed?.power ?? 20)}% урона и ${Math.round(special.appleRed?.defense ?? 20)}% защиты.`,
+        appleMint: `Уменьшает слайма на ${Math.abs(Math.round(special.appleMint?.size ?? -20))}%, добавляет ${Math.round(special.appleMint?.defense ?? 20)} защиты и ${Math.round(special.appleMint?.bounce ?? 20)}% прыгучести.`,
+        appleRed: `Увеличивает слайма на ${Math.round(special.appleRed?.size ?? 50)}%, добавляет ${Math.round(special.appleRed?.power ?? 20)} урона и ${Math.round(special.appleRed?.defense ?? 20)} защиты.`,
         heal: `Ломается при первом касании и восстанавливает до ${heal} здоровья. Лишнее лечение не переносится.`
       },
       4: {

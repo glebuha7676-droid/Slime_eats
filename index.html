@@ -7,9 +7,9 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=59" />
+  <link rel="stylesheet" href="styles.css?v=60" />
   <link rel="stylesheet" href="food-cards.css?v=40" />
-  <link rel="stylesheet" href="home-layout.css?v=72" />
+  <link rel="stylesheet" href="home-layout.css?v=85" />
 </head>
 <body>
   <div id="app" class="app">
@@ -43,7 +43,7 @@
               </div>
               <div class="stat-pill power">
                 <span class="stat-icon"><img src="assets/ui/stat-power.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>СИЛА</small><span class="stat-values"><b id="powerLabel">×1.0</b><em id="powerCompare"></em></span></span>
+                <span class="stat-copy"><small>УРОН</small><span class="stat-values"><b id="powerLabel">10</b><em id="powerCompare"></em></span></span>
               </div>
             </div>
             <div class="slime-playground">
@@ -56,11 +56,11 @@
             <div class="stat-rail stat-rail-right">
               <div class="stat-pill defense">
                 <span class="stat-icon"><img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>ЗАЩИТА</small><span class="stat-values"><b id="defenseLabel">0%</b><em id="defenseCompare"></em></span></span>
+                <span class="stat-copy"><small>ЗАЩИТА</small><span class="stat-values"><b id="defenseLabel">10</b><em id="defenseCompare"></em></span></span>
               </div>
               <div class="stat-pill bounce">
                 <span class="stat-icon"><img src="assets/ui/stat-bounce.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>ОТСКОК</small><span class="stat-values"><b id="bounceLabel">×1.0</b><em id="bounceCompare"></em></span></span>
+                <span class="stat-copy"><small>ОТСКОК</small><span class="stat-values"><b id="bounceLabel">100%</b><em id="bounceCompare"></em></span></span>
               </div>
             </div>
           </div>
@@ -94,22 +94,28 @@
         <section id="playSetupCard" class="play-setup-card card" aria-label="Выбор мира, режима и запуск">
           <div class="play-setup-toolbar">
             <div class="play-setup-control world-control">
-              <label class="home-world-picker" for="homeWorldSelect">
-                <span class="home-world-emblem"><img id="homeWorldPickerIcon" src="assets/ui/world-icons/world-1.webp" alt="" aria-hidden="true"></span>
-                <span class="home-world-copy">
-                  <b id="homeWorldPickerName">Зелёная долина</b>
-                </span>
-                <span class="home-world-chevron" aria-hidden="true">⌄</span>
-                <select id="homeWorldSelect" aria-label="Выбрать мир"></select>
-              </label>
+              <div class="home-world-selector">
+                <button id="homeWorldPicker" class="home-world-picker" type="button" aria-label="Выбрать мир" aria-haspopup="listbox" aria-controls="homeWorldMenu" aria-expanded="false">
+                  <span class="home-world-emblem"><img id="homeWorldPickerIcon" src="assets/ui/world-icons/world-1.webp" alt="" aria-hidden="true"></span>
+                  <span class="home-world-copy">
+                    <b id="homeWorldPickerName">Зелёная долина</b>
+                  </span>
+                  <span class="home-world-chevron" aria-hidden="true"><img src="assets/ui/world-picker-chevron.png?v=1" alt=""></span>
+                </button>
+                <div id="homeWorldMenu" class="home-world-menu" role="listbox" aria-label="Миры" hidden></div>
+                <select id="homeWorldSelect" class="home-world-native-select" tabindex="-1" aria-hidden="true" hidden></select>
+              </div>
             </div>
             <div class="play-setup-control mode-control">
               <div class="home-mode-tabs" role="tablist" aria-label="Режим игры">
                 <button id="campaignModeBtn" class="home-mode-tab active" type="button" role="tab" aria-selected="true" aria-controls="campaignModePanel">
-                  <span>УРОВНИ</span>
+                  <i class="home-mode-icon home-mode-levels-icon" aria-hidden="true"><b>1</b><b>2</b><b>3</b></i>
+                  <span><b>УРОВНИ</b><small>ВЫБОР ЭТАПА</small></span>
                 </button>
                 <button id="endlessModeBtn" class="home-mode-tab" type="button" role="tab" aria-selected="false" aria-controls="endlessModePanel">
-                  <span>БЕСКОНЕЧНЫЙ</span>
+                  <i class="home-mode-icon home-mode-endless-icon" aria-hidden="true"><img src="assets/ui/endless-mode.png?v=2" alt=""></i>
+                  <span><b>БЕСКОНЕЧНЫЙ</b><small id="endlessModeHint">ПОСЛЕ ФИНАЛА</small></span>
+                  <img class="home-mode-lock" src="assets/ui/level-lock.png" alt="" aria-hidden="true">
                 </button>
               </div>
             </div>
@@ -127,15 +133,17 @@
 
           <div id="endlessModePanel" class="home-mode-panel endless-mode-panel hidden" role="tabpanel" aria-labelledby="endlessModeBtn">
             <div class="endless-mode-records" aria-label="Рекорды бесконечного режима">
-              <span><i aria-hidden="true">★</i><small>ЛУЧШИЕ ОЧКИ</small><b id="endlessBestScore">0</b></span>
-              <span><i aria-hidden="true">↓</i><small>МАКС. ГЛУБИНА</small><b id="endlessBestDepth">0 М</b></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-score.png?v=1" alt="" aria-hidden="true"><span><small>ЛУЧШИЙ СЧЁТ</small><b id="endlessBestScore">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-depth.png?v=1" alt="" aria-hidden="true"><span><small>МАКС. ГЛУБИНА</small><b id="endlessBestDepth">0 М</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-laps.png?v=1" alt="" aria-hidden="true"><span><small>ПРОЙДЕНО КРУГОВ</small><b id="endlessBestLaps">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-runs.png?v=1" alt="" aria-hidden="true"><span><small>БЕСКОНЕЧНЫХ ЗАБЕГОВ</small><b id="endlessRuns">0</b></span></span>
             </div>
             <button id="startEndlessBtn" class="endless-home-btn" type="button"><img src="assets/ui/endless-mode.png?v=2" alt="" aria-hidden="true"><span><small>НАЧАТЬ</small><b>ИГРАТЬ</b></span></button>
           </div>
 
           <div class="home-route-progress" aria-label="Прогресс выбранного уровня">
             <div class="world-progress-copy">
-              <span>ВЫ ПРОШЛИ <strong id="worldProgressText">0 м</strong></span>
+              <span><i id="worldProgressPrefix">ВЫ ПРОШЛИ</i> <strong id="worldProgressText">0 м</strong></span>
               <b id="worldHint">ЕЩЁ 120 М</b>
             </div>
             <div class="progress-track world-progress-track" role="progressbar" aria-label="Рекорд глубины в мире" aria-valuemin="0" aria-valuemax="100">
@@ -180,19 +188,16 @@
             <span><small>ЗДОРОВЬЕ</small><b id="runMassLabel">0/0</b></span>
             <i><em id="runHealthBar"></em></i>
           </div>
-          <div class="fall-controls" aria-label="Управление траекторией слайма">
-            <button id="steerLeftBtn" class="fall-stick fall-stick-left" type="button" aria-label="Направлять слайма влево" aria-pressed="false"><span aria-hidden="true"></span></button>
-            <button id="steerRightBtn" class="fall-stick fall-stick-right" type="button" aria-label="Направлять слайма вправо" aria-pressed="false"><span aria-hidden="true"></span></button>
+          <div class="barrier-control" aria-label="Активный барьер">
+            <button id="abilityBtn" class="ability-btn barrier-btn" type="button" aria-label="Активировать барьер" disabled>
+              <img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true">
+              <span id="abilityPercent">0%</span>
+            </button>
+            <small id="abilityText">БАРЬЕР 10</small>
           </div>
-        </div>
-
-        <div class="ability-wrap card compact">
-          <img class="ability-art" src="assets/ui/buff.webp" alt="" aria-hidden="true">
-          <div class="ability-info">
-            <b>ЖЕЛЕ-ИМПУЛЬС</b>
-            <small id="abilityText">Ломай блоки, чтобы зарядить усиление</small>
+          <div class="fall-controls" aria-label="Сенсорное управление траекторией слайма">
+            <div id="touchJoystick" class="touch-joystick" aria-hidden="true"><span aria-hidden="true"></span></div>
           </div>
-          <button id="abilityBtn" class="ability-btn" type="button" aria-label="Активировать желе-импульс" disabled><span id="abilityPercent">0%</span></button>
         </div>
       </section>
     </main>
@@ -335,15 +340,15 @@
   <script src="/sdk.js"></script>
   <script src="published/food.js?v=1"></script>
   <script src="published/worlds.js?v=1"></script>
-  <script src="food-catalog.js?v=4"></script>
+  <script src="food-catalog.js?v=5"></script>
   <script src="world-catalog.js?v=18"></script>
-  <script src="balance/balance-catalog.js?v=7"></script>
-  <script src="js/config/game-config.js?v=37"></script>
+  <script src="balance/balance-catalog.js?v=8"></script>
+  <script src="js/config/game-config.js?v=39"></script>
   <script src="js/platform/yandex-platform.js?v=1"></script>
-  <script src="js/core/game-assets.js?v=10"></script>
+  <script src="js/core/game-assets.js?v=11"></script>
   <script src="js/core/audio.js?v=1"></script>
   <script src="js/rendering/slime-avatar.js?v=8"></script>
-  <script src="js/ui/encyclopedia.js?v=7"></script>
-  <script src="game.js?v=132"></script>
+  <script src="js/ui/encyclopedia.js?v=8"></script>
+  <script src="game.js?v=136"></script>
 </body>
 </html>

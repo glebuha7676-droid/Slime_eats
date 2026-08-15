@@ -38,6 +38,9 @@
     uiIconMarkup
   } = ASSETS;
   const { drawSlimeAvatar } = window.SlimeAvatarRenderer;
+  const BASE_DAMAGE = 10;
+  const BASE_DEFENSE = 10;
+  const BASE_BOUNCE = 1;
 
   // Данные из встроенного редактора миров. Значения остаются безопасными:
   // если редактор ещё не использовался, игра работает на исходных настройках.
@@ -63,7 +66,7 @@
   const els = {
     app: $('#app'),
     coinsLabel: $('#coinsLabel'), runCoinsGain: $('#runCoinsGain'), worldLabel: $('#worldLabel'), worldIcon: $('#worldIcon'),
-    worldEyebrow: $('#worldEyebrow'), levelPassedBadge: $('#levelPassedBadge'), worldProgressText: $('#worldProgressText'),
+    worldEyebrow: $('#worldEyebrow'), levelPassedBadge: $('#levelPassedBadge'), worldProgressPrefix: $('#worldProgressPrefix'), worldProgressText: $('#worldProgressText'),
     worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
     menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
@@ -77,16 +80,18 @@
     conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
     foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'),
     stomachQuickSlots: $('#stomachQuickSlots'),
-    playSetupCard: $('#playSetupCard'), homeWorldSelect: $('#homeWorldSelect'), homeWorldPickerIcon: $('#homeWorldPickerIcon'),
+    playSetupCard: $('#playSetupCard'), homeWorldPicker: $('#homeWorldPicker'), homeWorldMenu: $('#homeWorldMenu'),
+    homeWorldSelect: $('#homeWorldSelect'), homeWorldPickerIcon: $('#homeWorldPickerIcon'),
     homeWorldPickerEyebrow: $('#homeWorldPickerEyebrow'), homeWorldPickerName: $('#homeWorldPickerName'), homeWorldBest: $('#homeWorldBest'),
     campaignModeBtn: $('#campaignModeBtn'), endlessModeBtn: $('#endlessModeBtn'),
-    campaignModePanel: $('#campaignModePanel'), endlessModePanel: $('#endlessModePanel'), endlessBestScore: $('#endlessBestScore'),
-    endlessBestDepth: $('#endlessBestDepth'), startDropBtn: $('#startDropBtn'), startEndlessBtn: $('#startEndlessBtn'),
+    endlessModeHint: $('#endlessModeHint'), campaignModePanel: $('#campaignModePanel'), endlessModePanel: $('#endlessModePanel'),
+    endlessBestScore: $('#endlessBestScore'), endlessBestDepth: $('#endlessBestDepth'), endlessBestLaps: $('#endlessBestLaps'),
+    endlessRuns: $('#endlessRuns'), startDropBtn: $('#startDropBtn'), startEndlessBtn: $('#startEndlessBtn'),
     depthLabel: $('#depthLabel'), runMassLabel: $('#runMassLabel'), runHealthBar: $('#runHealthBar'),
     routeProgress: $('#routeProgress'), routeBestMarker: $('#routeBestMarker'), routeBestLabel: $('#routeBestLabel'),
     routeSlimeMarker: $('#routeSlimeMarker'), routeTargetLabel: $('#routeTargetLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'),
-    steerLeftBtn: $('#steerLeftBtn'), steerRightBtn: $('#steerRightBtn'),
+    touchJoystick: $('#touchJoystick'),
     abilityBtn: $('#abilityBtn'), abilityPercent: $('#abilityPercent'), abilityText: $('#abilityText'), endRunBtn: $('#endRunBtn'),
     runMenuOverlay: $('#runMenuOverlay'), resumeRunBtn: $('#resumeRunBtn'), restartRunBtn: $('#restartRunBtn'),
     finishRunBtn: $('#finishRunBtn'), toggleRunSoundBtn: $('#toggleRunSoundBtn'), runSoundIcon: $('#runSoundIcon'), runSoundLabel: $('#runSoundLabel'),
@@ -238,9 +243,11 @@
     merged.bestDepth = Math.max(0, +merged.bestDepth || 0);
     merged.endlessBestScore = { ...defaultSave.endlessBestScore };
     merged.endlessBestDepth = { ...defaultSave.endlessBestDepth };
+    merged.endlessRuns = { ...defaultSave.endlessRuns };
     for (const world of WORLDS) {
       merged.endlessBestScore[world.id] = Math.max(0, Math.floor(+(value.endlessBestScore?.[world.id] || 0)));
       merged.endlessBestDepth[world.id] = Math.max(0, Math.floor(+(value.endlessBestDepth?.[world.id] || 0)));
+      merged.endlessRuns[world.id] = Math.max(0, Math.floor(+(value.endlessRuns?.[world.id] || 0)));
     }
     merged.homeMode = value.homeMode === 'endless' ? 'endless' : 'campaign';
     merged.totalRuns = Math.max(0, Math.round(+merged.totalRuns || 0));
@@ -731,6 +738,56 @@
       }));
       els.homeWorldSelect.value = selectedValue;
     }
+    if (els.homeWorldMenu) {
+      const options = document.createDocumentFragment();
+      WORLDS.forEach(item => {
+        const unlocked = worldIsUnlocked(item.id);
+        const selected = item.id === world.id;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `home-world-option${selected ? ' active' : ''}${unlocked ? '' : ' locked'}`;
+        button.dataset.world = String(item.id);
+        button.disabled = !unlocked;
+        button.setAttribute('role', 'option');
+        button.setAttribute('aria-selected', String(selected));
+        button.setAttribute('aria-label', unlocked ? `Мир ${item.id}. ${item.name}` : `Мир ${item.id} закрыт`);
+
+        const emblem = document.createElement('span');
+        emblem.className = 'home-world-option-icon';
+        const image = document.createElement('img');
+        image.src = versionedAsset(`assets/ui/world-icons/world-${item.id}.webp`);
+        image.alt = '';
+        image.setAttribute('aria-hidden', 'true');
+        emblem.appendChild(image);
+
+        const copy = document.createElement('span');
+        copy.className = 'home-world-option-copy';
+        const eyebrow = document.createElement('small');
+        eyebrow.textContent = `МИР ${item.id}`;
+        const name = document.createElement('b');
+        name.textContent = item.name;
+        copy.append(eyebrow, name);
+
+        const state = document.createElement('i');
+        state.className = 'home-world-option-state';
+        state.setAttribute('aria-hidden', 'true');
+        if (selected && unlocked) {
+          const check = document.createElement('span');
+          check.className = 'home-world-option-check';
+          check.textContent = '✓';
+          state.appendChild(check);
+        } else if (!unlocked) {
+          const lock = document.createElement('img');
+          lock.className = 'home-world-option-lock';
+          lock.src = versionedAsset('assets/ui/level-lock.png');
+          lock.alt = '';
+          state.appendChild(lock);
+        }
+        button.append(emblem, copy, state);
+        options.appendChild(button);
+      });
+      els.homeWorldMenu.replaceChildren(options);
+    }
 
     const endlessUnlocked = Boolean(save.gameCompleted);
     const activeMode = save.homeMode === 'endless' && endlessUnlocked ? 'endless' : 'campaign';
@@ -741,17 +798,30 @@
     els.campaignModeBtn?.setAttribute('aria-selected', String(activeMode === 'campaign'));
     els.endlessModeBtn?.setAttribute('aria-selected', String(activeMode === 'endless'));
     if (els.endlessModeBtn) {
-      els.endlessModeBtn.disabled = !endlessUnlocked;
+      els.endlessModeBtn.disabled = false;
+      els.endlessModeBtn.classList.toggle('locked', !endlessUnlocked);
+      els.endlessModeBtn.removeAttribute('aria-disabled');
+      els.endlessModeBtn.setAttribute('aria-label', endlessUnlocked
+        ? 'Бесконечный режим'
+        : 'Бесконечный режим. Откроется после прохождения игры');
       els.endlessModeBtn.title = endlessUnlocked ? 'Бесконечный режим' : 'Откроется после прохождения игры';
     }
+    if (els.endlessModeHint) els.endlessModeHint.textContent = endlessUnlocked ? 'БЕЗ КОНЦА' : 'ОТКРОЕТСЯ ПОСЛЕ ИГРЫ';
     els.campaignModePanel?.classList.toggle('hidden', activeMode !== 'campaign');
     els.endlessModePanel?.classList.toggle('hidden', activeMode !== 'endless');
-    if (els.endlessBestScore) els.endlessBestScore.textContent = formatCompactNumber(save.endlessBestScore?.[world.id] || 0);
-    if (els.endlessBestDepth) els.endlessBestDepth.textContent = `${Math.floor(save.endlessBestDepth?.[world.id] || 0).toLocaleString('ru-RU')} М`;
+    const endlessScore = Math.max(0, ...WORLDS.map(item => +(save.endlessBestScore?.[item.id] || 0)));
+    const endlessDepth = Math.max(0, ...WORLDS.map(item => +(save.endlessBestDepth?.[item.id] || 0)));
+    const endlessLaps = Math.max(0, ...WORLDS.map(item => Math.floor(+(save.endlessBestDepth?.[item.id] || 0) / Math.max(1, levelTargetDepth(item, LEVEL_COUNT)))));
+    const endlessRunCount = WORLDS.reduce((sum, item) => sum + Math.max(0, +(save.endlessRuns?.[item.id] || 0)), 0);
+    if (els.endlessBestScore) els.endlessBestScore.textContent = formatCompactNumber(endlessScore);
+    if (els.endlessBestDepth) els.endlessBestDepth.textContent = `${Math.floor(endlessDepth).toLocaleString('ru-RU')} М`;
+    if (els.endlessBestLaps) els.endlessBestLaps.textContent = formatCompactNumber(endlessLaps);
+    if (els.endlessRuns) els.endlessRuns.textContent = formatCompactNumber(endlessRunCount);
   }
 
   function selectHomeMode(mode) {
     const nextMode = mode === 'endless' ? 'endless' : 'campaign';
+    setHomeWorldMenuOpen(false);
     if (nextMode === 'endless' && !save.gameCompleted) {
       showToast('Бесконечный режим откроется после прохождения игры');
       return;
@@ -762,6 +832,18 @@
     feedback(6);
     renderHomePlaySetup();
     persist();
+  }
+
+  function setHomeWorldMenuOpen(open) {
+    if (!els.homeWorldPicker || !els.homeWorldMenu) return;
+    const next = Boolean(open);
+    els.homeWorldMenu.hidden = !next;
+    els.homeWorldPicker.classList.toggle('is-open', next);
+    els.homeWorldPicker.setAttribute('aria-expanded', String(next));
+    els.playSetupCard?.classList.toggle('world-menu-open', next);
+    if (next) {
+      requestAnimationFrame(() => els.homeWorldMenu.querySelector('.home-world-option.active:not(:disabled),.home-world-option:not(:disabled)')?.focus());
+    }
   }
 
   function selectHomeWorld(worldId) {
@@ -814,13 +896,14 @@
     const targetDepth = levelTargetDepth(world, level);
     const best = Math.min(targetDepth, Math.floor(save.worldBest[world.id] || 0));
     const worldProgress = clamp(best / targetDepth * 100, 0, 100);
-    const remaining = Math.max(0, targetDepth - best);
+    const levelCompleted = best >= targetDepth;
     updateWorldHeader();
+    if (els.worldProgressPrefix) els.worldProgressPrefix.textContent = levelCompleted ? 'УРОВЕНЬ ПРОЙДЕН' : 'ВЫ ПРОШЛИ';
     els.worldProgressText.textContent = `${best} м`;
     els.worldProgressBar.style.width = `${worldProgress}%`;
     if (els.worldProgressMarker) els.worldProgressMarker.style.left = `${worldProgress}%`;
     els.worldProgressBar.parentElement.setAttribute('aria-valuenow', String(Math.round(worldProgress)));
-    els.worldHint.textContent = remaining > 0 ? `ЕЩЁ ${remaining} М` : (level >= LEVEL_COUNT ? 'МИР ПРОЙДЕН' : 'УРОВЕНЬ ПРОЙДЕН');
+    els.worldHint.textContent = `${targetDepth} М`;
     if (els.adminWorldValue) els.adminWorldValue.textContent = `МИР ${world.id}`;
     renderHomePlaySetup();
     renderLevelPicker();
@@ -1222,8 +1305,8 @@
   function foodStatItems(food) {
     return [
       { key: 'mass', value: food.mass || 0, score: (food.mass || 0) / 12, iconName: 'stat-health', display: `+${food.mass || 0}`, label: `+${food.mass || 0} здоровья` },
-      { key: 'power', value: food.power || 0, score: (food.power || 0) / .7, iconName: 'stat-power', display: `+${round1(food.power || 0)}`, label: `+${round1(food.power || 0)} силы` },
-      { key: 'defense', value: food.defense || 0, score: (food.defense || 0) / .14, iconName: 'stat-defense', display: `+${Math.round((food.defense || 0) * 100)}%`, label: `+${Math.round((food.defense || 0) * 100)}% защиты` },
+      { key: 'power', value: food.power || 0, score: (food.power || 0) / 7, iconName: 'stat-power', display: `+${round1(food.power || 0)}`, label: `+${round1(food.power || 0)} урона` },
+      { key: 'defense', value: food.defense || 0, score: (food.defense || 0) / 14, iconName: 'stat-defense', display: `+${Math.round(food.defense || 0)}`, label: `+${Math.round(food.defense || 0)} защиты` },
       { key: 'bounce', value: food.elasticity || 0, score: (food.elasticity || 0) / .22, iconName: 'stat-bounce', display: `+${Math.round((food.elasticity || 0) * 100)}%`, label: `+${Math.round((food.elasticity || 0) * 100)}% отскока` },
       { key: 'ability', value: food.ability || 0, score: (food.ability || 0) / 16, iconName: 'buff', display: `+${food.ability || 0}%`, label: `+${food.ability || 0}% заряда` },
       { key: 'coins', value: food.coinMultiplier || 0, score: (food.coinMultiplier || 0) / .45, iconName: 'coin', display: `+${Math.round((food.coinMultiplier || 0) * 100)}%`, label: `+${Math.round((food.coinMultiplier || 0) * 100)}% монет` }
@@ -1260,9 +1343,9 @@
   function calculateStatsForFoods(foods) {
     const stats = {
       mass: 8,
-      power: 1,
-      defense: 0,
-      elasticity: 1,
+      power: BASE_DAMAGE,
+      defense: BASE_DEFENSE,
+      elasticity: BASE_BOUNCE,
       ability: 0,
       coinMultiplier: 1
     };
@@ -1289,25 +1372,25 @@
     if (effects.rainbow || effects.prismFlow) {
       const boost = effects.prismFlow ? 1.12 : 1.10;
       stats.mass = 8 + (stats.mass - 8) * boost;
-      stats.power = 1 + (stats.power - 1) * boost;
-      stats.defense *= boost;
-      stats.elasticity = 1 + (stats.elasticity - 1) * boost;
+      stats.power = BASE_DAMAGE + (stats.power - BASE_DAMAGE) * boost;
+      stats.defense = BASE_DEFENSE + (stats.defense - BASE_DEFENSE) * boost;
+      stats.elasticity = BASE_BOUNCE + (stats.elasticity - BASE_BOUNCE) * boost;
       stats.ability *= boost;
       stats.coinMultiplier = 1 + (stats.coinMultiplier - 1) * boost;
     }
 
     let combo = null;
     if (counts.mass >= 3) { stats.mass *= 1.25; combo = { icon: '🍔', name: 'Запас здоровья', text: '+25% здоровья' }; }
-    if (counts.power >= 3) { stats.power += 1; combo = { icon: '🔥', name: 'Ярость', text: '+1 силы' }; }
-    if (counts.defense >= 3) { stats.defense += .15; combo = { icon: '🛡️', name: 'Бронеслайм', text: '+15% защиты' }; }
+    if (counts.power >= 3) { stats.power += 10; combo = { icon: '🔥', name: 'Ярость', text: '+10 урона' }; }
+    if (counts.defense >= 3) { stats.defense += 15; combo = { icon: '🛡️', name: 'Бронеслайм', text: '+15 защиты' }; }
     if (counts.bounce >= 3) { stats.elasticity += .28; combo = { icon: '🟣', name: 'Суперпрыжок', text: '+28% отскока' }; }
-    if (counts.magic >= 3) { stats.ability += 45; combo = { icon: '✨', name: 'Хаос', text: '+45% импульса' }; }
+    if (counts.magic >= 3) { stats.ability += 45; combo = { icon: '✨', name: 'Хаос', text: '+45% заряда барьера' }; }
 
     stats.mass *= 1 + session.massBoost / 100;
     stats.mass = Math.round(stats.mass);
-    stats.power = round1(stats.power);
-    stats.defense = clamp(stats.defense, 0, .58);
-    stats.elasticity = clamp(stats.elasticity, .85, 1.85);
+    stats.power = clamp(round1(stats.power), 1, 999);
+    stats.defense = clamp(Math.round(stats.defense), 0, 999);
+    stats.elasticity = clamp(stats.elasticity, .85, 2.6);
     stats.ability = clamp(stats.ability, 0, 45);
     return { stats, effects, combo };
   }
@@ -1334,7 +1417,7 @@
     const comparisons = [
       [els.massCompare, next.mass, session.stats.mass, delta => `+${Math.round(delta)}`],
       [els.powerCompare, next.power, session.stats.power, delta => `+${round1(delta)}`],
-      [els.defenseCompare, next.defense, session.stats.defense, delta => `+${Math.round(delta * 100)}%`],
+      [els.defenseCompare, next.defense, session.stats.defense, delta => `+${Math.round(delta)}`],
       [els.bounceCompare, next.elasticity, session.stats.elasticity, delta => `+${Math.round(delta * 100)}%`]
     ];
     comparisons.forEach(([element, value, current, format]) => {
@@ -1453,9 +1536,9 @@
     const full = session.foods.length >= capacity;
 
     els.massLabel.textContent = Math.round(session.stats.mass);
-    els.powerLabel.textContent = `×${session.stats.power.toFixed(1)}`;
-    els.defenseLabel.textContent = `${Math.round(session.stats.defense * 100)}%`;
-    els.bounceLabel.textContent = `×${session.stats.elasticity.toFixed(1)}`;
+    els.powerLabel.textContent = `${round1(session.stats.power)}`;
+    els.defenseLabel.textContent = `${Math.round(session.stats.defense)}`;
+    els.bounceLabel.textContent = `${Math.round(session.stats.elasticity * 100)}%`;
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
     clearFoodPreview();
     els.rerollBtn.disabled = full;
@@ -1872,7 +1955,11 @@
         radius: 28 * fedScale,
         wobble: 0
       },
-      steer: { left: false, right: false },
+      steer: {
+        keyLeft: false, keyRight: false, keyDown: false,
+        touchX: 0, touchDown: 0, pointerId: null,
+        originX: 0, originY: 0
+      },
       geyserCapture: null,
       geyserLaunchGraceUntil: 0,
       geyserBreaksLeft: 0,
@@ -1895,6 +1982,9 @@
       emotionUntil: 0,
       power: session.stats.power,
       defense: session.stats.defense,
+      barrier: 0,
+      barrierFlashUntil: 0,
+      bounceControlLockUntil: 0,
       elasticity: session.stats.elasticity,
       coinMultiplier: session.stats.coinMultiplier,
       effects: { ...session.effects },
@@ -1904,10 +1994,7 @@
       voidBreakerUsed: false,
       brokenSinceBlast: 0,
       abilityCharge: Math.min(45, session.stats.ability),
-      abilityTime: 0,
-      abilityCooldown: 0,
-      abilityCooldownMax: session.effects.cooldownCut ? 3.5 : BALANCE.abilityCooldown,
-      abilityChargeMultiplier: session.effects.chargeBoost ? 1.25 : 1,
+      abilityChargeMultiplier: (session.effects.chargeBoost ? 1.25 : 1) * (session.effects.cooldownCut ? 1.15 : 1),
       coins: 0,
       comboCount: 0,
       comboMultiplier: 1,
@@ -2279,7 +2366,7 @@
 
     const terminalSpeed = (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld) * (frozen ? 1.18 : 1);
     s.vy = Math.min(terminalSpeed, s.vy + worldGravity * dt);
-    applyFallSteering(s, dt);
+    applyFallSteering(s, dt, timestamp);
     s.x += s.vx * dt;
     s.y += s.vy * dt;
     s.wobble += dt * (4 + Math.abs(s.vy) / 180);
@@ -2342,11 +2429,6 @@
     const targetCamera = clamp(s.y - 158, 0, run.portalY - VIEW_H + 105);
     run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * 4.25, 0, 1));
 
-    if (run.abilityTime > 0) {
-      run.abilityTime = Math.max(0, run.abilityTime - dt);
-    } else if (run.abilityCooldown > 0) {
-      run.abilityCooldown = Math.max(0, run.abilityCooldown - dt);
-    }
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt * 20);
     run.visualMass = lerp(run.visualMass, Math.max(0, run.mass), clamp(dt * 11, 0, 1));
     const healthScale = .82 + .18 * Math.sqrt(clamp(run.mass / Math.max(1, run.startMass), 0, 1));
@@ -2479,17 +2561,31 @@
     return launchFromGeyser({ x: targetX - capture.targetX, y: targetY - capture.targetY }, timestamp);
   }
 
-  function applyFallSteering(slime, dt) {
-    if (!run?.steer || run.portalEntry || isSlimeFrozen()) return;
-    const direction = Number(run.steer.right) - Number(run.steer.left);
-    if (!direction) return;
-    const controlSpeed = 235;
-    const acceleration = 180;
-    if (Math.sign(slime.vx) === direction && Math.abs(slime.vx) >= controlSpeed) return;
-    const nextVx = slime.vx + direction * acceleration * dt;
-    slime.vx = Math.sign(nextVx) === direction
-      ? direction * Math.min(Math.abs(nextVx), controlSpeed)
-      : nextVx;
+  function fallSteeringVector() {
+    if (!run?.steer) return { x: 0, down: 0 };
+    const keyboardX = Number(run.steer.keyRight) - Number(run.steer.keyLeft);
+    return {
+      x: clamp(keyboardX + (run.steer.touchX || 0), -1, 1),
+      down: clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1)
+    };
+  }
+
+  function applyFallSteering(slime, dt, timestamp = performance.now()) {
+    if (!run?.steer || run.portalEntry || isSlimeFrozen(timestamp)) return;
+    const steering = fallSteeringVector();
+    if (Math.abs(steering.x) > .01) {
+      const controlSpeed = 235;
+      const acceleration = 190;
+      const nextVx = slime.vx + steering.x * acceleration * dt;
+      slime.vx = Math.sign(nextVx) === Math.sign(steering.x)
+        ? Math.sign(steering.x) * Math.min(Math.abs(nextVx), controlSpeed)
+        : nextVx;
+    }
+    // Downward input increases weight, but never cancels the first instant of
+    // a real rebound from a block the slime could not break.
+    if (steering.down > .01 && timestamp >= (run.bounceControlLockUntil || 0)) {
+      slime.vy += 235 * steering.down * dt;
+    }
   }
 
   function getPortalGeometry() {
@@ -2604,15 +2700,9 @@
     const isFalling = s.vy > 0;
     const tierData = BLOCK_TIERS[block.tier] || BLOCK_TIERS.dense;
     const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
-    const flightMultiplier = 1 + Math.min(run.flightDistance / 285, 1.35);
-    const speedMultiplier = clamp(impactSpeed / 360, .74, 1.55);
-    const abilityMultiplier = run.abilityTime > 0 ? 2.5 : 1;
-
-    // Сила удара опирается на максимальную массу. Потеря здоровья больше не запускает спираль смерти.
-    const healthFactor = .85 + .15 * clamp(run.mass / Math.max(1, run.maxMass), 0, 1);
-    const baseImpact = 7 + Math.sqrt(Math.max(1, run.maxMass)) * 2.12;
-    const rawDamage = baseImpact * run.power * flightMultiplier * speedMultiplier * healthFactor * abilityMultiplier;
-    let damage = Math.max(1, rawDamage * tierData.chip);
+    // Честная характеристика: «Урон 10» всегда снимает блоку 10 прочности.
+    // Разницу между породами полностью задаёт их запас HP.
+    let damage = Math.max(1, run.power);
     const hpBefore = block.hp;
     // Utility blocks are collected on the very first contact, regardless of
     // current speed or an old editor durability multiplier.
@@ -2639,10 +2729,8 @@
       massLoss = Math.min(massLoss, run.maxMass * BALANCE.maxBounceLossOfMaxMass, Math.max(1, run.mass * BALANCE.maxBounceLossOfCurrentMass));
     }
 
-    massLoss *= (1 - run.defense);
     if (block.special === 'spring') massLoss *= .35;
     if (block.hazard) massLoss *= 1.75;
-    if (run.abilityTime > 0) massLoss *= .18;
     if (run.effects.softLanding && timestamp < run.softLandingUntil) massLoss *= .45;
     if (frozenSlime || block.special === 'snowflake' || block.special === 'appleMint' || block.special === 'appleRed' || block.special === 'meteor') massLoss = 0;
     if (!destroysImmediately && run.freeBouncesLeft > 0) {
@@ -2652,6 +2740,13 @@
     }
     if (sameImpactCluster) massLoss *= BALANCE.repeatMassScale;
     massLoss = massLoss <= 0 ? 0 : Math.max(BALANCE.minMassLoss, massLoss);
+
+    const barrierAbsorbed = Math.min(Math.max(0, run.barrier || 0), massLoss);
+    if (barrierAbsorbed > 0) {
+      run.barrier = Math.max(0, run.barrier - barrierAbsorbed);
+      run.barrierFlashUntil = timestamp + 380;
+      massLoss = Math.max(0, massLoss - barrierAbsorbed);
+    }
 
     run.mass = Math.max(0, run.mass - massLoss);
     if (!sameImpactCluster && massLoss > 0) run.lastMassDamageAt = timestamp;
@@ -2696,7 +2791,9 @@
       }
 
       if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
-      else if (!block.special && run.comboCount < 2) impact(`УДАР · −${round1(massLoss)} здоровья`);
+      else if (!block.special && run.comboCount < 2) impact(barrierAbsorbed > 0 && massLoss <= 0
+        ? `БАРЬЕР · −${round1(barrierAbsorbed)}`
+        : `УДАР · −${round1(massLoss)} здоровья`);
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
       if (run.mass <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
       return false;
@@ -2717,6 +2814,7 @@
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
     run.flightDistance = 0;
     run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs;
+    run.bounceControlLockUntil = timestamp + 170;
     if (run.effects.softLanding) run.softLandingUntil = timestamp + 1000;
 
     s.x += collision.nx * (collision.penetration + 2.4);
@@ -2741,13 +2839,14 @@
 
     addAbilityCharge({ soft: 1.4, dense: 2.0, hard: 2.8, reinforced: 3.6, ore: 2.4, special: 2.0 }[block.tier] || 2);
 
+    const damageMessage = barrierAbsorbed > 0 && massLoss <= 0 ? `БАРЬЕР · −${round1(barrierAbsorbed)}` : `−${round1(massLoss)}`;
     impact(block.special === 'spring'
-      ? `ПРУЖИНА · −${round1(massLoss)}`
+      ? `ПРУЖИНА · ${damageMessage}`
       : block.special === 'boss'
-        ? `СТРАЖ НЕДР · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`
+        ? `СТРАЖ НЕДР · ${damageMessage} · ${Math.ceil(block.hp)} HP`
         : block.hazard
-          ? `ОПАСНЫЙ БЛОК · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`
-          : `РИКОШЕТ · −${round1(massLoss)} · ${Math.ceil(block.hp)} HP`);
+          ? `ОПАСНЫЙ БЛОК · ${damageMessage} · ${Math.ceil(block.hp)} HP`
+          : `РИКОШЕТ · ${damageMessage} · ${Math.ceil(block.hp)} HP`);
     sound(block.special === 'spring' ? 'bounce' : block.hazard || block.special === 'boss' ? 'hitHard' : 'hit');
     createDebris(block, 3, false);
 
@@ -2799,6 +2898,7 @@
     run.flightDistance = 0;
     preserveCombo(timestamp);
     run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + 110;
+    run.bounceControlLockUntil = timestamp + 220;
     run.emotion = 'joy';
     run.emotionUntil = timestamp + 480;
     run.shake = Math.max(run.shake, 6.5);
@@ -2812,6 +2912,8 @@
   }
 
   function chooseBounceDirection(block) {
+    const inputX = fallSteeringVector().x;
+    if (Math.abs(inputX) > .12) return Math.sign(inputX);
     const leftScore = scoreLandingSide(block.row, block.col - 1);
     const rightScore = scoreLandingSide(block.row, block.col + 1);
     if (Math.random() < .14) return Math.random() < .5 ? -1 : 1;
@@ -2858,7 +2960,7 @@
   }
 
   function addAbilityCharge(amount) {
-    if (!run || run.ended || run.abilityTime > 0 || run.abilityCooldown > 0) return;
+    if (!run || run.ended) return;
     run.abilityCharge = clamp(run.abilityCharge + amount * run.abilityChargeMultiplier, 0, 100);
   }
 
@@ -2937,10 +3039,10 @@
   function activateMintApple(source) {
     const settings = GAME_BALANCE?.special?.appleMint || {};
     const sizeChange = clamp((settings.size ?? -20) / 100, -.5, 0);
-    const defenseBoost = clamp((settings.defense ?? 20) / 100, 0, 1);
+    const defenseBoost = clamp(Math.round(settings.defense ?? 20), 0, 999);
     const bounceBoost = clamp((settings.bounce ?? 20) / 100, 0, 1);
     run.sizeMultiplier = clamp((run.sizeMultiplier || 1) * (1 + sizeChange), .62, 2.25);
-    run.defense = clamp(run.defense + defenseBoost, 0, .85);
+    run.defense = clamp(run.defense + defenseBoost, 0, 999);
     run.elasticity = clamp(run.elasticity + bounceBoost, .85, 2.6);
     const timestamp = performance.now();
     run.appleGlowUntil = timestamp + 1450;
@@ -2949,7 +3051,7 @@
     run.emotionUntil = timestamp + 1050;
     run.shake = Math.max(run.shake, 4.5);
     spawnSpecialBurst('appleMint', source.x + source.w / 2, source.y + source.h / 2);
-    impact(`МЯТНОЕ ЯБЛОКО · ${Math.round(sizeChange * 100)}% РАЗМЕР · +${Math.round(bounceBoost * 100)}% ОТСКОК`);
+    impact(`МЯТНОЕ ЯБЛОКО · +${defenseBoost} ЗАЩИТЫ · +${Math.round(bounceBoost * 100)}% ОТСКОК`);
     sound('happy');
     feedback([6, 10, 6, 14]);
   }
@@ -2957,11 +3059,11 @@
   function activateRedApple(source) {
     const settings = GAME_BALANCE?.special?.appleRed || {};
     const sizeBoost = clamp((settings.size ?? 50) / 100, 0, 1);
-    const powerBoost = clamp((settings.power ?? 20) / 100, 0, 1);
-    const defenseBoost = clamp((settings.defense ?? 20) / 100, 0, 1);
+    const powerBoost = clamp(Math.round(settings.power ?? 20), 0, 999);
+    const defenseBoost = clamp(Math.round(settings.defense ?? 20), 0, 999);
     run.sizeMultiplier = clamp((run.sizeMultiplier || 1) * (1 + sizeBoost), .62, 2.25);
-    run.power = Math.min(12, run.power * (1 + powerBoost));
-    run.defense = clamp(run.defense + defenseBoost, 0, .85);
+    run.power = Math.min(999, run.power + powerBoost);
+    run.defense = clamp(run.defense + defenseBoost, 0, 999);
     const timestamp = performance.now();
     run.appleGlowUntil = timestamp + 1650;
     run.appleGlowType = 'red';
@@ -2969,7 +3071,7 @@
     run.emotionUntil = timestamp + 1150;
     run.shake = Math.max(run.shake, 6);
     spawnSpecialBurst('appleRed', source.x + source.w / 2, source.y + source.h / 2);
-    impact(`КРАСНОЕ ЯБЛОКО · +${Math.round(sizeBoost * 100)}% РОСТ · +${Math.round(powerBoost * 100)}% УРОН`);
+    impact(`КРАСНОЕ ЯБЛОКО · +${powerBoost} УРОНА · +${defenseBoost} ЗАЩИТЫ`);
     sound('epic');
     feedback([9, 14, 9, 18]);
   }
@@ -3338,14 +3440,13 @@
   }
 
   function activateAbility() {
-    if (!run || run.ended || run.abilityCharge < 100 || run.abilityTime > 0 || run.abilityCooldown > 0) return;
+    if (!run || run.ended || run.paused || run.abilityCharge < 100) return;
     run.abilityCharge = 0;
-    run.abilityTime = BALANCE.abilityDuration;
-    run.abilityCooldown = run.abilityCooldownMax;
-    run.slime.vy += 125;
+    run.barrier = Math.max(0, run.defense);
+    run.barrierFlashUntil = performance.now() + 720;
     sound('epic');
     feedback([14, 22, 14]);
-    impact('ЖЕЛЕ-ИМПУЛЬС!');
+    impact(`БАРЬЕР +${Math.round(run.barrier)}`);
     updateRunUI();
   }
 
@@ -3375,23 +3476,14 @@
     els.runHealthBar.style.width = `${clamp(run.mass / Math.max(1, run.maxMass) * 100, 0, 100)}%`;
     els.runHealthBar.closest('.shaft-health')?.classList.toggle('is-low', run.mass / Math.max(1, run.maxMass) <= .3);
     const charge = clamp(Math.round(run.abilityCharge), 0, 100);
-    if (run.abilityTime > 0) {
-      els.abilityPercent.textContent = `${run.abilityTime.toFixed(1)}с`;
-      els.abilityBtn.style.setProperty('--ability', '100%');
-      els.abilityBtn.disabled = true;
-      els.abilityText.textContent = 'Усиление активно · заряд временно не копится';
-    } else if (run.abilityCooldown > 0) {
-      const ready = clamp((1 - run.abilityCooldown / run.abilityCooldownMax) * 100, 0, 100);
-      els.abilityPercent.textContent = `${run.abilityCooldown.toFixed(1)}с`;
-      els.abilityBtn.style.setProperty('--ability', `${ready}%`);
-      els.abilityBtn.disabled = true;
-      els.abilityText.textContent = 'Перезарядка · заряд не накапливается';
-    } else {
-      els.abilityPercent.textContent = `${charge}%`;
-      els.abilityBtn.style.setProperty('--ability', `${charge}%`);
-      els.abilityBtn.disabled = charge < 100 || run.ended;
-      els.abilityText.textContent = 'Заряжается от разрушений и настоящих рикошетов';
-    }
+    els.abilityPercent.textContent = `${charge}%`;
+    els.abilityBtn.style.setProperty('--ability', `${charge}%`);
+    els.abilityBtn.disabled = charge < 100 || run.ended || run.paused;
+    els.abilityBtn.classList.toggle('is-ready', charge >= 100 && !run.ended);
+    els.abilityBtn.classList.toggle('is-active', run.barrier > 0);
+    els.abilityText.textContent = run.barrier > 0
+      ? `ЩИТ ${Math.ceil(run.barrier)}/${Math.ceil(run.defense)}`
+      : `БАРЬЕР ${Math.ceil(run.defense)}`;
   }
 
   // ===== CANVAS-РЕНДЕР МИРА =====
@@ -4633,21 +4725,32 @@
       ? run.frozenEmotion
       : timestamp < run.emotionUntil
       ? run.emotion
-      : run.abilityTime > 0
-        ? 'power'
+      : run.barrier > 0
+        ? 'focused'
         : s.vy < -35
           ? 'surprised'
           : speed > 245
             ? 'joy'
             : 'focused';
 
-    if (run.abilityTime > 0) {
+    if (run.barrier > 0) {
       ctx.save();
-      ctx.globalAlpha = .25 + Math.sin(timestamp / 80) * .08;
-      ctx.fillStyle = '#67e8f9';
+      const barrierPulse = timestamp < (run.barrierFlashUntil || 0) ? .13 : .05;
+      ctx.globalAlpha = .18 + Math.sin(timestamp / 115) * .035 + barrierPulse;
+      const barrierGlow = ctx.createRadialGradient(s.x, screenY, radius * .72, s.x, screenY, radius + 19);
+      barrierGlow.addColorStop(0, 'rgba(111,211,255,.05)');
+      barrierGlow.addColorStop(.72, 'rgba(91,193,255,.22)');
+      barrierGlow.addColorStop(1, 'rgba(59,142,233,0)');
+      ctx.fillStyle = barrierGlow;
       ctx.beginPath();
-      ctx.arc(s.x, screenY, radius + 17, 0, Math.PI * 2);
+      ctx.arc(s.x, screenY, radius + 19, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalAlpha = .75;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#9ee8ff';
+      ctx.beginPath();
+      ctx.arc(s.x, screenY, radius + 10, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
 
@@ -5121,6 +5224,7 @@
       run.endlessScore = calculateEndlessScore(run);
       save.endlessBestScore[run.worldId] = Math.max(save.endlessBestScore[run.worldId] || 0, run.endlessScore);
       save.endlessBestDepth[run.worldId] = Math.max(save.endlessBestDepth[run.worldId] || 0, Math.max(0, Math.floor(run.maxDepth)));
+      save.endlessRuns[run.worldId] = Math.max(0, Math.floor(save.endlessRuns[run.worldId] || 0)) + 1;
     } else {
       save.worldBest[run.worldId] = Math.max(save.worldBest[run.worldId] || 0, Math.min(run.maxDepth, run.world.targetDepth));
       save.lastRunDepth[`${run.worldId}:${run.level}`] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
@@ -5699,44 +5803,83 @@
     if (lastFocusedElement?.focus) lastFocusedElement.focus();
   }
 
-  function bindFallStick(button, side) {
-    if (!button) return;
-    const setPressed = (pressed, pointerId = null) => {
-      if (run?.steer) run.steer[side] = pressed;
-      button.classList.toggle('is-pressed', pressed);
-      button.setAttribute('aria-pressed', String(pressed));
-      if (pressed && pointerId !== null) {
-        try { button.setPointerCapture(pointerId); } catch (_) { /* capture is optional */ }
-      }
-    };
-    button.addEventListener('pointerdown', event => {
-      if (!run || run.ended) return;
-      event.preventDefault();
-      if (run.geyserCapture && launchFromGeyser({ x: side === 'left' ? -1 : 1, y: 0 }, performance.now())) return;
-      setPressed(true, event.pointerId);
-      feedback(4);
-    });
-    const release = event => {
-      setPressed(false);
-      if (event?.pointerId !== undefined) {
-        try { button.releasePointerCapture(event.pointerId); } catch (_) { /* pointer already released */ }
-      }
-    };
-    button.addEventListener('pointerup', release);
-    button.addEventListener('pointercancel', release);
-    button.addEventListener('lostpointercapture', () => setPressed(false));
+  function updateTouchJoystick(event) {
+    if (!run?.steer || run.steer.pointerId !== event.pointerId) return;
+    const maxDistance = 35;
+    let dx = event.clientX - run.steer.originX;
+    let dy = Math.max(0, event.clientY - run.steer.originY);
+    const distance = Math.hypot(dx, dy);
+    if (distance > maxDistance) {
+      dx = dx / distance * maxDistance;
+      dy = dy / distance * maxDistance;
+    }
+    run.steer.touchX = clamp(dx / maxDistance, -1, 1);
+    run.steer.touchDown = clamp(dy / maxDistance, 0, 1);
+    els.touchJoystick?.style.setProperty('--stick-x', `${round1(dx)}px`);
+    els.touchJoystick?.style.setProperty('--stick-y', `${round1(dy)}px`);
+  }
+
+  function beginTouchJoystick(event) {
+    if (!run?.steer || run.ended || run.paused || run.portalEntry || event.pointerType === 'mouse') return false;
+    if (run.steer.pointerId !== null) return false;
+    const rect = els.shaft.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+    run.steer.pointerId = event.pointerId;
+    run.steer.originX = event.clientX;
+    run.steer.originY = event.clientY;
+    run.steer.touchX = 0;
+    run.steer.touchDown = 0;
+    const localX = clamp(event.clientX - rect.left, 43, rect.width - 43);
+    const localY = clamp(event.clientY - rect.top, 43, rect.height - 43);
+    if (els.touchJoystick) {
+      els.touchJoystick.style.left = `${localX}px`;
+      els.touchJoystick.style.top = `${localY}px`;
+      els.touchJoystick.style.setProperty('--stick-x', '0px');
+      els.touchJoystick.style.setProperty('--stick-y', '0px');
+      els.touchJoystick.classList.add('is-active');
+      els.touchJoystick.setAttribute('aria-hidden', 'false');
+    }
+    try { els.shaft.setPointerCapture(event.pointerId); } catch (_) { /* capture is optional */ }
+    feedback(3);
+    return true;
+  }
+
+  function endTouchJoystick(event) {
+    if (run?.steer && event?.pointerId !== undefined && run.steer.pointerId !== event.pointerId) return;
+    const pointerId = run?.steer?.pointerId ?? null;
+    if (run?.steer) {
+      run.steer.pointerId = null;
+      run.steer.touchX = 0;
+      run.steer.touchDown = 0;
+    }
+    els.touchJoystick?.classList.remove('is-active');
+    els.touchJoystick?.setAttribute('aria-hidden', 'true');
+    els.touchJoystick?.style.setProperty('--stick-x', '0px');
+    els.touchJoystick?.style.setProperty('--stick-y', '0px');
+    if (pointerId !== null) {
+      try { els.shaft.releasePointerCapture(pointerId); } catch (_) { /* pointer already released */ }
+    }
+  }
+
+  function setKeyboardSteering(code, pressed) {
+    if (!run?.steer || run.ended || run.paused || run.portalEntry) return false;
+    const key = {
+      ArrowLeft: 'keyLeft', KeyA: 'keyLeft',
+      ArrowRight: 'keyRight', KeyD: 'keyRight',
+      ArrowDown: 'keyDown', KeyS: 'keyDown'
+    }[code];
+    if (!key) return false;
+    run.steer[key] = pressed;
+    return true;
   }
 
   function clearFallSteering() {
     if (run?.steer) {
-      run.steer.left = false;
-      run.steer.right = false;
+      run.steer.keyLeft = false;
+      run.steer.keyRight = false;
+      run.steer.keyDown = false;
     }
-    [els.steerLeftBtn, els.steerRightBtn].forEach(button => {
-      if (!button) return;
-      button.classList.remove('is-pressed');
-      button.setAttribute('aria-pressed', 'false');
-    });
+    endTouchJoystick();
   }
 
   // ===== СОБЫТИЯ И ЗАПУСК ПРИЛОЖЕНИЯ =====
@@ -5749,6 +5892,22 @@
       selectLevel(Number(button.dataset.level));
     });
     els.homeWorldSelect?.addEventListener('change', event => selectHomeWorld(event.target.value));
+    els.homeWorldPicker?.addEventListener('click', () => setHomeWorldMenuOpen(els.homeWorldMenu?.hidden));
+    els.homeWorldMenu?.addEventListener('click', event => {
+      const option = event.target.closest('.home-world-option');
+      if (!option || option.disabled) return;
+      setHomeWorldMenuOpen(false);
+      selectHomeWorld(option.dataset.world);
+    });
+    document.addEventListener('pointerdown', event => {
+      if (els.homeWorldMenu?.hidden || event.target.closest('.home-world-selector')) return;
+      setHomeWorldMenuOpen(false);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape' || els.homeWorldMenu?.hidden) return;
+      setHomeWorldMenuOpen(false);
+      els.homeWorldPicker?.focus();
+    });
     els.campaignModeBtn?.addEventListener('click', () => selectHomeMode('campaign'));
     els.endlessModeBtn?.addEventListener('click', () => selectHomeMode('endless'));
     els.startDropBtn.addEventListener('click', startDrop);
@@ -5763,13 +5922,18 @@
     els.adminResetProgressBtn?.addEventListener('click', resetProgressFromAdmin);
     els.abilityBtn.addEventListener('click', activateAbility);
     els.shaft.addEventListener('pointerdown', event => {
-      if (!run?.geyserCapture || run.ended || run.paused) return;
-      if (event.target.closest?.('button')) return;
+      if (!run || run.ended || run.paused || event.target.closest?.('button')) return;
       event.preventDefault();
-      launchGeyserTowardClientPoint(event.clientX, event.clientY, performance.now());
+      if (run.geyserCapture) {
+        launchGeyserTowardClientPoint(event.clientX, event.clientY, performance.now());
+        return;
+      }
+      beginTouchJoystick(event);
     });
-    bindFallStick(els.steerLeftBtn, 'left');
-    bindFallStick(els.steerRightBtn, 'right');
+    els.shaft.addEventListener('pointermove', event => updateTouchJoystick(event));
+    els.shaft.addEventListener('pointerup', endTouchJoystick);
+    els.shaft.addEventListener('pointercancel', endTouchJoystick);
+    els.shaft.addEventListener('lostpointercapture', endTouchJoystick);
     els.endRunBtn.addEventListener('click', openRunMenu);
     els.resumeRunBtn?.addEventListener('click', continueRunFromMenu);
     els.toggleRunSoundBtn?.addEventListener('click', toggleRunSound);
@@ -5828,15 +5992,22 @@
       else if (els.homeScreen.classList.contains('active')) prepareMenuSlimeCanvas();
     });
     document.addEventListener('keydown', event => {
-      if (run?.geyserCapture && !run.paused && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+      const steerCode = event.code || event.key;
+      if (run?.geyserCapture && !run.paused && ['ArrowLeft', 'ArrowRight', 'ArrowDown', 'KeyA', 'KeyD', 'KeyS'].includes(steerCode)) {
         event.preventDefault();
         const direction = {
           ArrowLeft: { x: -1, y: 0 },
           ArrowRight: { x: 1, y: 0 },
-          ArrowUp: { x: 0, y: -1 },
-          ArrowDown: { x: 0, y: 1 }
-        }[event.key];
+          ArrowDown: { x: 0, y: 1 },
+          KeyA: { x: -1, y: 0 },
+          KeyD: { x: 1, y: 0 },
+          KeyS: { x: 0, y: 1 }
+        }[steerCode];
         launchFromGeyser(direction, performance.now());
+        return;
+      }
+      if (setKeyboardSteering(steerCode, true)) {
+        event.preventDefault();
         return;
       }
       if (event.key !== 'Escape') return;
@@ -5848,6 +6019,10 @@
       else if (!els.panelOverlay.classList.contains('hidden')) closePanel();
       else hideFoodInfo();
     });
+    document.addEventListener('keyup', event => {
+      if (setKeyboardSteering(event.code || event.key, false)) event.preventDefault();
+    });
+    window.addEventListener('blur', clearFallSteering);
   }
 
   async function init() {

@@ -73,18 +73,16 @@
     sideBounceMax: 92,
     bounceGraceMs: 145,
     segmentMinRows: 3,
-    segmentMaxRows: 6,
-    abilityDuration: 1.65,
-    abilityCooldown: 5
+    segmentMaxRows: 6
   };
 
   const BLOCK_TIERS = {
-    soft: { label: 'Лёгкий', shock: .55, chip: 1.12, drag: .99, coin: .72, breakLoss: [.001, .004], bounceLoss: [.018, .028] },
-    dense: { label: 'Плотный', shock: .82, chip: 1, drag: .95, coin: 1, breakLoss: [.004, .008], bounceLoss: [.026, .038] },
-    hard: { label: 'Твёрдый', shock: 1.05, chip: .94, drag: .91, coin: 1.45, breakLoss: [.006, .010], bounceLoss: [.036, .050] },
-    reinforced: { label: 'Усиленный', shock: 1.22, chip: .84, drag: .88, coin: 2.05, breakLoss: [.008, .012], bounceLoss: [.046, .060] },
-    ore: { label: 'Руда', shock: .86, chip: .99, drag: .94, coin: 3.55, breakLoss: [.004, .008], bounceLoss: [.030, .042] },
-    special: { label: 'Особый', shock: .72, chip: 1.05, drag: .96, coin: 1.30, breakLoss: [.002, .006], bounceLoss: [.020, .034] }
+    soft: { label: 'Лёгкий', shock: .55, drag: .99, coin: .72, breakLoss: [.001, .004], bounceLoss: [.018, .028] },
+    dense: { label: 'Плотный', shock: .82, drag: .95, coin: 1, breakLoss: [.004, .008], bounceLoss: [.026, .038] },
+    hard: { label: 'Твёрдый', shock: 1.05, drag: .91, coin: 1.45, breakLoss: [.006, .010], bounceLoss: [.036, .050] },
+    reinforced: { label: 'Усиленный', shock: 1.22, drag: .88, coin: 2.05, breakLoss: [.008, .012], bounceLoss: [.046, .060] },
+    ore: { label: 'Руда', shock: .86, drag: .94, coin: 3.55, breakLoss: [.004, .008], bounceLoss: [.030, .042] },
+    special: { label: 'Особый', shock: .72, drag: .96, coin: 1.30, breakLoss: [.002, .006], bounceLoss: [.020, .034] }
   };
 
   const RARITY_LABELS = {
@@ -145,7 +143,7 @@
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 13,
+    schemaVersion: 14,
     coins: 20,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
@@ -158,6 +156,7 @@
     bestDepth: 0,
     endlessBestScore: { 1: 0, 2: 0, 3: 0, 4: 0 },
     endlessBestDepth: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    endlessRuns: { 1: 0, 2: 0, 3: 0, 4: 0 },
     homeMode: 'campaign',
     selectedSkin: 'classic',
     unlockedSkins: ['classic'],

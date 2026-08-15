@@ -101,11 +101,11 @@
     base.special.cryo.area = 4;
     base.special.snowflake.duration = 3;
     base.special.appleMint.size = Math.round(clamp(value.special?.appleMint?.size, -50, 0, base.special.appleMint.size));
-    base.special.appleMint.defense = Math.round(clamp(value.special?.appleMint?.defense, 0, 100, base.special.appleMint.defense));
+    base.special.appleMint.defense = Math.round(clamp(value.special?.appleMint?.defense, 0, 999, base.special.appleMint.defense));
     base.special.appleMint.bounce = Math.round(clamp(value.special?.appleMint?.bounce, 0, 100, base.special.appleMint.bounce));
     base.special.appleRed.size = Math.round(clamp(value.special?.appleRed?.size, 0, 100, base.special.appleRed.size));
-    base.special.appleRed.power = Math.round(clamp(value.special?.appleRed?.power, 0, 100, base.special.appleRed.power));
-    base.special.appleRed.defense = Math.round(clamp(value.special?.appleRed?.defense, 0, 100, base.special.appleRed.defense));
+    base.special.appleRed.power = Math.round(clamp(value.special?.appleRed?.power, 0, 999, base.special.appleRed.power));
+    base.special.appleRed.defense = Math.round(clamp(value.special?.appleRed?.defense, 0, 999, base.special.appleRed.defense));
     base.special.geyser.launch = clamp(value.special?.geyser?.launch, .6, 2, base.special.geyser.launch);
     base.special.geyser.wait = 3;
     base.special.meteor.minCount = Math.round(clamp(value.special?.meteor?.minCount, 3, 4, base.special.meteor.minCount));

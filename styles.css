@@ -537,37 +537,46 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 }
 @media(max-width:430px){.impact-text.combo-impact{gap:1px}.combo-impact .combo-line{gap:4px;padding:3px 7px 4px}.combo-impact .combo-line:before{left:-12px}.combo-impact .combo-line:after{right:-12px}}
 
-/* Мягкое управление траекторией во время падения. */
-.fall-controls{position:absolute;z-index:10;inset:0;pointer-events:none}
-.fall-stick{
-  position:absolute;bottom:31px;width:62px;height:62px;padding:0;display:grid;place-items:center;
-  border:2px solid rgba(235,247,255,.46);border-radius:50%;background:rgba(25,39,57,.22);
-  box-shadow:inset 0 0 0 7px rgba(236,248,255,.07),0 2px 8px rgba(8,15,25,.16);
-  color:rgba(255,255,255,.76);opacity:.48;pointer-events:auto;touch-action:none;user-select:none;
-  -webkit-tap-highlight-color:transparent;
-  transition:opacity .12s ease,transform .12s cubic-bezier(.2,.8,.2,1),background .12s ease,border-color .12s ease;
+/* Один динамический джойстик появляется под пальцем. Вверх намеренно отключён. */
+.fall-controls{position:absolute;z-index:11;inset:0;overflow:hidden;pointer-events:none;touch-action:none}
+.touch-joystick{
+  --stick-x:0px;--stick-y:0px;position:absolute;left:50%;top:72%;width:82px;height:82px;
+  border:2px solid rgba(235,247,255,.66);border-radius:50%;background:rgba(25,39,57,.27);
+  box-shadow:inset 0 0 0 9px rgba(236,248,255,.08),0 4px 12px rgba(8,15,25,.2);
+  opacity:0;transform:translate(-50%,-50%) scale(.78);visibility:hidden;
+  transition:opacity .1s ease,transform .12s cubic-bezier(.2,.8,.2,1),visibility 0s linear .12s;
 }
-.fall-stick-left{left:29px}.fall-stick-right{right:29px}
-.fall-stick:before{
-  content:"";position:absolute;inset:13px;border:2px solid rgba(255,255,255,.46);border-radius:50%;
-  background:rgba(225,242,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.24);
-  transition:transform .12s ease,background .12s ease;
+.touch-joystick:before{
+  content:"";position:absolute;left:50%;top:50%;width:34px;height:34px;border:2px solid rgba(255,255,255,.46);border-radius:50%;
+  background:rgba(225,242,255,.11);transform:translate(-50%,-50%);
 }
-.fall-stick span{
-  position:relative;z-index:1;width:24px;height:24px;border:2px solid rgba(244,251,255,.74);border-radius:50%;
-  background:linear-gradient(145deg,rgba(235,248,255,.72),rgba(118,158,187,.68));
-  box-shadow:0 3px 4px rgba(7,16,28,.3),inset 0 2px 2px rgba(255,255,255,.38);
-  transition:transform .12s ease,filter .12s ease;
+.touch-joystick span{
+  position:absolute;z-index:1;left:50%;top:50%;width:31px;height:31px;border:2px solid rgba(244,251,255,.86);border-radius:50%;
+  background:linear-gradient(145deg,rgba(240,251,255,.92),rgba(95,159,202,.88));
+  box-shadow:0 3px 5px rgba(7,16,28,.32),inset 0 2px 2px rgba(255,255,255,.5);
+  transform:translate(calc(-50% + var(--stick-x)),calc(-50% + var(--stick-y)));
+  transition:transform .045s linear;
 }
-.fall-stick.is-pressed,.fall-stick:active{opacity:.9;transform:scale(1.09);border-color:rgba(255,255,255,.82);background:rgba(83,157,211,.38)}
-.fall-stick-left.is-pressed:before,.fall-stick-left:active:before{transform:translateX(-3px);background:rgba(225,242,255,.24)}
-.fall-stick-right.is-pressed:before,.fall-stick-right:active:before{transform:translateX(3px);background:rgba(225,242,255,.24)}
-.fall-stick-left.is-pressed span,.fall-stick-left:active span{transform:translateX(-4px);filter:brightness(1.18)}
-.fall-stick-right.is-pressed span,.fall-stick-right:active span{transform:translateX(4px);filter:brightness(1.18)}
-@media(max-width:370px){
-  .fall-stick{bottom:28px;width:58px;height:58px}
-  .fall-stick-left{left:28px}.fall-stick-right{right:28px}
+.touch-joystick.is-active{opacity:.92;transform:translate(-50%,-50%) scale(1);visibility:visible;transition-delay:0s}
+@media(pointer:fine){.touch-joystick{display:none}}
+
+/* Активный щит находится внутри шахты, а не отнимает отдельную строку экрана. */
+.barrier-control{
+  position:absolute;z-index:12;left:50%;bottom:22px;display:grid;justify-items:center;gap:3px;
+  transform:translateX(-50%);pointer-events:none;
 }
+.barrier-control .barrier-btn{
+  position:relative;width:64px;height:64px;padding:0;display:grid;place-items:center;border:3px solid #34415a;border-radius:50%;
+  background:conic-gradient(#48c5f1 var(--ability,0%),rgba(209,219,226,.72) 0);box-shadow:0 3px 5px rgba(17,30,47,.26),inset 0 2px 1px rgba(255,255,255,.7);
+  pointer-events:auto;touch-action:manipulation;
+}
+.barrier-control .barrier-btn:before{content:"";position:absolute;inset:7px;border:2px solid #53627a;border-radius:50%;background:linear-gradient(180deg,#f7fdff,#cfeefa)}
+.barrier-control .barrier-btn img{position:relative;z-index:1;width:31px;height:31px;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(30,54,84,.28))}
+.barrier-control .barrier-btn span{position:absolute;z-index:2;left:50%;bottom:6px;padding:1px 4px;border-radius:7px;background:#34415a;color:#fff;font-size:7px;line-height:1;transform:translateX(-50%)}
+.barrier-control .barrier-btn.is-ready{animation:barrierReady 1s ease-in-out infinite alternate}
+.barrier-control .barrier-btn.is-active:before{background:linear-gradient(180deg,#eaffff,#8fe5ff)}
+.barrier-control>small{padding:3px 7px;border:1px solid rgba(255,255,255,.52);border-radius:8px;background:rgba(28,43,62,.76);color:#fff;font-size:7px;font-weight:1000;line-height:1;white-space:nowrap;text-shadow:0 1px rgba(0,0,0,.25)}
+@keyframes barrierReady{to{filter:brightness(1.13);transform:scale(1.04)}}
 
 /* Encyclopedia rarity filters reuse the exact static card gems. */
 .encyclopedia-rarity-tabs>.encyclopedia-rarity-tab .rarity-name i,
