@@ -3,13 +3,13 @@
 
   const WORLD_LEVELS = {
     1: [
-      { depth: 85, features: { dynamite: false, medkit: false, hazards: false, boss: false }, utilityCadence: 0,
+      { depth: 100, features: { dynamite: false, medkit: false, hazards: false, boss: false }, utilityCadence: 0,
         sections: ['tutorial', 'flow', 'ore', 'flow', 'ore', 'flow', 'final'] },
-      { depth: 150, features: { dynamite: true, medkit: false, hazards: false, boss: false }, utilityCadence: 8,
+      { depth: 200, features: { dynamite: true, medkit: false, hazards: false, boss: false }, utilityCadence: 8,
         sections: ['tutorial', 'flow', 'bomb', 'ore', 'flow', 'bomb', 'flow', 'final'] },
-      { depth: 250, features: { dynamite: true, medkit: true, hazards: false, boss: false }, utilityCadence: 7,
+      { depth: 300, features: { dynamite: true, medkit: true, hazards: false, boss: false }, utilityCadence: 7,
         sections: ['tutorial', 'flow', 'bomb', 'recovery', 'ore', 'flow', 'bomb', 'recovery', 'final'] },
-      { depth: 350, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 7,
+      { depth: 400, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 7,
         sections: ['tutorial', 'flow', 'bomb', 'recovery', 'challenge', 'ore', 'bomb', 'challenge', 'final'] },
       { depth: 500, features: { dynamite: true, medkit: true, hazards: true, boss: true }, utilityCadence: 6,
         sections: ['tutorial', 'flow', 'bomb', 'recovery', 'challenge', 'ore', 'bomb', 'recovery', 'boss', 'final'] }
@@ -18,35 +18,35 @@
 
   const WORLDS = [
     {
-      id: 1, name: 'Зелёные глубины', targetDepth: 500, reward: 300, hardness: .58,
-      expectedDamage: 19, pathWidth: 3, minPathWidth: 3, turnRate: .08,
+      id: 1, name: 'Зелёные глубины', targetDepth: 500, reward: 300,
+      pathWidth: 3, minPathWidth: 3, turnRate: .08,
       hardCap: .08, reinforcedCap: .018, oreChance: .075, specialChance: .16,
       sky: '#63825b', earth: '#3b3027', deep: '#171c20', accent: '#54d7b0', icon: '🌿',
-      materials: ['packedDirt', 'stone', 'obsidian'], palette: 'earth', depthRamp: .22,
+      materials: ['packedDirt', 'stone', 'obsidian'], palette: 'earth',
       cellSize: 72, hazardChance: .055
     },
     {
-      id: 2, name: 'Ледяная пещера', targetDepth: 200, reward: 700, hardness: .88,
-      expectedDamage: 29, pathWidth: 3, minPathWidth: 2, turnRate: .18,
+      id: 2, name: 'Ледяная пещера', targetDepth: 550, reward: 700,
+      pathWidth: 3, minPathWidth: 2, turnRate: .18,
       hardCap: .15, reinforcedCap: .02, oreChance: .06, specialChance: .115,
       sky: '#4b7f97', earth: '#244452', deep: '#10232d', accent: '#67e8f9', icon: '🧊',
-      materials: ['iceLight', 'snowPacked', 'glacier'], palette: 'ice', depthRamp: .30,
+      materials: ['iceLight', 'snowPacked', 'glacier'], palette: 'ice',
       cellSize: 72, hazardChance: .075
     },
     {
-      id: 3, name: 'Конфетная фабрика', targetDepth: 300, reward: 1550, hardness: 1.18,
-      expectedDamage: 43, pathWidth: 2, minPathWidth: 2, turnRate: .28,
+      id: 3, name: 'Конфетная фабрика', targetDepth: 600, reward: 1550,
+      pathWidth: 2, minPathWidth: 2, turnRate: .28,
       hardCap: .27, reinforcedCap: .07, oreChance: .075, specialChance: .095,
       sky: '#8f4b82', earth: '#4a244d', deep: '#21142d', accent: '#f472b6', icon: '🍬',
-      materials: ['candy', 'cookie', 'stone'], palette: 'candy', depthRamp: .38,
+      materials: ['candy', 'cookie', 'stone'], palette: 'candy',
       cellSize: 72
     },
     {
-      id: 4, name: 'Магмовое ядро', targetDepth: 420, reward: 3300, hardness: 1.56,
-      expectedDamage: 62, pathWidth: 2, minPathWidth: 1, turnRate: .37,
+      id: 4, name: 'Магмовое ядро', targetDepth: 650, reward: 3300,
+      pathWidth: 2, minPathWidth: 1, turnRate: .37,
       hardCap: .39, reinforcedCap: .15, oreChance: .09, specialChance: .082,
       sky: '#7d3426', earth: '#45221e', deep: '#1b1112', accent: '#fb7185', icon: '🌋',
-      materials: ['basalt', 'lavaRock', 'metal'], palette: 'lava', depthRamp: .48,
+      materials: ['basalt', 'lavaRock', 'metal'], palette: 'lava',
       cellSize: 72
     }
   ];
@@ -63,31 +63,26 @@
     flightKeepDense: .55,
     flightKeepHard: .28,
     impactClusterMs: 150,
-    repeatMassScale: .10,
-    maxBounceLossOfMaxMass: .052,
-    maxBounceLossOfCurrentMass: .15,
-    maxBreakLossOfMaxMass: .008,
-    minMassLoss: .04,
-    bounceMin: 68,
-    bounceMax: 160,
-    sideBounceMax: 92,
-    bounceGraceMs: 145,
+    bounceMin: 70,
+    bounceMax: 215,
+    sideBounceMax: 195,
+    bounceGraceMs: 165,
     segmentMinRows: 3,
     segmentMaxRows: 6
   };
 
   const BLOCK_TIERS = {
-    soft: { label: 'Лёгкий', shock: .55, drag: .99, coin: .72, breakLoss: [.001, .004], bounceLoss: [.018, .028] },
-    dense: { label: 'Плотный', shock: .82, drag: .95, coin: 1, breakLoss: [.004, .008], bounceLoss: [.026, .038] },
-    hard: { label: 'Твёрдый', shock: 1.05, drag: .91, coin: 1.45, breakLoss: [.006, .010], bounceLoss: [.036, .050] },
-    reinforced: { label: 'Усиленный', shock: 1.22, drag: .88, coin: 2.05, breakLoss: [.008, .012], bounceLoss: [.046, .060] },
-    ore: { label: 'Руда', shock: .86, drag: .94, coin: 3.55, breakLoss: [.004, .008], bounceLoss: [.030, .042] },
-    special: { label: 'Особый', shock: .72, drag: .96, coin: 1.30, breakLoss: [.002, .006], bounceLoss: [.020, .034] }
+    soft: { label: 'Лёгкий', shock: .55, drag: .99, coin: .72 },
+    dense: { label: 'Плотный', shock: .82, drag: .95, coin: 1 },
+    hard: { label: 'Твёрдый', shock: 1.05, drag: .91, coin: 1.45 },
+    reinforced: { label: 'Усиленный', shock: 1.22, drag: .88, coin: 2.05 },
+    ore: { label: 'Руда', shock: .86, drag: .94, coin: 3.55 },
+    special: { label: 'Особый', shock: .72, drag: .96, coin: 1.30 }
   };
 
   const RARITY_LABELS = {
-    common: 'Обычное', rare: 'Редкое', epic: 'Эпическое', legendary: 'Легендарное',
-    prismatic: 'Призматическое', secret: 'Секретное'
+    common: 'Обычная', rare: 'Редкая', epic: 'Эпическая',
+    special: 'Особая', secret: 'Секретная'
   };
 
   const WORLD_SPRITE_NAMES = {
@@ -98,10 +93,10 @@
   };
 
   const ORE_TYPES = [
-    { id: 'coal', label: 'УГОЛЬ', min: 0, reward: .72, hp: [10, 16] },
-    { id: 'iron', label: 'ЖЕЛЕЗО', min: .12, reward: 1.02, hp: [17, 24] },
-    { id: 'gold', label: 'ЗОЛОТО', min: .32, reward: 1.48, hp: [25, 32] },
-    { id: 'diamond', label: 'АЛМАЗ', min: .58, reward: 2.10, hp: [33, 40] }
+    { id: 'coal', label: 'УГОЛЬ', min: 0, reward: .72, hp: [10, 10] },
+    { id: 'iron', label: 'ЖЕЛЕЗО', min: .12, reward: 1.02, hp: [30, 30] },
+    { id: 'gold', label: 'ЗОЛОТО', min: .32, reward: 1.48, hp: [60, 60] },
+    { id: 'diamond', label: 'АЛМАЗ', min: .58, reward: 2.10, hp: [100, 100] }
   ];
 
   const FOOD_ART_OFFSETS = {
@@ -126,31 +121,31 @@
 
   const UPGRADES = {
     stomachLevel: {
-      name: 'Желудок', icon: 'stomach', max: 6,
-      description: 'Вместимость: от 2 до 6 блюд. Главный источник разнообразия билдов.',
-      costs: [0, 0, 45, 180, 650, 2100]
+      name: 'Желудок', icon: 'stomach', max: 4,
+      description: 'Вместимость: от 1 до 4 блюд. Каждая карта — заметный выбор.',
+      costs: [0, 45, 180, 650]
     },
     conveyorLevel: {
       name: 'Конвейер', icon: 'conveyor', max: 5,
-      description: 'Снижает шанс обычной еды и открывает эпические, легендарные, призматические и секретные блюда.',
+      description: 'Снижает шанс обычной еды и открывает эпические, особые и секретные карточки.',
       costs: [0, 90, 340, 1150, 3600]
     },
     rerollLevel: {
-      name: 'Бесплатные рероллы', icon: 'reroll', max: 3,
-      description: '+1 бесплатный реролл на каждый забег. После них — только rewarded-реклама.',
+      name: 'Удача конвейера', icon: 'reroll', max: 3,
+      description: '+5% к редким картам после рекламного обновления.',
       costs: [180, 900, 3500]
     }
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 14,
+    schemaVersion: 16,
     coins: 20,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
     lastRunDepth: {},
     selectedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
     unlockedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
-    stomachLevel: 2,
+    stomachLevel: 1,
     conveyorLevel: 1,
     rerollLevel: 0,
     bestDepth: 0,
@@ -166,8 +161,8 @@
     revealedSecretFoods: [],
     lastDailyDate: '', dailyStreak: 0,
     lastWheelDate: '', wheelAdDate: '', wheelAdSpins: 0,
-    pendingEpicBoost: 0, pendingMassBoost: 0, pendingExtraRerolls: 0,
-    foodPity: { noEpic: 0, noLegendary: 0, noPrismatic: 0, noSecret: 0 },
+    pendingEpicBoost: 0, pendingHealthBoost: 0, pendingExtraRerolls: 0,
+    foodPity: { noEpic: 0, noSpecial: 0, noSecret: 0 },
     activeDraft: null,
     pendingWheel: null,
     totalRuns: 0,
@@ -183,12 +178,12 @@
     VIEW_H: 650,
     LEVEL_COUNT: 5,
     LEVEL_DEPTH_RATIOS: [.36, .52, .68, .84, 1],
-    ASSET_REVISION: '20260813-20',
+    ASSET_REVISION: '20260816-2',
     FOOD_ASSET_ROOT: 'assets/ЕДА/Общий пул/',
     UI_ASSET_ROOT: 'assets/ui/',
     FOOD_EDITOR_STORAGE_KEY: 'slime_food_catalog_v2',
-    FOOD_RARITIES: ['common', 'rare', 'epic', 'legendary', 'prismatic', 'secret'],
-    FOOD_CATEGORIES: ['mass', 'power', 'defense', 'bounce', 'magic'],
+    FOOD_RARITIES: ['common', 'rare', 'epic', 'special', 'secret'],
+    FOOD_CATEGORIES: ['health', 'damage', 'shield'],
     WORLD_LEVELS,
     WORLDS,
     PHYSICS,

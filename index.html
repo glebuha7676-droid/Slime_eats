@@ -7,9 +7,9 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=60" />
-  <link rel="stylesheet" href="food-cards.css?v=40" />
-  <link rel="stylesheet" href="home-layout.css?v=85" />
+  <link rel="stylesheet" href="styles.css?v=62" />
+  <link rel="stylesheet" href="food-cards.css?v=48" />
+  <link rel="stylesheet" href="home-layout.css?v=97" />
 </head>
 <body>
   <div id="app" class="app">
@@ -36,15 +36,9 @@
       <section id="homeScreen" class="screen active" aria-label="Подготовка слайма">
         <section id="slimeStage" class="slime-stage card" aria-label="Слайм и его характеристики">
           <div class="slime-hero-layout">
-            <div class="stat-rail stat-rail-left">
-              <div class="stat-pill mass">
-                <span class="stat-icon"><img src="assets/ui/stat-health.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>ЗДОРОВЬЕ</small><span class="stat-values"><b id="massLabel">0</b><em id="massCompare"></em></span></span>
-              </div>
-              <div class="stat-pill power">
-                <span class="stat-icon"><img src="assets/ui/stat-power.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>УРОН</small><span class="stat-values"><b id="powerLabel">10</b><em id="powerCompare"></em></span></span>
-              </div>
+            <div class="stomach-rail" aria-label="Желудок слайма">
+              <span class="stomach-rail-title">ЖЕЛУДОК</span>
+              <div id="stomachQuickSlots" class="stomach-quick-slots" aria-label="Ячейки желудка"></div>
             </div>
             <div class="slime-playground">
               <div id="slime" class="slime skin-classic" role="button" tabindex="0" aria-label="Слайм. Нажми или погладь его">
@@ -54,19 +48,21 @@
               </div>
             </div>
             <div class="stat-rail stat-rail-right">
-              <div class="stat-pill defense">
-                <span class="stat-icon"><img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>ЗАЩИТА</small><span class="stat-values"><b id="defenseLabel">10</b><em id="defenseCompare"></em></span></span>
+              <div class="stat-pill health">
+                <span class="stat-icon"><img src="assets/ui/stat-health.webp" alt="" aria-hidden="true"></span>
+                <span class="stat-copy"><small>ЗДОРОВЬЕ</small><span class="stat-values"><b id="healthLabel">100</b><em id="healthCompare"></em></span></span>
               </div>
-              <div class="stat-pill bounce">
-                <span class="stat-icon"><img src="assets/ui/stat-bounce.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>ОТСКОК</small><span class="stat-values"><b id="bounceLabel">100%</b><em id="bounceCompare"></em></span></span>
+              <div class="stat-pill damage">
+                <span class="stat-icon"><img src="assets/ui/stat-power.webp" alt="" aria-hidden="true"></span>
+                <span class="stat-copy"><small>УРОН</small><span class="stat-values"><b id="damageLabel">10</b><em id="damageCompare"></em></span></span>
+              </div>
+              <div class="stat-pill shield">
+                <span class="stat-icon"><img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true"></span>
+                <span class="stat-copy"><small>ЩИТ</small><span class="stat-values"><b id="shieldLabel">25</b><em id="shieldCompare"></em><span class="shield-charge-badge" aria-label="Заряды щита" title="Заряды щита"><b id="shieldChargesLabel">2</b></span></span></span>
               </div>
             </div>
           </div>
-          <div class="slime-quickbar" aria-label="Сборка слайма">
-            <div id="stomachQuickSlots" class="stomach-quick-slots" aria-label="Ячейки желудка"></div>
-          </div>
+          <div id="stomachCardViewer" class="stomach-card-viewer hidden" aria-live="polite"></div>
           <div id="rarityBursts" class="rarity-bursts" aria-live="polite"></div>
         </section>
 
@@ -188,12 +184,12 @@
             <span><small>ЗДОРОВЬЕ</small><b id="runMassLabel">0/0</b></span>
             <i><em id="runHealthBar"></em></i>
           </div>
-          <div class="barrier-control" aria-label="Активный барьер">
+          <div class="barrier-control" aria-label="Щит с зарядами">
             <button id="abilityBtn" class="ability-btn barrier-btn" type="button" aria-label="Активировать барьер" disabled>
               <img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true">
-              <span id="abilityPercent">0%</span>
+              <span id="abilityPercent">2</span>
             </button>
-            <small id="abilityText">БАРЬЕР 10</small>
+            <small id="abilityText">ЩИТ 25 · 2/2</small>
           </div>
           <div class="fall-controls" aria-label="Сенсорное управление траекторией слайма">
             <div id="touchJoystick" class="touch-joystick" aria-hidden="true"><span aria-hidden="true"></span></div>
@@ -252,11 +248,11 @@
         <span class="run-menu-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=1" alt=""></span>
         <div><small>ЗАБЕГ ОСТАНОВЛЕН</small><h2 id="runMenuTitle">Меню</h2></div>
       </div>
-      <button id="resumeRunBtn" class="run-menu-action run-menu-resume" type="button"><span aria-hidden="true">▶</span><b>ПРОДОЛЖИТЬ</b></button>
-      <button id="toggleRunSoundBtn" class="run-menu-action run-menu-sound" type="button"><span id="runSoundIcon" aria-hidden="true">♪</span><b id="runSoundLabel">ЗВУК ВКЛЮЧЁН</b></button>
+      <button id="resumeRunBtn" class="run-menu-action run-menu-resume" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/continue.webp?v=20260815-1" alt=""></span><b>ПРОДОЛЖИТЬ</b></button>
+      <button id="toggleRunSoundBtn" class="run-menu-action run-menu-sound" type="button"><span id="runSoundIcon" class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/sound.webp?v=20260815-1" alt=""></span><b id="runSoundLabel">ЗВУК ВКЛЮЧЁН</b></button>
       <div class="run-menu-danger-zone">
-        <button id="restartRunBtn" class="run-menu-action run-menu-restart" type="button"><span aria-hidden="true">↻</span><b>НАЧАТЬ ЗАНОВО</b></button>
-        <button id="finishRunBtn" class="run-menu-action run-menu-finish" type="button"><span aria-hidden="true">■</span><b>ЗАКОНЧИТЬ ЗАБЕГ</b></button>
+        <button id="restartRunBtn" class="run-menu-action run-menu-restart" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/restart.webp?v=20260815-1" alt=""></span><b>НАЧАТЬ ЗАНОВО</b></button>
+        <button id="finishRunBtn" class="run-menu-action run-menu-finish" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/finish.webp?v=20260815-1" alt=""></span><b>ЗАКОНЧИТЬ ЗАБЕГ</b></button>
       </div>
     </div>
   </div>
@@ -340,15 +336,15 @@
   <script src="/sdk.js"></script>
   <script src="published/food.js?v=1"></script>
   <script src="published/worlds.js?v=1"></script>
-  <script src="food-catalog.js?v=5"></script>
-  <script src="world-catalog.js?v=18"></script>
+  <script src="food-catalog.js?v=6"></script>
+  <script src="world-catalog.js?v=20"></script>
   <script src="balance/balance-catalog.js?v=8"></script>
-  <script src="js/config/game-config.js?v=39"></script>
+  <script src="js/config/game-config.js?v=52"></script>
   <script src="js/platform/yandex-platform.js?v=1"></script>
-  <script src="js/core/game-assets.js?v=11"></script>
-  <script src="js/core/audio.js?v=1"></script>
-  <script src="js/rendering/slime-avatar.js?v=8"></script>
-  <script src="js/ui/encyclopedia.js?v=8"></script>
-  <script src="game.js?v=136"></script>
+  <script src="js/core/game-assets.js?v=12"></script>
+  <script src="js/core/audio.js?v=2"></script>
+  <script src="js/rendering/slime-avatar.js?v=9"></script>
+  <script src="js/ui/encyclopedia.js?v=9"></script>
+  <script src="game.js?v=150"></script>
 </body>
 </html>

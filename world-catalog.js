@@ -82,7 +82,7 @@
       block('hazard', 'Лава · опасный блок', 'hazard', 'lava-hazard', { hp: 1.2 }),
       block('geyser', 'Вулканический гейзер', 'geyser', 'geyser', { hp: 1 }),
       block('meteor', 'Метеоритный блок', 'meteor', 'meteor', { hp: 1 }),
-      block('heal', 'Вулканическая аптечка', 'gel', 'heal', { hp: .44, healAmount: 16 })
+      block('heal', 'Вулканическая аптечка', 'gel', 'heal', { hp: .44 })
     ];
     return [
       ...(!ice ? [block('soft', candy ? 'Верхний сладкий декор' : 'Трава · только верхний ряд', 'soft', candy ? 'candy-light' : 'dirt-grass')] : []),
@@ -101,7 +101,7 @@
         block('cryo', 'Крио-блок', 'cryo', 'cryo', { hp: 1 }),
         block('snowflake', 'Блок снежинки', 'snowflake', 'snowflake', { hp: 1 })
       ]),
-      block('heal', 'Лечебный блок', 'gel', 'heal', { hp: .44, healAmount: 16 }),
+      block('heal', 'Лечебный блок', 'gel', 'heal', { hp: .44 }),
     ];
   };
   const enabledForLevel = (worldId, index) => {
@@ -128,7 +128,7 @@
     return ['soft','dense','hard','reinforced','ore','bomb','heal','hazard','spring'];
   };
   const world = (id, name, accent, top, bottom, depths) => ({ id, name, accent, background: { top, bottom, image: '', x: 0, y: 0, scale: 1 }, levels: depths.map((depth, index) => level(depth, enabledForLevel(id, index))), blocks: blocksFor(id) });
-  const builtInDefaults = () => ({ version: 8, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[85,150,250,350,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[120,210,320,440,580]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[140,240,360,490,640]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[160,280,410,560,720])] });
+  const builtInDefaults = () => ({ version: 10, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[100,200,300,400,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[150,250,350,450,550]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,600]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,550,650])] });
   const WORLD2_LEGACY_IDS = { freeze:'cryo', blizzard:'snowflake', bomb:'cryo', spring:'snowflake' };
   const WORLD3_LEGACY_IDS = { bomb:'appleRed', spring:'appleMint' };
   const WORLD4_LEGACY_IDS = { bomb:'geyser', spring:'meteor', seismic:'meteor' };
@@ -166,6 +166,7 @@
     const legacyWorld4NaturalAssets = +value.version < 6;
     const legacyWorld4Meteor = +value.version < 7;
     const legacyGlobalHazards = +value.version < 8;
+    const legacyCoreSignalArt = +value.version < 9;
     base.worlds.forEach(fallback => {
       const src = value.worlds.find(x => +x.id === fallback.id);
       if (!src) return;
@@ -194,11 +195,14 @@
         const migratedSpecial = (fallback.id === 3 && legacyWorld3 || fallback.id === 4 && (legacyWorld4 || legacyWorld4Meteor)) && legacyIds.includes(saved.id);
         block.label = migratedSpecial || (fallback.id === 4 && (legacyWorld4NaturalAssets || block.id === 'meteor' && legacyWorld4Meteor)) ? block.label : String(saved.label||block.label).slice(0,32);
         const forceBuiltInCryo = fallback.id === 2 && block.id === 'cryo';
-        block.image = forceBuiltInCryo || (fallback.id === 2 && legacyWorld2) || (fallback.id === 3 && legacyWorld3Assets) || (fallback.id === 4 && (legacyWorld4NaturalAssets || block.id === 'meteor' && legacyWorld4Meteor)) || migratedSpecial ? '' : String(saved.image||'').slice(0,1500000);
+        // Version 9 refreshes the universal green/red signal blocks. Older
+        // editor saves could keep an embedded texture here and silently cover
+        // the new project asset (most visibly the World 1 medkit).
+        const refreshCoreSignalArt = legacyCoreSignalArt && fallback.id <= 3 && (block.id === 'heal' || block.id === 'hazard');
+        block.image = refreshCoreSignalArt || forceBuiltInCryo || (fallback.id === 2 && legacyWorld2) || (fallback.id === 3 && legacyWorld3Assets) || (fallback.id === 4 && (legacyWorld4NaturalAssets || block.id === 'meteor' && legacyWorld4Meteor)) || migratedSpecial ? '' : String(saved.image||'').slice(0,1500000);
         block.x=clamp(saved.x,-45,45,0); block.y=clamp(saved.y,-45,45,0); block.scale=clamp(saved.scale,.55,1.55,1); block.hp=clamp(saved.hp,.1,5,block.hp);
         if(block.type==='ore'){const allowed=['coal','iron','gold','diamond'];block.oreVariant=['random',...allowed].includes(saved.oreVariant)?saved.oreVariant:'random';const selected=Array.isArray(saved.oreEnabled)?saved.oreEnabled.filter(id=>allowed.includes(id)):allowed;block.oreEnabled=selected.length?selected:allowed;}
         if(block.type==='bomb')block.explosionRadius=clamp(saved.explosionRadius,40,260,block.explosionRadius);
-        if(block.type==='gel')block.healAmount=clamp(saved.healAmount,1,100,block.healAmount);
         if(block.type==='spring')block.push=clamp(saved.push,.4,2.5,block.push);
       });
     });

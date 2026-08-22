@@ -24,7 +24,7 @@
     ]
   });
 
-  const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'prismatic', 'secret'];
+  const RARITY_ORDER = ['common', 'rare', 'epic', 'special', 'secret'];
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, character => ({
@@ -34,7 +34,7 @@
 
   function blockDescription(worldId, id, balance) {
     const special = balance?.special || {};
-    const heal = Math.max(1, Math.round(special.heal?.amount || 16));
+    const heal = Math.max(1, Math.round(special.heal?.amount || 25));
     const descriptions = {
       1: {
         bomb: 'Ломается при первом касании и взрывает квадрат 3×3 вместе с соседними блоками. Может запустить цепную реакцию другого динамита.',
@@ -47,8 +47,8 @@
         heal: `Ломается при первом касании и восстанавливает до ${heal} здоровья. Лишнее лечение не переносится.`
       },
       3: {
-        appleMint: `Уменьшает слайма на ${Math.abs(Math.round(special.appleMint?.size ?? -20))}%, добавляет ${Math.round(special.appleMint?.defense ?? 20)} защиты и ${Math.round(special.appleMint?.bounce ?? 20)}% прыгучести.`,
-        appleRed: `Увеличивает слайма на ${Math.round(special.appleRed?.size ?? 50)}%, добавляет ${Math.round(special.appleRed?.power ?? 20)} урона и ${Math.round(special.appleRed?.defense ?? 20)} защиты.`,
+        appleMint: `Уменьшает слайма на ${Math.abs(Math.round(special.appleMint?.size ?? -20))}%, добавляет ${Math.round(special.appleMint?.shield ?? 20)} щита и ${Math.round(special.appleMint?.shieldCharges ?? 1)} заряд щита.`,
+        appleRed: `Увеличивает слайма на ${Math.round(special.appleRed?.size ?? 50)}%, добавляет ${Math.round(special.appleRed?.damage ?? 20)} урона и ${Math.round(special.appleRed?.shield ?? 20)} щита.`,
         heal: `Ломается при первом касании и восстанавливает до ${heal} здоровья. Лишнее лечение не переносится.`
       },
       4: {
@@ -93,16 +93,19 @@
 
   function foodCardMarkup(food, helpers) {
     const cardType = food.effect && food.effectText ? 'ability' : 'stats';
-    const cardBody = cardType === 'ability'
-      ? `<span class="food-ability-copy"><b><span class="effect-title-star" aria-hidden="true">★</span><span class="effect-title-label">ЭФФЕКТ</span></b><em>${escapeHtml(food.effectText)}</em></span>`
-      : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid count-${Math.min(helpers.foodStatItems(food).length, 4)}">${helpers.foodStatGridMarkup(food)}</span></span>`;
+    const cardBody = helpers.foodCardBodyMarkup
+      ? helpers.foodCardBodyMarkup(food)
+      : '<span class="food-card-description empty"><em aria-hidden="true">—</em></span>';
+    const foodName = helpers.foodNameMarkup
+      ? helpers.foodNameMarkup(food)
+      : `<span class="food-name">${escapeHtml(food.name)}</span>`;
     const summary = cardType === 'ability'
       ? `Эффект: ${food.effectText}`
       : helpers.foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
     return `<article class="food-card encyclopedia-food-card ${escapeHtml(food.rarity)} food-type-${cardType}" data-encyclopedia-food="${escapeHtml(food.id)}" tabindex="0" role="button" aria-label="${escapeHtml(`${food.name}. ${summary}. Открыть крупную карточку`)}">
       <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${escapeHtml(helpers.rarityLabels[food.rarity])}</span></span></span>
       <span class="food-model-wrap">${helpers.foodArtMarkup(food)}</span>
-      <span class="food-name">${escapeHtml(food.name)}</span>
+      ${foodName}
       ${cardBody}
     </article>`;
   }

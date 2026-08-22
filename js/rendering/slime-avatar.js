@@ -38,12 +38,12 @@
   }
 
   function drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp) {
-    if (aura !== 'prismatic' && aura !== 'secret') return;
+    if (aura !== 'special' && aura !== 'secret') return;
     targetCtx.save();
     traceSlimeBody(targetCtx, skinId, radius, tipX);
     targetCtx.clip();
 
-    if (aura === 'prismatic') {
+    if (aura === 'special') {
       const drift = timestamp / 950;
       const dx = Math.cos(drift) * radius;
       const dy = Math.sin(drift) * radius * .55;
@@ -92,7 +92,7 @@
 
     targetCtx.save();
     traceSlimeBody(targetCtx, skinId, radius, tipX);
-    if (aura === 'prismatic') {
+    if (aura === 'special') {
       const outline = targetCtx.createLinearGradient(-radius, 0, radius, 0);
       outline.addColorStop(0, '#ff4f91');
       outline.addColorStop(.25, '#ffd84f');
@@ -144,25 +144,23 @@
           targetCtx.fillStyle = index % 3 === 0 ? '#f0c4ff' : '#9f6cff';
           targetCtx.save(); targetCtx.translate(px, py); targetCtx.rotate(Math.PI / 4 + phase); targetCtx.fillRect(-size, -size, size * 2, size * 2); targetCtx.restore();
         }
-      } else if (aura === 'legendary') {
-        const pulse = 1 + Math.sin(timestamp / 240) * .045;
-        targetCtx.globalAlpha = .76;
-        targetCtx.strokeStyle = '#ffc83d';
-        targetCtx.lineCap = 'round';
-        for (let index = 0; index < 12; index += 1) {
-          const angle = index / 12 * Math.PI * 2 + timestamp / 2600;
-          const inner = (radius + 4) * pulse;
-          const outer = (radius + (index % 2 ? 10 : 16)) * pulse;
-          targetCtx.lineWidth = index % 2 ? 3 : 5;
-          targetCtx.beginPath(); targetCtx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner); targetCtx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer); targetCtx.stroke();
-        }
-      } else if (aura === 'prismatic') {
+      } else if (aura === 'special') {
         const glow = targetCtx.createRadialGradient(0, 0, radius * .68, 0, 0, radius + 13);
-        glow.addColorStop(0, 'rgba(255,255,255,.12)');
-        glow.addColorStop(.66, 'rgba(105,217,255,.18)');
+        glow.addColorStop(0, 'rgba(255,244,157,.2)');
+        glow.addColorStop(.58, 'rgba(255,188,55,.2)');
         glow.addColorStop(1, 'rgba(173,99,255,0)');
         targetCtx.fillStyle = glow;
         targetCtx.beginPath(); targetCtx.arc(0, 0, radius + 13, 0, Math.PI * 2); targetCtx.fill();
+        targetCtx.globalAlpha = .62;
+        targetCtx.strokeStyle = '#ffd84f';
+        targetCtx.lineCap = 'round';
+        for (let index = 0; index < 8; index += 1) {
+          const angle = index / 8 * Math.PI * 2 + timestamp / 2800;
+          const inner = radius + 3;
+          const outer = radius + (index % 2 ? 8 : 13);
+          targetCtx.lineWidth = index % 2 ? 2 : 3.5;
+          targetCtx.beginPath(); targetCtx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner); targetCtx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer); targetCtx.stroke();
+        }
         const rainbow = ['#ff5f9f', '#ffb24e', '#ffe45a', '#4ddd8a', '#4fcaff', '#a875ff'];
         rainbow.forEach((color, index) => {
           const angle = index / rainbow.length * Math.PI * 2 + timestamp / 1500;

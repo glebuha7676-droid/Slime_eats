@@ -38,9 +38,10 @@
     uiIconMarkup
   } = ASSETS;
   const { drawSlimeAvatar } = window.SlimeAvatarRenderer;
+  const BASE_HEALTH = 100;
   const BASE_DAMAGE = 10;
-  const BASE_DEFENSE = 10;
-  const BASE_BOUNCE = 1;
+  const BASE_SHIELD = 25;
+  const BASE_SHIELD_CHARGES = 2;
 
   // Данные из встроенного редактора миров. Значения остаются безопасными:
   // если редактор ещё не использовался, игра работает на исходных настройках.
@@ -70,16 +71,16 @@
     worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
     menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
-    foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), massLabel: $('#massLabel'), powerLabel: $('#powerLabel'),
-    defenseLabel: $('#defenseLabel'), bounceLabel: $('#bounceLabel'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
-    massCompare: $('#massCompare'), powerCompare: $('#powerCompare'), defenseCompare: $('#defenseCompare'), bounceCompare: $('#bounceCompare'),
+    foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), healthLabel: $('#healthLabel'), damageLabel: $('#damageLabel'),
+    shieldLabel: $('#shieldLabel'), shieldChargesLabel: $('#shieldChargesLabel'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
+    healthCompare: $('#healthCompare'), damageCompare: $('#damageCompare'), shieldCompare: $('#shieldCompare'),
     startDropLabel: $('#startDropLabel'), adminMenuBtn: $('#adminMenuBtn'), adminToolsOverlay: $('#adminToolsOverlay'),
     closeAdminToolsBtn: $('#closeAdminToolsBtn'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
     adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'), adminResetProgressBtn: $('#adminResetProgressBtn'),
     conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
     foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'),
-    stomachQuickSlots: $('#stomachQuickSlots'),
+    stomachQuickSlots: $('#stomachQuickSlots'), stomachCardViewer: $('#stomachCardViewer'),
     playSetupCard: $('#playSetupCard'), homeWorldPicker: $('#homeWorldPicker'), homeWorldMenu: $('#homeWorldMenu'),
     homeWorldSelect: $('#homeWorldSelect'), homeWorldPickerIcon: $('#homeWorldPickerIcon'),
     homeWorldPickerEyebrow: $('#homeWorldPickerEyebrow'), homeWorldPickerName: $('#homeWorldPickerName'), homeWorldBest: $('#homeWorldBest'),
@@ -232,12 +233,14 @@
 
   function normalizeSave(value) {
     const sourceSchema = Math.max(0, Math.round(+value.schemaVersion || 0));
-    const sourceStomachLevel = Math.round(+value.stomachLevel || (sourceSchema >= 10 ? 2 : 1));
+    const sourceStomachLevel = Math.round(+value.stomachLevel || 1);
     const merged = { ...structuredClone(defaultSave), ...value };
-    merged.schemaVersion = 13;
+    merged.schemaVersion = defaultSave.schemaVersion;
     merged.coins = Math.max(0, Number.isFinite(+merged.coins) ? +merged.coins : defaultSave.coins);
     merged.world = clamp(Math.round(+merged.world || 1), 1, WORLDS.length);
-    merged.stomachLevel = clamp(sourceSchema < 10 ? sourceStomachLevel + 1 : sourceStomachLevel, 2, UPGRADE_DATA.stomachLevel.max);
+    // Старые сохранения могли хранить до шести ячеек. Новая сборка компактна
+    // и честно ограничена четырьмя; уже открытые ячейки не отнимаются ниже 1.
+    merged.stomachLevel = clamp(sourceStomachLevel, 1, UPGRADE_DATA.stomachLevel.max);
     merged.conveyorLevel = clamp(Math.round(+merged.conveyorLevel || 1), 1, UPGRADE_DATA.conveyorLevel.max);
     merged.rerollLevel = clamp(Math.round(+merged.rerollLevel || 0), 0, UPGRADE_DATA.rerollLevel.max);
     merged.bestDepth = Math.max(0, +merged.bestDepth || 0);
@@ -293,7 +296,11 @@
       : [];
     merged.foodPity = { ...defaultSave.foodPity };
     for (const key of Object.keys(merged.foodPity)) merged.foodPity[key] = clamp(Math.round(+(value.foodPity?.[key] || 0)), 0, 10000);
-    for (const key of ['pendingEpicBoost', 'pendingMassBoost', 'pendingExtraRerolls', 'wheelAdSpins', 'dailyStreak']) {
+    if (!Number.isFinite(+(value.foodPity?.noSpecial))) {
+      merged.foodPity.noSpecial = clamp(Math.max(+(value.foodPity?.noLegendary || 0), +(value.foodPity?.noPrismatic || 0)), 0, 10000);
+    }
+    merged.pendingHealthBoost = Math.max(0, Math.round(+(value.pendingHealthBoost ?? value.pendingMassBoost) || 0));
+    for (const key of ['pendingEpicBoost', 'pendingExtraRerolls', 'wheelAdSpins', 'dailyStreak']) {
       merged[key] = Math.max(0, Math.round(+merged[key] || 0));
     }
     merged.dailyStreak = clamp(merged.dailyStreak, 0, 7);
@@ -314,7 +321,7 @@
       freeRerolls: session.freeRerolls,
       adRerolls: session.adRerolls,
       baseEpicBoost: session.baseEpicBoost,
-      massBoost: session.massBoost
+      healthBoost: session.healthBoost
     };
   }
 
@@ -328,14 +335,16 @@
     session = {
       foods, offer,
       commonOnlyStreak: Math.max(0, Math.round(+raw.commonOnlyStreak || 0)),
-      noEpicStreak: 0, noLegendaryStreak: 0,
+      noEpicStreak: 0,
       offersSeen: Math.max(1, Math.round(+raw.offersSeen || 1)),
-      freeRerolls: Math.max(0, Math.round(+raw.freeRerolls || 0)),
-      adRerolls: Math.max(0, Math.round(+raw.adRerolls || 0)),
+      // У каждой тройки свой один бесплатный и один рекламный переролл.
+      freeRerolls: 1,
+      adRerolls: 0,
       baseEpicBoost: clamp(+raw.baseEpicBoost || 0, 0, 10),
-      massBoost: clamp(+raw.massBoost || 0, 0, 100),
+      healthBoost: clamp(+(raw.healthBoost ?? raw.massBoost) || 0, 0, 100),
       stats: {}, effects: {}, combo: null,
-      rerollPending: false
+      rerollPending: false,
+      offerTransition: false
     };
     const consumedSecrets = foods.filter(food => food.rarity === 'secret').map(food => food.id);
     if (consumedSecrets.length) save.revealedSecretFoods = [...new Set([...(save.revealedSecretFoods || []), ...consumedSecrets])];
@@ -513,7 +522,13 @@
   function lerp(a, b, t) { return a + (b - a) * t; }
   function rand(min, max) { return min + Math.random() * (max - min); }
   function round1(value) { return Math.round(value * 10) / 10; }
-  function foodGrowthScale(foodCount) { return 1 + Math.max(0, foodCount) * .05; }
+  function stomachFoodCount(foods = session?.foods || []) { return foods.length; }
+  function canAddToStomach(food, foods = session?.foods || []) {
+    return Boolean(food) && stomachFoodCount(foods) < save.stomachLevel;
+  }
+  function stomachIsFull(foods = session?.foods || []) {
+    return stomachFoodCount(foods) >= save.stomachLevel;
+  }
   function levelConfig(world, level) {
     const entries = WORLD_LEVELS[world.id];
     const index = clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1);
@@ -536,10 +551,11 @@
   }
 
   function levelTargetDepth(world, level) {
-    const configured = levelConfig(world, level);
-    if (configured?.depth) return configured.depth;
-    const ratio = LEVEL_DEPTH_RATIOS[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)];
-    return Math.max(20, Math.round(world.targetDepth * ratio / 5) * 5);
+    // Кампания имеет одну ясную шкалу: +100 м за уровень и +50 м за новый мир.
+    // Настройки редактора могут менять состав блоков, но не длину уровня.
+    const worldIndex = clamp(Math.round(world?.id || 1) - 1, 0, WORLDS.length - 1);
+    const levelIndex = clamp(Math.round(level || 1) - 1, 0, LEVEL_COUNT - 1);
+    return 100 + worldIndex * 50 + levelIndex * 100;
   }
   function selectedLevelForWorld(worldId = save.world) {
     const unlocked = clamp(Math.round(save.unlockedLevels?.[worldId] || 1), 1, LEVEL_COUNT);
@@ -573,14 +589,14 @@
   function showRarityBurst(food) {
     if (!els.rarityBursts) return;
     const titles = {
-      common: 'НЯМ!', rare: 'ОГО, РЕДКОЕ!', epic: 'ЭПИЧНО!', legendary: 'ЛЕГЕНДАРНО!',
-      prismatic: 'РАДУЖНЫЙ ВКУС!', secret: 'СЕКРЕТ РАСКРЫТ!'
+      common: 'НЯМ!', rare: 'ОГО, РЕДКОЕ!', epic: 'ЭПИЧНО!',
+      special: 'ОСОБЫЙ ЭФФЕКТ!', secret: 'СЕКРЕТ РАСКРЫТ!'
     };
     const burst = document.createElement('span');
     burst.className = `rarity-burst ${food.rarity}`;
     burst.textContent = titles[food.rarity] || 'ВКУСНО!';
     els.rarityBursts.replaceChildren(burst);
-    setTimeout(() => burst.remove(), food.rarity === 'secret' ? 2350 : food.rarity === 'prismatic' ? 1900 : 1500);
+    setTimeout(() => burst.remove(), food.rarity === 'secret' ? 2350 : food.rarity === 'special' ? 1900 : 1500);
   }
 
   const waitForSecretPhase = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -591,10 +607,7 @@
 
   function secretCardMarkup(food) {
     const cardType = foodCardType(food);
-    const cardBody = cardType === 'ability'
-      ? `<span class="food-ability-copy"><b><span class="effect-title-star" aria-hidden="true">★</span><span class="effect-title-label">ЭФФЕКТ</span></b><em>${escapeMarkup(food.effectText)}</em></span>`
-      : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid count-${Math.min(foodStatItems(food).length, 4)}">${foodStatGridMarkup(food)}</span></span>`;
-    return `<article class="food-card secret secret-revealed food-type-${cardType}"><span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>СЕКРЕТНОЕ</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span><span class="food-name">${escapeMarkup(food.name)}</span>${cardBody}</article>`;
+    return `<article class="food-card secret secret-revealed food-type-${cardType}"><span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>СЕКРЕТНОЕ</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}</article>`;
   }
 
   function waitForSecretCardDismiss(food, token) {
@@ -678,7 +691,7 @@
 
   function forceSecretDiscoveryForDebug(foodId = '', { play = false } = {}) {
     const food = FOODS.find(item => item.rarity === 'secret' && (!foodId || item.id === foodId));
-    if (!food || secretSequenceActive || session.foods.length >= save.stomachLevel) return false;
+    if (!food || secretSequenceActive || !canAddToStomach(food)) return false;
     const slot = session.offer.findIndex(Boolean);
     if (slot < 0) return false;
     session.offer[slot] = food;
@@ -982,7 +995,7 @@
   }
 
   const MENU_SLIME_STATES = ['booped', 'petting', 'petted'];
-  const MEAL_REACTION_CLASSES = ['meal-common', 'meal-rare', 'meal-epic', 'meal-legendary', 'meal-prismatic', 'meal-secret'];
+  const MEAL_REACTION_CLASSES = ['meal-common', 'meal-rare', 'meal-epic', 'meal-special', 'meal-secret'];
 
   function clearMenuMealReaction() {
     clearTimeout(menuEmotionTimer);
@@ -1096,26 +1109,37 @@
   function newDraft() {
     cancelSecretDiscovery();
     const bonusEpic = save.pendingEpicBoost || 0;
-    const bonusMass = save.pendingMassBoost || 0;
-    const bonusRerolls = save.pendingExtraRerolls || 0;
+    const bonusHealth = save.pendingHealthBoost || 0;
     save.pendingEpicBoost = 0;
-    save.pendingMassBoost = 0;
+    save.pendingHealthBoost = 0;
     save.pendingExtraRerolls = 0;
     session = {
       foods: [], offer: [],
-      commonOnlyStreak: 0, noEpicStreak: 0, noLegendaryStreak: 0, offersSeen: 0,
-      freeRerolls: 1 + save.rerollLevel + bonusRerolls,
+      commonOnlyStreak: 0, noEpicStreak: 0, offersSeen: 0,
+      freeRerolls: 1,
       adRerolls: 0,
       baseEpicBoost: bonusEpic,
-      massBoost: bonusMass,
-      stats: { mass: 8, power: 1, defense: 0, elasticity: 1, ability: 0, coinMultiplier: 1 },
+      healthBoost: bonusHealth,
+      stats: { health: BASE_HEALTH, damage: BASE_DAMAGE, shield: BASE_SHIELD, shieldCharges: BASE_SHIELD_CHARGES, coinMultiplier: 1 },
       effects: {},
       combo: null,
-      rerollPending: false
+      rerollPending: false,
+      offerTransition: false
     };
     generateOffer(session.baseEpicBoost);
     showScreen('home');
-    renderDraft();
+    els.conveyor.classList.add('is-running');
+    renderDraft({ offerMotion: 'enter' });
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(() => {
+      if (!session) return;
+      els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
+        card.classList.remove('tunnel-enter');
+        card.style.removeProperty('--conveyor-delay');
+        card.style.removeProperty('--conveyor-duration');
+      });
+      els.conveyor.classList.remove('is-running');
+    }, reducedMotion ? 30 : 850);
     persist();
   }
 
@@ -1166,7 +1190,7 @@
     const coinGrant = 9999999;
     save.coins = Math.max(save.coins, coinGrant);
     save.world = 1;
-    save.stomachLevel = 6;
+    save.stomachLevel = 4;
     save.conveyorLevel = 5;
     save.rerollLevel = 3;
     save.unlockedSkins = SKINS.map(skin => skin.id);
@@ -1192,11 +1216,11 @@
 
   function rarityWeights(boost = 0, rareBoost = 0) {
     const tables = [
-      { common: 80, rare: 19, epic: 1, legendary: 0, prismatic: 0, secret: 0 },
-      { common: 70, rare: 25, epic: 5, legendary: 0, prismatic: 0, secret: 0 },
-      { common: 58, rare: 30, epic: 10, legendary: 2, prismatic: 0, secret: 0 },
-      { common: 46, rare: 31, epic: 16, legendary: 5, prismatic: 2, secret: 0 },
-      { common: 18.35, rare: 15.5, epic: 10, legendary: 4, prismatic: 2, secret: 50 }
+      { common: 80, rare: 19, epic: 1, special: 0, secret: 0 },
+      { common: 70, rare: 25, epic: 5, special: 0, secret: 0 },
+      { common: 60, rare: 30, epic: 10, special: 0, secret: 0 },
+      { common: 46, rare: 31, epic: 16, special: 7, secret: 0 },
+      { common: 18.5, rare: 15.5, epic: 10, special: 6, secret: 50 }
     ];
     const base = { ...tables[save.conveyorLevel - 1] };
     const epicAdd = clamp(boost, 0, 10);
@@ -1221,7 +1245,7 @@
   }
 
   function rarityRank(rarity) {
-    return { common: 0, rare: 1, epic: 2, legendary: 3, prismatic: 4, secret: 5 }[rarity] ?? 0;
+    return { common: 0, rare: 1, epic: 2, special: 3, secret: 4 }[rarity] ?? 0;
   }
 
   function foodAvailableInWorld(food) {
@@ -1257,7 +1281,7 @@
     if (minimumRarity && rarityRank(rarity) < rarityRank(minimumRarity)) rarity = minimumRarity;
     let pool = FOODS.filter(food => foodAvailableInWorld(food) && food.rarity === rarity && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
     if (!pool.length) {
-      const order = ['secret', 'prismatic', 'legendary', 'epic', 'rare', 'common'];
+      const order = ['secret', 'special', 'epic', 'rare', 'common'];
       const allowed = minimumRarity ? order.filter(r => rarityRank(r) >= rarityRank(minimumRarity)) : order;
       for (const fallback of allowed) {
         pool = FOODS.filter(food => foodAvailableInWorld(food) && food.rarity === fallback && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
@@ -1267,15 +1291,14 @@
     return pool[Math.floor(Math.random() * pool.length)] || FOODS[0];
   }
 
-  function generateOffer(rollBoost = 0, rareBoost = 0) {
+  function generateOffer(rollBoost = 0, rareBoost = 0, { resetRerolls = true } = {}) {
     const offer = [null, null, null];
     const used = [];
     const pity = save.foodPity || structuredClone(defaultSave.foodPity);
 
     let guaranteed = null;
     if (save.conveyorLevel >= 5 && pity.noSecret >= 45) guaranteed = 'secret';
-    else if (save.conveyorLevel >= 4 && pity.noPrismatic >= 18) guaranteed = 'prismatic';
-    else if (save.conveyorLevel >= 3 && pity.noLegendary >= 10) guaranteed = 'legendary';
+    else if (save.conveyorLevel >= 4 && pity.noSpecial >= 10) guaranteed = 'special';
     else if (save.conveyorLevel >= 2 && pity.noEpic >= 5) guaranteed = 'epic';
     else if (session.commonOnlyStreak >= 2) guaranteed = 'rare';
     const guaranteedSlot = Math.floor(Math.random() * 3);
@@ -1286,13 +1309,16 @@
       used.push(food.id);
     }
     session.offer = offer;
+    if (resetRerolls) {
+      session.freeRerolls = 1;
+      session.adRerolls = 0;
+    }
     discoverFoods(offer.filter(food => food.rarity !== 'secret'));
     session.offersSeen += 1;
     session.commonOnlyStreak = offer.some(food => rarityRank(food.rarity) >= 1) ? 0 : session.commonOnlyStreak + 1;
 
     pity.noEpic = offer.some(food => rarityRank(food.rarity) >= 2) ? 0 : pity.noEpic + 1;
-    pity.noLegendary = offer.some(food => rarityRank(food.rarity) >= 3) ? 0 : pity.noLegendary + 1;
-    pity.noPrismatic = offer.some(food => rarityRank(food.rarity) >= 4) ? 0 : pity.noPrismatic + 1;
+    pity.noSpecial = offer.some(food => food.rarity === 'special' || food.rarity === 'secret') ? 0 : pity.noSpecial + 1;
     pity.noSecret = offer.some(food => food.rarity === 'secret') ? 0 : pity.noSecret + 1;
     save.foodPity = pity;
     persist();
@@ -1304,23 +1330,57 @@
 
   function foodStatItems(food) {
     return [
-      { key: 'mass', value: food.mass || 0, score: (food.mass || 0) / 12, iconName: 'stat-health', display: `+${food.mass || 0}`, label: `+${food.mass || 0} здоровья` },
-      { key: 'power', value: food.power || 0, score: (food.power || 0) / 7, iconName: 'stat-power', display: `+${round1(food.power || 0)}`, label: `+${round1(food.power || 0)} урона` },
-      { key: 'defense', value: food.defense || 0, score: (food.defense || 0) / 14, iconName: 'stat-defense', display: `+${Math.round(food.defense || 0)}`, label: `+${Math.round(food.defense || 0)} защиты` },
-      { key: 'bounce', value: food.elasticity || 0, score: (food.elasticity || 0) / .22, iconName: 'stat-bounce', display: `+${Math.round((food.elasticity || 0) * 100)}%`, label: `+${Math.round((food.elasticity || 0) * 100)}% отскока` },
-      { key: 'ability', value: food.ability || 0, score: (food.ability || 0) / 16, iconName: 'buff', display: `+${food.ability || 0}%`, label: `+${food.ability || 0}% заряда` },
+      { key: 'health', value: food.health || 0, score: (food.health || 0) / 18, iconName: 'stat-health', display: `+${food.health || 0}`, label: `+${food.health || 0} здоровья` },
+      { key: 'damage', value: food.damage || 0, score: (food.damage || 0) / 5, iconName: 'stat-power', display: `+${Math.round(food.damage || 0)}`, label: `+${Math.round(food.damage || 0)} урона` },
+      { key: 'shield', value: food.shield || 0, score: (food.shield || 0) / 12, iconName: 'stat-defense', display: `+${Math.round(food.shield || 0)}`, label: `+${Math.round(food.shield || 0)} щита` },
+      { key: 'shield-charges', value: food.shieldCharges || 0, score: (food.shieldCharges || 0) * 1.3, iconName: 'stat-defense', display: `+${Math.round(food.shieldCharges || 0)}`, label: `+${Math.round(food.shieldCharges || 0)} заряд щита` },
       { key: 'coins', value: food.coinMultiplier || 0, score: (food.coinMultiplier || 0) / .45, iconName: 'coin', display: `+${Math.round((food.coinMultiplier || 0) * 100)}%`, label: `+${Math.round((food.coinMultiplier || 0) * 100)}% монет` }
     ].filter(item => item.value > 0).sort((a, b) => b.score - a.score);
   }
 
+  const CARD_STAT_ASSETS = Object.freeze({
+    health: 'assets/ui/card-stats/stat-health.png',
+    damage: 'assets/ui/card-stats/stat-damage.png',
+    shield: 'assets/ui/card-stats/stat-shield.png'
+  });
+
+  function foodCardStatItems(food) {
+    const cardOrder = { health: 0, damage: 1, shield: 2 };
+    return foodStatItems(food)
+      .filter(item => CARD_STAT_ASSETS[item.key])
+      .sort((a, b) => cardOrder[a.key] - cardOrder[b.key])
+      .slice(0, 3);
+  }
+
   function foodStatGridMarkup(food) {
-    const items = foodStatItems(food).slice(0, 4);
-    return Array.from({ length: 4 }, (_, index) => {
-      const item = items[index];
-      return item
-        ? `<span class="food-stat-cell ${item.key}" aria-label="${item.label}">${uiIconMarkup(item.iconName, 'card-stat-icon')}<b>${item.display}</b></span>`
-        : '<span class="food-stat-cell empty" aria-hidden="true"></span>';
-    }).join('');
+    return foodCardStatItems(food).map(item => `<span class="food-stat-cell ${item.key}" aria-label="${item.label}"><img class="card-stat-badge-art" src="${versionedAsset(CARD_STAT_ASSETS[item.key])}" alt="" aria-hidden="true"><b>${item.display}</b></span>`).join('');
+  }
+
+  function foodCardDescription(food) {
+    if (food.effectText) return { text: food.effectText, effect: true };
+    const bonuses = [];
+    if (food.shieldCharges > 0) bonuses.push(`+${Math.round(food.shieldCharges)} заряд щита`);
+    if (food.coinMultiplier > 0) bonuses.push(`+${Math.round(food.coinMultiplier * 100)}% монет`);
+    return bonuses.length
+      ? { text: bonuses.join(' · '), effect: false }
+      : { text: '', effect: false };
+  }
+
+  function foodNameMarkup(food) {
+    const lengthClass = food.name.length > 23 ? ' very-long' : food.name.length > 16 ? ' long' : '';
+    return `<span class="food-name${lengthClass}">${escapeMarkup(food.name)}</span>`;
+  }
+
+  function foodCardBodyMarkup(food) {
+    const description = foodCardDescription(food);
+    const stats = foodCardStatItems(food);
+    const descriptionMarkup = description.text
+      ? `<span class="food-card-description ${description.effect ? 'effect' : 'bonus'}"><em>${escapeMarkup(description.text)}</em></span>`
+      : '<span class="food-card-description empty"><em aria-hidden="true">—</em></span>';
+    const statsMarkup = stats.length
+      ? `<span class="food-stat-grid count-${stats.length}">${foodStatGridMarkup(food)}</span>`
+      : '';
+    return `${descriptionMarkup}${statsMarkup}`;
   }
 
   function foodInfoStatMarkup(food) {
@@ -1332,67 +1392,43 @@
     return `<strong class="food-info-kind">${uiIconMarkup('stat-health', 'food-info-kind-icon')}ХАРАКТЕРИСТИКИ</strong><span class="food-info-stat-grid count-${items.length}">${cells}</span>`;
   }
 
-  function countCategories(foods) {
-    return foods.reduce((acc, food) => {
-      if (foodCardType(food) !== 'stats') return acc;
-      acc[food.category] = (acc[food.category] || 0) + 1;
-      return acc;
-    }, { mass: 0, power: 0, defense: 0, bounce: 0, magic: 0 });
-  }
-
   function calculateStatsForFoods(foods) {
     const stats = {
-      mass: 8,
-      power: BASE_DAMAGE,
-      defense: BASE_DEFENSE,
-      elasticity: BASE_BOUNCE,
-      ability: 0,
+      health: BASE_HEALTH,
+      damage: BASE_DAMAGE,
+      shield: BASE_SHIELD,
+      shieldCharges: BASE_SHIELD_CHARGES,
       coinMultiplier: 1
     };
     const effects = {
       momentum: false, dragonBlast: false, freeBounces: 0,
       oreHeal: false, smallRevive: false, softLanding: false,
-      healBoost: false, bombPull: false, rainbow: false, prismFlow: false, chargeBoost: false,
-      cooldownCut: false, voidBreaker: false, rainbowHeart: false
+      healBoost: false, bombPull: false, rainbow: false, prismFlow: false,
+      voidBreaker: false, rainbowHeart: false
     };
-    const counts = countCategories(foods);
 
     for (const food of foods) {
-      if (foodCardType(food) === 'stats') {
-        stats.mass += food.mass || 0;
-        stats.power += food.power || 0;
-        stats.defense += food.defense || 0;
-        stats.elasticity += food.elasticity || 0;
-        stats.ability += food.ability || 0;
-        stats.coinMultiplier += food.coinMultiplier || 0;
-      }
+      stats.health += food.health || 0;
+      stats.damage += food.damage || 0;
+      stats.shield += food.shield || 0;
+      stats.shieldCharges += food.shieldCharges || 0;
+      stats.coinMultiplier += food.coinMultiplier || 0;
       if (food.effect) effects[food.effect] = food.effect === 'freeBounces' ? 3 : true;
     }
 
     if (effects.rainbow || effects.prismFlow) {
       const boost = effects.prismFlow ? 1.12 : 1.10;
-      stats.mass = 8 + (stats.mass - 8) * boost;
-      stats.power = BASE_DAMAGE + (stats.power - BASE_DAMAGE) * boost;
-      stats.defense = BASE_DEFENSE + (stats.defense - BASE_DEFENSE) * boost;
-      stats.elasticity = BASE_BOUNCE + (stats.elasticity - BASE_BOUNCE) * boost;
-      stats.ability *= boost;
+      stats.health = BASE_HEALTH + (stats.health - BASE_HEALTH) * boost;
+      stats.damage = BASE_DAMAGE + (stats.damage - BASE_DAMAGE) * boost;
+      stats.shield = BASE_SHIELD + (stats.shield - BASE_SHIELD) * boost;
       stats.coinMultiplier = 1 + (stats.coinMultiplier - 1) * boost;
     }
-
-    let combo = null;
-    if (counts.mass >= 3) { stats.mass *= 1.25; combo = { icon: '🍔', name: 'Запас здоровья', text: '+25% здоровья' }; }
-    if (counts.power >= 3) { stats.power += 10; combo = { icon: '🔥', name: 'Ярость', text: '+10 урона' }; }
-    if (counts.defense >= 3) { stats.defense += 15; combo = { icon: '🛡️', name: 'Бронеслайм', text: '+15 защиты' }; }
-    if (counts.bounce >= 3) { stats.elasticity += .28; combo = { icon: '🟣', name: 'Суперпрыжок', text: '+28% отскока' }; }
-    if (counts.magic >= 3) { stats.ability += 45; combo = { icon: '✨', name: 'Хаос', text: '+45% заряда барьера' }; }
-
-    stats.mass *= 1 + session.massBoost / 100;
-    stats.mass = Math.round(stats.mass);
-    stats.power = clamp(round1(stats.power), 1, 999);
-    stats.defense = clamp(Math.round(stats.defense), 0, 999);
-    stats.elasticity = clamp(stats.elasticity, .85, 2.6);
-    stats.ability = clamp(stats.ability, 0, 45);
-    return { stats, effects, combo };
+    stats.health *= 1 + (session.healthBoost || 0) / 100;
+    stats.health = clamp(Math.round(stats.health), 1, 999);
+    stats.damage = clamp(Math.round(stats.damage), 1, 999);
+    stats.shield = clamp(Math.round(stats.shield), 0, 999);
+    stats.shieldCharges = clamp(Math.round(stats.shieldCharges), 1, 9);
+    return { stats, effects, combo: null };
   }
 
   function recalcStats() {
@@ -1404,21 +1440,20 @@
 
   function clearFoodPreview(force = false) {
     if (force !== true && document.body.classList.contains('food-dragging')) return;
-    [els.massCompare, els.powerCompare, els.defenseCompare, els.bounceCompare].forEach(element => {
+    [els.healthCompare, els.damageCompare, els.shieldCompare].forEach(element => {
       if (element) element.textContent = '';
     });
     $$('.slime-stage .stat-pill').forEach(pill => pill.classList.remove('previewing'));
   }
 
   function showFoodPreview(food) {
-    if (!food || session.foods.length >= save.stomachLevel) return clearFoodPreview();
+    if (!food || !canAddToStomach(food)) return clearFoodPreview();
     if (!secretFoodIsRevealed(food)) return clearFoodPreview();
     const next = calculateStatsForFoods([...session.foods, food]).stats;
     const comparisons = [
-      [els.massCompare, next.mass, session.stats.mass, delta => `+${Math.round(delta)}`],
-      [els.powerCompare, next.power, session.stats.power, delta => `+${round1(delta)}`],
-      [els.defenseCompare, next.defense, session.stats.defense, delta => `+${Math.round(delta)}`],
-      [els.bounceCompare, next.elasticity, session.stats.elasticity, delta => `+${Math.round(delta * 100)}%`]
+      [els.healthCompare, next.health, session.stats.health, delta => `+${Math.round(delta)}`],
+      [els.damageCompare, next.damage, session.stats.damage, delta => `+${Math.round(delta)}`],
+      [els.shieldCompare, next.shield, session.stats.shield, delta => `+${Math.round(delta)}`]
     ];
     comparisons.forEach(([element, value, current, format]) => {
       if (!element) return;
@@ -1430,19 +1465,23 @@
   }
 
   // ===== ГЛАВНЫЙ ЭКРАН: эффекты и выдача еды =====
-  function createStomachSlot(food, index) {
+  function createStomachSlot(food, index, { locked = false } = {}) {
     const slot = document.createElement('button');
     slot.type = 'button';
-    slot.className = `stomach-quick-slot ${food ? `filled ${food.rarity}` : ''}`;
+    slot.className = `stomach-quick-slot ${locked ? 'locked' : ''} ${food ? `filled ${food.rarity}` : ''}`;
     if (food) {
       const effectStar = food.effectText
         ? '<span class="slot-effect-star" aria-hidden="true">★</span>'
         : '';
       slot.innerHTML = `${effectStar}<span class="slot-art">${foodArtMarkup(food, 'food-mini-model')}</span>`;
       centerFoodThumbnail(slot.querySelector('.food-mini-model'));
-      slot.setAttribute('aria-label', `${index + 1}. ${food.name}. ${RARITY_LABELS[food.rarity]}${food.effectText ? '. Есть особый эффект' : ''}. Показать свойства`);
+      slot.setAttribute('aria-label', `${index + 1}. ячейка. ${food.name}. ${RARITY_LABELS[food.rarity]}${food.effectText ? '. Есть особый эффект' : ''}. Показать свойства`);
       slot.title = `${food.name}${food.effectText ? ' · ★ эффект' : ''}`;
       slot.addEventListener('click', () => showStomachFoodInfo(food, index, slot));
+    } else if (locked) {
+      slot.innerHTML = '<img class="slot-lock" src="assets/ui/lock.webp" alt="" aria-hidden="true">';
+      slot.setAttribute('aria-label', `${index + 1}. ячейка желудка ещё не открыта`);
+      slot.disabled = true;
     } else {
       slot.innerHTML = '<span class="slot-plus" aria-hidden="true"></span>';
       slot.setAttribute('aria-label', `${index + 1}. Пустая ячейка желудка`);
@@ -1455,15 +1494,15 @@
   function renderStomachSlots() {
     const capacity = save.stomachLevel;
     els.stomachQuickSlots?.replaceChildren();
-    if (els.stomachQuickSlots) els.stomachQuickSlots.dataset.slots = String(capacity);
-    for (let index = 0; index < capacity; index += 1) {
-      const food = session.foods[index];
-      els.stomachQuickSlots?.appendChild(createStomachSlot(food, index));
+    if (els.stomachQuickSlots) els.stomachQuickSlots.dataset.slots = '4';
+    // Четыре позиции всегда на виду: закрытые явно показывают будущую прокачку.
+    for (let index = 0; index < 4; index += 1) {
+      els.stomachQuickSlots?.appendChild(createStomachSlot(session.foods[index], index, { locked: index >= capacity }));
     }
-    els.stomachQuickSlots?.classList.toggle('is-full', session.foods.length >= capacity);
+    els.stomachQuickSlots?.classList.toggle('is-full', stomachIsFull());
   }
 
-  function hideFoodInfo() {
+  function hideFoodInfo(closeStomachViewer = true) {
     selectedFoodOfferIndex = null;
     selectedFoodInfoKey = null;
     els.foodInfo?.classList.add('hidden');
@@ -1472,6 +1511,7 @@
     els.foodInfo?.style.removeProperty('top');
     $$('.food-info-source.selected').forEach(source => source.classList.remove('selected', 'food-info-source'));
     clearFoodPreview();
+    if (closeStomachViewer) hideStomachCardViewer();
   }
 
   function positionFoodInfoPopover(source) {
@@ -1526,26 +1566,49 @@
   }
 
   function showStomachFoodInfo(food, stomachIndex, source) {
-    presentFoodInfo(food, `stomach:${stomachIndex}`, source);
+    if (!food || !els.stomachCardViewer) return;
+    if (els.stomachCardViewer.dataset.foodId === food.id && !els.stomachCardViewer.classList.contains('hidden')) {
+      hideStomachCardViewer();
+      return;
+    }
+    hideFoodInfo(false);
+    $$('.stomach-quick-slot.selected').forEach(slot => slot.classList.remove('selected'));
+    source?.classList.add('selected');
+    const encyclopedia = window.SlimeEncyclopedia;
+    const markup = encyclopedia?.foodCardMarkup
+      ? encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup, foodNameMarkup, foodCardBodyMarkup })
+      : secretCardMarkup(food);
+    els.stomachCardViewer.dataset.foodId = food.id;
+    els.stomachCardViewer.innerHTML = `<button class="stomach-card-close" type="button" aria-label="Закрыть карточку">×</button><div class="stomach-card-viewer-card">${markup}</div>`;
+    els.stomachCardViewer.className = `stomach-card-viewer ${food.rarity}`;
+    els.stomachCardViewer.querySelector('.stomach-card-close')?.addEventListener('click', hideStomachCardViewer);
+  }
+
+  function hideStomachCardViewer() {
+    if (!els.stomachCardViewer) return;
+    els.stomachCardViewer.className = 'stomach-card-viewer hidden';
+    els.stomachCardViewer.removeAttribute('data-food-id');
+    els.stomachCardViewer.replaceChildren();
+    $$('.stomach-quick-slot.selected').forEach(slot => slot.classList.remove('selected'));
   }
 
   function renderDraft({ offerMotion = 'static' } = {}) {
     recalcStats();
     updatePersistentUI();
-    const capacity = save.stomachLevel;
-    const full = session.foods.length >= capacity;
+    const full = stomachIsFull();
 
-    els.massLabel.textContent = Math.round(session.stats.mass);
-    els.powerLabel.textContent = `${round1(session.stats.power)}`;
-    els.defenseLabel.textContent = `${Math.round(session.stats.defense)}`;
-    els.bounceLabel.textContent = `${Math.round(session.stats.elasticity * 100)}%`;
+    els.healthLabel.textContent = Math.round(session.stats.health);
+    els.damageLabel.textContent = `${Math.round(session.stats.damage)}`;
+    els.shieldLabel.textContent = `${Math.round(session.stats.shield)}`;
+    els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
+    els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
     clearFoodPreview();
-    els.rerollBtn.disabled = full;
+    els.rerollBtn.disabled = full || session.rerollPending || adInFlight;
 
-    const scale = foodGrowthScale(session.foods.length);
-    els.slime.style.width = `${124 * scale}px`;
-    els.slime.style.height = `${124 * scale}px`;
+    // Еда меняет характеристики и эффекты, но не размер слайма.
+    els.slime.style.width = '124px';
+    els.slime.style.height = '124px';
 
     els.foodInside.replaceChildren();
     renderStomachSlots();
@@ -1564,8 +1627,13 @@
       const cardType = foodCardType(food);
       const tunnelInDistance = 112 + index * 110;
       const tunnelOutDistance = 112 + (session.offer.length - 1 - index) * 110;
-      button.className = `food-card ${food.rarity} food-type-${cardType} ${unknownSecret ? 'secret-unknown' : ''} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${full ? 'locked' : ''}`;
-      button.style.animationDelay = offerMotion === 'enter' ? `${index * 70}ms` : '0ms';
+      const cardLocked = !canAddToStomach(food);
+      button.className = `food-card ${food.rarity} food-type-${cardType} ${unknownSecret ? 'secret-unknown' : ''} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${cardLocked ? 'locked' : ''}`;
+      if (offerMotion === 'enter') {
+        const arrivalSequence = Math.max(0, session.offer.length - 1 - index);
+        button.style.setProperty('--conveyor-delay', `${arrivalSequence * 140}ms`);
+        button.style.setProperty('--conveyor-duration', '520ms');
+      }
       button.style.setProperty('--tunnel-in-distance', `${tunnelInDistance}%`);
       button.style.setProperty('--tunnel-in-mouth', `${Math.round(tunnelInDistance * .94)}%`);
       button.style.setProperty('--tunnel-out-cruise', `${Math.round(tunnelOutDistance * .72)}%`);
@@ -1573,12 +1641,9 @@
       button.style.setProperty('--tunnel-out-distance', `${tunnelOutDistance}%`);
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
-      const cardBody = cardType === 'ability'
-        ? `<span class="food-ability-copy"><b><span class="effect-title-star" aria-hidden="true">★</span><span class="effect-title-label">ЭФФЕКТ</span></b><em>${escapeMarkup(food.effectText)}</em></span>`
-        : `<span class="food-stat-block"><b class="card-section-title">ХАРАКТЕРИСТИКИ</b><span class="food-stat-grid count-${Math.min(foodStatItems(food).length, 4)}">${foodStatGridMarkup(food)}</span></span>`;
       button.innerHTML = unknownSecret
         ? `<span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>СЕКРЕТНОЕ</span></span></span><span class="secret-unknown-center" aria-hidden="true">???</span><span class="secret-unknown-copy">НАЖМИ</span>`
-        : `<span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span><span class="food-name">${escapeMarkup(food.name)}</span>${cardBody}`;
+        : `<span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
       button.type = 'button';
       const cardSummary = cardType === 'ability' ? `Эффект: ${food.effectText}` : foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
       button.setAttribute('aria-label', unknownSecret ? 'Неизвестная секретная карта. Нажми, чтобы раскрыть' : `${food.name}. ${cardSummary}. Открыть описание`);
@@ -1593,23 +1658,28 @@
       els.foodChoices.appendChild(button);
     });
 
+    const rerollBlocked = full || session.rerollPending || session.offerTransition || adInFlight;
     if (session.freeRerolls > 0) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ОБНОВИТЬ';
-      if (els.rerollText) els.rerollText.textContent = `БЕСПЛАТНО ×${session.freeRerolls}`;
+      if (els.rerollText) els.rerollText.textContent = 'БЕСПЛАТНО ×1';
       els.rerollBtn.classList.remove('ad-mode');
-    } else {
+    } else if (session.adRerolls === 0) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ОБНОВИТЬ';
-      if (els.rerollText) els.rerollText.textContent = 'РЕДКИЕ +10%';
+      if (els.rerollText) els.rerollText.textContent = `РЕДКИЕ +${10 + save.rerollLevel * 5}%`;
       els.rerollBtn.classList.add('ad-mode');
-      els.rerollBtn.disabled = full;
+    } else {
+      if (els.rerollTitle) els.rerollTitle.textContent = 'ВЫБОР ГОТОВ';
+      if (els.rerollText) els.rerollText.textContent = 'НОВАЯ ТРОЙКА ПОСЛЕ ВЫБОРА';
+      els.rerollBtn.classList.remove('ad-mode');
     }
+    els.rerollBtn.disabled = rerollBlocked || (session.freeRerolls <= 0 && session.adRerolls > 0);
 
     if (selectedFoodOfferIndex !== null && !session.offer[selectedFoodOfferIndex]) hideFoodInfo();
   }
 
   // ===== КОРМЛЕНИЕ: клик, перетаскивание и эмоции =====
   function beginFoodDrag(event, food, offerIndex, source) {
-    if (secretSequenceActive || session.foods.length >= save.stomachLevel || event.button > 0) return;
+    if (secretSequenceActive || !canAddToStomach(food) || event.button > 0) return;
     if (!secretFoodIsRevealed(food)) return;
     event.preventDefault();
     document.body.classList.add('food-dragging');
@@ -1684,7 +1754,7 @@
         const mouthRect = els.menuSlimeMouth?.getBoundingClientRect();
         if (mouthRect) setMenuGazePoint(mouthRect.left + mouthRect.width / 2, mouthRect.top + mouthRect.height / 2);
         resetMenuGaze(300);
-        chooseFood(offerIndex);
+        chooseFood(offerIndex, source);
       } else resetMenuGaze();
     };
 
@@ -1699,13 +1769,13 @@
   }
 
   function chooseFood(offerIndex, source = null) {
-    if (secretSequenceActive) {
+    if (secretSequenceActive || session.offerTransition) {
       showToast('Секретный вкус нельзя торопить');
       return;
     }
-    if (session.foods.length >= save.stomachLevel) return;
     const food = session.offer[offerIndex];
     if (!food) return;
+    if (!canAddToStomach(food)) return;
     if (food.rarity === 'secret' && !secretFoodIsRevealed(food)) {
       showToast('Сначала нажми на карту и раскрой секрет');
       return;
@@ -1721,8 +1791,7 @@
       common: { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, happyMs: 350 },
       rare: { catchMs: 210, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 420 },
       epic: { catchMs: 230, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 620 },
-      legendary: { catchMs: 250, chewMs: 1200, chewTime: '.3s', chews: 4, happyMs: 680 },
-      prismatic: { catchMs: 270, chewMs: 1500, chewTime: '.3s', chews: 5, happyMs: 820 },
+      special: { catchMs: 260, chewMs: 1350, chewTime: '.3s', chews: 5, happyMs: 780 },
       secret: { catchMs: 270, chewMs: 1500, chewTime: '.3s', chews: 5, revealDelayMs: 0, happyMs: 820 }
     }[food.rarity] || { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, revealDelayMs: 0, happyMs: 350 };
     sound('eat', {
@@ -1748,7 +1817,7 @@
           els.slime.classList.remove('savoring');
           els.slime.classList.add('pleased');
           if (food.rarity === 'secret') feedback([14, 24, 12]);
-          sound(['epic', 'legendary', 'prismatic', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
+          sound(['epic', 'special', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
           menuEmotionTimer = setTimeout(() => {
             clearMenuMealReaction();
           }, mealReaction.happyMs);
@@ -1759,10 +1828,39 @@
         } else revealMeal();
       }, mealReaction.chewMs);
     }, mealReaction.catchMs);
-    renderDraft();
     persist();
-    feedback(food.rarity === 'legendary' || food.rarity === 'prismatic' || food.rarity === 'secret' ? [12, 30, 18] : 8);
+    feedback(food.rarity === 'special' || food.rarity === 'secret' ? [12, 30, 18] : 8);
     if (session.combo && session.combo.name !== previousCombo) showToast(`${session.combo.icon} Комбо: ${session.combo.name} — ${session.combo.text}`);
+    void advanceConveyorAfterChoice(offerIndex, source);
+  }
+
+  async function advanceConveyorAfterChoice(chosenIndex, source) {
+    if (!session || session.offerTransition) return;
+    session.offerTransition = true;
+    hideFoodInfo();
+    els.conveyor.classList.add('is-running', 'is-selecting');
+    const cards = [...els.foodChoices.querySelectorAll('.food-card')];
+    cards.forEach(card => {
+      const index = Number(card.dataset.offerIndex || 0);
+      const sequence = Math.max(0, session.offer.length - 1 - index);
+      card.style.setProperty('--conveyor-delay', `${sequence * 70}ms`);
+      card.style.setProperty('--conveyor-duration', index === chosenIndex ? '410ms' : '470ms');
+      card.classList.add('leaving');
+    });
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 620));
+    generateOffer(session.baseEpicBoost);
+    renderDraft({ offerMotion: 'enter' });
+    persist();
+    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 850));
+    els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
+      card.classList.remove('tunnel-enter');
+      card.style.removeProperty('--conveyor-delay');
+      card.style.removeProperty('--conveyor-duration');
+    });
+    session.offerTransition = false;
+    els.conveyor.classList.remove('is-running', 'is-selecting');
+    renderDraft();
   }
 
 
@@ -1771,7 +1869,7 @@
       showToast('Секретный вкус нельзя торопить');
       return;
     }
-    if (session.foods.length >= save.stomachLevel || session.rerollPending || adInFlight) return;
+    if (stomachIsFull() || session.rerollPending || session.offerTransition || adInFlight) return;
     session.rerollPending = true;
     hideFoodInfo();
     els.rerollBtn.disabled = true;
@@ -1780,25 +1878,34 @@
     try {
       if (session.freeRerolls > 0) {
         session.freeRerolls -= 1;
-      } else {
+      } else if (session.adRerolls === 0) {
         const rewarded = await showRewardedAd('Новая тройка еды. Для этой выдачи шанс редкой еды повышен на 10%.');
         if (!rewarded) return;
-        session.adRerolls += 1;
-        rareBoost = 10;
-      }
+        session.adRerolls = 1;
+        rareBoost = 10 + save.rerollLevel * 5;
+      } else return;
       sound(rollBoost >= 10 || rareBoost >= 10 ? 'epic' : 'reroll');
       feedback(6);
       els.conveyor.classList.add('is-running');
-      $$('.food-card').forEach(card => {
+      const visibleCards = [...els.foodChoices.querySelectorAll('.food-card')];
+      visibleCards.forEach(card => {
         const offerIndex = Number(card.dataset.offerIndex || 0);
-        card.style.animationDelay = `${Math.max(0, session.offer.length - 1 - offerIndex) * 70}ms`;
+        const sequence = Math.max(0, session.offer.length - 1 - offerIndex);
+        card.style.setProperty('--conveyor-delay', `${sequence * 110}ms`);
+        card.style.setProperty('--conveyor-duration', '500ms');
         card.classList.add('leaving');
       });
-      await new Promise(resolve => setTimeout(resolve, 840));
-      generateOffer(rollBoost, rareBoost);
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 760));
+      generateOffer(rollBoost, rareBoost, { resetRerolls: false });
       renderDraft({ offerMotion: 'enter' });
       persist();
-      await new Promise(resolve => setTimeout(resolve, 900));
+      await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 850));
+      els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
+        card.classList.remove('tunnel-enter');
+        card.style.removeProperty('--conveyor-delay');
+        card.style.removeProperty('--conveyor-duration');
+      });
     } finally {
       session.rerollPending = false;
       els.conveyor.classList.remove('is-running');
@@ -1811,7 +1918,7 @@
     if (!run || delta <= 0) return;
     const timestampKeys = [
       'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'appleGlowUntil', 'freezeUntil',
-      'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'lastMassDamageAt', 'bounceGraceUntil',
+      'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
       'softLandingUntil', 'lastBombPullAt', 'lastTrailSampleAt', 'lastUiUpdateAt'
     ];
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
@@ -1831,7 +1938,7 @@
     if (!els.toggleRunSoundBtn) return;
     els.toggleRunSoundBtn.classList.toggle('is-muted', !save.sound);
     els.toggleRunSoundBtn.setAttribute('aria-pressed', String(!save.sound));
-    els.runSoundIcon.textContent = save.sound ? '♪' : '×';
+    els.runSoundIcon?.classList.toggle('is-muted', !save.sound);
     els.runSoundLabel.textContent = save.sound ? 'ЗВУК ВКЛЮЧЁН' : 'ЗВУК ВЫКЛЮЧЕН';
   }
 
@@ -1929,7 +2036,6 @@
       ? Math.floor(columns / 2)
       : Math.floor(columns / 2) - (Math.random() < .5 ? 1 : 0);
     const startX = gridOffsetX + startLane * cellSize + cellSize / 2;
-    const fedScale = foodGrowthScale(session.foods.length);
     run = {
       worldId: world.id,
       level,
@@ -1952,7 +2058,7 @@
         y: 78,
         vx: rand(-65, 65),
         vy: 40,
-        radius: 28 * fedScale,
+        radius: 28,
         wobble: 0
       },
       steer: {
@@ -1963,14 +2069,12 @@
       geyserCapture: null,
       geyserLaunchGraceUntil: 0,
       geyserBreaksLeft: 0,
-      fedScale,
-      sizeMultiplier: 1,
-      mass: session.stats.mass,
-      startMass: session.stats.mass,
-      maxMass: Math.max(1, Math.round(session.stats.mass)),
-      visualMass: session.stats.mass,
-      massFlash: 0,
-      massFlashTime: 0,
+      health: session.stats.health,
+      startHealth: session.stats.health,
+      maxHealth: Math.max(1, Math.round(session.stats.health)),
+      visualHealth: session.stats.health,
+      healthFlash: 0,
+      healthFlashTime: 0,
       hurtFlashUntil: 0,
       healGlowUntil: 0,
       appleGlowUntil: 0,
@@ -1980,12 +2084,12 @@
       lastFrozenImpactAt: 0,
       emotion: 'joy',
       emotionUntil: 0,
-      power: session.stats.power,
-      defense: session.stats.defense,
+      damage: session.stats.damage,
+      shield: session.stats.shield,
       barrier: 0,
       barrierFlashUntil: 0,
       bounceControlLockUntil: 0,
-      elasticity: session.stats.elasticity,
+      bounceControlRestoreUntil: 0,
       coinMultiplier: session.stats.coinMultiplier,
       effects: { ...session.effects },
       freeBouncesLeft: session.effects.freeBounces || 0,
@@ -1993,8 +2097,8 @@
       rainbowHeartUsed: false,
       voidBreakerUsed: false,
       brokenSinceBlast: 0,
-      abilityCharge: Math.min(45, session.stats.ability),
-      abilityChargeMultiplier: (session.effects.chargeBoost ? 1.25 : 1) * (session.effects.cooldownCut ? 1.15 : 1),
+      shieldCharges: session.stats.shieldCharges,
+      maxShieldCharges: session.stats.shieldCharges,
       coins: 0,
       comboCount: 0,
       comboMultiplier: 1,
@@ -2019,7 +2123,7 @@
       animationId: 0,
       shake: 0,
       hitCooldowns: new Map(),
-      lastMassDamageAt: -9999,
+      damageInvulnerableUntil: 0,
       bounceGraceUntil: 0,
             softLandingUntil: 0,
       lastBombPullAt: 0,
@@ -2144,16 +2248,12 @@
         if (special === 'boss') maxHp *= 4.4;
         const editedBlock = customVisual || editorBlock(world.id, special === 'gel' ? 'heal' : special || (hazard ? 'hazard' : finalTier));
         if (customVisual) maxHp *= editedBlock?.hp || 1;
-        const coreRange = durabilityRange(finalTier);
-        if (coreRange && !special && !hazard) maxHp = clamp(maxHp, coreRange[0], coreRange[1]);
-        if (oreType) {
-          const oreBalance = GAME_BALANCE?.ores?.[oreType.id];
-          maxHp = rand(oreBalance?.min ?? oreType.hp[0], oreBalance?.max ?? oreType.hp[1]);
-        }
-        // Fixed values for gameplay-critical blocks. Editor multipliers never
-        // make a medkit, dynamite or hazard unexpectedly tougher.
-        if (hazard) maxHp = 30;
-        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'snowflake' || special === 'appleMint' || special === 'appleRed' || special === 'geyser' || special === 'meteor') maxHp = 5;
+        if (oreType) maxHp = Math.round(oreType.hp[0]);
+        // Опасность не имеет прочности: она всегда отражает слайма и наносит 30 HP.
+        if (hazard) maxHp = 1;
+        // Все вспомогательные блоки срабатывают от первого касания — число на
+        // плитке это честно показывает, а не маскирует триггер за «5 HP».
+        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'snowflake' || special === 'appleMint' || special === 'appleRed' || special === 'geyser' || special === 'meteor') maxHp = 1;
         if (special === 'spring') maxHp = 1;
         maxHp = Math.max(1, Math.round(maxHp));
 
@@ -2161,7 +2261,7 @@
         rowBlocks.push({
           id: id++, row, col, x: gridOffsetX + col * cell, y, w: cell, h: cell,
           hp: maxHp, maxHp, material, special, tier: finalTier, dead: false,
-          path: inPath, segment: meta.kind, hazard, hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
+          path: inPath, segment: meta.kind, hazard, unbreakable: hazard, hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
           // Grass belongs only to the surface layer of World 1.
           topGrass: world.id === 1 && row === 0 && !special && finalTier === 'soft',
           coins: special
@@ -2180,6 +2280,7 @@
           block.tier = world.id === 2 || world.id === 4 ? 'dense' : 'soft';
           block.special = null;
           block.hazard = false;
+          block.unbreakable = false;
           block.hazardVariant = null;
           block.oreType = null;
           block.editorVisualId = '';
@@ -2235,15 +2336,12 @@
   }
 
   function blockHpForTier(tier, world, progress, row, col, inPath = false) {
-    const [min, max] = durabilityRange(tier) || [5, 15];
-    return Math.round(rand(min, max) * Math.max(1, world.endlessScale || 1));
-  }
-
-  function durabilityRange(tier) {
-    const id = tier === 'hard' ? 'normal' : tier === 'reinforced' ? 'strong' : (tier === 'soft' || tier === 'dense') ? 'weak' : null;
-    if (!id) return tier === 'ore' ? [10, 40] : tier === 'special' ? [5, 5] : null;
-    const range = GAME_BALANCE?.durability?.[id];
-    return [range?.min ?? (id === 'weak' ? 5 : id === 'normal' ? 15 : 35), range?.max ?? (id === 'weak' ? 15 : id === 'normal' ? 35 : 55)];
+    const worldStep = Math.max(0, Math.round(world?.id || 1) - 1);
+    const base = (tier === 'soft' || tier === 'dense') ? 10
+      : tier === 'hard' ? 20 + worldStep * 10
+        : tier === 'reinforced' ? 60 + worldStep * 20
+          : tier === 'ore' ? 10 : 1;
+    return Math.round(base * Math.max(1, world?.endlessScale || 1));
   }
 
   function blockRewardForTier(tier) {
@@ -2373,12 +2471,12 @@
 
     if (s.x - s.radius < 4) {
       s.x = s.radius + 4;
-      s.vx = Math.abs(s.vx) * .82 + 28;
+      s.vx = clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
       run.shake = Math.max(run.shake, 3);
     }
     if (s.x + s.radius > VIEW_W - 4) {
       s.x = VIEW_W - s.radius - 4;
-      s.vx = -Math.abs(s.vx) * .82 - 28;
+      s.vx = -clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
       run.shake = Math.max(run.shake, 3);
     }
 
@@ -2430,10 +2528,10 @@
     run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * 4.25, 0, 1));
 
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt * 20);
-    run.visualMass = lerp(run.visualMass, Math.max(0, run.mass), clamp(dt * 11, 0, 1));
-    const healthScale = .82 + .18 * Math.sqrt(clamp(run.mass / Math.max(1, run.startMass), 0, 1));
-    s.radius = lerp(s.radius, 28 * run.fedScale * healthScale * (run.sizeMultiplier || 1), clamp(dt * 5.5, 0, 1));
-    if (run.massFlashTime > 0) run.massFlashTime = Math.max(0, run.massFlashTime - dt);
+    run.visualHealth = lerp(run.visualHealth, Math.max(0, run.health), clamp(dt * 11, 0, 1));
+    const healthScale = .82 + .18 * Math.sqrt(clamp(run.health / Math.max(1, run.startHealth), 0, 1));
+    s.radius = lerp(s.radius, 28 * healthScale, clamp(dt * 5.5, 0, 1));
+    if (run.healthFlashTime > 0) run.healthFlashTime = Math.max(0, run.healthFlashTime - dt);
 
     const speedNow = Math.hypot(s.vx, s.vy);
     if (speedNow < 34 && s.y > 180) run.lowMotionTime += dt;
@@ -2444,7 +2542,7 @@
       run.lowMotionTime = 0;
     }
 
-    if (run.mass <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
+    if (run.health <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
   }
 
   function updateGeyserCapture(dt, timestamp) {
@@ -2573,18 +2671,25 @@
   function applyFallSteering(slime, dt, timestamp = performance.now()) {
     if (!run?.steer || run.portalEntry || isSlimeFrozen(timestamp)) return;
     const steering = fallSteeringVector();
-    if (Math.abs(steering.x) > .01) {
-      const controlSpeed = 235;
-      const acceleration = 190;
+    const lockUntil = run.bounceControlLockUntil || 0;
+    const restoreUntil = Math.max(lockUntil, run.bounceControlRestoreUntil || 0);
+    const steeringAuthority = timestamp < lockUntil
+      ? 0
+      : restoreUntil > lockUntil
+        ? clamp((timestamp - lockUntil) / (restoreUntil - lockUntil), 0, 1)
+        : 1;
+    if (Math.abs(steering.x) > .01 && steeringAuthority > 0) {
+      const controlSpeed = 220;
+      const acceleration = 250 * steeringAuthority;
       const nextVx = slime.vx + steering.x * acceleration * dt;
       slime.vx = Math.sign(nextVx) === Math.sign(steering.x)
         ? Math.sign(steering.x) * Math.min(Math.abs(nextVx), controlSpeed)
         : nextVx;
     }
-    // Downward input increases weight, but never cancels the first instant of
-    // a real rebound from a block the slime could not break.
-    if (steering.down > .01 && timestamp >= (run.bounceControlLockUntil || 0)) {
-      slime.vy += 235 * steering.down * dt;
+    // Downward input increases weight only after the rebound has established
+    // its trajectory; holding it can never flatten an impact into a block.
+    if (steering.down > .01 && steeringAuthority > 0) {
+      slime.vy += 235 * steering.down * steeringAuthority * dt;
     }
   }
 
@@ -2692,6 +2797,51 @@
     }
   }
 
+  function applyBlockBounce(slime, collision, { hazard, timestamp }) {
+    const nx = collision.nx;
+    const ny = collision.ny;
+    const incomingNormal = slime.vx * nx + slime.vy * ny;
+    const inwardSpeed = Math.max(0, -incomingNormal);
+    const regularRatio = clamp((inwardSpeed - 40) / 440, 0, 1);
+    const hazardRatio = clamp((inwardSpeed - 45) / 375, 0, 1);
+    const regularCurve = regularRatio * regularRatio * (3 - 2 * regularRatio);
+    const hazardCurve = hazardRatio * hazardRatio * (3 - 2 * hazardRatio);
+    const normalSpeed = hazard
+      ? lerp(195, 285, hazardCurve)
+      : lerp(BALANCE.bounceMin, BALANCE.bounceMax, regularCurve);
+    const tangentKeep = hazard ? .32 : .50;
+    let tangentX = (slime.vx - incomingNormal * nx) * tangentKeep;
+    let tangentY = (slime.vy - incomingNormal * ny) * tangentKeep;
+    const tangentSpeed = Math.hypot(tangentX, tangentY);
+    const tangentLimit = hazard ? 112 : lerp(82, 150, regularCurve);
+    if (tangentSpeed > tangentLimit) {
+      const tangentScale = tangentLimit / tangentSpeed;
+      tangentX *= tangentScale;
+      tangentY *= tangentScale;
+    }
+
+    // Единственный источник отскока — нормаль поверхности. Случайного выбора
+    // стороны больше нет: слайм всегда сначала уверенно выходит из блока.
+    slime.vx = nx * normalSpeed + tangentX * tangentKeep;
+    slime.vy = ny * normalSpeed + tangentY * tangentKeep;
+
+    const steering = fallSteeringVector();
+    if (Math.abs(steering.x) > .01) {
+      if (Math.abs(nx) < .34) {
+        // На горизонтальной поверхности ввод лишь направляет следующий полёт.
+        const steeringAssist = hazard ? 82 : lerp(46, 78, regularCurve);
+        slime.vx = clamp(slime.vx * .52 + steering.x * steeringAssist, -BALANCE.sideBounceMax, BALANCE.sideBounceMax);
+      } else if (Math.sign(steering.x) === Math.sign(nx)) {
+        // У боковой стенки разрешено помочь отскоку наружу, но не продавить её.
+        slime.vx += steering.x * (hazard ? 34 : 24);
+      }
+    }
+
+    run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + (hazard ? 70 : 20);
+    run.bounceControlLockUntil = timestamp + (hazard ? 70 : 90);
+    run.bounceControlRestoreUntil = timestamp + (hazard ? 250 : 285);
+  }
+
   function resolveBlockHit(block, collision, timestamp = performance.now()) {
     const s = run.slime;
     if (block.special === 'geyser') return activateGeyser(block, timestamp);
@@ -2700,60 +2850,43 @@
     const isFalling = s.vy > 0;
     const tierData = BLOCK_TIERS[block.tier] || BLOCK_TIERS.dense;
     const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
-    // Честная характеристика: «Урон 10» всегда снимает блоку 10 прочности.
-    // Разницу между породами полностью задаёт их запас HP.
-    let damage = Math.max(1, run.power);
+    const unbreakable = Boolean(block.hazard || block.unbreakable);
+    // Урон всегда снимается с прочности один к одному. Опасный блок —
+    // исключение: это непробиваемая преграда, а не ещё один запас HP.
+    let damage = Math.max(1, run.damage);
     const hpBefore = block.hp;
-    // Utility blocks are collected on the very first contact, regardless of
-    // current speed or an old editor durability multiplier.
     const breaksOnTouch = ['bomb', 'gel', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'meteor'].includes(block.special);
-    if (breaksOnTouch) damage = hpBefore;
-    if (run.effects.voidBreaker && !run.voidBreakerUsed && ['hard', 'reinforced'].includes(block.tier) && damage < hpBefore) {
+    if (breaksOnTouch && !unbreakable) damage = hpBefore;
+    if (!unbreakable && run.effects.voidBreaker && !run.voidBreakerUsed && ['hard', 'reinforced'].includes(block.tier) && damage < hpBefore) {
       damage = hpBefore + 1;
       run.voidBreakerUsed = true;
       impact('ПУСТОТА ПОГЛОТИЛА БЛОК!');
     }
-    const geyserPiercing = run.geyserBreaksLeft > 0 && block.special !== 'geyser';
+    const geyserPiercing = !unbreakable && run.geyserBreaksLeft > 0 && block.special !== 'geyser';
     if (geyserPiercing) damage = hpBefore;
-    const destroysImmediately = breaksOnTouch || geyserPiercing || damage >= hpBefore;
-    const sameImpactCluster = timestamp - run.lastMassDamageAt < BALANCE.impactClusterMs;
-
-    let massLoss;
-    if (destroysImmediately) {
-      const work = clamp(hpBefore / Math.max(1, damage), 0, 1);
-      massLoss = run.maxMass * lerp(tierData.breakLoss[0], tierData.breakLoss[1], work);
-      massLoss = Math.min(massLoss, run.maxMass * BALANCE.maxBreakLossOfMaxMass);
-    } else {
-      const resistance = clamp(hpBefore / Math.max(1, damage), 1, 5);
-      massLoss = run.maxMass * lerp(tierData.bounceLoss[0], tierData.bounceLoss[1], (resistance - 1) / 4);
-      massLoss = Math.min(massLoss, run.maxMass * BALANCE.maxBounceLossOfMaxMass, Math.max(1, run.mass * BALANCE.maxBounceLossOfCurrentMass));
-    }
-
-    if (block.special === 'spring') massLoss *= .35;
-    if (block.hazard) massLoss *= 1.75;
-    if (run.effects.softLanding && timestamp < run.softLandingUntil) massLoss *= .45;
-    if (frozenSlime || block.special === 'snowflake' || block.special === 'appleMint' || block.special === 'appleRed' || block.special === 'meteor') massLoss = 0;
-    if (!destroysImmediately && run.freeBouncesLeft > 0) {
-      massLoss = 0;
+    const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || damage >= hpBefore);
+    const oreBlock = block.tier === 'ore' || block.frozenOre;
+    let healthLoss = unbreakable ? 30 : (destroysImmediately || oreBlock ? 0 : 5);
+    if (run.effects.softLanding && timestamp < run.softLandingUntil) healthLoss = Math.ceil(healthLoss * .5);
+    if (frozenSlime || breaksOnTouch) healthLoss = 0;
+    if (healthLoss > 0 && timestamp < run.damageInvulnerableUntil) healthLoss = 0;
+    if (healthLoss > 0 && !unbreakable && run.freeBouncesLeft > 0) {
+      healthLoss = 0;
       run.freeBouncesLeft -= 1;
       impact(`АЛМАЗНАЯ ЗАЩИТА · осталось ${run.freeBouncesLeft}`);
     }
-    if (sameImpactCluster) massLoss *= BALANCE.repeatMassScale;
-    massLoss = massLoss <= 0 ? 0 : Math.max(BALANCE.minMassLoss, massLoss);
-
-    const barrierAbsorbed = Math.min(Math.max(0, run.barrier || 0), massLoss);
+    const barrierAbsorbed = Math.min(Math.max(0, run.barrier || 0), healthLoss);
     if (barrierAbsorbed > 0) {
       run.barrier = Math.max(0, run.barrier - barrierAbsorbed);
       run.barrierFlashUntil = timestamp + 380;
-      massLoss = Math.max(0, massLoss - barrierAbsorbed);
+      healthLoss = Math.max(0, healthLoss - barrierAbsorbed);
     }
-
-    run.mass = Math.max(0, run.mass - massLoss);
-    if (!sameImpactCluster && massLoss > 0) run.lastMassDamageAt = timestamp;
+    run.health = Math.max(0, run.health - healthLoss);
+    if (healthLoss > 0) run.damageInvulnerableUntil = timestamp + 1000;
     if (!frozenSlime) {
-      run.massFlash = massLoss > 0 ? -1 : 1;
-      run.massFlashTime = .22;
-      if (block.hazard && massLoss > 0) run.hurtFlashUntil = timestamp + 430;
+      run.healthFlash = healthLoss > 0 ? -1 : 1;
+      run.healthFlashTime = .22;
+      if (healthLoss > 0) run.hurtFlashUntil = timestamp + 1000;
     }
     run.shake = Math.max(run.shake, clamp(impactSpeed / 165, 1.0, destroysImmediately ? 3.8 : 5.8));
     if (!frozenSlime) {
@@ -2791,66 +2924,39 @@
       }
 
       if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
-      else if (!block.special && run.comboCount < 2) impact(barrierAbsorbed > 0 && massLoss <= 0
-        ? `БАРЬЕР · −${round1(barrierAbsorbed)}`
-        : `УДАР · −${round1(massLoss)} здоровья`);
+      else if (!block.special && run.comboCount < 2) impact('ПРОБОЙ · БЕЗ УРОНА');
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
-      if (run.mass <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
+      if (run.health <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
       return false;
     }
 
     preserveCombo(timestamp);
-    block.hp = Math.max(.05, block.hp - damage);
+    if (!unbreakable) block.hp = Math.max(.05, block.hp - damage);
     if (frozenSlime) {
       slideFrozenSlime(block, collision, timestamp);
-      addAbilityCharge(2);
       createDebris(block, 3, false);
       return true;
     }
-    const springBoost = block.special === 'spring' ? (GAME_BALANCE?.special?.spring?.push || 1.35) : 1;
-    const resistance = clamp(hpBefore / Math.max(1, damage), 1, 5);
-    const bounceBase = 74 + impactSpeed * .10 + run.flightDistance * .11 + resistance * 7;
-    const bounce = clamp(bounceBase * run.elasticity * springBoost, BALANCE.bounceMin, BALANCE.bounceMax);
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
-    run.flightDistance = 0;
-    run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs;
-    run.bounceControlLockUntil = timestamp + 170;
     if (run.effects.softLanding) run.softLandingUntil = timestamp + 1000;
 
-    s.x += collision.nx * (collision.penetration + 2.4);
-    s.y += collision.ny * (collision.penetration + 2.4);
-    const dot = s.vx * collision.nx + s.vy * collision.ny;
-    const restitution = block.special === 'spring' ? 1 + (GAME_BALANCE?.special?.spring?.push || 1.35) * .25 : 1.06;
-    s.vx -= restitution * dot * collision.nx;
-    s.vy -= restitution * dot * collision.ny;
+    s.x += collision.nx * (collision.penetration + (unbreakable ? 6 : 4));
+    s.y += collision.ny * (collision.penetration + (unbreakable ? 6 : 4));
+    applyBlockBounce(s, collision, { hazard: unbreakable, timestamp });
+    run.flightDistance = 0;
 
-    if (collision.ny < -.35) {
-      s.vy = -bounce;
-      const direction = chooseBounceDirection(block);
-      const sideStrength = rand(38, 62);
-      s.vx = clamp(s.vx * .28 + direction * sideStrength, -BALANCE.sideBounceMax, BALANCE.sideBounceMax);
-    } else if (Math.abs(collision.nx) > .45) {
-      const chosen = chooseBounceDirection(block);
-      s.vx = clamp(Math.abs(s.vx) * chosen + chosen * bounce * .20, -BALANCE.sideBounceMax, BALANCE.sideBounceMax);
-      s.vy *= .88;
-    } else if (collision.ny > .35) {
-      s.vy = Math.abs(s.vy) * .28;
-    }
-
-    addAbilityCharge({ soft: 1.4, dense: 2.0, hard: 2.8, reinforced: 3.6, ore: 2.4, special: 2.0 }[block.tier] || 2);
-
-    const damageMessage = barrierAbsorbed > 0 && massLoss <= 0 ? `БАРЬЕР · −${round1(barrierAbsorbed)}` : `−${round1(massLoss)}`;
+    const damageMessage = barrierAbsorbed > 0 && healthLoss <= 0 ? `ЩИТ −${Math.round(barrierAbsorbed)}` : `−${Math.round(healthLoss)} HP`;
     impact(block.special === 'spring'
       ? `ПРУЖИНА · ${damageMessage}`
       : block.special === 'boss'
         ? `СТРАЖ НЕДР · ${damageMessage} · ${Math.ceil(block.hp)} HP`
-        : block.hazard
-          ? `ОПАСНЫЙ БЛОК · ${damageMessage} · ${Math.ceil(block.hp)} HP`
+        : unbreakable
+          ? `ОПАСНЫЙ БЛОК · ${damageMessage}`
           : `РИКОШЕТ · ${damageMessage} · ${Math.ceil(block.hp)} HP`);
     sound(block.special === 'spring' ? 'bounce' : block.hazard || block.special === 'boss' ? 'hitHard' : 'hit');
     createDebris(block, 3, false);
 
-    if (run.mass <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
+    if (run.health <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
     return true;
   }
 
@@ -2899,6 +3005,7 @@
     preserveCombo(timestamp);
     run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + 110;
     run.bounceControlLockUntil = timestamp + 220;
+    run.bounceControlRestoreUntil = timestamp + 500;
     run.emotion = 'joy';
     run.emotionUntil = timestamp + 480;
     run.shake = Math.max(run.shake, 6.5);
@@ -2911,22 +3018,12 @@
     return true;
   }
 
-  function chooseBounceDirection(block) {
-    const inputX = fallSteeringVector().x;
-    if (Math.abs(inputX) > .12) return Math.sign(inputX);
-    const leftScore = scoreLandingSide(block.row, block.col - 1);
-    const rightScore = scoreLandingSide(block.row, block.col + 1);
-    if (Math.random() < .14) return Math.random() < .5 ? -1 : 1;
-    if (Math.abs(leftScore - rightScore) < .12) return run.slime.x < block.x + block.w / 2 ? -1 : 1;
-    return leftScore < rightScore ? -1 : 1;
-  }
-
   function tryRevive() {
     if (run.effects.rainbowHeart && !run.rainbowHeartUsed) {
       run.rainbowHeartUsed = true;
-      run.mass = Math.max(1, run.maxMass * .30);
-      run.massFlash = 1;
-      run.massFlashTime = .75;
+      run.health = Math.max(1, run.maxHealth * .30);
+      run.healthFlash = 1;
+      run.healthFlashTime = .75;
       run.slime.vy = 150;
       explodeAt(run.slime.x, run.slime.y, 125, .35);
       impact('СЕРДЦЕ РАДУГИ: ВОЗРОЖДЕНИЕ!');
@@ -2934,34 +3031,13 @@
     }
     if (!run.effects.smallRevive || run.revived) return false;
     run.revived = true;
-    run.mass = Math.max(1, run.maxMass * .12);
-    run.massFlash = 1;
-    run.massFlashTime = .75;
+    run.health = Math.max(1, run.maxHealth * .12);
+    run.healthFlash = 1;
+    run.healthFlashTime = .75;
     run.slime.vy = 150;
     explodeAt(run.slime.x, run.slime.y, 105, .30);
     impact('ФЕНИКС: ВОЗРОЖДЕНИЕ!');
     return true;
-  }
-
-  function scoreLandingSide(row, col) {
-    let score = 0;
-    let count = 0;
-    for (let r = row + 1; r <= row + 3; r += 1) {
-      for (let c = col - 1; c <= col + 1; c += 1) {
-        const block = run.blocks.find(item => !item.dead && item.row === r && item.col === c);
-        if (!block) continue;
-        score += block.hp / Math.max(1, run.world.expectedDamage);
-        if (['gel', 'bomb', 'appleMint', 'appleRed'].includes(block.special)) score -= .75;
-        if (block.tier === 'reinforced') score += .7;
-        count += 1;
-      }
-    }
-    return count ? score / count : 10;
-  }
-
-  function addAbilityCharge(amount) {
-    if (!run || run.ended) return;
-    run.abilityCharge = clamp(run.abilityCharge + amount * run.abilityChargeMultiplier, 0, 100);
   }
 
   function registerComboLayer(row, timestamp = performance.now()) {
@@ -2997,22 +3073,20 @@
     run.blocksDestroyed += 1;
     const reward = block.coins * run.comboMultiplier * run.coinMultiplier;
     run.coins += reward;
-    addAbilityCharge({ soft: 2.2, dense: 3.1, hard: 4.2, reinforced: 5.2, ore: 4.0, special: 3.0 }[block.tier] || 2.5);
     createDebris(block, block.special === 'geyser' ? 0 : block.special === 'bomb' ? 8 : block.special === 'appleRed' ? 10 : 9, true);
 
     if (block.tier === 'ore' || block.frozenOre) {
       const ore = block.oreType || ORE_TYPES[0];
       const oreReward = Math.round(reward);
-      if (run.effects.oreHeal) healRun(Math.max(2, run.maxMass * .035), ore.label);
+      if (run.effects.oreHeal) healRun(Math.max(2, run.maxHealth * .035), ore.label);
       else impact(`${ore.label} +${oreReward}`);
     } else if (block.special === 'coin') {
-      if (run.effects.oreHeal) healRun(Math.max(2, run.maxMass * .03), 'ЗОЛОТОЙ ПИР');
+      if (run.effects.oreHeal) healRun(Math.max(2, run.maxHealth * .03), 'ЗОЛОТОЙ ПИР');
       else impact('БЛОК РАЗРУШЕН');
     } else if (block.special === 'gel') {
       spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
       const multiplier = run.effects.healBoost ? 2 : 1;
-      const configuredHeal = GAME_BALANCE?.special?.heal?.amount;
-      const heal = Math.max(1, Math.round((configuredHeal ?? (run.maxMass * .16 + run.worldId)) * multiplier));
+      const heal = 25 * multiplier;
       healRun(heal, run.effects.healBoost ? 'КОРОЛЕВСКОЕ ЛЕЧЕНИЕ' : 'ЛЕЧЕНИЕ');
     } else if (block.special === 'appleMint') {
       activateMintApple(block);
@@ -3021,7 +3095,6 @@
     } else if (block.special === 'meteor') {
       activateMeteorShower(block);
     } else if (block.special === 'spring') {
-      addAbilityCharge(5);
       impact('ПРУЖИНА СЛОМАНА!');
     } else if (block.special === 'cryo') {
       weakenCryoArea4x4(block);
@@ -3038,12 +3111,11 @@
 
   function activateMintApple(source) {
     const settings = GAME_BALANCE?.special?.appleMint || {};
-    const sizeChange = clamp((settings.size ?? -20) / 100, -.5, 0);
-    const defenseBoost = clamp(Math.round(settings.defense ?? 20), 0, 999);
-    const bounceBoost = clamp((settings.bounce ?? 20) / 100, 0, 1);
-    run.sizeMultiplier = clamp((run.sizeMultiplier || 1) * (1 + sizeChange), .62, 2.25);
-    run.defense = clamp(run.defense + defenseBoost, 0, 999);
-    run.elasticity = clamp(run.elasticity + bounceBoost, .85, 2.6);
+    const shieldBoost = clamp(Math.round(settings.shield ?? settings.defense ?? 20), 0, 999);
+    const chargeBoost = clamp(Math.round(settings.shieldCharges ?? 1), 0, 3);
+    run.shield = clamp(run.shield + shieldBoost, 0, 999);
+    run.maxShieldCharges = clamp(run.maxShieldCharges + chargeBoost, 1, 9);
+    run.shieldCharges = Math.min(run.maxShieldCharges, run.shieldCharges + chargeBoost);
     const timestamp = performance.now();
     run.appleGlowUntil = timestamp + 1450;
     run.appleGlowType = 'mint';
@@ -3051,19 +3123,17 @@
     run.emotionUntil = timestamp + 1050;
     run.shake = Math.max(run.shake, 4.5);
     spawnSpecialBurst('appleMint', source.x + source.w / 2, source.y + source.h / 2);
-    impact(`МЯТНОЕ ЯБЛОКО · +${defenseBoost} ЗАЩИТЫ · +${Math.round(bounceBoost * 100)}% ОТСКОК`);
+    impact(`МЯТНОЕ ЯБЛОКО · +${shieldBoost} ЩИТА · +${chargeBoost} ЗАРЯД`);
     sound('happy');
     feedback([6, 10, 6, 14]);
   }
 
   function activateRedApple(source) {
     const settings = GAME_BALANCE?.special?.appleRed || {};
-    const sizeBoost = clamp((settings.size ?? 50) / 100, 0, 1);
-    const powerBoost = clamp(Math.round(settings.power ?? 20), 0, 999);
-    const defenseBoost = clamp(Math.round(settings.defense ?? 20), 0, 999);
-    run.sizeMultiplier = clamp((run.sizeMultiplier || 1) * (1 + sizeBoost), .62, 2.25);
-    run.power = Math.min(999, run.power + powerBoost);
-    run.defense = clamp(run.defense + defenseBoost, 0, 999);
+    const damageBoost = clamp(Math.round(settings.damage ?? settings.power ?? 20), 0, 999);
+    const shieldBoost = clamp(Math.round(settings.shield ?? settings.defense ?? 20), 0, 999);
+    run.damage = Math.min(999, run.damage + damageBoost);
+    run.shield = clamp(run.shield + shieldBoost, 0, 999);
     const timestamp = performance.now();
     run.appleGlowUntil = timestamp + 1650;
     run.appleGlowType = 'red';
@@ -3071,7 +3141,7 @@
     run.emotionUntil = timestamp + 1150;
     run.shake = Math.max(run.shake, 6);
     spawnSpecialBurst('appleRed', source.x + source.w / 2, source.y + source.h / 2);
-    impact(`КРАСНОЕ ЯБЛОКО · +${powerBoost} УРОНА · +${defenseBoost} ЗАЩИТЫ`);
+    impact(`КРАСНОЕ ЯБЛОКО · +${damageBoost} УРОНА · +${shieldBoost} ЩИТА`);
     sound('epic');
     feedback([9, 14, 9, 18]);
   }
@@ -3114,8 +3184,8 @@
     run.frozenEmotion = 'surprised';
     run.slime.vx *= .62;
     run.slime.vy = Math.max(155, run.slime.vy);
-    run.massFlash = 1;
-    run.massFlashTime = .65;
+    run.healthFlash = 1;
+    run.healthFlashTime = .65;
     run.shake = Math.max(run.shake, 5.5);
     spawnSpecialBurst('snowflake', source.x + source.w / 2, source.y + source.h / 2);
     impact(`СНЕЖИНКА · ЗАМОРОЗКА И НЕУЯЗВИМОСТЬ · ${durationSeconds}с`);
@@ -3223,12 +3293,12 @@
   }
 
   function healRun(amount, label = 'ЛЕЧЕНИЕ') {
-    const before = run.mass;
-    run.mass = Math.min(run.maxMass, run.mass + amount);
-    const healed = Math.max(0, run.mass - before);
+    const before = run.health;
+    run.health = Math.min(run.maxHealth, run.health + amount);
+    const healed = Math.max(0, run.health - before);
     const timestamp = performance.now();
-    run.massFlash = 1;
-    run.massFlashTime = .58;
+    run.healthFlash = 1;
+    run.healthFlashTime = .58;
     run.healGlowUntil = timestamp + 980;
     run.emotion = 'joy';
     run.emotionUntil = timestamp + 720;
@@ -3241,7 +3311,7 @@
     let destroyed = 0;
     const chainBombs = [];
     for (const block of run.blocks) {
-      if (block.dead) continue;
+      if (block.dead || block.unbreakable || block.hazard) continue;
       const dx = block.x + block.w / 2 - x;
       const dy = block.y + block.h / 2 - y;
       const distance = Math.hypot(dx, dy);
@@ -3440,13 +3510,13 @@
   }
 
   function activateAbility() {
-    if (!run || run.ended || run.paused || run.abilityCharge < 100) return;
-    run.abilityCharge = 0;
-    run.barrier = Math.max(0, run.defense);
+    if (!run || run.ended || run.paused || run.shieldCharges <= 0 || run.barrier > 0) return;
+    run.shieldCharges -= 1;
+    run.barrier = Math.max(0, run.shield);
     run.barrierFlashUntil = performance.now() + 720;
     sound('epic');
     feedback([14, 22, 14]);
-    impact(`БАРЬЕР +${Math.round(run.barrier)}`);
+    impact(`ЩИТ +${Math.round(run.barrier)}`);
     updateRunUI();
   }
 
@@ -3460,6 +3530,7 @@
     const previousBest = Math.min(targetDepth, Math.max(0, run.previousBest || 0));
     const bestRatio = clamp(previousBest / targetDepth, 0, 1);
     const bestPosition = clamp(3 + bestRatio * 94, 3, 90);
+    const showPreviousBest = !run.endless && previousBest > 0 && previousBest < targetDepth;
     els.depthLabel.textContent = `${currentDepth} М`;
     if (els.runCoinsGain) {
       const earnedCoins = Math.max(0, Math.floor(run.coins));
@@ -3469,21 +3540,21 @@
     els.routeProgress.style.width = `${routePosition}%`;
     els.routeSlimeMarker.style.left = `${routePosition}%`;
     els.routeTargetLabel.textContent = run.endless ? `∞ · КРУГ ${run.endlessLap}` : `${targetDepth} М`;
-    els.routeBestLabel.textContent = previousBest > 0 ? `ПРОШЛЫЙ ${previousBest} М` : 'ПЕРВЫЙ ЗАБЕГ';
+    els.routeBestLabel.textContent = showPreviousBest ? `ПРОШЛЫЙ ${previousBest} М` : '';
     els.routeBestMarker.style.left = `${bestPosition}%`;
-    els.routeBestMarker.classList.toggle('hidden', run.endless || previousBest <= 0);
-    els.runMassLabel.textContent = `${Math.max(0, Math.ceil(run.mass))}/${Math.ceil(run.maxMass)}`;
-    els.runHealthBar.style.width = `${clamp(run.mass / Math.max(1, run.maxMass) * 100, 0, 100)}%`;
-    els.runHealthBar.closest('.shaft-health')?.classList.toggle('is-low', run.mass / Math.max(1, run.maxMass) <= .3);
-    const charge = clamp(Math.round(run.abilityCharge), 0, 100);
-    els.abilityPercent.textContent = `${charge}%`;
-    els.abilityBtn.style.setProperty('--ability', `${charge}%`);
-    els.abilityBtn.disabled = charge < 100 || run.ended || run.paused;
-    els.abilityBtn.classList.toggle('is-ready', charge >= 100 && !run.ended);
+    els.routeBestMarker.classList.toggle('hidden', !showPreviousBest);
+    els.runMassLabel.textContent = `${Math.max(0, Math.ceil(run.health))}/${Math.ceil(run.maxHealth)}`;
+    els.runHealthBar.style.width = `${clamp(run.health / Math.max(1, run.maxHealth) * 100, 0, 100)}%`;
+    els.runHealthBar.closest('.shaft-health')?.classList.toggle('is-low', run.health / Math.max(1, run.maxHealth) <= .3);
+    const charges = clamp(Math.round(run.shieldCharges), 0, run.maxShieldCharges);
+    els.abilityPercent.textContent = `${charges}`;
+    els.abilityBtn.style.setProperty('--ability', `${charges / Math.max(1, run.maxShieldCharges) * 100}%`);
+    els.abilityBtn.disabled = charges <= 0 || run.barrier > 0 || run.ended || run.paused;
+    els.abilityBtn.classList.toggle('is-ready', charges > 0 && run.barrier <= 0 && !run.ended);
     els.abilityBtn.classList.toggle('is-active', run.barrier > 0);
     els.abilityText.textContent = run.barrier > 0
-      ? `ЩИТ ${Math.ceil(run.barrier)}/${Math.ceil(run.defense)}`
-      : `БАРЬЕР ${Math.ceil(run.defense)}`;
+      ? `ЩИТ ${Math.ceil(run.barrier)}/${Math.ceil(run.shield)} · ${charges}/${run.maxShieldCharges}`
+      : `ЩИТ ${Math.ceil(run.shield)} · ${charges}/${run.maxShieldCharges}`;
   }
 
   // ===== CANVAS-РЕНДЕР МИРА =====
@@ -4278,7 +4349,7 @@
       ctx.font = tier === 'reinforced' ? '1000 13px system-ui' : '1000 12px system-ui';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(Math.max(1, Math.ceil(block.hp)), block.x + block.w / 2, sy + block.h / 2 + 1);
+      ctx.fillText(block.unbreakable ? '⚠ 30' : Math.max(1, Math.ceil(block.hp)), block.x + block.w / 2, sy + block.h / 2 + 1);
       if (tier === 'ore') {
         ctx.font = '900 8px system-ui';
         ctx.fillStyle = 'rgba(255,255,255,.92)';
@@ -4357,9 +4428,11 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(symbol, block.x + block.w / 2, sy + block.h / 2 - 2);
-    ctx.font = '1000 9px system-ui';
-    ctx.fillStyle = 'rgba(255,255,255,.94)';
-    ctx.fillText(special === 'boss' ? `БОСС · ${Math.max(1, Math.ceil(block.hp))}` : `${Math.max(1, Math.ceil(block.hp))} HP`, block.x + block.w / 2, sy + block.h - 7);
+    if (special === 'boss') {
+      ctx.font = '1000 9px system-ui';
+      ctx.fillStyle = 'rgba(255,255,255,.94)';
+      ctx.fillText(`БОСС · ${Math.max(1, Math.ceil(block.hp))}`, block.x + block.w / 2, sy + block.h - 7);
+    }
     ctx.restore();
   }
 
@@ -4383,7 +4456,7 @@
     return true;
   }
 
-  function drawSpecialBlockAura(block, sy, timestamp) {
+  function drawSpecialBlockAura(block, sy) {
     const auraKey = block.hazard ? 'hazard' : block.special;
     // Only universally important signals glow: green means healing, red means
     // danger. Other utility blocks rely on their artwork and own animations.
@@ -4393,8 +4466,9 @@
       hazard: [255, 60, 24]
     };
     const [red, green, blue] = colors[auraKey];
-    const phase = timestamp / (auraKey === 'hazard' ? 240 : 280) + block.id * .71;
-    const pulse = .5 + Math.sin(phase) * .5;
+    // These are navigation signals, not animated power-ups. Their artwork and
+    // outline stay still while the other secondary blocks softly pulse.
+    const pulse = .5;
     const cx = block.x + block.w / 2;
     const cy = sy + block.h / 2;
     ctx.save();
@@ -4403,21 +4477,39 @@
     ctx.clip();
     const radius = block.w * (auraKey === 'hazard' ? .7 : .62);
     const glow = ctx.createRadialGradient(cx, cy, 2, cx, cy, radius);
-    const strength = .3;
+    // Keep the artwork readable: the colour lives mostly on the rim instead
+    // of washing the whole tile with a flat glow.
+    const preserveVolcanicLook = run.worldId === 4;
+    const strength = preserveVolcanicLook ? .3 : .21;
     glow.addColorStop(0, `rgba(${red},${green},${blue},${strength + pulse * .12})`);
     glow.addColorStop(.58, `rgba(${red},${green},${blue},${strength * .48})`);
     glow.addColorStop(1, `rgba(${red},${green},${blue},0)`);
     ctx.globalAlpha = .9;
     ctx.fillStyle = glow;
     ctx.fillRect(block.x + 1, sy + 1, block.w - 2, block.h - 2);
-    // Semantic lighting is deliberately reserved for these two block types.
+    // A dark semantic under-stroke keeps the outline visible on ice, cream and
+    // other pale worlds. The bright inner stroke supplies the jelly-like glow.
     {
-      ctx.globalAlpha = (auraKey === 'hazard' || auraKey === 'gel' ? .68 : .56) + pulse * .25;
-      ctx.strokeStyle = `rgba(${red},${green},${blue},.9)`;
+      const darkRim = auraKey === 'hazard'
+        ? 'rgba(103, 12, 24, .94)'
+        : 'rgba(5, 91, 50, .92)';
+      if (!preserveVolcanicLook) {
+        ctx.globalAlpha = .84 + pulse * .1;
+        ctx.strokeStyle = darkRim;
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 4.4;
+        roundedRect(ctx, block.x + 2.35, sy + 2.35, block.w - 4.7, block.h - 4.7, 7);
+        ctx.stroke();
+      }
+
+      ctx.globalAlpha = .73 + pulse * .23;
+      ctx.strokeStyle = `rgba(${red},${green},${blue},.97)`;
       ctx.shadowColor = `rgba(${red},${green},${blue},.92)`;
-      ctx.shadowBlur = 3.5 + pulse * 4.5;
-      ctx.lineWidth = auraKey === 'hazard' ? 2.6 : 2.15;
-      roundedRect(ctx, block.x + 2.1, sy + 2.1, block.w - 4.2, block.h - 4.2, 7);
+      ctx.shadowBlur = (preserveVolcanicLook ? 3.5 : 3) + pulse * (preserveVolcanicLook ? 4.5 : 4);
+      ctx.lineWidth = preserveVolcanicLook
+        ? (auraKey === 'hazard' ? 2.6 : 2.15)
+        : (auraKey === 'hazard' ? 2.25 : 2);
+      roundedRect(ctx, block.x + 2.35, sy + 2.35, block.w - 4.7, block.h - 4.7, 7);
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
@@ -4492,15 +4584,13 @@
     const offsetY = customSprite ? block.h * (artwork.y || 0) / 100 : 0;
     const drawX = block.x + (block.w - width) / 2 + offsetX;
     const drawY = sy + (block.h - height) / 2 + offsetY;
-    if (['bomb', 'gel', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'].includes(block.special)) {
+    if (['bomb', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'].includes(block.special)) {
       const time = performance.now();
-      const phase = time / (block.special === 'bomb' ? 160 : block.special === 'gel' ? 330 : block.special === 'spring' ? 260 : 300) + block.id;
+      const phase = time / (block.special === 'bomb' ? 160 : block.special === 'spring' ? 260 : 300) + block.id;
       const wave = Math.sin(phase);
       const pulse = block.special === 'bomb'
         ? 1 + wave * .06
-        : block.special === 'gel'
-          ? 1 + wave * .055
-          : block.special === 'cryo' || block.special === 'snowflake'
+        : block.special === 'cryo' || block.special === 'snowflake'
             ? 1 + wave * .028
             : block.special === 'appleMint' || block.special === 'appleRed'
               ? 1 + wave * .038
@@ -4523,22 +4613,26 @@
       ctx.drawImage(sprite, drawX, drawY, width, height);
     }
     ctx.globalAlpha = 1;
-    drawSpecialBlockAura(block, sy, performance.now());
+    drawSpecialBlockAura(block, sy);
     drawCrackStage(block, sy, hpRatio);
 
-    const label = Math.max(1, Math.ceil(block.hp)).toString();
-    const badgeWidth = Math.max(29, 15 + label.length * 7);
-    ctx.fillStyle = 'rgba(22,28,38,.80)';
-    roundedRect(ctx, block.x + block.w / 2 - badgeWidth / 2, sy + block.h - 18, badgeWidth, 14, 7);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.48)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '1000 9px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, block.x + block.w / 2, sy + block.h - 11);
+    // Вспомогательные блоки срабатывают при касании, это не запас HP.
+    // Число остаётся только у материалов и у опасной непробиваемой плитки.
+    if (!block.special || block.special === 'boss') {
+      const label = block.unbreakable ? '⚠ 30' : Math.max(1, Math.ceil(block.hp)).toString();
+      const badgeWidth = Math.max(29, 15 + label.length * 7);
+      ctx.fillStyle = 'rgba(22,28,38,.80)';
+      roundedRect(ctx, block.x + block.w / 2 - badgeWidth / 2, sy + block.h - 18, badgeWidth, 14, 7);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.48)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = '1000 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, block.x + block.w / 2, sy + block.h - 11);
+    }
     return true;
   }
 
@@ -4662,13 +4756,12 @@
     const isEating = ['eat', 'chewing', 'savoring', 'pleased'].some(name => els.slime.classList.contains(name));
     const isPleased = els.slime.classList.contains('pleased');
     const blinkPhase = timestamp % 4700;
-    const prismaticActive = rarity === 'prismatic' && isEating;
+    const specialActive = rarity === 'special' && isEating;
     const secretActive = rarity === 'secret' && isEating;
     const selected = skinById(save.selectedSkin);
     let aura = '';
     if (rarity === 'epic' && isPleased) aura = 'epic';
-    else if (rarity === 'legendary' && isPleased) aura = 'legendary';
-    else if (prismaticActive) aura = 'prismatic';
+    else if (specialActive) aura = 'special';
     else if (secretActive) aura = 'secret';
     drawSlimeAvatar(menuSlimeCtx, {
       x: 90, y: 91, radius: 66, emotion,
@@ -4677,7 +4770,7 @@
       gazeX: menuGaze.x, gazeY: menuGaze.y,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
       aura,
-      tipSway: prismaticActive ? Math.sin(timestamp / 210) * .16 : 0,
+      tipSway: specialActive ? Math.sin(timestamp / 210) * .16 : 0,
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
       timestamp
     });
@@ -4846,7 +4939,7 @@
 
     if (frozen && !run.portalEntry) drawFrozenSlimeOverlay(s.x, screenY, radius, timestamp);
 
-    if (!run.portalEntry) drawMassBar(s.x, screenY - radius * .98 - 22, radius);
+    if (!run.portalEntry) drawHealthBar(s.x, screenY - radius * .98 - 22, radius);
 
     if (!run.portalEntry && speed > 260) {
       run.trails.push({ x: s.x, y: s.y, radius, life: .22 });
@@ -4897,16 +4990,16 @@
     ctx.restore();
   }
 
-  function drawMassBar(x, y, radius) {
+  function drawHealthBar(x, y, radius) {
     const width = clamp(radius * 2.25, 74, 108);
     const height = 12;
     const left = clamp(x - width / 2, 6, VIEW_W - width - 6);
     const top = clamp(y, 8, VIEW_H - 24);
-    const ratio = clamp(run.visualMass / Math.max(1, run.maxMass), 0, 1);
+    const ratio = clamp(run.visualHealth / Math.max(1, run.maxHealth), 0, 1);
     const fillWidth = Math.max(0, (width - 4) * ratio);
     let fill = ratio > .55 ? '#4ade80' : ratio > .25 ? '#facc15' : '#fb7185';
-    if (run.massFlashTime > 0 && run.massFlash > 0) fill = '#67e8f9';
-    if (run.massFlashTime > 0 && run.massFlash < 0) fill = '#fff';
+    if (run.healthFlashTime > 0 && run.healthFlash > 0) fill = '#67e8f9';
+    if (run.healthFlashTime > 0 && run.healthFlash < 0) fill = '#fff';
 
     ctx.save();
     ctx.fillStyle = 'rgba(10,9,17,.78)';
@@ -4923,7 +5016,7 @@
     ctx.font = '900 8px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${Math.max(0, Math.ceil(run.mass))} / ${Math.ceil(run.maxMass)}`, left + width / 2, top + height / 2 + .5);
+    ctx.fillText(`${Math.max(0, Math.ceil(run.health))} / ${Math.ceil(run.maxHealth)}`, left + width / 2, top + height / 2 + .5);
     ctx.restore();
   }
 
@@ -4947,13 +5040,9 @@
     els.shaft.style.removeProperty('--combo-y');
   }
 
-  function impact(text) {
-    els.impactText.className = 'impact-text';
-    els.impactText.removeAttribute('style');
-    els.impactText.textContent = text;
-    void els.impactText.offsetWidth;
-    els.impactText.classList.add('show');
-  }
+  // Обычные подсказки в шахте создавали визуальный шум. Комбо рендерится
+  // отдельной функцией ниже и остаётся единственным текстовым откликом.
+  function impact() {}
 
   function comboImpact(multiplier, count) {
     const phase = multiplier >= 10 ? 5 : multiplier >= 6 ? 4 : multiplier >= 4 ? 3 : multiplier >= 2 ? 2 : 1;
@@ -4999,7 +5088,7 @@
     run.endlessDepthOffset += segmentDepth;
     run.endlessLap += 1;
     run.world.endlessScale = 1 + Math.min(.9, (run.endlessLap - 1) * .1);
-    run.mass = Math.min(run.maxMass, run.mass + Math.max(1, Math.ceil(run.maxMass * .12)));
+    run.health = Math.min(run.maxHealth, run.health + Math.max(1, Math.ceil(run.maxHealth * .12)));
     run.portalEntry = null;
     run.portalTransitioning = false;
     run.blocks = generateBlockField(run);
@@ -5370,7 +5459,6 @@
     if (save.coins < cost) return showToast('Не хватает монет');
     save.coins -= cost;
     save[key] += 1;
-    if (key === 'rerollLevel') session.freeRerolls += 1;
     if (key === 'conveyorLevel') generateOffer(session.baseEpicBoost);
     sound('coin');
     renderDraft();
@@ -5613,7 +5701,9 @@
       versionedAsset,
       foodArtMarkup,
       foodStatItems,
-      foodStatGridMarkup
+      foodStatGridMarkup,
+      foodNameMarkup,
+      foodCardBodyMarkup
     });
     $$('[data-encyclopedia-tab]').forEach(button => button.addEventListener('click', () => {
       if (button.dataset.encyclopediaTab === activeEncyclopediaTab) return;
@@ -5659,7 +5749,7 @@
     viewer.setAttribute('role', 'dialog');
     viewer.setAttribute('aria-modal', 'true');
     viewer.setAttribute('aria-label', `Карточка: ${food.name}`);
-    viewer.innerHTML = `<div class="encyclopedia-card-viewer-stage"><button class="encyclopedia-card-viewer-close" type="button" aria-label="Закрыть крупную карточку">×</button><div class="encyclopedia-card-viewer-card">${encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup })}</div><small>Нажми ещё раз, чтобы закрыть</small></div>`;
+    viewer.innerHTML = `<div class="encyclopedia-card-viewer-stage"><button class="encyclopedia-card-viewer-close" type="button" aria-label="Закрыть крупную карточку">×</button><div class="encyclopedia-card-viewer-card">${encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup, foodNameMarkup, foodCardBodyMarkup })}</div><small>Нажми ещё раз, чтобы закрыть</small></div>`;
     document.body.appendChild(viewer);
     syncInteractionLayers();
     const close = () => {
@@ -5693,8 +5783,8 @@
     { weight: 22, text: '+150 монет', apply: () => { save.coins += 150; } },
     { weight: 8, text: '+350 монет', apply: () => { save.coins += 350; } },
     { weight: 15, text: '+10% эпика в следующем забеге', apply: () => { save.pendingEpicBoost += 10; } },
-    { weight: 13, text: '+20% здоровья в следующем забеге', apply: () => { save.pendingMassBoost += 20; } },
-    { weight: 12, text: '+1 бесплатная прокрутка', apply: () => { save.pendingExtraRerolls += 1; } }
+    { weight: 13, text: '+20% здоровья в следующем забеге', apply: () => { save.pendingHealthBoost += 20; } },
+    { weight: 12, text: '+10% эпика в следующем забеге', apply: () => { save.pendingEpicBoost += 10; } }
   ];
 
   function chooseWheelReward() {
@@ -5971,6 +6061,13 @@
       if (event.target.closest('.food-card,.stomach-quick-slot')) return;
       hideFoodInfo();
     });
+    document.addEventListener('pointerdown', event => {
+      // Просмотр съеденной карты — лёгкая подсказка, а не отдельное окно.
+      // Повторный тап по ячейке переключает карту штатным click-обработчиком.
+      if (!els.stomachCardViewer || els.stomachCardViewer.classList.contains('hidden')) return;
+      if (event.target.closest('.stomach-quick-slot')) return;
+      hideStomachCardViewer();
+    });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopAllSounds();
@@ -6048,11 +6145,11 @@
       addCoins: (amount = 1000) => { save.coins += amount; persist(); },
       unlockFood: () => { save.conveyorLevel = 5; persist(); newDraft(); },
       secretDiscovery: (foodId = '', play = false) => forceSecretDiscoveryForDebug(foodId, { play }),
-      maxStomach: () => { save.stomachLevel = 6; persist(); newDraft(); },
+      maxStomach: () => { save.stomachLevel = 4; persist(); newDraft(); },
       maxRerolls: () => { save.rerollLevel = 3; persist(); newDraft(); },
-      setNextBonuses: ({ epic = 0, mass = 0, rerolls = 0 } = {}) => {
+      setNextBonuses: ({ epic = 0, health = 0, rerolls = 0 } = {}) => {
         save.pendingEpicBoost = clamp(Math.round(epic), 0, 10);
-        save.pendingMassBoost = clamp(Math.round(mass), 0, 100);
+        save.pendingHealthBoost = clamp(Math.round(health), 0, 100);
         save.pendingExtraRerolls = clamp(Math.round(rerolls), 0, 20);
         save.activeDraft = null;
         session = null;

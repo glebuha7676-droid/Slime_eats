@@ -142,7 +142,7 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .encyclopedia-tab{min-height:40px;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;background:transparent;color:#778195;font-size:8.5px;font-weight:1000;letter-spacing:.35px}.encyclopedia-tab>img{width:31px;height:31px;display:block;object-fit:contain}.encyclopedia-tab.active{color:var(--world-text,var(--ink));text-shadow:0 1px rgba(255,255,255,.55)}
 .encyclopedia-world-tabs{position:sticky;z-index:18;top:56px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:9px;padding:5px;border:1.5px solid color-mix(in srgb,var(--world-line,var(--line)) 45%,transparent);border-radius:15px;background:rgba(255,255,255,.88);backdrop-filter:blur(6px)}
 .encyclopedia-world-tab{min-width:0;height:45px;display:flex;align-items:center;justify-content:center;border:2px solid color-mix(in srgb,var(--world-line,var(--line)) 62%,white);border-radius:11px;background:var(--world-panel-soft,#eee5d3);color:var(--world-text,var(--ink));box-shadow:0 2px 0 color-mix(in srgb,var(--world-line,var(--line)) 36%,transparent)}.encyclopedia-world-tab img{width:35px;height:35px;display:block;object-fit:contain}.encyclopedia-world-tab.active{border-color:var(--world-accent-deep,var(--purple-dark));background:linear-gradient(180deg,#fff,var(--world-accent-top,#d7b9ff));transform:translateY(-1px)}.encyclopedia-world-tab.locked{filter:grayscale(1);opacity:.44}.encyclopedia-world-tab.locked>span{font-size:17px}
-.encyclopedia-rarity-tabs{position:sticky;z-index:18;top:55px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:9px;padding:5px;border:1.5px solid color-mix(in srgb,var(--world-line,var(--line)) 45%,transparent);border-radius:15px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px)}
+.encyclopedia-rarity-tabs{position:sticky;z-index:18;top:55px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-bottom:9px;padding:5px;border:1.5px solid color-mix(in srgb,var(--world-line,var(--line)) 45%,transparent);border-radius:15px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px)}
 .encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.food-card{position:relative;width:auto;min-width:0;max-width:none;height:43px;min-height:43px;max-height:43px;display:grid;place-items:center;padding:0;border:2px solid #cdd4dc;border-radius:10px;background:#f4f6f8;box-shadow:0 2px 0 rgba(53,65,90,.15);overflow:visible;touch-action:manipulation}.encyclopedia-rarity-tab .rarity-name{width:100%;height:100%;display:grid;place-items:center}.encyclopedia-rarity-tab .rarity-name i,.encyclopedia-rarity-tab.legendary .rarity-name i,.encyclopedia-rarity-tab.prismatic .rarity-name i,.encyclopedia-rarity-tab.secret .rarity-name i{position:relative;left:auto;top:auto;width:20px;height:20px;display:block;animation:none!important;filter:drop-shadow(0 1px 0 rgba(35,43,59,.45))}.encyclopedia-rarity-tab.secret .rarity-name i{width:24px;height:16px}.encyclopedia-rarity-tab:before,.encyclopedia-rarity-tab:after,.encyclopedia-rarity-tab .rarity-name i:after{animation:none!important}.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.active{transform:translateY(-1px)!important;background:#fff;border-color:var(--rarity-deep,#56616d);box-shadow:0 3px 0 color-mix(in srgb,var(--rarity-deep,#56616d) 55%,transparent)}
 .encyclopedia-page{animation:encyclopediaPageIn .18s ease-out}@keyframes encyclopediaPageIn{from{opacity:0;transform:translateX(5px)}to{opacity:1;transform:none}}
 .encyclopedia-page-head{display:flex;align-items:center;gap:9px;margin-bottom:9px;padding:8px 9px;border:2px solid var(--world-line,var(--line));border-radius:14px;background:linear-gradient(135deg,#fff,var(--world-panel-soft,#eef2f5));box-shadow:inset 0 2px 1px rgba(255,255,255,.75)}
@@ -233,7 +233,7 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 @keyframes slimePetted{0%,100%{transform:scale(1)}35%{transform:translateY(-5px) scaleX(.95) scaleY(1.055)}62%{transform:translateY(1px) scaleX(1.035) scaleY(.98)}}
 
 /* По нарастающей: от короткой реакции до редких праздничных вспышек. */
-.slime.meal-rare.pleased{animation-name:slimeRareHappy}.slime.meal-epic.pleased{animation-name:slimeEpicHappy}.slime.meal-legendary.pleased{animation-name:slimeLegendHappy}.slime.meal-prismatic.pleased{animation-name:slimePrismHappy}.slime.meal-secret.pleased{animation-name:slimeSecretHappy}
+.slime.meal-rare.pleased{animation-name:slimeRareHappy}.slime.meal-epic.pleased{animation-name:slimeEpicHappy}.slime.meal-special.pleased{animation-name:slimePrismHappy}.slime.meal-secret.pleased{animation-name:slimeSecretHappy}
 @keyframes slimeRareHappy{0%,100%{transform:scale(1)}40%{transform:translateY(-8px) scale(.96,1.06)}70%{transform:scale(1.04,.97)}}
 @keyframes slimeEpicHappy{0%,100%{transform:scale(1)}18%{transform:translateY(2px) scale(1.045,.965)}48%{transform:translateY(-13px) scale(.965,1.045)}76%{transform:translateY(1px) scale(1.025,.985)}}
 @keyframes slimeLegendHappy{0%,100%{transform:scale(1)}36%{transform:translateY(-3px) scale(.985,1.025)}68%{transform:translateY(1px) scale(1.025,.985)}}
@@ -592,3 +592,18 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   .encyclopedia-rarity-tabs>.encyclopedia-rarity-tab .rarity-name i{width:18px!important;height:18px!important}
   .encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.secret .rarity-name i{width:21px!important;height:15px!important}
 }
+
+/* Special cards are effect rewards, not another numerical rarity step. */
+.rarity-burst.special{
+  border-color:#fff1a0;background:linear-gradient(105deg,#6d31b4,#f34eaa 24%,#ffbd2c 52%,#59d5f7 78%,#7b48c8);
+  background-size:220% 100%;color:#fff;text-shadow:0 1px 0 #4e2187,0 0 5px rgba(255,216,63,.9);
+  box-shadow:0 0 0 3px rgba(255,196,45,.26),0 4px 0 rgba(77,32,129,.35);
+  animation:titlePrismV11 2.05s cubic-bezier(.18,.82,.2,1.08) forwards,specialBurstFlow 1.2s ease-in-out infinite alternate;
+}
+.rarity-burst.special:before,.rarity-burst.special:after{content:"✦";position:absolute;top:50%;color:#ffe25d;font-size:15px;text-shadow:0 0 5px #fff}
+.rarity-burst.special:before{left:-17px}.rarity-burst.special:after{right:-17px}
+.encyclopedia-rarity-group.special .encyclopedia-rarity-head{color:#692cab}
+.encyclopedia-rarity-group.special .encyclopedia-rarity-head i{
+  border-radius:0;background:transparent url("assets/ui/rarity/special-gem.webp?v=20260816-2") center/contain no-repeat;box-shadow:none;
+}
+@keyframes specialBurstFlow{from{background-position:0 0}to{background-position:100% 0}}

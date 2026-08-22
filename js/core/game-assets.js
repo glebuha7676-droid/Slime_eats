@@ -191,8 +191,10 @@
     const name = String(value.name || '').trim();
     if (!/^[a-z][A-Za-z0-9_-]{0,47}$/.test(id) || !name) return null;
     const clampNumber = (number, min, max) => Math.max(min, Math.min(max, Number(number) || 0));
-    const rarity = foodRarities.has(value.rarity) ? value.rarity : 'common';
-    const category = foodCategories.has(value.category) ? value.category : 'mass';
+    const legacyRarity = value.rarity === 'legendary' || value.rarity === 'prismatic' ? 'special' : value.rarity;
+    const rarity = foodRarities.has(legacyRarity) ? legacyRarity : 'common';
+    const legacyCategories = { mass: 'health', power: 'damage', defense: 'shield', bounce: 'shield', magic: 'shield' };
+    const category = foodCategories.has(value.category) ? value.category : (legacyCategories[value.category] || 'health');
     const image = String(value.image || '').trim();
     const hasArtTransform = ['artX', 'artY', 'artScale'].some(key => Object.hasOwn(value, key));
     const numericStats = Number(value.statVersion) >= 2;
@@ -203,12 +205,11 @@
       rarity,
       category,
       minConveyor: Math.round(clampNumber(value.minConveyor || 1, 1, 5)),
-      mass: clampNumber(value.mass, 0, 999),
-      statVersion: 2,
-      power: clampNumber(numericStats ? value.power : Number(value.power || 0) * 10, 0, 999),
-      defense: clampNumber(numericStats ? value.defense : Number(value.defense || 0) * 100, 0, 999),
-      elasticity: clampNumber(value.elasticity, 0, 9.99),
-      ability: clampNumber(value.ability, 0, 999),
+      health: clampNumber(value.health ?? value.mass, 0, 999),
+      statVersion: 3,
+      damage: clampNumber(value.damage ?? (numericStats ? value.power : Number(value.power || 0) * 10), 0, 999),
+      shield: clampNumber(value.shield ?? (numericStats ? value.defense : Number(value.defense || 0) * 100), 0, 999),
+      shieldCharges: Math.round(clampNumber(value.shieldCharges, 0, 9)),
       coinMultiplier: clampNumber(value.coinMultiplier, 0, 99),
       effect: String(value.effect || '').trim(),
       effectText: String(value.effectText || '').trim(),

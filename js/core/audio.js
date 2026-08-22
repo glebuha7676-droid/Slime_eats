@@ -2,6 +2,9 @@
   'use strict';
 
   const SOUND_ROOT = 'assets/audio/';
+  // Increase this value whenever sound files are replaced under the same names.
+  // The query string prevents phones and GitHub Pages from keeping stale audio.
+  const SOUND_ASSET_VERSION = '20260815-1';
   const SOUND_ASSETS = {
     tap: { file: 'button.ogg', volume: .34, size: 3 },
     eatBite: { file: 'eat-bite.ogg', volume: .42, size: 2 },
@@ -54,7 +57,7 @@
       if (!config || typeof Audio === 'undefined') return null;
       if (soundPools.has(kind)) return soundPools.get(kind);
       const pool = Array.from({ length: config.size }, () => {
-        const audio = new Audio(new URL(`${SOUND_ROOT}${config.file}`, document.baseURI).href);
+        const audio = new Audio(new URL(`${SOUND_ROOT}${config.file}?v=${SOUND_ASSET_VERSION}`, document.baseURI).href);
         audio.preload = 'auto';
         audio.volume = config.volume;
         return audio;
