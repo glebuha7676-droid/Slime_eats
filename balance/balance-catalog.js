@@ -39,11 +39,11 @@
   });
 
   const defaults = () => ({
-    version: 4,
+    version: 5,
     durability: {
-      weak: { min:5, max:15 },
-      normal: { min:15, max:35 },
-      strong: { min:35, max:55 }
+      weak: { hp:15 },
+      normal: { hp:25 },
+      strong: { hp:40 }
     },
     rewards: {
       weak: 4,
@@ -51,19 +51,19 @@
       strong: 22
     },
     ores: {
-      coal: { min:10, max:16, coins:12 },
-      iron: { min:17, max:24, coins:18 },
-      gold: { min:25, max:32, coins:28 },
-      diamond: { min:33, max:40, coins:42 }
+      coal: { hp:15, coins:12 },
+      iron: { hp:20, coins:18 },
+      gold: { hp:30, coins:28 },
+      diamond: { hp:40, coins:42 }
     },
     special: {
       bomb: { radius:125, damage:45 },
-      heal: { amount:16 },
+      heal: { amount:25 },
       spring: { push:1.35 },
       cryo: { area:4 },
       snowflake: { duration:3 },
-      appleMint: { size:-20, defense:20, bounce:20 },
-      appleRed: { size:50, power:20, defense:20 },
+      appleMint: { size:-20, shield:20, shieldCharges:1 },
+      appleRed: { size:50, damage:20, shield:20 },
       geyser: { launch:1, wait:3 },
       meteor: { minCount:3, maxCount:4, delay:.42 }
     },
@@ -77,22 +77,20 @@
   });
 
   const normalizeDistribution = (source, ids, fallback) => Object.fromEntries(ids.map(id => [id, clamp(source?.[id], 0, 100, fallback[id])]));
-  const normalizeRange = (source, fallback, maxValue = 500) => {
-    const min = clamp(source?.min, 1, maxValue, fallback.min);
-    const max = clamp(source?.max, min, maxValue, fallback.max);
-    return { min, max };
-  };
-
   function normalize(value) {
     const base = defaults();
     if (!value || typeof value !== 'object') return base;
-    Object.keys(base.durability).forEach(id => base.durability[id] = normalizeRange(value.durability?.[id], base.durability[id]));
+    Object.keys(base.durability).forEach(id => {
+      base.durability[id].hp = Math.round(clamp(value.durability?.[id]?.hp, 1, 500, base.durability[id].hp));
+    });
     Object.keys(base.rewards).forEach(id => {
       base.rewards[id] = Math.round(clamp(value.rewards?.[id], 0, 10000, base.rewards[id]));
     });
     ORE_IDS.forEach(id => {
-      const range = normalizeRange(value.ores?.[id], base.ores[id]);
-      base.ores[id] = { ...range, coins: Math.round(clamp(value.ores?.[id]?.coins, 0, 10000, base.ores[id].coins)) };
+      base.ores[id] = {
+        hp: Math.round(clamp(value.ores?.[id]?.hp, 1, 500, base.ores[id].hp)),
+        coins: Math.round(clamp(value.ores?.[id]?.coins, 0, 10000, base.ores[id].coins))
+      };
     });
     base.special.bomb.radius = Math.round(clamp(value.special?.bomb?.radius, 30, 400, base.special.bomb.radius));
     base.special.bomb.damage = Math.round(clamp(value.special?.bomb?.damage, 1, 500, base.special.bomb.damage));
@@ -101,11 +99,11 @@
     base.special.cryo.area = 4;
     base.special.snowflake.duration = 3;
     base.special.appleMint.size = Math.round(clamp(value.special?.appleMint?.size, -50, 0, base.special.appleMint.size));
-    base.special.appleMint.defense = Math.round(clamp(value.special?.appleMint?.defense, 0, 999, base.special.appleMint.defense));
-    base.special.appleMint.bounce = Math.round(clamp(value.special?.appleMint?.bounce, 0, 100, base.special.appleMint.bounce));
+    base.special.appleMint.shield = Math.round(clamp(value.special?.appleMint?.shield, 0, 999, base.special.appleMint.shield));
+    base.special.appleMint.shieldCharges = Math.round(clamp(value.special?.appleMint?.shieldCharges, 0, 3, base.special.appleMint.shieldCharges));
     base.special.appleRed.size = Math.round(clamp(value.special?.appleRed?.size, 0, 100, base.special.appleRed.size));
-    base.special.appleRed.power = Math.round(clamp(value.special?.appleRed?.power, 0, 999, base.special.appleRed.power));
-    base.special.appleRed.defense = Math.round(clamp(value.special?.appleRed?.defense, 0, 999, base.special.appleRed.defense));
+    base.special.appleRed.damage = Math.round(clamp(value.special?.appleRed?.damage, 0, 999, base.special.appleRed.damage));
+    base.special.appleRed.shield = Math.round(clamp(value.special?.appleRed?.shield, 0, 999, base.special.appleRed.shield));
     base.special.geyser.launch = clamp(value.special?.geyser?.launch, .6, 2, base.special.geyser.launch);
     base.special.geyser.wait = 3;
     base.special.meteor.minCount = Math.round(clamp(value.special?.meteor?.minCount, 3, 4, base.special.meteor.minCount));

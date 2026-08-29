@@ -434,7 +434,7 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
   --machine-housing-top:20px;--machine-housing-bottom:12px;--machine-mouth-rise:6px;
   --machine-bolt-side:2.5px;
   --machine-belt-inset:calc(var(--machine-tunnel-w) - var(--machine-mouth-w) + 2px);
-  position:relative;isolation:isolate;width:100%;height:248px;margin:0;overflow:visible;background:transparent;
+  position:relative;isolation:isolate;width:100%;height:259px;margin:0;overflow:visible;background:transparent;
 }
 #homeScreen .conveyor-machine:before,#homeScreen .conveyor-machine:after{
   content:"";position:absolute;z-index:40;
@@ -446,7 +446,7 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
 #homeScreen .conveyor-machine:before{left:calc(var(--machine-tunnel-w) - var(--machine-mouth-w))}
 #homeScreen .conveyor-machine:after{right:calc(var(--machine-tunnel-w) - var(--machine-mouth-w))}
 #homeScreen .conveyor-machine .food-choices{
-  position:relative;z-index:20;margin-inline:var(--machine-side-space);padding-top:5px;
+  position:relative;z-index:20;margin-inline:var(--machine-side-space);padding-top:8px;
   clip-path:inset(-22px -12px -8px -12px);
 }
 #homeScreen .machine-belt{
@@ -525,7 +525,7 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
 @media(max-width:370px){
   #homeScreen .slime-hero-layout .stat-rail{transform:translateY(-14px)}
   #homeScreen .conveyor-machine{--machine-tunnel-w:30px;--machine-mouth-w:20px;--machine-side-space:23px;--machine-bolt-side:1.5px;height:208px}
-  #homeScreen .conveyor-machine .food-choices{padding-top:4px}
+  #homeScreen .conveyor-machine .food-choices{padding-top:7px}
 }
 
 /* V27: world-aware slime room, readable reroll control and compact ad cancel. */
@@ -2211,6 +2211,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
   box-shadow:inset 0 2px 0 rgba(255,255,255,.96),0 2px 0 rgba(40,52,76,.24);
 }
 #homeScreen .stat-rail .stat-icon,#homeScreen .stat-rail .stat-icon img{width:25px;height:25px;margin:0;transform:none}
+#homeScreen .stat-rail .health .stat-icon img{transform:scale(1.18);transform-origin:center}
 #homeScreen .stat-rail .stat-icon{grid-row:1 / 3;border-radius:8px}
 #homeScreen .stat-copy{display:contents}
 #homeScreen .stat-copy>small{grid-column:2;grid-row:1;width:100%;font-size:7px;line-height:1;color:#27394f;text-shadow:0 1px rgba(255,255,255,.92);letter-spacing:.28px;white-space:nowrap}
@@ -2218,21 +2219,34 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 #homeScreen .stat-rail .stat-values>b{font-size:16px;line-height:.9;color:#152d46;text-shadow:0 1px rgba(255,255,255,.85);transform:translateY(-1px)}
 #homeScreen .stat-rail .stat-values em{position:absolute;left:-2px;top:15px;min-width:29px;padding:2px 5px;border:1px solid #096735;border-radius:999px;background:linear-gradient(180deg,#35c875,#12904c);box-shadow:0 2px 0 #07562e;color:#fff;font-size:9px;line-height:1;text-align:center;font-style:normal;font-weight:1000;text-shadow:0 1px rgba(0,63,29,.65)}
 #homeScreen .stat-rail .stat-values em:empty{display:none}
+#homeScreen .stat-rail .stat-values em.negative{border-color:#942a3c;background:linear-gradient(180deg,#ff8490,#dc3f53);box-shadow:0 2px 0 #7e1d2d;color:#fff}
 #homeScreen .stat-rail .stat-pill.previewing{border-width:2px;border-color:#15995b;background:linear-gradient(145deg,#fff,#c8f7da);transform:none}
+#homeScreen .stat-rail .stat-pill.preview-loss{border-color:#c84b5b;background:linear-gradient(145deg,#fff,#ffd4d9)}
 #homeScreen .food-dragging .stat-rail .stat-values em:not(:empty){min-width:29px;padding:2px 5px;border:1px solid #096735;border-radius:999px;background:linear-gradient(180deg,#35c875,#12904c);box-shadow:0 2px 0 #07562e;color:#fff;font-size:9px;line-height:1}
-#homeScreen .stat-rail .shield-charge-badge{display:inline-grid;place-items:center;flex:0 0 19px;width:19px;height:19px;margin-left:auto;border:2px solid #175985;border-radius:50%;background:radial-gradient(circle at 35% 27%,#fff 0 10%,#aee7ff 11% 42%,#3c9bd2 43% 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 0 rgba(21,60,97,.38)}
-#homeScreen .stat-rail .shield-charge-badge b{font-size:12px;line-height:1;color:#08385c;text-shadow:0 1px #e9fbff;transform:none}
+#homeScreen .stat-rail .shield-charge-badge{position:relative;display:inline-grid;place-items:center;flex:0 0 24px;width:24px;height:23px;margin-left:auto;border:2px solid #175985;border-radius:8px;background:linear-gradient(145deg,#eafcff 0 27%,#78cbed 28% 57%,#2786c3 58% 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.96),inset 0 -2px 0 rgba(10,74,129,.22),0 2px 0 rgba(21,60,97,.45)}
+#homeScreen .stat-rail .shield-charge-badge:before{content:"";position:absolute;inset:3px;border:1px solid rgba(255,255,255,.62);border-radius:4px;pointer-events:none}
+#homeScreen .stat-rail .shield-charge-badge b{position:relative;z-index:1;font-size:13px;line-height:1;color:#073b66;font-weight:1000;text-shadow:0 1px #effdff;transform:none}
 #homeScreen .stat-rail .health{background:linear-gradient(145deg,#fff,#ccf5d9);border-color:#258758}
 #homeScreen .stat-rail .damage{background:linear-gradient(145deg,#fff9ed,#ffd2c2);border-color:#c85742}
 #homeScreen .stat-rail .shield{background:linear-gradient(145deg,#fff,#c7ebff);border-color:#277ab4}
+
+/* Значения из съеденной карты мягко долетают до своей характеристики. */
+.stat-change-fly{position:fixed;z-index:1200;min-width:30px;padding:4px 7px;border:2px solid #126a3a;border-radius:999px;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.58);transition:left .43s cubic-bezier(.18,.8,.2,1),top .43s cubic-bezier(.18,.8,.2,1),transform .43s cubic-bezier(.18,.8,.2,1),opacity .12s ease;background:linear-gradient(180deg,#efffe9,#6ee79a);box-shadow:0 3px 0 rgba(9,91,48,.65),0 0 0 3px rgba(255,255,255,.7);color:#07532d;font-size:12px;line-height:1;font-weight:1000;text-align:center;text-shadow:0 1px rgba(255,255,255,.7)}
+.stat-change-fly.is-flying{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.stat-change-fly.loss{border-color:#96293b;background:linear-gradient(180deg,#ffe4e6,#ff7887);box-shadow:0 3px 0 rgba(112,25,39,.65),0 0 0 3px rgba(255,255,255,.7);color:#801d31}
+#homeScreen .stat-rail .stat-pill.stat-change-pop{position:relative;animation:statChangeBubble .7s cubic-bezier(.18,.8,.24,1) both}
+#homeScreen .stat-rail .stat-pill.stat-change-pop:after{content:attr(data-stat-change);position:absolute;z-index:6;left:50%;top:-9px;min-width:28px;padding:3px 5px;border:2px solid #0f7440;border-radius:999px;background:linear-gradient(180deg,#efffe9,#62dd8e);box-shadow:0 2px 0 #0a5a31;color:#07532d;font-size:9px;line-height:1;font-weight:1000;text-align:center;transform:translateX(-50%);text-shadow:0 1px rgba(255,255,255,.76);animation:statChangeBubbleLabel .7s ease-out both;pointer-events:none}
+#homeScreen .stat-rail .stat-pill.stat-change-loss:after{border-color:#96293b;background:linear-gradient(180deg,#ffe6e8,#ff7887);box-shadow:0 2px 0 #7e1d2d;color:#7d1d30}
+@keyframes statChangeBubble{0%{transform:scale(1)}32%{transform:scale(1.1)}62%{transform:scale(.97)}100%{transform:scale(1)}}
+@keyframes statChangeBubbleLabel{0%{opacity:0;transform:translate(-50%,6px) scale(.7)}28%{opacity:1;transform:translate(-50%,-2px) scale(1.08)}100%{opacity:0;transform:translate(-50%,-14px) scale(.94)}}
 #homeScreen .stat-rail .health .stat-icon{background:#22a966}.stat-rail .damage .stat-icon{background:#e14d42}.stat-rail .shield .stat-icon{background:#258ac5}
 
 #homeScreen .stomach-card-viewer{
-  position:absolute;z-index:110;left:126px;right:94px;top:7px;bottom:7px;display:grid;place-items:center;pointer-events:none;
+  position:absolute;z-index:110;left:116px;right:84px;top:2px;bottom:2px;display:grid;place-items:center;pointer-events:none;
 }
 #homeScreen .stomach-card-viewer.hidden{display:none}
-#homeScreen .stomach-card-viewer-card{position:relative;width:148px;pointer-events:auto;filter:drop-shadow(0 8px 9px rgba(26,39,59,.36));animation:stomachCardOpen .18s cubic-bezier(.2,.82,.25,1.15) both}
-#homeScreen .stomach-card-viewer-card>.food-card{width:148px;min-width:148px;max-width:148px;pointer-events:none}
+#homeScreen .stomach-card-viewer-card{position:relative;width:134px;zoom:1.14;pointer-events:auto;filter:drop-shadow(0 8px 9px rgba(26,39,59,.36));animation:stomachCardOpen .18s cubic-bezier(.2,.82,.25,1.15) both}
+#homeScreen .stomach-card-viewer-card>.food-card{width:134px;min-width:134px;max-width:134px;pointer-events:none}
 #homeScreen .stomach-card-close{position:absolute;z-index:2;right:-10px;top:-10px;width:25px;height:25px;padding:0;border:2px solid #3d4e69;border-radius:50%;background:#fff;color:#3d4e69;font-size:18px;line-height:19px;font-weight:1000;box-shadow:0 2px 0 rgba(41,53,75,.26);pointer-events:auto}
 @keyframes stomachCardOpen{from{opacity:0;transform:translateY(8px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}
 
@@ -2248,6 +2262,517 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
   #homeScreen .stat-rail .stat-icon,#homeScreen .stat-rail .stat-icon img{width:22px;height:22px}
   #homeScreen .stat-rail .stat-values>b{font-size:12px}
   #homeScreen .stat-rail .stat-values em{top:12px;min-width:25px;padding:2px 3px;font-size:7px}
-  #homeScreen .stomach-card-viewer{left:110px;right:84px}
-  #homeScreen .stomach-card-viewer-card,#homeScreen .stomach-card-viewer-card>.food-card{width:132px;min-width:132px;max-width:132px}
+  #homeScreen .stomach-card-viewer{left:104px;right:78px;top:1px;bottom:1px}
+  #homeScreen .stomach-card-viewer-card,#homeScreen .stomach-card-viewer-card>.food-card{width:104px;min-width:104px;max-width:104px}
 }
+
+@media(min-width:371px) and (max-width:430px){
+  #homeScreen .stomach-card-viewer-card,#homeScreen .stomach-card-viewer-card>.food-card{width:112px;min-width:112px;max-width:112px}
+  #homeScreen .stomach-card-viewer-card{zoom:1.16}
+}
+
+/* Финальный этап конвейера: после полной сборки еды приезжает карточка запуска. */
+#homeScreen .food-choices>.conveyor-start-card{
+  position:relative;isolation:isolate;grid-column:1 / -1;align-self:end;justify-self:center;
+  width:242px;height:223px;min-width:242px;min-height:223px;margin:0;padding:9px 10px 10px;
+  overflow:visible;border:4px solid #34415a;border-radius:24px;
+  background:var(--world-panel);color:var(--world-text);text-align:center;
+  box-shadow:0 5px 0 color-mix(in srgb,var(--world-line) 78%,#34415a),inset 0 0 0 3px rgba(255,255,255,.84),inset 0 -8px 0 color-mix(in srgb,var(--world-accent-bottom) 18%,transparent);
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+#homeScreen .food-choices>.conveyor-start-card:before{
+  content:"";position:absolute;z-index:-1;inset:5px;border:2px solid var(--world-line);border-radius:17px;
+  background:linear-gradient(180deg,#fff 0%,var(--world-panel-soft) 100%);pointer-events:none;
+}
+#homeScreen .food-choices>.conveyor-start-card:after{
+  content:"";position:absolute;z-index:0;left:15px;right:15px;top:12px;height:8px;border-radius:999px;
+  background:rgba(255,255,255,.74);transform:rotate(-1.2deg);pointer-events:none;
+}
+.launch-card-ready{
+  position:relative;z-index:2;height:28px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:3px 10px 3px 5px;border:2px solid var(--world-line);border-radius:999px;
+  background:#fff;color:var(--world-text);box-shadow:0 2px 0 color-mix(in srgb,var(--world-line) 42%,transparent);
+}
+.launch-card-ready>i{
+  width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#3ac978;color:#fff;
+  font-size:11px;font-style:normal;font-weight:1000;text-shadow:0 1px rgba(0,87,42,.48);
+}
+.launch-card-ready>b{font-size:8px;line-height:1;letter-spacing:.75px;white-space:nowrap}
+.launch-card-hero{
+  position:relative;z-index:2;width:100%;height:112px;display:grid;place-items:center;margin-top:1px;
+}
+.launch-card-ring{
+  position:absolute;width:96px;height:96px;border:4px solid var(--world-line);border-radius:50%;
+  background:color-mix(in srgb,var(--world-accent-top) 32%,white);
+  box-shadow:inset 0 0 0 7px rgba(255,255,255,.68),0 0 0 5px color-mix(in srgb,var(--world-accent-top) 22%,transparent);
+}
+.launch-card-ring:before,.launch-card-ring:after{
+  content:"";position:absolute;left:50%;top:50%;border:2px solid color-mix(in srgb,var(--world-line) 62%,transparent);border-radius:50%;transform:translate(-50%,-50%);
+}
+.launch-card-ring:before{width:70px;height:70px}.launch-card-ring:after{width:52px;height:52px;opacity:.58}
+.launch-card-hero>img{
+  position:relative;z-index:2;width:82px;height:82px;display:block;object-fit:contain;
+  filter:drop-shadow(0 4px 0 color-mix(in srgb,var(--world-line) 35%,transparent));
+  animation:launchSlimeReady 1.7s ease-in-out infinite;
+}
+.launch-card-action{
+  position:relative;z-index:3;width:calc(100% - 26px);height:57px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;margin:-2px auto 0;border:3px solid var(--world-line);border-radius:16px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--world-accent-top) 72%,white) 0%,var(--world-accent-top) 30%,var(--world-accent-bottom) 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.76),inset 0 -4px 0 color-mix(in srgb,var(--world-line) 18%,transparent),0 3px 0 color-mix(in srgb,var(--world-line) 68%,#34415a);
+}
+.launch-card-action>b{font-size:22px;line-height:.9;letter-spacing:1.8px;color:var(--world-text);text-shadow:0 1px rgba(255,255,255,.72)}
+.launch-card-action>small{font-size:6px;line-height:1;font-weight:1000;letter-spacing:.65px;color:var(--world-text);opacity:.82}
+.launch-card-sparkles{position:absolute;z-index:4;inset:0;pointer-events:none}
+.launch-card-sparkles>i{position:absolute;width:10px;height:10px;background:#fff4a8;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 3px #ffc62f);animation:launchSparkle 1.8s ease-in-out infinite}
+.launch-card-sparkles>i:nth-child(1){left:17px;top:48px}.launch-card-sparkles>i:nth-child(2){right:18px;top:69px;animation-delay:-.45s}.launch-card-sparkles>i:nth-child(3){left:25px;top:139px;animation-delay:-.9s}.launch-card-sparkles>i:nth-child(4){right:25px;top:134px;animation-delay:-1.3s}
+#homeScreen .conveyor.is-running .conveyor-start-card{pointer-events:none}
+#homeScreen .conveyor.launch-ready:not(.is-running) .conveyor-start-card{animation:launchCardIdle 2.8s ease-in-out infinite}
+#homeScreen .food-choices>.conveyor-start-card.launch-card-enter{
+  animation:launchCardArrival 720ms cubic-bezier(.18,.76,.2,1) both!important;will-change:transform,opacity,filter;
+}
+#homeScreen .food-choices>.conveyor-start-card:active{transform:translateY(3px) scale(.982)!important;filter:brightness(.98) saturate(1.06)}
+#homeScreen .launch-btn.stomach-locked,#homeScreen .endless-home-btn.stomach-locked{filter:grayscale(.5) saturate(.55);opacity:.54}
+
+@keyframes launchCardArrival{
+  0%{opacity:0;filter:brightness(.12) saturate(.4);transform:translateX(-190%) translateY(1px) rotate(-1deg) scale(.91,.97)}
+  15%{opacity:.38;filter:brightness(.3) saturate(.55);transform:translateX(-158%) translateY(1px) rotate(-.7deg) scale(.94,.98)}
+  70%{opacity:1;filter:brightness(1) saturate(1.04);transform:translateX(9px) translateY(-3px) rotate(1deg) scale(1.015,.985)}
+  82%{transform:translateX(-5px) translateY(1px) rotate(-.65deg) scale(.995,1.008)}
+  92%{transform:translateX(2px) rotate(.2deg) scale(1.003,.998)}
+  100%{opacity:1;filter:none;transform:none}
+}
+@keyframes launchCardIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes launchSlimeReady{0%,100%{transform:translateY(1px) scale(1)}45%{transform:translateY(-3px) scale(1.025,.98)}65%{transform:translateY(0) scale(.985,1.02)}}
+@keyframes launchSparkle{0%,100%{opacity:.25;transform:scale(.65) rotate(0)}45%{opacity:1;transform:scale(1.2) rotate(45deg)}70%{opacity:.48;transform:scale(.82) rotate(75deg)}}
+
+@media(max-width:430px){
+  #homeScreen .food-choices>.conveyor-start-card{width:222px;min-width:222px;height:187px;min-height:187px;padding:7px 8px 8px;border-width:3px;border-radius:21px;box-shadow:0 4px 0 color-mix(in srgb,var(--world-line) 78%,#34415a),inset 0 0 0 2px rgba(255,255,255,.84),inset 0 -7px 0 color-mix(in srgb,var(--world-accent-bottom) 18%,transparent)}
+  #homeScreen .food-choices>.conveyor-start-card:before{inset:4px;border-radius:15px}
+  .launch-card-ready{height:24px;padding-right:8px}.launch-card-ready>i{width:16px;height:16px;font-size:9px}.launch-card-ready>b{font-size:7px}
+  .launch-card-hero{height:91px}.launch-card-ring{width:78px;height:78px;border-width:3px}.launch-card-ring:before{width:57px;height:57px}.launch-card-ring:after{width:41px;height:41px}
+  .launch-card-hero>img{width:69px;height:69px}
+  .launch-card-action{height:48px;margin-top:-2px;border-radius:14px}.launch-card-action>b{font-size:18px}.launch-card-action>small{font-size:5.2px}
+  .launch-card-sparkles>i:nth-child(1){left:14px;top:40px}.launch-card-sparkles>i:nth-child(2){right:15px;top:56px}.launch-card-sparkles>i:nth-child(3){left:20px;top:113px}.launch-card-sparkles>i:nth-child(4){right:20px;top:109px}
+}
+@media(max-width:370px){
+  #homeScreen .food-choices>.conveyor-start-card{width:208px;min-width:208px;height:173px;min-height:173px}
+  .launch-card-ready{height:22px}.launch-card-hero{height:84px}.launch-card-ring{width:72px;height:72px}.launch-card-hero>img{width:64px;height:64px}
+  .launch-card-action{height:44px}.launch-card-action>b{font-size:17px}.launch-card-action>small{font-size:4.8px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #homeScreen .conveyor.launch-ready .conveyor-start-card,.launch-card-hero>img,.launch-card-sparkles>i{animation:none!important}
+}
+
+/* Единственный старт теперь приезжает по ленте; нижняя консоль целиком отдана выбору. */
+#homeScreen>.play-setup-card{
+  grid-template-columns:172px minmax(0,1fr);grid-template-rows:70px 35px 58px auto;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{grid-column:1;grid-row:1}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{grid-column:2;grid-row:1;width:100%;max-width:none}
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{grid-column:2;grid-row:1;width:100%}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{grid-column:1 / -1;grid-row:3;grid-template-rows:8px 47px}
+#homeScreen>.play-setup-card .level-buttons{width:100%;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+#homeScreen>.play-setup-card .level-btn{width:100%;min-width:0}
+#homeScreen>.play-setup-card .home-mode-tabs{height:47px;padding:4px}
+#homeScreen>.play-setup-card .home-mode-tab{gap:7px}
+#homeScreen>.play-setup-card .home-mode-tab>span{font-size:9px;letter-spacing:.25px}
+#homeScreen>.play-setup-card .home-mode-tab>span>small{font-size:5.7px;margin-top:2px}
+#homeScreen>.play-setup-card .home-mode-icon{transform:scale(1.08)}
+#homeScreen .conveyor.launch-ready .conveyor-controls{height:0!important;min-height:0;margin:0!important;padding:0!important;overflow:hidden;visibility:hidden;pointer-events:none}
+
+#homeScreen .food-choices>.conveyor-start-card{width:284px;min-width:284px}
+.launch-card-booms{position:absolute;z-index:5;inset:0;pointer-events:none}
+.launch-card-booms>i{
+  position:absolute;width:34px;height:34px;border-radius:50%;opacity:0;
+  background:
+    radial-gradient(circle,#fff6aa 0 18%,#ffc82f 19% 35%,transparent 37%),
+    conic-gradient(from 10deg,transparent 0 7%,#ff9c32 8% 12%,transparent 13% 22%,#ffe34c 23% 27%,transparent 28% 45%,#ff7c5d 46% 51%,transparent 52% 72%,#fff082 73% 77%,transparent 78%);
+  filter:drop-shadow(0 0 3px rgba(255,177,35,.7));
+}
+.launch-card-booms>i:nth-child(1){left:-14px;top:42px;animation-delay:.31s}
+.launch-card-booms>i:nth-child(2){right:-17px;top:92px;animation-delay:.43s}
+.launch-card-booms>i:nth-child(3){left:18px;bottom:23px;animation-delay:.55s}
+.launch-card-enter .launch-card-booms>i{animation:launchMiniBoom .42s cubic-bezier(.16,.8,.2,1) both}
+.launch-card-enter .launch-card-booms>i:nth-child(2){animation-delay:.43s}.launch-card-enter .launch-card-booms>i:nth-child(3){animation-delay:.55s}
+@keyframes launchMiniBoom{0%{opacity:0;transform:scale(.15) rotate(-18deg)}32%{opacity:1;transform:scale(1.22) rotate(8deg)}70%{opacity:.78;transform:scale(.94) rotate(18deg)}100%{opacity:0;transform:scale(1.38) rotate(28deg)}}
+
+@media(max-width:430px){
+  #homeScreen>.play-setup-card{grid-template-columns:120px minmax(0,1fr);grid-template-rows:55px 37px 58px auto;column-gap:6px}
+  #homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{grid-template-rows:8px 47px}
+  #homeScreen>.play-setup-card .level-buttons{gap:4px}
+  #homeScreen>.play-setup-card .home-mode-tabs{height:47px}
+  #homeScreen>.play-setup-card .home-mode-tab{gap:4px}
+  #homeScreen>.play-setup-card .home-mode-tab>span{font-size:8.8px}
+  #homeScreen>.play-setup-card .home-mode-tab>span>small{font-size:5.5px}
+  #homeScreen .food-choices>.conveyor-start-card{width:258px;min-width:258px}
+  .launch-card-action>b{font-size:21px;letter-spacing:2px}.launch-card-action>small{font-size:5.7px}
+}
+@media(max-width:370px){
+  #homeScreen>.play-setup-card{grid-template-columns:114px minmax(0,1fr);grid-template-rows:53px 36px 56px auto;column-gap:5px}
+  #homeScreen>.play-setup-card .level-buttons{gap:3px}
+  #homeScreen>.play-setup-card .home-mode-tab>span{font-size:8px}
+  #homeScreen>.play-setup-card .home-mode-tab>span>small{font-size:5px}
+  #homeScreen .food-choices>.conveyor-start-card{width:242px;min-width:242px}
+  .launch-card-action>b{font-size:19px}
+}
+
+@media(prefers-reduced-motion:reduce){.launch-card-booms>i{animation:none!important}}
+
+/* V69: world scene launch card and a truly centred slime stage. */
+body[data-world="1"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-1-cave.webp?v=1")}
+body[data-world="2"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-2-cave.webp?v=1")}
+body[data-world="3"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-3-cave.webp?v=1")}
+body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-4-cave.webp?v=1")}
+
+#homeScreen .food-choices>.conveyor-start-card{
+  width:100%;min-width:0;max-width:420px;height:223px;min-height:223px;padding:12px;
+  border:4px solid #303b52;border-radius:20px;
+  background-image:linear-gradient(180deg,rgba(20,31,46,.04) 0 52%,rgba(17,26,39,.34) 100%),var(--launch-card-cave);
+  background-position:center;background-size:cover;background-repeat:no-repeat;
+  box-shadow:0 5px 0 #243047,inset 0 0 0 3px rgba(255,255,255,.74),inset 0 -6px 0 rgba(20,29,43,.16);
+}
+#homeScreen .food-choices>.conveyor-start-card:before{
+  z-index:1;inset:6px;border:2px solid rgba(255,255,255,.78);border-radius:12px;background:transparent;
+  box-shadow:inset 0 0 0 1px rgba(38,50,70,.23);
+}
+#homeScreen .food-choices>.conveyor-start-card:after{
+  z-index:1;left:8px;right:8px;top:auto;bottom:7px;height:78px;border-radius:0 0 10px 10px;
+  background:linear-gradient(180deg,transparent,rgba(14,22,34,.26));transform:none;
+}
+.launch-card-world{
+  position:absolute;z-index:4;left:13px;top:13px;max-width:62%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  padding:7px 11px;border:2px solid rgba(47,59,80,.9);border-radius:12px;background:rgba(255,255,255,.91);
+  box-shadow:0 2px 0 rgba(35,46,65,.38),inset 0 1px 0 #fff;text-align:left;
+}
+.launch-card-world>small{color:var(--world-accent-deep);font-size:6px;line-height:1;font-weight:1000;letter-spacing:.75px}
+.launch-card-world>b{max-width:100%;overflow:hidden;color:#25344c;font-size:12px;line-height:1.04;font-weight:1000;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px #fff}
+.launch-card-stage{
+  position:absolute;z-index:4;right:13px;top:13px;min-height:29px;display:flex;align-items:center;justify-content:center;
+  padding:5px 9px;border:2px solid rgba(47,59,80,.9);border-radius:999px;background:rgba(255,255,255,.91);
+  box-shadow:0 2px 0 rgba(35,46,65,.38),inset 0 1px 0 #fff;color:#25344c;font-size:7px;font-weight:1000;letter-spacing:.35px;white-space:nowrap;
+}
+.launch-card-action{
+  position:absolute;z-index:5;left:50%;bottom:18px;width:250px;height:55px;margin:0;transform:translateX(-50%);
+  display:grid;grid-template-columns:22px 1fr 22px;place-items:center;gap:5px;
+  border:3px solid color-mix(in srgb,var(--world-line) 78%,#34415a);border-radius:17px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--world-accent-top) 72%,white),var(--world-accent-top) 35%,var(--world-accent-bottom));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.78),inset 0 -5px 0 color-mix(in srgb,var(--world-line) 18%,transparent),0 4px 0 color-mix(in srgb,var(--world-line) 75%,#29354a);
+}
+.launch-card-action>b{color:var(--world-text);font-size:24px;line-height:1;font-weight:1000;letter-spacing:2.2px;text-shadow:0 1px rgba(255,255,255,.75)}
+.launch-card-action>i{width:14px;height:14px;display:block;background:#fff4a8;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 3px rgba(255,190,38,.78))}
+.launch-card-action>i:last-child{transform:scale(.86)}
+.launch-card-sparkles>i:nth-child(1){left:10%;top:39%}.launch-card-sparkles>i:nth-child(2){right:9%;top:43%}.launch-card-sparkles>i:nth-child(3){left:18%;top:69%}.launch-card-sparkles>i:nth-child(4){right:18%;top:67%}
+.launch-card-booms>i:nth-child(1){left:9%;top:46%}.launch-card-booms>i:nth-child(2){right:8%;top:50%}.launch-card-booms>i:nth-child(3){left:29%;bottom:8%}
+#homeScreen .food-choices>.conveyor-start-card:active .launch-card-action{transform:translateX(-50%) translateY(2px) scale(.985)}
+
+#homeScreen .slime-hero-layout{grid-template-columns:116px minmax(124px,1fr) 116px;gap:5px}
+#homeScreen .slime-hero-layout .stat-rail-right{width:116px}
+#homeScreen .stomach-card-viewer{left:116px;right:116px}
+
+@media(max-width:430px){
+  #homeScreen .food-choices>.conveyor-start-card{width:100%;min-width:0;max-width:none;height:187px;min-height:187px;padding:9px;border-radius:18px}
+  .launch-card-world{left:10px;top:10px;padding:6px 8px;border-radius:10px}.launch-card-world>b{font-size:10px}.launch-card-world>small{font-size:5.3px}
+  .launch-card-stage{right:10px;top:10px;min-height:25px;padding:4px 7px;font-size:6px}
+  .launch-card-action{bottom:14px;width:220px;height:48px;grid-template-columns:18px 1fr 18px;border-radius:15px}
+  .launch-card-action>b{font-size:21px}.launch-card-action>i{width:13px;height:13px}
+  #homeScreen .slime-hero-layout{grid-template-columns:104px minmax(132px,1fr) 104px;gap:4px}
+  #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--quick-food-size:45px;width:104px;height:116px;gap:6px}
+  #homeScreen .slime-hero-layout .stat-rail-right{width:104px;transform:translateY(-4px)}
+  #homeScreen .stomach-card-viewer{left:104px;right:104px}
+}
+@media(max-width:370px){
+  #homeScreen .food-choices>.conveyor-start-card{height:173px;min-height:173px}
+  .launch-card-world{max-width:58%}.launch-card-world>b{font-size:9px}.launch-card-stage{font-size:5.5px}
+  .launch-card-action{bottom:12px;width:210px;height:45px}.launch-card-action>b{font-size:19px}
+  #homeScreen .slime-hero-layout{grid-template-columns:96px minmax(124px,1fr) 96px;gap:4px}
+  #homeScreen .stomach-quick-slots{--quick-slot-size:45px;--quick-food-size:42px;width:96px;height:108px;gap:6px}
+  #homeScreen .stomach-rail{height:148px}
+  #homeScreen .slime-hero-layout .stat-rail-right{width:96px;transform:translateY(-4px)}
+  #homeScreen .stomach-card-viewer{left:96px;right:96px}
+}
+
+/* === V85: читаемая панель характеристик в симметричной сцене === */
+#homeScreen .slime-hero-layout .stat-rail-right{
+  display:grid;
+  align-content:center;
+  gap:6px;
+}
+#homeScreen .stat-rail-right .stat-pill{
+  position:relative;
+  isolation:isolate;
+  min-height:56px;
+  padding:5px 6px 5px 4px;
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr);
+  grid-template-rows:1fr;
+  column-gap:6px;
+  align-items:center;
+  border:2px solid;
+  border-radius:15px;
+  overflow:visible;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.92),inset 0 -3px 0 rgba(36,53,73,.08),0 2px 0 rgba(38,51,73,.3),0 4px 8px rgba(38,51,73,.08);
+}
+#homeScreen .stat-rail-right .stat-pill:before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:3px;
+  border:1px solid rgba(255,255,255,.62);
+  border-radius:10px;
+  pointer-events:none;
+}
+#homeScreen .stat-rail-right .stat-icon{
+  position:relative;
+  z-index:1;
+  grid-column:1;
+  grid-row:1;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  margin:0;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  box-shadow:none;
+}
+#homeScreen .stat-rail-right .stat-icon img{
+  width:38px;
+  height:38px;
+  margin:0;
+  object-fit:contain;
+  filter:drop-shadow(0 1px 0 rgba(255,255,255,.55)) drop-shadow(0 1px 1px rgba(27,42,58,.2));
+  transform:none;
+}
+#homeScreen .stat-rail-right .health .stat-icon img{width:40px;height:40px;transform:none}
+#homeScreen .stat-rail-right .stat-copy{
+  position:relative;
+  z-index:1;
+  grid-column:2;
+  grid-row:1;
+  min-width:0;
+  height:40px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:stretch;
+  gap:3px;
+}
+#homeScreen .stat-rail-right .stat-copy>small{
+  width:100%;
+  color:#24364b;
+  font-size:7.7px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.35px;
+  white-space:nowrap;
+  text-shadow:0 1px rgba(255,255,255,.9);
+}
+#homeScreen .stat-rail-right .stat-values{
+  position:relative;
+  width:100%;
+  min-height:23px;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:3px;
+}
+#homeScreen .stat-rail-right .stat-values>b{
+  flex:0 1 auto;
+  color:#172b42;
+  font-size:21px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:-.45px;
+  transform:none;
+  text-shadow:0 1px rgba(255,255,255,.92);
+}
+#homeScreen .stat-rail-right .stat-values em{
+  left:auto;
+  right:-3px;
+  top:20px;
+  z-index:5;
+  min-width:34px;
+  padding:3px 6px;
+  border-width:1.5px;
+  font-size:9px;
+}
+#homeScreen .stat-rail-right .health{
+  border-color:#137247;
+  background:linear-gradient(145deg,#f3fff5 0 38%,#b9efca 100%);
+}
+#homeScreen .stat-rail-right .health .stat-icon{border-color:transparent;background:transparent}
+#homeScreen .stat-rail-right .damage{
+  border-color:#b23a35;
+  background:linear-gradient(145deg,#fff8ed 0 38%,#ffc5b6 100%);
+}
+#homeScreen .stat-rail-right .damage .stat-icon{border-color:transparent;background:transparent}
+#homeScreen .stat-rail-right .shield{
+  border-color:#176b9e;
+  background:linear-gradient(145deg,#f1fbff 0 38%,#a8dcf7 100%);
+}
+#homeScreen .stat-rail-right .shield .stat-icon{border-color:transparent;background:transparent}
+#homeScreen .stat-rail-right .shield-charge-badge{
+  position:relative;
+  flex:0 0 29px;
+  width:29px;
+  height:29px;
+  margin:-3px -2px -3px auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  border:2px solid #0c527e;
+  border-radius:50%;
+  background:#6bcaf0;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.8),inset 0 -3px 0 rgba(13,83,126,.22),0 2px 0 rgba(15,68,105,.42);
+}
+#homeScreen .stat-rail-right .shield-charge-badge:before{
+  content:"×";
+  position:static;
+  border:0;
+  color:#06406a;
+  font-size:9px;
+  line-height:1;
+  font-weight:1000;
+}
+#homeScreen .stat-rail-right .shield-charge-badge b{
+  position:static;
+  color:#063d66;
+  font-size:14px;
+  line-height:1;
+  font-weight:1000;
+  text-shadow:0 1px rgba(255,255,255,.8);
+  transform:none;
+}
+
+@media(max-width:430px){
+  #homeScreen .slime-hero-layout .stat-rail-right{gap:5px}
+  #homeScreen .stat-rail-right .stat-pill{min-height:53px;grid-template-columns:34px minmax(0,1fr);column-gap:4px;padding:4px 4px 4px 3px;border-radius:14px}
+  #homeScreen .stat-rail-right .stat-icon{width:34px;height:34px;border-radius:10px}
+  #homeScreen .stat-rail-right .stat-icon img{width:34px;height:34px}
+  #homeScreen .stat-rail-right .health .stat-icon img{width:36px;height:36px}
+  #homeScreen .stat-rail-right .stat-copy{height:38px;gap:2px}
+  #homeScreen .stat-rail-right .stat-copy>small{font-size:7px;letter-spacing:.2px}
+  #homeScreen .stat-rail-right .stat-values>b{font-size:19px}
+  #homeScreen .stat-rail-right .shield-charge-badge{width:26px;height:26px;flex-basis:26px;margin:-2px -1px -2px auto}
+  #homeScreen .stat-rail-right .shield-charge-badge b{font-size:13px}
+  #homeScreen .stat-rail-right .shield-charge-badge:before{font-size:8px}
+  #homeScreen .stat-rail-right .stat-values em{right:-2px;top:19px;min-width:31px;padding:3px 5px;font-size:8px}
+}
+@media(max-width:370px){
+  #homeScreen .slime-hero-layout .stat-rail-right{gap:4px}
+  #homeScreen .stat-rail-right .stat-pill{min-height:50px;grid-template-columns:31px minmax(0,1fr);column-gap:3px;padding:3px;border-radius:13px}
+  #homeScreen .stat-rail-right .stat-icon{width:31px;height:31px;border-radius:9px}
+  #homeScreen .stat-rail-right .stat-icon img{width:31px;height:31px}
+  #homeScreen .stat-rail-right .health .stat-icon img{width:33px;height:33px}
+  #homeScreen .stat-rail-right .stat-copy{height:36px;gap:2px}
+  #homeScreen .stat-rail-right .stat-copy>small{font-size:6.5px;letter-spacing:0}
+  #homeScreen .stat-rail-right .stat-values>b{font-size:17px;letter-spacing:-.25px}
+  #homeScreen .stat-rail-right .shield-charge-badge{width:24px;height:24px;flex-basis:24px;margin:-1px -1px -1px auto}
+  #homeScreen .stat-rail-right .shield-charge-badge b{font-size:12px}
+  #homeScreen .stat-rail-right .stat-values em{top:18px;min-width:28px;padding:2px 4px;font-size:7.5px}
+}
+
+/* === V86: секретная карта меняет атмосферу всей комнаты при поедании === */
+#homeScreen .slime-stage.secret-meal-active:before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 54%,rgba(255,111,137,.2) 0 15%,rgba(126,11,54,.18) 38%,transparent 68%),
+    radial-gradient(ellipse at 50% 54%,transparent 42%,rgba(46,1,24,.34) 100%);
+  box-shadow:inset 0 0 0 2px rgba(255,74,108,.36),inset 0 0 34px rgba(79,3,36,.28);
+  opacity:0;
+  animation:secretMealRoomShift 2.15s ease-in-out both;
+}
+#homeScreen .slime-stage.secret-meal-active .slime-playground{
+  animation:secretMealPlaygroundShift 2.15s ease-in-out both;
+}
+#homeScreen .slime-stage.secret-meal-active .menu-slime-canvas{
+  animation:secretMealSlimeAura 2.15s ease-in-out both;
+}
+#homeScreen .slime-stage.secret-meal-impact .slime-playground{
+  animation:secretMealPlaygroundShift 2.15s ease-in-out both,secretMealImpact .7s cubic-bezier(.16,.82,.2,1) both;
+}
+@keyframes secretMealRoomShift{
+  0%{opacity:0;filter:saturate(1)}
+  18%{opacity:.68}
+  62%{opacity:.86;filter:saturate(1.2)}
+  100%{opacity:0;filter:saturate(1)}
+}
+@keyframes secretMealPlaygroundShift{
+  0%,100%{border-color:var(--room-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 0 -12px 20px rgba(55,64,78,.045)}
+  28%,68%{border-color:#bd244f;box-shadow:inset 0 0 28px rgba(112,5,48,.2),0 0 0 3px rgba(255,75,109,.14),0 0 18px rgba(129,10,54,.24)}
+}
+@keyframes secretMealSlimeAura{
+  0%,100%{filter:none}
+  27%{filter:drop-shadow(0 0 5px rgba(255,77,111,.66))}
+  58%{filter:drop-shadow(0 0 11px rgba(255,38,82,.88)) drop-shadow(0 5px 9px rgba(82,2,39,.35))}
+  82%{filter:drop-shadow(0 0 5px rgba(255,91,119,.55))}
+}
+@keyframes secretMealImpact{
+  0%{transform:scale(1)}
+  36%{transform:scale(1.018)}
+  72%{transform:scale(.995)}
+  100%{transform:scale(1)}
+}
+
+/* V87: секретная еда на короткое время меняет весь интерфейс, а не только комнату. */
+body.secret-meal-ui-active #app:after{
+  content:"";position:fixed;z-index:1100;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 37%,rgba(255,91,123,.16),transparent 42%),
+    radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(77,4,38,.18) 78%,rgba(36,1,20,.3) 100%);
+  box-shadow:inset 0 0 0 2px rgba(255,74,108,.22),inset 0 0 45px rgba(69,2,35,.18);
+  opacity:0;animation:secretMealInterfaceVeil 2.75s ease-in-out both;
+}
+body.secret-meal-ui-active #homeScreen:after{
+  content:"";position:fixed;z-index:1099;left:50%;top:0;bottom:0;width:min(100vw,520px);pointer-events:none;
+  background:
+    radial-gradient(ellipse 3px 5px at 10% 27%,#3d071d 0 64%,transparent 76%),
+    radial-gradient(ellipse 11px 7px at 10% 27%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%),
+    radial-gradient(ellipse 4px 6px at 89% 35%,#3d071d 0 64%,transparent 76%),
+    radial-gradient(ellipse 13px 8px at 89% 35%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%),
+    radial-gradient(ellipse 3px 5px at 14% 74%,#3d071d 0 64%,transparent 76%),
+    radial-gradient(ellipse 10px 7px at 14% 74%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%),
+    radial-gradient(ellipse 4px 6px at 86% 81%,#3d071d 0 64%,transparent 76%),
+    radial-gradient(ellipse 12px 8px at 86% 81%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%);
+  opacity:0;filter:drop-shadow(0 0 5px rgba(255,44,83,.72));transform:translateX(-50%);animation:secretMealInterfaceEyes 2.75s ease-in-out both;
+}
+body.secret-meal-ui-active #homeScreen .stomach-rail:before{
+  content:"";position:absolute;z-index:-1;inset:-4px -3px;border:2px solid rgba(255,69,105,.58);border-radius:22px;
+  background:rgba(92,7,42,.06);box-shadow:0 0 13px rgba(255,43,82,.28),inset 0 0 14px rgba(255,67,104,.09);
+  opacity:0;animation:secretStomachWake 2.75s ease-in-out both;
+}
+body.secret-meal-ui-active #homeScreen .stomach-rail-title{
+  position:relative;color:#8b183c;text-shadow:0 0 5px rgba(255,78,111,.34);animation:secretStomachTitleWake 2.75s ease-in-out both;
+}
+body.secret-meal-ui-active #homeScreen .stomach-rail-title:after{
+  content:"";position:absolute;left:calc(100% + 5px);top:50%;width:11px;height:7px;border:1.5px solid #8d183b;border-radius:50%;
+  background:radial-gradient(ellipse,#4d0b25 0 23%,#fff3ef 27% 54%,#ef5572 58% 100%);box-shadow:0 0 5px rgba(255,48,86,.56);
+  opacity:0;transform:translateY(-50%) scaleY(.08);animation:secretStomachEye 2.75s ease-in-out both;
+}
+#homeScreen .stomach-quick-slot.filled.secret .food-mini-model{
+  transform-origin:50% 66%;animation:secretStomachFoodIdle 3.6s ease-in-out infinite;
+}
+body.secret-meal-ui-impact #homeScreen .slime-stage,
+body.secret-meal-ui-impact #homeScreen .conveyor,
+body.secret-meal-ui-impact .topbar{animation:secretMealPanelImpact .82s cubic-bezier(.18,.8,.2,1) both}
+/* Глаза больше не разбросаны по интерфейсу: весь живой взгляд рисуется
+   только внутри сцены со слаймом. */
+body.secret-meal-ui-active #homeScreen:after,
+body.secret-meal-ui-active #homeScreen .stomach-rail-title:after{display:none!important}
+@keyframes secretMealInterfaceVeil{0%,100%{opacity:0}22%{opacity:.56}52%{opacity:.82}78%{opacity:.48}}
+@keyframes secretMealInterfaceEyes{0%,12%,100%{opacity:0;transform:translate(-50%,2px)}28%,43%{opacity:.82;transform:translate(-50%,0)}48%{opacity:.18;transform:translate(-50%,0)}54%,78%{opacity:.72;transform:translate(-50%,-1px)}86%{opacity:.38}}
+@keyframes secretStomachWake{0%,100%{opacity:0;transform:scale(.96)}22%,76%{opacity:1;transform:scale(1)}48%{opacity:.72;transform:scale(1.025)}}
+@keyframes secretStomachTitleWake{0%,100%{transform:translateY(0)}28%{transform:translateY(-2px)}54%{transform:translateY(1px)}78%{transform:translateY(-1px)}}
+@keyframes secretStomachEye{0%,14%,100%{opacity:0;transform:translateY(-50%) scaleY(.08)}27%,62%{opacity:1;transform:translateY(-50%) scaleY(1)}68%{opacity:1;transform:translateY(-50%) scaleY(.1)}75%,88%{opacity:1;transform:translateY(-50%) scaleY(1)}}
+@keyframes secretStomachFoodIdle{0%,100%{filter:brightness(1);transform:translateY(0) rotate(-.5deg) scale(1)}46%{filter:brightness(1.07) saturate(1.06);transform:translateY(-1px) rotate(.7deg) scale(1.025)}58%{transform:translateY(0) rotate(.2deg) scale(.995,1.015)}}
+@keyframes secretMealPanelImpact{0%,100%{filter:none}38%{filter:saturate(1.12) brightness(1.025)}68%{filter:saturate(1.04)}}

@@ -1,18 +1,16 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'slime_food_catalog_v2';
+  const STORAGE_KEY = 'slime_food_catalog_v3';
   const RARITIES = [
-    ['common', 'Обычное'], ['rare', 'Редкое'], ['epic', 'Эпическое'],
-    ['legendary', 'Легендарное'], ['prismatic', 'Призматическое'], ['secret', 'Секретное']
+    ['common', 'Обычная'], ['rare', 'Редкая'], ['epic', 'Эпическая']
   ];
-  const CATEGORIES = [['mass', 'Здоровье'], ['power', 'Урон'], ['defense', 'Защита'], ['bounce', 'Отскок'], ['magic', 'Заряд']];
+  const CATEGORIES = [['health', 'Здоровье'], ['damage', 'Урон'], ['shield', 'Щит']];
   const STAT_META = [
-    ['mass', 'ЗДОРОВЬЕ', value => `+${formatNumber(value)}`],
-    ['power', 'УРОН', value => `+${formatNumber(value)}`],
-    ['defense', 'ЗАЩИТА', value => `+${formatNumber(value)}`],
-    ['elasticity', 'ОТСКОК', value => `+${formatPercent(value)}`],
-    ['ability', 'ЗАРЯД', value => `+${formatNumber(value)}%`],
+    ['health', 'ЗДОРОВЬЕ', value => `+${formatNumber(value)}`],
+    ['damage', 'УРОН', value => `+${formatNumber(value)}`],
+    ['shield', 'ЩИТ', value => `+${formatNumber(value)}`],
+    ['shieldCharges', 'ЗАРЯДЫ ЩИТА', value => `+${formatNumber(value)}`],
     ['coinMultiplier', 'МОНЕТЫ', value => `+${formatPercent(value)}`]
   ];
   const els = {
@@ -53,18 +51,21 @@
     const name = String(source.name || '').trim();
     if (!/^[a-z][A-Za-z0-9_-]{0,47}$/.test(id) || !name) return null;
     const number = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0));
-    const rarity = RARITIES.some(([key]) => key === source.rarity) ? source.rarity : 'common';
-    const category = CATEGORIES.some(([key]) => key === source.category) ? source.category : 'mass';
+    const legacyRarity = source.rarity === 'legendary' || source.rarity === 'prismatic' ? 'special' : source.rarity;
+    const rarity = RARITIES.some(([key]) => key === legacyRarity) ? legacyRarity : 'common';
+    const legacyCategory = { mass:'health', power:'damage', defense:'shield', bounce:'shield', magic:'shield' };
+    const category = CATEGORIES.some(([key]) => key === source.category) ? source.category : (legacyCategory[source.category] || 'health');
     const numericStats = Number(source.statVersion) >= 2;
     const result = {
       id, name, icon: String(source.icon || '🍓').slice(0, 8), rarity, category,
       minConveyor: Math.round(number(source.minConveyor || 1, 1, 5)),
-      statVersion: 2,
-      mass: number(source.mass, 0, 999), power: number(numericStats ? source.power : Number(source.power || 0) * 10, 0, 999),
-      defense: number(numericStats ? source.defense : Number(source.defense || 0) * 100, 0, 999), elasticity: number(source.elasticity, 0, 9.99),
-      ability: number(source.ability, 0, 999), coinMultiplier: number(source.coinMultiplier, 0, 99),
+      statVersion: 4,
+      health: number(source.health ?? source.mass, 0, 999), healthPenalty: number(source.healthPenalty, 0, 999),
+      damage: number(source.damage ?? (numericStats ? source.power : Number(source.power || 0) * 10), 0, 999), damagePenalty: number(source.damagePenalty, 0, 999),
+      shield: number(source.shield ?? (numericStats ? source.defense : Number(source.defense || 0) * 100), 0, 999), shieldPenalty: number(source.shieldPenalty, 0, 999), shieldCharges: number(source.shieldCharges, 0, 9),
+      coinMultiplier: number(source.coinMultiplier, 0, 99),
       artX: number(source.artX, -30, 30), artY: number(source.artY, -30, 30), artScale: number(source.artScale || 1, .55, 1.6),
-      effect: String(source.effect || '').trim(), effectText: String(source.effectText || '').trim()
+      effect: String(source.effect || '').trim(), effectText: String(source.effectText || source.description || '').trim()
     };
     const image = String(source.image || '').trim();
     if (image) result.image = image;
@@ -110,8 +111,8 @@
     els.effectSelect.innerHTML = effectOptions.map(effect => `<option value="${escapeHtml(effect.id)}">${escapeHtml(effect.label)}</option>`).join('');
     els.filters.innerHTML = `<button class="rarity-filter active" data-rarity="all" type="button">ВСЕ</button>${RARITIES.map(([id, label]) => `<button class="rarity-filter" data-rarity="${id}" type="button">${label.toUpperCase()}</button>`).join('')}`;
   }
-  function rarityLabel(rarity) { return RARITIES.find(([id]) => id === rarity)?.[1] || 'Обычное'; }
-  function rarityColor(rarity) { return ({ common: '#73b86f', rare: '#3ba9d2', epic: '#9d69db', legendary: '#dfa520', prismatic: '#7f73e8', secret: '#ff62ad' })[rarity] || '#97a1af'; }
+  function rarityLabel(rarity) { return RARITIES.find(([id]) => id === rarity)?.[1] || 'Обычная'; }
+  function rarityColor(rarity) { return ({ common: '#73b86f', rare: '#3ba9d2', epic: '#9d69db' })[rarity] || '#97a1af'; }
   function categoryLabel(category) { return CATEGORIES.find(([id]) => id === category)?.[1] || 'Здоровье'; }
   function visibleFoods() {
     const query = els.search.value.trim().toLocaleLowerCase('ru');
@@ -137,7 +138,7 @@
       const input = els.form.elements.namedItem(name);
       if (input) input.value = value ?? '';
     }
-    for (const name of ['mass', 'power', 'defense', 'elasticity', 'ability', 'coinMultiplier']) {
+    for (const name of ['health', 'damage', 'shield', 'shieldCharges', 'coinMultiplier']) {
       if (!Object.hasOwn(data, name)) els.form.elements.namedItem(name).value = 0;
     }
     els.title.textContent = data.name || 'Новая еда';
@@ -152,11 +153,11 @@
     let index = 1;
     let id = 'newFood';
     while (catalog.some(food => food.id === id)) { index += 1; id = `newFood${index}`; }
-    return { id, name: 'Новая еда', icon: '🍓', rarity: 'common', category: 'mass', minConveyor: 1, statVersion: 2, mass: 6, power: 0, defense: 0, elasticity: 0, ability: 0, coinMultiplier: 0, artX: 0, artY: 0, artScale: 1, effect: '', effectText: '', image: '' };
+    return { id, name: 'Новая еда', icon: '🍓', rarity: 'common', category: 'health', minConveyor: 1, statVersion: 4, health: 12, healthPenalty: 0, damage: 0, damagePenalty: 0, shield: 0, shieldPenalty: 0, shieldCharges: 0, coinMultiplier: 0, artX: 0, artY: 0, artScale: 1, effect: '', effectText: '', image: '' };
   }
   function formFood() {
     const data = Object.fromEntries(new FormData(els.form).entries());
-    data.statVersion = 2;
+    data.statVersion = 3;
     const normalized = normalizeFood(data);
     const sourceWorlds = activeFood()?.worlds;
     if (normalized && Array.isArray(sourceWorlds)) normalized.worlds = [...sourceWorlds];

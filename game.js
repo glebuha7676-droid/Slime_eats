@@ -120,6 +120,7 @@
   let secretSequenceActive = false;
   let secretRevealCanClose = false;
   let secretRevealResolver = null;
+  let secretSequenceSource = null;
   let foodFlyerToken = 0;
   let slimeInteractionTimer = null;
   let resultCoinAnimationId = 0;
@@ -144,6 +145,8 @@
   let slimePointer = null;
   let menuSlimeAnimationId = 0;
   let menuSlimeLastFrame = 0;
+  let menuMealFxStartedAt = 0;
+  let menuStatFeedbackTimers = [];
   const menuGaze = { x: 0, y: 0 };
   const menuPetPoint = { x: 0, y: 0 };
   const SAVE_BACKUP_KEY = `${SAVE_KEY}_backup`;
@@ -259,6 +262,7 @@
     const finalWorld = WORLDS[WORLDS.length - 1];
     merged.gameCompleted = Boolean(value.gameCompleted || (finalWorld && merged.worldBest[finalWorld.id] >= finalWorld.targetDepth));
     merged.lastRunDepth = {};
+    merged.levelFailures = {};
     for (const world of WORLDS) {
       for (let level = 1; level <= LEVEL_COUNT; level += 1) {
         const key = `${world.id}:${level}`;
@@ -266,6 +270,7 @@
         const recordedDepth = clamp(+(value.lastRunDepth?.[key] || 0), 0, targetDepth);
         const completedDepth = merged.worldBest[world.id] >= targetDepth ? targetDepth : 0;
         merged.lastRunDepth[key] = Math.max(recordedDepth, completedDepth);
+        merged.levelFailures[key] = clamp(Math.round(+(value.levelFailures?.[key] || 0)), 0, 99);
       }
     }
     merged.selectedLevels = { ...defaultSave.selectedLevels };
@@ -296,9 +301,6 @@
       : [];
     merged.foodPity = { ...defaultSave.foodPity };
     for (const key of Object.keys(merged.foodPity)) merged.foodPity[key] = clamp(Math.round(+(value.foodPity?.[key] || 0)), 0, 10000);
-    if (!Number.isFinite(+(value.foodPity?.noSpecial))) {
-      merged.foodPity.noSpecial = clamp(Math.max(+(value.foodPity?.noLegendary || 0), +(value.foodPity?.noPrismatic || 0)), 0, 10000);
-    }
     merged.pendingHealthBoost = Math.max(0, Math.round(+(value.pendingHealthBoost ?? value.pendingMassBoost) || 0));
     for (const key of ['pendingEpicBoost', 'pendingExtraRerolls', 'wheelAdSpins', 'dailyStreak']) {
       merged[key] = Math.max(0, Math.round(+merged[key] || 0));
@@ -330,7 +332,10 @@
     const foodById = id => FOODS.find(food => food.id === id);
     const foods = raw.foods.map(foodById).filter(Boolean).slice(0, save.stomachLevel);
     const offer = raw.offer.slice(0, 3).map(id => id ? foodById(id) || null : null);
-    while (offer.length < 3) offer.push(null);
+    // Полный желудок восстанавливается сразу на финальном этапе: пустые
+    // заглушки не должны создавать перед старт-картой лишний ряд.
+    if (stomachIsFull(foods)) offer.length = 0;
+    else while (offer.length < 3) offer.push(null);
     if (!offer.some(Boolean) && !foods.length) return false;
     session = {
       foods, offer,
@@ -346,9 +351,12 @@
       rerollPending: false,
       offerTransition: false
     };
+    // Если сохранение попало ровно между выбором карты и приездом новой тройки,
+    // не оставляем игрока с пустой лентой после возвращения в игру.
+    if (!session.offer.some(Boolean) && !stomachIsFull(foods)) generateOffer(session.baseEpicBoost);
     const consumedSecrets = foods.filter(food => food.rarity === 'secret').map(food => food.id);
     if (consumedSecrets.length) save.revealedSecretFoods = [...new Set([...(save.revealedSecretFoods || []), ...consumedSecrets])];
-    discoverFoods([...foods, ...offer.filter(food => food && food.rarity !== 'secret')]);
+    discoverFoods([...foods, ...session.offer.filter(food => food && food.rarity !== 'secret')]);
     return true;
   }
 
@@ -497,6 +505,8 @@
     const activeLayer = visibleInteractionLayer();
     const screen = document.body.dataset.screen || 'home';
     const modalOpen = Boolean(activeLayer || adInFlight);
+    const secretRevealOpen = activeLayer === els.secretDiscoveryOverlay && secretSequenceActive;
+    const pauseScene = modalOpen && !secretRevealOpen;
     els.app.inert = modalOpen;
     els.homeScreen.inert = modalOpen || screen !== 'home';
     els.dropScreen.inert = modalOpen || screen !== 'drop';
@@ -504,11 +514,11 @@
       if (layer) layer.inert = layer !== activeLayer;
     });
     document.querySelectorAll('.encyclopedia-card-viewer').forEach(layer => { layer.inert = layer !== activeLayer; });
-    document.body.classList.toggle('ui-modal-open', modalOpen);
-    if (modalOpen && menuSlimeAnimationId) {
+    document.body.classList.toggle('ui-modal-open', pauseScene);
+    if (pauseScene && menuSlimeAnimationId) {
       cancelAnimationFrame(menuSlimeAnimationId);
       menuSlimeAnimationId = 0;
-    } else if (!modalOpen && screen === 'home') startMenuSlimeLoop();
+    } else if (!pauseScene && screen === 'home') startMenuSlimeLoop();
   }
 
   function initializeInteractionLayers() {
@@ -589,14 +599,13 @@
   function showRarityBurst(food) {
     if (!els.rarityBursts) return;
     const titles = {
-      common: 'НЯМ!', rare: 'ОГО, РЕДКОЕ!', epic: 'ЭПИЧНО!',
-      special: 'ОСОБЫЙ ЭФФЕКТ!', secret: 'СЕКРЕТ РАСКРЫТ!'
+      common: 'НЯМ!', rare: 'ОГО, РЕДКОЕ!', epic: 'ЭПИЧНО!', special: 'ОСОБАЯ!', secret: 'СЕКРЕТ АКТИВЕН!'
     };
     const burst = document.createElement('span');
     burst.className = `rarity-burst ${food.rarity}`;
     burst.textContent = titles[food.rarity] || 'ВКУСНО!';
     els.rarityBursts.replaceChildren(burst);
-    setTimeout(() => burst.remove(), food.rarity === 'secret' ? 2350 : food.rarity === 'special' ? 1900 : 1500);
+    setTimeout(() => burst.remove(), 1500);
   }
 
   const waitForSecretPhase = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -605,21 +614,46 @@
     return String(value ?? '').replace(/[&<>"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character]));
   }
 
-  function secretCardMarkup(food) {
+  function inspectFoodCardMarkup(food) {
+    const encyclopedia = window.SlimeEncyclopedia;
+    if (encyclopedia?.foodCardMarkup) {
+      return encyclopedia.foodCardMarkup(food, {
+        rarityLabels: RARITY_LABELS,
+        foodArtMarkup,
+        foodStatItems,
+        foodStatGridMarkup,
+        foodNameMarkup,
+        foodCardBodyMarkup,
+        foodCardDecorMarkup
+      });
+    }
     const cardType = foodCardType(food);
-    return `<article class="food-card secret secret-revealed food-type-${cardType}"><span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>СЕКРЕТНОЕ</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}</article>`;
+    return `<article class="food-card encyclopedia-food-card ${food.rarity} food-type-${cardType}">${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}</article>`;
   }
 
-  function waitForSecretCardDismiss(food, token) {
-    revealSecretFood(food);
-    persist({ captureDraft: false });
-    els.secretDiscoveryCard.innerHTML = secretCardMarkup(food);
-    els.secretDiscoveryOverlay.classList.add('show-card');
-    els.secretDiscoveryCard.focus({ preventScroll: true });
+  function waitForSecretCardDismiss(food, token, sourceCard) {
+    els.secretDiscoveryCard.innerHTML = inspectFoodCardMarkup(food);
     secretRevealCanClose = false;
-    setTimeout(() => {
-      if (token === secretSequenceToken) secretRevealCanClose = true;
-    }, 480);
+    requestAnimationFrame(() => {
+      if (token !== secretSequenceToken) return;
+      const sourceRect = sourceCard?.isConnected ? sourceCard.getBoundingClientRect() : null;
+      const sourceX = sourceRect ? sourceRect.left + sourceRect.width / 2 : innerWidth / 2;
+      const sourceY = sourceRect ? sourceRect.top + sourceRect.height / 2 : innerHeight * .68;
+      const baseWidth = els.secretDiscoveryCard.offsetWidth || 134;
+      const sourceScale = sourceRect ? sourceRect.width / baseWidth : .9;
+      els.secretDiscoveryCard.style.setProperty('--secret-flight-x', `${sourceX}px`);
+      els.secretDiscoveryCard.style.setProperty('--secret-flight-y', `${sourceY}px`);
+      els.secretDiscoveryCard.style.setProperty('--secret-flight-scale', String(sourceScale));
+      sourceCard?.classList.add('secret-flight-source-hidden');
+      els.secretDiscoveryOverlay.classList.add('show-card', 'flight-ready');
+      els.secretDiscoveryCard.focus({ preventScroll: true });
+      setTimeout(() => {
+        if (token === secretSequenceToken) els.secretDiscoveryOverlay.classList.add('flight-complete');
+      }, 850);
+      setTimeout(() => {
+        if (token === secretSequenceToken) secretRevealCanClose = true;
+      }, 1180);
+    });
     return new Promise(resolve => { secretRevealResolver = resolve; });
   }
 
@@ -646,38 +680,77 @@
     els.secretDiscoveryOverlay?.classList.add('hidden');
     if (els.secretDiscoveryOverlay) els.secretDiscoveryOverlay.className = 'secret-discovery-overlay hidden';
     if (els.secretDiscoveryCard) els.secretDiscoveryCard.replaceChildren();
+    secretSequenceSource?.querySelector('.secret-reveal-curtain')?.remove();
+    secretSequenceSource?.classList.remove('secret-card-awakening', 'secret-eye-open', 'secret-card-scanning', 'secret-eye-closing', 'secret-card-revealing', 'secret-card-uncovering', 'secret-card-revealed-in-place', 'secret-flight-source-hidden');
+    secretSequenceSource = null;
     clearMenuMealReaction();
     syncInteractionLayers();
   }
 
-  async function playSecretDiscovery(food, offerIndex) {
+  function revealedSecretCardInnerMarkup(food) {
+    return `${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
+  }
+
+  function revealSecretCardInPlace(food, source, curtain = null) {
+    revealSecretFood(food);
+    persist({ captureDraft: false });
+    if (!source?.isConnected) return;
+    source.innerHTML = revealedSecretCardInnerMarkup(food);
+    if (curtain) source.appendChild(curtain);
+    source.classList.remove('secret-unknown', 'secret-card-awakening', 'secret-eye-open', 'secret-card-scanning', 'secret-eye-closing');
+    source.classList.add('secret-revealed', 'secret-card-revealed-in-place', 'secret-card-uncovering');
+    source.setAttribute('aria-label', `${food.name}. Секрет открыт. Нажми, чтобы посмотреть`);
+  }
+
+  async function playSecretDiscovery(food, offerIndex, source = null) {
     if (secretSequenceActive) return;
     secretSequenceActive = true;
     const token = ++secretSequenceToken;
+    const sourceCard = source?.isConnected
+      ? source
+      : els.foodChoices?.querySelector(`.food-card[data-offer-index="${offerIndex}"]`);
+    secretSequenceSource = sourceCard || null;
     clearMenuMealReaction();
     hideFoodInfo();
     clearMenuSlimeInteraction();
     document.body.classList.add('secret-discovery-active');
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-birth';
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-card-awaken';
+    sourceCard?.classList.add('secret-card-awakening');
     syncInteractionLayers();
     sound('tap');
     feedback(9);
-    await waitForSecretPhase(1050);
+    await waitForSecretPhase(430);
     if (token !== secretSequenceToken) return;
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-open';
+    sourceCard?.classList.add('secret-eye-open');
     sound('epic');
-    feedback([15, 35, 24]);
-    await waitForSecretPhase(700);
+    feedback([12, 28, 18]);
+    await waitForSecretPhase(1780);
     if (token !== secretSequenceToken) return;
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-watch';
-    await waitForSecretPhase(1650);
+    sourceCard?.classList.add('secret-card-scanning');
+    feedback([8, 12, 8]);
+    await waitForSecretPhase(940);
     if (token !== secretSequenceToken) return;
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-collapse';
-    feedback([10, 18, 12, 28]);
-    await waitForSecretPhase(1050);
+    sourceCard?.classList.add('secret-eye-closing');
+    await waitForSecretPhase(520);
     if (token !== secretSequenceToken) return;
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-card';
-    await waitForSecretCardDismiss(food, token);
+    const revealCurtain = document.createElement('span');
+    revealCurtain.className = 'secret-reveal-curtain';
+    revealCurtain.setAttribute('aria-hidden', 'true');
+    sourceCard?.appendChild(revealCurtain);
+    sourceCard?.classList.add('secret-card-revealing');
+    feedback([8, 14, 10]);
+    await waitForSecretPhase(380);
+    if (token !== secretSequenceToken) return;
+    revealSecretCardInPlace(food, sourceCard, revealCurtain);
+    sound('epic');
+    await waitForSecretPhase(620);
+    if (token !== secretSequenceToken) return;
+    revealCurtain.remove();
+    sourceCard?.classList.remove('secret-card-revealing', 'secret-card-uncovering');
+    await waitForSecretPhase(430);
+    if (token !== secretSequenceToken) return;
+    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-card-flight';
+    await waitForSecretCardDismiss(food, token, sourceCard);
     if (token !== secretSequenceToken) return;
     els.secretDiscoveryOverlay.className = 'secret-discovery-overlay hidden';
     els.secretDiscoveryCard.replaceChildren();
@@ -685,6 +758,7 @@
     clearMenuMealReaction();
     renderDraft();
     persist();
+    secretSequenceSource = null;
     secretSequenceActive = false;
     syncInteractionLayers();
   }
@@ -844,6 +918,7 @@
     sound('tap');
     feedback(6);
     renderHomePlaySetup();
+    refreshConveyorStartCard();
     persist();
   }
 
@@ -897,6 +972,7 @@
     feedback(5);
     persist();
     updatePersistentUI();
+    refreshConveyorStartCard();
   }
 
   function updatePersistentUI() {
@@ -999,10 +1075,13 @@
 
   function clearMenuMealReaction() {
     clearTimeout(menuEmotionTimer);
+    menuMealFxStartedAt = 0;
     els.slime?.classList.remove(
       'eat', 'chewing', 'savoring', 'pleased', 'tracking-food', 'expect-food',
       ...MEAL_REACTION_CLASSES
     );
+    els.slimeStage?.classList.remove('secret-meal-active', 'secret-meal-impact');
+    document.body.classList.remove('secret-meal-ui-active', 'secret-meal-ui-impact');
     els.slime?.style.removeProperty('--catch-time');
     els.slime?.style.removeProperty('--chew-time');
     els.slime?.style.removeProperty('--chew-count');
@@ -1216,11 +1295,11 @@
 
   function rarityWeights(boost = 0, rareBoost = 0) {
     const tables = [
-      { common: 80, rare: 19, epic: 1, special: 0, secret: 0 },
-      { common: 70, rare: 25, epic: 5, special: 0, secret: 0 },
-      { common: 60, rare: 30, epic: 10, special: 0, secret: 0 },
-      { common: 46, rare: 31, epic: 16, special: 7, secret: 0 },
-      { common: 18.5, rare: 15.5, epic: 10, special: 6, secret: 50 }
+      { common: 78.85, rare: 19, epic: 1, special: 1, secret: .15 },
+      { common: 68.75, rare: 25, epic: 5, special: 1, secret: .25 },
+      { common: 57.6, rare: 30, epic: 10, special: 2, secret: .4 },
+      { common: 48.3, rare: 31, epic: 16, special: 4, secret: .7 },
+      { common: 17, rare: 15.5, epic: 60, special: 6, secret: 1.5 }
     ];
     const base = { ...tables[save.conveyorLevel - 1] };
     const epicAdd = clamp(boost, 0, 10);
@@ -1297,8 +1376,8 @@
     const pity = save.foodPity || structuredClone(defaultSave.foodPity);
 
     let guaranteed = null;
-    if (save.conveyorLevel >= 5 && pity.noSecret >= 45) guaranteed = 'secret';
-    else if (save.conveyorLevel >= 4 && pity.noSpecial >= 10) guaranteed = 'special';
+    if (pity.noSecret >= 8) guaranteed = 'secret';
+    else if (pity.noSpecial >= 3) guaranteed = 'special';
     else if (save.conveyorLevel >= 2 && pity.noEpic >= 5) guaranteed = 'epic';
     else if (session.commonOnlyStreak >= 2) guaranteed = 'rare';
     const guaranteedSlot = Math.floor(Math.random() * 3);
@@ -1313,51 +1392,72 @@
       session.freeRerolls = 1;
       session.adRerolls = 0;
     }
-    discoverFoods(offer.filter(food => food.rarity !== 'secret'));
+    discoverFoods(offer);
     session.offersSeen += 1;
     session.commonOnlyStreak = offer.some(food => rarityRank(food.rarity) >= 1) ? 0 : session.commonOnlyStreak + 1;
 
-    pity.noEpic = offer.some(food => rarityRank(food.rarity) >= 2) ? 0 : pity.noEpic + 1;
-    pity.noSpecial = offer.some(food => food.rarity === 'special' || food.rarity === 'secret') ? 0 : pity.noSpecial + 1;
+    pity.noEpic = offer.some(food => food.rarity === 'epic') ? 0 : pity.noEpic + 1;
+    pity.noSpecial = offer.some(food => food.rarity === 'special') ? 0 : pity.noSpecial + 1;
     pity.noSecret = offer.some(food => food.rarity === 'secret') ? 0 : pity.noSecret + 1;
     save.foodPity = pity;
     persist();
   }
 
   function foodCardType(food) {
-    return food.effect && food.effectText ? 'ability' : 'stats';
+    return 'stats';
   }
 
   function foodStatItems(food) {
     return [
-      { key: 'health', value: food.health || 0, score: (food.health || 0) / 18, iconName: 'stat-health', display: `+${food.health || 0}`, label: `+${food.health || 0} здоровья` },
-      { key: 'damage', value: food.damage || 0, score: (food.damage || 0) / 5, iconName: 'stat-power', display: `+${Math.round(food.damage || 0)}`, label: `+${Math.round(food.damage || 0)} урона` },
-      { key: 'shield', value: food.shield || 0, score: (food.shield || 0) / 12, iconName: 'stat-defense', display: `+${Math.round(food.shield || 0)}`, label: `+${Math.round(food.shield || 0)} щита` },
+      { key: 'health', value: food.health || 0, score: (food.health || 0) / 20, iconName: 'stat-health', display: `+${food.health || 0}`, label: `+${food.health || 0} здоровья` },
+      { key: 'damage', value: food.damage || 0, score: (food.damage || 0) / 10, iconName: 'stat-power', display: `+${Math.round(food.damage || 0)}`, label: `+${Math.round(food.damage || 0)} урона` },
+      { key: 'shield', value: food.shield || 0, score: (food.shield || 0) / 10, iconName: 'stat-defense', display: `+${Math.round(food.shield || 0)}`, label: `+${Math.round(food.shield || 0)} щита` },
       { key: 'shield-charges', value: food.shieldCharges || 0, score: (food.shieldCharges || 0) * 1.3, iconName: 'stat-defense', display: `+${Math.round(food.shieldCharges || 0)}`, label: `+${Math.round(food.shieldCharges || 0)} заряд щита` },
       { key: 'coins', value: food.coinMultiplier || 0, score: (food.coinMultiplier || 0) / .45, iconName: 'coin', display: `+${Math.round((food.coinMultiplier || 0) * 100)}%`, label: `+${Math.round((food.coinMultiplier || 0) * 100)}% монет` }
     ].filter(item => item.value > 0).sort((a, b) => b.score - a.score);
   }
 
-  const CARD_STAT_ASSETS = Object.freeze({
-    health: 'assets/ui/card-stats/stat-health.png',
-    damage: 'assets/ui/card-stats/stat-damage.png',
-    shield: 'assets/ui/card-stats/stat-shield.png'
+  const CARD_STAT_ICONS = Object.freeze({
+    health: 'assets/ui/stat-health.webp',
+    damage: 'assets/ui/stat-power.webp',
+    shield: 'assets/ui/stat-defense.webp'
   });
+
+  function foodCardDecorMarkup(food) {
+    if (food?.rarity === 'epic') {
+      return '<span class="food-epic-motes" aria-hidden="true"><i></i><i></i><i></i><i></i></span>';
+    }
+    if (food?.rarity === 'special') {
+      return '<span class="food-special-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="food-special-neon" aria-hidden="true"></span>';
+    }
+    if (food?.rarity === 'secret') {
+      return '<span class="food-secret-neon" aria-hidden="true"></span>';
+    }
+    return '';
+  }
 
   function foodCardStatItems(food) {
     const cardOrder = { health: 0, damage: 1, shield: 2 };
     return foodStatItems(food)
-      .filter(item => CARD_STAT_ASSETS[item.key])
-      .sort((a, b) => cardOrder[a.key] - cardOrder[b.key])
+      .filter(item => CARD_STAT_ICONS[item.key])
+      // Самая сильная характеристика всегда первой: она крупнее и стоит слева.
+      .sort((a, b) => b.score - a.score || cardOrder[a.key] - cardOrder[b.key])
       .slice(0, 3);
   }
 
   function foodStatGridMarkup(food) {
-    return foodCardStatItems(food).map(item => `<span class="food-stat-cell ${item.key}" aria-label="${item.label}"><img class="card-stat-badge-art" src="${versionedAsset(CARD_STAT_ASSETS[item.key])}" alt="" aria-hidden="true"><b>${item.display}</b></span>`).join('');
+    const items = foodCardStatItems(food);
+    const strongest = Math.max(...items.map(item => item.score), 0);
+    const weakest = Math.min(...items.map(item => item.score), strongest);
+    const hasClearLeader = items.length > 1 && strongest - weakest >= .45;
+    return items.map(item => {
+      const powerClass = items.length === 1 || (hasClearLeader && item.score === strongest) ? ' power-leading' : ' power-regular';
+      return `<span class="food-stat-cell ${item.key}${powerClass}" aria-label="${item.label}"><img class="card-stat-icon" src="${versionedAsset(CARD_STAT_ICONS[item.key])}" alt="" aria-hidden="true"><b>${item.display}</b></span>`;
+    }).join('');
   }
 
   function foodCardDescription(food) {
-    if (food.effectText) return { text: food.effectText, effect: true };
+    if (food.description || food.effectText) return { text: food.description || food.effectText, effect: true };
     const bonuses = [];
     if (food.shieldCharges > 0) bonuses.push(`+${Math.round(food.shieldCharges)} заряд щита`);
     if (food.coinMultiplier > 0) bonuses.push(`+${Math.round(food.coinMultiplier * 100)}% монет`);
@@ -1366,17 +1466,96 @@
       : { text: '', effect: false };
   }
 
+  function foodCardAnimatedTextMarkup(value, effect) {
+    let index = 0;
+    return String(value ?? '').split(/(\s+)/).map(token => {
+      if (!token) return '';
+      if (/^\s+$/.test(token)) return [...token].map(character => character === '\n' ? '<br>' : ' ').join('');
+      const letters = [...token].map(character => {
+        const properties = [`--card-letter-index:${index}`];
+        if (effect === 'secret') {
+          const lift = .75 + ((index * 7) % 5) * .13;
+          const side = (((index * 11) % 5) - 2) * .09;
+          const turn = (((index * 13) % 5) - 2) * .09;
+          properties.push(
+            `--card-chaos-up:${-lift}px`,
+            `--card-chaos-soft:${-(lift * .32)}px`,
+            `--card-chaos-down:${lift * .2}px`,
+            `--card-chaos-side:${side}px`,
+            `--card-chaos-back:${side * -.45}px`,
+            `--card-chaos-turn:${turn}deg`,
+            `--card-chaos-turn-back:${turn * -.4}deg`,
+            `--card-chaos-duration:${2.25 + ((index * 17) % 9) * .14}s`,
+            `--card-chaos-delay:${-(((index * 19) % 23) * .11)}s`
+          );
+        }
+        index += 1;
+        return `<span class="card-fx-letter" style="${properties.join(';')}">${escapeMarkup(character)}</span>`;
+      }).join('');
+      return `<span class="card-fx-word">${letters}</span>`;
+    }).join('');
+  }
+
   function foodNameMarkup(food) {
-    const lengthClass = food.name.length > 23 ? ' very-long' : food.name.length > 16 ? ' long' : '';
-    return `<span class="food-name${lengthClass}">${escapeMarkup(food.name)}</span>`;
+    const words = food.name.trim().split(/\s+/).filter(Boolean);
+    let nameForRender = food.name;
+    let twoLineClass = '';
+    if (words.length > 1) {
+      let splitAt = 1;
+      let bestDifference = Number.POSITIVE_INFINITY;
+      for (let index = 1; index < words.length; index += 1) {
+        const firstLength = words.slice(0, index).join(' ').length;
+        const secondLength = words.slice(index).join(' ').length;
+        const difference = Math.abs(firstLength - secondLength);
+        if (difference < bestDifference) {
+          bestDifference = difference;
+          splitAt = index;
+        }
+      }
+      nameForRender = `${words.slice(0, splitAt).join(' ')}\n${words.slice(splitAt).join(' ')}`;
+      twoLineClass = ' two-line';
+    }
+    const longestLine = Math.max(...nameForRender.split('\n').map(line => line.length));
+    const lengthClass = longestLine > 17 ? ' very-long' : longestLine > 12 ? ' long' : '';
+    const animated = food.rarity === 'special' || food.rarity === 'secret';
+    const renderedName = animated ? foodCardAnimatedTextMarkup(nameForRender, food.rarity) : escapeMarkup(nameForRender).replace('\n', '<br>');
+    return `<span class="food-name${lengthClass}${twoLineClass}"><span class="food-name-text">${renderedName}</span></span>`;
+  }
+
+  function foodDescriptionRichMarkup(value, rarity) {
+    const text = String(value || '');
+    const animated = rarity === 'special' || rarity === 'secret';
+    const renderText = part => animated ? foodCardAnimatedTextMarkup(part, rarity) : escapeMarkup(part);
+    const pattern = /[+-]?\d+(?:[.,]\d+)?\s*%?\s*(?:здоровь(?:я|е)|урон(?:а)?|щит(?:а)?|монет(?:ы|а|у)?|к\s+комбо|заряд(?:а|ов)?\s+щита)/giu;
+    const parts = [];
+    let cursor = 0;
+    for (const match of text.matchAll(pattern)) {
+      const index = match.index || 0;
+      if (index > cursor) parts.push(renderText(text.slice(cursor, index)));
+      const label = match[0];
+      const lowered = label.toLowerCase();
+      const kind = lowered.includes('здоров') ? 'health'
+        : lowered.includes('урон') ? 'damage'
+          : lowered.includes('щит') ? 'shield'
+            : lowered.includes('комбо') ? 'combo' : 'money';
+      const iconPath = CARD_STAT_ICONS[kind];
+      const icon = iconPath ? `<img src="${versionedAsset(iconPath)}" alt="" aria-hidden="true">` : '';
+      parts.push(`<span class="food-inline-bonus ${kind}">${icon}<b>${renderText(label)}</b></span>`);
+      cursor = index + label.length;
+    }
+    if (cursor < text.length) parts.push(renderText(text.slice(cursor)));
+    return parts.join('');
   }
 
   function foodCardBodyMarkup(food) {
     const description = foodCardDescription(food);
     const stats = foodCardStatItems(food);
+    const copyLengthClass = description.text
+      ? description.text.length > 95 ? ' copy-very-long' : description.text.length > 65 ? ' copy-long' : description.text.length > 38 ? ' copy-medium' : ' copy-short'
+      : '';
     const descriptionMarkup = description.text
-      ? `<span class="food-card-description ${description.effect ? 'effect' : 'bonus'}"><em>${escapeMarkup(description.text)}</em></span>`
-      : '<span class="food-card-description empty"><em aria-hidden="true">—</em></span>';
+      ? `<span class="food-card-description ${description.effect ? 'effect' : 'bonus'}${copyLengthClass}"><em>${foodDescriptionRichMarkup(description.text, food.rarity)}</em></span>`
+      : '<span class="food-card-description no-effect"><em><b>Нет эффекта</b><i aria-hidden="true">—</i></em></span>';
     const statsMarkup = stats.length
       ? `<span class="food-stat-grid count-${stats.length}">${foodStatGridMarkup(food)}</span>`
       : '';
@@ -1385,6 +1564,7 @@
 
   function foodInfoStatMarkup(food) {
     const items = foodStatItems(food).slice(0, 4);
+    if (!items.length) return '';
     const cells = items.map(item => `
       <span class="food-info-stat ${item.key}" aria-label="${item.label}">
         ${uiIconMarkup(item.iconName, 'food-info-stat-icon')}<b>${item.display}</b>
@@ -1401,27 +1581,31 @@
       coinMultiplier: 1
     };
     const effects = {
-      momentum: false, dragonBlast: false, freeBounces: 0,
-      oreHeal: false, smallRevive: false, softLanding: false,
-      healBoost: false, bombPull: false, rainbow: false, prismFlow: false,
-      voidBreaker: false, rainbowHeart: false
+      medkitBoost: false,
+      breakHealEveryFive: false,
+      shieldActivationHeal: false,
+      lowHealthDamage: false,
+      bouncePower: false,
+      shieldDamageBoost: false,
+      shieldDamageToHealth: false,
+      shieldEndExplosion: false,
+      gravitySwitch: false,
+      edgePortals: false,
+      blockGrowth: false,
+      pandoraChaos: false,
+      slimeSplinters: false
     };
 
     for (const food of foods) {
       stats.health += food.health || 0;
       stats.damage += food.damage || 0;
       stats.shield += food.shield || 0;
+      stats.health -= food.healthPenalty || 0;
+      stats.damage -= food.damagePenalty || 0;
+      stats.shield -= food.shieldPenalty || 0;
       stats.shieldCharges += food.shieldCharges || 0;
       stats.coinMultiplier += food.coinMultiplier || 0;
-      if (food.effect) effects[food.effect] = food.effect === 'freeBounces' ? 3 : true;
-    }
-
-    if (effects.rainbow || effects.prismFlow) {
-      const boost = effects.prismFlow ? 1.12 : 1.10;
-      stats.health = BASE_HEALTH + (stats.health - BASE_HEALTH) * boost;
-      stats.damage = BASE_DAMAGE + (stats.damage - BASE_DAMAGE) * boost;
-      stats.shield = BASE_SHIELD + (stats.shield - BASE_SHIELD) * boost;
-      stats.coinMultiplier = 1 + (stats.coinMultiplier - 1) * boost;
+      if (food.effect && Object.hasOwn(effects, food.effect)) effects[food.effect] = true;
     }
     stats.health *= 1 + (session.healthBoost || 0) / 100;
     stats.health = clamp(Math.round(stats.health), 1, 999);
@@ -1438,12 +1622,36 @@
     session.combo = result.combo;
   }
 
+  function refreshLowHealthDamage(announce = false) {
+    if (!run?.effects?.lowHealthDamage) return;
+    const active = run.health / Math.max(1, run.maxHealth) < .5;
+    if (active === run.lowHealthDamageActive) return;
+    run.lowHealthDamageActive = active;
+    run.damage = clamp(run.damage + (active ? 15 : -15), 1, 999);
+    if (announce) impact(active ? 'КРИТИЧЕСКОЕ ЗДОРОВЬЕ · +15 УРОНА' : 'ЗДОРОВЬЕ ВОССТАНОВЛЕНО · −15 УРОНА');
+  }
+
+  function finishShield(timestamp = performance.now()) {
+    if (!run?.effects?.shieldEndExplosion) return;
+    const damage = Math.max(1, Math.round(run.damage * .4));
+    const x = run.slime.x;
+    const y = run.slime.y;
+    spawnSpecialBurst('shieldBurst', x, y);
+    explodeAt(x, y, 96, .5, damage);
+    run.shake = Math.max(run.shake, 6);
+    impact(`ВЗРЫВ ЩИТА · ${damage} УРОНА`);
+    sound('epic');
+    feedback([10, 18, 10]);
+  }
+
   function clearFoodPreview(force = false) {
     if (force !== true && document.body.classList.contains('food-dragging')) return;
     [els.healthCompare, els.damageCompare, els.shieldCompare].forEach(element => {
-      if (element) element.textContent = '';
+      if (!element) return;
+      element.textContent = '';
+      element.classList.remove('negative');
     });
-    $$('.slime-stage .stat-pill').forEach(pill => pill.classList.remove('previewing'));
+    $$('.slime-stage .stat-pill').forEach(pill => pill.classList.remove('previewing', 'preview-loss'));
   }
 
   function showFoodPreview(food) {
@@ -1451,16 +1659,77 @@
     if (!secretFoodIsRevealed(food)) return clearFoodPreview();
     const next = calculateStatsForFoods([...session.foods, food]).stats;
     const comparisons = [
-      [els.healthCompare, next.health, session.stats.health, delta => `+${Math.round(delta)}`],
-      [els.damageCompare, next.damage, session.stats.damage, delta => `+${Math.round(delta)}`],
-      [els.shieldCompare, next.shield, session.stats.shield, delta => `+${Math.round(delta)}`]
+      [els.healthCompare, next.health, session.stats.health],
+      [els.damageCompare, next.damage, session.stats.damage],
+      [els.shieldCompare, next.shield, session.stats.shield]
     ];
-    comparisons.forEach(([element, value, current, format]) => {
+    comparisons.forEach(([element, value, current]) => {
       if (!element) return;
       const delta = value - current;
-      const changed = delta > .001;
-      element.textContent = changed ? format(delta) : '';
+      const changed = Math.abs(delta) > .001;
+      element.textContent = changed ? `${delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '';
+      element.classList.toggle('negative', delta < 0);
       element.closest('.stat-pill')?.classList.toggle('previewing', changed);
+      element.closest('.stat-pill')?.classList.toggle('preview-loss', changed && delta < 0);
+    });
+  }
+
+  function clearMenuStatFeedback() {
+    menuStatFeedbackTimers.forEach(clearTimeout);
+    menuStatFeedbackTimers = [];
+    document.querySelectorAll('.stat-change-fly').forEach(item => item.remove());
+    $$('.slime-stage .stat-pill.stat-change-pop').forEach(pill => {
+      pill.classList.remove('stat-change-pop', 'stat-change-gain', 'stat-change-loss');
+      pill.removeAttribute('data-stat-change');
+    });
+  }
+
+  function showMenuStatChange(before, after) {
+    const changes = [
+      { key: 'health', label: els.healthLabel, value: after.health, previous: before.health },
+      { key: 'damage', label: els.damageLabel, value: after.damage, previous: before.damage },
+      { key: 'shield', label: els.shieldLabel, value: after.shield, previous: before.shield }
+    ].filter(item => Math.round(item.value) !== Math.round(item.previous));
+    if (!changes.length) return;
+
+    const mouth = els.menuSlimeMouth?.getBoundingClientRect();
+    if (!mouth) return;
+    clearMenuStatFeedback();
+    changes.forEach((change, index) => {
+      const timer = setTimeout(() => {
+        const target = change.label?.closest('.stat-pill');
+        if (!target) return;
+        const targetRect = target.getBoundingClientRect();
+        const delta = Math.round(change.value - change.previous);
+        const direction = delta > 0 ? 'gain' : 'loss';
+        const text = `${delta > 0 ? '+' : '−'}${Math.abs(delta)}`;
+        const flyer = document.createElement('span');
+        flyer.className = `stat-change-fly ${direction} ${change.key}`;
+        flyer.textContent = text;
+        flyer.style.left = `${mouth.left + mouth.width / 2}px`;
+        flyer.style.top = `${mouth.top + mouth.height / 2}px`;
+        document.body.appendChild(flyer);
+        requestAnimationFrame(() => {
+          flyer.style.left = `${targetRect.left + targetRect.width / 2}px`;
+          flyer.style.top = `${targetRect.top + targetRect.height / 2}px`;
+          flyer.classList.add('is-flying');
+        });
+        const arrivalTimer = setTimeout(() => {
+          flyer.remove();
+          change.label.textContent = Math.round(change.value);
+          target.dataset.statChange = text;
+          target.classList.remove('stat-change-pop', 'stat-change-gain', 'stat-change-loss');
+          void target.offsetWidth;
+          target.classList.add('stat-change-pop', `stat-change-${direction}`);
+          const clearTimer = setTimeout(() => {
+            target.classList.remove('stat-change-pop', 'stat-change-gain', 'stat-change-loss');
+            target.removeAttribute('data-stat-change');
+          }, 720);
+          menuStatFeedbackTimers.push(clearTimer);
+        }, 430);
+        menuStatFeedbackTimers.push(arrivalTimer);
+      }, index * 88);
+      menuStatFeedbackTimers.push(timer);
     });
   }
 
@@ -1470,13 +1739,13 @@
     slot.type = 'button';
     slot.className = `stomach-quick-slot ${locked ? 'locked' : ''} ${food ? `filled ${food.rarity}` : ''}`;
     if (food) {
-      const effectStar = food.effectText
+      const effectStar = (food.description || food.effectText)
         ? '<span class="slot-effect-star" aria-hidden="true">★</span>'
         : '';
       slot.innerHTML = `${effectStar}<span class="slot-art">${foodArtMarkup(food, 'food-mini-model')}</span>`;
       centerFoodThumbnail(slot.querySelector('.food-mini-model'));
-      slot.setAttribute('aria-label', `${index + 1}. ячейка. ${food.name}. ${RARITY_LABELS[food.rarity]}${food.effectText ? '. Есть особый эффект' : ''}. Показать свойства`);
-      slot.title = `${food.name}${food.effectText ? ' · ★ эффект' : ''}`;
+      slot.setAttribute('aria-label', `${index + 1}. ячейка. ${food.name}. ${RARITY_LABELS[food.rarity]}${food.description || food.effectText ? '. Есть описание эффекта' : ''}. Показать свойства`);
+      slot.title = `${food.name}${food.description || food.effectText ? ' · ★ эффект' : ''}`;
       slot.addEventListener('click', () => showStomachFoodInfo(food, index, slot));
     } else if (locked) {
       slot.innerHTML = '<img class="slot-lock" src="assets/ui/lock.webp" alt="" aria-hidden="true">';
@@ -1505,6 +1774,7 @@
   function hideFoodInfo(closeStomachViewer = true) {
     selectedFoodOfferIndex = null;
     selectedFoodInfoKey = null;
+    els.conveyor?.classList.remove('showing-food-info');
     els.foodInfo?.classList.add('hidden');
     els.foodInfo?.classList.remove('below');
     els.foodInfo?.style.removeProperty('left');
@@ -1542,24 +1812,24 @@
     }
     selectedFoodInfoKey = key;
     selectedFoodOfferIndex = offerIndex;
+    els.conveyor?.classList.add('showing-food-info');
     $$('.food-info-source.selected').forEach(item => item.classList.remove('selected', 'food-info-source'));
     source?.classList.add('selected', 'food-info-source');
     if (preview) showFoodPreview(food);
     else clearFoodPreview();
     const cardType = foodCardType(food);
-    els.foodInfoStats.innerHTML = cardType === 'ability'
-      ? `<strong class="food-info-kind">${uiIconMarkup('special', 'food-info-kind-icon')}ЭФФЕКТ</strong>`
-      : foodInfoStatMarkup(food);
-    els.foodInfoEffect.textContent = food.effectText || '';
-    els.foodInfoEffect.classList.toggle('hidden', !food.effectText);
-    els.foodInfo.className = `food-info ${food.rarity} food-type-${cardType}`;
+    const description = food.description || food.effectText || '';
+    els.foodInfoStats.innerHTML = foodInfoStatMarkup(food);
+    els.foodInfoEffect.textContent = description;
+    els.foodInfoEffect.classList.toggle('hidden', !description);
+    els.foodInfo.className = `food-info ${food.rarity} food-type-${cardType}${description ? ' has-description' : ''}`;
     positionFoodInfoPopover(source);
   }
 
   function showFoodInfo(food, offerIndex, source) {
     if (!secretFoodIsRevealed(food)) {
       hideFoodInfo();
-      playSecretDiscovery(food, offerIndex);
+      playSecretDiscovery(food, offerIndex, source);
       return;
     }
     presentFoodInfo(food, `offer:${offerIndex}`, source, { offerIndex, preview: true });
@@ -1576,7 +1846,7 @@
     source?.classList.add('selected');
     const encyclopedia = window.SlimeEncyclopedia;
     const markup = encyclopedia?.foodCardMarkup
-      ? encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup, foodNameMarkup, foodCardBodyMarkup })
+      ? encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup, foodNameMarkup, foodCardBodyMarkup, foodCardDecorMarkup })
       : secretCardMarkup(food);
     els.stomachCardViewer.dataset.foodId = food.id;
     els.stomachCardViewer.innerHTML = `<button class="stomach-card-close" type="button" aria-label="Закрыть карточку">×</button><div class="stomach-card-viewer-card">${markup}</div>`;
@@ -1592,17 +1862,54 @@
     $$('.stomach-quick-slot.selected').forEach(slot => slot.classList.remove('selected'));
   }
 
-  function renderDraft({ offerMotion = 'static' } = {}) {
+  function renderConveyorStartCard({ entering = false } = {}) {
+    const world = currentWorld();
+    const endless = save.homeMode === 'endless';
+    const stageLabel = endless ? 'БЕСКОНЕЧНЫЙ РЕЖИМ' : `УРОВЕНЬ ${selectedLevelForWorld(world.id)}`;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `conveyor-start-card${entering ? ' launch-card-enter' : ''}`;
+    button.setAttribute('aria-label', `${world.name}. ${stageLabel}. Начать падение`);
+    button.innerHTML = `
+      <span class="launch-card-booms" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="launch-card-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="launch-card-world"><small>МИР ${world.id}</small><b>${world.name}</b></span>
+      <span class="launch-card-stage">${stageLabel}</span>
+      <span class="launch-card-action"><i aria-hidden="true"></i><b>СТАРТ</b><i aria-hidden="true"></i></span>`;
+    button.addEventListener('click', () => startDrop({ endless: save.homeMode === 'endless' }));
+    els.foodChoices.appendChild(button);
+  }
+
+  function refreshConveyorStartCard() {
+    if (!stomachIsFull() || !els.foodChoices?.querySelector('.conveyor-start-card')) return;
+    els.foodChoices.replaceChildren();
+    renderConveyorStartCard();
+  }
+
+  function renderDraft({ offerMotion = 'static', showLaunchCard = true } = {}) {
     recalcStats();
     updatePersistentUI();
     const full = stomachIsFull();
 
-    els.healthLabel.textContent = Math.round(session.stats.health);
-    els.damageLabel.textContent = `${Math.round(session.stats.damage)}`;
-    els.shieldLabel.textContent = `${Math.round(session.stats.shield)}`;
-    els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
-    els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
+    const mealInProgress = ['eat', 'chewing', 'savoring'].some(name => els.slime.classList.contains(name));
+    if (!mealInProgress) {
+      els.healthLabel.textContent = Math.round(session.stats.health);
+      els.damageLabel.textContent = `${Math.round(session.stats.damage)}`;
+      els.shieldLabel.textContent = `${Math.round(session.stats.shield)}`;
+      els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
+      els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
+    }
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
+    if (els.startDropBtn) {
+      els.startDropBtn.disabled = !full;
+      els.startDropBtn.classList.toggle('stomach-locked', !full);
+      els.startDropBtn.setAttribute('aria-label', full ? 'Начать падение' : `Сначала заполни желудок: ${stomachFoodCount()} из ${save.stomachLevel}`);
+    }
+    if (els.startEndlessBtn) {
+      els.startEndlessBtn.disabled = !full || !save.gameCompleted;
+      els.startEndlessBtn.classList.toggle('stomach-locked', !full);
+    }
+    els.conveyor.classList.toggle('launch-ready', full && showLaunchCard);
     clearFoodPreview();
     els.rerollBtn.disabled = full || session.rerollPending || adInFlight;
 
@@ -1642,10 +1949,13 @@
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
       button.innerHTML = unknownSecret
-        ? `<span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>СЕКРЕТНОЕ</span></span></span><span class="secret-unknown-center" aria-hidden="true">???</span><span class="secret-unknown-copy">НАЖМИ</span>`
-        : `<span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
+        ? `${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>СЕКРЕТНОЕ</span></span></span><span class="secret-unknown-center" aria-hidden="true"><span class="secret-question-marks">???</span><span class="secret-awaken-main-eye"><i></i></span></span><span class="secret-awaken-side-eyes" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></span><span class="food-name secret-unknown-copy"><span class="food-name-text">НАЖМИ</span></span><span class="food-card-description empty"><em aria-hidden="true">—</em></span><span class="secret-awaken-aura" aria-hidden="true"></span>`
+        : `${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
       button.type = 'button';
-      const cardSummary = cardType === 'ability' ? `Эффект: ${food.effectText}` : foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
+      const cardSummary = [
+        foodStatItems(food).slice(0, 4).map(item => item.label).join(', '),
+        food.description || food.effectText || ''
+      ].filter(Boolean).join('. ');
       button.setAttribute('aria-label', unknownSecret ? 'Неизвестная секретная карта. Нажми, чтобы раскрыть' : `${food.name}. ${cardSummary}. Открыть описание`);
       button.addEventListener('pointerdown', event => beginFoodDrag(event, food, index, button));
       button.addEventListener('pointerenter', () => showFoodPreview(food));
@@ -1657,9 +1967,14 @@
       });
       els.foodChoices.appendChild(button);
     });
+    if (full && showLaunchCard) renderConveyorStartCard({ entering: offerMotion === 'launch' });
 
     const rerollBlocked = full || session.rerollPending || session.offerTransition || adInFlight;
-    if (session.freeRerolls > 0) {
+    if (full) {
+      if (els.rerollTitle) els.rerollTitle.textContent = 'ВЫБОР ГОТОВ';
+      if (els.rerollText) els.rerollText.textContent = 'ЖЕЛУДОК ЗАПОЛНЕН';
+      els.rerollBtn.classList.remove('ad-mode');
+    } else if (session.freeRerolls > 0) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ОБНОВИТЬ';
       if (els.rerollText) els.rerollText.textContent = 'БЕСПЛАТНО ×1';
       els.rerollBtn.classList.remove('ad-mode');
@@ -1783,16 +2098,18 @@
     discoverFoods([food]);
     hideFoodInfo();
     clearMenuSlimeInteraction();
+    clearMenuStatFeedback();
     animateFoodToMouth(food, source);
     const previousCombo = session.combo?.name || '';
+    const statsBeforeMeal = { ...session.stats };
     session.foods.push(food);
     session.offer[offerIndex] = null;
+    const statsAfterMeal = calculateStatsForFoods(session.foods).stats;
     const mealReaction = {
       common: { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, happyMs: 350 },
       rare: { catchMs: 210, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 420 },
       epic: { catchMs: 230, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 620 },
-      special: { catchMs: 260, chewMs: 1350, chewTime: '.3s', chews: 5, happyMs: 780 },
-      secret: { catchMs: 270, chewMs: 1500, chewTime: '.3s', chews: 5, revealDelayMs: 0, happyMs: 820 }
+      secret: { catchMs: 300, chewMs: 1350, chewTime: '.36s', chews: 4, happyMs: 1050 }
     }[food.rarity] || { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, revealDelayMs: 0, happyMs: 350 };
     sound('eat', {
       biteDelay: Math.max(180, mealReaction.catchMs - 20),
@@ -1800,13 +2117,18 @@
     });
     clearMenuMealReaction();
     els.slime.classList.add(`meal-${food.rarity}`);
+    if (food.rarity === 'secret') {
+      els.slimeStage?.classList.add('secret-meal-active');
+      document.body.classList.add('secret-meal-ui-active');
+    }
     els.slime.style.setProperty('--catch-time', `${mealReaction.catchMs}ms`);
     els.slime.style.setProperty('--chew-time', mealReaction.chewTime);
     els.slime.style.setProperty('--chew-count', String(mealReaction.chews));
     els.slime.style.setProperty('--happy-time', `${mealReaction.happyMs}ms`);
+    menuMealFxStartedAt = performance.now();
     void els.slime.offsetWidth;
     els.slime.classList.add('eat');
-    if (food.rarity !== 'secret') showRarityBurst(food);
+    showRarityBurst(food);
     menuEmotionTimer = setTimeout(() => {
       els.slime.classList.remove('eat', 'expect-food', 'tracking-food');
       els.slime.classList.add('chewing');
@@ -1816,7 +2138,14 @@
         const revealMeal = () => {
           els.slime.classList.remove('savoring');
           els.slime.classList.add('pleased');
-          if (food.rarity === 'secret') feedback([14, 24, 12]);
+          if (food.rarity === 'secret') {
+            els.slimeStage?.classList.add('secret-meal-impact');
+            document.body.classList.add('secret-meal-ui-impact');
+          }
+          recalcStats();
+          showMenuStatChange(statsBeforeMeal, statsAfterMeal);
+          els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
+          els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
           sound(['epic', 'special', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
           menuEmotionTimer = setTimeout(() => {
             clearMenuMealReaction();
@@ -1829,7 +2158,7 @@
       }, mealReaction.chewMs);
     }, mealReaction.catchMs);
     persist();
-    feedback(food.rarity === 'special' || food.rarity === 'secret' ? [12, 30, 18] : 8);
+    feedback(food.rarity === 'secret' ? [12, 24, 14, 34] : food.rarity === 'special' ? [12, 30, 18] : 8);
     if (session.combo && session.combo.name !== previousCombo) showToast(`${session.combo.icon} Комбо: ${session.combo.name} — ${session.combo.text}`);
     void advanceConveyorAfterChoice(offerIndex, source);
   }
@@ -1849,6 +2178,22 @@
     });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 620));
+    // После последней еды лента на мгновение очищается и привозит отдельную
+    // большую карточку запуска — это финальный этап подготовки к забегу.
+    if (stomachIsFull()) {
+      session.offer = [];
+      renderDraft({ showLaunchCard: false });
+      persist();
+      await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 210));
+      renderDraft({ offerMotion: 'launch' });
+      sound('happy');
+      feedback([8, 18, 8]);
+      await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 760));
+      els.foodChoices.querySelector('.conveyor-start-card')?.classList.remove('launch-card-enter');
+      session.offerTransition = false;
+      els.conveyor.classList.remove('is-running', 'is-selecting');
+      return;
+    }
     generateOffer(session.baseEpicBoost);
     renderDraft({ offerMotion: 'enter' });
     persist();
@@ -1917,13 +2262,21 @@
   function shiftRunClock(delta) {
     if (!run || delta <= 0) return;
     const timestampKeys = [
-      'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'appleGlowUntil', 'freezeUntil',
+      'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'freezeUntil',
       'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
-      'softLandingUntil', 'lastBombPullAt', 'lastTrailSampleAt', 'lastUiUpdateAt'
+      'lastTrailSampleAt', 'lastUiUpdateAt', 'gravitySwitchFlashUntil', 'growthResetUntil', 'edgePortalFlashUntil',
+      'timeSlowUntil', 'lastSplitAt', 'jellyEnteredAt', 'lastJellyBubbleAt'
     ];
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
     if (run.geyserCapture) {
       for (const key of ['startedAt', 'readyAt', 'autoLaunchAt']) if (run.geyserCapture[key] > 0) run.geyserCapture[key] += delta;
+    }
+    if (run.edgePortalPhase?.until > 0) run.edgePortalPhase.until += delta;
+    for (const mini of run.miniSlimes || []) {
+      if (mini.invulnerableUntil > 0) mini.invulnerableUntil += delta;
+      if (mini.damageInvulnerableUntil > 0) mini.damageInvulnerableUntil += delta;
+      if (mini.launchUntil > 0) mini.launchUntil += delta;
+      if (mini.spawnedAt > 0) mini.spawnedAt += delta;
     }
     if (run.portalEntry?.startedAt > 0) run.portalEntry.startedAt += delta;
     run.hitCooldowns = new Map([...run.hitCooldowns.entries()].map(([key, value]) => [key, value > 0 ? value + delta : value]));
@@ -1998,9 +2351,11 @@
   function restartCurrentRun() {
     if (!run || run.ended) return;
     const endless = run.endless;
+    if (!endless) registerCampaignFailure(run.worldId, run.level);
     cancelAnimationFrame(run.animationId);
     hideRunMenu();
     run = null;
+    persist();
     startDrop({ endless });
   }
 
@@ -2010,9 +2365,33 @@
     finishRunEarly();
   }
 
+  function campaignAttemptKey(worldId, level) {
+    return `${worldId}:${level}`;
+  }
+
+  function registerCampaignFailure(worldId, level) {
+    const key = campaignAttemptKey(worldId, level);
+    save.levelFailures[key] = clamp(Math.round(+(save.levelFailures?.[key] || 0)) + 1, 0, 99);
+  }
+
+  function campaignGenerationDifficulty(world, level) {
+    const targetDepth = levelTargetDepth(world, level);
+    if ((save.worldBest?.[world.id] || 0) >= targetDepth) return 'mixed';
+    const failures = Math.max(0, Math.round(+(save.levelFailures?.[campaignAttemptKey(world.id, level)] || 0)));
+    if (failures < 2) return 'hard';
+    if (failures < 4) return 'normal';
+    return 'easy';
+  }
+
   function startDrop(options = {}) {
     const endless = options?.endless === true;
     GAME_BALANCE = window.SlimeBalance?.load?.() || GAME_BALANCE;
+    if (!stomachIsFull()) {
+      const remaining = Math.max(0, save.stomachLevel - stomachFoodCount());
+      showToast(`Сначала выбери ещё ${remaining} ${remaining === 1 ? 'карту' : remaining < 5 ? 'карты' : 'карт'}`);
+      feedback([10, 18, 10]);
+      return;
+    }
     if (secretSequenceActive || menuSlimeIsBusy()) {
       showToast('Слайм ещё доедает');
       return;
@@ -2028,6 +2407,7 @@
       reward: levelReward(baseWorld, level),
       endlessScale: 1
     };
+    const generationDifficulty = endless ? 'mixed' : campaignGenerationDifficulty(world, level);
     const finishY = world.targetDepth * 10 + 180;
     const cellSize = world.cellSize || BALANCE.gridCell;
     const columns = Math.floor(VIEW_W / cellSize);
@@ -2047,12 +2427,13 @@
       gridOffsetX,
       startX,
       endless,
+      generationDifficulty,
       endlessLap: 1,
       endlessDepthOffset: 0,
       // Портал — самостоятельный финал. Крепостной стены перед ним больше нет.
       portalY: finishY + cellSize * .35,
-      blocks: [], particles: [], trails: [], specialEffects: [],
-      meteorShowers: [],
+      blocks: [], honeyZones: [], jellyZones: [], particles: [], trails: [], specialEffects: [],
+      meteorShowers: [], miniSlimes: [],
       slime: {
         x: startX,
         y: 78,
@@ -2064,8 +2445,16 @@
       steer: {
         keyLeft: false, keyRight: false, keyDown: false,
         touchX: 0, touchDown: 0, pointerId: null,
-        originX: 0, originY: 0
+        originX: 0, originY: 0, gravityGestureLocked: false
       },
+      gravityDirection: 1,
+      gravitySwitchFlashUntil: 0,
+      edgePortalFlashUntil: 0,
+      edgePortalPhase: null,
+      growthStacks: 0,
+      growthResetUntil: 0,
+      timeSlowUntil: 0,
+      lastSplitAt: 0,
       geyserCapture: null,
       geyserLaunchGraceUntil: 0,
       geyserBreaksLeft: 0,
@@ -2077,8 +2466,11 @@
       healthFlashTime: 0,
       hurtFlashUntil: 0,
       healGlowUntil: 0,
-      appleGlowUntil: 0,
-      appleGlowType: '',
+      inHoneyZoneId: '',
+      lastHoneyBubbleAt: 0,
+      inJellyZoneId: '',
+      jellyEnteredAt: 0,
+      lastJellyBubbleAt: 0,
       freezeUntil: 0,
       frozenEmotion: 'surprised',
       lastFrozenImpactAt: 0,
@@ -2092,11 +2484,9 @@
       bounceControlRestoreUntil: 0,
       coinMultiplier: session.stats.coinMultiplier,
       effects: { ...session.effects },
-      freeBouncesLeft: session.effects.freeBounces || 0,
-      revived: false,
-      rainbowHeartUsed: false,
-      voidBreakerUsed: false,
-      brokenSinceBlast: 0,
+      blocksBrokenForHeal: 0,
+      lowHealthDamageActive: false,
+      bouncePowerReady: false,
       shieldCharges: session.stats.shieldCharges,
       maxShieldCharges: session.stats.shieldCharges,
       coins: 0,
@@ -2125,8 +2515,6 @@
       hitCooldowns: new Map(),
       damageInvulnerableUntil: 0,
       bounceGraceUntil: 0,
-            softLandingUntil: 0,
-      lastBombPullAt: 0,
       impactGroupId: 0,
       lowMotionTime: 0,
       lastPosition: { x: startX, y: 78 },
@@ -2135,6 +2523,9 @@
       lastTrailSampleAt: 0
     };
     run.blocks = generateBlockField(run);
+    applySecretWorldModifiers(run);
+    run.honeyZones = generateHoneyZones(run);
+    run.jellyZones = generateJellyZones(run);
     prepareCanvas();
     showScreen('drop');
     clearRunImpactFeedback();
@@ -2165,21 +2556,65 @@
     if (category === 'normal') return { tier:'hard', special:null, zone };
     if (category === 'strong') return { tier:'reinforced', special:null, zone };
     if (category === 'ore') return { tier:'ore', special:null, zone };
-    const worldSpecialIds = window.SlimeBalance?.specialIdsForWorld?.(world.id)
+    const rawWorldSpecialIds = window.SlimeBalance?.specialIdsForWorld?.(world.id)
       || (world.id === 2
         ? ['heal', 'cryo', 'snowflake']
         : world.id === 3
-          ? ['heal', 'appleMint', 'appleRed']
+          ? ['heal', 'jelly']
           : world.id === 4
             ? ['heal', 'geyser', 'meteor']
           : ['heal', 'bomb', 'spring']);
+    // Старый баланс хранит два яблочных ключа. В самой игре они становятся
+    // одной желейкой, а их суммарный вес сохраняет прежнюю частоту особого блока.
+    const worldSpecialIds = [...new Set(rawWorldSpecialIds.map(id => world.id === 3 && (id === 'appleMint' || id === 'appleRed') ? 'jelly' : id))]
+      .filter(id => !(world.id === 1 && id === 'spring'));
+    const secondaryWeight = id => id === 'jelly'
+      ? (zone?.secondary?.jelly ?? ((zone?.secondary?.appleMint || 0) + (zone?.secondary?.appleRed || 0)))
+      : (zone?.secondary?.[id] || 0);
     const enabledSecondary = Object.fromEntries(worldSpecialIds
       .filter(id => editorAllows(world, level, id))
-      .map(id => [id, zone?.secondary?.[id] || 0]));
+      .map(id => [id, secondaryWeight(id)]));
     if (!Object.values(enabledSecondary).some(weight => weight > 0)) return { tier:'dense', special:null, zone };
-    const selected = weightedKey(enabledSecondary, world.id === 2 ? 'cryo' : world.id === 3 ? 'appleMint' : world.id === 4 ? 'geyser' : 'heal');
+    const selected = weightedKey(enabledSecondary, world.id === 2 ? 'cryo' : world.id === 3 ? 'jelly' : world.id === 4 ? 'geyser' : 'heal');
     const special = selected === 'heal' ? 'gel' : selected;
     return { tier:'special', special, zone };
+  }
+
+  function authoredSectionCell(token, world, level, unlocks) {
+    if (!token) return null;
+    const weak = { tier: 'dense', special: null, hazard: false, path: true };
+    if (token === '.') return { ...weak, dead: true, path: true };
+    if (token === 'w') return weak;
+    if (token === 'n') return { tier: 'hard', special: null, hazard: false, path: false };
+    if (token === 'h') return { tier: 'reinforced', special: null, hazard: false, path: false };
+    if (token === 'x') return unlocks?.hazards && editorAllows(world, level, 'hazard')
+      ? { tier: 'dense', special: null, hazard: true, path: false }
+      : { ...weak, path: false };
+    if ('cigd'.includes(token)) {
+      const oreByToken = { c: 'coal', i: 'iron', g: 'gold', d: 'diamond' };
+      return { tier: 'ore', special: null, hazard: false, path: true, oreId: oreByToken[token] };
+    }
+    if (token === '+') return unlocks?.medkit && editorAllows(world, level, 'heal')
+      ? { tier: 'special', special: 'gel', hazard: false, path: true }
+      : weak;
+    if (token === 'z') {
+      if (world.id === 1) return { ...weak, dead: true, environment: 'jelly', path: true };
+      if (world.id === 3) return { ...weak, dead: true, environment: 'honey', path: true };
+    }
+    if (token === 'p' || token === 'q' || token === 'z') {
+      const specialByWorld = {
+        1: { p: 'bomb', q: 'bomb', z: 'bomb' },
+        2: { p: 'cryo', q: 'snowflake', z: 'snowflake' },
+        3: { p: 'jelly', q: 'jelly', z: 'jelly' },
+        4: { p: 'geyser', q: 'meteor', z: 'meteor' }
+      };
+      const special = specialByWorld[world.id]?.[token] || null;
+      const lockedBomb = special === 'bomb' && !unlocks?.dynamite;
+      return special && !lockedBomb && editorAllows(world, level, special)
+        ? { tier: 'special', special, hazard: false, path: true }
+        : weak;
+    }
+    return weak;
   }
 
   function generateBlockField(runState) {
@@ -2192,7 +2627,7 @@
     // Оставляем перед порталом чистый вход: последний ряд блоков не заменяется стеной.
     const rows = Math.max(8, Math.floor((finishY - cell - startY) / cell));
     const unlocks = levelFeatures(world, runState.level);
-    const plan = createSectionPlan(world, rows, runState.level);
+    const plan = createSectionPlan(world, rows, runState.level, runState.generationDifficulty);
     let id = 0;
     let pathCenter = Math.floor(columns / 2);
     let previousSection = '';
@@ -2209,7 +2644,7 @@
       pathCenter = clamp(pathCenter, 1, columns - 2);
 
       let pathWidth = clamp(Math.round(lerp(world.pathWidth, world.minPathWidth, progress)), 1, 3);
-      if (meta.kind === 'tutorial' || meta.kind === 'recovery' || meta.kind === 'final') pathWidth = Math.max(pathWidth, world.id === 1 ? 3 : 2);
+      if (meta.kind === 'start' || meta.kind === 'safe' || meta.kind === 'tutorial' || meta.kind === 'recovery' || meta.kind === 'final') pathWidth = Math.max(pathWidth, world.id === 1 ? 3 : 2);
       if (meta.kind === 'boss') pathWidth = 1;
       const pathStart = clamp(Math.round(pathCenter - (pathWidth - 1) / 2), 0, columns - pathWidth);
       let pathColumns = Array.from({ length: pathWidth }, (_, index) => pathStart + index);
@@ -2231,17 +2666,26 @@
         const balanced = chooseBalancedCell(world, runState.level, progress);
         let tier = balanced.tier;
         let special = balanced.special;
+        const authored = authoredSectionCell(meta.cells?.[col], world, runState.level, unlocks);
+        if (authored) {
+          tier = authored.tier;
+          special = authored.special;
+        }
         // Hazards are biome-wide mechanics. They used to be accidentally
         // hard-locked to World 4 even when another world's level enabled them.
-        const hazard = !special
-          && tier !== 'ore'
-          && editorAllows(world, runState.level, 'hazard')
-          && Math.random() < lerp(.035, .075, progress);
+        const hazard = authored
+          ? authored.hazard
+          : !special
+            && tier !== 'ore'
+            && editorAllows(world, runState.level, 'hazard')
+            && Math.random() < lerp(.035, .075, progress);
         const hazardVariant = null;
         const finalTier = special ? 'special' : tier;
         const customVisuals = editorWorld(world.id)?.blocks?.filter(item => item.type === 'custom' && item.spawnType === finalTier && editorAllows(world, runState.level, item.id)) || [];
         const customVisual = customVisuals.length ? customVisuals[Math.floor(Math.random() * customVisuals.length)] : null;
-        const oreType = finalTier === 'ore' ? chooseOreType(progress, world, balanced.zone) : null;
+        const oreType = authored?.oreId
+          ? ORE_TYPES.find(ore => ore.id === authored.oreId) || chooseOreType(progress, world, balanced.zone)
+          : finalTier === 'ore' ? chooseOreType(progress, world, balanced.zone) : null;
         let maxHp = blockHpForTier(finalTier, world, progress, row, col, inPath);
         if (special === 'coin') maxHp *= .66;
         if (special === 'spring') maxHp = 1;
@@ -2253,15 +2697,16 @@
         if (hazard) maxHp = 1;
         // Все вспомогательные блоки срабатывают от первого касания — число на
         // плитке это честно показывает, а не маскирует триггер за «5 HP».
-        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'snowflake' || special === 'appleMint' || special === 'appleRed' || special === 'geyser' || special === 'meteor') maxHp = 1;
+        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'snowflake' || special === 'jelly' || special === 'geyser' || special === 'meteor') maxHp = 1;
         if (special === 'spring') maxHp = 1;
         maxHp = Math.max(1, Math.round(maxHp));
 
         const material = hazard ? (world.id === 2 ? 'iceHazard' : world.id === 4 ? 'lavaRock' : 'hazard') : chooseMaterial(world, progress, special, finalTier);
         rowBlocks.push({
           id: id++, row, col, x: gridOffsetX + col * cell, y, w: cell, h: cell,
-          hp: maxHp, maxHp, material, special, tier: finalTier, dead: false,
-          path: inPath, segment: meta.kind, hazard, unbreakable: hazard, hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
+          hp: maxHp, maxHp, material, special, tier: finalTier, dead: Boolean(authored?.dead),
+          path: authored?.path ?? inPath, segment: meta.kind, hazard, unbreakable: hazard || special === 'jelly', hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
+          environmentRemoved: authored?.environment || '',
           // Grass belongs only to the surface layer of World 1.
           topGrass: world.id === 1 && row === 0 && !special && finalTier === 'soft',
           coins: special
@@ -2277,6 +2722,7 @@
       // appears underground.
       if (row === 0) {
         for (const block of rowBlocks) {
+          block.dead = false;
           block.tier = world.id === 2 || world.id === 4 ? 'dense' : 'soft';
           block.special = null;
           block.hazard = false;
@@ -2284,6 +2730,8 @@
           block.hazardVariant = null;
           block.oreType = null;
           block.editorVisualId = '';
+          block.environmentRemoved = '';
+          block.path = true;
           block.topGrass = world.id === 1;
           if (world.id === 1) block.material = 'grass';
           if (world.id === 2) block.material = 'iceLight';
@@ -2297,7 +2745,180 @@
     return blocks;
   }
 
-  function createSectionPlan(world, rows, level) {
+  function generateHoneyZones(runState) {
+    if (runState.worldId !== 3) return [];
+    const authoredZones = authoredEnvironmentZones(runState, 'honey');
+    if (authoredZones.length) return authoredZones;
+    const blocks = runState.blocks || [];
+    const cell = runState.cellSize;
+    const rowCount = blocks.reduce((maximum, block) => Math.max(maximum, block.row + 1), 0);
+    const desired = clamp(1 + Math.floor((runState.level || 1) / 2), 1, 3);
+    const targetRatios = desired === 1 ? [.43] : desired === 2 ? [.3, .68] : [.23, .5, .76];
+    const zones = [];
+
+    for (let index = 0; index < targetRatios.length; index += 1) {
+      const targetRow = clamp(Math.round(rowCount * targetRatios[index]), 5, rowCount - 5);
+      let selected = null;
+      for (const offset of [0, 1, -1, 2, -2, 3, -3]) {
+        const row = clamp(targetRow + offset, 4, rowCount - 4);
+        const pathBlocks = blocks.filter(block => block.row === row && block.path && !block.special && !block.hazard && block.tier !== 'ore');
+        if (!pathBlocks.length) continue;
+        const centerBlock = pathBlocks[Math.floor(pathBlocks.length / 2)];
+        const widthCells = pathBlocks.some(block => block.col === centerBlock.col + 1) ? 2 : 1;
+        const startCol = widthCells === 2 ? centerBlock.col : centerBlock.col;
+        const cells = blocks.filter(block => block.row >= row && block.row < row + 2 && block.col >= startCol && block.col < startCol + widthCells);
+        if (cells.length !== widthCells * 2 || cells.some(block => block.special || block.hazard || block.tier === 'ore')) continue;
+        selected = { row, startCol, widthCells, cells };
+        break;
+      }
+      if (!selected) continue;
+      selected.cells.forEach(block => {
+        block.dead = true;
+        block.environmentRemoved = 'honey';
+      });
+      zones.push({
+        id: `honey-${index}`,
+        x: runState.gridOffsetX + selected.startCol * cell + 3,
+        y: 190 + selected.row * cell + 3,
+        w: selected.widthCells * cell - 6,
+        h: cell * 2 - 6,
+        seed: index * 1.73 + selected.row * .19
+      });
+    }
+    return zones;
+  }
+
+  function generateJellyZones(runState) {
+    if (runState.worldId !== 1) return [];
+    const authoredZones = authoredEnvironmentZones(runState, 'jelly');
+    if (authoredZones.length) return authoredZones;
+    const blocks = runState.blocks || [];
+    const cell = runState.cellSize;
+    const rowCount = blocks.reduce((maximum, block) => Math.max(maximum, block.row + 1), 0);
+    const desired = clamp(1 + Math.floor(((runState.level || 1) - 1) / 2), 1, 3);
+    const targetRatios = desired === 1 ? [.5] : desired === 2 ? [.34, .69] : [.26, .51, .75];
+    const zones = [];
+
+    for (let index = 0; index < targetRatios.length; index += 1) {
+      const heightCells = runState.level >= 4 && index === targetRatios.length - 1 ? 3 : 2;
+      const widthCells = 2;
+      const targetRow = clamp(Math.round(rowCount * targetRatios[index]), 5, rowCount - heightCells - 4);
+      let selected = null;
+      for (const offset of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
+        const row = clamp(targetRow + offset, 4, rowCount - heightCells - 4);
+        const pathBlocks = blocks.filter(block => block.row === row && block.path && !block.dead && !block.special && !block.hazard && block.tier !== 'ore');
+        for (const pathBlock of pathBlocks) {
+          const startCol = clamp(pathBlock.col - (pathBlock.col >= runState.columns / 2 ? 1 : 0), 0, runState.columns - widthCells);
+          const cells = blocks.filter(block => block.row >= row && block.row < row + heightCells && block.col >= startCol && block.col < startCol + widthCells);
+          if (cells.length !== widthCells * heightCells) continue;
+          if (cells.some(block => block.dead || block.special || block.hazard || block.tier === 'ore')) continue;
+          const unsafeNeighbor = blocks.some(block => !block.dead && block.hazard
+            && block.row >= row - 1 && block.row <= row + heightCells
+            && block.col >= startCol - 1 && block.col <= startCol + widthCells);
+          if (unsafeNeighbor) continue;
+          selected = { row, startCol, widthCells, heightCells, cells };
+          break;
+        }
+        if (selected) break;
+      }
+      if (!selected) continue;
+      selected.cells.forEach(block => {
+        block.dead = true;
+        block.environmentRemoved = 'jelly';
+      });
+      zones.push({
+        id: `jelly-${index}`,
+        x: runState.gridOffsetX + selected.startCol * cell + 3,
+        y: 190 + selected.row * cell + 3,
+        w: selected.widthCells * cell - 6,
+        h: selected.heightCells * cell - 6,
+        seed: selected.row * .27 + index * 1.91
+      });
+    }
+    return zones;
+  }
+
+  function authoredEnvironmentZones(runState, environment) {
+    const cells = (runState.blocks || []).filter(block => block.environmentRemoved === environment);
+    if (!cells.length) return [];
+    const byPosition = new Map(cells.map(block => [`${block.row}:${block.col}`, block]));
+    const visited = new Set();
+    const zones = [];
+    for (const cell of cells) {
+      const firstKey = `${cell.row}:${cell.col}`;
+      if (visited.has(firstKey)) continue;
+      const queue = [cell];
+      const component = [];
+      visited.add(firstKey);
+      while (queue.length) {
+        const current = queue.shift();
+        component.push(current);
+        for (const [row, col] of [[current.row - 1, current.col], [current.row + 1, current.col], [current.row, current.col - 1], [current.row, current.col + 1]]) {
+          const key = `${row}:${col}`;
+          if (visited.has(key) || !byPosition.has(key)) continue;
+          visited.add(key);
+          queue.push(byPosition.get(key));
+        }
+      }
+      const minRow = Math.min(...component.map(block => block.row));
+      const maxRow = Math.max(...component.map(block => block.row));
+      const minCol = Math.min(...component.map(block => block.col));
+      const maxCol = Math.max(...component.map(block => block.col));
+      zones.push({
+        id: `${environment}-authored-${zones.length}`,
+        x: runState.gridOffsetX + minCol * runState.cellSize + 3,
+        y: 190 + minRow * runState.cellSize + 3,
+        w: (maxCol - minCol + 1) * runState.cellSize - 6,
+        h: (maxRow - minRow + 1) * runState.cellSize - 6,
+        seed: minRow * .27 + minCol * .61
+      });
+    }
+    return zones;
+  }
+
+  function applySecretWorldModifiers(runState) {
+    if (!runState?.effects?.pandoraChaos) return;
+    const candidates = runState.blocks.filter(block => block.row > 2 && block.path && !block.special && !block.hazard && block.tier !== 'ore');
+    if (!candidates.length) return;
+    const desired = clamp(4 + Math.floor((runState.level || 1) / 2), 4, 7);
+    const usedRows = new Set();
+    for (let index = 0; index < desired; index += 1) {
+      const target = (index + .65) / desired;
+      const targetRow = Math.round(target * Math.max(...candidates.map(block => block.row)));
+      const pool = candidates
+        .filter(block => !usedRows.has(block.row))
+        .sort((a, b) => Math.abs(a.row - targetRow) - Math.abs(b.row - targetRow));
+      const nearestDistance = pool.length ? Math.abs(pool[0].row - targetRow) : 0;
+      const nearest = pool.filter(block => Math.abs(block.row - targetRow) <= nearestDistance + 1);
+      const block = nearest[Math.floor(Math.random() * nearest.length)] || pool[0];
+      if (!block) continue;
+      usedRows.add(block.row);
+      block.special = 'pandora';
+      block.tier = 'special';
+      block.material = 'pandora';
+      block.hp = 1;
+      block.maxHp = 1;
+      block.coins = 0;
+      block.hazard = false;
+      block.unbreakable = true;
+      block.editorVisualId = '';
+    }
+  }
+
+  function createSectionPlan(world, rows, level, difficultyMode = 'mixed') {
+    const catalog = window.SlimeSectionCatalog;
+    if (world.id !== 1) return createLegacySectionPlan(world, rows, level);
+    if (!catalog) return Array.from({ length: rows }, (_, row) => ({
+      kind: row < 3 ? 'start' : row >= rows - 2 ? 'final' : 'neutral',
+      sectionIndex: row < 3 ? 0 : 1,
+      localRow: row,
+      length: rows
+    }));
+
+    return catalog.buildPlan(world.id, level, rows, Math.random, difficultyMode);
+  }
+
+  function createLegacySectionPlan(world, rows, level) {
     const sequences = {
       1: ['tutorial', 'flow', 'bounce', 'recovery', 'reward', 'flow', 'bomb', 'bounce', 'ore', 'final'],
       2: ['tutorial', 'flow', 'fork', 'reward', 'bounce', 'ore', 'recovery', 'bomb', 'challenge', 'final'],
@@ -2308,15 +2929,15 @@
     const sequence = levelConfig(world, level)?.sections || sequences[world.id] || sequences[4];
     const minimums = sequence.map((kind, index) => index === 0 ? 2 : 1);
     const lengths = [...minimums];
-    let remaining = Math.max(0, rows - lengths.reduce((a, b) => a + b, 0));
+    let remaining = Math.max(0, rows - lengths.reduce((sum, length) => sum + length, 0));
     const weightSum = sequence.reduce((sum, kind) => sum + baseLength[kind], 0);
     const targets = sequence.map(kind => rows * baseLength[kind] / weightSum);
     while (remaining > 0) {
       let bestIndex = 0;
       let bestNeed = -Infinity;
-      for (let i = 0; i < lengths.length; i += 1) {
-        const need = targets[i] - lengths[i] + (sequence[i] === 'final' ? .18 : 0);
-        if (need > bestNeed) { bestNeed = need; bestIndex = i; }
+      for (let index = 0; index < lengths.length; index += 1) {
+        const need = targets[index] - lengths[index] + (sequence[index] === 'final' ? .18 : 0);
+        if (need > bestNeed) { bestNeed = need; bestIndex = index; }
       }
       lengths[bestIndex] += 1;
       remaining -= 1;
@@ -2375,23 +2996,143 @@
     if (!run.lastTime) run.lastTime = timestamp;
     const dt = Math.min(.034, (timestamp - run.lastTime) / 1000);
     run.lastTime = timestamp;
+    const simulationScale = timestamp < (run.timeSlowUntil || 0) ? .46 : 1;
+    const simulationDt = dt * simulationScale;
 
     const speed = Math.hypot(run.slime.vx, run.slime.vy);
     // Fast launches and low-FPS frames must never move the slime far enough
     // to skip a block between two collision checks.
     const safeTravel = Math.max(5, Math.min(run.slime.radius * .24, run.cellSize * .14));
-    const substeps = clamp(Math.ceil(speed * dt / safeTravel), 1, 12);
-    for (let i = 0; i < substeps; i += 1) updatePhysics(dt / substeps, timestamp);
+    const substeps = clamp(Math.ceil(speed * simulationDt / safeTravel), 1, 12);
+    for (let i = 0; i < substeps; i += 1) updatePhysics(simulationDt / substeps, timestamp);
+    updateMiniSlimes(simulationDt, timestamp);
+    refreshLowHealthDamage(true);
     updateMeteorShowers(timestamp);
-    updateSlimeTrail(dt, timestamp);
-    updateParticles(dt);
-    updateSpecialEffects(dt);
+    updateSlimeTrail(simulationDt, timestamp);
+    updateParticles(simulationDt);
+    updateSpecialEffects(simulationDt);
     renderCanvas(timestamp);
     if (!run.lastUiUpdateAt || timestamp - run.lastUiUpdateAt >= (isMobileDevice() ? 90 : 70)) {
       run.lastUiUpdateAt = timestamp;
       updateRunUI();
     }
     if (!run.ended && !run.paused && !run.portalTransitioning) run.animationId = requestAnimationFrame(gameFrame);
+  }
+
+  function spawnMiniSlimes(collision, timestamp = performance.now()) {
+    if (!run?.effects?.slimeSplinters || timestamp - (run.lastSplitAt || 0) < 1150) return;
+    run.lastSplitAt = timestamp;
+    run.timeSlowUntil = Math.max(run.timeSlowUntil || 0, timestamp + 760);
+    const nx = collision?.nx || 0;
+    const ny = collision?.ny || -1;
+    const tangentX = -ny;
+    const tangentY = nx;
+    for (const spread of [-1, 0, 1]) {
+      const launchForce = spread === 0 ? 420 : 365;
+      run.miniSlimes.push({
+        id: `${timestamp}-${spread}`,
+        x: run.slime.x + nx * 18 + tangentX * spread * 15,
+        y: run.slime.y + ny * 18 + tangentY * spread * 15,
+        vx: nx * launchForce + tangentX * spread * 285 + rand(-18, 18),
+        vy: ny * launchForce + tangentY * spread * 285 + rand(-18, 18),
+        radius: 14,
+        health: 10,
+        wobble: rand(0, Math.PI * 2),
+        spawnedAt: timestamp,
+        launchUntil: timestamp + 340,
+        invulnerableUntil: timestamp + 3000,
+        damageInvulnerableUntil: 0,
+        hitCooldowns: new Map(),
+        dead: false
+      });
+    }
+    if (run.miniSlimes.length > 9) run.miniSlimes.splice(0, run.miniSlimes.length - 9);
+    spawnSpecialBurst('split', run.slime.x, run.slime.y);
+    run.emotion = 'surprised';
+    run.emotionUntil = timestamp + 600;
+    feedback([8, 13, 8]);
+  }
+
+  function updateMiniSlimes(dt, timestamp) {
+    if (!run?.miniSlimes?.length) return;
+    const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
+    for (const mini of run.miniSlimes) {
+      if (mini.dead) continue;
+      const miniDt = timestamp < (mini.launchUntil || 0) ? dt * 1.65 : dt;
+      mini.vy = clamp(mini.vy + (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * 1.08 * gravityDirection * miniDt, -760, 760);
+      mini.x += mini.vx * miniDt;
+      mini.y += mini.vy * miniDt;
+      mini.wobble += miniDt * (8 + Math.abs(mini.vy) / 100);
+
+      if (run.effects.edgePortals) {
+        if (mini.x < 0) {
+          const exit = prepareEdgePortalExit('right', mini.y);
+          mini.x = exit.x;
+          mini.vx = -Math.max(150, Math.abs(mini.vx));
+        } else if (mini.x >= VIEW_W) {
+          const exit = prepareEdgePortalExit('left', mini.y);
+          mini.x = exit.x;
+          mini.vx = Math.max(150, Math.abs(mini.vx));
+        }
+      } else {
+        if (mini.x - mini.radius < 4) {
+          mini.x = mini.radius + 4;
+          mini.vx = Math.max(175, Math.abs(mini.vx));
+        } else if (mini.x + mini.radius > VIEW_W - 4) {
+          mini.x = VIEW_W - mini.radius - 4;
+          mini.vx = -Math.max(175, Math.abs(mini.vx));
+        }
+      }
+
+      const collisions = run.blocks
+        .filter(block => !block.dead && block.y + block.h > mini.y - mini.radius && block.y < mini.y + mini.radius)
+        .map(block => ({ block, collision: circleRectCollision(mini, block) }))
+        .filter(item => item.collision)
+        .sort((a, b) => b.collision.penetration - a.collision.penetration);
+      for (const { block, collision } of collisions) {
+        const cooldown = mini.hitCooldowns.get(block.id) || 0;
+        if (timestamp - cooldown < 110) {
+          stabilizeSlimeContact(mini, collision, .7);
+          continue;
+        }
+        mini.hitCooldowns.set(block.id, timestamp);
+        mini.x += collision.nx * (collision.penetration + 2.5);
+        mini.y += collision.ny * (collision.penetration + 2.5);
+        const incoming = mini.vx * collision.nx + mini.vy * collision.ny;
+        const tangentX = mini.vx - incoming * collision.nx;
+        const tangentY = mini.vy - incoming * collision.ny;
+        const rebound = block.hazard || block.unbreakable ? 325 : 255;
+        mini.vx = collision.nx * rebound + tangentX * .46;
+        mini.vy = collision.ny * rebound + tangentY * .46;
+
+        if ((block.hazard || block.unbreakable) && timestamp >= mini.invulnerableUntil) {
+          mini.health -= block.hazard ? 30 : 5;
+          if (mini.health <= 0) {
+            mini.dead = true;
+            spawnSpecialBurst('split', mini.x, mini.y);
+          }
+        } else if (!block.special && block.tier !== 'ore') {
+          if (block.hp <= 10) {
+            block.hp = 0;
+            destroyBlock(block);
+          } else {
+            block.hp = Math.max(.05, block.hp - 10);
+            createDebris(block, 2, false);
+            if (timestamp >= mini.invulnerableUntil && timestamp >= (mini.damageInvulnerableUntil || 0)) {
+              mini.health -= 5;
+              mini.damageInvulnerableUntil = timestamp + 650;
+              if (mini.health <= 0) {
+                mini.dead = true;
+                spawnSpecialBurst('split', mini.x, mini.y);
+              }
+            }
+          }
+        }
+        break;
+      }
+      if (mini.y - mini.radius > getPortalGeometry().bottom + 120 || mini.y + mini.radius < -120) mini.dead = true;
+    }
+    run.miniSlimes = run.miniSlimes.filter(mini => !mini.dead);
   }
 
   function isSlimeFrozen(timestamp = performance.now()) {
@@ -2447,6 +3188,117 @@
     if (run.trailPoints.length > maxPoints) run.trailPoints.splice(0, run.trailPoints.length - maxPoints);
   }
 
+  function honeyZoneForSlime(slime) {
+    return run?.honeyZones?.find(zone => circleRectCollision(slime, zone)) || null;
+  }
+
+  function updateHoneyState(slime, timestamp) {
+    const zone = honeyZoneForSlime(slime);
+    const previousId = run.inHoneyZoneId || '';
+    run.inHoneyZoneId = zone?.id || '';
+    if (!zone) return;
+    if (zone.id !== previousId) {
+      run.emotion = 'surprised';
+      run.emotionUntil = timestamp + 420;
+      feedback(4);
+    }
+    if (timestamp - (run.lastHoneyBubbleAt || 0) < 115) return;
+    run.lastHoneyBubbleAt = timestamp;
+    const life = rand(.5, .82);
+    run.particles.push({
+      kind: 'special', shape: 'orb',
+      x: slime.x + rand(-slime.radius * .48, slime.radius * .48),
+      y: slime.y + rand(-slime.radius * .18, slime.radius * .52),
+      vx: rand(-14, 14), vy: rand(-42, -22), gravity: -8,
+      life, maxLife: life, size: rand(2.4, 5.4),
+      color: Math.random() < .5 ? '#ffe991' : '#ffbc3f'
+    });
+  }
+
+  function jellyZoneForSlime(slime) {
+    return run?.jellyZones?.find(zone => circleRectCollision(slime, zone)) || null;
+  }
+
+  function jellyDiveInput() {
+    if (!run?.steer) return 0;
+    return clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1);
+  }
+
+  function updateJellyState(slime, timestamp) {
+    const zone = jellyZoneForSlime(slime);
+    const previousId = run.inJellyZoneId || '';
+    run.inJellyZoneId = zone?.id || '';
+    if (!zone) return;
+    if (zone.id !== previousId) {
+      run.jellyEnteredAt = timestamp;
+      slime.vx *= .72;
+      slime.vy *= .48;
+      run.emotion = 'surprised';
+      run.emotionUntil = timestamp + 420;
+      feedback(4);
+    }
+    if (timestamp - (run.lastJellyBubbleAt || 0) < 105) return;
+    run.lastJellyBubbleAt = timestamp;
+    const life = rand(.55, .95);
+    run.particles.push({
+      kind: 'special', shape: 'orb',
+      x: slime.x + rand(-slime.radius * .58, slime.radius * .58),
+      y: slime.y + rand(-slime.radius * .24, slime.radius * .56),
+      vx: rand(-11, 11), vy: rand(-46, -25), gravity: -12,
+      life, maxLife: life, size: rand(2.2, 5.6),
+      color: Math.random() < .5 ? '#efffe8' : '#8fea72'
+    });
+  }
+
+  function updateSecretEdgePortal(slime, timestamp) {
+    if (!run.effects.edgePortals) {
+      run.edgePortalPhase = null;
+      return;
+    }
+    const phase = run.edgePortalPhase;
+    if (phase && timestamp >= phase.until) run.edgePortalPhase = null;
+    if (slime.x < 0) {
+      const exit = prepareEdgePortalExit('right', slime.y);
+      slime.x = exit.x;
+      slime.vx = -Math.max(120, Math.abs(slime.vx));
+      run.edgePortalPhase = { exitSide: 'right', clearedCols: exit.cols, until: timestamp + 320 };
+      run.edgePortalFlashUntil = timestamp + 420;
+      spawnPortalBurst(VIEW_W - 8, slime.y);
+      feedback(3);
+    } else if (slime.x >= VIEW_W) {
+      const exit = prepareEdgePortalExit('left', slime.y);
+      slime.x = exit.x;
+      slime.vx = Math.max(120, Math.abs(slime.vx));
+      run.edgePortalPhase = { exitSide: 'left', clearedCols: exit.cols, until: timestamp + 320 };
+      run.edgePortalFlashUntil = timestamp + 420;
+      spawnPortalBurst(8, slime.y);
+      feedback(3);
+    }
+  }
+
+  function prepareEdgePortalExit(exitSide, worldY) {
+    const left = exitSide === 'left';
+    const cols = left ? [0, 1, 2] : [run.columns - 1, run.columns - 2, run.columns - 3];
+    const radius = run.slime?.radius || 28;
+    for (const block of run.blocks) {
+      if (block.dead || !cols.includes(block.col)) continue;
+      if (block.y + block.h < worldY - radius - 3 || block.y > worldY + radius + 3) continue;
+      block.dead = true;
+      block.environmentRemoved = 'edge-portal';
+    }
+    const centerCol = left ? 1 : run.columns - 2;
+    return {
+      x: run.gridOffsetX + centerCol * run.cellSize + run.cellSize / 2,
+      cols
+    };
+  }
+
+  function blockHiddenByPortalExit(block) {
+    const phase = run.edgePortalPhase;
+    if (!phase) return false;
+    return phase.clearedCols?.includes(block.col) || false;
+  }
+
   function updatePhysics(dt, timestamp) {
     const s = run.slime;
     if (run.portalEntry) {
@@ -2458,26 +3310,56 @@
       return;
     }
     const frozen = isSlimeFrozen(timestamp);
-    const worldGravity = (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (frozen ? 1.48 : 1);
+    const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
+    const honeyAtStart = honeyZoneForSlime(s);
+    const honeyDrag = Boolean(honeyAtStart);
+    const jellyAtStart = jellyZoneForSlime(s);
+    const jellyDrag = Boolean(jellyAtStart);
+    const worldGravity = (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (frozen ? 1.48 : honeyDrag ? .24 : jellyDrag ? .08 : 1);
     const previousX = s.x;
     const previousY = s.y;
 
-    const terminalSpeed = (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld) * (frozen ? 1.18 : 1);
-    s.vy = Math.min(terminalSpeed, s.vy + worldGravity * dt);
+    const terminalSpeed = honeyDrag ? 132 : jellyDrag ? 165 : (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld) * (frozen ? 1.18 : 1);
+    s.vy = clamp(s.vy + worldGravity * gravityDirection * dt, -terminalSpeed, terminalSpeed);
     applyFallSteering(s, dt, timestamp);
+    if (honeyDrag && !frozen) {
+      s.vx *= Math.pow(.32, dt);
+      s.vy *= Math.pow(.085, dt);
+    } else if (jellyDrag && !frozen) {
+      const jellyAge = Math.max(0, timestamp - (run.jellyEnteredAt || timestamp));
+      const dive = jellyDiveInput();
+      const targetVy = dive > .08
+        ? lerp(-42, 158, dive)
+        : jellyAge < 170
+          ? Math.min(52, Math.max(18, s.vy * .55))
+          : -158;
+      s.vx *= Math.pow(.56, dt);
+      s.vy = lerp(s.vy, targetVy, clamp(dt * (dive > .08 ? 4.25 : 4.9), 0, 1));
+    }
     s.x += s.vx * dt;
     s.y += s.vy * dt;
+    updateHoneyState(s, timestamp);
+    updateJellyState(s, timestamp);
     s.wobble += dt * (4 + Math.abs(s.vy) / 180);
 
-    if (s.x - s.radius < 4) {
-      s.x = s.radius + 4;
-      s.vx = clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
-      run.shake = Math.max(run.shake, 3);
+    if (run.effects.edgePortals) {
+      updateSecretEdgePortal(s, timestamp);
+    } else {
+      if (s.x - s.radius < 4) {
+        s.x = s.radius + 4;
+        s.vx = clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
+        run.shake = Math.max(run.shake, 3);
+      }
+      if (s.x + s.radius > VIEW_W - 4) {
+        s.x = VIEW_W - s.radius - 4;
+        s.vx = -clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
+        run.shake = Math.max(run.shake, 3);
+      }
     }
-    if (s.x + s.radius > VIEW_W - 4) {
-      s.x = VIEW_W - s.radius - 4;
-      s.vx = -clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
-      run.shake = Math.max(run.shake, 3);
+    if (run.effects.gravitySwitch && s.y - s.radius < 4) {
+      s.y = s.radius + 4;
+      s.vy = Math.max(78, Math.abs(s.vy) * .58);
+      run.gravitySwitchFlashUntil = timestamp + 520;
     }
 
     const moved = Math.hypot(s.x - previousX, s.y - previousY);
@@ -2486,18 +3368,8 @@
     run.depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.floor((s.y - 80) / 10));
     run.maxDepth = Math.max(run.maxDepth, run.depth);
 
-    if (run.effects.bombPull && timestamp - run.lastBombPullAt > 220) {
-      const nearbyBomb = run.blocks.find(block => !block.dead && block.special === 'bomb' && Math.hypot(block.x + block.w / 2 - s.x, block.y + block.h / 2 - s.y) < 92);
-      if (nearbyBomb) {
-        nearbyBomb.dead = true;
-        run.lastBombPullAt = timestamp;
-        explodeBomb(nearbyBomb);
-        impact('ЧЁРНАЯ ДЫРА: ВЗРЫВ!');
-      }
-    }
-
     const collisions = run.blocks
-      .filter(block => !block.dead && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
+      .filter(block => !block.dead && !blockHiddenByPortalExit(block) && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
       .map(block => ({ block, collision: circleRectCollision(s, block) }))
       .filter(item => item.collision)
       .sort((a, b) => b.collision.penetration - a.collision.penetration);
@@ -2530,19 +3402,20 @@
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt * 20);
     run.visualHealth = lerp(run.visualHealth, Math.max(0, run.health), clamp(dt * 11, 0, 1));
     const healthScale = .82 + .18 * Math.sqrt(clamp(run.health / Math.max(1, run.startHealth), 0, 1));
-    s.radius = lerp(s.radius, 28 * healthScale, clamp(dt * 5.5, 0, 1));
+    const growthScale = run.effects.blockGrowth ? 1 + Math.min(1.15, (run.growthStacks || 0) * .025) : 1;
+    s.radius = lerp(s.radius, 28 * healthScale * growthScale, clamp(dt * 5.5, 0, 1));
     if (run.healthFlashTime > 0) run.healthFlashTime = Math.max(0, run.healthFlashTime - dt);
 
     const speedNow = Math.hypot(s.vx, s.vy);
     if (speedNow < 34 && s.y > 180) run.lowMotionTime += dt;
     else run.lowMotionTime = 0;
     if (run.lowMotionTime > 1.0) {
-      s.vy += 145;
+      s.vy += 145 * gravityDirection;
       s.vx += rand(-65, 65);
       run.lowMotionTime = 0;
     }
 
-    if (run.health <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
+    if (run.health <= 0) endRun(false, 'У слайма закончилось здоровье');
   }
 
   function updateGeyserCapture(dt, timestamp) {
@@ -2664,8 +3537,22 @@
     const keyboardX = Number(run.steer.keyRight) - Number(run.steer.keyLeft);
     return {
       x: clamp(keyboardX + (run.steer.touchX || 0), -1, 1),
-      down: clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1)
+      down: run.effects.gravitySwitch ? 0 : clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1)
     };
+  }
+
+  function setSecretGravityDirection(direction, timestamp = performance.now()) {
+    if (!run?.effects?.gravitySwitch || run.ended || run.paused || run.portalEntry) return false;
+    const nextDirection = direction < 0 ? -1 : 1;
+    if (run.gravityDirection === nextDirection) return true;
+    run.gravityDirection = nextDirection;
+    run.slime.vy *= .55;
+    run.gravitySwitchFlashUntil = timestamp + 620;
+    run.emotion = 'surprised';
+    run.emotionUntil = timestamp + 420;
+    feedback(5);
+    sound('tap');
+    return true;
   }
 
   function applyFallSteering(slime, dt, timestamp = performance.now()) {
@@ -2842,46 +3729,108 @@
     run.bounceControlRestoreUntil = timestamp + (hazard ? 250 : 285);
   }
 
+  function activateJellyBounce(block, collision, timestamp) {
+    const slime = run.slime;
+    const nx = collision.nx;
+    const ny = collision.ny;
+    const incomingNormal = slime.vx * nx + slime.vy * ny;
+    const impactSpeed = Math.max(0, -incomingNormal);
+    const impactRatio = clamp((impactSpeed - 35) / 360, 0, 1);
+    const curve = impactRatio * impactRatio * (3 - 2 * impactRatio);
+    const rebound = lerp(190, 292, curve);
+    let tangentX = slime.vx - incomingNormal * nx;
+    let tangentY = slime.vy - incomingNormal * ny;
+    const tangentSpeed = Math.hypot(tangentX, tangentY);
+    const tangentLimit = lerp(105, 172, curve);
+    if (tangentSpeed > tangentLimit) {
+      tangentX *= tangentLimit / tangentSpeed;
+      tangentY *= tangentLimit / tangentSpeed;
+    }
+
+    slime.x += nx * (collision.penetration + 5);
+    slime.y += ny * (collision.penetration + 5);
+    slime.vx = nx * rebound + tangentX * .62;
+    slime.vy = ny * rebound + tangentY * .62;
+    const steering = fallSteeringVector();
+    if (Math.abs(nx) < .34 && Math.abs(steering.x) > .01) {
+      slime.vx = clamp(slime.vx * .62 + steering.x * lerp(62, 94, curve), -BALANCE.sideBounceMax, BALANCE.sideBounceMax);
+    }
+
+    block.jellyHitAt = timestamp;
+    block.jellyImpact = .62 + curve * .38;
+    block.jellyNormalX = nx;
+    block.jellyNormalY = ny;
+    run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + 55;
+    run.bounceControlLockUntil = timestamp + 45;
+    run.bounceControlRestoreUntil = timestamp + 175;
+    run.flightDistance = 0;
+    run.emotion = 'joy';
+    run.emotionUntil = timestamp + 420;
+    run.shake = Math.max(run.shake, 2.4 + curve * 2.2);
+    preserveCombo(timestamp);
+    spawnSpecialBurst('jelly', block.x + block.w / 2, block.y + block.h / 2, nx, ny);
+    sound('bounce');
+    feedback(curve > .66 ? [7, 12, 7] : 6);
+    return true;
+  }
+
   function resolveBlockHit(block, collision, timestamp = performance.now()) {
     const s = run.slime;
+    if (block.special === 'pandora') return activatePandoraBox(block, timestamp);
+    if (block.special === 'jelly') return activateJellyBounce(block, collision, timestamp);
     if (block.special === 'geyser') return activateGeyser(block, timestamp);
     if (block.special === 'spring') return activateSpring(block, collision, timestamp);
     const frozenSlime = isSlimeFrozen(timestamp);
-    const isFalling = s.vy > 0;
+    const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
+    const isFalling = s.vy * gravityDirection > 0;
     const tierData = BLOCK_TIERS[block.tier] || BLOCK_TIERS.dense;
     const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
     const unbreakable = Boolean(block.hazard || block.unbreakable);
     // Урон всегда снимается с прочности один к одному. Опасный блок —
     // исключение: это непробиваемая преграда, а не ещё один запас HP.
-    let damage = Math.max(1, run.damage);
+    const shieldWasActive = run.barrier > 0;
+    const bouncePowerUsed = Boolean(run.effects.bouncePower && run.bouncePowerReady);
+    let damage = Math.max(1, run.damage + (shieldWasActive && run.effects.shieldDamageBoost ? 25 : 0) + (bouncePowerUsed ? 30 : 0));
     const hpBefore = block.hp;
-    const breaksOnTouch = ['bomb', 'gel', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'meteor'].includes(block.special);
-    if (breaksOnTouch && !unbreakable) damage = hpBefore;
-    if (!unbreakable && run.effects.voidBreaker && !run.voidBreakerUsed && ['hard', 'reinforced'].includes(block.tier) && damage < hpBefore) {
-      damage = hpBefore + 1;
-      run.voidBreakerUsed = true;
-      impact('ПУСТОТА ПОГЛОТИЛА БЛОК!');
+    if (bouncePowerUsed) {
+      run.bouncePowerReady = false;
+      spawnSpecialBurst('chargedHit', block.x + block.w / 2, block.y + block.h / 2);
     }
+    const breaksOnTouch = ['bomb', 'gel', 'cryo', 'snowflake', 'meteor'].includes(block.special);
+    if (breaksOnTouch && !unbreakable) damage = hpBefore;
     const geyserPiercing = !unbreakable && run.geyserBreaksLeft > 0 && block.special !== 'geyser';
     if (geyserPiercing) damage = hpBefore;
     const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || damage >= hpBefore);
     const oreBlock = block.tier === 'ore' || block.frozenOre;
     let healthLoss = unbreakable ? 30 : (destroysImmediately || oreBlock ? 0 : 5);
-    if (run.effects.softLanding && timestamp < run.softLandingUntil) healthLoss = Math.ceil(healthLoss * .5);
+    const regularBlock = !unbreakable && !block.special && !oreBlock;
+    if (run.effects.blockGrowth && regularBlock) healthLoss = 0;
     if (frozenSlime || breaksOnTouch) healthLoss = 0;
     if (healthLoss > 0 && timestamp < run.damageInvulnerableUntil) healthLoss = 0;
-    if (healthLoss > 0 && !unbreakable && run.freeBouncesLeft > 0) {
-      healthLoss = 0;
-      run.freeBouncesLeft -= 1;
-      impact(`АЛМАЗНАЯ ЗАЩИТА · осталось ${run.freeBouncesLeft}`);
-    }
+    const incomingHealthLoss = healthLoss;
     const barrierAbsorbed = Math.min(Math.max(0, run.barrier || 0), healthLoss);
     if (barrierAbsorbed > 0) {
       run.barrier = Math.max(0, run.barrier - barrierAbsorbed);
       run.barrierFlashUntil = timestamp + 380;
       healthLoss = Math.max(0, healthLoss - barrierAbsorbed);
     }
-    run.health = Math.max(0, run.health - healthLoss);
+    let convertedHealth = 0;
+    if (shieldWasActive && run.effects.shieldDamageToHealth && incomingHealthLoss > 0) {
+      const before = run.health;
+      run.health = Math.min(run.maxHealth, run.health + incomingHealthLoss);
+      convertedHealth = Math.max(0, run.health - before);
+      healthLoss = 0;
+      if (convertedHealth > 0) {
+        run.healGlowUntil = timestamp + 980;
+        spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
+      }
+    } else {
+      run.health = Math.max(0, run.health - healthLoss);
+    }
+    if (healthLoss > 0 && run.effects.blockGrowth && run.growthStacks > 0) {
+      run.growthStacks = 0;
+      run.growthResetUntil = timestamp + 560;
+    }
     if (healthLoss > 0) run.damageInvulnerableUntil = timestamp + 1000;
     if (!frozenSlime) {
       run.healthFlash = healthLoss > 0 ? -1 : 1;
@@ -2890,14 +3839,14 @@
     }
     run.shake = Math.max(run.shake, clamp(impactSpeed / 165, 1.0, destroysImmediately ? 3.8 : 5.8));
     if (!frozenSlime) {
-      run.emotion = destroysImmediately ? 'impact' : 'hurt';
-      run.emotionUntil = timestamp + (destroysImmediately ? 260 : 430);
+      run.emotion = destroysImmediately ? 'impact' : healthLoss > 0 ? 'hurt' : 'focused';
+      run.emotionUntil = timestamp + (destroysImmediately ? 260 : healthLoss > 0 ? 430 : 260);
     }
     
     if (destroysImmediately) {
       block.hp = 0;
       const withinComboGrace = run.comboCount > 0 && timestamp <= run.comboGraceUntil;
-      const hasComboMomentum = isFalling && (s.vy >= 110 || withinComboGrace);
+      const hasComboMomentum = isFalling && (Math.abs(s.vy) >= 110 || withinComboGrace);
       let comboAdvanced = false;
       let comboStepReached = false;
       if (breaksOnTouch) preserveCombo(timestamp);
@@ -2910,23 +3859,17 @@
       destroyBlock(block, damage);
       if (geyserPiercing) run.geyserBreaksLeft = Math.max(0, run.geyserBreaksLeft - 1);
       const drag = block.tier === 'soft' ? BALANCE.weakBreakDrag : BALANCE.denseBreakDrag;
-      s.vy = Math.max(110, s.vy * drag * tierData.drag);
+      const travelDirection = Math.sign(s.vy) || gravityDirection;
+      s.vy = travelDirection * Math.max(110, Math.abs(s.vy) * drag * tierData.drag);
       s.vx *= .95;
       let keep = block.tier === 'soft' ? BALANCE.flightKeepSoft : block.tier === 'dense' || block.tier === 'special' || block.tier === 'ore' ? BALANCE.flightKeepDense : BALANCE.flightKeepHard;
-      if (run.effects.momentum) keep = Math.max(keep, .84);
       run.flightDistance *= keep;
-
-      run.brokenSinceBlast += 1;
-      if (run.effects.dragonBlast && run.brokenSinceBlast >= 10) {
-        run.brokenSinceBlast = 0;
-        explodeAt(block.x + block.w / 2, block.y + block.h / 2, 112, .45);
-        impact('ДРАКОНИЙ ВЗРЫВ!');
-      }
 
       if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
       else if (!block.special && run.comboCount < 2) impact('ПРОБОЙ · БЕЗ УРОНА');
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
-      if (run.health <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
+      if (shieldWasActive && run.barrier <= 0) finishShield(timestamp);
+      if (run.health <= 0) endRun(false, 'У слайма закончилось здоровье');
       return false;
     }
 
@@ -2938,14 +3881,22 @@
       return true;
     }
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
-    if (run.effects.softLanding) run.softLandingUntil = timestamp + 1000;
-
     s.x += collision.nx * (collision.penetration + (unbreakable ? 6 : 4));
     s.y += collision.ny * (collision.penetration + (unbreakable ? 6 : 4));
     applyBlockBounce(s, collision, { hazard: unbreakable, timestamp });
+    if (healthLoss > 0 && block.hazard) spawnMiniSlimes(collision, timestamp);
+    if (run.effects.bouncePower) {
+      run.bouncePowerReady = true;
+      run.emotion = 'joy';
+      run.emotionUntil = timestamp + 360;
+    }
     run.flightDistance = 0;
 
-    const damageMessage = barrierAbsorbed > 0 && healthLoss <= 0 ? `ЩИТ −${Math.round(barrierAbsorbed)}` : `−${Math.round(healthLoss)} HP`;
+    const damageMessage = convertedHealth > 0
+      ? `ЩИТ · +${Math.round(convertedHealth)} HP`
+      : barrierAbsorbed > 0 && healthLoss <= 0
+        ? `ЩИТ −${Math.round(barrierAbsorbed)}`
+        : `−${Math.round(healthLoss)} HP`;
     impact(block.special === 'spring'
       ? `ПРУЖИНА · ${damageMessage}`
       : block.special === 'boss'
@@ -2955,9 +3906,55 @@
           : `РИКОШЕТ · ${damageMessage} · ${Math.ceil(block.hp)} HP`);
     sound(block.special === 'spring' ? 'bounce' : block.hazard || block.special === 'boss' ? 'hitHard' : 'hit');
     createDebris(block, 3, false);
+    if (shieldWasActive && run.barrier <= 0) finishShield(timestamp);
 
-    if (run.health <= 0 && !tryRevive()) endRun(false, 'У слайма закончилось здоровье');
+    if (run.health <= 0) endRun(false, 'У слайма закончилось здоровье');
     return true;
+  }
+
+  function activatePandoraBox(block, timestamp = performance.now()) {
+    if (!block || block.dead || block.pandoraOpened) return false;
+    block.pandoraOpened = true;
+    block.dead = true;
+    const choices = ['meteor', 'bomb', 'heal', 'coins', 'shield']
+      .filter(type => type !== 'heal' || run.health < run.maxHealth)
+      .filter(type => type !== 'shield' || run.barrier < Math.max(20, run.shield));
+    const effect = choices[Math.floor(Math.random() * choices.length)] || 'coins';
+    const x = block.x + block.w / 2;
+    const y = block.y + block.h / 2;
+    spawnSpecialBurst('pandora', x, y);
+    preserveCombo(timestamp);
+
+    if (effect === 'meteor') {
+      activateMeteorShower(block);
+    } else if (effect === 'bomb') {
+      spawnSpecialBurst('bomb', x, y);
+      explodeAt(x, y, 118, .65, 45);
+    } else if (effect === 'heal') {
+      spawnSpecialBurst('heal', x, y);
+      healRun(25, 'ЯЩИК ПАНДОРЫ');
+    } else if (effect === 'shield') {
+      run.barrier = Math.max(run.barrier, Math.max(25, run.shield));
+      run.barrierFlashUntil = timestamp + 900;
+      spawnSpecialBurst('shieldBurst', run.slime.x, run.slime.y);
+    } else {
+      const jackpot = 35 + (run.level || 1) * 10;
+      run.coins += jackpot;
+      for (let index = 0; index < 12; index += 1) {
+        run.particles.push({
+          kind: 'special', shape: 'orb', x, y,
+          vx: rand(-155, 155), vy: rand(-220, -85), gravity: 260,
+          life: rand(.55, .92), maxLife: .92, size: rand(3, 6),
+          color: index % 2 ? '#ffe36d' : '#fff8ca'
+        });
+      }
+    }
+    run.emotion = 'surprised';
+    run.emotionUntil = timestamp + 520;
+    run.shake = Math.max(run.shake, effect === 'bomb' || effect === 'meteor' ? 7 : 4.5);
+    sound(effect === 'bomb' ? 'break' : 'epic');
+    feedback(effect === 'bomb' || effect === 'meteor' ? [10, 18, 9] : [7, 12, 7]);
+    return false;
   }
 
   function slideFrozenSlime(block, collision, timestamp) {
@@ -3018,28 +4015,6 @@
     return true;
   }
 
-  function tryRevive() {
-    if (run.effects.rainbowHeart && !run.rainbowHeartUsed) {
-      run.rainbowHeartUsed = true;
-      run.health = Math.max(1, run.maxHealth * .30);
-      run.healthFlash = 1;
-      run.healthFlashTime = .75;
-      run.slime.vy = 150;
-      explodeAt(run.slime.x, run.slime.y, 125, .35);
-      impact('СЕРДЦЕ РАДУГИ: ВОЗРОЖДЕНИЕ!');
-      return true;
-    }
-    if (!run.effects.smallRevive || run.revived) return false;
-    run.revived = true;
-    run.health = Math.max(1, run.maxHealth * .12);
-    run.healthFlash = 1;
-    run.healthFlashTime = .75;
-    run.slime.vy = 150;
-    explodeAt(run.slime.x, run.slime.y, 105, .30);
-    impact('ФЕНИКС: ВОЗРОЖДЕНИЕ!');
-    return true;
-  }
-
   function registerComboLayer(row, timestamp = performance.now()) {
     if (!run || run.ended) return { registered: false, multiplierChanged: false };
     if (run.comboCount > 0 && timestamp > run.comboGraceUntil) resetCombo();
@@ -3071,27 +4046,22 @@
   function destroyBlock(block) {
     block.dead = true;
     run.blocksDestroyed += 1;
+    if (run.effects.blockGrowth) run.growthStacks = Math.min(46, (run.growthStacks || 0) + 1);
+    registerBrokenBlock(block);
     const reward = block.coins * run.comboMultiplier * run.coinMultiplier;
     run.coins += reward;
-    createDebris(block, block.special === 'geyser' ? 0 : block.special === 'bomb' ? 8 : block.special === 'appleRed' ? 10 : 9, true);
+    createDebris(block, block.special === 'geyser' ? 0 : block.special === 'bomb' ? 8 : 9, true);
 
     if (block.tier === 'ore' || block.frozenOre) {
       const ore = block.oreType || ORE_TYPES[0];
       const oreReward = Math.round(reward);
-      if (run.effects.oreHeal) healRun(Math.max(2, run.maxHealth * .035), ore.label);
-      else impact(`${ore.label} +${oreReward}`);
+      impact(`${ore.label} +${oreReward}`);
     } else if (block.special === 'coin') {
-      if (run.effects.oreHeal) healRun(Math.max(2, run.maxHealth * .03), 'ЗОЛОТОЙ ПИР');
-      else impact('БЛОК РАЗРУШЕН');
+      impact('БЛОК РАЗРУШЕН');
     } else if (block.special === 'gel') {
       spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
-      const multiplier = run.effects.healBoost ? 2 : 1;
-      const heal = 25 * multiplier;
-      healRun(heal, run.effects.healBoost ? 'КОРОЛЕВСКОЕ ЛЕЧЕНИЕ' : 'ЛЕЧЕНИЕ');
-    } else if (block.special === 'appleMint') {
-      activateMintApple(block);
-    } else if (block.special === 'appleRed') {
-      activateRedApple(block);
+      const heal = 25 + (run.effects.medkitBoost ? 10 : 0);
+      healRun(heal, run.effects.medkitBoost ? 'УСИЛЕННАЯ АПТЕЧКА' : 'ЛЕЧЕНИЕ');
     } else if (block.special === 'meteor') {
       activateMeteorShower(block);
     } else if (block.special === 'spring') {
@@ -3109,41 +4079,12 @@
     }
   }
 
-  function activateMintApple(source) {
-    const settings = GAME_BALANCE?.special?.appleMint || {};
-    const shieldBoost = clamp(Math.round(settings.shield ?? settings.defense ?? 20), 0, 999);
-    const chargeBoost = clamp(Math.round(settings.shieldCharges ?? 1), 0, 3);
-    run.shield = clamp(run.shield + shieldBoost, 0, 999);
-    run.maxShieldCharges = clamp(run.maxShieldCharges + chargeBoost, 1, 9);
-    run.shieldCharges = Math.min(run.maxShieldCharges, run.shieldCharges + chargeBoost);
-    const timestamp = performance.now();
-    run.appleGlowUntil = timestamp + 1450;
-    run.appleGlowType = 'mint';
-    run.emotion = 'joy';
-    run.emotionUntil = timestamp + 1050;
-    run.shake = Math.max(run.shake, 4.5);
-    spawnSpecialBurst('appleMint', source.x + source.w / 2, source.y + source.h / 2);
-    impact(`МЯТНОЕ ЯБЛОКО · +${shieldBoost} ЩИТА · +${chargeBoost} ЗАРЯД`);
-    sound('happy');
-    feedback([6, 10, 6, 14]);
-  }
-
-  function activateRedApple(source) {
-    const settings = GAME_BALANCE?.special?.appleRed || {};
-    const damageBoost = clamp(Math.round(settings.damage ?? settings.power ?? 20), 0, 999);
-    const shieldBoost = clamp(Math.round(settings.shield ?? settings.defense ?? 20), 0, 999);
-    run.damage = Math.min(999, run.damage + damageBoost);
-    run.shield = clamp(run.shield + shieldBoost, 0, 999);
-    const timestamp = performance.now();
-    run.appleGlowUntil = timestamp + 1650;
-    run.appleGlowType = 'red';
-    run.emotion = 'joy';
-    run.emotionUntil = timestamp + 1150;
-    run.shake = Math.max(run.shake, 6);
-    spawnSpecialBurst('appleRed', source.x + source.w / 2, source.y + source.h / 2);
-    impact(`КРАСНОЕ ЯБЛОКО · +${damageBoost} УРОНА · +${shieldBoost} ЩИТА`);
-    sound('epic');
-    feedback([9, 14, 9, 18]);
+  function registerBrokenBlock(block) {
+    if (!run?.effects?.breakHealEveryFive) return;
+    run.blocksBrokenForHeal += 1;
+    if (run.blocksBrokenForHeal % 5 !== 0) return;
+    spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
+    healRun(5, '5-Й СЛОМАННЫЙ БЛОК');
   }
 
   function weakenCryoArea4x4(source) {
@@ -3324,6 +4265,7 @@
         }
         block.dead = true;
         run.blocksDestroyed += 1;
+        registerBrokenBlock(block);
         run.coins += block.coins * rewardScale * run.coinMultiplier;
         createDebris(block, 5, true);
         if (collectChainBombs && block.special === 'bomb') chainBombs.push(block);
@@ -3342,6 +4284,7 @@
       if (Math.abs(block.row - source.row) > radiusCells || Math.abs(block.col - source.col) > radiusCells) continue;
       block.dead = true;
       run.blocksDestroyed += 1;
+      registerBrokenBlock(block);
       run.coins += block.coins * rewardScale * run.coinMultiplier;
       createDebris(block, 5, true);
       if (collectChainBombs && block.special === 'bomb') chainBombs.push(block);
@@ -3453,9 +4396,12 @@
       heal: { colors: ['#effff4', '#8dffba', '#31d98b', '#ffffff'], count: 8, life: .9 },
       cryo: { colors: ['#effcff', '#a9efff', '#54cfff', '#ffffff'], count: 8, life: 1.05 },
       snowflake: { colors: ['#ffffff', '#c7f6ff', '#73dcff', '#3ba9ed'], count: 8, life: 1.1 },
-      appleMint: { colors: ['#f1fff9', '#a9ffe8', '#45e3b5', '#ffffff'], count: 10, life: 1.28 },
-      appleRed: { colors: ['#fff4bb', '#ffc54f', '#ff526d', '#ffffff'], count: 12, life: 1.45 },
+      jelly: { colors: ['#fff0f7', '#ff9bc1', '#ff3f88', '#ffffff'], count: 9, life: .72 },
+      pandora: { colors: ['#ff4ca3', '#4bdcff', '#ffe45c', '#65ed9a', '#bb66ff'], count: 18, life: .92 },
+      split: { colors: ['#f3ffd0', '#91ef70', '#53c75d', '#ffffff'], count: 12, life: .7 },
       geyser: { colors: ['#fff4d0', '#ffbd45', '#ff6a2b', '#d9d9d4'], count: 4, life: .68 },
+      chargedHit: { colors: ['#fff8b0', '#ffc94d', '#ff8747', '#ffffff'], count: 13, life: .46 },
+      shieldBurst: { colors: ['#ecfaff', '#99eaff', '#6d9dff', '#ffffff'], count: 16, life: .7 },
     }[type];
     if (!config) return;
     run.specialEffects.push({
@@ -3469,6 +4415,10 @@
         : Math.PI * 2 * i / particleCount + rand(-.16, .16);
       const speed = type === 'bomb'
         ? (bombSmoke ? rand(32, 72) : rand(155, 265))
+        : type === 'chargedHit'
+          ? rand(125, 230)
+          : type === 'shieldBurst'
+            ? rand(155, 260)
         : type === 'spring'
           ? rand(210, 345)
           : type === 'geyser'
@@ -3478,7 +4428,7 @@
         kind: 'special', x, y,
         vx: bombSmoke ? rand(-52, 52) : Math.cos(angle) * speed,
         vy: bombSmoke ? rand(-88, -34) : Math.sin(angle) * speed,
-        gravity: bombSmoke ? -12 : type === 'bomb' ? 145 : type === 'heal' ? -42 : type === 'appleMint' ? -18 : type === 'appleRed' ? 52 : type === 'snowflake' ? 18 : type === 'geyser' ? -10 : 32,
+        gravity: bombSmoke ? -12 : type === 'bomb' ? 145 : type === 'heal' ? -42 : type === 'jelly' ? 26 : type === 'pandora' ? 40 : type === 'snowflake' ? 18 : type === 'geyser' ? -10 : type === 'shieldBurst' ? 12 : 32,
         life: bombSmoke ? rand(.48, .7) : rand(config.life * .66, config.life), maxLife: config.life,
         size: bombSmoke ? rand(7, 11) : rand(2.5, type === 'bomb' ? 6.2 : 6),
         color: bombSmoke ? ['#4f3b46', '#76505a', '#a8675b'][i % 3] : config.colors[i % config.colors.length],
@@ -3494,9 +4444,7 @@
             ? 'streak'
           : type === 'snowflake' && i % 4 === 0
                 ? 'flake'
-                : type === 'appleMint' && i % 3 === 0
-                  ? 'leaf'
-                  : 'orb'
+                : 'orb'
       });
     }
     if (run.specialEffects.length > 16) run.specialEffects.shift();
@@ -3513,10 +4461,17 @@
     if (!run || run.ended || run.paused || run.shieldCharges <= 0 || run.barrier > 0) return;
     run.shieldCharges -= 1;
     run.barrier = Math.max(0, run.shield);
-    run.barrierFlashUntil = performance.now() + 720;
+    const timestamp = performance.now();
+    run.barrierFlashUntil = timestamp + 720;
     sound('epic');
     feedback([14, 22, 14]);
-    impact(`ЩИТ +${Math.round(run.barrier)}`);
+    if (run.effects.shieldActivationHeal) {
+      spawnSpecialBurst('heal', run.slime.x, run.slime.y);
+      healRun(20, 'ЩИТ · ЛЕЧЕНИЕ');
+      refreshLowHealthDamage(true);
+    } else {
+      impact(`ЩИТ +${Math.round(run.barrier)}`);
+    }
     updateRunUI();
   }
 
@@ -3573,6 +4528,8 @@
     ctx.fillRect(-15, -15, VIEW_W + 30, VIEW_H + 30);
 
     drawBackground(world);
+    drawHoneyZones(timestamp, false);
+    drawJellyZones(timestamp, false);
     drawFinishPortal(world, timestamp);
 
     for (const block of run.blocks) {
@@ -3584,6 +4541,7 @@
 
     // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions();
+    drawSecretEdgePortals(timestamp);
     drawGeyserCapture(timestamp);
     drawMeteorShowers(timestamp);
     drawSpecialEffects(false);
@@ -3649,10 +4607,49 @@
     ctx.globalAlpha = 1;
 
     drawSelectedTrail(timestamp);
+    drawMiniSlimes(timestamp);
     drawSlime(timestamp);
-    // Size-change arrows must stay above the slime. A large red-apple slime
-    // previously covered most of the effect when it was rendered with blocks.
+    drawHoneyZones(timestamp, true);
+    drawJellyZones(timestamp, true);
     drawSpecialEffects(true);
+    ctx.restore();
+  }
+
+  function drawSecretEdgePortals(timestamp) {
+    if (!run?.effects?.edgePortals) return;
+    const flash = timestamp < (run.edgePortalFlashUntil || 0) ? .22 : 0;
+    const phase = timestamp / 280;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const side of [-1, 1]) {
+      const baseX = side < 0 ? 5 : VIEW_W - 5;
+      for (let layer = 0; layer < 2; layer += 1) {
+        ctx.beginPath();
+        for (let y = -12; y <= VIEW_H + 12; y += 7) {
+          const wave = Math.sin(y * .052 + phase + side * .7) * (layer ? 1.6 : 3.2);
+          const x = baseX + side * wave;
+          if (y === -12) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.globalAlpha = (layer ? .92 : .38) + flash;
+        ctx.strokeStyle = layer ? '#fff1fc' : '#d737bd';
+        ctx.lineWidth = layer ? 2.1 : 7.5;
+        ctx.shadowColor = layer ? '#ff75df' : '#8b32d9';
+        ctx.shadowBlur = layer ? 7 : 13;
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 8;
+      for (let dot = 0; dot < 8; dot += 1) {
+        const y = ((dot * 91 + timestamp / 7 * side) % (VIEW_H + 50) + VIEW_H + 50) % (VIEW_H + 50) - 25;
+        const x = baseX + side * (4 + Math.sin(dot + phase) * 2.2);
+        ctx.globalAlpha = .42 + flash;
+        ctx.fillStyle = dot % 2 ? '#ff9feb' : '#9cf8ff';
+        ctx.beginPath();
+        ctx.arc(x, y, dot % 3 === 0 ? 2.2 : 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
     ctx.restore();
   }
 
@@ -3991,7 +4988,7 @@
     if (!run.specialEffects?.length) return;
     ctx.save();
     for (const effect of run.specialEffects) {
-      const slimeOverlay = effect.type === 'appleMint' || effect.type === 'appleRed';
+      const slimeOverlay = false;
       if (slimeOverlay !== overlayOnly) continue;
       const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
       const alpha = Math.pow(1 - progress, .94);
@@ -4016,6 +5013,61 @@
           roundedRect(ctx, targetX - 8, targetY - 34, 16, 68, 8); ctx.fill();
           roundedRect(ctx, targetX - 34, targetY - 8, 68, 16, 8); ctx.fill();
         }
+      } else if (effect.type === 'pandora') {
+        const radius = 22 + progress * 72;
+        const colors = ['#ff4ca3', '#48dfff', '#ffe052', '#65ef9a', '#b968ff'];
+        ctx.globalAlpha = alpha * .9;
+        ctx.lineWidth = 5.5 - progress * 3;
+        ctx.strokeStyle = colors[Math.min(colors.length - 1, Math.floor(progress * colors.length))];
+        ctx.shadowColor = colors[(Math.floor(progress * colors.length) + 2) % colors.length];
+        ctx.shadowBlur = 15;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
+        for (let ray = 0; ray < 7; ray += 1) {
+          const angle = ray * Math.PI * 2 / 7 + progress * 1.8;
+          const inner = radius * .62;
+          const outer = radius + 11;
+          ctx.strokeStyle = colors[ray % colors.length];
+          ctx.beginPath();
+          ctx.moveTo(effect.x + Math.cos(angle) * inner, y + Math.sin(angle) * inner);
+          ctx.lineTo(effect.x + Math.cos(angle) * outer, y + Math.sin(angle) * outer);
+          ctx.stroke();
+        }
+      } else if (effect.type === 'chargedHit') {
+        const radius = 14 + progress * 42;
+        ctx.globalAlpha = alpha * .92;
+        ctx.strokeStyle = '#ffd45a';
+        ctx.lineWidth = 4.2 - progress * 2;
+        ctx.shadowColor = '#ff8d45';
+        ctx.shadowBlur = 13;
+        ctx.beginPath();
+        ctx.arc(effect.x, y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = alpha * .85;
+        ctx.fillStyle = '#fff3bd';
+        for (let ray = 0; ray < 8; ray += 1) {
+          const angle = ray * Math.PI / 4 + progress * .24;
+          const inner = radius * .45;
+          const outer = radius + 13 + progress * 12;
+          ctx.beginPath();
+          ctx.moveTo(effect.x + Math.cos(angle) * inner, y + Math.sin(angle) * inner);
+          ctx.lineTo(effect.x + Math.cos(angle) * outer, y + Math.sin(angle) * outer);
+          ctx.stroke();
+        }
+      } else if (effect.type === 'shieldBurst') {
+        const radius = 20 + progress * 88;
+        ctx.globalAlpha = alpha * .9;
+        ctx.strokeStyle = '#b8f5ff';
+        ctx.lineWidth = 5 - progress * 2.5;
+        ctx.shadowColor = '#609dff';
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.arc(effect.x, y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = alpha * .52;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(effect.x, y, radius * .67, progress * 2.4, progress * 2.4 + Math.PI * 1.55);
+        ctx.stroke();
       } else if (effect.type === 'cryo') {
         const frame = progress < .14 ? 1 : progress < .34 ? 2 : progress < .72 ? 3 : 4;
         const frameSize = frame === 1 ? 138 : frame === 2 ? 188 : frame === 3 ? 244 : 256;
@@ -4044,45 +5096,21 @@
           ctx.font = `900 ${snowSize * .62}px "Segoe UI Symbol", system-ui`;
           ctx.fillText('❄', targetX, snowY);
         }
-      } else if (effect.type === 'appleMint' || effect.type === 'appleRed') {
-        const mint = effect.type === 'appleMint';
-        const targetX = run.slime.x;
-        const targetY = run.slime.y - run.cameraY;
-        const radius = run.slime.radius;
-        const enter = clamp(progress / .12, 0, 1);
-        const leave = clamp((1 - progress) / .2, 0, 1);
-        const arrowAlpha = enter * leave;
-        const arrowSize = clamp(radius * 3.35, 154, 224);
-        const arrowsY = mint
-          ? targetY + radius + arrowSize * .33 + progress * 16
-          : targetY - radius - arrowSize * .33 - progress * 16;
-        const ringRadius = mint
-          ? radius + 48 - progress * 36
-          : radius + 10 + progress * 42;
-        const rgb = mint ? '54,231,174' : '255,72,75';
-        ctx.globalAlpha = arrowAlpha * .8;
-        ctx.strokeStyle = `rgba(${rgb},.96)`;
-        ctx.lineWidth = 4.2;
-        ctx.shadowColor = `rgb(${rgb})`;
-        ctx.shadowBlur = 13;
-        ctx.beginPath();
-        ctx.arc(targetX, targetY, Math.max(radius + 8, ringRadius), 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = arrowAlpha * .32;
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.arc(targetX, targetY, Math.max(radius + 15, ringRadius + 12), 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        const spriteName = mint ? 'apple-shrink' : 'apple-grow';
-        if (!drawVfxSprite(spriteName, targetX, arrowsY, arrowSize, arrowSize, arrowAlpha, 0, .96 + Math.sin(progress * Math.PI) * .12)) {
-          ctx.globalAlpha = arrowAlpha;
-          ctx.fillStyle = mint ? '#42dbad' : '#ff5b5e';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.font = `1000 ${Math.round(arrowSize * .35)}px system-ui`;
-          ctx.fillText(mint ? '↓' : '↑', targetX, arrowsY);
+      } else if (effect.type === 'jelly') {
+        const direction = Math.atan2(effect.ny, effect.nx);
+        ctx.save();
+        ctx.translate(effect.x, y);
+        ctx.rotate(direction);
+        ctx.globalAlpha = alpha * .8;
+        ctx.strokeStyle = '#ff96bf';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 4 - progress * 2;
+        for (let line = -1; line <= 1; line += 1) {
+          ctx.beginPath();
+          ctx.arc(0, line * 11, 18 + progress * 34 + Math.abs(line) * 5, -.42, .42);
+          ctx.stroke();
         }
+        ctx.restore();
       } else if (effect.type === 'geyser') {
         const frame = progress < .26 ? 3 : 4;
         const direction = Math.atan2(effect.ny, effect.nx);
@@ -4170,6 +5198,184 @@
     ctx.font = '900 11px system-ui';
     ctx.textAlign = 'center';
     ctx.fillText(`${depth} м`, 46, 27);
+  }
+
+  function drawHoneyZones(timestamp, foreground) {
+    if (!run?.honeyZones?.length) return;
+    for (const zone of run.honeyZones) {
+      const y = zone.y - run.cameraY;
+      if (y + zone.h < -30 || y > VIEW_H + 30) continue;
+      const active = run.inHoneyZoneId === zone.id;
+      if (foreground && !active) continue;
+      const pulse = Math.sin(timestamp / 310 + zone.seed) * .5 + .5;
+      ctx.save();
+      if (!foreground) {
+        const honey = ctx.createLinearGradient(zone.x, y, zone.x, y + zone.h);
+        honey.addColorStop(0, 'rgba(255,226,105,.88)');
+        honey.addColorStop(.38, 'rgba(255,181,45,.82)');
+        honey.addColorStop(1, 'rgba(215,108,14,.9)');
+        ctx.fillStyle = honey;
+        ctx.strokeStyle = 'rgba(255,239,151,.92)';
+        ctx.lineWidth = 2.2;
+        ctx.shadowColor = 'rgba(255,164,31,.38)';
+        ctx.shadowBlur = 8;
+        roundedRect(ctx, zone.x, y, zone.w, zone.h, Math.min(20, zone.w * .22));
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.globalAlpha = .52;
+        ctx.fillStyle = '#fff1a9';
+        roundedRect(ctx, zone.x + 7, y + 8, Math.max(7, zone.w * .14), zone.h - 18, 7);
+        ctx.fill();
+        for (let bubble = 0; bubble < 5; bubble += 1) {
+          const phase = (timestamp / (980 + bubble * 74) + zone.seed + bubble * .21) % 1;
+          const bx = zone.x + 13 + (bubble * 29 + zone.seed * 17) % Math.max(18, zone.w - 26);
+          const by = y + zone.h - 11 - phase * (zone.h - 22);
+          const size = 2.4 + bubble % 3 * 1.2;
+          ctx.globalAlpha = Math.sin(phase * Math.PI) * (.34 + pulse * .16);
+          ctx.strokeStyle = '#fff5bf';
+          ctx.lineWidth = 1.3;
+          ctx.beginPath();
+          ctx.arc(bx, by, size, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      } else {
+        ctx.globalAlpha = .12 + pulse * .05;
+        ctx.fillStyle = '#ffbd36';
+        roundedRect(ctx, zone.x + 1, y + 1, zone.w - 2, zone.h - 2, Math.min(19, zone.w * .2));
+        ctx.fill();
+        ctx.globalAlpha = .48;
+        ctx.strokeStyle = '#ffe982';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(run.slime.x - 7, run.slime.y - run.cameraY + 4, run.slime.radius * .72, .18, Math.PI * 1.18);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawJellyZones(timestamp, foreground) {
+    if (!run?.jellyZones?.length) return;
+    for (const zone of run.jellyZones) {
+      const y = zone.y - run.cameraY;
+      if (y + zone.h < -30 || y > VIEW_H + 30) continue;
+      const active = run.inJellyZoneId === zone.id;
+      if (foreground && !active) continue;
+      const enteredAge = active ? Math.max(0, timestamp - (run.jellyEnteredAt || timestamp)) : 9999;
+      const impact = active ? Math.exp(-enteredAge / 620) : 0;
+      const impactWobble = Math.sin(enteredAge / 66) * impact * 5.2;
+      const surfaceY = y + 5 + Math.max(0, impactWobble * .38);
+      const wave = timestamp / 510 + zone.seed;
+      const corner = clamp(Math.min(zone.w * .09, zone.h * .11), 8, 14);
+      const jellyPath = () => {
+        ctx.beginPath();
+        const topAt = px => surfaceY + Math.sin(wave + px * .075) * (1.35 + impact * 1.7) + impactWobble;
+        ctx.moveTo(zone.x + corner, topAt(corner));
+        for (let px = corner + 8; px < zone.w - corner; px += 8) {
+          ctx.lineTo(zone.x + px, topAt(px));
+        }
+        const rightTop = topAt(zone.w - corner);
+        ctx.lineTo(zone.x + zone.w - corner, rightTop);
+        ctx.quadraticCurveTo(zone.x + zone.w, rightTop, zone.x + zone.w, rightTop + corner);
+        ctx.lineTo(zone.x + zone.w, y + zone.h - corner);
+        ctx.quadraticCurveTo(zone.x + zone.w, y + zone.h, zone.x + zone.w - corner, y + zone.h);
+        ctx.lineTo(zone.x + corner, y + zone.h);
+        ctx.quadraticCurveTo(zone.x, y + zone.h, zone.x, y + zone.h - corner);
+        ctx.lineTo(zone.x, surfaceY + corner);
+        ctx.quadraticCurveTo(zone.x, topAt(corner), zone.x + corner, topAt(corner));
+        ctx.closePath();
+      };
+      ctx.save();
+      if (!foreground) {
+        jellyPath();
+        const base = ctx.createLinearGradient(zone.x, surfaceY, zone.x, y + zone.h);
+        base.addColorStop(0, '#a8f47a');
+        base.addColorStop(.5, '#59d45f');
+        base.addColorStop(1, '#2c9e50');
+        ctx.fillStyle = base;
+        ctx.fill();
+
+        const texture = VFX_SPRITES?.['jelly-zone-texture'];
+        if (texture?.complete && texture.naturalWidth) {
+          ctx.save();
+          jellyPath();
+          ctx.clip();
+          ctx.globalAlpha = .42;
+          ctx.drawImage(texture, zone.x, y, zone.w, zone.h);
+          ctx.restore();
+        }
+
+        jellyPath();
+        ctx.strokeStyle = '#17613a';
+        ctx.lineWidth = 4.2;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        ctx.save();
+        jellyPath();
+        ctx.clip();
+        const bubbleCount = clamp(Math.round(zone.w / 46 + zone.h / 76), 4, 10);
+        for (let bubble = 0; bubble < bubbleCount; bubble += 1) {
+          const duration = 1700 + (bubble % 4) * 310;
+          const phase = (timestamp / duration + zone.seed * .13 + bubble * .217) % 1;
+          const lane = (bubble * 47 + zone.seed * 31) % Math.max(16, zone.w - corner * 2 - 16);
+          const sway = Math.sin(timestamp / (390 + bubble * 29) + bubble * 1.73) * (2.2 + bubble % 3 * 1.15);
+          const bx = zone.x + corner + 8 + lane + sway;
+          const by = y + zone.h - corner + 7 - phase * Math.max(28, zone.h - corner * 2 + 14);
+          const size = 3.7 + bubble % 3 * 1.4;
+          const appear = clamp(Math.min(phase * 5, (1 - phase) * 7), 0, 1);
+          ctx.globalAlpha = appear * .72;
+          ctx.fillStyle = 'rgba(220,255,200,.28)';
+          ctx.strokeStyle = '#eaffd9';
+          ctx.lineWidth = 1.55;
+          ctx.beginPath();
+          ctx.arc(bx, by, size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.globalAlpha *= .92;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(bx - size * .28, by - size * .3, Math.max(.7, size * .18), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = .82;
+        ctx.strokeStyle = '#ebffd7';
+        ctx.lineWidth = 2.6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        for (let px = corner + 5; px <= zone.w - corner - 5; px += 7) {
+          const py = surfaceY + Math.sin(wave + px * .075) * (1.35 + impact * 1.7) + impactWobble + 2.2;
+          if (px === corner + 5) ctx.moveTo(zone.x + px, py);
+          else ctx.lineTo(zone.x + px, py);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = .3;
+        ctx.strokeStyle = '#f5ffe9';
+        ctx.lineWidth = 3.4;
+        for (let streak = 0; streak < Math.min(3, Math.ceil(zone.w / 90)); streak += 1) {
+          const sx = zone.x + corner + 14 + streak * Math.max(38, (zone.w - corner * 2 - 28) / 2);
+          ctx.beginPath();
+          ctx.moveTo(sx, y + corner + 12);
+          ctx.quadraticCurveTo(sx + 7, y + zone.h * .42, sx + 1, y + zone.h * .58);
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else {
+        jellyPath();
+        ctx.globalAlpha = .15 + impact * .08;
+        ctx.fillStyle = '#d4ffc3';
+        ctx.fill();
+        ctx.globalAlpha = .54;
+        ctx.strokeStyle = '#efffe3';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(run.slime.x - 4, run.slime.y - run.cameraY + 3, run.slime.radius * .72, .18, Math.PI * 1.12);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
   }
 
   function drawFinishPortal(world, timestamp) {
@@ -4398,10 +5604,10 @@
       ctx.beginPath();
       ctx.arc(block.x + block.w / 2, sy + block.h / 2, 17, 0, Math.PI * 2);
       ctx.stroke();
-    } else if (special === 'appleMint' || special === 'appleRed') {
-      ctx.fillStyle = special === 'appleMint' ? 'rgba(88,235,188,.42)' : 'rgba(255,77,99,.42)';
+    } else if (special === 'jelly') {
+      ctx.fillStyle = 'rgba(255,63,136,.72)';
       ctx.beginPath();
-      ctx.arc(block.x + block.w / 2, sy + block.h / 2, 20, 0, Math.PI * 2);
+      ctx.ellipse(block.x + block.w / 2, sy + block.h / 2 + 3, 24, 21, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (special === 'boss') {
       const cx = block.x + block.w / 2;
@@ -4422,7 +5628,7 @@
       ctx.stroke();
     }
 
-    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', cryo: '◇', snowflake: '❄', appleMint: '🍏', appleRed: '🍎', geyser: '◉', meteor: '☄', boss: '!' }[special] || '•';
+    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', cryo: '◇', snowflake: '❄', jelly: '●', pandora: '?', geyser: '◉', meteor: '☄', boss: '!' }[special] || '•';
     ctx.fillStyle = '#fff';
     ctx.font = special === 'gel' ? '1000 28px system-ui' : '1000 23px system-ui';
     ctx.textAlign = 'center';
@@ -4526,8 +5732,7 @@
     else if (block.hazard) spriteName = 'stone-hazard';
     else if (block.special === 'bomb') spriteName = 'dynamite';
     else if (block.special === 'spring') spriteName = 'spring';
-    else if (block.special === 'appleMint') spriteName = 'apple-mint';
-    else if (block.special === 'appleRed') spriteName = 'apple-red';
+    else if (block.special === 'jelly') spriteName = 'jelly-bounce';
     else if (block.special === 'cryo') spriteName = 'cryo';
     else if (block.special === 'snowflake') spriteName = 'snowflake';
     else if (block.special === 'geyser') spriteName = 'geyser';
@@ -4569,7 +5774,10 @@
     const artwork = oreArtwork?.image ? oreArtwork : edited;
     const customSprite = artwork?.image ? editorSprite(artwork.image) : null;
     const sprites = WORLD_SPRITES[run.worldId];
-    const sprite = customSprite?.complete && customSprite.naturalWidth ? customSprite : sprites?.[spriteName];
+    const pandoraSprite = block.special === 'pandora' ? VFX_SPRITES?.['pandora-box'] : null;
+    const sprite = pandoraSprite?.complete && pandoraSprite.naturalWidth
+      ? pandoraSprite
+      : customSprite?.complete && customSprite.naturalWidth ? customSprite : sprites?.[spriteName];
     if (!sprite?.complete || !sprite.naturalWidth) return false;
 
     // Leave a single-pixel gutter for the grid instead of letting tiles overlap.
@@ -4584,7 +5792,7 @@
     const offsetY = customSprite ? block.h * (artwork.y || 0) / 100 : 0;
     const drawX = block.x + (block.w - width) / 2 + offsetX;
     const drawY = sy + (block.h - height) / 2 + offsetY;
-    if (['bomb', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'].includes(block.special)) {
+    if (['bomb', 'spring', 'cryo', 'snowflake', 'jelly', 'pandora', 'geyser', 'meteor'].includes(block.special)) {
       const time = performance.now();
       const phase = time / (block.special === 'bomb' ? 160 : block.special === 'spring' ? 260 : 300) + block.id;
       const wave = Math.sin(phase);
@@ -4592,8 +5800,8 @@
         ? 1 + wave * .06
         : block.special === 'cryo' || block.special === 'snowflake'
             ? 1 + wave * .028
-            : block.special === 'appleMint' || block.special === 'appleRed'
-              ? 1 + wave * .038
+            : block.special === 'jelly'
+              ? 1 + wave * .012
             : block.special === 'geyser'
               ? 1 + wave * .025
               : block.special === 'meteor'
@@ -4606,6 +5814,19 @@
         const bounce = Math.max(0, wave);
         ctx.translate(0, -bounce * 2.5);
         ctx.scale(1 + bounce * .07, 1 - bounce * .11);
+      } else if (block.special === 'jelly') {
+        const hitAge = Math.max(0, time - (block.jellyHitAt || 0));
+        const hitMotion = hitAge < 720
+          ? Math.sin(hitAge / 720 * Math.PI * 3.4) * Math.exp(-hitAge / 340) * (block.jellyImpact || 0)
+          : 0;
+        const squash = hitMotion * .24;
+        if (Math.abs(block.jellyNormalX || 0) > Math.abs(block.jellyNormalY || 0)) ctx.scale(1 - squash, 1 + squash * .72);
+        else ctx.scale(1 + squash * .72, 1 - squash);
+        ctx.scale(pulse, pulse);
+      } else if (block.special === 'pandora') {
+        const jackpotPulse = 1 + Math.sin(time / 210 + block.id) * .035;
+        ctx.scale(jackpotPulse, jackpotPulse);
+        ctx.filter = `hue-rotate(${Math.sin(time / 520 + block.id) * 22}deg) saturate(1.12)`;
       } else ctx.scale(pulse, pulse);
       ctx.drawImage(sprite, -width / 2, -height / 2, width, height);
       ctx.restore();
@@ -4717,7 +5938,7 @@
       iceLight: '#bdefff', snowPacked: '#e7f8ff', glacier: '#65b9e7', iceHazard: '#168bd2',
       ash: '#55515b', volcanicEarth: '#8f3f2b', basalt: '#35343d', lavaRock: '#ef592b', metal: '#677383', ore: '#9b7cff',
       coin: '#eab308', spring: '#22d3ee', bomb: '#ef4444', gel: '#34d399',
-      hazard: '#403c49', cryo: '#54dff5', snowflake: '#378ed8', appleMint: '#50e8bd', appleRed: '#ff596d', geyser: '#ff762b', meteor: '#ff7e27', boss: '#8a4fd2'
+      hazard: '#403c49', cryo: '#54dff5', snowflake: '#378ed8', jelly: '#ff3f88', geyser: '#ff762b', meteor: '#ff7e27', boss: '#8a4fd2'
     };
     return colors[material] || world.accent;
   }
@@ -4749,31 +5970,296 @@
     menuSlimeCtx.imageSmoothingEnabled = true;
   }
 
+  function drawMenuMealOrb(ctx, x, y, radius, inner, edge, alpha = 1) {
+    const glow = ctx.createRadialGradient(x - radius * .26, y - radius * .3, 0, x, y, radius);
+    glow.addColorStop(0, 'rgba(255,255,255,.95)');
+    glow.addColorStop(.26, inner);
+    glow.addColorStop(1, edge);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMenuMealSparkle(ctx, x, y, radius, color, alpha = 1) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y - radius);
+    ctx.quadraticCurveTo(x + radius * .18, y - radius * .18, x + radius, y);
+    ctx.quadraticCurveTo(x + radius * .18, y + radius * .18, x, y + radius);
+    ctx.quadraticCurveTo(x - radius * .18, y + radius * .18, x - radius, y);
+    ctx.quadraticCurveTo(x - radius * .18, y - radius * .18, x, y - radius);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMenuMealStar(ctx, x, y, outer, inner, color, alpha = 1) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let index = 0; index < 10; index += 1) {
+      const angle = -Math.PI / 2 + index * Math.PI / 5;
+      const radius = index % 2 ? inner : outer;
+      const px = x + Math.cos(angle) * radius;
+      const py = y + Math.sin(angle) * radius;
+      if (!index) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMenuSecretEyeShape(ctx, { x, y, width, openness, alpha, look = 0, rotation = 0, bright = false }) {
+    if (openness < .025 || alpha <= 0) return;
+    const halfWidth = width / 2;
+    const openHeight = Math.max(1.1, width * .19 * openness);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.shadowColor = bright ? '#ff3158' : 'rgba(255,49,88,.72)';
+    ctx.shadowBlur = bright ? 15 : 7;
+    ctx.fillStyle = bright ? '#92143c' : '#77102f';
+    ctx.strokeStyle = bright ? '#ff7890' : '#df4367';
+    ctx.lineWidth = Math.max(1.4, width * .045);
+    ctx.beginPath();
+    ctx.moveTo(-halfWidth, 0);
+    ctx.quadraticCurveTo(0, -openHeight * 1.34, halfWidth, 0);
+    ctx.quadraticCurveTo(0, openHeight * 1.34, -halfWidth, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff5ee';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, halfWidth * .69, openHeight, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#570822';
+    ctx.lineWidth = Math.max(1, width * .025);
+    ctx.stroke();
+    const irisRadius = Math.max(1.4, width * .115 * openness);
+    ctx.fillStyle = bright ? '#f1325e' : '#ce244f';
+    ctx.beginPath();
+    ctx.ellipse(look, 0, irisRadius, Math.max(.8, openHeight * .78), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1a020c';
+    ctx.beginPath();
+    ctx.ellipse(look, 0, Math.max(.8, irisRadius * .34), Math.max(.7, openHeight * .58), 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (bright && openness > .72) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(look - irisRadius * .27, -openHeight * .32, Math.max(.8, width * .018), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawMenuMysticEye(ctx, age, intensity, small = false) {
+    if (small) {
+      const eyes = [
+        { x: 24, y: 68, width: 25, start: 110, duration: 590, rotation: -.16 },
+        { x: 35, y: 118, width: 18, start: 390, duration: 510, rotation: .1 },
+        { x: 156, y: 64, width: 23, start: 250, duration: 620, rotation: .14 },
+        { x: 148, y: 116, width: 17, start: 610, duration: 540, rotation: -.11 },
+        { x: 45, y: 39, width: 15, start: 830, duration: 470, rotation: .08 },
+        { x: 137, y: 40, width: 19, start: 980, duration: 520, rotation: -.08 }
+      ];
+      for (const eye of eyes) {
+        const progress = clamp((age - eye.start) / eye.duration, 0, 1);
+        const openness = Math.sin(progress * Math.PI);
+        drawMenuSecretEyeShape(ctx, {
+          ...eye,
+          openness,
+          alpha: intensity * Math.sin(progress * Math.PI) * .82,
+          look: Math.sin(age / 165 + eye.start) * eye.width * .055
+        });
+      }
+      return;
+    }
+    const start = 1210;
+    const open = clamp((age - start) / 320, 0, 1);
+    const close = clamp((age - 2110) / 310, 0, 1);
+    const openness = Math.sin(open * Math.PI / 2) * (1 - close);
+    drawMenuSecretEyeShape(ctx, {
+      x: 90,
+      y: 31 + Math.sin(age / 240) * 1.1,
+      width: 88,
+      openness,
+      alpha: intensity * (1 - close * .5),
+      look: Math.sin(age / 220) * 4.2,
+      bright: true
+    });
+    const impulse = clamp((age - 2410) / 250, 0, 1);
+    if (impulse > 0 && impulse < 1) {
+      ctx.save();
+      ctx.globalAlpha = intensity * (1 - impulse) * .9;
+      ctx.strokeStyle = '#ff6b8d';
+      ctx.lineWidth = 3 - impulse * 1.5;
+      ctx.shadowColor = '#ff315f';
+      ctx.shadowBlur = 10 * (1 - impulse);
+      ctx.beginPath();
+      ctx.arc(90, 31, 24 + impulse * 38, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Редкость определяет один читаемый визуальный ответ, а жевание остаётся прежним.
+  function drawMenuMealEffect(ctx, rarity, timestamp, layer) {
+    const age = Math.max(0, timestamp - menuMealFxStartedAt);
+    const chewing = els.slime.classList.contains('chewing');
+    const pleased = els.slime.classList.contains('pleased');
+    const intensity = pleased ? .96 : chewing ? .8 : .58;
+    const pulse = .82 + Math.sin(age / 115) * .18;
+    const x = 90;
+    const y = 91;
+
+    if (rarity === 'epic') {
+      if (layer === 'back') {
+        const glow = ctx.createRadialGradient(x, y, 14, x, y, 90);
+        glow.addColorStop(0, 'rgba(224,171,255,.18)');
+        glow.addColorStop(.5, 'rgba(169,78,239,.36)');
+        glow.addColorStop(1, 'rgba(125,43,207,0)');
+        ctx.save();
+        ctx.globalAlpha = intensity * pulse;
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, 90, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      if (layer === 'front') {
+        for (let index = 0; index < 6; index += 1) {
+          const progress = (age / 900 + index * .17) % 1;
+          const side = index % 2 ? 1 : -1;
+          const sparkleX = x + side * (28 + progress * 35);
+          const sparkleY = y + 47 - progress * 104;
+          drawMenuMealSparkle(ctx, sparkleX, sparkleY, 4.2 + (1 - progress) * 5.2, index % 2 ? '#f5d5ff' : '#bd7cff', intensity * Math.sin(progress * Math.PI));
+        }
+      }
+      return;
+    }
+
+    if (rarity === 'special') {
+      if (layer === 'back') {
+        const rainbow = [
+          ['rgba(255,116,170,.82)', 'rgba(255,87,151,0)'],
+          ['rgba(255,203,91,.86)', 'rgba(255,168,46,0)'],
+          ['rgba(120,237,162,.8)', 'rgba(67,210,127,0)'],
+          ['rgba(97,210,255,.82)', 'rgba(63,163,255,0)'],
+          ['rgba(185,128,255,.8)', 'rgba(141,91,235,0)']
+        ];
+        rainbow.forEach(([inner, edge], index) => {
+          const angle = age / 800 + index * Math.PI * 2 / rainbow.length;
+          drawMenuMealOrb(ctx, x + Math.cos(angle) * 45, y + Math.sin(angle) * 32, 13, inner, edge, intensity * .42);
+        });
+        drawMenuMealStar(ctx, x, y + 5, 76 + pulse * 5, 35, '#ffcd4d', intensity * .3);
+        drawMenuMealStar(ctx, x, y + 5, 50 + pulse * 3, 23, '#fff0a3', intensity * .42);
+      }
+      return;
+    }
+
+    if (rarity === 'secret') {
+      if (layer === 'back') {
+        const shadow = ctx.createRadialGradient(x, y + 3, 12, x, y + 3, 94);
+        shadow.addColorStop(0, 'rgba(255,84,116,.18)');
+        shadow.addColorStop(.46, 'rgba(104,7,43,.4)');
+        shadow.addColorStop(1, 'rgba(24,1,14,0)');
+        ctx.save();
+        ctx.globalAlpha = intensity * pulse;
+        ctx.fillStyle = shadow;
+        ctx.beginPath();
+        ctx.arc(x, y + 3, 94, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+      }
+      if (layer === 'front') {
+        drawMenuMysticEye(ctx, age, intensity, true);
+        drawMenuMysticEye(ctx, age, intensity, false);
+      }
+    }
+  }
+
   function drawMenuSlime(timestamp) {
     menuSlimeCtx.clearRect(0, 0, 180, 180);
     const emotion = menuSlimeEmotion();
     const rarity = MEAL_REACTION_CLASSES.find(name => els.slime.classList.contains(name))?.replace('meal-', '') || '';
     const isEating = ['eat', 'chewing', 'savoring', 'pleased'].some(name => els.slime.classList.contains(name));
-    const isPleased = els.slime.classList.contains('pleased');
+    const hasMealFx = isEating && ['epic', 'special', 'secret'].includes(rarity);
     const blinkPhase = timestamp % 4700;
-    const specialActive = rarity === 'special' && isEating;
-    const secretActive = rarity === 'secret' && isEating;
     const selected = skinById(save.selectedSkin);
-    let aura = '';
-    if (rarity === 'epic' && isPleased) aura = 'epic';
-    else if (specialActive) aura = 'special';
-    else if (secretActive) aura = 'secret';
+    if (hasMealFx) drawMenuMealEffect(menuSlimeCtx, rarity, timestamp, 'back');
     drawSlimeAvatar(menuSlimeCtx, {
       x: 90, y: 91, radius: 66, emotion,
       skin: selected.id,
       colors: selected.colors,
       gazeX: menuGaze.x, gazeY: menuGaze.y,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
-      aura,
-      tipSway: specialActive ? Math.sin(timestamp / 210) * .16 : 0,
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
       timestamp
     });
+    if (hasMealFx) drawMenuMealEffect(menuSlimeCtx, rarity, timestamp, 'front');
+  }
+
+  function drawMiniSlimes(timestamp) {
+    if (!run?.miniSlimes?.length && timestamp >= (run?.timeSlowUntil || 0)) return;
+    const selected = skinById(save.selectedSkin);
+    if (timestamp < (run.timeSlowUntil || 0)) {
+      const remaining = clamp((run.timeSlowUntil - timestamp) / 760, 0, 1);
+      const pulse = .5 + Math.sin(timestamp / 75) * .5;
+      ctx.save();
+      ctx.globalAlpha = remaining * (.055 + pulse * .025);
+      ctx.fillStyle = '#a9efff';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.globalAlpha = remaining * .42;
+      ctx.strokeStyle = '#d7fbff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(run.slime.x, run.slime.y - run.cameraY, run.slime.radius + 26 + (1 - remaining) * 34, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    for (const mini of run.miniSlimes || []) {
+      const screenY = mini.y - run.cameraY;
+      if (screenY < -50 || screenY > VIEW_H + 50) continue;
+      const invulnerable = timestamp < mini.invulnerableUntil;
+      const arrival = clamp((timestamp - mini.spawnedAt) / 220, 0, 1);
+      const scale = (.72 + arrival * .28) * (1 + Math.sin(mini.wobble) * .04);
+      ctx.save();
+      ctx.globalAlpha = .18;
+      ctx.fillStyle = '#122117';
+      ctx.beginPath();
+      ctx.ellipse(mini.x, screenY + mini.radius * .78, mini.radius * .7, mini.radius * .22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      drawSlimeAvatar(ctx, {
+        x: mini.x, y: screenY, radius: mini.radius,
+        emotion: invulnerable ? 'joy' : 'focused',
+        skin: selected.id, colors: selected.colors,
+        scaleX: scale, scaleY: scale,
+        rotation: clamp(mini.vx / 1050, -.24, .24),
+        timestamp
+      });
+      if (invulnerable) {
+        const pulse = .55 + Math.sin(timestamp / 85 + mini.wobble) * .2;
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        ctx.strokeStyle = '#e7fdff';
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = '#78dcff';
+        ctx.shadowBlur = 7;
+        ctx.beginPath(); ctx.arc(mini.x, screenY, mini.radius + 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+    }
   }
 
   function menuSlimeFrame(timestamp) {
@@ -4826,6 +6312,36 @@
             ? 'joy'
             : 'focused';
 
+    if (run.bouncePowerReady) {
+      const pulse = .72 + Math.sin(timestamp / 95) * .18;
+      ctx.save();
+      const aura = ctx.createRadialGradient(s.x, screenY, radius * .35, s.x, screenY, radius + 34);
+      aura.addColorStop(0, 'rgba(255,240,112,.16)');
+      aura.addColorStop(.56, `rgba(255,179,52,${.20 + pulse * .09})`);
+      aura.addColorStop(1, 'rgba(255,111,55,0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(s.x, screenY, radius + 34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffd45a';
+      ctx.lineWidth = 2.6;
+      ctx.shadowColor = '#ff8d45';
+      ctx.shadowBlur = 10;
+      ctx.globalAlpha = .68 + pulse * .22;
+      ctx.beginPath();
+      ctx.arc(s.x, screenY, radius + 16 + pulse * 4, timestamp / 220, timestamp / 220 + Math.PI * 1.42);
+      ctx.stroke();
+      for (let spark = 0; spark < 5; spark += 1) {
+        const angle = timestamp / 320 + spark * Math.PI * 2 / 5;
+        const orbit = radius + 23 + Math.sin(timestamp / 120 + spark) * 4;
+        ctx.fillStyle = spark % 2 ? '#fff7b9' : '#ffb44c';
+        ctx.beginPath();
+        ctx.arc(s.x + Math.cos(angle) * orbit, screenY + Math.sin(angle) * orbit, 2.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
     if (run.barrier > 0) {
       ctx.save();
       const barrierPulse = timestamp < (run.barrierFlashUntil || 0) ? .13 : .05;
@@ -4869,22 +6385,6 @@
       ctx.restore();
     }
 
-    if (timestamp < run.appleGlowUntil) {
-      const mint = run.appleGlowType === 'mint';
-      const duration = mint ? 1450 : 1650;
-      const appleProgress = clamp((run.appleGlowUntil - timestamp) / duration, 0, 1);
-      const pulse = .82 + Math.sin(timestamp / 72) * .18;
-      const appleGlow = ctx.createRadialGradient(s.x, screenY, radius * .18, s.x, screenY, radius + 46);
-      const rgb = mint ? '58,220,168' : '255,77,83';
-      appleGlow.addColorStop(0, `rgba(${rgb},${appleProgress * .38 * pulse})`);
-      appleGlow.addColorStop(.58, `rgba(${rgb},${appleProgress * .22 * pulse})`);
-      appleGlow.addColorStop(1, `rgba(${rgb},0)`);
-      ctx.save();
-      ctx.fillStyle = appleGlow;
-      ctx.beginPath(); ctx.arc(s.x, screenY, radius + 46, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    }
-
     if (run.portalEntry) {
       const portalPalette = {
         1: ['82,239,176', '221,255,231'],
@@ -4906,7 +6406,7 @@
       ctx.restore();
     }
 
-    drawSlimeAvatar(ctx, {
+    const avatarOptions = {
       x: s.x,
       y: screenY,
       radius,
@@ -4922,7 +6422,51 @@
       rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.8,
       alpha: run.portalEntry ? Math.pow(1 - vanishProgress, .72) : 1,
       timestamp
-    });
+    };
+    drawSlimeAvatar(ctx, avatarOptions);
+    if (run.effects.edgePortals && !run.portalEntry) {
+      if (s.x - radius < 0) drawSlimeAvatar(ctx, { ...avatarOptions, x: s.x + VIEW_W });
+      if (s.x + radius > VIEW_W) drawSlimeAvatar(ctx, { ...avatarOptions, x: s.x - VIEW_W });
+    }
+
+    if (!run.portalEntry && timestamp < (run.gravitySwitchFlashUntil || 0)) {
+      const progress = clamp((run.gravitySwitchFlashUntil - timestamp) / 620, 0, 1);
+      const direction = run.gravityDirection < 0 ? -1 : 1;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, progress * 2.6);
+      ctx.translate(s.x, screenY + direction * (radius + 21));
+      ctx.fillStyle = '#fff7ff';
+      ctx.strokeStyle = '#8b2ad4';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#e771ff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(0, direction * 11);
+      ctx.lineTo(-7, direction * 2);
+      ctx.lineTo(-3, direction * 2);
+      ctx.lineTo(-3, direction * -9);
+      ctx.lineTo(3, direction * -9);
+      ctx.lineTo(3, direction * 2);
+      ctx.lineTo(7, direction * 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (!run.portalEntry && timestamp < (run.growthResetUntil || 0)) {
+      const progress = clamp((run.growthResetUntil - timestamp) / 560, 0, 1);
+      ctx.save();
+      ctx.globalAlpha = progress * .72;
+      ctx.strokeStyle = '#ff6577';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#ff435f';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(s.x, screenY, radius + (1 - progress) * 25, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     if (hurtActive && !run.portalEntry) {
       drawVfxSprite(
@@ -5092,9 +6636,16 @@
     run.portalEntry = null;
     run.portalTransitioning = false;
     run.blocks = generateBlockField(run);
+    applySecretWorldModifiers(run);
+    run.honeyZones = generateHoneyZones(run);
+    run.jellyZones = generateJellyZones(run);
+    run.inJellyZoneId = '';
+    run.jellyEnteredAt = 0;
+    run.lastJellyBubbleAt = 0;
     run.particles = [];
     run.specialEffects = [];
     run.meteorShowers = [];
+    run.miniSlimes = [];
     run.hitCooldowns.clear();
     run.geyserCapture = null;
     run.slime.x = run.startX;
@@ -5120,6 +6671,7 @@
     if (!run || run.ended) return;
     const world = run.world;
     const level = clamp(Math.round(run.level || 1), 1, LEVEL_COUNT);
+    save.levelFailures[campaignAttemptKey(world.id, level)] = 0;
     save.worldBest[world.id] = Math.max(save.worldBest[world.id] || 0, world.targetDepth);
     if (level < LEVEL_COUNT) {
       save.unlockedLevels[world.id] = Math.max(save.unlockedLevels[world.id] || 1, level + 1);
@@ -5315,6 +6867,7 @@
       save.endlessBestDepth[run.worldId] = Math.max(save.endlessBestDepth[run.worldId] || 0, Math.max(0, Math.floor(run.maxDepth)));
       save.endlessRuns[run.worldId] = Math.max(0, Math.floor(save.endlessRuns[run.worldId] || 0)) + 1;
     } else {
+      if (!completed) registerCampaignFailure(run.worldId, run.level);
       save.worldBest[run.worldId] = Math.max(save.worldBest[run.worldId] || 0, Math.min(run.maxDepth, run.world.targetDepth));
       save.lastRunDepth[`${run.worldId}:${run.level}`] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
     }
@@ -5702,6 +7255,7 @@
       foodArtMarkup,
       foodStatItems,
       foodStatGridMarkup,
+      foodCardDecorMarkup,
       foodNameMarkup,
       foodCardBodyMarkup
     });
@@ -5749,7 +7303,7 @@
     viewer.setAttribute('role', 'dialog');
     viewer.setAttribute('aria-modal', 'true');
     viewer.setAttribute('aria-label', `Карточка: ${food.name}`);
-    viewer.innerHTML = `<div class="encyclopedia-card-viewer-stage"><button class="encyclopedia-card-viewer-close" type="button" aria-label="Закрыть крупную карточку">×</button><div class="encyclopedia-card-viewer-card">${encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup, foodNameMarkup, foodCardBodyMarkup })}</div><small>Нажми ещё раз, чтобы закрыть</small></div>`;
+    viewer.innerHTML = `<div class="encyclopedia-card-viewer-stage"><button class="encyclopedia-card-viewer-close" type="button" aria-label="Закрыть крупную карточку">×</button><div class="encyclopedia-card-viewer-card">${inspectFoodCardMarkup(food)}</div><small>Нажми ещё раз, чтобы закрыть</small></div>`;
     document.body.appendChild(viewer);
     syncInteractionLayers();
     const close = () => {
@@ -5897,14 +7451,23 @@
     if (!run?.steer || run.steer.pointerId !== event.pointerId) return;
     const maxDistance = 35;
     let dx = event.clientX - run.steer.originX;
-    let dy = Math.max(0, event.clientY - run.steer.originY);
+    let dy = event.clientY - run.steer.originY;
+    if (!run.effects.gravitySwitch) dy = Math.max(0, dy);
     const distance = Math.hypot(dx, dy);
     if (distance > maxDistance) {
       dx = dx / distance * maxDistance;
       dy = dy / distance * maxDistance;
     }
     run.steer.touchX = clamp(dx / maxDistance, -1, 1);
-    run.steer.touchDown = clamp(dy / maxDistance, 0, 1);
+    const vertical = clamp(dy / maxDistance, -1, 1);
+    run.steer.touchDown = run.effects.gravitySwitch ? 0 : clamp(vertical, 0, 1);
+    if (run.effects.gravitySwitch) {
+      if (Math.abs(vertical) < .18) run.steer.gravityGestureLocked = false;
+      else if (Math.abs(vertical) >= .42 && !run.steer.gravityGestureLocked) {
+        setSecretGravityDirection(vertical < 0 ? -1 : 1);
+        run.steer.gravityGestureLocked = true;
+      }
+    }
     els.touchJoystick?.style.setProperty('--stick-x', `${round1(dx)}px`);
     els.touchJoystick?.style.setProperty('--stick-y', `${round1(dy)}px`);
   }
@@ -5919,6 +7482,7 @@
     run.steer.originY = event.clientY;
     run.steer.touchX = 0;
     run.steer.touchDown = 0;
+    run.steer.gravityGestureLocked = false;
     const localX = clamp(event.clientX - rect.left, 43, rect.width - 43);
     const localY = clamp(event.clientY - rect.top, 43, rect.height - 43);
     if (els.touchJoystick) {
@@ -5941,6 +7505,7 @@
       run.steer.pointerId = null;
       run.steer.touchX = 0;
       run.steer.touchDown = 0;
+      run.steer.gravityGestureLocked = false;
     }
     els.touchJoystick?.classList.remove('is-active');
     els.touchJoystick?.setAttribute('aria-hidden', 'true');
@@ -5953,6 +7518,10 @@
 
   function setKeyboardSteering(code, pressed) {
     if (!run?.steer || run.ended || run.paused || run.portalEntry) return false;
+    if (run.effects.gravitySwitch && ['ArrowUp', 'KeyW', 'ArrowDown', 'KeyS'].includes(code)) {
+      if (pressed) setSecretGravityDirection(code === 'ArrowUp' || code === 'KeyW' ? -1 : 1);
+      return true;
+    }
     const key = {
       ArrowLeft: 'keyLeft', KeyA: 'keyLeft',
       ArrowRight: 'keyRight', KeyD: 'keyRight',
@@ -6000,7 +7569,7 @@
     });
     els.campaignModeBtn?.addEventListener('click', () => selectHomeMode('campaign'));
     els.endlessModeBtn?.addEventListener('click', () => selectHomeMode('endless'));
-    els.startDropBtn.addEventListener('click', startDrop);
+    els.startDropBtn?.addEventListener('click', startDrop);
     els.startEndlessBtn?.addEventListener('click', () => startDrop({ endless: true }));
     els.adminMenuBtn?.addEventListener('click', openAdminTools);
     els.closeAdminToolsBtn?.addEventListener('click', closeAdminTools);
@@ -6090,14 +7659,16 @@
     });
     document.addEventListener('keydown', event => {
       const steerCode = event.code || event.key;
-      if (run?.geyserCapture && !run.paused && ['ArrowLeft', 'ArrowRight', 'ArrowDown', 'KeyA', 'KeyD', 'KeyS'].includes(steerCode)) {
+      if (run?.geyserCapture && !run.paused && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS'].includes(steerCode)) {
         event.preventDefault();
         const direction = {
           ArrowLeft: { x: -1, y: 0 },
           ArrowRight: { x: 1, y: 0 },
+          ArrowUp: { x: 0, y: -1 },
           ArrowDown: { x: 0, y: 1 },
           KeyA: { x: -1, y: 0 },
           KeyD: { x: 1, y: 0 },
+          KeyW: { x: 0, y: -1 },
           KeyS: { x: 0, y: 1 }
         }[steerCode];
         launchFromGeyser(direction, performance.now());
@@ -6160,7 +7731,7 @@
         persist();
       },
       specialFx: (type = 'bomb') => {
-        if (!run || run.ended || !['bomb', 'heal', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'].includes(type)) return false;
+        if (!run || run.ended || !['bomb', 'heal', 'spring', 'cryo', 'snowflake', 'jelly', 'geyser', 'meteor'].includes(type)) return false;
         const x = clamp(run.slime.x + (type === 'heal' ? 72 : 0), 50, VIEW_W - 50);
         const y = run.slime.y + 58;
         if (type === 'meteor') {
@@ -6175,9 +7746,6 @@
         } else if (type === 'snowflake') {
           run.freezeUntil = performance.now() + 3000;
           run.frozenEmotion = 'surprised';
-        } else if (type === 'appleMint' || type === 'appleRed') {
-          run.appleGlowUntil = performance.now() + (type === 'appleMint' ? 1450 : 1650);
-          run.appleGlowType = type === 'appleMint' ? 'mint' : 'red';
         }
         return true;
       },

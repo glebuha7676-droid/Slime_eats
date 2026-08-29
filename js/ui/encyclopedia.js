@@ -13,8 +13,7 @@
       { id: 'heal', name: 'Ледяная аптечка', sprite: 'heal', kind: 'ЛЕЧЕНИЕ' }
     ],
     3: [
-      { id: 'appleMint', name: 'Мятное яблоко', sprite: 'apple-mint', kind: 'ЛЁГКОСТЬ' },
-      { id: 'appleRed', name: 'Красное яблоко', sprite: 'apple-red', kind: 'УСИЛЕНИЕ' },
+      { id: 'jelly', name: 'Пружинящая желейка', sprite: 'jelly-bounce', kind: 'ОТСКОК' },
       { id: 'heal', name: 'Сладкая аптечка', sprite: 'heal', kind: 'ЛЕЧЕНИЕ' }
     ],
     4: [
@@ -47,8 +46,7 @@
         heal: `Ломается при первом касании и восстанавливает до ${heal} здоровья. Лишнее лечение не переносится.`
       },
       3: {
-        appleMint: `Уменьшает слайма на ${Math.abs(Math.round(special.appleMint?.size ?? -20))}%, добавляет ${Math.round(special.appleMint?.shield ?? 20)} щита и ${Math.round(special.appleMint?.shieldCharges ?? 1)} заряд щита.`,
-        appleRed: `Увеличивает слайма на ${Math.round(special.appleRed?.size ?? 50)}%, добавляет ${Math.round(special.appleRed?.damage ?? 20)} урона и ${Math.round(special.appleRed?.shield ?? 20)} щита.`,
+        jelly: 'Не разрушается и не наносит урон. Сочно прогибается от удара и мягко, но сильно отталкивает слайма обратно.',
         heal: `Ломается при первом касании и восстанавливает до ${heal} здоровья. Лишнее лечение не переносится.`
       },
       4: {
@@ -85,25 +83,27 @@
     return `<div class="encyclopedia-rarity-tabs" role="tablist" aria-label="Редкость карточек">
       ${RARITY_ORDER.map(rarity => {
         return `<button class="encyclopedia-rarity-tab food-card ${rarity} ${activeRarity === rarity ? 'active' : ''}" data-encyclopedia-rarity="${rarity}" role="tab" aria-selected="${activeRarity === rarity}" aria-label="${escapeHtml(rarityLabels[rarity])}">
-          <span class="rarity-name"><i aria-hidden="true"></i></span>
+          <span class="rarity-name"><i aria-hidden="true"><b></b></i></span>
         </button>`;
       }).join('')}
     </div>`;
   }
 
   function foodCardMarkup(food, helpers) {
-    const cardType = food.effect && food.effectText ? 'ability' : 'stats';
+    const cardType = 'stats';
     const cardBody = helpers.foodCardBodyMarkup
       ? helpers.foodCardBodyMarkup(food)
       : '<span class="food-card-description empty"><em aria-hidden="true">—</em></span>';
     const foodName = helpers.foodNameMarkup
       ? helpers.foodNameMarkup(food)
       : `<span class="food-name">${escapeHtml(food.name)}</span>`;
-    const summary = cardType === 'ability'
-      ? `Эффект: ${food.effectText}`
-      : helpers.foodStatItems(food).slice(0, 4).map(item => item.label).join(', ');
+    const summary = [
+      helpers.foodStatItems(food).slice(0, 4).map(item => item.label).join(', '),
+      food.description || food.effectText || ''
+    ].filter(Boolean).join('. ');
     return `<article class="food-card encyclopedia-food-card ${escapeHtml(food.rarity)} food-type-${cardType}" data-encyclopedia-food="${escapeHtml(food.id)}" tabindex="0" role="button" aria-label="${escapeHtml(`${food.name}. ${summary}. Открыть крупную карточку`)}">
-      <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${escapeHtml(helpers.rarityLabels[food.rarity])}</span></span></span>
+      ${helpers.foodCardDecorMarkup ? helpers.foodCardDecorMarkup(food) : ''}
+      <span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${escapeHtml(helpers.rarityLabels[food.rarity])}</span></span></span>
       <span class="food-model-wrap">${helpers.foodArtMarkup(food)}</span>
       ${foodName}
       ${cardBody}
@@ -113,7 +113,8 @@
   function unknownFoodCardMarkup(rarity, helpers) {
     const secret = rarity === 'secret';
     return `<article class="food-card encyclopedia-food-card encyclopedia-food-unknown ${escapeHtml(rarity)} food-type-stats" aria-label="Неизвестная карточка. ${escapeHtml(helpers.rarityLabels[rarity])}">
-      <span class="rarity"><span class="rarity-name"><i aria-hidden="true"></i><span>${escapeHtml(helpers.rarityLabels[rarity])}</span></span></span>
+      ${helpers.foodCardDecorMarkup ? helpers.foodCardDecorMarkup({ rarity }) : ''}
+      <span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${escapeHtml(helpers.rarityLabels[rarity])}</span></span></span>
       <span class="encyclopedia-unknown-mark" aria-hidden="true">${secret ? '???' : '?'}</span>
       <span class="encyclopedia-unknown-label">НЕ ОТКРЫТО</span>
     </article>`;
@@ -140,7 +141,7 @@
         <p>Карточка открывается после встречи на конвейере. Нажми на найденную карточку, чтобы рассмотреть её.</p>
       </div>
       <section class="encyclopedia-rarity-group ${rarity}">
-        <div class="encyclopedia-rarity-head"><i aria-hidden="true"></i><b>${escapeHtml(options.rarityLabels[rarity])}</b><div class="encyclopedia-rarity-progress" style="--rarity-progress:${rarityPercent}%"><u></u></div><span>${rarityKnown.length} из ${rarityFoods.length}</span></div>
+        <div class="encyclopedia-rarity-head"><i aria-hidden="true"><b></b></i><b>${escapeHtml(options.rarityLabels[rarity])}</b><div class="encyclopedia-rarity-progress" style="--rarity-progress:${rarityPercent}%"><u></u></div><span>${rarityKnown.length} из ${rarityFoods.length}</span></div>
         <div class="encyclopedia-food-viewport"><div class="encyclopedia-food-row">${rarityFoods.map(food => isKnown(food) ? foodCardMarkup(food, options) : unknownFoodCardMarkup(rarity, options)).join('')}</div></div>
       </section>
     </section>`;

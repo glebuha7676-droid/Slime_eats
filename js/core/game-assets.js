@@ -73,6 +73,8 @@
     'meteor-flight',
     'meteor-impact-1',
     'meteor-impact-2',
+    'pandora-box',
+    'jelly-zone-texture',
     'combo-stage-1',
     'combo-stage-2',
     'combo-stage-3',
@@ -86,7 +88,11 @@
       ? `assets/vfx/geyser-compact/frame-${geyserFrame}.png`
       : comboStage
         ? `assets/ui/combo/stage-${comboStage}.png`
-        : `assets/vfx/${name}.png`);
+        : name === 'pandora-box'
+          ? 'assets/vfx/pandora-box.webp'
+          : name === 'jelly-zone-texture'
+            ? 'assets/Мир 1/Желе текстура v4.webp'
+          : `assets/vfx/${name}.png`);
     return [name, image];
   }));
 
@@ -206,13 +212,17 @@
       category,
       minConveyor: Math.round(clampNumber(value.minConveyor || 1, 1, 5)),
       health: clampNumber(value.health ?? value.mass, 0, 999),
-      statVersion: 3,
+      healthPenalty: clampNumber(value.healthPenalty, 0, 999),
+      statVersion: 4,
       damage: clampNumber(value.damage ?? (numericStats ? value.power : Number(value.power || 0) * 10), 0, 999),
+      damagePenalty: clampNumber(value.damagePenalty, 0, 999),
       shield: clampNumber(value.shield ?? (numericStats ? value.defense : Number(value.defense || 0) * 100), 0, 999),
+      shieldPenalty: clampNumber(value.shieldPenalty, 0, 999),
       shieldCharges: Math.round(clampNumber(value.shieldCharges, 0, 9)),
       coinMultiplier: clampNumber(value.coinMultiplier, 0, 99),
       effect: String(value.effect || '').trim(),
       effectText: String(value.effectText || '').trim(),
+      description: String(value.description || value.effectText || '').trim(),
       ...(Array.isArray(value.worlds) ? { worlds: value.worlds.map(Number).filter(worldId => worldId >= 1 && worldId <= 4) } : {}),
       ...(image ? { image } : {}),
       ...(hasArtTransform ? {
@@ -236,7 +246,23 @@
       const catalog = savedCatalog
         .map(normalizeEditorFood)
         .filter(food => food && !ids.has(food.id) && ids.add(food.id));
-      return catalog.length ? catalog : baseCatalog;
+      if (!catalog.length) return baseCatalog;
+      // Встроенный каталог определяет актуальную редкость, баланс и графику.
+      // От старого редактора сохраняем только ручное позиционирование картинки,
+      // чтобы локальные данные не могли спрятать новые или изменённые карты.
+      const savedById = new Map(catalog.map(food => [food.id, food]));
+      const mergedBase = baseCatalog.map(baseFood => {
+        const savedFood = savedById.get(baseFood.id);
+        if (!savedFood) return baseFood;
+        return {
+          ...baseFood,
+          ...(['artX', 'artY', 'artScale'].reduce((transform, key) => {
+            if (Object.hasOwn(savedFood, key)) transform[key] = savedFood[key];
+            return transform;
+          }, {}))
+        };
+      });
+      return [...mergedBase, ...catalog.filter(food => !baseIds.has(food.id))];
     } catch (_) {
       return baseCatalog;
     }

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Генерация уровней</title>
+  <link rel="stylesheet" href="styles.css?v=1">
+  <link rel="stylesheet" href="responsive.css?v=2">
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="../../index.html" aria-label="Вернуться в игру">←</a>
+    <div><small>ИНСТРУМЕНТЫ</small><h1>Генерация</h1></div>
+    <button id="saveBtn" class="primary" type="button">Сохранить</button>
+  </header>
+
+  <nav id="worldTabs" class="world-tabs" aria-label="Миры"></nav>
+
+  <main>
+    <section class="panel editor-panel">
+      <div class="section-heading">
+        <div><small id="categoryHint"></small><h2 id="worldTitle"></h2></div>
+        <div id="difficultyButtons" class="stars" aria-label="Сложность секции"></div>
+      </div>
+
+      <div id="categoryTabs" class="category-tabs" aria-label="Категории секций"></div>
+      <div id="variantTabs" class="variant-tabs" aria-label="Варианты секции"></div>
+
+      <label class="name-field">Название секции<input id="sectionName" maxlength="42" autocomplete="off"></label>
+      <p id="templatePurpose" class="template-purpose"></p>
+
+      <div class="workspace">
+        <div>
+          <div id="sectionGrid" class="section-grid" aria-label="Сетка секции"></div>
+          <p class="grid-help">Нажми или проведи кистью. Правая кнопка мыши стирает.</p>
+        </div>
+        <aside>
+          <h3>Кисти</h3>
+          <div id="brushPalette" class="brush-palette"></div>
+        </aside>
+      </div>
+
+      <div class="actions">
+        <button id="mirrorBtn" type="button">↔ Отразить</button>
+        <button id="resetBtn" type="button">Вернуть вариант</button>
+      </div>
+    </section>
+
+    <section class="panel preview-panel">
+      <div class="preview-heading">
+        <div><small>ПРОВЕРКА ДИРЕКТОРА</small><h2>Как соберётся забег</h2></div>
+        <label>Уровень<select id="previewLevel"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        <label>Попытка<select id="previewDifficulty"><option value="hard">1–2 · сложная</option><option value="normal">3–4 · обычная</option><option value="easy">5+ · облегчённая</option><option value="mixed">После прохождения</option></select></label>
+        <button id="regenerateBtn" type="button">Новый вариант</button>
+      </div>
+      <div id="runPreview" class="run-preview"></div>
+      <p id="previewSummary" class="preview-summary"></p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="../../published/worlds.js?v=1"></script>
+  <script src="../../world-catalog.js?v=22"></script>
+  <script src="../../js/generation/section-catalog.js?v=12"></script>
+  <script src="generation.js?v=8"></script>
+</body>
+</html>

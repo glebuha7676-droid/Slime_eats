@@ -3,11 +3,11 @@
 
   const WORLD_LEVELS = {
     1: [
-      { depth: 100, features: { dynamite: false, medkit: false, hazards: false, boss: false }, utilityCadence: 0,
+      { depth: 100, features: { dynamite: false, medkit: false, hazards: true, boss: false }, utilityCadence: 0,
         sections: ['tutorial', 'flow', 'ore', 'flow', 'ore', 'flow', 'final'] },
-      { depth: 200, features: { dynamite: true, medkit: false, hazards: false, boss: false }, utilityCadence: 8,
+      { depth: 200, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 8,
         sections: ['tutorial', 'flow', 'bomb', 'ore', 'flow', 'bomb', 'flow', 'final'] },
-      { depth: 300, features: { dynamite: true, medkit: true, hazards: false, boss: false }, utilityCadence: 7,
+      { depth: 300, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 7,
         sections: ['tutorial', 'flow', 'bomb', 'recovery', 'ore', 'flow', 'bomb', 'recovery', 'final'] },
       { depth: 400, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 7,
         sections: ['tutorial', 'flow', 'bomb', 'recovery', 'challenge', 'ore', 'bomb', 'challenge', 'final'] },
@@ -81,14 +81,13 @@
   };
 
   const RARITY_LABELS = {
-    common: 'Обычная', rare: 'Редкая', epic: 'Эпическая',
-    special: 'Особая', secret: 'Секретная'
+    common: 'Обычная', rare: 'Редкая', epic: 'Эпическая', special: 'Особая', secret: 'Секретная'
   };
 
   const WORLD_SPRITE_NAMES = {
-    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'spring', 'heal', 'portal'],
+    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'heal', 'portal'],
     2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'cryo', 'snowflake', 'heal', 'portal'],
-    3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'apple-mint', 'apple-red', 'heal', 'portal'],
+    3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'jelly-bounce', 'heal', 'portal'],
     4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'geyser', 'meteor', 'heal', 'portal']
   };
 
@@ -138,11 +137,12 @@
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 16,
+    schemaVersion: 18,
     coins: 20,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
     lastRunDepth: {},
+    levelFailures: {},
     selectedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
     unlockedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
     stomachLevel: 1,
@@ -178,12 +178,12 @@
     VIEW_H: 650,
     LEVEL_COUNT: 5,
     LEVEL_DEPTH_RATIOS: [.36, .52, .68, .84, 1],
-    ASSET_REVISION: '20260816-2',
+    ASSET_REVISION: '20260829-3',
     FOOD_ASSET_ROOT: 'assets/ЕДА/Общий пул/',
     UI_ASSET_ROOT: 'assets/ui/',
-    FOOD_EDITOR_STORAGE_KEY: 'slime_food_catalog_v2',
+    FOOD_EDITOR_STORAGE_KEY: 'slime_food_catalog_v3',
     FOOD_RARITIES: ['common', 'rare', 'epic', 'special', 'secret'],
-    FOOD_CATEGORIES: ['health', 'damage', 'shield'],
+    FOOD_CATEGORIES: ['health', 'damage', 'shield', 'secret'],
     WORLD_LEVELS,
     WORLDS,
     PHYSICS,

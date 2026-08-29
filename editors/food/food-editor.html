@@ -72,14 +72,13 @@
             <fieldset>
               <legend>ХАРАКТЕРИСТИКИ</legend>
               <div class="field-grid stats-grid">
-                <label>Здоровье<input name="mass" type="number" min="0" max="999" step="1"></label>
-                <label>Урон<input name="power" type="number" min="0" max="999" step="1"></label>
-                <label>Защита<input name="defense" type="number" min="0" max="999" step="1"></label>
-                <label>Отскок<input name="elasticity" type="number" min="0" max="9" step="0.01"></label>
-                <label>Заряд<input name="ability" type="number" min="0" max="999" step="1"></label>
+                <label>Здоровье<input name="health" type="number" min="0" max="999" step="1"></label>
+                <label>Урон<input name="damage" type="number" min="0" max="999" step="1"></label>
+                <label>Щит<input name="shield" type="number" min="0" max="999" step="1"></label>
+                <label>Заряды щита<input name="shieldCharges" type="number" min="0" max="9" step="1"></label>
                 <label>Монеты<input name="coinMultiplier" type="number" min="0" max="99" step="0.01"></label>
               </div>
-              <p class="field-hint">На самой карточке показываются 4 самые заметные характеристики. Все значения работают в расчёте забега.</p>
+              <p class="field-hint">У слайма только три базовые характеристики: здоровье, урон и щит. Заряды определяют, сколько раз щит можно включить за забег.</p>
             </fieldset>
 
             <fieldset>
@@ -116,7 +115,7 @@
 
   <div id="editorToast" class="editor-toast" role="status" aria-live="polite"></div>
   <script src="../../published/food.js?v=1"></script>
-  <script src="../../food-catalog.js?v=5"></script>
-  <script src="food-editor.js?v=7"></script>
+  <script src="../../food-catalog.js?v=6"></script>
+  <script src="food-editor.js?v=8"></script>
 </body>
 </html>

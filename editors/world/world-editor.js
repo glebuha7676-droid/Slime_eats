@@ -35,7 +35,6 @@
     }
     picture.style.objectFit = 'contain';
     picture.style.transform = `translate(${b.x || 0}%, ${b.y || 0}%) scale(${b.scale || 1})`;
-    if (b.type === 'gel' && !e.bc.querySelector('[data-field="healAmount"]')) e.bc.insertAdjacentHTML('beforeend', `<label class="wide">Восстанавливает здоровье<input data-field="healAmount" type="number" min="1" max="100" value="${b.healAmount || 16}"></label>`);
   }
   const renderEditorBase = render;
   render = function () { renderEditorBase(); enhanceBlockPreview(); paintWorldPreview(); };

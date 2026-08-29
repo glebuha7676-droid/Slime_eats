@@ -7,9 +7,9 @@
   <meta name="color-scheme" content="light" />
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=62" />
-  <link rel="stylesheet" href="food-cards.css?v=48" />
-  <link rel="stylesheet" href="home-layout.css?v=97" />
+  <link rel="stylesheet" href="styles.css?v=79" />
+  <link rel="stylesheet" href="food-cards.css?v=90" />
+  <link rel="stylesheet" href="home-layout.css?v=114" />
 </head>
 <body>
   <div id="app" class="app">
@@ -121,10 +121,6 @@
             <div class="level-picker">
               <div id="levelButtons" class="level-buttons" aria-label="Уровни мира"></div>
             </div>
-            <button id="startDropBtn" class="launch-btn" type="button">
-              <img src="assets/ui/falling-slime-start.png?v=20260814-1" alt="" aria-hidden="true">
-              <b id="startDropLabel">СТАРТ</b>
-            </button>
           </div>
 
           <div id="endlessModePanel" class="home-mode-panel endless-mode-panel hidden" role="tabpanel" aria-labelledby="endlessModeBtn">
@@ -134,7 +130,6 @@
               <span class="endless-stat-card"><img src="assets/ui/endless-laps.png?v=1" alt="" aria-hidden="true"><span><small>ПРОЙДЕНО КРУГОВ</small><b id="endlessBestLaps">0</b></span></span>
               <span class="endless-stat-card"><img src="assets/ui/endless-runs.png?v=1" alt="" aria-hidden="true"><span><small>БЕСКОНЕЧНЫХ ЗАБЕГОВ</small><b id="endlessRuns">0</b></span></span>
             </div>
-            <button id="startEndlessBtn" class="endless-home-btn" type="button"><img src="assets/ui/endless-mode.png?v=2" alt="" aria-hidden="true"><span><small>НАЧАТЬ</small><b>ИГРАТЬ</b></span></button>
           </div>
 
           <div class="home-route-progress" aria-label="Прогресс выбранного уровня">
@@ -221,7 +216,7 @@
         <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
         <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
       </div>
-      <div class="admin-editor-links" aria-label="Редакторы"><a href="editors/world/world-editor.html">РЕДАКТОР МИРОВ</a><a href="balance/index.html">БАЛАНС</a></div>
+      <div class="admin-editor-links" aria-label="Инструменты"><a href="tools/generation/index.html">ГЕНЕРАЦИЯ</a><a href="editors/world/world-editor.html">РЕДАКТОР МИРОВ</a><a href="balance/index.html">БАЛАНС</a></div>
     </section>
   </div>
 
@@ -336,15 +331,16 @@
   <script src="/sdk.js"></script>
   <script src="published/food.js?v=1"></script>
   <script src="published/worlds.js?v=1"></script>
-  <script src="food-catalog.js?v=6"></script>
-  <script src="world-catalog.js?v=20"></script>
+  <script src="food-catalog.js?v=13"></script>
+  <script src="world-catalog.js?v=22"></script>
+  <script src="js/generation/section-catalog.js?v=12"></script>
   <script src="balance/balance-catalog.js?v=8"></script>
-  <script src="js/config/game-config.js?v=52"></script>
+  <script src="js/config/game-config.js?v=63"></script>
   <script src="js/platform/yandex-platform.js?v=1"></script>
-  <script src="js/core/game-assets.js?v=12"></script>
+  <script src="js/core/game-assets.js?v=21"></script>
   <script src="js/core/audio.js?v=2"></script>
   <script src="js/rendering/slime-avatar.js?v=9"></script>
-  <script src="js/ui/encyclopedia.js?v=9"></script>
-  <script src="game.js?v=150"></script>
+  <script src="js/ui/encyclopedia.js?v=17"></script>
+  <script src="game.js?v=197"></script>
 </body>
 </html>

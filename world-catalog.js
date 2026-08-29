@@ -43,8 +43,7 @@
     'ore-iron': 'assets/Мир 3/Карамель.webp',
     'ore-gold': 'assets/Мир 3/Золото.webp',
     'ore-diamond': 'assets/Мир 3/Алмазы.webp',
-    'apple-mint': 'assets/Мир 3/Уменьшающее яблоко.webp',
-    'apple-red': 'assets/Мир 3/Увеличивающее яблоко.webp',
+    'jelly-bounce': 'assets/Мир 3/Желейка.webp',
     'heal': 'assets/Мир 3/Хилка.webp',
     'portal': 'assets/ui/portals/world-3.png'
   };
@@ -71,7 +70,7 @@
   };
   const clamp = (v, a, b, d) => Number.isFinite(+v) ? Math.max(a, Math.min(b, +v)) : d;
   const block = (id, label, type, sprite, extra = {}) => ({ id, label, type, sprite, hp: 1, x: 0, y: 0, scale: 1, ...extra });
-  const level = (depth, enabled) => ({ depth, enabled, weights: { soft: 0, dense: 48, hard: 42, reinforced: 4, ore: 8, hazard: 5, bomb: 4, spring: 3, heal: 3, cryo: 3, snowflake: 3, appleMint: 3, appleRed: 3, geyser: 3, meteor: 3 } });
+  const level = (depth, enabled) => ({ depth, enabled, weights: { soft: 0, dense: 48, hard: 42, reinforced: 4, ore: 8, hazard: 5, bomb: 4, spring: 3, heal: 3, cryo: 3, snowflake: 3, jelly: 6, geyser: 3, meteor: 3 } });
   const blocksFor = id => {
     const ice = id === 2, candy = id === 3, volcano = id === 4;
     if (volcano) return [
@@ -92,11 +91,9 @@
       block('ore', 'Рудный блок', 'ore', 'ore-diamond', { oreVariant: 'random', oreEnabled: [...ORE_IDS], oreTextures: Object.fromEntries(ORE_IDS.map(id => [id, { image:'', x:0, y:0, scale:1 }])) }),
       block('hazard', ice ? 'Ледяные шипы' : candy ? 'Кислая карамель' : 'Опасный камень', 'hazard', ice ? 'ice-spikes' : candy ? 'candy-hazard' : 'stone-hazard', { hp: 1.2 }),
       ...(candy ? [
-        block('appleMint', 'Мятное яблоко', 'appleMint', 'apple-mint', { hp: 1 }),
-        block('appleRed', 'Красное яблоко', 'appleRed', 'apple-red', { hp: 1 })
+        block('jelly', 'Пружинящая желейка', 'jelly', 'jelly-bounce', { hp: 1 })
       ] : !ice ? [
-        block('bomb', 'Динамит', 'bomb', 'dynamite', { hp: .68, explosionRadius: 125 }),
-        block('spring', 'Прыжинка', 'spring', 'spring', { hp: 1.1, push: 1.35 })
+        block('bomb', 'Динамит', 'bomb', 'dynamite', { hp: .68, explosionRadius: 125 })
       ] : [
         block('cryo', 'Крио-блок', 'cryo', 'cryo', { hp: 1 }),
         block('snowflake', 'Блок снежинки', 'snowflake', 'snowflake', { hp: 1 })
@@ -112,7 +109,7 @@
       return enabled;
     }
     if (worldId === 3) {
-      const enabled = ['soft','dense','ore','hazard','appleMint','appleRed','heal'];
+      const enabled = ['soft','dense','ore','hazard','jelly','heal'];
       if (index >= 1) enabled.push('hard');
       if (index >= 2) enabled.push('reinforced');
       return enabled;
@@ -125,12 +122,12 @@
     if (index === 0) return ['soft','dense','ore','hazard'];
     if (index === 1) return ['soft','dense','ore','hazard','bomb'];
     if (index === 2) return ['soft','dense','hard','ore','hazard','bomb','heal'];
-    return ['soft','dense','hard','reinforced','ore','bomb','heal','hazard','spring'];
+    return ['soft','dense','hard','reinforced','ore','bomb','heal','hazard'];
   };
   const world = (id, name, accent, top, bottom, depths) => ({ id, name, accent, background: { top, bottom, image: '', x: 0, y: 0, scale: 1 }, levels: depths.map((depth, index) => level(depth, enabledForLevel(id, index))), blocks: blocksFor(id) });
-  const builtInDefaults = () => ({ version: 10, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[100,200,300,400,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[150,250,350,450,550]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,600]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,550,650])] });
+  const builtInDefaults = () => ({ version: 12, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[100,200,300,400,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[150,250,350,450,550]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,600]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,550,650])] });
   const WORLD2_LEGACY_IDS = { freeze:'cryo', blizzard:'snowflake', bomb:'cryo', spring:'snowflake' };
-  const WORLD3_LEGACY_IDS = { bomb:'appleRed', spring:'appleMint' };
+  const WORLD3_LEGACY_IDS = { bomb:'jelly', spring:'jelly', appleMint:'jelly', appleRed:'jelly' };
   const WORLD4_LEGACY_IDS = { bomb:'geyser', spring:'meteor', seismic:'meteor' };
   const normalizeEnabled = (worldId, values, validIds, legacyWorld2 = false, legacyWorld3 = false, legacyWorld4 = false) => {
     const mapped = (Array.isArray(values) ? values : []).map(id => +worldId === 2
@@ -146,9 +143,9 @@
       if (legacyWorld2) mapped.push('cryo', 'snowflake');
     }
     if (+worldId === 3) {
-      const disallowed = new Set(['bomb','spring']);
+      const disallowed = new Set(['bomb','spring','appleMint','appleRed']);
       for (let index = mapped.length - 1; index >= 0; index -= 1) if (disallowed.has(mapped[index])) mapped.splice(index, 1);
-      if (legacyWorld3) mapped.push('appleMint', 'appleRed');
+      if (legacyWorld3) mapped.push('jelly');
     }
     if (+worldId === 4) {
       const disallowed = new Set(['soft','bomb','spring','cryo','snowflake','appleMint','appleRed']);
@@ -185,21 +182,21 @@
       fallback.blocks.forEach(block => {
         const legacyIds = fallback.id === 2 && block.id === 'cryo' ? ['freeze','bomb']
           : fallback.id === 2 && block.id === 'snowflake' ? ['blizzard','spring']
-            : fallback.id === 3 && block.id === 'appleRed' ? ['bomb']
-              : fallback.id === 3 && block.id === 'appleMint' ? ['spring']
+            : fallback.id === 3 && block.id === 'jelly' ? ['appleMint','appleRed','bomb','spring']
                 : fallback.id === 4 && block.id === 'geyser' ? ['bomb']
                 : fallback.id === 4 && block.id === 'meteor' ? ['seismic','spring']
                 : [];
         const saved = src.blocks?.find(item=>item.id===block.id) || src.blocks?.find(item=>legacyIds.includes(item.id));
         if (!saved) return;
-        const migratedSpecial = (fallback.id === 3 && legacyWorld3 || fallback.id === 4 && (legacyWorld4 || legacyWorld4Meteor)) && legacyIds.includes(saved.id);
+        const migratedWorld3Jelly = fallback.id === 3 && block.id === 'jelly' && legacyIds.includes(saved.id);
+        const migratedSpecial = migratedWorld3Jelly || fallback.id === 4 && (legacyWorld4 || legacyWorld4Meteor) && legacyIds.includes(saved.id);
         block.label = migratedSpecial || (fallback.id === 4 && (legacyWorld4NaturalAssets || block.id === 'meteor' && legacyWorld4Meteor)) ? block.label : String(saved.label||block.label).slice(0,32);
         const forceBuiltInCryo = fallback.id === 2 && block.id === 'cryo';
         // Version 9 refreshes the universal green/red signal blocks. Older
         // editor saves could keep an embedded texture here and silently cover
         // the new project asset (most visibly the World 1 medkit).
         const refreshCoreSignalArt = legacyCoreSignalArt && fallback.id <= 3 && (block.id === 'heal' || block.id === 'hazard');
-        block.image = refreshCoreSignalArt || forceBuiltInCryo || (fallback.id === 2 && legacyWorld2) || (fallback.id === 3 && legacyWorld3Assets) || (fallback.id === 4 && (legacyWorld4NaturalAssets || block.id === 'meteor' && legacyWorld4Meteor)) || migratedSpecial ? '' : String(saved.image||'').slice(0,1500000);
+        block.image = refreshCoreSignalArt || forceBuiltInCryo || migratedWorld3Jelly || (fallback.id === 2 && legacyWorld2) || (fallback.id === 3 && legacyWorld3Assets) || (fallback.id === 4 && (legacyWorld4NaturalAssets || block.id === 'meteor' && legacyWorld4Meteor)) || migratedSpecial ? '' : String(saved.image||'').slice(0,1500000);
         block.x=clamp(saved.x,-45,45,0); block.y=clamp(saved.y,-45,45,0); block.scale=clamp(saved.scale,.55,1.55,1); block.hp=clamp(saved.hp,.1,5,block.hp);
         if(block.type==='ore'){const allowed=['coal','iron','gold','diamond'];block.oreVariant=['random',...allowed].includes(saved.oreVariant)?saved.oreVariant:'random';const selected=Array.isArray(saved.oreEnabled)?saved.oreEnabled.filter(id=>allowed.includes(id)):allowed;block.oreEnabled=selected.length?selected:allowed;}
         if(block.type==='bomb')block.explosionRadius=clamp(saved.explosionRadius,40,260,block.explosionRadius);
