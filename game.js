@@ -472,26 +472,88 @@
     return `${compact}${unit[1]}`;
   }
 
+  const appleMobilePerformanceMode = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   let mobilePerformanceMode = matchMedia('(pointer:coarse)').matches || window.innerWidth <= 540;
-  const lowPowerPerformanceMode = (navigator.deviceMemory && navigator.deviceMemory <= 4)
+  const lowPowerPerformanceMode = appleMobilePerformanceMode
+    || (navigator.deviceMemory && navigator.deviceMemory <= 4)
     || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+  let viewportSyncFrame = 0;
+  let lastViewportHeight = 0;
 
   function isMobileDevice() { return mobilePerformanceMode; }
+
+  function isAppleMobileDevice() { return appleMobilePerformanceMode; }
 
   function isLowPowerDevice() { return lowPowerPerformanceMode; }
 
   function effectDensity() {
-    return isLowPowerDevice() ? .58 : isMobileDevice() ? .74 : 1;
+    return isAppleMobileDevice() ? .46 : isLowPowerDevice() ? .56 : isMobileDevice() ? .7 : 1;
   }
 
   function scaledEffectCount(count, minimum = 1) {
     return Math.min(count, Math.max(minimum, Math.round(count * effectDensity())));
   }
 
+  function particleLimit(limit) {
+    const density = isAppleMobileDevice() ? .48 : isLowPowerDevice() ? .62 : isMobileDevice() ? .78 : 1;
+    return Math.max(54, Math.round(limit * density));
+  }
+
+  function trimParticles(limit) {
+    if (!run?.particles) return;
+    const maximum = particleLimit(limit);
+    if (run.particles.length > maximum) run.particles.splice(0, run.particles.length - maximum);
+  }
+
+  function indexRunBlocks() {
+    if (!run?.blocks) return;
+    run.blocksByRow = new Map();
+    run.blockRowOrigin = 190;
+    if (run.blocks.length) {
+      run.blockRowOrigin = Infinity;
+      for (const block of run.blocks) {
+        run.blockRowOrigin = Math.min(run.blockRowOrigin, block.y - block.row * run.cellSize);
+      }
+    }
+    for (const block of run.blocks) {
+      if (!run.blocksByRow.has(block.row)) run.blocksByRow.set(block.row, []);
+      run.blocksByRow.get(block.row).push(block);
+    }
+  }
+
+  function blocksNearY(y, radius, padding = 3) {
+    if (!run?.blocksByRow) return run?.blocks || [];
+    const origin = run.blockRowOrigin || 190;
+    const firstRow = Math.floor((y - radius - padding - origin) / run.cellSize) - 1;
+    const lastRow = Math.floor((y + radius + padding - origin) / run.cellSize) + 1;
+    const nearby = [];
+    for (let row = firstRow; row <= lastRow; row += 1) {
+      const blocks = run.blocksByRow.get(row);
+      if (blocks) nearby.push(...blocks);
+    }
+    return nearby;
+  }
+
+  function syncViewportMetrics() {
+    viewportSyncFrame = 0;
+    const nextHeight = Math.round(window.visualViewport?.height || window.innerHeight || 0);
+    if (!nextHeight || Math.abs(nextHeight - lastViewportHeight) < 2) return;
+    lastViewportHeight = nextHeight;
+    document.documentElement.style.setProperty('--app-height', `${nextHeight}px`);
+  }
+
+  function scheduleViewportMetrics() {
+    if (viewportSyncFrame) return;
+    viewportSyncFrame = requestAnimationFrame(syncViewportMetrics);
+  }
+
   function syncPerformanceMode() {
     mobilePerformanceMode = matchMedia('(pointer:coarse)').matches || window.innerWidth <= 540;
     document.documentElement.classList.toggle('mobile-lite', isMobileDevice());
     document.documentElement.classList.toggle('low-power-device', isLowPowerDevice());
+    document.documentElement.classList.toggle('ios-device', isAppleMobileDevice());
+    scheduleViewportMetrics();
   }
 
   function visibleInteractionLayer() {
@@ -2510,6 +2572,7 @@
       rewardMeter: null,
       cameraY: 0,
       lastTime: 0,
+      lastFrameGateAt: 0,
       animationId: 0,
       shake: 0,
       hitCooldowns: new Map(),
@@ -2524,6 +2587,7 @@
     };
     run.blocks = generateBlockField(run);
     applySecretWorldModifiers(run);
+    indexRunBlocks();
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
     prepareCanvas();
@@ -2993,6 +3057,19 @@
   // ===== ФИЗИКА И СТОЛКНОВЕНИЯ =====
   function gameFrame(timestamp) {
     if (!run || run.ended || run.paused || run.portalTransitioning) return;
+    // ProMotion iPhones may request 120 frames per second. Physics is designed
+    // for 60 FPS, so rendering the duplicate frames only heats the phone up.
+    if (isMobileDevice()) {
+      const frameInterval = 1000 / 60;
+      if (run.lastFrameGateAt) {
+        const frameElapsed = timestamp - run.lastFrameGateAt;
+        if (frameElapsed < frameInterval - 1) {
+          run.animationId = requestAnimationFrame(gameFrame);
+          return;
+        }
+        run.lastFrameGateAt = timestamp - (frameElapsed % frameInterval);
+      } else run.lastFrameGateAt = timestamp;
+    }
     if (!run.lastTime) run.lastTime = timestamp;
     const dt = Math.min(.034, (timestamp - run.lastTime) / 1000);
     run.lastTime = timestamp;
@@ -3084,7 +3161,7 @@
         }
       }
 
-      const collisions = run.blocks
+      const collisions = blocksNearY(mini.y, mini.radius)
         .filter(block => !block.dead && block.y + block.h > mini.y - mini.radius && block.y < mini.y + mini.radius)
         .map(block => ({ block, collision: circleRectCollision(mini, block) }))
         .filter(item => item.collision)
@@ -3368,7 +3445,7 @@
     run.depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.floor((s.y - 80) / 10));
     run.maxDepth = Math.max(run.maxDepth, run.depth);
 
-    const collisions = run.blocks
+    const collisions = blocksNearY(s.y, s.radius)
       .filter(block => !block.dead && !blockHiddenByPortalExit(block) && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
       .map(block => ({ block, collision: circleRectCollision(s, block) }))
       .filter(item => item.collision)
@@ -4230,7 +4307,7 @@
         shape: index % 4 === 0 ? 'streak' : 'orb'
       });
     }
-    if (run.particles.length > 240) run.particles.splice(0, run.particles.length - 240);
+    trimParticles(240);
   }
 
   function healRun(amount, label = 'ЛЕЧЕНИЕ') {
@@ -4333,7 +4410,7 @@
         life: rand(.35, .78), maxLife: .78, size: rand(3, 8), color
       });
     }
-    if (run.particles.length > 180) run.particles.splice(0, run.particles.length - 180);
+    trimParticles(180);
   }
 
   function spawnPortalBurst(x, y) {
@@ -4357,7 +4434,7 @@
         size: rand(2.5, 6.5), color: colors[i % colors.length], shape: i % 4 === 0 ? 'streak' : 'orb'
       });
     }
-    if (run.particles.length > 210) run.particles.splice(0, run.particles.length - 210);
+    trimParticles(210);
   }
 
   function updateParticles(dt) {
@@ -4448,7 +4525,7 @@
       });
     }
     if (run.specialEffects.length > 16) run.specialEffects.shift();
-    if (run.particles.length > 240) run.particles.splice(0, run.particles.length - 240);
+    trimParticles(240);
   }
 
   function updateSpecialEffects(dt) {
@@ -4532,15 +4609,17 @@
     drawJellyZones(timestamp, false);
     drawFinishPortal(world, timestamp);
 
+    const visibleBlocks = [];
     for (const block of run.blocks) {
       if (block.dead) continue;
       const sy = block.y - run.cameraY;
       if (sy < -60 || sy > VIEW_H + 60) continue;
+      visibleBlocks.push(block);
       drawBlock(block, sy, timestamp);
     }
 
     // A thin shared grid keeps every tile aligned without blending their art.
-    drawBlockTransitions();
+    drawBlockTransitions(visibleBlocks);
     drawSecretEdgePortals(timestamp);
     drawGeyserCapture(timestamp);
     drawMeteorShowers(timestamp);
@@ -4553,7 +4632,7 @@
       ctx.fillStyle = p.color;
       if (p.kind === 'portal' || p.kind === 'special') {
         ctx.shadowColor = p.color;
-        ctx.shadowBlur = p.shape === 'smoke' ? 0 : p.kind === 'portal' ? 9 : 6;
+        ctx.shadowBlur = isLowPowerDevice() || p.shape === 'smoke' ? 0 : p.kind === 'portal' ? 9 : 6;
         if (p.shape === 'smoke') {
           ctx.globalAlpha *= .38;
           ctx.beginPath();
@@ -5857,11 +5936,9 @@
     return true;
   }
 
-  function drawBlockTransitions() {
+  function drawBlockTransitions(visibleBlocks) {
     const liveBlocks = new Map();
-    for (const block of run.blocks) {
-      if (!block.dead) liveBlocks.set(`${block.row}:${block.col}`, block);
-    }
+    for (const block of visibleBlocks) liveBlocks.set(`${block.row}:${block.col}`, block);
 
     ctx.save();
     // A single neutral grid line separates tiles. Unlike the old colour blends,
@@ -6268,7 +6345,8 @@
       return;
     }
     menuSlimeAnimationId = requestAnimationFrame(menuSlimeFrame);
-    if (document.hidden || timestamp - menuSlimeLastFrame < 32) return;
+    const menuFrameInterval = isAppleMobileDevice() ? 42 : isLowPowerDevice() ? 36 : 32;
+    if (document.hidden || timestamp - menuSlimeLastFrame < menuFrameInterval) return;
     menuSlimeLastFrame = timestamp;
     drawMenuSlime(timestamp);
   }
@@ -6637,6 +6715,7 @@
     run.portalTransitioning = false;
     run.blocks = generateBlockField(run);
     applySecretWorldModifiers(run);
+    indexRunBlocks();
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
     run.inJellyZoneId = '';
@@ -7657,6 +7736,8 @@
       if (run && !run.ended) prepareCanvas();
       else if (els.homeScreen.classList.contains('active')) prepareMenuSlimeCanvas();
     });
+    window.addEventListener('orientationchange', scheduleViewportMetrics, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleViewportMetrics, { passive: true });
     document.addEventListener('keydown', event => {
       const steerCode = event.code || event.key;
       if (run?.geyserCapture && !run.paused && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS'].includes(steerCode)) {
@@ -7694,8 +7775,8 @@
   }
 
   async function init() {
-    await initializeReliableSaves();
     syncPerformanceMode();
+    await initializeReliableSaves();
     initializeInteractionLayers();
     bindEvents();
     updatePersistentUI();
