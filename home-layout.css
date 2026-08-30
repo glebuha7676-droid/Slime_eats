@@ -2777,41 +2777,70 @@ body.secret-meal-ui-active #homeScreen .stomach-rail-title:after{display:none!im
 @keyframes secretStomachFoodIdle{0%,100%{filter:brightness(1);transform:translateY(0) rotate(-.5deg) scale(1)}46%{filter:brightness(1.07) saturate(1.06);transform:translateY(-1px) rotate(.7deg) scale(1.025)}58%{transform:translateY(0) rotate(.2deg) scale(.995,1.015)}}
 @keyframes secretMealPanelImpact{0%,100%{filter:none}38%{filter:saturate(1.12) brightness(1.025)}68%{filter:saturate(1.04)}}
 
-/* === V88: real iPhone viewport and compact landscape rules === */
-body[data-screen="home"],body[data-screen="drop"]{min-height:var(--app-height,100dvh)}
-@media(max-width:520px) and (min-height:740px){
-  body[data-screen="home"],body[data-screen="drop"]{height:var(--app-height,100dvh);min-height:var(--app-height,100dvh)}
-  body[data-screen="home"] .app,body[data-screen="drop"] .app{height:var(--app-height,100dvh);min-height:var(--app-height,100dvh)}
+/* === V89: one stable phone-shaped interface on every device ===
+   The page never scrolls during preparation or a run. Short viewports get a
+   compact layout first; a final measured scale only handles the remaining few
+   pixels, so Safari toolbars cannot cut off half of the interface. */
+body[data-screen="home"],body[data-screen="drop"]{
+  width:100%;height:var(--app-height,100svh)!important;min-height:var(--app-height,100svh)!important;
+  overflow:hidden!important;overscroll-behavior:none;
 }
+body[data-screen="home"] .app,body[data-screen="drop"] .app{
+  width:100%;height:var(--app-height,100svh)!important;min-height:0!important;
+  overflow:hidden!important;padding-bottom:max(5px,var(--safe-bottom));
+}
+body[data-screen="home"] .game-shell{display:block!important;min-height:0!important;overflow:visible}
+body[data-screen="home"] #homeScreen.active{
+  --home-fit-scale:1;display:grid!important;flex:none!important;width:100%;height:auto!important;min-height:0!important;
+  align-content:start;transform:scale(var(--home-fit-scale));transform-origin:top center;
+}
+body.home-height-fitted #homeScreen.active{box-shadow:0 3px 0 rgba(49,59,79,.22),inset 0 0 0 1px rgba(255,255,255,.72)}
 body[data-screen="drop"] #dropScreen .shaft{
-  height:min(635px,calc(var(--app-height,100dvh) - 198px - var(--safe-top) - var(--safe-bottom)));
+  height:min(635px,max(180px,calc(var(--app-height,100svh) - 198px - var(--safe-top) - var(--safe-bottom))));
+  min-height:180px;
 }
 
-html.ios-device .admin-tools-overlay,
-html.ios-device .run-menu-overlay,
-html.ios-device .game-complete-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-html.ios-device body.secret-meal-ui-active #homeScreen .menu-slime-canvas{filter:none!important}
-html.ios-device body.secret-meal-ui-active #app:after{box-shadow:inset 0 0 0 2px rgba(255,74,108,.22)}
+html.mobile-lite .admin-tools-overlay,
+html.mobile-lite .run-menu-overlay,
+html.mobile-lite .game-complete-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.mobile-lite body.secret-meal-ui-active #homeScreen .menu-slime-canvas{filter:none!important}
+html.mobile-lite body.secret-meal-ui-active #app:after{box-shadow:inset 0 0 0 2px rgba(255,74,108,.22)}
 
-/* On Pro Max screens the spare height belongs to the slime room instead of
-   becoming a dead blank strip below the interface. */
-@media(max-width:520px) and (min-height:880px){
-  #homeScreen{--home-tall-extra:clamp(0px,calc(var(--app-height,100dvh) - 850px),82px)}
-  #homeScreen>.slime-stage{min-height:calc(218px + var(--home-tall-extra))}
-  #homeScreen .slime-hero-layout{min-height:calc(202px + var(--home-tall-extra))}
-  #homeScreen .slime-playground{height:calc(194px + var(--home-tall-extra))}
+html.compact-viewport body[data-screen="home"] .topbar.world-summary{
+  height:46px;min-height:46px;margin-top:2px;padding:3px 5px;
 }
+html.compact-viewport #homeScreen>.slime-stage{min-height:188px;padding:6px 8px}
+html.compact-viewport #homeScreen .slime-hero-layout{min-height:176px}
+html.compact-viewport #homeScreen .slime-playground{height:170px}
+html.compact-viewport #homeScreen .stomach-rail{height:150px}
+html.compact-viewport #homeScreen .stat-rail-right{gap:4px}
+html.compact-viewport #homeScreen .stat-rail-right .stat-pill{min-height:48px}
+html.compact-viewport #homeScreen>.play-setup-card{row-gap:4px;padding-top:5px}
 
-@media(max-width:430px) and (max-height:739px){
-  body[data-screen="home"]{overflow-y:auto;-webkit-overflow-scrolling:touch}
-  body[data-screen="home"] .app{height:auto;min-height:var(--app-height,100dvh)}
-  #homeScreen{padding-bottom:max(4px,var(--safe-bottom))}
+html.short-viewport body[data-screen="home"] .topbar.world-summary{
+  height:43px;min-height:43px;margin-top:1px;padding:2px 4px;
 }
+html.short-viewport body[data-screen="home"] .world-summary .currency,
+html.short-viewport body[data-screen="home"] .header-admin-btn{height:34px;min-height:34px}
+html.short-viewport #homeScreen>.slime-stage{min-height:168px;padding:5px 7px}
+html.short-viewport #homeScreen .slime-hero-layout{min-height:158px}
+html.short-viewport #homeScreen .slime-playground{height:152px}
+html.short-viewport #homeScreen .stomach-rail{height:136px;gap:3px;padding-block:3px}
+html.short-viewport #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--quick-food-size:45px;height:112px;gap:6px}
+html.short-viewport #homeScreen .stat-rail-right{gap:3px}
+html.short-viewport #homeScreen .stat-rail-right .stat-pill{min-height:44px;padding-block:2px}
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:48px 32px 44px auto;row-gap:3px;padding:4px 6px 0;
+}
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{height:41px}
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs{height:36px}
+html.short-viewport #homeScreen>.play-setup-card .level-btn{height:41px}
+html.short-viewport #homeScreen>.play-setup-card .bottom-actions button{min-height:43px;padding-block:4px}
 
 @media(max-height:500px) and (orientation:landscape){
-  body[data-screen="home"]{height:auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
-  body[data-screen="home"] .app{height:auto!important;min-height:var(--app-height,100dvh)!important;overflow:visible!important}
-  body[data-screen="drop"] #dropScreen .shaft{height:calc(var(--app-height,100dvh) - 72px);min-height:238px}
+  body[data-screen="drop"] #dropScreen .shaft{
+    height:max(180px,calc(var(--app-height,100svh) - 151px - var(--safe-bottom)));min-height:180px;
+  }
   #dropScreen .drop-hud{min-height:28px}
   #dropScreen .run-route{height:46px;min-height:46px}
   #dropScreen .run-menu-btn{top:max(6px,var(--safe-top));right:max(6px,var(--safe-right))}

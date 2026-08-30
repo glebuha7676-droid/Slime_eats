@@ -867,11 +867,10 @@ button,.food-card,.stomach-quick-slot{touch-action:manipulation}
 }
 
 /* Safari has no cheap backdrop-filter path on several iPhone generations. */
-html.ios-device .overlay,
-html.ios-device .panel-overlay,
-html.ios-device .encyclopedia-card-viewer{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.mobile-lite .overlay,
+html.mobile-lite .panel-overlay,
+html.mobile-lite .encyclopedia-card-viewer{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.ios-device .screen.active{animation-duration:.14s}
-html.ios-device .shaft{contain:layout paint}
 html.ios-device canvas{image-rendering:auto}
 
 @media(max-height:500px) and (orientation:landscape){

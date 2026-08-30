@@ -1324,17 +1324,17 @@
 @keyframes encyclopediaSecretEyeLook{0%,16%,88%,100%{transform:translate(-50%,-50%)}28%,40%{transform:translate(-70%,-50%)}55%,69%{transform:translate(-30%,-50%)}}
 
 /* iPhone keeps every rarity readable, but renders fewer continuous particles. */
-html.ios-device .food-epic-motes i:nth-child(n+3),
-html.ios-device .food-special-sparkles i:nth-child(n+3){display:none!important}
-html.ios-device .food-epic-motes i{animation-duration:4.4s}
-html.ios-device .food-special-sparkles i{animation-duration:5.8s}
-html.ios-device .food-card:not(.encyclopedia-rarity-tab)>.food-secret-neon,
-html.ios-device .food-card:not(.encyclopedia-rarity-tab)>.food-special-neon{filter:none}
-html.ios-device .food-card.secret:not(.encyclopedia-rarity-tab):before{
+html.mobile-lite .food-epic-motes i:nth-child(n+3),
+html.mobile-lite .food-special-sparkles i:nth-child(n+3){display:none!important}
+html.mobile-lite .food-epic-motes i{animation-duration:4.4s}
+html.mobile-lite .food-special-sparkles i{animation-duration:5.8s}
+html.mobile-lite .food-card:not(.encyclopedia-rarity-tab)>.food-secret-neon,
+html.mobile-lite .food-card:not(.encyclopedia-rarity-tab)>.food-special-neon{filter:none}
+html.mobile-lite .food-card.secret:not(.encyclopedia-rarity-tab):before{
   animation:foodSecretOutlineMobile 4.2s ease-in-out infinite;
 }
-html.ios-device .food-card.secret:not(.encyclopedia-rarity-tab){animation-duration:4.2s;will-change:auto}
-html.ios-device .food-card:not(.encyclopedia-rarity-tab) .card-fx-letter{will-change:auto}
+html.mobile-lite .food-card.secret:not(.encyclopedia-rarity-tab){animation-duration:4.2s;will-change:auto}
+html.mobile-lite .food-card:not(.encyclopedia-rarity-tab) .card-fx-letter{will-change:auto}
 @keyframes foodSecretOutlineMobile{
   0%,100%{background:#d91b49;filter:drop-shadow(0 4px 0 var(--card-shadow)) drop-shadow(0 0 4px rgba(255,29,76,.6))}
   50%{background:#ff2f57;filter:drop-shadow(0 4px 0 var(--card-shadow)) drop-shadow(0 0 7px rgba(255,35,79,.82))}

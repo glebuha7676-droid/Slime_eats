@@ -478,8 +478,10 @@
   const lowPowerPerformanceMode = appleMobilePerformanceMode
     || (navigator.deviceMemory && navigator.deviceMemory <= 4)
     || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-  let viewportSyncFrame = 0;
+  let viewportSyncTimer = 0;
+  let homeFitFrame = 0;
   let lastViewportHeight = 0;
+  let lastViewportWidth = 0;
 
   function isMobileDevice() { return mobilePerformanceMode; }
 
@@ -488,7 +490,7 @@
   function isLowPowerDevice() { return lowPowerPerformanceMode; }
 
   function effectDensity() {
-    return isAppleMobileDevice() ? .46 : isLowPowerDevice() ? .56 : isMobileDevice() ? .7 : 1;
+    return isMobileDevice() ? .56 : isLowPowerDevice() ? .62 : 1;
   }
 
   function scaledEffectCount(count, minimum = 1) {
@@ -496,7 +498,7 @@
   }
 
   function particleLimit(limit) {
-    const density = isAppleMobileDevice() ? .48 : isLowPowerDevice() ? .62 : isMobileDevice() ? .78 : 1;
+    const density = isMobileDevice() ? .58 : isLowPowerDevice() ? .66 : 1;
     return Math.max(54, Math.round(limit * density));
   }
 
@@ -535,17 +537,56 @@
     return nearby;
   }
 
-  function syncViewportMetrics() {
-    viewportSyncFrame = 0;
-    const nextHeight = Math.round(window.visualViewport?.height || window.innerHeight || 0);
-    if (!nextHeight || Math.abs(nextHeight - lastViewportHeight) < 2) return;
-    lastViewportHeight = nextHeight;
-    document.documentElement.style.setProperty('--app-height', `${nextHeight}px`);
+  function scheduleHomeFit() {
+    if (homeFitFrame) return;
+    homeFitFrame = requestAnimationFrame(syncHomeFit);
   }
 
-  function scheduleViewportMetrics() {
-    if (viewportSyncFrame) return;
-    viewportSyncFrame = requestAnimationFrame(syncViewportMetrics);
+  function syncHomeFit() {
+    homeFitFrame = 0;
+    if (!els?.homeScreen) return;
+    els.homeScreen.style.setProperty('--home-fit-scale', '1');
+    document.body.classList.remove('home-height-fitted');
+    if (document.body.dataset.screen !== 'home' || !els.homeScreen.classList.contains('active')) return;
+
+    const appStyles = getComputedStyle(els.app);
+    const topbar = document.querySelector('.topbar.world-summary');
+    const reservedHeight = (topbar?.offsetHeight || 0)
+      + parseFloat(appStyles.paddingTop || 0)
+      + parseFloat(appStyles.paddingBottom || 0)
+      + 5;
+    const availableHeight = Math.max(220, (lastViewportHeight || window.innerHeight) - reservedHeight);
+    const naturalHeight = Math.max(1, els.homeScreen.scrollHeight, els.homeScreen.offsetHeight);
+    const scale = clamp(availableHeight / naturalHeight, .42, 1);
+    els.homeScreen.style.setProperty('--home-fit-scale', scale.toFixed(4));
+    document.body.classList.toggle('home-height-fitted', scale < .995);
+  }
+
+  function syncViewportMetrics({ reset = false } = {}) {
+    viewportSyncTimer = 0;
+    const nextWidth = Math.round(window.visualViewport?.width || window.innerWidth || 0);
+    const nextHeight = Math.round(window.visualViewport?.height || window.innerHeight || 0);
+    if (!nextWidth || !nextHeight) return;
+    const widthChanged = !lastViewportWidth || Math.abs(nextWidth - lastViewportWidth) > 2;
+    if (reset || widthChanged || !lastViewportHeight) lastViewportHeight = nextHeight;
+    else lastViewportHeight = Math.min(lastViewportHeight, nextHeight);
+    lastViewportWidth = nextWidth;
+    document.documentElement.style.setProperty('--app-height', `${lastViewportHeight}px`);
+    document.documentElement.classList.toggle('compact-viewport', lastViewportHeight < 780);
+    document.documentElement.classList.toggle('short-viewport', lastViewportHeight < 680);
+    scheduleHomeFit();
+
+    if (widthChanged) {
+      mobilePerformanceMode = matchMedia('(pointer:coarse)').matches || window.innerWidth <= 540;
+      document.documentElement.classList.toggle('mobile-lite', isMobileDevice());
+      if (run && !run.ended) prepareCanvas();
+      else if (els.homeScreen.classList.contains('active')) prepareMenuSlimeCanvas();
+    }
+  }
+
+  function scheduleViewportMetrics(reset = false) {
+    if (viewportSyncTimer) clearTimeout(viewportSyncTimer);
+    viewportSyncTimer = setTimeout(() => syncViewportMetrics({ reset }), 140);
   }
 
   function syncPerformanceMode() {
@@ -553,7 +594,7 @@
     document.documentElement.classList.toggle('mobile-lite', isMobileDevice());
     document.documentElement.classList.toggle('low-power-device', isLowPowerDevice());
     document.documentElement.classList.toggle('ios-device', isAppleMobileDevice());
-    scheduleViewportMetrics();
+    syncViewportMetrics({ reset: !lastViewportHeight });
   }
 
   function visibleInteractionLayer() {
@@ -1245,6 +1286,7 @@
       menuSlimeAnimationId = 0;
     }
     syncInteractionLayers();
+    scheduleHomeFit();
   }
 
   function newDraft() {
@@ -2052,6 +2094,7 @@
     els.rerollBtn.disabled = rerollBlocked || (session.freeRerolls <= 0 && session.adRerolls > 0);
 
     if (selectedFoodOfferIndex !== null && !session.offer[selectedFoodOfferIndex]) hideFoodInfo();
+    scheduleHomeFit();
   }
 
   // ===== КОРМЛЕНИЕ: клик, перетаскивание и эмоции =====
@@ -2079,6 +2122,9 @@
         ghost.classList.add('drag-ghost');
         ghost.classList.remove('tunnel-enter', 'leaving');
         ghost.style.animationDelay = '0ms';
+        ghost.style.setProperty('width', `${sourceRectAtStart.width}px`, 'important');
+        ghost.style.setProperty('min-width', `${sourceRectAtStart.width}px`, 'important');
+        ghost.style.setProperty('max-width', `${sourceRectAtStart.width}px`, 'important');
         document.body.appendChild(ghost);
         source.classList.add('drag-source');
       }
@@ -2598,7 +2644,7 @@
   }
 
   function prepareCanvas() {
-    const dpr = Math.min(isLowPowerDevice() ? 1 : isMobileDevice() ? 1.25 : 1.75, window.devicePixelRatio || 1);
+    const dpr = Math.min(isMobileDevice() ? 1 : isLowPowerDevice() ? 1.25 : 1.75, window.devicePixelRatio || 1);
     els.canvas.width = VIEW_W * dpr;
     els.canvas.height = VIEW_H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -6040,7 +6086,7 @@
   }
 
   function prepareMenuSlimeCanvas() {
-    const dpr = Math.min(isLowPowerDevice() ? 1 : isMobileDevice() ? 1.2 : 1.5, window.devicePixelRatio || 1);
+    const dpr = Math.min(isMobileDevice() ? 1 : isLowPowerDevice() ? 1.2 : 1.5, window.devicePixelRatio || 1);
     els.menuSlimeCanvas.width = Math.round(180 * dpr);
     els.menuSlimeCanvas.height = Math.round(180 * dpr);
     menuSlimeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -6345,7 +6391,7 @@
       return;
     }
     menuSlimeAnimationId = requestAnimationFrame(menuSlimeFrame);
-    const menuFrameInterval = isAppleMobileDevice() ? 42 : isLowPowerDevice() ? 36 : 32;
+    const menuFrameInterval = isMobileDevice() ? 42 : isLowPowerDevice() ? 36 : 32;
     if (document.hidden || timestamp - menuSlimeLastFrame < menuFrameInterval) return;
     menuSlimeLastFrame = timestamp;
     drawMenuSlime(timestamp);
@@ -7731,13 +7777,9 @@
       persist();
       flushCloudSave(true);
     });
-    window.addEventListener('resize', () => {
-      syncPerformanceMode();
-      if (run && !run.ended) prepareCanvas();
-      else if (els.homeScreen.classList.contains('active')) prepareMenuSlimeCanvas();
-    });
-    window.addEventListener('orientationchange', scheduleViewportMetrics, { passive: true });
-    window.visualViewport?.addEventListener('resize', scheduleViewportMetrics, { passive: true });
+    window.addEventListener('resize', () => scheduleViewportMetrics(false), { passive: true });
+    window.addEventListener('orientationchange', () => scheduleViewportMetrics(true), { passive: true });
+    window.visualViewport?.addEventListener('resize', () => scheduleViewportMetrics(false), { passive: true });
     document.addEventListener('keydown', event => {
       const steerCode = event.code || event.key;
       if (run?.geyserCapture && !run.paused && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS'].includes(steerCode)) {
@@ -7777,8 +7819,17 @@
   async function init() {
     syncPerformanceMode();
     await initializeReliableSaves();
+    // Keep the fixed card popover outside the measured/scaled home console.
+    // This preserves exact pointer positioning on short phone screens.
+    if (els.foodInfo?.parentElement !== document.body) document.body.appendChild(els.foodInfo);
     initializeInteractionLayers();
     bindEvents();
+    if ('ResizeObserver' in window) {
+      const homeFitObserver = new ResizeObserver(scheduleHomeFit);
+      homeFitObserver.observe(els.homeScreen);
+      const homeTopbar = document.querySelector('.topbar.world-summary');
+      if (homeTopbar) homeFitObserver.observe(homeTopbar);
+    }
     updatePersistentUI();
     if (save.pendingWheel) finishPendingWheel(false);
     if (restoreSession(save.activeDraft)) {
