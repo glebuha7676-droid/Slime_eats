@@ -86,7 +86,7 @@
 
   const WORLD_SPRITE_NAMES = {
     1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'heal', 'portal'],
-    2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'cryo', 'snowflake', 'heal', 'portal'],
+    2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'cryo', 'heal', 'portal'],
     3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'jelly-bounce', 'heal', 'portal'],
     4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'geyser', 'meteor', 'heal', 'portal']
   };

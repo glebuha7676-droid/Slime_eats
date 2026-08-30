@@ -58,7 +58,6 @@
     'cryo-2',
     'cryo-3',
     'cryo-4',
-    'snowflake-hit',
     'apple-grow',
     'apple-shrink',
     'damage-splash',

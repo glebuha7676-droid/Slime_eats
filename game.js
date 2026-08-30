@@ -42,6 +42,8 @@
   const BASE_DAMAGE = 10;
   const BASE_SHIELD = 25;
   const BASE_SHIELD_CHARGES = 2;
+  const FREEZE_ZONE_CHARGE_MS = 1000;
+  const FREEZE_ZONE_DURATION_MS = 3000;
 
   // Данные из встроенного редактора миров. Значения остаются безопасными:
   // если редактор ещё не использовался, игра работает на исходных настройках.
@@ -2373,7 +2375,7 @@
       'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'freezeUntil',
       'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
       'lastTrailSampleAt', 'lastUiUpdateAt', 'gravitySwitchFlashUntil', 'growthResetUntil', 'edgePortalFlashUntil',
-      'timeSlowUntil', 'lastSplitAt', 'jellyEnteredAt', 'lastJellyBubbleAt'
+      'timeSlowUntil', 'lastSplitAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt'
     ];
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
     if (run.geyserCapture) {
@@ -2540,7 +2542,7 @@
       endlessDepthOffset: 0,
       // Портал — самостоятельный финал. Крепостной стены перед ним больше нет.
       portalY: finishY + cellSize * .35,
-      blocks: [], honeyZones: [], jellyZones: [], particles: [], trails: [], specialEffects: [],
+      blocks: [], honeyZones: [], jellyZones: [], freezeZones: [], particles: [], trails: [], specialEffects: [],
       meteorShowers: [], miniSlimes: [],
       slime: {
         x: startX,
@@ -2579,6 +2581,9 @@
       inJellyZoneId: '',
       jellyEnteredAt: 0,
       lastJellyBubbleAt: 0,
+      inFreezeZoneId: '',
+      freezeZoneEnteredAt: 0,
+      freezeZoneTriggeredId: '',
       freezeUntil: 0,
       frozenEmotion: 'surprised',
       lastFrozenImpactAt: 0,
@@ -2636,6 +2641,7 @@
     indexRunBlocks();
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
+    run.freezeZones = generateFreezeZones(run);
     prepareCanvas();
     showScreen('drop');
     clearRunImpactFeedback();
@@ -2668,7 +2674,7 @@
     if (category === 'ore') return { tier:'ore', special:null, zone };
     const rawWorldSpecialIds = window.SlimeBalance?.specialIdsForWorld?.(world.id)
       || (world.id === 2
-        ? ['heal', 'cryo', 'snowflake']
+        ? ['heal', 'cryo']
         : world.id === 3
           ? ['heal', 'jelly']
           : world.id === 4
@@ -2677,7 +2683,7 @@
     // Старый баланс хранит два яблочных ключа. В самой игре они становятся
     // одной желейкой, а их суммарный вес сохраняет прежнюю частоту особого блока.
     const worldSpecialIds = [...new Set(rawWorldSpecialIds.map(id => world.id === 3 && (id === 'appleMint' || id === 'appleRed') ? 'jelly' : id))]
-      .filter(id => !(world.id === 1 && id === 'spring'));
+      .filter(id => !(world.id === 1 && id === 'spring') && id !== 'snowflake' && id !== 'freezeZone');
     const secondaryWeight = id => id === 'jelly'
       ? (zone?.secondary?.jelly ?? ((zone?.secondary?.appleMint || 0) + (zone?.secondary?.appleRed || 0)))
       : (zone?.secondary?.[id] || 0);
@@ -2709,12 +2715,13 @@
       : weak;
     if (token === 'z') {
       if (world.id === 1) return { ...weak, dead: true, environment: 'jelly', path: true };
+      if (world.id === 2) return { ...weak, dead: true, environment: 'freeze', path: true };
       if (world.id === 3) return { ...weak, dead: true, environment: 'honey', path: true };
     }
     if (token === 'p' || token === 'q' || token === 'z') {
       const specialByWorld = {
         1: { p: 'bomb', q: 'bomb', z: 'bomb' },
-        2: { p: 'cryo', q: 'snowflake', z: 'snowflake' },
+        2: { p: 'cryo', q: 'cryo', z: 'cryo' },
         3: { p: 'jelly', q: 'jelly', z: 'jelly' },
         4: { p: 'geyser', q: 'meteor', z: 'meteor' }
       };
@@ -2807,7 +2814,7 @@
         if (hazard) maxHp = 1;
         // Все вспомогательные блоки срабатывают от первого касания — число на
         // плитке это честно показывает, а не маскирует триггер за «5 HP».
-        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'snowflake' || special === 'jelly' || special === 'geyser' || special === 'meteor') maxHp = 1;
+        if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'jelly' || special === 'geyser' || special === 'meteor') maxHp = 1;
         if (special === 'spring') maxHp = 1;
         maxHp = Math.max(1, Math.round(maxHp));
 
@@ -2943,6 +2950,58 @@
         w: selected.widthCells * cell - 6,
         h: selected.heightCells * cell - 6,
         seed: selected.row * .27 + index * 1.91
+      });
+    }
+    return zones;
+  }
+
+  function generateFreezeZones(runState) {
+    // The old snowflake tile is replaced by a readable environmental hazard:
+    // the same feature slot now creates shallow icy-water pockets.
+    if (runState.worldId !== 2 || !editorAllows(runState.world, runState.level, 'snowflake')) return [];
+    const authoredZones = authoredEnvironmentZones(runState, 'freeze');
+    if (authoredZones.length) return authoredZones;
+    const blocks = runState.blocks || [];
+    const cell = runState.cellSize;
+    const rowCount = blocks.reduce((maximum, block) => Math.max(maximum, block.row + 1), 0);
+    const desired = clamp(1 + Math.floor(((runState.level || 1) - 1) / 2), 1, 3);
+    const targetRatios = desired === 1 ? [.49] : desired === 2 ? [.34, .7] : [.24, .51, .77];
+    const zones = [];
+
+    for (let index = 0; index < targetRatios.length; index += 1) {
+      const widthCells = 2;
+      const heightCells = 2;
+      const targetRow = clamp(Math.round(rowCount * targetRatios[index]), 5, rowCount - heightCells - 4);
+      let selected = null;
+      for (const offset of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
+        const row = clamp(targetRow + offset, 4, rowCount - heightCells - 4);
+        const pathBlocks = blocks.filter(block => block.row === row && block.path && !block.dead && !block.special && !block.hazard && block.tier !== 'ore');
+        for (const pathBlock of pathBlocks) {
+          const startCol = clamp(pathBlock.col - (pathBlock.col >= runState.columns / 2 ? 1 : 0), 0, runState.columns - widthCells);
+          const cells = blocks.filter(block => block.row >= row && block.row < row + heightCells && block.col >= startCol && block.col < startCol + widthCells);
+          if (cells.length !== widthCells * heightCells) continue;
+          if (cells.some(block => block.dead || block.special || block.hazard || block.tier === 'ore')) continue;
+          const unsafeNeighbor = blocks.some(block => !block.dead && block.hazard
+            && block.row >= row - 1 && block.row <= row + heightCells
+            && block.col >= startCol - 1 && block.col <= startCol + widthCells);
+          if (unsafeNeighbor) continue;
+          selected = { row, startCol, widthCells, heightCells, cells };
+          break;
+        }
+        if (selected) break;
+      }
+      if (!selected) continue;
+      selected.cells.forEach(block => {
+        block.dead = true;
+        block.environmentRemoved = 'freeze';
+      });
+      zones.push({
+        id: `freeze-water-${index}`,
+        x: runState.gridOffsetX + selected.startCol * cell + 3,
+        y: 190 + selected.row * cell + 3,
+        w: selected.widthCells * cell - 6,
+        h: selected.heightCells * cell - 6,
+        seed: selected.row * .31 + index * 2.17
       });
     }
     return zones;
@@ -3373,6 +3432,36 @@
     });
   }
 
+  function freezeZoneForSlime(slime) {
+    return run?.freezeZones?.find(zone => circleRectCollision(slime, zone)) || null;
+  }
+
+  function updateFreezeZoneState(slime, timestamp) {
+    const zone = freezeZoneForSlime(slime);
+    const previousId = run.inFreezeZoneId || '';
+    run.inFreezeZoneId = zone?.id || '';
+    if (!zone) {
+      run.freezeZoneEnteredAt = 0;
+      run.freezeZoneTriggeredId = '';
+      return;
+    }
+    if (zone.id !== previousId) {
+      run.freezeZoneEnteredAt = timestamp;
+      run.freezeZoneTriggeredId = '';
+      // The pocket must hold the slime long enough for its one-second frost
+      // charge to be readable instead of being crossed in a single fast fall.
+      slime.vx *= .68;
+      slime.vy *= .24;
+      run.emotion = 'surprised';
+      run.emotionUntil = timestamp + 460;
+      feedback(3);
+      return;
+    }
+    if (run.freezeZoneTriggeredId === zone.id || timestamp - run.freezeZoneEnteredAt < FREEZE_ZONE_CHARGE_MS) return;
+    run.freezeZoneTriggeredId = zone.id;
+    activateFreezeZone(timestamp);
+  }
+
   function updateSecretEdgePortal(slime, timestamp) {
     if (!run.effects.edgePortals) {
       run.edgePortalPhase = null;
@@ -3438,16 +3527,24 @@
     const honeyDrag = Boolean(honeyAtStart);
     const jellyAtStart = jellyZoneForSlime(s);
     const jellyDrag = Boolean(jellyAtStart);
-    const worldGravity = (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (frozen ? 1.48 : honeyDrag ? .24 : jellyDrag ? .08 : 1);
+    const freezeWaterAtStart = freezeZoneForSlime(s);
+    const freezeWaterDrag = Boolean(freezeWaterAtStart);
+    const worldGravity = (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (frozen ? 1.48 : freezeWaterDrag ? .28 : honeyDrag ? .24 : jellyDrag ? .08 : 1);
     const previousX = s.x;
     const previousY = s.y;
 
-    const terminalSpeed = honeyDrag ? 132 : jellyDrag ? 165 : (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld) * (frozen ? 1.18 : 1);
+    const terminalSpeed = frozen
+      ? (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld) * 1.18
+      : freezeWaterDrag ? 118 : honeyDrag ? 132 : jellyDrag ? 165
+        : (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld);
     s.vy = clamp(s.vy + worldGravity * gravityDirection * dt, -terminalSpeed, terminalSpeed);
     applyFallSteering(s, dt, timestamp);
     if (honeyDrag && !frozen) {
       s.vx *= Math.pow(.32, dt);
       s.vy *= Math.pow(.085, dt);
+    } else if (freezeWaterDrag && !frozen) {
+      s.vx *= Math.pow(.48, dt);
+      s.vy = lerp(s.vy, 86, clamp(dt * 3.8, 0, 1));
     } else if (jellyDrag && !frozen) {
       const jellyAge = Math.max(0, timestamp - (run.jellyEnteredAt || timestamp));
       const dive = jellyDiveInput();
@@ -3463,6 +3560,7 @@
     s.y += s.vy * dt;
     updateHoneyState(s, timestamp);
     updateJellyState(s, timestamp);
+    updateFreezeZoneState(s, timestamp);
     s.wobble += dt * (4 + Math.abs(s.vy) / 180);
 
     if (run.effects.edgePortals) {
@@ -3660,7 +3758,7 @@
     const keyboardX = Number(run.steer.keyRight) - Number(run.steer.keyLeft);
     return {
       x: clamp(keyboardX + (run.steer.touchX || 0), -1, 1),
-      down: run.effects.gravitySwitch ? 0 : clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1)
+      down: clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1)
     };
   }
 
@@ -3919,7 +4017,7 @@
       run.bouncePowerReady = false;
       spawnSpecialBurst('chargedHit', block.x + block.w / 2, block.y + block.h / 2);
     }
-    const breaksOnTouch = ['bomb', 'gel', 'cryo', 'snowflake', 'meteor'].includes(block.special);
+    const breaksOnTouch = ['bomb', 'gel', 'cryo', 'meteor'].includes(block.special);
     if (breaksOnTouch && !unbreakable) damage = hpBefore;
     const geyserPiercing = !unbreakable && run.geyserBreaksLeft > 0 && block.special !== 'geyser';
     if (geyserPiercing) damage = hpBefore;
@@ -4191,8 +4289,6 @@
       impact('ПРУЖИНА СЛОМАНА!');
     } else if (block.special === 'cryo') {
       weakenCryoArea4x4(block);
-    } else if (block.special === 'snowflake') {
-      activateSnowflakeFreeze(block);
     } else if (block.special === 'bomb') {
       explodeBomb(block);
     } else if (block.special === 'boss') {
@@ -4240,19 +4336,16 @@
     feedback([12, 20, 10]);
   }
 
-  function activateSnowflakeFreeze(source) {
-    const timestamp = performance.now();
-    const durationSeconds = GAME_BALANCE?.special?.snowflake?.duration || 3;
-    const durationMs = durationSeconds * 1000;
-    run.freezeUntil = timestamp + durationMs;
+  function activateFreezeZone(timestamp = performance.now()) {
+    run.freezeUntil = timestamp + FREEZE_ZONE_DURATION_MS;
     run.frozenEmotion = 'surprised';
     run.slime.vx *= .62;
     run.slime.vy = Math.max(155, run.slime.vy);
     run.healthFlash = 1;
     run.healthFlashTime = .65;
     run.shake = Math.max(run.shake, 5.5);
-    spawnSpecialBurst('snowflake', source.x + source.w / 2, source.y + source.h / 2);
-    impact(`СНЕЖИНКА · ЗАМОРОЗКА И НЕУЯЗВИМОСТЬ · ${durationSeconds}с`);
+    spawnSpecialBurst('freeze', run.slime.x, run.slime.y);
+    impact('ЛЕДЯНАЯ ВОДА · ЗАМОРОЗКА И НЕУЯЗВИМОСТЬ · 3с');
     sound('epic');
     feedback([8, 14, 8, 18]);
   }
@@ -4518,7 +4611,7 @@
       bomb: { colors: ['#fff7c7', '#ffd65a', '#ff8a3d', '#f34e56'], count: 20, life: .9 },
       heal: { colors: ['#effff4', '#8dffba', '#31d98b', '#ffffff'], count: 8, life: .9 },
       cryo: { colors: ['#effcff', '#a9efff', '#54cfff', '#ffffff'], count: 8, life: 1.05 },
-      snowflake: { colors: ['#ffffff', '#c7f6ff', '#73dcff', '#3ba9ed'], count: 8, life: 1.1 },
+      freeze: { colors: ['#f4feff', '#c7f6ff', '#73dcff', '#3ba9ed'], count: 11, life: 1.06 },
       jelly: { colors: ['#fff0f7', '#ff9bc1', '#ff3f88', '#ffffff'], count: 9, life: .72 },
       pandora: { colors: ['#ff4ca3', '#4bdcff', '#ffe45c', '#65ed9a', '#bb66ff'], count: 18, life: .92 },
       split: { colors: ['#f3ffd0', '#91ef70', '#53c75d', '#ffffff'], count: 12, life: .7 },
@@ -4551,7 +4644,7 @@
         kind: 'special', x, y,
         vx: bombSmoke ? rand(-52, 52) : Math.cos(angle) * speed,
         vy: bombSmoke ? rand(-88, -34) : Math.sin(angle) * speed,
-        gravity: bombSmoke ? -12 : type === 'bomb' ? 145 : type === 'heal' ? -42 : type === 'jelly' ? 26 : type === 'pandora' ? 40 : type === 'snowflake' ? 18 : type === 'geyser' ? -10 : type === 'shieldBurst' ? 12 : 32,
+        gravity: bombSmoke ? -12 : type === 'bomb' ? 145 : type === 'heal' ? -42 : type === 'jelly' ? 26 : type === 'pandora' ? 40 : type === 'freeze' ? 12 : type === 'geyser' ? -10 : type === 'shieldBurst' ? 12 : 32,
         life: bombSmoke ? rand(.48, .7) : rand(config.life * .66, config.life), maxLife: config.life,
         size: bombSmoke ? rand(7, 11) : rand(2.5, type === 'bomb' ? 6.2 : 6),
         color: bombSmoke ? ['#4f3b46', '#76505a', '#a8675b'][i % 3] : config.colors[i % config.colors.length],
@@ -4565,9 +4658,7 @@
             ? 'smoke'
           : type === 'geyser' && i % 3 === 0
             ? 'streak'
-          : type === 'snowflake' && i % 4 === 0
-                ? 'flake'
-                : 'orb'
+          : 'orb'
       });
     }
     if (run.specialEffects.length > 16) run.specialEffects.shift();
@@ -4653,6 +4744,7 @@
     drawBackground(world);
     drawHoneyZones(timestamp, false);
     drawJellyZones(timestamp, false);
+    drawFreezeZones(timestamp, false);
     drawFinishPortal(world, timestamp);
 
     const visibleBlocks = [];
@@ -4736,6 +4828,7 @@
     drawSlime(timestamp);
     drawHoneyZones(timestamp, true);
     drawJellyZones(timestamp, true);
+    drawFreezeZones(timestamp, true);
     drawSpecialEffects(true);
     ctx.restore();
   }
@@ -5207,20 +5300,33 @@
           ctx.fillStyle = mist;
           ctx.beginPath(); ctx.arc(effect.x, y, spread, 0, Math.PI * 2); ctx.fill();
         }
-      } else if (effect.type === 'snowflake') {
+      } else if (effect.type === 'freeze') {
         const targetX = run.slime.x;
         const targetY = run.slime.y - run.cameraY;
-        const fall = 1 - Math.pow(1 - clamp(progress * 1.8, 0, 1), 3);
-        const snowY = targetY - 118 + fall * 105;
-        const snowSize = 92 + Math.sin(progress * Math.PI) * 24;
-        if (!drawVfxSprite('snowflake-hit', targetX, snowY, snowSize, snowSize, alpha * .96, -.09 + progress * .18)) {
-          ctx.globalAlpha = alpha;
-          ctx.fillStyle = '#effdff';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.font = `900 ${snowSize * .62}px "Segoe UI Symbol", system-ui`;
-          ctx.fillText('❄', targetX, snowY);
+        const radius = 24 + progress * 88;
+        const frost = ctx.createRadialGradient(targetX, targetY, 4, targetX, targetY, radius);
+        frost.addColorStop(0, `rgba(238,253,255,${alpha * .34})`);
+        frost.addColorStop(.55, `rgba(125,222,250,${alpha * .18})`);
+        frost.addColorStop(1, 'rgba(77,183,228,0)');
+        ctx.save();
+        ctx.fillStyle = frost;
+        ctx.beginPath();
+        ctx.arc(targetX, targetY, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha * .82;
+        ctx.fillStyle = '#edfdff';
+        for (let shard = 0; shard < 6; shard += 1) {
+          const angle = shard * Math.PI / 3 + progress * .7;
+          const orbit = 27 + progress * 50;
+          const x = targetX + Math.cos(angle) * orbit;
+          const y = targetY + Math.sin(angle) * orbit;
+          const size = 3.4 + (shard % 2) * 1.6;
+          ctx.beginPath();
+          ctx.moveTo(x, y - size); ctx.lineTo(x + size, y); ctx.lineTo(x, y + size); ctx.lineTo(x - size, y);
+          ctx.closePath();
+          ctx.fill();
         }
+        ctx.restore();
       } else if (effect.type === 'jelly') {
         const direction = Math.atan2(effect.ny, effect.nx);
         ctx.save();
@@ -5465,39 +5571,115 @@
           ctx.arc(bx - size * .28, by - size * .3, Math.max(.7, size * .18), 0, Math.PI * 2);
           ctx.fill();
         }
-        ctx.globalAlpha = .82;
-        ctx.strokeStyle = '#ebffd7';
-        ctx.lineWidth = 2.6;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        for (let px = corner + 5; px <= zone.w - corner - 5; px += 7) {
-          const py = surfaceY + Math.sin(wave + px * .075) * (1.35 + impact * 1.7) + impactWobble + 2.2;
-          if (px === corner + 5) ctx.moveTo(zone.x + px, py);
-          else ctx.lineTo(zone.x + px, py);
-        }
-        ctx.stroke();
-        ctx.globalAlpha = .3;
-        ctx.strokeStyle = '#f5ffe9';
-        ctx.lineWidth = 3.4;
-        for (let streak = 0; streak < Math.min(3, Math.ceil(zone.w / 90)); streak += 1) {
-          const sx = zone.x + corner + 14 + streak * Math.max(38, (zone.w - corner * 2 - 28) / 2);
-          ctx.beginPath();
-          ctx.moveTo(sx, y + corner + 12);
-          ctx.quadraticCurveTo(sx + 7, y + zone.h * .42, sx + 1, y + zone.h * .58);
-          ctx.stroke();
-        }
         ctx.restore();
       } else {
         jellyPath();
         ctx.globalAlpha = .15 + impact * .08;
         ctx.fillStyle = '#d4ffc3';
         ctx.fill();
-        ctx.globalAlpha = .54;
-        ctx.strokeStyle = '#efffe3';
-        ctx.lineWidth = 2.2;
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawFreezeZones(timestamp, foreground) {
+    if (!run?.freezeZones?.length) return;
+    for (const zone of run.freezeZones) {
+      const y = zone.y - run.cameraY;
+      if (y + zone.h < -30 || y > VIEW_H + 30) continue;
+      const active = run.inFreezeZoneId === zone.id;
+      if (foreground && !active) continue;
+      const charging = active && run.freezeZoneTriggeredId !== zone.id;
+      const charge = charging
+        ? clamp((timestamp - (run.freezeZoneEnteredAt || timestamp)) / FREEZE_ZONE_CHARGE_MS, 0, 1)
+        : 0;
+      const wave = timestamp / 860 + zone.seed;
+      const corner = clamp(Math.min(zone.w * .1, zone.h * .12), 9, 15);
+      const surfaceY = y + 6;
+      const waterPath = () => {
+        const topAt = px => surfaceY + Math.sin(wave + px * .06) * 1.15;
         ctx.beginPath();
-        ctx.arc(run.slime.x - 4, run.slime.y - run.cameraY + 3, run.slime.radius * .72, .18, Math.PI * 1.12);
+        ctx.moveTo(zone.x + corner, topAt(corner));
+        for (let px = corner + 10; px < zone.w - corner; px += 10) ctx.lineTo(zone.x + px, topAt(px));
+        const rightTop = topAt(zone.w - corner);
+        ctx.lineTo(zone.x + zone.w - corner, rightTop);
+        ctx.quadraticCurveTo(zone.x + zone.w, rightTop, zone.x + zone.w, rightTop + corner);
+        ctx.lineTo(zone.x + zone.w, y + zone.h - corner);
+        ctx.quadraticCurveTo(zone.x + zone.w, y + zone.h, zone.x + zone.w - corner, y + zone.h);
+        ctx.lineTo(zone.x + corner, y + zone.h);
+        ctx.quadraticCurveTo(zone.x, y + zone.h, zone.x, y + zone.h - corner);
+        ctx.lineTo(zone.x, surfaceY + corner);
+        ctx.quadraticCurveTo(zone.x, topAt(corner), zone.x + corner, topAt(corner));
+        ctx.closePath();
+      };
+
+      ctx.save();
+      if (!foreground) {
+        waterPath();
+        const water = ctx.createLinearGradient(zone.x, surfaceY, zone.x, y + zone.h);
+        water.addColorStop(0, 'rgba(207,249,255,.80)');
+        water.addColorStop(.38, 'rgba(109,215,242,.66)');
+        water.addColorStop(1, 'rgba(46,157,211,.72)');
+        ctx.fillStyle = water;
+        ctx.fill();
+        ctx.strokeStyle = '#2c8ec2';
+        ctx.lineWidth = 3.8;
+        ctx.lineJoin = 'round';
         ctx.stroke();
+
+        ctx.save();
+        waterPath();
+        ctx.clip();
+        const bubbleCount = clamp(Math.round(zone.w / 50 + zone.h / 92), 3, 7);
+        for (let bubble = 0; bubble < bubbleCount; bubble += 1) {
+          const duration = 1750 + (bubble % 3) * 290;
+          const phase = (timestamp / duration + zone.seed * .17 + bubble * .243) % 1;
+          const lane = (bubble * 41 + zone.seed * 23) % Math.max(18, zone.w - corner * 2 - 18);
+          const bx = zone.x + corner + 9 + lane + Math.sin(timestamp / 440 + bubble) * 1.8;
+          const by = y + zone.h - corner - 10 - phase * Math.max(24, zone.h - corner * 2 - 10);
+          const size = 2.8 + bubble % 3 * 1.15;
+          ctx.globalAlpha = clamp(Math.min(phase * 5, (1 - phase) * 6), 0, 1) * .68;
+          ctx.fillStyle = 'rgba(240,254,255,.30)';
+          ctx.strokeStyle = '#e6fbff';
+          ctx.lineWidth = 1.25;
+          ctx.beginPath();
+          ctx.arc(bx, by, size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        for (let shard = 0; shard < 4; shard += 1) {
+          const sx = zone.x + 18 + ((shard * 47 + zone.seed * 29) % Math.max(26, zone.w - 36));
+          const sy = y + 28 + ((shard * 31 + zone.seed * 17) % Math.max(22, zone.h - 48));
+          const size = 3.4 + shard % 2 * 1.8;
+          ctx.globalAlpha = .26 + Math.sin(timestamp / 620 + shard) * .07;
+          ctx.fillStyle = '#f5feff';
+          ctx.beginPath();
+          ctx.moveTo(sx, sy - size); ctx.lineTo(sx + size, sy); ctx.lineTo(sx, sy + size); ctx.lineTo(sx - size, sy);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      } else {
+        waterPath();
+        ctx.globalAlpha = charging ? .08 + charge * .17 : .12;
+        ctx.fillStyle = charging ? '#effdff' : '#b9efff';
+        ctx.fill();
+        if (charging) {
+          const screenY = run.slime.y - run.cameraY;
+          const orbit = run.slime.radius + 14 + charge * 9;
+          ctx.globalAlpha = .35 + charge * .45;
+          ctx.fillStyle = '#effdff';
+          for (let shard = 0; shard < 4; shard += 1) {
+            const angle = timestamp / 450 + shard * Math.PI / 2;
+            const sx = run.slime.x + Math.cos(angle) * orbit;
+            const sy = screenY + Math.sin(angle) * orbit;
+            const size = 2 + charge * 2.1;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - size); ctx.lineTo(sx + size, sy); ctx.lineTo(sx, sy + size); ctx.lineTo(sx - size, sy);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
       }
       ctx.restore();
     }
@@ -5723,7 +5905,7 @@
       ctx.beginPath();
       ctx.arc(block.x + block.w / 2, sy + block.h / 2, 17, 0, Math.PI * 2);
       ctx.fill();
-    } else if (special === 'cryo' || special === 'snowflake') {
+    } else if (special === 'cryo') {
       ctx.strokeStyle = 'rgba(255,255,255,.8)';
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -5753,7 +5935,7 @@
       ctx.stroke();
     }
 
-    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', cryo: '◇', snowflake: '❄', jelly: '●', pandora: '?', geyser: '◉', meteor: '☄', boss: '!' }[special] || '•';
+    const symbol = { coin: '●', spring: '↥', bomb: '✹', gel: '+', cryo: '◇', jelly: '●', pandora: '?', geyser: '◉', meteor: '☄', boss: '!' }[special] || '•';
     ctx.fillStyle = '#fff';
     ctx.font = special === 'gel' ? '1000 28px system-ui' : '1000 23px system-ui';
     ctx.textAlign = 'center';
@@ -5859,7 +6041,6 @@
     else if (block.special === 'spring') spriteName = 'spring';
     else if (block.special === 'jelly') spriteName = 'jelly-bounce';
     else if (block.special === 'cryo') spriteName = 'cryo';
-    else if (block.special === 'snowflake') spriteName = 'snowflake';
     else if (block.special === 'geyser') spriteName = 'geyser';
     else if (block.special === 'meteor') spriteName = 'meteor';
     else if (block.special === 'gel') spriteName = 'heal';
@@ -5917,13 +6098,13 @@
     const offsetY = customSprite ? block.h * (artwork.y || 0) / 100 : 0;
     const drawX = block.x + (block.w - width) / 2 + offsetX;
     const drawY = sy + (block.h - height) / 2 + offsetY;
-    if (['bomb', 'spring', 'cryo', 'snowflake', 'jelly', 'pandora', 'geyser', 'meteor'].includes(block.special)) {
+    if (['bomb', 'spring', 'cryo', 'jelly', 'pandora', 'geyser', 'meteor'].includes(block.special)) {
       const time = performance.now();
       const phase = time / (block.special === 'bomb' ? 160 : block.special === 'spring' ? 260 : 300) + block.id;
       const wave = Math.sin(phase);
       const pulse = block.special === 'bomb'
         ? 1 + wave * .06
-        : block.special === 'cryo' || block.special === 'snowflake'
+        : block.special === 'cryo'
             ? 1 + wave * .028
             : block.special === 'jelly'
               ? 1 + wave * .012
@@ -6061,7 +6242,7 @@
       iceLight: '#bdefff', snowPacked: '#e7f8ff', glacier: '#65b9e7', iceHazard: '#168bd2',
       ash: '#55515b', volcanicEarth: '#8f3f2b', basalt: '#35343d', lavaRock: '#ef592b', metal: '#677383', ore: '#9b7cff',
       coin: '#eab308', spring: '#22d3ee', bomb: '#ef4444', gel: '#34d399',
-      hazard: '#403c49', cryo: '#54dff5', snowflake: '#378ed8', jelly: '#ff3f88', geyser: '#ff762b', meteor: '#ff7e27', boss: '#8a4fd2'
+      hazard: '#403c49', cryo: '#54dff5', jelly: '#ff3f88', geyser: '#ff762b', meteor: '#ff7e27', boss: '#8a4fd2'
     };
     return colors[material] || world.accent;
   }
@@ -6764,9 +6945,13 @@
     indexRunBlocks();
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
+    run.freezeZones = generateFreezeZones(run);
     run.inJellyZoneId = '';
     run.jellyEnteredAt = 0;
     run.lastJellyBubbleAt = 0;
+    run.inFreezeZoneId = '';
+    run.freezeZoneEnteredAt = 0;
+    run.freezeZoneTriggeredId = '';
     run.particles = [];
     run.specialEffects = [];
     run.meteorShowers = [];
@@ -7585,7 +7770,9 @@
     }
     run.steer.touchX = clamp(dx / maxDistance, -1, 1);
     const vertical = clamp(dy / maxDistance, -1, 1);
-    run.steer.touchDown = run.effects.gravitySwitch ? 0 : clamp(vertical, 0, 1);
+    // The gravity secret keeps its up/down switch, while a downward hold still
+    // acts as the regular dive input (most visibly inside jelly zones).
+    run.steer.touchDown = clamp(vertical, 0, 1);
     if (run.effects.gravitySwitch) {
       if (Math.abs(vertical) < .18) run.steer.gravityGestureLocked = false;
       else if (Math.abs(vertical) >= .42 && !run.steer.gravityGestureLocked) {
@@ -7644,6 +7831,7 @@
   function setKeyboardSteering(code, pressed) {
     if (!run?.steer || run.ended || run.paused || run.portalEntry) return false;
     if (run.effects.gravitySwitch && ['ArrowUp', 'KeyW', 'ArrowDown', 'KeyS'].includes(code)) {
+      if (code === 'ArrowDown' || code === 'KeyS') run.steer.keyDown = pressed;
       if (pressed) setSecretGravityDirection(code === 'ArrowUp' || code === 'KeyW' ? -1 : 1);
       return true;
     }
@@ -7863,7 +8051,7 @@
         persist();
       },
       specialFx: (type = 'bomb') => {
-        if (!run || run.ended || !['bomb', 'heal', 'spring', 'cryo', 'snowflake', 'jelly', 'geyser', 'meteor'].includes(type)) return false;
+        if (!run || run.ended || !['bomb', 'heal', 'spring', 'cryo', 'freeze', 'jelly', 'geyser', 'meteor'].includes(type)) return false;
         const x = clamp(run.slime.x + (type === 'heal' ? 72 : 0), 50, VIEW_W - 50);
         const y = run.slime.y + 58;
         if (type === 'meteor') {
@@ -7875,7 +8063,7 @@
         if (type === 'heal') {
           const timestamp = performance.now();
           run.healGlowUntil = timestamp + 980;
-        } else if (type === 'snowflake') {
+        } else if (type === 'freeze') {
           run.freezeUntil = performance.now() + 3000;
           run.frozenEmotion = 'surprised';
         }
