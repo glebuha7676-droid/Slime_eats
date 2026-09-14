@@ -1,0 +1,2479 @@
+/* Последний слой: единая сетка для уровней и бесконечного режима. */
+#homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
+  background:linear-gradient(180deg,
+    #101a24 0 calc(100% - 270px),
+    var(--route-top) calc(100% - 264px),
+    var(--route-bottom) 100%)!important;
+}
+
+#homeScreen>.play-setup-card[data-mode="endless"] .home-endless-rank{
+  display:grid!important;
+  box-sizing:border-box!important;
+  width:100%!important;height:54px!important;min-height:54px!important;
+}
+
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  box-sizing:border-box!important;
+  width:100%!important;height:141px!important;min-height:141px!important;
+}
+#homeScreen>.play-setup-card[data-mode="endless"]>#endlessModePanel:not(.hidden){
+  grid-row:3 / 5!important;align-self:stretch!important;
+}
+#homeScreen>.play-setup-card[data-mode="endless"]>.home-route-progress{
+  visibility:hidden!important;pointer-events:none!important;
+}
+
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
+  gap:4px!important;
+  align-content:stretch!important;
+}
+
+#homeScreen>.play-setup-card .endless-stat-card{
+  box-sizing:border-box!important;
+  height:100%!important;min-height:0!important;align-self:stretch!important;
+  display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  align-items:center!important;justify-items:stretch!important;
+  column-gap:4px!important;
+  padding:5px 8px!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card>img{grid-row:1!important;width:40px!important;height:40px!important}
+#homeScreen>.play-setup-card .endless-stat-card>span{grid-row:1!important;display:grid!important;gap:4px!important;text-align:left!important}
+#homeScreen>.play-setup-card .endless-stat-card small{display:block!important;font-size:6.4px!important;line-height:1.03!important;text-align:left!important}
+#homeScreen>.play-setup-card .endless-stat-card b{font-size:13px!important;line-height:1!important;text-align:left!important}
+
+html.short-viewport #homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(2px,1fr) 48px 82px 46px 50px!important;
+  background:linear-gradient(180deg,
+      #101a24 0 calc(100% - 248px),
+      var(--route-top) calc(100% - 242px),
+      var(--route-bottom) 100%)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card[data-mode="endless"] .home-endless-rank{
+    height:48px!important;min-height:48px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+    height:131px!important;min-height:131px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card{
+    grid-template-columns:38px minmax(0,1fr)!important;padding:4px 7px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:36px!important;height:36px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card small{font-size:6px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:12px!important}
+
+/* На сцене слева и справа остаются только сами понятные блоки. */
+#homeScreen .stomach-rail:after,
+#homeScreen .recipe-rail:before,
+#homeScreen .recipe-category-slots:after{
+  display:none!important;content:none!important;
+}
+
+/* Центрируем весь готовый блок желудка, не меняя форму его ячеек. */
+#homeScreen .stomach-rail{justify-self:center!important}
+
+/* Новая иерархия сцены: желудок выше, индикаторы рецепта прямо под ним. */
+#homeScreen .stomach-rail{
+  height:166px!important;
+  grid-template-rows:18px 104px 30px!important;
+  gap:3px!important;
+  align-content:center!important;
+  transform:translateY(-7px)!important;
+}
+#homeScreen .stomach-rail .recipe-category-slots{
+  grid-row:3!important;
+  width:88px!important;height:28px!important;
+  align-self:center!important;justify-self:center!important;
+}
+
+/* Вместо карточки блюда справа — две одинаково полезные точки входа. */
+#homeScreen .recipe-rail{
+  height:166px!important;
+  grid-template-rows:repeat(2,65px)!important;
+  gap:8px!important;
+  align-content:center!important;
+  justify-items:center!important;
+}
+#homeScreen .recipe-book-button,
+#homeScreen .recipe-accessories-button{
+  box-sizing:border-box!important;width:88px!important;height:65px!important;
+  display:grid!important;grid-template-rows:46px 12px!important;
+  place-items:center!important;gap:2px!important;padding:2px!important;
+  border:2px solid #78909b!important;border-radius:14px!important;
+  background:linear-gradient(145deg,#ffffff,#e5f4ee)!important;
+  box-shadow:inset 0 2px 0 #fff,inset 0 -3px 0 rgba(72,124,107,.12),0 2px 0 rgba(48,75,82,.2)!important;
+  color:#385365!important;
+}
+#homeScreen .recipe-book-button img,
+#homeScreen .recipe-accessories-button img{width:46px!important;height:46px!important;display:block!important;object-fit:contain!important}
+#homeScreen .recipe-book-button span,
+#homeScreen .recipe-accessories-button span{font-size:6.3px!important;line-height:1!important;font-weight:1000!important;letter-spacing:.45px!important}
+#homeScreen .recipe-accessories-button:active{transform:translateY(2px)!important;filter:brightness(.97)!important}
+
+/* Награда — компактная кнопка рядом с валютой в верхней панели. */
+.header-rewards-btn{display:none!important}
+body[data-screen="home"] .header-rewards-btn{
+  order:2!important;flex:0 0 36px!important;width:36px!important;height:36px!important;
+  display:grid!important;place-items:center!important;padding:3px!important;
+  border:1.5px solid color-mix(in srgb,var(--world-line) 82%,#3a455b)!important;border-radius:11px!important;
+  background:rgba(255,255,255,.9)!important;
+  box-shadow:inset 0 2px 1px #fff,inset 0 -3px 4px color-mix(in srgb,var(--world-line) 10%,transparent),0 1px 2px rgba(34,43,62,.14)!important;
+}
+body[data-screen="home"] .header-rewards-btn img{width:28px!important;height:28px!important;display:block!important;object-fit:contain!important}
+body[data-screen="home"] .header-admin-btn{order:3!important}
+
+/* Конвейер продолжается в нижний тёмный терминал, а не обрывается пустым полем. */
+#homeScreen>.card.conveyor{
+  position:relative!important;z-index:30!important;isolation:isolate!important;
+}
+#homeScreen>.play-setup-card{
+  background:linear-gradient(180deg,
+    #101a24 0 calc(100% - 270px),
+    var(--route-top) calc(100% - 264px),
+    var(--route-bottom) 100%)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card{
+  background:linear-gradient(180deg,
+    #101a24 0 calc(100% - 248px),
+    var(--route-top) calc(100% - 242px),
+    var(--route-bottom) 100%)!important;
+}
+#homeScreen>.card.conveyor:after{
+  content:""!important;position:absolute!important;z-index:0!important;
+  left:0!important;right:0!important;top:calc(100% - 7px)!important;height:70px!important;
+  border-top:3px solid #8093a0!important;
+  background:linear-gradient(180deg,#23323f 0,#101a24 22%,#182632 100%)!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.09),inset 0 -4px 0 rgba(0,0,0,.28)!important;
+  pointer-events:none!important;
+}
+#homeScreen .conveyor-workbench{position:relative!important;z-index:1!important}
+#homeScreen .conveyor-machine{min-height:160px!important}
+#homeScreen .machine-belt{height:35px!important}
+#homeScreen .conveyor-machine .food-choices{bottom:13px!important}
+
+/* Центральный круг — единственное действие в терминале. */
+#homeScreen .conveyor-controls{
+  z-index:71!important;left:50%!important;right:auto!important;bottom:-76px!important;
+  width:58px!important;height:58px!important;min-height:58px!important;
+  display:grid!important;place-items:center!important;padding:0!important;
+  border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;
+  transform:translateX(-50%)!important;
+}
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  width:58px!important;height:58px!important;min-height:58px!important;
+  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:1fr!important;place-items:center!important;padding:0!important;
+  border:0!important;border-radius:50%!important;
+  background:radial-gradient(circle at 35% 27%,#efbdff 0 10%,#ca78ed 38%,#8b4caf 72%,#61387d 100%)!important;
+  position:relative!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(74,36,96,.28),0 3px 0 #56336d!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  position:absolute!important;left:50%!important;top:50%!important;
+  width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;
+  display:block!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  transform:translate(-50%,-50%)!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{position:absolute!important;left:50%!important;top:54%!important;display:block!important;width:62px!important;height:62px!important;margin:0!important;transform:translate(-50%,-50%) scale(1.06)!important}
+#homeScreen .conveyor-controls .reroll-copy,
+#homeScreen .conveyor-controls .reroll-btn>em{display:none!important}
+#homeScreen .conveyor-controls .reroll-btn:active{transform:translateY(3px) scale(.97)!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 1px 0 #293744!important}
+
+@media(max-width:370px){
+  #homeScreen>.card.conveyor:after{height:62px!important}
+  #homeScreen .conveyor-machine{min-height:150px!important}
+  #homeScreen .conveyor-controls{bottom:-68px!important;width:52px!important;height:52px!important;min-height:52px!important}
+  #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:52px!important;height:52px!important;min-height:52px!important}
+  #homeScreen .conveyor-controls .reroll-icon-well{width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important}
+  #homeScreen .conveyor-controls .reroll-icon{width:56px!important;height:56px!important}
+}
+
+/* V20: исследование — основная мобильная мета-валюта рядом с монетами. */
+.research-wallet{
+  position:relative;flex:0 0 126px;width:126px;height:38px;display:flex;align-items:center;padding:0 7px 0 35px;
+  border:2px solid #315b57;border-radius:13px;background:rgba(246,255,249,.95);
+  box-shadow:inset 0 2px 1px #fff,inset 0 -3px 4px rgba(31,144,91,.12),0 2px 0 rgba(36,50,66,.19);
+  isolation:isolate;
+}
+.research-wallet-flask{position:absolute;z-index:3;left:-5px;top:50%;width:45px;height:45px;transform:translateY(-50%);display:grid;place-items:center}
+.research-wallet-flask>img{width:45px;height:45px;display:block;object-fit:contain;filter:drop-shadow(0 2px 1px rgba(22,60,62,.27))}
+.research-wallet-flask>b{
+  position:absolute;right:-1px;bottom:-1px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 3px;
+  border:2px solid #284650;border-radius:999px;background:linear-gradient(#f7fff2,#baf17f);color:#22533a;
+  box-shadow:0 2px 0 rgba(38,55,70,.25),inset 0 1px #fff;font-size:9px;font-weight:1000;line-height:1;
+}
+.research-wallet-track{
+  position:relative;z-index:1;width:100%;height:13px;overflow:hidden;border:2px solid #315b57;border-radius:0 999px 999px 0;
+  background:linear-gradient(180deg,#d9eee5,#f5fff8);box-shadow:inset 0 2px 3px rgba(35,83,69,.2),0 1px 0 #fff;
+}
+.research-wallet-track:after{content:"";position:absolute;left:3px;right:8px;top:2px;height:3px;border-radius:99px;background:rgba(255,255,255,.72)}
+.research-wallet-track>i{
+  display:block;width:0;height:100%;border-radius:0 999px 999px 0;
+  background:linear-gradient(90deg,#31c77a,#75eb78 62%,#d4ff72);box-shadow:inset 0 2px rgba(255,255,255,.38),0 0 7px rgba(64,224,119,.58);
+  transition:width .48s cubic-bezier(.18,.8,.2,1);
+}
+body[data-screen="home"] .research-wallet{order:1;margin-right:auto}
+body[data-screen="home"] .world-summary .coin-wallet{order:2!important;min-width:67px;width:auto;margin-right:0!important;padding-inline:6px}
+body[data-screen="home"] .header-rewards-btn{order:3!important}
+body[data-screen="home"] .header-admin-btn{order:4!important}
+body[data-screen="drop"] .research-wallet{display:none}
+
+.run-research-hud{
+  position:absolute;z-index:9;left:184px;top:8px;width:104px;height:52px;display:grid;grid-template-columns:35px minmax(0,1fr);align-items:center;
+  padding:4px 7px 4px 3px;border:2px solid #315b57;border-radius:15px;background:linear-gradient(180deg,#f5fff8,#cdefd8);
+  box-shadow:0 3px 0 rgba(28,50,48,.24),inset 0 2px #fff,inset 0 -3px rgba(45,153,91,.1);pointer-events:none;
+}
+.run-research-hud>img{width:35px;height:35px;object-fit:contain;filter:drop-shadow(0 2px 0 rgba(36,69,65,.2))}
+.run-research-hud>span{min-width:0;display:flex;flex-direction:column;align-items:flex-start;line-height:1}
+.run-research-hud small{color:#2d7452;font-size:5.8px;font-weight:1000;letter-spacing:.35px}
+.run-research-hud b{margin-top:3px;color:#164c35;font-size:17px;line-height:1}
+.run-research-hud>i{position:absolute;right:8px;top:5px;color:#20a35e;font-size:10px;font-style:normal;font-weight:1000;opacity:0;transform:translateY(5px) scale(.7)}
+.run-research-hud>i.is-visible{animation:runResearchGain .46s ease-out both}
+.run-research-hud.is-collecting>img{animation:runResearchFlaskPop .28s cubic-bezier(.2,.8,.2,1.2)}
+@keyframes runResearchGain{0%{opacity:0;transform:translateY(7px) scale(.7)}25%{opacity:1;transform:translateY(0) scale(1.08)}100%{opacity:0;transform:translateY(-13px) scale(.92)}}
+@keyframes runResearchFlaskPop{45%{transform:rotate(-7deg) scale(1.12);filter:brightness(1.12) drop-shadow(0 0 5px #7cff8f)}100%{transform:none}}
+
+.result-research-stat{position:relative;overflow:visible;padding-left:5px;background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(216,250,228,.88))}
+.result-research-flask{position:relative;z-index:4;width:43px;height:43px;display:grid;place-items:center;flex:0 0 43px;transform-origin:50% 75%}
+.result-research-flask>img{width:43px!important;height:43px!important;filter:drop-shadow(0 2px 1px rgba(30,76,62,.25))!important}
+.result-research-flask>b{
+  position:absolute;right:-1px;bottom:-1px;min-width:19px;height:19px;display:grid;place-items:center;padding:0 3px;
+  border:2px solid #31505a;border-radius:99px;background:#d9ff96;color:#23503a;font-size:8px;font-weight:1000;line-height:1;
+}
+.result-research-copy{position:relative;z-index:3;display:flex!important;flex:1;flex-direction:column;justify-content:center;min-width:0}
+.result-research-copy>b{color:#1d8c54!important;font-size:15px!important}
+.result-research-track{display:block;width:100%;height:7px;margin-top:4px;overflow:hidden;border:1.5px solid #356457;border-radius:99px;background:#d9e9e1;box-shadow:inset 0 1px 2px rgba(30,79,61,.24)}
+.result-research-track>i{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#2dc873,#8bf078,#dfff78);box-shadow:inset 0 1px rgba(255,255,255,.5),0 0 5px rgba(52,215,107,.48)}
+.result-research-flask.unit-earned{animation:resultFlaskUnit .38s cubic-bezier(.2,.78,.22,1.25)}
+@keyframes resultFlaskUnit{18%{transform:rotate(-10deg) scale(1.08)}42%{transform:rotate(9deg) scale(1.14);filter:brightness(1.2) drop-shadow(0 0 7px #79f28c)}70%{transform:rotate(-4deg) scale(1.06)}100%{transform:none}}
+.result-research-stream{position:absolute!important;z-index:2;left:45px;right:7px;top:8px;bottom:8px;overflow:hidden;pointer-events:none}
+.result-research-stream>i{--y:0px;position:absolute;right:9px;top:15px;width:6px;height:6px;border-radius:50%;background:#8cff79;box-shadow:0 0 6px #42d875;opacity:0}
+.result-research-stream.is-pouring>i{animation:resultResearchPour .72s ease-in infinite}
+.result-research-stream>i:nth-child(2){--y:-8px;animation-delay:.12s}.result-research-stream>i:nth-child(3){--y:7px;animation-delay:.24s}.result-research-stream>i:nth-child(4){--y:-4px;animation-delay:.36s}.result-research-stream>i:nth-child(5){--y:5px;animation-delay:.48s}.result-research-stream>i:nth-child(6){--y:-7px;animation-delay:.6s}
+@keyframes resultResearchPour{0%{opacity:0;transform:translate(0,var(--y)) scale(.45)}16%{opacity:1}75%{opacity:.95}100%{opacity:0;transform:translate(-92px,calc(var(--y) + 7px)) scale(.9)}}
+
+@media(max-width:370px){
+  .research-wallet{flex-basis:111px;width:111px;padding-left:32px}.research-wallet-flask,.research-wallet-flask>img{width:41px;height:41px}
+  body[data-screen="home"] .world-summary .coin-wallet{min-width:59px;padding-inline:4px}body[data-screen="home"] .world-summary .currency-icon{width:24px;height:24px}
+  .run-research-hud{left:154px;width:96px;grid-template-columns:32px minmax(0,1fr);padding-right:5px}.run-research-hud>img{width:32px;height:32px}.run-research-hud small{font-size:4.9px;letter-spacing:.2px}
+}
+
+/* Маленький знак семейства над каждым блюдом на ленте. */
+#homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge{
+  position:absolute!important;z-index:55!important;left:50%!important;top:-15px!important;
+  width:22px!important;height:22px!important;display:grid!important;place-items:center!important;
+  border:2px solid var(--food-family-line,#435970)!important;border-radius:50%!important;background:var(--food-family-fill,#6a7f91)!important;
+  color:var(--food-family-ink,#fff)!important;font-size:13px!important;font-weight:1000!important;line-height:1!important;
+  box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(21,37,49,.42)!important;
+  transform:translateX(-50%)!important;
+}
+#homeScreen .food-category-badge.family-health,#homeScreen .food-category-badge.family-mass{--food-family-fill:#f2a83b!important;--food-family-line:#9b5a20!important}
+#homeScreen .food-category-badge.family-fire,#homeScreen .food-category-badge.family-damage{--food-family-fill:#f45b48!important;--food-family-line:#a7382e!important}
+#homeScreen .food-category-badge.family-ice,#homeScreen .food-category-badge.family-protection,#homeScreen .food-category-badge.family-shield{--food-family-fill:#59bfea!important;--food-family-line:#2875a7!important}
+#homeScreen .food-category-badge.family-electric{--food-family-fill:#ffd94d!important;--food-family-line:#806319!important;--food-family-ink:#59420b!important}
+#homeScreen .food-category-badge.family-bounce{--food-family-fill:#87d66d!important;--food-family-line:#4c8d42!important}
+#homeScreen .food-category-badge.family-gold{--food-family-fill:#ffd259!important;--food-family-line:#9d6c12!important;--food-family-ink:#664506!important}
+#homeScreen .food-category-badge.family-blast{--food-family-fill:#ff775d!important;--food-family-line:#8b3c34!important}
+#homeScreen .food-category-badge.family-secret{--food-family-fill:#3f1024!important;--food-family-line:#8d2142!important}
+
+/* Единый набор нарисованных категорий: конвейер, желудок и книга рецептов. */
+#homeScreen .family-fire,#homeScreen .family-damage,.recipe-book-family.family-fire,.recipe-book-family.family-damage{--recipe-category-icon:url("assets/ui/recipe-categories/fire-aligned.png")}
+#homeScreen .family-ice,.recipe-book-family.family-ice{--recipe-category-icon:url("assets/ui/recipe-categories/frost-aligned.png")}
+#homeScreen .family-electric,.recipe-book-family.family-electric{--recipe-category-icon:url("assets/ui/recipe-categories/electricity-aligned.png")}
+#homeScreen .family-gold,.recipe-book-family.family-gold{--recipe-category-icon:url("assets/ui/recipe-categories/gold-aligned.png")}
+#homeScreen .family-bounce,.recipe-book-family.family-bounce{--recipe-category-icon:url("assets/ui/recipe-categories/mobility-aligned.png")}
+#homeScreen .family-mass,#homeScreen .family-health,.recipe-book-family.family-mass,.recipe-book-family.family-health{--recipe-category-icon:url("assets/ui/recipe-categories/weight-aligned.png")}
+#homeScreen .family-protection,#homeScreen .family-shield,.recipe-book-family.family-protection,.recipe-book-family.family-shield{--recipe-category-icon:url("assets/ui/recipe-categories/protection-aligned.png")}
+#homeScreen .family-blast,.recipe-book-family.family-blast{--recipe-category-icon:url("assets/ui/recipe-categories/explosion-aligned.png")}
+
+#homeScreen .food-category-badge:not(.family-secret),
+#homeScreen .recipe-category-slot.filled:not(.family-secret){
+  border:0!important;background-color:transparent!important;
+  background-image:var(--recipe-category-icon)!important;background-position:center!important;background-repeat:no-repeat!important;background-size:contain!important;
+  box-shadow:none!important;color:transparent!important;font-size:0!important;
+}
+#homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge:not(.family-secret){
+  width:27px!important;height:27px!important;top:-20px!important;
+  filter:drop-shadow(0 2px 1px rgba(8,18,28,.42))!important;
+}
+#homeScreen .recipe-category-slot.filled:not(.family-secret){width:24px!important;height:24px!important}
+
+.recipe-book-family[class*="family-"] i{
+  border:0!important;background-color:transparent!important;
+  background-image:var(--recipe-category-icon)!important;background-position:center!important;background-repeat:no-repeat!important;background-size:contain!important;
+  box-shadow:none!important;color:transparent!important;font-size:0!important;
+}
+
+@media(max-width:370px){
+  #homeScreen .stomach-rail{height:158px!important;grid-template-rows:18px 91px 27px!important;transform:translateY(-5px)!important}
+  #homeScreen .stomach-rail .recipe-category-slots{width:76px!important;height:25px!important}
+  #homeScreen .recipe-rail{width:86px!important;height:158px!important;grid-template-rows:repeat(2,60px)!important;gap:7px!important}
+  #homeScreen .recipe-book-button,#homeScreen .recipe-accessories-button{width:76px!important;height:60px!important;grid-template-rows:42px 11px!important}
+  #homeScreen .recipe-book-button img,#homeScreen .recipe-accessories-button img{width:42px!important;height:42px!important}
+  #homeScreen .recipe-book-button span,#homeScreen .recipe-accessories-button span{font-size:5.6px!important}
+  body[data-screen="home"] .header-rewards-btn{flex-basis:34px!important;width:34px!important;height:34px!important}
+  body[data-screen="home"] .header-rewards-btn img{width:26px!important;height:26px!important}
+}
+
+/* V16: цельная кнопка реролла без вложенного серого диска. */
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;
+  padding:0!important;border:0!important;border-radius:50%!important;
+  background:radial-gradient(circle at 34% 24%,rgba(255,255,255,.58) 0 6%,transparent 7%),linear-gradient(180deg,#d98cf3 0%,#b760dc 52%,#8b45b4 100%)!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.42),inset 0 -4px 0 rgba(76,37,101,.26),0 2px 0 #553168!important;
+  transform:none!important;outline:0!important;overflow:hidden!important;
+}
+#homeScreen .conveyor-controls .reroll-btn::before,
+#homeScreen .conveyor-controls .reroll-btn::after{content:none!important;display:none!important}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  position:absolute!important;inset:0!important;
+  width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;
+  display:grid!important;place-items:center!important;
+  border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;transform:none!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{
+  position:absolute!important;left:50%!important;top:50%!important;
+  display:block!important;width:43px!important;height:43px!important;margin:0!important;
+  object-fit:contain!important;transform:translate(-50%,-50%)!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well::before{
+  content:none!important;display:none!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well::after{content:none!important;display:none!important}
+#homeScreen .conveyor-controls .reroll-btn:active{
+  transform:translateY(2px) scale(.97)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(76,37,101,.2)!important;
+}
+#homeScreen .conveyor-controls .reroll-btn:disabled{opacity:.72!important;filter:saturate(.55) brightness(.9)!important}
+#homeScreen .conveyor.is-rerolling .reroll-icon{animation:rerollGlyphSpin .52s cubic-bezier(.3,.7,.25,1)!important}
+@keyframes rerollGlyphSpin{
+  from{transform:translate(-50%,-50%) rotate(0deg)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@media(max-width:370px){
+  #homeScreen .conveyor-controls .reroll-btn,
+  #homeScreen .conveyor-controls .reroll-btn.ad-mode,
+  #homeScreen .conveyor-controls .reroll-icon-well{
+    width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;
+  }
+  #homeScreen .conveyor-controls .reroll-icon{width:39px!important;height:39px!important}
+}
+
+/* V18: сгенерированная игровая кнопка и аккуратный терминал под лентой. */
+#homeScreen>.card.conveyor:after{
+  box-sizing:border-box!important;left:0!important;right:0!important;top:100%!important;height:60px!important;
+  border-top:3px solid #718593!important;border-left:0!important;border-right:0!important;
+  background:linear-gradient(90deg,#293a47 0 5px,#14212c 5px calc(100% - 5px),#293a47 calc(100% - 5px)),linear-gradient(180deg,#1d2c38,#101a24)!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.07),inset 0 -3px 0 rgba(0,0,0,.26)!important;
+}
+#homeScreen .conveyor-controls,
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+#homeScreen .conveyor-controls{bottom:-64px!important}
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  position:relative!important;width:64px!important;height:64px!important;min-width:64px!important;min-height:64px!important;
+  padding:0!important;border-radius:50%!important;outline:0!important;transform:none!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  position:absolute!important;inset:0!important;width:64px!important;height:64px!important;min-width:64px!important;min-height:64px!important;
+  display:grid!important;place-items:center!important;overflow:visible!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{
+  position:absolute!important;left:50%!important;top:50%!important;
+  display:block!important;width:72px!important;height:72px!important;max-width:none!important;margin:0!important;
+  object-fit:contain!important;content:url("assets/ui/reroll-button-v2.png?v=1")!important;
+  transform:translate(-50%,-50%)!important;filter:none!important;
+}
+#homeScreen .conveyor-controls .reroll-btn.confirm-mode .reroll-icon{
+  content:url("assets/ui/ready-button-v2.png?v=1")!important;
+  animation:none!important;
+}
+#homeScreen .conveyor-controls .reroll-btn.confirm-mode:not(:disabled){
+  animation:readyControlPulse 1.15s ease-in-out infinite!important;
+}
+#homeScreen .conveyor-controls .reroll-btn.confirm-mode:not(:disabled)::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  inset:-7px!important;
+  border:3px solid rgba(92,255,112,.78)!important;
+  border-radius:50%!important;
+  box-shadow:0 0 10px rgba(69,255,95,.5)!important;
+  pointer-events:none!important;
+  animation:readyControlHalo 1.15s ease-out infinite!important;
+}
+#homeScreen .conveyor-controls .reroll-btn:active{transform:translateY(2px) scale(.95)!important;box-shadow:none!important}
+#homeScreen .conveyor-controls .reroll-btn:disabled{opacity:.58!important;filter:saturate(.65)!important}
+#homeScreen .conveyor.is-rerolling .reroll-icon{animation:rerollImageSpin .52s cubic-bezier(.3,.72,.25,1)!important}
+@keyframes rerollImageSpin{
+  from{transform:translate(-50%,-50%) rotate(0deg)}
+  to{transform:translate(-50%,-50%) rotate(360deg)}
+}
+@keyframes readyButtonNudge{
+  0%,100%{transform:translate(-50%,-50%) scale(1)}
+  48%{transform:translate(-50%,-53%) scale(1.08)}
+  62%{transform:translate(-50%,-50%) scale(1.03)}
+}
+@keyframes readyControlPulse{
+  0%,100%{filter:brightness(1) drop-shadow(0 0 0 rgba(82,255,105,0))}
+  48%{filter:brightness(1.15) drop-shadow(0 0 10px rgba(82,255,105,.86))}
+}
+@keyframes readyControlHalo{
+  0%{opacity:0;transform:scale(.76)}
+  18%{opacity:.95}
+  78%,100%{opacity:0;transform:scale(1.24)}
+}
+@media(max-width:370px){
+  #homeScreen>.card.conveyor:after{height:56px!important}
+  #homeScreen .conveyor-controls{bottom:-58px!important}
+  #homeScreen .conveyor-controls .reroll-btn,
+  #homeScreen .conveyor-controls .reroll-btn.ad-mode,
+  #homeScreen .conveyor-controls .reroll-icon-well{
+    width:57px!important;height:57px!important;min-width:57px!important;min-height:57px!important;
+  }
+  #homeScreen .conveyor-controls .reroll-icon{width:65px!important;height:65px!important}
+}
+
+/* V19: чистые категории, лёгкая жизнь кнопки и упрощённый терминал. */
+body[data-screen="home"] .world-summary-head{justify-content:flex-start!important}
+body[data-screen="home"] .world-summary .currency{order:1!important;margin-right:auto!important}
+body[data-screen="home"] .header-rewards-btn{order:2!important}
+body[data-screen="home"] .header-admin-btn{order:3!important}
+
+#homeScreen .stomach-quick-slot .slot-effect-star{display:none!important}
+#homeScreen .recipe-category-slots{
+  padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+#homeScreen .recipe-category-slots::before,
+#homeScreen .recipe-category-slots::after{content:none!important;display:none!important}
+#homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge:not(.family-secret),
+#homeScreen .recipe-category-slot.filled:not(.family-secret){
+  border:0!important;background:transparent!important;box-shadow:none!important;color:transparent!important;font-size:0!important;
+}
+#homeScreen .food-category-badge>img,
+#homeScreen .recipe-category-slot>img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important}
+#homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge:not(.family-secret){
+  width:29px!important;height:29px!important;top:-22px!important;filter:drop-shadow(0 2px 1px rgba(8,18,28,.42))!important;
+}
+#homeScreen .recipe-category-slot.filled:not(.family-secret){width:24px!important;height:24px!important}
+
+#homeScreen>.card.conveyor:after{
+  background:linear-gradient(180deg,#1d2c38 0%,#101a24 100%)!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.07),inset 0 -3px 0 rgba(0,0,0,.26)!important;
+}
+#homeScreen .conveyor-controls{bottom:-67px!important}
+#homeScreen .conveyor-controls .reroll-btn:not(.confirm-mode):not(:disabled) .reroll-icon{
+  animation:rerollButtonIdle 2.65s ease-in-out infinite!important;
+}
+#homeScreen .conveyor.is-rerolling .reroll-btn .reroll-icon{
+  animation:rerollImageSpin .52s cubic-bezier(.3,.72,.25,1)!important;
+}
+@keyframes rerollButtonIdle{
+  0%,66%,100%{transform:translate(-50%,-50%) rotate(0deg) scale(1)}
+  74%{transform:translate(-50%,-50%) rotate(-4deg) scale(1.035)}
+  82%{transform:translate(-50%,-50%) rotate(4deg) scale(1.035)}
+  90%{transform:translate(-50%,-50%) rotate(0deg) scale(1)}
+}
+@media(max-width:370px){
+  #homeScreen .conveyor-controls{bottom:-61px!important}
+  #homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge:not(.family-secret){width:27px!important;height:27px!important;top:-20px!important}
+}
+
+/* V20: значки категорий не обрезаются, кнопка ниже в центре терминала. */
+#homeScreen .stomach-rail{
+  grid-template-rows:18px 96px 38px!important;
+}
+#homeScreen .stomach-rail .recipe-category-slots{
+  box-sizing:border-box!important;width:88px!important;height:38px!important;
+  grid-template-columns:repeat(3,26px)!important;gap:3px!important;
+  place-content:center!important;overflow:visible!important;z-index:20!important;
+  contain:none!important;clip-path:none!important;-webkit-mask:none!important;mask:none!important;
+}
+#homeScreen .recipe-category-slot,
+#homeScreen .recipe-category-slot.filled:not(.family-secret){
+  position:relative!important;box-sizing:border-box!important;width:26px!important;height:26px!important;
+  display:grid!important;place-items:center!important;overflow:visible!important;
+  contain:none!important;clip-path:none!important;-webkit-mask:none!important;mask:none!important;
+}
+#homeScreen .recipe-category-slot>img{
+  position:absolute!important;left:1px!important;top:0!important;
+  width:24px!important;height:24px!important;margin:0!important;overflow:visible!important;
+  clip-path:none!important;transform:none!important;
+}
+#homeScreen .conveyor-controls{bottom:-74px!important}
+
+@media(max-width:370px){
+  #homeScreen .stomach-rail{grid-template-rows:18px 90px 34px!important}
+  #homeScreen .stomach-rail .recipe-category-slots{
+    width:76px!important;height:34px!important;grid-template-columns:repeat(3,22px)!important;gap:3px!important;
+  }
+  #homeScreen .recipe-category-slot,
+  #homeScreen .recipe-category-slot.filled:not(.family-secret){width:22px!important;height:22px!important}
+  #homeScreen .recipe-category-slot>img{left:1px!important;top:0!important;width:20px!important;height:20px!important}
+  #homeScreen .conveyor-controls{bottom:-68px!important}
+}
+
+/* V25: три индикатора под желудком получают собственный ровный круг. */
+#homeScreen .stomach-rail .recipe-category-slot.filled:not(.family-secret){
+  width:26px!important;height:26px!important;
+  overflow:hidden!important;border-radius:50%!important;
+  background:#20364b!important;
+  clip-path:circle(50% at 50% 50%)!important;
+  -webkit-mask-image:radial-gradient(circle at center,#000 0 99%,transparent 100%)!important;
+  mask-image:radial-gradient(circle at center,#000 0 99%,transparent 100%)!important;
+}
+#homeScreen .stomach-rail .recipe-category-slot.filled:not(.family-secret)>img{
+  left:-2px!important;top:-2px!important;width:30px!important;height:30px!important;
+  max-width:none!important;object-fit:cover!important;transform:none!important;
+}
+@media(max-width:370px){
+  #homeScreen .stomach-rail .recipe-category-slot.filled:not(.family-secret){width:22px!important;height:22px!important}
+  #homeScreen .stomach-rail .recipe-category-slot.filled:not(.family-secret)>img{
+    left:-2px!important;top:-2px!important;width:26px!important;height:26px!important;
+  }
+}
+
+/* V28: срезаем плоские края, оставшиеся внутри исходных PNG категорий. */
+.recipe-book-family[class*="family-"] i{
+  width:30px!important;height:30px!important;
+  overflow:hidden!important;border:0!important;border-radius:50%!important;
+  background-color:transparent!important;background-position:center!important;
+  background-repeat:no-repeat!important;background-size:contain!important;
+  box-shadow:none!important;filter:none!important;
+  clip-path:circle(43.5% at 50% 50%)!important;
+  -webkit-mask:none!important;mask:none!important;
+}
+
+/* V37: круглый портал рождается за слаймом и показывает выбранный мир. */
+body[data-world="1"]{--launch-glow:#64efb0;--launch-core:#dfffaa;--launch-rim:#28765e;--launch-world-image:url("assets/backgrounds/world-1-depths.webp?v=20260910-1");--launch-world-position:50% 11%}
+body[data-world="2"]{--launch-glow:#62e7ff;--launch-core:#e9feff;--launch-rim:#347f9d;--launch-world-image:url("assets/backgrounds/world-2-ice.webp?v=20260910-1");--launch-world-position:50% 16%}
+body[data-world="3"]{--launch-glow:#ff80c9;--launch-core:#fff0ac;--launch-rim:#984578;--launch-world-image:url("assets/backgrounds/world-3-factory.webp?v=20260910-1");--launch-world-position:50% 18%}
+body[data-world="4"]{--launch-glow:#ff7840;--launch-core:#ffd369;--launch-rim:#8c3b31;--launch-world-image:url("assets/backgrounds/world-4-magma.webp?v=20260910-1");--launch-world-position:50% 16%}
+
+#homeScreen .slime-playground:after{
+  display:block!important;content:""!important;opacity:1!important;transform:translateX(-50%)!important;
+}
+#homeScreen .slime-playground .slime{
+  position:relative!important;z-index:6!important;margin-bottom:0!important;
+  transform-origin:50% 91%!important;
+}
+#homeScreen .slime-stage:not(.launch-opening) .slime-playground .slime:not(.eat):not(.chewing):not(.savoring):not(.booped):not(.petting):not(.petted):not(.pleased){
+  animation:roomSlimeStand 3.4s ease-in-out infinite!important;
+}
+
+.launch-portal{
+  position:absolute;z-index:3;left:50%;top:22px;width:112px;height:112px;
+  overflow:hidden;border-radius:50%;opacity:0;transform:translateX(-50%) scale(.05);
+  transform-origin:50% 50%;pointer-events:none;isolation:isolate;
+  filter:drop-shadow(0 0 8px color-mix(in srgb,var(--launch-glow) 72%,transparent)) drop-shadow(0 0 22px color-mix(in srgb,var(--launch-glow) 38%,transparent));
+}
+.launch-portal-core,
+.launch-portal-depth,
+.launch-portal-rim{position:absolute;box-sizing:border-box;border-radius:50%}
+.launch-portal-core{
+  z-index:1;inset:7px;
+  background-image:linear-gradient(180deg,color-mix(in srgb,var(--launch-rim) 16%,transparent),rgba(4,10,16,.28)),var(--launch-world-image);
+  background-position:center,var(--launch-world-position);background-size:cover,cover;background-repeat:no-repeat;
+  box-shadow:inset 0 0 22px 7px rgba(2,7,12,.76),inset 0 0 0 2px color-mix(in srgb,var(--launch-glow) 42%,transparent);
+  animation:roomPortalWorldPulse 1.15s ease-in-out infinite alternate;
+}
+.launch-portal-core:before{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 50% 48%,transparent 0 36%,rgba(3,9,15,.2) 58%,rgba(2,6,12,.78) 100%);
+}
+.launch-portal-core:after{
+  content:"";position:absolute;inset:24px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--launch-glow) 18%,transparent),transparent 68%);
+  opacity:.54;animation:roomPortalDepthPulse .86s ease-in-out infinite alternate;
+}
+.launch-portal-depth{
+  z-index:2;inset:14px;border:2px solid color-mix(in srgb,var(--launch-core) 62%,transparent);
+  background:transparent;box-shadow:0 0 7px color-mix(in srgb,var(--launch-glow) 44%,transparent);
+  opacity:0;animation:roomPortalSuction .58s linear infinite;
+}
+.launch-portal-depth-inner{
+  animation-delay:-.29s;
+}
+.launch-portal-rim{
+  z-index:4;inset:2px;border:5px solid var(--launch-rim);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--launch-core) 66%,white),inset 0 0 12px var(--launch-glow),0 0 0 2px color-mix(in srgb,var(--launch-rim) 70%,#263649);
+}
+.launch-portal-rim:before{
+  content:"";position:absolute;inset:-1px;border-radius:50%;
+  background:conic-gradient(from 18deg,transparent 0 8%,color-mix(in srgb,var(--launch-core) 82%,white) 11% 15%,transparent 18% 36%,var(--launch-glow) 40% 45%,transparent 49% 68%,color-mix(in srgb,var(--launch-core) 72%,white) 72% 77%,transparent 81% 100%);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  opacity:.76;animation:roomPortalRimDrift 4.8s linear infinite;
+}
+.launch-portal-front{
+  position:absolute;z-index:5;box-sizing:border-box;left:50%;top:22px;width:112px;height:112px;
+  border:5px solid color-mix(in srgb,var(--launch-glow) 66%,var(--launch-rim));border-radius:50%;
+  opacity:0;transform:translateX(-50%) scale(.05);transform-origin:50% 50%;pointer-events:none;
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--launch-core) 72%,white),0 0 8px var(--launch-glow),0 0 20px color-mix(in srgb,var(--launch-glow) 42%,transparent);
+}
+
+#homeScreen .slime-stage.portal-ready:not(.launch-opening) .launch-portal{animation:roomPortalReadyAppear .56s cubic-bezier(.2,.82,.25,1.12) both}
+#homeScreen .slime-stage.portal-ready:not(.launch-opening) .launch-portal-front{animation:roomPortalReadyAppear .56s cubic-bezier(.2,.82,.25,1.12) both}
+#homeScreen .slime-stage.launch-charging:not(.launch-opening) .launch-portal{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--launch-glow) 72%,transparent)) drop-shadow(0 0 22px color-mix(in srgb,var(--launch-glow) 38%,transparent))}
+#homeScreen .slime-stage.launch-opening .launch-portal{animation:roomPortalCapture .96s ease-in both}
+#homeScreen .slime-stage.launch-opening .launch-portal-front{animation:roomPortalCapture .96s ease-in both}
+#homeScreen .slime-stage.launch-opening .launch-portal-core,
+#homeScreen .slime-stage.launch-opening .launch-portal-rim::before{
+  animation:none!important;
+  filter:none!important;
+}
+#homeScreen .slime-stage.launch-opening .slime{
+  pointer-events:none!important;transform-origin:50% 35%!important;animation:roomLaunchSlime .96s linear both!important;
+}
+body.room-launch-active #homeScreen{pointer-events:none}
+body.room-launch-active #homeScreen .stomach-rail,
+body.room-launch-active #homeScreen .recipe-rail,
+body.room-launch-active #homeScreen>.card.conveyor,
+body.room-launch-active #homeScreen>.play-setup-card{filter:none;opacity:1}
+body.room-launch-active #homeScreen .conveyor-controls .reroll-btn:disabled{
+  opacity:1!important;
+  filter:none!important;
+}
+
+body.portal-arrival #dropScreen.active .shaft{animation:portalShaftArrival .34s ease-out both}
+body.portal-arrival #dropScreen.active .run-route{animation:portalRouteArrival .3s .08s ease-out both}
+
+@keyframes roomSlimeStand{
+  0%,100%{transform:translateY(0) scale(1)}
+  46%{transform:translateY(0) scaleX(.992) scaleY(1.008)}
+  54%{transform:translateY(0) scaleX(1.008) scaleY(.992)}
+}
+@keyframes roomLaunchSlime{
+  0%{opacity:1;filter:none;transform:rotate(0) scale(1)}
+  12%{opacity:1;filter:brightness(1.05);transform:rotate(-5deg) scaleX(1.06) scaleY(.94)}
+  22%{opacity:1;filter:none;transform:rotate(0) scale(1);animation-timing-function:cubic-bezier(.34,.03,.9,.38)}
+  80%{opacity:.94;filter:drop-shadow(0 0 11px color-mix(in srgb,var(--launch-core) 88%,transparent)) brightness(1.16);transform:translateY(-26px) rotate(500deg) scale(.055)}
+  86%,100%{opacity:0;filter:none;transform:translateY(-28px) rotate(540deg) scale(.008)}
+}
+@keyframes roomPortalReadyAppear{
+  0%{opacity:0;transform:translateX(-50%) scale(.05)}
+  42%{opacity:.88;transform:translateX(-50%) scale(.72)}
+  76%{opacity:1;transform:translateX(-50%) scale(1.055)}
+  100%{opacity:1;transform:translateX(-50%) scale(1)}
+}
+@keyframes roomPortalCapture{
+  0%{opacity:1;transform:translateX(-50%) scale(1)}
+  20%{opacity:1;transform:translateX(-50%) scale(1.025)}
+  64%{opacity:1;transform:translateX(-50%) scale(1.045)}
+  100%{opacity:1;transform:translateX(-50%) scale(.98)}
+}
+@keyframes roomPortalSuction{
+  0%{opacity:0;transform:scale(1.02)}
+  24%{opacity:.62}
+  100%{opacity:0;transform:scale(.16)}
+}
+@keyframes roomPortalWorldPulse{to{filter:brightness(1.1) saturate(1.08);transform:scale(1.025)}}
+@keyframes roomPortalDepthPulse{to{opacity:.84;transform:scale(.78)}}
+@keyframes roomPortalRimDrift{to{transform:rotate(360deg)}}
+@keyframes portalShaftArrival{
+  from{opacity:.72;filter:brightness(1.24) saturate(1.12);transform:translateY(-4px)}
+  to{opacity:1;filter:none;transform:none}
+}
+@keyframes portalRouteArrival{
+  from{opacity:.82;transform:translateY(-3px)}
+  to{opacity:1;transform:none}
+}
+
+@media(max-width:370px){
+  .launch-portal,.launch-portal-front{top:20px;width:108px;height:108px}
+}
+@media(prefers-reduced-motion:reduce){
+  #homeScreen .slime-stage.launch-opening .slime{animation:roomLaunchSlime .16s ease-in both!important}
+  #homeScreen .slime-stage.launch-opening .launch-portal{animation:roomPortalCapture .16s ease-out both!important}
+  #homeScreen .slime-stage.launch-opening .launch-portal-front{animation:roomPortalCapture .16s ease-out both!important}
+  .launch-portal-depth,.launch-portal-core:after{animation:none!important}
+  body.portal-arrival #dropScreen.active .shaft,
+  body.portal-arrival #dropScreen.active .run-route{animation-duration:.12s!important}
+}
+
+body[data-screen="home"] .world-summary .research-wallet{order:1!important;margin-right:auto!important}
+body[data-screen="home"] .world-summary .currency.coin-wallet{order:2!important;margin-right:0!important}
+body[data-screen="home"] .world-summary .header-rewards-btn{order:3!important}
+body[data-screen="home"] .world-summary .header-admin-btn{order:4!important}
+
+/* V21: лаборатория мутаций и более читаемая шкала исследования. */
+.research-wallet{padding-left:39px;background:linear-gradient(180deg,#f8fff9,#d7f4df);border-color:#244f4b}
+.research-wallet-flask{left:-3px}
+.research-wallet-track{
+  height:15px;border-color:#234e49;background:linear-gradient(180deg,#a9c9bd,#d9ece4);
+  box-shadow:inset 0 3px 4px rgba(20,67,53,.34),0 1px 0 #fff;
+}
+.research-wallet-track>i{
+  background:linear-gradient(90deg,#068f50,#20cc69 55%,#b6f044);
+  box-shadow:inset 0 2px rgba(255,255,255,.42),0 0 6px rgba(17,194,93,.72);
+}
+.research-wallet-track:after{background:rgba(255,255,255,.58)}
+.research-wallet-flask>b{
+  right:-2px;bottom:-2px;min-width:21px;height:21px;border-color:#173f39;background:linear-gradient(#178f54,#087644);
+  color:#fff;text-shadow:0 1px 0 #075132;box-shadow:0 2px 0 rgba(24,45,58,.32),inset 0 1px rgba(255,255,255,.34);
+}
+
+#homeScreen .mutation-lab-button img{width:51px!important;height:51px!important;transform:translateY(-2px);filter:drop-shadow(0 2px 1px rgba(31,49,69,.28))!important}
+#homeScreen .mutation-lab-button:active img{transform:translateY(0) scale(.96)}
+
+.mutation-lab-panel{display:grid;gap:10px;margin:0!important;padding:1px 1px 4px}
+.mutation-lab-note,.mutation-test-note{margin:0;text-align:center;color:#58717d;font-size:9px;line-height:1.35;font-weight:800}
+.mutation-test-note{font-size:7.5px;color:#768992}
+.mutation-capsule{
+  position:relative;width:100%;height:254px;display:grid;justify-items:center;align-content:start;gap:5px;padding:18px 16px 10px;
+  overflow:visible;border:3px solid #31566a;border-radius:25px;background:
+    radial-gradient(circle at 50% 42%,rgba(99,255,181,.26),transparent 40%),
+    linear-gradient(145deg,#e5f6ef,#b8ddd4 55%,#8ebdb5);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.9),inset 0 -8px 12px rgba(27,91,81,.14),0 4px 0 rgba(35,55,75,.2);
+  color:#183c49;cursor:pointer;isolation:isolate;
+}
+.mutation-capsule:before,.mutation-capsule:after{content:"";position:absolute;z-index:-1;top:45px;width:28px;height:145px;border:3px solid #31566a;background:linear-gradient(#6c9b9e,#426f76);box-shadow:inset 0 2px rgba(255,255,255,.3)}
+.mutation-capsule:before{left:15px;border-radius:14px 4px 4px 14px}.mutation-capsule:after{right:15px;border-radius:4px 14px 14px 4px}
+.mutation-machine-top{position:absolute;z-index:3;left:50%;top:5px;width:114px;height:24px;display:flex;justify-content:space-around;align-items:center;border:3px solid #31566a;border-radius:12px;background:linear-gradient(#8fb8b5,#527f82);transform:translateX(-50%);box-shadow:inset 0 2px rgba(255,255,255,.42)}
+.mutation-machine-top i{width:9px;height:9px;border:2px solid #254958;border-radius:50%;background:#78f098;box-shadow:0 0 7px #56ed88,inset 0 1px #fff}
+.mutation-machine-top i:nth-child(2){background:#f3d75c;box-shadow:0 0 7px #f4da5b}.mutation-machine-top i:nth-child(3){background:#71caff;box-shadow:0 0 7px #69c8ff}
+.mutation-glass{
+  position:relative;width:178px;height:181px;display:grid;justify-items:center;align-content:center;margin-top:9px;
+  border:4px solid #31566a;border-radius:42px 42px 32px 32px;background:
+    linear-gradient(105deg,rgba(255,255,255,.64) 8%,rgba(255,255,255,.08) 27%,rgba(69,230,162,.11) 72%,rgba(255,255,255,.45)),
+    linear-gradient(#d9f8f0,#92d8c4);
+  box-shadow:inset 10px 0 12px rgba(255,255,255,.38),inset -8px -6px 13px rgba(30,118,97,.22),0 3px 0 rgba(38,70,77,.17);
+}
+.mutation-glass:before{content:"";position:absolute;left:17px;top:21px;width:13px;height:92px;border-radius:99px;background:linear-gradient(rgba(255,255,255,.78),rgba(255,255,255,.08));transform:rotate(4deg)}
+.mutation-mystery{position:relative;z-index:2;width:91px;height:91px;display:grid;place-items:center;border:4px solid #31566a;border-radius:50%;background:radial-gradient(circle at 38% 31%,#fff,#e3f1ed 47%,#9fc8bf);box-shadow:0 4px 0 rgba(32,70,75,.24),0 0 18px rgba(82,244,161,.38)}
+.mutation-mystery>i{color:#31566a;font-size:50px;line-height:1;font-style:normal;font-weight:1000;text-shadow:0 3px #fff}
+.mutation-mystery>img{width:103px;height:103px;object-fit:contain;filter:drop-shadow(0 4px 2px rgba(22,45,68,.3))}
+.mutation-cost{position:absolute;z-index:4;right:12px;top:14px;min-width:53px;height:35px;display:flex;align-items:center;justify-content:center;padding:1px 7px 1px 2px;border:3px solid #274e51;border-radius:18px;background:#effff2;box-shadow:0 3px 0 rgba(34,66,69,.22),inset 0 2px #fff}
+.mutation-cost img{width:31px;height:31px;object-fit:contain;margin-left:-4px}.mutation-cost b{min-width:15px;color:#0a6d43;font-size:17px;font-weight:1000;text-shadow:0 1px #fff}
+.mutation-progress-track{position:absolute;z-index:3;left:15px;right:15px;bottom:13px;height:16px;overflow:hidden;border:3px solid #284e55;border-radius:99px;background:#aec7c1;box-shadow:inset 0 3px 4px rgba(34,78,69,.33),0 1px #fff}
+.mutation-progress-track>i{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#078d51,#20d06c 60%,#d0f14d);box-shadow:inset 0 2px rgba(255,255,255,.46),0 0 8px rgba(38,225,112,.72);transition:width .4s cubic-bezier(.2,.78,.22,1)}
+.mutation-capsule-hint{height:21px;display:grid;place-items:center;color:#224b56;font-size:8px;font-weight:1000;letter-spacing:.55px}
+.mutation-capsule:not(:disabled):active{transform:translateY(2px);box-shadow:inset 0 3px 0 rgba(255,255,255,.9),inset 0 -6px 10px rgba(27,91,81,.14),0 2px 0 rgba(35,55,75,.2)}
+.mutation-capsule:disabled{opacity:1!important;filter:none!important;cursor:default}
+.mutation-capsule.needs-research{animation:mutationNoResearch .34s ease both}.mutation-capsule.received-research .mutation-glass{animation:mutationCapsuleBump .34s cubic-bezier(.2,.8,.2,1.2)}
+.mutation-invest-flask{position:absolute;z-index:12;left:50%;top:-33px;width:48px;height:48px;object-fit:contain;pointer-events:none;transform:translateX(-50%)}
+.mutation-capsule.is-investing .mutation-invest-flask{animation:mutationFlaskDrop .43s cubic-bezier(.2,.72,.28,1) both}
+.mutation-capsule.is-revealing .mutation-mystery{animation:mutationMysteryCharge .72s ease-in-out infinite}.mutation-capsule.is-revealing .mutation-machine-top i{animation:mutationLamp .28s ease-in-out infinite alternate}
+.mutation-mystery.is-discovered{animation:mutationDiscovered .48s cubic-bezier(.18,.78,.2,1.25)!important;background:#fff;box-shadow:0 4px 0 rgba(32,70,75,.24),0 0 28px #71f2a4}
+.mutation-unlock-flyer{position:absolute!important;z-index:20!important;inset:-6px!important;width:103px!important;height:103px!important;animation:mutationFlyToShelf .62s cubic-bezier(.3,.02,.2,1) both!important;pointer-events:none}
+.mutation-collection-head{display:flex;align-items:center;justify-content:space-between;padding:1px 4px;color:#355465;font-size:8px;letter-spacing:.55px}.mutation-collection-head span{display:grid;place-items:center;min-width:30px;height:19px;border:2px solid #446474;border-radius:10px;background:#e9f5f0;color:#1b7c50;font-weight:1000}
+.mutation-collection{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.mutation-collection-slot{position:relative;min-width:0;height:92px;display:grid;grid-template-rows:67px 15px;place-items:center;padding:4px;border:3px solid #59717d;border-radius:16px;background:linear-gradient(#f7fbfa,#d8e6e2);box-shadow:inset 0 2px #fff,0 3px 0 rgba(35,58,70,.15)}
+.mutation-collection-slot img{width:67px;height:67px;object-fit:contain;filter:drop-shadow(0 2px 1px rgba(24,45,66,.25))}.mutation-collection-slot b{max-width:100%;overflow:hidden;color:#344f5d;font-size:7px;letter-spacing:.55px;text-overflow:ellipsis;white-space:nowrap}
+.mutation-collection-slot.locked{border-style:dashed;filter:saturate(.45);opacity:.72}.mutation-collection-slot.locked i{width:52px;height:52px;display:grid;place-items:center;border:3px solid #718993;border-radius:50%;background:#cbdad6;color:#627984;font-size:29px;font-style:normal;font-weight:1000}
+.mutation-collection-slot.unlocked{border-color:#2c7053;background:linear-gradient(#f4fff6,#c8efd4)}.mutation-collection-slot.just-unlocked{animation:mutationShelfUnlock .7s cubic-bezier(.18,.8,.22,1.25)}
+.mutation-capsule.is-complete .mutation-glass{background:linear-gradient(105deg,rgba(255,255,255,.65),rgba(93,235,158,.34)),linear-gradient(#d9f8f0,#83d8b6)}
+
+@keyframes mutationNoResearch{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}62%{transform:translateX(-4px)}82%{transform:translateX(2px)}}
+@keyframes mutationFlaskDrop{0%{opacity:0;transform:translate(-50%,-17px) scale(.7) rotate(-14deg)}22%{opacity:1;transform:translate(-50%,0) scale(1.08) rotate(8deg)}78%{opacity:1;transform:translate(-50%,118px) scale(.75) rotate(-5deg)}100%{opacity:0;transform:translate(-50%,139px) scale(.35)}}
+@keyframes mutationCapsuleBump{35%{transform:scale(1.035);filter:brightness(1.12)}70%{transform:scale(.985)}100%{transform:none}}
+@keyframes mutationMysteryCharge{0%,100%{transform:rotate(-4deg) scale(.96);box-shadow:0 4px 0 rgba(32,70,75,.24),0 0 14px #51d985}50%{transform:rotate(5deg) scale(1.09);box-shadow:0 4px 0 rgba(32,70,75,.24),0 0 34px #b6ff64}}
+@keyframes mutationLamp{to{filter:brightness(1.55);transform:scale(1.25)}}
+@keyframes mutationDiscovered{0%{transform:scale(.2) rotate(-120deg);opacity:0}55%{transform:scale(1.18) rotate(7deg);opacity:1}100%{transform:none}}
+@keyframes mutationFlyToShelf{0%{opacity:1;transform:none}72%{opacity:1;transform:translate(var(--mutation-fly-x),var(--mutation-fly-y)) scale(.58) rotate(10deg)}100%{opacity:0;transform:translate(var(--mutation-fly-x),var(--mutation-fly-y)) scale(.48)}}
+@keyframes mutationShelfUnlock{0%{transform:scale(.7);filter:brightness(1.6)}55%{transform:scale(1.12);box-shadow:0 0 22px #65e995}100%{transform:none}}
+
+@media(max-width:370px){
+  .mutation-capsule{height:232px;padding-top:15px}.mutation-glass{width:158px;height:163px}.mutation-mystery{width:82px;height:82px}.mutation-mystery>img{width:92px;height:92px}.mutation-progress-track{bottom:10px}.mutation-collection-slot{height:82px;grid-template-rows:58px 14px}.mutation-collection-slot img{width:58px;height:58px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .mutation-invest-flask,.mutation-capsule.is-revealing .mutation-mystery,.mutation-capsule.is-revealing .mutation-machine-top i,.mutation-mystery.is-discovered,.mutation-unlock-flyer,.mutation-collection-slot.just-unlocked{animation-duration:.08s!important;animation-iteration-count:1!important}
+}
+
+/* V22: быстрые вклады, шесть компактных ячеек и рабочий цикл аппарата. */
+#panelTitle:has(.mutation-panel-balance){width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel-modal:has(.mutation-lab-panel){position:relative}.panel-content:has(.mutation-lab-panel){max-height:none;overflow:hidden}
+.mutation-panel-balance{height:34px;display:flex;align-items:center;gap:2px;padding:1px 10px 1px 3px;border:2px solid #2d5855;border-radius:18px;background:linear-gradient(#f7fff7,#ccefd7);box-shadow:inset 0 2px #fff,0 2px 0 rgba(35,65,71,.18)}
+.mutation-panel-balance img{width:31px;height:31px;object-fit:contain}.mutation-panel-balance b{min-width:20px;color:#086c42;font-size:13px;font-weight:1000;text-align:center;text-shadow:0 1px #fff}
+.mutation-lab-panel{gap:8px}
+.mutation-capsule{height:236px;padding-top:16px}
+.mutation-glass{height:166px;margin-top:11px}
+.mutation-capsule:before,.mutation-capsule:after{z-index:1;transition:transform .28s cubic-bezier(.2,.8,.2,1),filter .2s,box-shadow .2s}
+.mutation-capsule.is-processing:before{transform:translateX(39px)}
+.mutation-capsule.is-processing:after{transform:translateX(-39px)}
+.mutation-machine-top i{background:#789098!important;box-shadow:inset 0 1px rgba(255,255,255,.38)!important;filter:saturate(.2) brightness(.84)}
+.mutation-capsule.is-processing .mutation-machine-top i{filter:none;animation:mutationWorkingLamp .42s steps(2,end) infinite!important}
+.mutation-capsule.is-processing .mutation-machine-top i:nth-child(1){background:#56e889!important;box-shadow:0 0 8px #39df73,inset 0 1px #fff!important;animation-delay:0s!important}
+.mutation-capsule.is-processing .mutation-machine-top i:nth-child(2){background:#ffd84f!important;box-shadow:0 0 8px #ffd84f,inset 0 1px #fff!important;animation-delay:.14s!important}
+.mutation-capsule.is-processing .mutation-machine-top i:nth-child(3){background:#60c7ff!important;box-shadow:0 0 8px #45bfff,inset 0 1px #fff!important;animation-delay:.28s!important}
+.mutation-capsule.is-processing .mutation-glass{animation:mutationMachineWork .12s linear infinite;box-shadow:inset 10px 0 12px rgba(255,255,255,.38),inset -8px -6px 13px rgba(30,118,97,.22),0 3px 0 rgba(38,70,77,.17),0 0 19px rgba(48,216,125,.48)}
+.mutation-capsule.is-processing .mutation-glass:after{content:"";position:absolute;z-index:1;inset:22px 25px 34px;border-radius:40%;background:radial-gradient(circle at 18% 88%,rgba(255,255,255,.86) 0 4px,transparent 5px),radial-gradient(circle at 70% 92%,rgba(86,238,159,.9) 0 5px,transparent 6px),radial-gradient(circle at 83% 66%,rgba(255,255,255,.74) 0 3px,transparent 4px),radial-gradient(circle at 35% 72%,rgba(67,218,147,.8) 0 4px,transparent 5px);animation:mutationBubbles .65s linear infinite}
+.mutation-impact{position:absolute;z-index:8;left:50%;top:49%;width:24px;height:24px;border:4px solid #7dff9a;border-radius:50%;opacity:0;transform:translate(-50%,-50%) scale(.25);pointer-events:none}
+.mutation-impact.is-visible{animation:mutationImpactBoom .34s ease-out both}
+.mutation-invest-flask{left:0;top:0;width:43px;height:43px;animation:mutationFlaskRapid .52s cubic-bezier(.18,.72,.2,1) both}
+.mutation-capsule.received-research .mutation-glass{animation:mutationCapsuleTap .2s cubic-bezier(.2,.8,.2,1.15)}
+.mutation-collection{grid-template-columns:repeat(3,64px);justify-content:space-between;gap:7px 12px;padding-inline:7px}
+.mutation-collection-slot{width:64px;height:64px;grid-template-rows:44px 12px;padding:3px;border-width:2px;border-radius:12px}
+.mutation-collection-slot img{width:44px;height:44px}.mutation-collection-slot b{font-size:6.2px;letter-spacing:.4px}
+.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:34px;height:34px;border-width:2px;font-size:20px}
+.mutation-collection-slot.future{border:2px dashed #92a39f;background:linear-gradient(#f4f8f7,#e4ece9);opacity:.55}.mutation-collection-slot.future i{display:grid;place-items:center;border:2px solid #91a49e;border-radius:50%;background:#dbe6e2;color:#839791;font-style:normal;font-weight:1000}
+.mutation-test-note{font-size:7px}
+
+@keyframes mutationFlaskRapid{0%{opacity:0;transform:translate(calc(var(--mutation-start-x) - 50%),calc(var(--mutation-start-y) - 50%)) scale(.58) rotate(-11deg)}18%{opacity:1;transform:translate(calc(var(--mutation-start-x) - 50%),calc(var(--mutation-start-y) - 50% - 9px)) scale(1.02) rotate(7deg)}78%{opacity:1;transform:translate(calc(var(--mutation-end-x) - 50%),calc(var(--mutation-end-y) - 50% - 7px)) scale(.72) rotate(-5deg)}100%{opacity:0;transform:translate(calc(var(--mutation-end-x) - 50%),calc(var(--mutation-end-y) - 50%)) scale(.24)}}
+@keyframes mutationImpactBoom{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}24%{opacity:1;transform:translate(-50%,-50%) scale(.65)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8);border-width:1px}}
+@keyframes mutationCapsuleTap{45%{transform:scale(1.025)}100%{transform:none}}
+@keyframes mutationMachineWork{0%{transform:translate(0,0)}25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,1px)}75%{transform:translate(1px,1px)}100%{transform:translate(-1px,-1px)}}
+@keyframes mutationWorkingLamp{0%,48%{opacity:.42;transform:scale(.86)}49%,100%{opacity:1;transform:scale(1.22)}}
+@keyframes mutationBubbles{from{transform:translateY(13px);opacity:.25}45%{opacity:.9}to{transform:translateY(-18px);opacity:0}}
+
+@media(max-width:370px){
+  .mutation-capsule{height:220px}.mutation-glass{height:151px}.mutation-collection{grid-template-columns:repeat(3,58px);padding-inline:4px}.mutation-collection-slot{width:58px;height:58px;grid-template-rows:39px 11px}.mutation-collection-slot img{width:39px;height:39px}.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:31px;height:31px}
+}
+
+/* V29: девять контрастных ячеек мутаций, включая три стартовые формы. */
+#panelTitle:has(.mutation-panel-balance)>span:first-child{
+  color:#183f50;font-size:22px;line-height:1;font-weight:1000;letter-spacing:.2px;text-shadow:0 1px #fff;
+}
+.mutation-panel-balance{min-width:68px;height:38px!important;padding-right:11px!important;border-width:3px!important;box-shadow:inset 0 2px #fff,0 3px 0 rgba(35,65,71,.2)!important}
+.mutation-panel-balance img{width:34px!important;height:34px!important}.mutation-panel-balance b{font-size:16px!important;color:#075d3b!important;text-shadow:0 1px #fff!important}
+.mutation-collection-head{padding:4px 5px 2px!important;color:#183f50!important;font-size:11px!important;letter-spacing:.7px!important;font-weight:1000}
+.mutation-collection-head>b{font-size:11px;font-weight:1000;text-shadow:0 1px #fff}
+.mutation-collection-head span{min-width:38px!important;height:23px!important;border:3px solid #315a62!important;border-radius:13px!important;background:linear-gradient(#f5fff9,#ccebd8)!important;color:#086e47!important;font-size:11px!important;box-shadow:inset 0 1px #fff,0 2px 0 rgba(30,59,69,.16)}
+.mutation-collection{grid-template-columns:repeat(3,76px)!important;justify-content:space-between!important;gap:8px 12px!important;padding:1px 5px 3px!important}
+.mutation-collection-slot{width:76px!important;height:78px!important;grid-template-rows:55px 15px!important;padding:3px!important;border:3px solid #456675!important;border-radius:14px!important;background:linear-gradient(155deg,#fbfffe,#d6e8e3)!important;box-shadow:inset 0 2px #fff,0 3px 0 rgba(30,55,67,.2)!important}
+.mutation-collection-slot img{width:54px!important;height:54px!important;filter:drop-shadow(0 2px 1px rgba(19,41,61,.34))!important}
+.mutation-collection-slot b{max-width:70px!important;color:#203f4d!important;font-size:8.4px!important;line-height:1!important;font-weight:1000!important;letter-spacing:.25px!important;text-align:center;text-overflow:clip!important;text-shadow:0 1px #fff}
+.mutation-collection-slot.unlocked{border-color:#24704f!important;background:linear-gradient(155deg,#f5fff7,#bfeacf)!important;box-shadow:inset 0 2px #fff,0 3px 0 rgba(31,101,72,.24),0 0 0 1px rgba(42,150,98,.12)!important}
+.mutation-collection-slot.starter{background:linear-gradient(155deg,#f8fff5,#c9edc9)!important}
+.mutation-collection-slot.locked,.mutation-collection-slot.future{border:3px dashed #82959b!important;background:linear-gradient(155deg,#edf2f1,#ced8d6)!important;filter:none!important;opacity:1!important;box-shadow:inset 0 2px rgba(255,255,255,.68),0 3px 0 rgba(49,68,74,.14)!important}
+.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:43px!important;height:43px!important;border:3px solid #89999e!important;background:linear-gradient(#e7eceb,#c6d0ce)!important;color:#667980!important;font-size:27px!important;text-shadow:0 1px #fff;box-shadow:inset 0 2px rgba(255,255,255,.58)}
+.mutation-collection-slot.locked b,.mutation-collection-slot.future b{color:#687c83!important;font-size:9px!important;letter-spacing:.8px!important}
+.panel-content:has(.mutation-lab-panel){padding-bottom:4px!important}
+.mutation-lab-panel{gap:6px!important}
+.mutation-lab-note{font-size:8px!important}
+.mutation-capsule{height:194px!important;padding-top:12px!important}
+.mutation-capsule:before,.mutation-capsule:after{top:38px!important;height:116px!important}
+.mutation-machine-top{top:3px!important;height:22px!important}
+.mutation-glass{width:164px!important;height:129px!important;margin-top:9px!important;border-radius:36px 36px 27px 27px!important}
+.mutation-glass:before{top:17px!important;height:67px!important}
+.mutation-mystery{width:72px!important;height:72px!important}.mutation-mystery>i{font-size:42px!important}.mutation-mystery>img{width:82px!important;height:82px!important}
+.mutation-cost{top:10px!important;right:9px!important;height:31px!important}.mutation-cost img{width:28px!important;height:28px!important}.mutation-cost b{font-size:15px!important}
+.mutation-progress-track{bottom:9px!important;height:13px!important}
+.mutation-capsule-hint{height:17px!important;font-size:7.6px!important}
+.mutation-collection{gap:6px 12px!important}
+.mutation-collection-slot{height:66px!important;grid-template-rows:45px 13px!important}
+.mutation-collection-slot img{width:44px!important;height:44px!important}
+.mutation-collection-slot b{font-size:8.2px!important}.mutation-collection-slot.long-name b{font-size:7.2px!important;letter-spacing:0!important}
+.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:37px!important;height:37px!important;font-size:24px!important}
+.mutation-collection-slot.locked b,.mutation-collection-slot.future b{font-size:8.5px!important}
+
+@media(max-width:370px){
+  .mutation-collection{grid-template-columns:repeat(3,68px)!important;gap:5px 8px!important;padding-inline:2px!important}
+  .mutation-collection-slot{width:68px!important;height:62px!important;grid-template-rows:42px 12px!important}
+  .mutation-collection-slot img{width:41px!important;height:41px!important}.mutation-collection-slot b{max-width:63px!important;font-size:7.6px!important}
+  .mutation-collection-slot.long-name b{font-size:6.7px!important}.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:34px!important;height:34px!important;font-size:22px!important}
+}
+
+/* V30: высокий мутационный реактор с жидкостью вместо полосы прогресса. */
+.panel-modal:has(.mutation-lab-panel){width:min(100%,500px);max-height:calc(100dvh - 10px);padding:13px 15px 9px}
+.panel-content:has(.mutation-lab-panel){max-height:none!important;overflow:visible!important;padding:0 2px 3px!important}
+.mutation-lab-panel{gap:7px!important;margin:0!important;padding:0 0 2px!important}
+.mutation-capsule{
+  height:278px!important;padding:39px 12px 8px!important;gap:4px!important;overflow:visible!important;border:4px solid #294f62!important;border-radius:31px!important;
+  background:radial-gradient(circle at 50% 45%,rgba(223,255,247,.94) 0 33%,rgba(163,221,207,.7) 60%,transparent 61%),linear-gradient(145deg,#dff3ed,#a8d2ca 62%,#79aaa7)!important;
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.88),inset 0 -10px 14px rgba(32,93,91,.17),0 4px 0 rgba(30,52,66,.24)!important;
+}
+.mutation-capsule:before,.mutation-capsule:after{display:none!important}
+.mutation-machine-top{top:4px!important;width:128px!important;height:24px!important;border:3px solid #294f62!important;border-radius:13px!important;background:linear-gradient(#8eb6b5,#557f84)!important;box-shadow:inset 0 2px rgba(255,255,255,.42),0 2px 0 rgba(33,61,73,.16)!important}
+.mutation-machine-top i{width:9px!important;height:9px!important}
+.mutation-inlet{position:absolute;z-index:7;left:50%;top:25px;width:56px;height:24px;display:grid;place-items:center;border:3px solid #294f62;border-radius:8px 8px 15px 15px;background:linear-gradient(#71999b,#426c75);transform:translateX(-50%);box-shadow:inset 0 2px rgba(255,255,255,.28)}
+.mutation-inlet i{width:34px;height:7px;border:2px solid #244653;border-radius:99px;background:#173643;box-shadow:inset 0 2px rgba(0,0,0,.25),0 1px rgba(255,255,255,.25)}
+.mutation-glass{
+  position:relative!important;width:202px!important;height:202px!important;margin:0!important;overflow:visible;border:7px solid #294f62!important;border-radius:50%!important;
+  background:radial-gradient(circle at 38% 29%,rgba(255,255,255,.98),rgba(222,247,240,.8) 32%,rgba(155,209,199,.58) 74%,rgba(85,147,145,.5))!important;
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.68),inset 0 -10px 18px rgba(31,111,101,.18),0 5px 0 rgba(31,63,73,.25),0 0 0 3px rgba(142,196,188,.52)!important;
+  isolation:isolate;
+}
+.mutation-liquid-chamber{position:absolute;z-index:0;inset:4px;overflow:hidden;border-radius:50%;pointer-events:none}
+.mutation-liquid{
+  position:absolute;left:-4%;right:-4%;bottom:-2px;min-height:0;border-radius:0 0 48% 48%;
+  background:linear-gradient(90deg,#15a96a,#32d982 58%,#b9eb52);box-shadow:inset 0 8px 12px rgba(222,255,189,.32),0 -3px 10px rgba(52,220,123,.44);
+  transition:height .48s cubic-bezier(.18,.78,.2,1.08);transform-origin:50% 100%;
+}
+.mutation-liquid:before{content:"";position:absolute;left:-7%;top:-8px;width:114%;height:17px;border-radius:50%;background:linear-gradient(#c8f47a,#32db7c 58%,#129a62);box-shadow:0 -2px 5px rgba(223,255,202,.7);animation:reactorSurface 2.2s ease-in-out infinite alternate}
+.mutation-liquid>i{position:absolute;bottom:-16px;width:8px;height:8px;border:2px solid rgba(231,255,220,.8);border-radius:50%;background:rgba(255,255,255,.2);animation:reactorBubble 2.8s linear infinite}
+.mutation-liquid>i:nth-child(1){left:12%;animation-delay:-.3s}.mutation-liquid>i:nth-child(2){left:29%;width:5px;height:5px;animation-delay:-1.8s}.mutation-liquid>i:nth-child(3){left:45%;width:11px;height:11px;animation-delay:-1s}.mutation-liquid>i:nth-child(4){left:61%;width:6px;height:6px;animation-delay:-2.3s}.mutation-liquid>i:nth-child(5){left:76%;width:9px;height:9px;animation-delay:-.8s}.mutation-liquid>i:nth-child(6){left:88%;width:5px;height:5px;animation-delay:-2s}
+.mutation-glass:before{content:""!important;position:absolute!important;z-index:5!important;left:31px!important;top:23px!important;width:17px!important;height:84px!important;border-radius:99px!important;background:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.06))!important;transform:rotate(15deg)!important;pointer-events:none}
+.mutation-glass:after{content:"";position:absolute;z-index:6;inset:5px;border:2px solid rgba(255,255,255,.48);border-radius:50%;pointer-events:none}
+.mutation-mystery{z-index:4!important;width:70px!important;height:70px!important;border:4px solid #294f62!important;background:radial-gradient(circle at 38% 28%,#fff,#e9f5f1 48%,#aacbc4)!important;box-shadow:0 4px 0 rgba(31,66,75,.25),0 0 18px rgba(77,231,151,.38)!important}
+.mutation-mystery>i{font-size:28px!important;color:#214959!important;text-shadow:0 2px #fff!important}.mutation-mystery>img{width:78px!important;height:78px!important}
+.mutation-impact{z-index:3!important;top:50%!important;width:34px!important;height:34px!important;border-color:#d8ff85!important}
+.mutation-capsule-hint{height:18px!important;color:#193f4d!important;font-size:8px!important;letter-spacing:.48px!important;text-shadow:0 1px rgba(255,255,255,.7)}
+.mutation-capsule.received-research .mutation-glass{animation:reactorTap .32s cubic-bezier(.2,.78,.22,1.15)!important}
+.mutation-liquid.is-splashing{animation:reactorLiquidKick .48s cubic-bezier(.2,.8,.2,1)}
+.mutation-capsule.is-processing{animation:reactorBodyWork .15s linear infinite!important}
+.mutation-capsule.is-processing .mutation-glass{animation:none!important;box-shadow:inset 0 0 0 4px rgba(255,255,255,.72),inset 0 -10px 18px rgba(31,111,101,.2),0 5px 0 rgba(31,63,73,.25),0 0 25px rgba(66,231,142,.75)!important}
+.mutation-capsule.is-processing .mutation-glass:after{inset:-5px!important;border:4px solid rgba(196,255,153,.72)!important;animation:reactorHalo .55s ease-in-out infinite alternate!important;background:none!important}
+.mutation-capsule.is-processing .mutation-liquid{height:104%!important;filter:saturate(1.2) brightness(1.05);animation:reactorChurn .24s ease-in-out infinite alternate}
+.mutation-capsule.is-processing .mutation-liquid:before{height:25px;top:-11px;animation-duration:.25s}
+.mutation-capsule.is-processing .mutation-liquid>i{animation-duration:.62s}
+.mutation-capsule.is-processing .mutation-mystery:not(.is-discovered){animation:reactorCoreSink .55s ease-in both!important}
+.mutation-capsule.has-result{animation:none!important}.mutation-capsule.has-result .mutation-liquid{height:27%!important;transition:height .48s cubic-bezier(.22,.72,.2,1)!important;animation:none!important;filter:none}
+.mutation-capsule.has-result .mutation-glass:after{animation:reactorRevealHalo .42s ease-out both!important}
+.mutation-mystery.is-discovered{animation:reactorReveal .58s cubic-bezier(.16,.8,.22,1.22)!important;background:#fafffd!important;box-shadow:0 4px 0 rgba(31,66,75,.25),0 0 32px #7cff9e!important}
+.mutation-invest-flask{width:42px!important;height:42px!important;animation:mutationFlaskToReactor .66s cubic-bezier(.2,.72,.22,1) both!important;filter:drop-shadow(0 4px 2px rgba(25,65,62,.28))}
+.mutation-unlock-flyer{inset:-5px!important;width:78px!important;height:78px!important}
+
+.mutation-collection{grid-template-columns:repeat(3,64px)!important;justify-content:space-around!important;gap:6px 10px!important;padding:0 8px 2px!important}
+.mutation-collection-slot{width:64px!important;height:59px!important;grid-template-rows:40px 12px!important;padding:3px!important;border-width:2px!important;border-radius:12px!important}
+.mutation-collection-slot img{width:40px!important;height:40px!important}.mutation-collection-slot b{max-width:59px!important;font-size:7.4px!important}.mutation-collection-slot.long-name b{font-size:6.3px!important}
+.mutation-collection-slot.locked,.mutation-collection-slot.future{grid-template-rows:1fr!important;border-width:2px!important}
+.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:40px!important;height:40px!important;border-width:2px!important;font-size:25px!important}
+.mutation-collection-head{padding:2px 7px 1px!important}
+
+@keyframes mutationFlaskToReactor{
+  0%{opacity:0;transform:translate(calc(var(--mutation-start-x) - 50%),calc(var(--mutation-start-y) - 50%)) scale(.62) rotate(-13deg)}
+  14%{opacity:1;transform:translate(calc(var(--mutation-start-x) - 50%),calc(var(--mutation-start-y) - 50% - 7px)) scale(1.06) rotate(7deg)}
+  55%{opacity:1;transform:translate(calc(var(--mutation-mid-x) - 50%),calc(var(--mutation-mid-y) - 50%)) scale(.94) rotate(-8deg)}
+  84%{opacity:1;transform:translate(calc(var(--mutation-end-x) - 50%),calc(var(--mutation-end-y) - 50% - 7px)) scale(.72) rotate(3deg)}
+  100%{opacity:0;transform:translate(calc(var(--mutation-end-x) - 50%),calc(var(--mutation-end-y) - 50% + 7px)) scale(.18) rotate(0)}
+}
+@keyframes reactorSurface{from{transform:translateX(-3%) rotate(-1deg) scaleX(.98)}to{transform:translateX(3%) rotate(1deg) scaleX(1.02)}}
+@keyframes reactorBubble{0%{transform:translateY(0) scale(.65);opacity:0}18%{opacity:.78}88%{opacity:.55}100%{transform:translateY(-165px) scale(1.12);opacity:0}}
+@keyframes reactorLiquidKick{0%,100%{transform:scaleY(1)}35%{transform:scaleY(1.07) translateY(-3px)}62%{transform:scaleY(.985)}}
+@keyframes reactorTap{0%,100%{transform:none}42%{transform:scale(1.025)}72%{transform:scale(.99)}}
+@keyframes reactorBodyWork{0%,100%{transform:translate(0,0)}25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,1px)}75%{transform:translate(1px,1px)}}
+@keyframes reactorChurn{from{transform:scaleY(1.015) translateX(-2px)}to{transform:scaleY(.985) translateX(2px)}}
+@keyframes reactorCoreSink{0%{opacity:1;transform:scale(1)}65%{opacity:.35;transform:translateY(17px) scale(.76)}100%{opacity:0;transform:translateY(28px) scale(.42)}}
+@keyframes reactorHalo{from{opacity:.35;transform:scale(.98)}to{opacity:1;transform:scale(1.035)}}
+@keyframes reactorReveal{0%{opacity:0;transform:scale(.18);filter:brightness(2) blur(5px)}58%{opacity:1;transform:scale(1.16);filter:brightness(1.35) blur(0)}100%{opacity:1;transform:scale(1);filter:none}}
+@keyframes reactorRevealHalo{0%{opacity:1;transform:scale(.9);border-color:#ecff9a}100%{opacity:0;transform:scale(1.24);border-color:#75f7ae}}
+
+@media(max-width:370px){
+  .panel-modal:has(.mutation-lab-panel){padding-inline:12px}.mutation-capsule{height:260px!important;padding-top:37px!important}.mutation-glass{width:187px!important;height:187px!important}
+  .mutation-collection{grid-template-columns:repeat(3,59px)!important;gap:5px 7px!important;padding-inline:2px!important}.mutation-collection-slot{width:59px!important;height:55px!important;grid-template-rows:37px 11px!important}.mutation-collection-slot img{width:37px!important;height:37px!important}.mutation-collection-slot b{font-size:6.8px!important}.mutation-collection-slot.long-name b{font-size:5.8px!important}.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:37px!important;height:37px!important}
+}
+
+/* V31: боковая загрузка, глубокое стекло и двухэтапное раскрытие мутации. */
+.mutation-capsule{height:300px!important;padding:43px 12px 8px!important;background:radial-gradient(circle at 43% 46%,rgba(232,255,250,.94) 0 34%,rgba(160,219,207,.68) 61%,transparent 62%),linear-gradient(145deg,#dcefeb,#a3cec7 62%,#72a4a5)!important}
+.mutation-machine-top{left:calc(50% - 28px)!important;top:7px!important;width:142px!important;background:linear-gradient(#a3c4c0,#628b8d 58%,#476f79)!important}
+.mutation-side-feed{position:absolute;z-index:9;right:17px;top:70px;width:66px;display:grid;justify-items:center;gap:7px;pointer-events:none}
+.mutation-side-feed .mutation-inlet{position:relative;left:auto;top:auto;width:58px;height:52px;display:grid;place-items:center;border:4px solid #294f62;border-radius:15px 8px 8px 15px;background:linear-gradient(145deg,#a9ccc5,#6f9b99 58%,#466e77);transform:none;box-shadow:inset 3px 3px rgba(255,255,255,.38),inset -4px -5px 6px rgba(29,73,77,.18),0 3px 0 rgba(31,59,70,.22)}
+.mutation-side-feed .mutation-inlet:before{content:"";position:absolute;left:-10px;width:13px;height:31px;border:3px solid #294f62;border-right:0;border-radius:9px 0 0 9px;background:#739c9b}
+.mutation-side-feed .mutation-inlet i{width:9px;height:31px;border:2px solid #244653;border-radius:99px;background:#163642;box-shadow:inset 2px 0 rgba(0,0,0,.24),0 0 0 3px rgba(201,234,226,.28)}
+.mutation-feed-count{display:flex;align-items:center;justify-content:center;gap:2px;min-width:58px;height:32px;color:#174556;text-shadow:0 1px #fff}
+.mutation-feed-count img{width:29px;height:29px;object-fit:contain;filter:drop-shadow(0 2px 1px rgba(27,65,63,.24))}.mutation-feed-count b{min-width:24px;font-size:17px;line-height:1;font-weight:1000;text-align:left}
+.mutation-glass{width:224px!important;height:224px!important;transform:translateX(-27px);border-width:8px!important;background:radial-gradient(circle at 35% 24%,rgba(255,255,255,.96),rgba(220,246,241,.78) 30%,rgba(143,202,195,.45) 72%,rgba(61,121,128,.42))!important;box-shadow:inset 0 0 0 5px rgba(255,255,255,.64),inset 10px 4px 20px rgba(255,255,255,.42),inset -13px -16px 24px rgba(23,86,92,.22),0 5px 0 rgba(31,63,73,.28),0 0 0 4px rgba(130,183,181,.58),0 0 20px rgba(39,106,111,.16)!important}
+.mutation-liquid-chamber{inset:7px;background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.25),transparent 45%),rgba(205,238,232,.22);box-shadow:inset 0 0 22px rgba(31,104,105,.16)}
+.mutation-liquid{left:-5%;right:-5%;bottom:-3px;background:linear-gradient(90deg,#087e60,#10b96b 46%,#59df68 74%,#c1ef4d);box-shadow:inset 0 11px 16px rgba(218,255,155,.24),0 -4px 11px rgba(67,230,103,.62)}
+.mutation-liquid:before{top:-9px;height:19px;background:linear-gradient(#e3fa77,#5ee36a 52%,#0eaa68);box-shadow:0 -2px 7px rgba(223,255,162,.78)}
+.mutation-liquid>i{border-color:rgba(226,255,199,.9);background:rgba(194,255,156,.2);box-shadow:0 0 4px rgba(203,255,170,.34)}
+.mutation-glass:before{left:35px!important;top:25px!important;width:19px!important;height:99px!important;background:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.08))!important;box-shadow:13px -5px 0 -6px rgba(255,255,255,.52)}
+.mutation-glass:after{inset:7px;border:3px solid rgba(255,255,255,.44);box-shadow:inset 0 0 12px rgba(232,255,250,.36)}
+.mutation-mystery{opacity:0;transform:scale(.12);width:88px!important;height:88px!important;pointer-events:none;background:radial-gradient(circle at 38% 28%,#effff7,#94d8bb 55%,#2b8f76)!important;box-shadow:0 4px 0 rgba(31,66,75,.25),0 0 28px rgba(91,255,151,.58)!important}
+.mutation-mystery>i{font-size:42px!important}.mutation-mystery>img{width:96px!important;height:96px!important;object-position:center!important}
+.mutation-vortex{position:absolute;z-index:3;left:50%;top:50%;width:154px;height:154px;border-radius:50%;opacity:0;transform:translate(-50%,-50%) scale(1.5);background:repeating-conic-gradient(from 20deg,rgba(236,255,176,.95) 0 10deg,rgba(42,221,111,.75) 13deg 28deg,rgba(3,112,92,.86) 31deg 48deg);filter:blur(2px);box-shadow:0 0 26px rgba(119,255,125,.7);pointer-events:none}
+.mutation-impact{left:50%!important;top:50%!important}
+.mutation-capsule.is-processing .mutation-liquid{height:106%!important;animation:reactorFullBoil .18s ease-in-out infinite alternate!important}
+.mutation-capsule.is-processing .mutation-liquid:before{animation:reactorSurfaceBoil .18s ease-in-out infinite alternate!important}
+.mutation-capsule.is-processing .mutation-liquid>i{animation-duration:.48s!important}
+.mutation-capsule.is-forming-core .mutation-liquid{animation:reactorLiquidCollapse .95s cubic-bezier(.4,.02,.25,1) forwards!important}
+.mutation-capsule.is-forming-core .mutation-vortex{animation:reactorVortexForm .95s cubic-bezier(.3,.02,.22,1) forwards}
+.mutation-capsule.is-core-ready .mutation-liquid,.mutation-capsule.is-reveal-flash .mutation-liquid,.mutation-capsule.has-result .mutation-liquid{height:0!important;animation:none!important}
+.mutation-capsule.is-core-ready .mutation-mystery{opacity:1;transform:scale(1);pointer-events:auto;animation:reactorUnknownCore .9s ease-in-out infinite alternate!important}
+.mutation-capsule.is-core-ready .mutation-glass{box-shadow:inset 0 0 0 5px rgba(255,255,255,.7),inset 10px 4px 20px rgba(255,255,255,.42),inset -13px -16px 24px rgba(23,86,92,.22),0 5px 0 rgba(31,63,73,.28),0 0 0 4px rgba(130,183,181,.58),0 0 27px rgba(79,241,139,.46)!important}
+.mutation-capsule.is-reveal-flash .mutation-mystery{opacity:1;transform:scale(1);animation:reactorCoreTap .32s ease-out both!important}
+.mutation-capsule.is-reveal-flash .mutation-glass:after{animation:reactorTapFlash .38s ease-out both!important;border-color:#eaff9b!important}
+.mutation-capsule.has-result .mutation-mystery{opacity:1;transform:scale(1)}
+
+.mutation-prize{position:absolute;z-index:80;inset:-3px;display:grid;grid-template-rows:auto 190px auto auto;align-content:center;justify-items:center;gap:8px;padding:28px 18px;border:3px solid #294f62;border-radius:24px;background:radial-gradient(circle at 50% 43%,rgba(218,255,183,.98),rgba(74,196,131,.95) 38%,rgba(24,78,82,.96) 76%);color:#fff;opacity:0;pointer-events:none;transition:opacity .22s ease;box-shadow:inset 0 3px rgba(255,255,255,.35)}
+.mutation-prize.is-visible{opacity:1;pointer-events:auto}.mutation-prize small{font-size:12px;font-weight:1000;letter-spacing:1.1px;text-shadow:0 2px #174b4d}.mutation-prize>img{position:relative;z-index:2;width:184px;height:184px;object-fit:contain;object-position:center;filter:drop-shadow(0 9px 3px rgba(13,44,55,.3));transform-origin:center}.mutation-prize.is-visible>img{animation:mutationPrizeAppear .48s cubic-bezier(.16,.8,.2,1.2) both}.mutation-prize>b{font-size:24px;line-height:1;font-weight:1000;text-shadow:0 3px #174b4d}.mutation-prize>span{font-size:9px;font-weight:1000;letter-spacing:.55px;text-shadow:0 2px #174b4d}
+.mutation-prize.is-collecting{pointer-events:none;background:rgba(26,70,76,0);border-color:transparent;box-shadow:none;transition:background .45s,border-color .3s}.mutation-prize.is-collecting>:not(img){opacity:0;transition:opacity .16s}.mutation-prize.is-collecting>img{animation:none!important;transform:translate(var(--mutation-prize-x),var(--mutation-prize-y)) scale(var(--mutation-prize-scale));filter:drop-shadow(0 3px 2px rgba(13,44,55,.22));transition:transform .62s cubic-bezier(.3,.02,.2,1),filter .45s}
+
+.mutation-collection-slot{width:61px!important;height:56px!important;grid-template-rows:38px 11px!important}.mutation-collection-slot img{width:38px!important;height:38px!important;object-position:center!important}.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:38px!important;height:38px!important}.mutation-collection{grid-template-columns:repeat(3,61px)!important;gap:5px 10px!important}
+
+@keyframes reactorFullBoil{from{transform:translateX(-2px) scaleY(1.015)}to{transform:translateX(2px) scaleY(.985)}}
+@keyframes reactorSurfaceBoil{from{transform:translateX(-5%) rotate(-2deg) scaleY(.8)}to{transform:translateX(5%) rotate(2deg) scaleY(1.25)}}
+@keyframes reactorLiquidCollapse{0%{height:106%;transform:scale(1);filter:brightness(1)}38%{height:108%;transform:scale(1.02);filter:brightness(1.14)}100%{height:0;transform:scaleX(.24);filter:brightness(1.6)}}
+@keyframes reactorVortexForm{0%{opacity:0;transform:translate(-50%,-50%) scale(1.55) rotate(0);filter:blur(5px)}24%{opacity:.92}100%{opacity:0;transform:translate(-50%,-50%) scale(.34) rotate(680deg);filter:blur(0)}}
+@keyframes reactorUnknownCore{from{transform:scale(.97);box-shadow:0 4px 0 rgba(31,66,75,.25),0 0 17px rgba(91,255,151,.42)}to{transform:scale(1.035);box-shadow:0 4px 0 rgba(31,66,75,.25),0 0 34px rgba(187,255,104,.85)}}
+@keyframes reactorCoreTap{0%{opacity:1;transform:scale(1)}48%{opacity:1;transform:scale(.78);filter:brightness(2)}100%{opacity:0;transform:scale(1.55);filter:brightness(2.5)}}
+@keyframes reactorTapFlash{0%{opacity:0;transform:scale(.55)}35%{opacity:1}100%{opacity:0;transform:scale(1.2)}}
+@keyframes mutationPrizeAppear{0%{opacity:0;transform:scale(.18)}58%{opacity:1;transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
+
+@media(max-width:370px){
+  .mutation-capsule{height:282px!important;padding-top:42px!important}.mutation-glass{width:207px!important;height:207px!important;transform:translateX(-22px)}.mutation-side-feed{right:9px;top:70px;transform:scale(.9)}
+  .mutation-collection{grid-template-columns:repeat(3,56px)!important;gap:4px 7px!important}.mutation-collection-slot{width:56px!important;height:52px!important;grid-template-rows:35px 10px!important}.mutation-collection-slot img,.mutation-collection-slot.locked i,.mutation-collection-slot.future i{width:35px!important;height:35px!important}.mutation-collection-slot b{font-size:6.3px!important}.mutation-collection-slot.long-name b{font-size:5.5px!important}
+}
+
+/* V32: стабильная геометрия и более медленный, читаемый цикл синтеза. */
+.mutation-glass{transform:none!important;margin-right:54px!important}
+.mutation-side-feed .mutation-inlet{width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#c8e0da 0 20%,#759f9d 48%,#456f78 75%);box-shadow:inset 4px 4px 4px rgba(255,255,255,.36),inset -5px -6px 7px rgba(24,61,69,.28),0 3px 0 rgba(31,59,70,.23),0 0 0 3px rgba(173,211,202,.38)}
+.mutation-side-feed .mutation-inlet:before{left:50%;top:50%;width:36px;height:36px;border:3px solid #294f62;border-radius:50%;background:radial-gradient(circle,#102e39 0 34%,#244c58 37% 52%,#86ada6 56% 72%,#426b75 76%);transform:translate(-50%,-50%);box-shadow:inset 0 4px 5px rgba(0,0,0,.36),0 2px rgba(255,255,255,.24)}
+.mutation-side-feed .mutation-inlet i{position:relative;z-index:2;width:22px;height:22px;border:0;border-radius:50%;background:radial-gradient(circle at 50% 62%,#10242f,#071b24 72%);box-shadow:inset 0 3px 7px #000,0 0 0 2px rgba(155,205,193,.22)}
+.mutation-invest-flask{animation-duration:.86s!important;animation-timing-function:cubic-bezier(.22,.66,.2,1)!important}
+.mutation-capsule.is-pressurizing .mutation-liquid{height:106%!important;animation:reactorPressureRise .76s cubic-bezier(.16,.7,.2,1) both!important}
+.mutation-capsule.is-pressurizing .mutation-glass{box-shadow:inset 0 0 0 5px rgba(255,255,255,.64),inset 10px 4px 20px rgba(255,255,255,.42),inset -13px -16px 24px rgba(23,86,92,.22),0 5px 0 rgba(31,63,73,.28),0 0 0 4px rgba(130,183,181,.58),0 0 18px rgba(91,236,126,.34)!important}
+.mutation-capsule.is-pressurizing .mutation-machine-top i{filter:none!important;animation:reactorPressureLamp .76s ease both!important}
+.mutation-capsule.is-pressurizing .mutation-machine-top i:nth-child(1){background:#56e889!important;box-shadow:0 0 9px #39df73!important;animation-delay:0s!important}.mutation-capsule.is-pressurizing .mutation-machine-top i:nth-child(2){background:#ffd84f!important;box-shadow:0 0 9px #ffd84f!important;animation-delay:.12s!important}.mutation-capsule.is-pressurizing .mutation-machine-top i:nth-child(3){background:#60c7ff!important;box-shadow:0 0 9px #45bfff!important;animation-delay:.24s!important}
+.mutation-capsule.is-processing{animation:reactorBodyWork .28s linear infinite!important}
+.mutation-capsule.is-processing .mutation-liquid{animation-duration:.34s!important}.mutation-capsule.is-processing .mutation-liquid:before{animation-duration:.31s!important}.mutation-capsule.is-processing .mutation-liquid>i{animation-duration:.82s!important}
+.mutation-capsule.is-forming-core .mutation-liquid{animation-duration:1.7s!important}.mutation-capsule.is-forming-core .mutation-vortex{animation-duration:1.7s!important}
+.mutation-capsule.is-reveal-flash .mutation-mystery{animation-duration:.52s!important}
+.mutation-mystery.is-discovered{animation:reactorEmblemMaterialize .82s cubic-bezier(.16,.78,.2,1.16) both!important}
+.mutation-prize.is-visible>img{animation-duration:.72s!important}
+
+@keyframes reactorPressureRise{0%{transform:scaleY(1);filter:brightness(1)}48%{transform:scaleY(1.035) translateY(-3px);filter:brightness(1.1)}72%{transform:scaleY(.992);filter:brightness(1.04)}100%{transform:scaleY(1);filter:brightness(1)}}
+@keyframes reactorPressureLamp{0%,25%{opacity:.25;transform:scale(.75)}55%{opacity:1;transform:scale(1.28)}100%{opacity:.72;transform:scale(1)}}
+@keyframes reactorEmblemMaterialize{0%{opacity:0;transform:scale(.34);filter:blur(7px) brightness(2.2)}45%{opacity:.82;transform:scale(.82);filter:blur(2px) brightness(1.65)}76%{opacity:1;transform:scale(1.1);filter:blur(0) brightness(1.2)}100%{opacity:1;transform:scale(1);filter:none}}
+
+@media(max-width:370px){.mutation-glass{margin-right:44px!important}.mutation-side-feed{right:8px}}
+
+/* V33: синтез с резким сливом и физической выдачей эмблемы из лотка. */
+.mutation-vortex{display:none!important}
+.mutation-glass{z-index:3!important}
+.mutation-capsule.is-processing .mutation-glass,
+.mutation-capsule.is-draining .mutation-glass{
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.68),inset 10px 4px 20px rgba(255,255,255,.42),inset -13px -16px 24px rgba(23,86,92,.22),0 5px 0 rgba(31,63,73,.28),0 0 0 4px rgba(130,183,181,.58),0 0 16px rgba(56,205,126,.22)!important;
+}
+.mutation-capsule.is-processing .mutation-glass:after,
+.mutation-capsule.is-draining .mutation-glass:after{
+  inset:7px!important;border:3px solid rgba(255,255,255,.48)!important;background:none!important;
+  animation:none!important;box-shadow:inset 0 0 12px rgba(232,255,250,.36)!important;
+}
+.mutation-capsule.is-processing .mutation-liquid{
+  height:106%!important;animation:reactorReadableBoil .27s ease-in-out infinite alternate!important;
+  filter:saturate(1.26) brightness(1.06);
+}
+.mutation-capsule.is-processing .mutation-liquid:before{
+  height:27px!important;top:-13px!important;animation:reactorSurfaceBoil .24s ease-in-out infinite alternate!important;
+}
+.mutation-capsule.is-processing .mutation-liquid>i{animation-duration:.68s!important}
+.mutation-capsule.is-draining .mutation-liquid{
+  height:106%!important;animation:reactorDrainToOutlet .76s cubic-bezier(.58,.03,.72,.42) forwards!important;
+  transition:none!important;
+}
+.mutation-capsule.is-draining .mutation-liquid:before{animation:reactorDrainSurface .76s ease-in forwards!important}
+.mutation-capsule.is-draining .mutation-liquid>i{animation:reactorDrainBubble .55s ease-in forwards!important}
+.mutation-capsule.is-dispensing .mutation-liquid,
+.mutation-capsule.is-core-ready .mutation-liquid,
+.mutation-capsule.is-output-selected .mutation-liquid{height:0!important;animation:none!important;transition:none!important}
+
+/* Неровные всполохи энергии: это отдельные разряды, а не сияющее кольцо. */
+.mutation-reactor-energy{position:absolute;z-index:9;inset:-19px;opacity:0;pointer-events:none}
+.mutation-reactor-energy i{
+  position:absolute;width:34px;height:8px;display:block;border-radius:8px 2px 7px 1px;
+  background:linear-gradient(90deg,transparent 0 5%,#dfff72 18%,#4fec81 56%,rgba(15,164,107,.08) 100%);
+  clip-path:polygon(0 42%,25% 18%,42% 54%,67% 7%,100% 38%,78% 57%,55% 39%,29% 82%);
+  filter:drop-shadow(0 0 4px rgba(98,255,139,.86));transform-origin:center;opacity:0;
+}
+.mutation-reactor-energy i:nth-child(1){left:13px;top:35px;transform:rotate(-48deg) scaleX(.8)}
+.mutation-reactor-energy i:nth-child(2){left:-3px;top:91px;width:29px;transform:rotate(-7deg)}
+.mutation-reactor-energy i:nth-child(3){left:11px;bottom:44px;width:39px;transform:rotate(39deg)}
+.mutation-reactor-energy i:nth-child(4){left:70px;bottom:2px;width:31px;transform:rotate(73deg)}
+.mutation-reactor-energy i:nth-child(5){right:58px;bottom:0;width:42px;transform:rotate(111deg)}
+.mutation-reactor-energy i:nth-child(6){right:4px;bottom:51px;width:31px;transform:rotate(144deg)}
+.mutation-reactor-energy i:nth-child(7){right:-5px;top:72px;width:42px;transform:rotate(186deg)}
+.mutation-reactor-energy i:nth-child(8){right:34px;top:8px;width:32px;transform:rotate(224deg)}
+.mutation-capsule.is-processing .mutation-reactor-energy,
+.mutation-capsule.is-draining .mutation-reactor-energy{opacity:1}
+.mutation-capsule.is-processing .mutation-reactor-energy i{animation:reactorJaggedEnergy .62s steps(2,end) infinite}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(2n){animation-delay:-.19s;animation-duration:.47s}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(3n){animation-delay:-.34s;animation-duration:.71s}
+.mutation-capsule.is-draining .mutation-reactor-energy i{animation:reactorEnergyDischarge .62s ease-out both}
+.mutation-capsule.is-draining .mutation-reactor-energy i:nth-child(2n){animation-delay:.08s}
+
+/* Выдающий узел под приёмником — утопленная ниша, крышка и нижний лоток. */
+.mutation-dispenser{
+  position:absolute;z-index:12;right:10px;top:168px;width:72px;height:82px;display:block;
+  pointer-events:none;filter:drop-shadow(0 3px 0 rgba(27,55,65,.2));
+}
+.mutation-dispenser-mouth{
+  position:absolute;left:2px;top:0;width:68px;height:65px;overflow:visible;border:4px solid #294f62;border-radius:11px 11px 14px 14px;
+  background:linear-gradient(155deg,#183d48,#0b2630 62%,#071c24);box-shadow:inset 0 6px 10px rgba(0,0,0,.52),inset 0 -2px rgba(132,181,171,.18),0 0 0 2px rgba(164,203,195,.36);
+  perspective:120px;
+}
+.mutation-dispenser-mouth:before{
+  content:"";position:absolute;left:8px;right:8px;top:8px;height:5px;border-radius:5px;
+  background:rgba(3,17,23,.72);box-shadow:inset 0 2px 2px #000,0 1px rgba(172,218,205,.14);
+}
+.mutation-dispenser-flap{
+  position:absolute;z-index:4;inset:3px;border:3px solid #294f62;border-radius:7px 7px 10px 10px;
+  background:linear-gradient(160deg,#9ebfba,#628f8e 55%,#426b74);box-shadow:inset 3px 3px rgba(255,255,255,.3),inset -4px -5px 5px rgba(22,63,68,.2);
+  transform-origin:50% 4px;transform:rotateX(0deg);backface-visibility:hidden;
+}
+.mutation-dispenser-flap:after{content:"";position:absolute;left:17px;right:17px;bottom:7px;height:4px;border-radius:99px;background:#294f62;box-shadow:0 1px rgba(255,255,255,.22)}
+.mutation-dispenser-tray{
+  position:absolute;z-index:6;left:0;right:0;bottom:0;height:21px;border:4px solid #294f62;border-radius:5px 5px 14px 14px;
+  background:linear-gradient(#789f9d,#456f77);box-shadow:inset 0 4px rgba(255,255,255,.25);
+}
+.mutation-dispenser .mutation-mystery{
+  position:absolute!important;z-index:3!important;left:50%!important;top:8px!important;width:54px!important;height:54px!important;margin:0!important;
+  opacity:0;transform:translate(-50%,-22px) scale(.62)!important;border:0!important;border-radius:50%!important;background:transparent!important;
+  box-shadow:none!important;filter:drop-shadow(0 3px 2px rgba(0,0,0,.35));pointer-events:none;
+}
+.mutation-dispenser .mutation-mystery>i{display:none!important}
+.mutation-dispenser .mutation-mystery>img{display:block;width:54px!important;height:54px!important;object-fit:contain!important;object-position:center!important}
+.mutation-capsule.is-dispensing .mutation-dispenser-flap{animation:mutationDispenserFlapOpen 1.05s cubic-bezier(.25,.7,.2,1) both}
+.mutation-capsule.is-dispensing .mutation-mystery{animation:mutationVendDrop 1.05s cubic-bezier(.22,.72,.22,1) both!important}
+.mutation-capsule.is-core-ready .mutation-dispenser-flap{transform:rotateX(76deg)}
+.mutation-capsule.is-core-ready .mutation-mystery{
+  opacity:1;transform:translate(-50%,10px) scale(1)!important;pointer-events:auto;
+  animation:mutationVendReady 1.15s ease-in-out infinite alternate!important;
+}
+.mutation-capsule.is-output-selected .mutation-dispenser-flap{transform:rotateX(76deg)}
+.mutation-capsule.is-output-selected .mutation-mystery{
+  opacity:1;transform:translate(-50%,10px) scale(1)!important;
+  animation:mutationVendSelected .48s ease-out both!important;
+}
+
+@keyframes reactorReadableBoil{
+  from{transform:translateX(-2px) scaleY(1.022);filter:saturate(1.2) brightness(1.03)}
+  to{transform:translateX(2px) scaleY(.982);filter:saturate(1.34) brightness(1.11)}
+}
+@keyframes reactorDrainToOutlet{
+  0%,13%{height:106%;transform:scaleX(1) translateY(0);filter:brightness(1.08)}
+  40%{height:78%;transform:scaleX(.98) translateY(2px);filter:brightness(1.12)}
+  76%{height:25%;transform:scaleX(.76) translateY(5px);filter:brightness(1.2)}
+  100%{height:0;transform:scaleX(.2) translateY(10px);filter:brightness(1.35)}
+}
+@keyframes reactorDrainSurface{0%,13%{opacity:1;transform:scaleX(1)}70%{opacity:.8;transform:scaleX(.78)}100%{opacity:0;transform:scaleX(.16)}}
+@keyframes reactorDrainBubble{0%{opacity:.8;transform:translateY(-95px) scale(1)}100%{opacity:0;transform:translateY(42px) scale(.42)}}
+@keyframes reactorJaggedEnergy{0%,100%{opacity:.16;filter:drop-shadow(0 0 2px rgba(98,255,139,.54))}38%{opacity:1;filter:drop-shadow(0 0 6px rgba(98,255,139,1))}64%{opacity:.42}}
+@keyframes reactorEnergyDischarge{0%{opacity:.9}45%{opacity:1;filter:drop-shadow(0 0 8px #b4ff79)}100%{opacity:0;transform:scaleX(1.35)}}
+@keyframes mutationDispenserFlapOpen{0%,14%{transform:rotateX(0deg)}43%,82%{transform:rotateX(76deg)}100%{transform:rotateX(76deg)}}
+@keyframes mutationVendDrop{
+  0%,25%{opacity:0;transform:translate(-50%,-25px) scale(.62)}
+  38%{opacity:1;transform:translate(-50%,-12px) scale(.82)}
+  68%{opacity:1;transform:translate(-50%,14px) scale(1.06)}
+  82%{opacity:1;transform:translate(-50%,7px) scale(.96)}
+  100%{opacity:1;transform:translate(-50%,10px) scale(1)}
+}
+@keyframes mutationVendReady{from{transform:translate(-50%,10px) scale(.98);filter:drop-shadow(0 3px 2px rgba(0,0,0,.35)) drop-shadow(0 0 2px rgba(199,255,113,.3))}to{transform:translate(-50%,8px) scale(1.045);filter:drop-shadow(0 3px 2px rgba(0,0,0,.35)) drop-shadow(0 0 7px rgba(199,255,113,.82))}}
+@keyframes mutationVendSelected{0%{transform:translate(-50%,10px) scale(1)}44%{transform:translate(-50%,5px) scale(1.18);filter:brightness(1.6) drop-shadow(0 0 10px #dfff81)}100%{transform:translate(-50%,10px) scale(.92);filter:brightness(1.08)}}
+
+@media(max-width:370px){
+  .mutation-dispenser{right:5px;top:158px;transform:scale(.9);transform-origin:top right}
+  .mutation-reactor-energy{inset:-17px}
+}
+
+/* V34: ускоряемая подача, чистая жидкость и заслонка, уходящая в стенку. */
+.mutation-capsule{touch-action:none;-webkit-user-select:none;user-select:none}
+.mutation-invest-flask{animation-duration:var(--mutation-flight-duration,.56s)!important}
+.mutation-capsule.is-auto-feeding .mutation-inlet{animation:mutationFeedIntakePulse .46s ease-in-out infinite alternate}
+.mutation-capsule.is-auto-feeding .mutation-capsule-hint{color:#08754c!important;text-shadow:0 1px #fff,0 0 7px rgba(67,235,129,.34)}
+
+/* Пузырьки физически обрезаются уровнем жидкости и не остаются в пустом стекле. */
+.mutation-liquid{overflow:hidden!important}
+.mutation-liquid:before{top:0!important}
+.mutation-capsule.is-processing .mutation-liquid:before{top:0!important}
+.mutation-liquid>i{visibility:visible}
+.mutation-capsule.is-dispensing .mutation-liquid>i,
+.mutation-capsule.is-core-ready .mutation-liquid>i,
+.mutation-capsule.is-output-selected .mutation-liquid>i{visibility:hidden!important;animation:none!important}
+
+.mutation-dispenser-mouth{overflow:hidden!important}
+.mutation-dispenser-flap{
+  transform:translateY(0)!important;transform-origin:center!important;backface-visibility:visible!important;
+  will-change:transform;
+}
+.mutation-capsule.is-dispensing .mutation-dispenser-flap{animation:mutationDispenserShutterLift 1.05s cubic-bezier(.42,0,.22,1) both!important}
+.mutation-capsule.is-core-ready .mutation-dispenser-flap,
+.mutation-capsule.is-output-selected .mutation-dispenser-flap{transform:translateY(-62px)!important}
+.mutation-capsule.is-draining .mutation-liquid{animation-duration:.52s!important}
+.mutation-capsule.is-draining .mutation-liquid:before{animation-duration:.52s!important}
+
+@keyframes mutationFeedIntakePulse{from{filter:brightness(1)}to{filter:brightness(1.16) drop-shadow(0 0 5px rgba(69,231,137,.44))}}
+@keyframes mutationDispenserShutterLift{
+  0%,13%{transform:translateY(0)}
+  56%,100%{transform:translateY(-62px)}
+}
+
+/* V35: спокойный ритм синтеза, дуги по всей камере и ровный слив уровня. */
+.mutation-capsule.is-processing{animation:reactorBodyWork .34s linear infinite!important}
+.mutation-capsule.is-processing .mutation-liquid{animation:reactorDeepBoil .31s ease-in-out infinite alternate!important}
+.mutation-capsule.is-processing .mutation-liquid:before{animation:reactorBoilSurface .27s ease-in-out infinite alternate!important}
+
+.mutation-reactor-energy{inset:-12px!important;opacity:0!important}
+.mutation-reactor-energy i{
+  width:62px;height:11px;border-radius:0!important;
+  background:linear-gradient(180deg,transparent 0 26%,#efffc5 28% 43%,#77fa8c 45% 57%,#159e70 59% 68%,transparent 70%)!important;
+  clip-path:polygon(0 40%,15% 29%,25% 47%,39% 17%,52% 51%,65% 25%,78% 48%,100% 31%,84% 61%,70% 50%,56% 76%,41% 43%,27% 69%,13% 52%,0 61%)!important;
+  filter:drop-shadow(0 0 2px #efffc5) drop-shadow(0 0 5px rgba(43,244,126,.88))!important;
+  transform-origin:0 50%!important;opacity:0;
+}
+.mutation-reactor-energy i:after{
+  content:"";position:absolute;left:43%;top:3px;width:29px;height:8px;
+  background:linear-gradient(180deg,transparent 0 30%,#dcffae 32% 49%,#36d77e 52% 66%,transparent 69%);
+  clip-path:polygon(0 38%,25% 19%,43% 46%,65% 8%,100% 39%,72% 63%,47% 52%,23% 77%,0 59%);
+  transform:rotate(31deg);transform-origin:0 50%;opacity:.76;
+}
+.mutation-reactor-energy i:nth-child(1){left:-20px;top:20px;width:75px;transform:rotate(31deg)!important}
+.mutation-reactor-energy i:nth-child(2){left:-31px;top:54px;width:69px;transform:rotate(12deg)!important}
+.mutation-reactor-energy i:nth-child(3){left:-30px;top:94px;width:81px;transform:rotate(-4deg)!important}
+.mutation-reactor-energy i:nth-child(4){left:-25px;top:137px;width:66px;transform:rotate(-22deg)!important}
+.mutation-reactor-energy i:nth-child(5){left:-6px;bottom:22px;width:73px;transform:rotate(-43deg)!important}
+.mutation-reactor-energy i:nth-child(6){left:41px;bottom:-10px;width:69px;transform:rotate(-69deg)!important}
+.mutation-reactor-energy i:nth-child(7){left:91px;bottom:-20px;width:76px;transform:rotate(-87deg)!important}
+.mutation-reactor-energy i:nth-child(8){right:26px;bottom:-13px;width:68px;transform:rotate(-111deg)!important}
+.mutation-reactor-energy i:nth-child(9){right:-13px;bottom:24px;width:74px;transform:rotate(-136deg)!important}
+.mutation-reactor-energy i:nth-child(10){right:-31px;top:137px;width:69px;transform:rotate(-158deg)!important}
+.mutation-reactor-energy i:nth-child(11){right:-32px;top:94px;width:82px;transform:rotate(178deg)!important}
+.mutation-reactor-energy i:nth-child(12){right:-27px;top:54px;width:66px;transform:rotate(164deg)!important}
+.mutation-reactor-energy i:nth-child(13){right:-10px;top:19px;width:75px;transform:rotate(142deg)!important}
+.mutation-reactor-energy i:nth-child(14){left:77px;top:-18px;width:73px;transform:rotate(82deg)!important}
+.mutation-capsule.is-processing .mutation-reactor-energy{opacity:1!important}
+.mutation-capsule.is-processing .mutation-reactor-energy i{animation:reactorArcAppear 1.08s ease-out infinite!important}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(2n){animation-delay:-.41s!important;animation-duration:.86s!important}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(3n){animation-delay:-.72s!important;animation-duration:1.31s!important}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(5n){animation-delay:-.23s!important;animation-duration:1.52s!important}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy{opacity:1!important}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy i{animation:reactorArcFade .58s ease-out both!important}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy i:nth-child(2n){animation-delay:.05s!important}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy i:nth-child(3n){animation-delay:.11s!important}
+
+/* После сигнала механизм успокаивается, а заслонка заранее уходит в корпус. */
+.mutation-capsule.is-synthesis-ready{animation:none!important}
+.mutation-capsule.is-synthesis-ready .mutation-liquid{height:106%!important;animation:none!important;transform:none!important;filter:saturate(1.15) brightness(1.04)}
+.mutation-capsule.is-synthesis-ready .mutation-liquid:before{animation:none!important;transform:none!important}
+.mutation-capsule.is-synthesis-ready .mutation-liquid>i{animation-play-state:paused!important;opacity:.28}
+.mutation-capsule.is-synthesis-ready .mutation-dispenser-flap{animation:mutationDispenserShutterLift .52s cubic-bezier(.42,0,.22,1) both!important}
+.mutation-capsule.is-draining .mutation-dispenser-flap{animation:none!important;transform:translateY(-62px)!important}
+
+/* Никаких воронок: верхняя граница жидкости просто быстро опускается. */
+.mutation-capsule.is-draining .mutation-liquid{
+  height:106%!important;transform:none!important;filter:none!important;transition:none!important;
+  animation:reactorLevelDrain .68s cubic-bezier(.48,.06,.72,.36) forwards!important;
+}
+.mutation-capsule.is-draining .mutation-liquid:before{animation:none!important;opacity:1!important;transform:none!important}
+.mutation-capsule.is-draining .mutation-liquid>i{animation:none!important;opacity:.18!important}
+.mutation-capsule.is-dispensing .mutation-dispenser-flap{animation:none!important;transform:translateY(-62px)!important}
+.mutation-capsule.is-dispensing .mutation-mystery{animation:mutationVendDrop .9s cubic-bezier(.22,.72,.22,1) both!important;will-change:transform,opacity}
+
+@keyframes reactorDeepBoil{
+  from{transform:translateY(0) scaleY(1.018);filter:saturate(1.24) brightness(1.04)}
+  to{transform:translateY(-2px) scaleY(.988);filter:saturate(1.34) brightness(1.12)}
+}
+@keyframes reactorBoilSurface{from{transform:translateX(-4%) scaleY(.86)}to{transform:translateX(4%) scaleY(1.18)}}
+@keyframes reactorArcAppear{
+  0%,7%{opacity:0;filter:drop-shadow(0 0 0 rgba(43,244,126,0))}
+  16%{opacity:1;filter:drop-shadow(0 0 2px #f4ffd2) drop-shadow(0 0 7px rgba(43,244,126,1))}
+  31%{opacity:.72}
+  55%,100%{opacity:0;filter:drop-shadow(0 0 1px rgba(43,244,126,.1))}
+}
+@keyframes reactorArcFade{from{opacity:.72}to{opacity:0;filter:drop-shadow(0 0 0 rgba(43,244,126,0))}}
+@keyframes reactorLevelDrain{0%,9%{height:106%}100%{height:0}}
+
+/* V36: молнии как у электрической формы и полностью непрерывная механика выдачи. */
+.mutation-reactor-energy i{
+  height:30px!important;background:none!important;clip-path:none!important;border-radius:0!important;
+  filter:none!important;overflow:visible!important;
+}
+.mutation-reactor-energy i:after{display:none!important}
+.mutation-reactor-energy svg{display:block;width:100%;height:100%;overflow:visible}
+.mutation-reactor-energy polyline{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.mutation-reactor-energy .reactor-bolt-glow{stroke:#16c861;stroke-width:7;opacity:.9;filter:drop-shadow(0 0 4px #28e879)}
+.mutation-reactor-energy .reactor-bolt-core{stroke:#efffc8;stroke-width:2.15;opacity:1}
+.mutation-capsule.is-processing .mutation-reactor-energy i{
+  animation:reactorElectricSlimeBolt 1.08s cubic-bezier(.22,.66,.3,1) infinite!important;
+}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(2n){animation-delay:-.41s!important;animation-duration:.86s!important}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(3n){animation-delay:-.72s!important;animation-duration:1.31s!important}
+.mutation-capsule.is-processing .mutation-reactor-energy i:nth-child(5n){animation-delay:-.23s!important;animation-duration:1.52s!important}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy i{
+  animation:reactorElectricSlimeFade .58s ease-out both!important;
+}
+
+/* Заслонка едет одним движением и остаётся внутри верхней стенки. */
+.mutation-dispenser-flap{
+  animation:none!important;transform:translateY(0)!important;
+  transition:transform .58s cubic-bezier(.38,.04,.18,1)!important;
+}
+.mutation-capsule.is-synthesis-ready .mutation-dispenser-flap,
+.mutation-capsule.is-drain-armed .mutation-dispenser-flap,
+.mutation-capsule.is-draining .mutation-dispenser-flap,
+.mutation-capsule.is-dispensing .mutation-dispenser-flap,
+.mutation-capsule.is-core-ready .mutation-dispenser-flap,
+.mutation-capsule.is-output-selected .mutation-dispenser-flap{
+  animation:none!important;transform:translateY(-62px)!important;
+}
+
+/* Уровень жидкости просто опускается от полного к пустому без смены формы. */
+.mutation-capsule.is-synthesis-ready .mutation-liquid,
+.mutation-capsule.is-drain-armed .mutation-liquid{
+  height:106%!important;transform:none!important;animation:none!important;transition:none!important;
+}
+.mutation-capsule.is-draining .mutation-liquid{
+  height:0!important;transform:none!important;animation:none!important;
+  transition:height .82s cubic-bezier(.42,0,.72,.46)!important;
+}
+.mutation-capsule.is-draining .mutation-liquid:before{animation:none!important;transform:none!important;opacity:1!important}
+
+/* Эмблема одним быстрым движением выпадает из уже открытой ниши. */
+.mutation-dispenser .mutation-mystery{
+  animation:none!important;transition:opacity .12s linear,transform .36s cubic-bezier(.22,.74,.22,1)!important;
+  will-change:transform,opacity;
+}
+.mutation-capsule.is-synthesis-ready .mutation-mystery,
+.mutation-capsule.is-drain-armed .mutation-mystery,
+.mutation-capsule.is-draining .mutation-mystery{
+  opacity:0!important;transform:translate(-50%,-20px) scale(.88)!important;animation:none!important;
+}
+.mutation-capsule.is-dispensing .mutation-mystery{
+  opacity:1!important;transform:translate(-50%,10px) scale(1)!important;animation:none!important;
+}
+
+@keyframes reactorElectricSlimeBolt{
+  0%,9%{opacity:0}
+  18%{opacity:1}
+  36%{opacity:.9}
+  72%,100%{opacity:0}
+}
+@keyframes reactorElectricSlimeFade{from{opacity:.82}to{opacity:0}}
+
+/* V37: электричество держится на ободе, а готовность читается вспышкой камеры. */
+.mutation-reactor-energy{inset:-7px!important}
+.mutation-reactor-energy i{width:54px!important;height:27px!important}
+.mutation-reactor-energy i:nth-child(1){left:19px!important;top:7px!important;transform:rotate(31deg)!important}
+.mutation-reactor-energy i:nth-child(2){left:66px!important;top:-8px!important;transform:rotate(9deg)!important}
+.mutation-reactor-energy i:nth-child(3){right:43px!important;top:-3px!important;transform:rotate(-15deg)!important}
+.mutation-reactor-energy i:nth-child(4){right:1px!important;top:24px!important;transform:rotate(-43deg)!important}
+.mutation-reactor-energy i:nth-child(5){right:-17px!important;top:69px!important;transform:rotate(-72deg)!important}
+.mutation-reactor-energy i:nth-child(6){right:-13px!important;bottom:68px!important;top:auto!important;transform:rotate(-103deg)!important}
+.mutation-reactor-energy i:nth-child(7){right:8px!important;bottom:25px!important;top:auto!important;transform:rotate(-132deg)!important}
+.mutation-reactor-energy i:nth-child(8){right:49px!important;bottom:-2px!important;top:auto!important;transform:rotate(-160deg)!important}
+.mutation-reactor-energy i:nth-child(9){left:65px!important;bottom:-8px!important;right:auto!important;top:auto!important;transform:rotate(171deg)!important}
+.mutation-reactor-energy i:nth-child(10){left:22px!important;bottom:9px!important;right:auto!important;top:auto!important;transform:rotate(143deg)!important}
+.mutation-reactor-energy i:nth-child(11){left:-8px!important;bottom:48px!important;right:auto!important;top:auto!important;transform:rotate(112deg)!important}
+.mutation-reactor-energy i:nth-child(12){left:-18px!important;top:82px!important;right:auto!important;bottom:auto!important;transform:rotate(82deg)!important}
+.mutation-reactor-energy i:nth-child(13){left:-5px!important;top:39px!important;right:auto!important;bottom:auto!important;transform:rotate(53deg)!important}
+.mutation-reactor-energy i:nth-child(14){right:16px!important;top:18px!important;left:auto!important;bottom:auto!important;transform:rotate(-31deg)!important}
+.mutation-reactor-energy .reactor-bolt-glow{stroke:#00b94f;stroke-width:8;opacity:.96;filter:drop-shadow(0 0 3px #20ff72) drop-shadow(0 0 6px rgba(24,225,103,.72))}
+.mutation-reactor-energy .reactor-bolt-core{stroke:#f0ffd1;stroke-width:2.35}
+
+.mutation-capsule.is-processing .mutation-glass{
+  animation:mutationNeonGlassPulse .68s ease-in-out infinite alternate!important;
+}
+.mutation-capsule.is-processing .mutation-glass:after{
+  background:transparent!important;border-color:rgba(81,255,126,.82)!important;
+  box-shadow:inset 0 0 8px rgba(55,255,120,.62),0 0 8px rgba(42,239,108,.72)!important;
+  animation:mutationNeonRimPulse .68s ease-in-out infinite alternate!important;
+}
+.mutation-capsule.is-synthesis-ready .mutation-glass:after{
+  inset:7px!important;border-color:rgba(205,255,203,.9)!important;
+  background:radial-gradient(circle,rgba(255,255,238,.96) 0,rgba(177,255,170,.78) 24%,rgba(67,242,124,.32) 52%,rgba(39,202,112,0) 78%)!important;
+  box-shadow:inset 0 0 20px rgba(193,255,189,.72),0 0 10px rgba(53,235,112,.5)!important;
+  animation:mutationReactorReadyFlash .62s ease-out both!important;
+}
+
+/* Подача идёт последовательно; заполненный реактор сразу перестаёт принимать нажатия. */
+.mutation-invest-flask{will-change:transform,opacity}
+.mutation-capsule:disabled{cursor:default}
+.mutation-capsule.is-pressurizing .mutation-inlet,
+.mutation-capsule.is-processing .mutation-inlet,
+.mutation-capsule.is-synthesis-ready .mutation-inlet,
+.mutation-capsule.is-draining .mutation-inlet,
+.mutation-capsule.is-dispensing .mutation-inlet{
+  filter:saturate(.65) brightness(.82)!important;animation:none!important;
+}
+
+@keyframes mutationNeonGlassPulse{
+  from{border-color:#2f7a65;box-shadow:inset 0 0 0 5px rgba(255,255,255,.68),inset 10px 4px 20px rgba(255,255,255,.42),inset -13px -16px 24px rgba(23,86,92,.22),0 5px 0 rgba(31,63,73,.28),0 0 0 4px rgba(54,204,111,.52),0 0 8px rgba(32,223,99,.38)}
+  to{border-color:#55ef83;box-shadow:inset 0 0 0 5px rgba(230,255,235,.74),inset 10px 4px 20px rgba(255,255,255,.42),inset -13px -16px 24px rgba(23,86,92,.18),0 5px 0 rgba(31,63,73,.28),0 0 0 4px rgba(104,255,137,.86),0 0 17px rgba(35,242,105,.72)}
+}
+@keyframes mutationNeonRimPulse{from{opacity:.48}to{opacity:1}}
+@keyframes mutationReactorReadyFlash{
+  0%{opacity:0;transform:scale(.82);filter:brightness(1)}
+  28%{opacity:1;transform:scale(1);filter:brightness(1.8)}
+  100%{opacity:0;transform:scale(1.04);filter:brightness(1)}
+}
+
+/* V38: восемь разрядов физически закреплены прямо на круглом ободе. */
+.mutation-reactor-energy{inset:-7px!important}
+.mutation-reactor-energy i{width:46px!important;height:24px!important;right:auto!important;bottom:auto!important}
+.mutation-reactor-energy i:nth-child(n+9){display:none!important}
+.mutation-reactor-energy i:nth-child(1){left:96px!important;top:-6px!important;transform:rotate(0deg)!important}
+.mutation-reactor-energy i:nth-child(2){left:177px!important;top:28px!important;transform:rotate(45deg)!important}
+.mutation-reactor-energy i:nth-child(3){left:207px!important;top:107px!important;transform:rotate(90deg)!important}
+.mutation-reactor-energy i:nth-child(4){left:174px!important;top:184px!important;transform:rotate(135deg)!important}
+.mutation-reactor-energy i:nth-child(5){left:96px!important;top:214px!important;transform:rotate(180deg)!important}
+.mutation-reactor-energy i:nth-child(6){left:18px!important;top:184px!important;transform:rotate(225deg)!important}
+.mutation-reactor-energy i:nth-child(7){left:-13px!important;top:107px!important;transform:rotate(270deg)!important}
+.mutation-reactor-energy i:nth-child(8){left:18px!important;top:28px!important;transform:rotate(315deg)!important}
+.mutation-reactor-energy .reactor-bolt-glow{stroke-width:6.5}
+.mutation-reactor-energy .reactor-bolt-core{stroke-width:2.2}
+
+/* V39: разряды начинаются на окружности и направлены наружу. */
+.mutation-reactor-energy i{width:42px!important;height:24px!important;transform-origin:0 50%!important;z-index:2}
+.mutation-reactor-energy i:nth-child(1){left:119px!important;top:-5px!important;transform:rotate(270deg)!important}
+.mutation-reactor-energy i:nth-child(2){left:198px!important;top:28px!important;transform:rotate(315deg)!important}
+.mutation-reactor-energy i:nth-child(3){left:231px!important;top:107px!important;transform:rotate(0deg)!important}
+.mutation-reactor-energy i:nth-child(4){left:198px!important;top:186px!important;transform:rotate(45deg)!important}
+.mutation-reactor-energy i:nth-child(5){left:119px!important;top:219px!important;transform:rotate(90deg)!important}
+.mutation-reactor-energy i:nth-child(6){left:40px!important;top:186px!important;transform:rotate(135deg)!important}
+.mutation-reactor-energy i:nth-child(7){left:7px!important;top:107px!important;transform:rotate(180deg)!important}
+.mutation-reactor-energy i:nth-child(8){left:40px!important;top:28px!important;transform:rotate(225deg)!important}
+
+/* Отдельное кольцо не зависит от тёмной металлической рамки. */
+.mutation-reactor-energy:before{
+  content:"";position:absolute;z-index:1;inset:7px;border:4px solid #50ff82;border-radius:50%;opacity:0;
+  box-shadow:0 0 5px #caffb5,0 0 11px #24ee6d,inset 0 0 6px rgba(79,255,130,.9);
+  pointer-events:none;
+}
+.mutation-capsule.is-processing .mutation-reactor-energy:before{animation:mutationTrueNeonRing .64s ease-in-out infinite alternate}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy:before{animation:mutationTrueNeonFade .48s ease-out both}
+
+/* На полном синтезе жидкость выходит за круглую маску, поэтому её края не видны. */
+.mutation-capsule.is-processing .mutation-liquid,
+.mutation-capsule.is-synthesis-ready .mutation-liquid,
+.mutation-capsule.is-drain-armed .mutation-liquid{
+  left:-10%!important;right:-10%!important;bottom:-8%!important;height:116%!important;border-radius:0!important;
+}
+.mutation-capsule.is-processing .mutation-liquid:before,
+.mutation-capsule.is-synthesis-ready .mutation-liquid:before{opacity:0!important;animation:none!important}
+.mutation-capsule.is-draining .mutation-liquid{
+  left:-10%!important;right:-10%!important;bottom:-8%!important;height:0!important;border-radius:0!important;
+}
+
+@keyframes mutationTrueNeonRing{
+  from{opacity:.58;filter:brightness(.92)}
+  to{opacity:1;filter:brightness(1.3)}
+}
+@keyframes mutationTrueNeonFade{from{opacity:1}to{opacity:0}}
+
+/* V40: заряд прорисовывается из глубины наружу, а панель колб собрана в один индикатор. */
+.mutation-reactor-energy i{width:64px!important;height:24px!important;transform-origin:0 50%!important;--bolt-duration:1.08s;--bolt-delay:0s}
+.mutation-reactor-energy i:nth-child(1){left:119px!important;top:17px!important;transform:rotate(270deg)!important;--bolt-delay:-.16s}
+.mutation-reactor-energy i:nth-child(2){left:183px!important;top:43px!important;transform:rotate(315deg)!important;--bolt-delay:-.63s;--bolt-duration:1.22s}
+.mutation-reactor-energy i:nth-child(3){left:209px!important;top:107px!important;transform:rotate(0deg)!important;--bolt-delay:-.34s;--bolt-duration:.94s}
+.mutation-reactor-energy i:nth-child(4){left:183px!important;top:171px!important;transform:rotate(45deg)!important;--bolt-delay:-.82s;--bolt-duration:1.29s}
+.mutation-reactor-energy i:nth-child(5){left:119px!important;top:197px!important;transform:rotate(90deg)!important;--bolt-delay:-.48s;--bolt-duration:1.04s}
+.mutation-reactor-energy i:nth-child(6){left:55px!important;top:171px!important;transform:rotate(135deg)!important;--bolt-delay:-.97s;--bolt-duration:1.34s}
+.mutation-reactor-energy i:nth-child(7){left:29px!important;top:107px!important;transform:rotate(180deg)!important;--bolt-delay:-.25s;--bolt-duration:.98s}
+.mutation-reactor-energy i:nth-child(8){left:55px!important;top:43px!important;transform:rotate(225deg)!important;--bolt-delay:-.71s;--bolt-duration:1.18s}
+.mutation-reactor-energy polyline{stroke-dasharray:100;stroke-dashoffset:100}
+.mutation-capsule.is-processing .mutation-reactor-energy i{
+  animation:mutationBoltLife var(--bolt-duration) ease-out var(--bolt-delay) infinite!important;
+}
+.mutation-capsule.is-processing .mutation-reactor-energy i polyline{
+  animation:mutationBoltTravel var(--bolt-duration) cubic-bezier(.18,.68,.2,1) var(--bolt-delay) infinite!important;
+}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy i{animation:reactorElectricSlimeFade .5s ease-out both!important}
+.mutation-capsule.is-synthesis-ready .mutation-reactor-energy i polyline{stroke-dashoffset:0;animation:none!important}
+
+/* Приёмник остаётся светлым и читаемым во время работы. */
+.mutation-capsule.is-pressurizing .mutation-inlet,
+.mutation-capsule.is-processing .mutation-inlet,
+.mutation-capsule.is-synthesis-ready .mutation-inlet,
+.mutation-capsule.is-draining .mutation-inlet,
+.mutation-capsule.is-dispensing .mutation-inlet{
+  filter:none!important;opacity:1!important;
+}
+.mutation-feed-count{
+  width:64px!important;min-width:64px!important;height:29px!important;gap:3px!important;padding:1px 7px 1px 3px!important;
+  border:2px solid #315d61;border-radius:15px;background:linear-gradient(180deg,#f3fff7,#bde9cf);
+  box-shadow:inset 0 2px rgba(255,255,255,.9),0 2px 0 rgba(35,68,73,.18);box-sizing:border-box;
+}
+.mutation-feed-count img{width:27px!important;height:27px!important;flex:0 0 27px;filter:drop-shadow(0 2px 1px rgba(18,83,57,.25))!important}
+.mutation-feed-count b{min-width:20px!important;color:#075e3d!important;font-size:15px!important;line-height:1!important;text-align:center!important;text-shadow:0 1px #fff!important}
+
+/* После получения створка возвращается тем же плавным ходом. */
+.mutation-capsule.is-dispenser-closing .mutation-dispenser-flap{animation:none!important;transform:translateY(0)!important}
+.mutation-capsule.is-dispenser-closing .mutation-mystery{opacity:0!important;transform:translate(-50%,-2px) scale(.82)!important;animation:none!important}
+
+@keyframes mutationBoltLife{
+  0%,5%{opacity:0}
+  12%,64%{opacity:1}
+  100%{opacity:0}
+}
+@keyframes mutationBoltTravel{
+  0%,7%{stroke-dashoffset:100}
+  58%,100%{stroke-dashoffset:0}
+}
+
+/* V41: пустой реактор остаётся пустым, а награда физически приземляется в коллекцию. */
+.mutation-capsule.is-output-selected .mutation-liquid,
+.mutation-capsule.is-dispenser-closing .mutation-liquid{
+  height:0!important;bottom:-8%!important;animation:none!important;transition:none!important;transform:none!important;
+}
+.mutation-capsule.is-dispenser-closing .mutation-liquid:before,
+.mutation-capsule.is-dispenser-closing .mutation-liquid>i{display:none!important}
+
+.mutation-collection-slot.is-receiving{
+  z-index:3;animation:mutationSlotAwait .82s ease-in-out both!important;
+}
+.mutation-collection-slot.is-receiving i{opacity:.22;transform:scale(.74);transition:opacity .2s,transform .3s}
+.mutation-prize.is-collecting>img{
+  animation:mutationPrizeFlight .82s cubic-bezier(.22,.64,.18,1) both!important;
+  transition:none!important;will-change:transform,filter,opacity;
+}
+.mutation-collection-slot.just-unlocked{
+  z-index:4;animation:mutationSlotLanding .7s cubic-bezier(.18,.78,.18,1.22) both!important;
+}
+.mutation-collection-slot.just-unlocked:before{
+  content:"";position:absolute;z-index:-1;inset:-7px;border:3px solid #70ff91;border-radius:17px;opacity:0;
+  box-shadow:0 0 12px #4fec7c;animation:mutationLandingRing .62s ease-out both;
+}
+.mutation-collection-slot.just-unlocked:after{
+  content:"";position:absolute;z-index:5;inset:-12px;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 12% 30%,#eaff9a 0 2px,transparent 3px),radial-gradient(circle at 88% 24%,#fff 0 2px,transparent 3px),radial-gradient(circle at 18% 82%,#66ff8b 0 2px,transparent 3px),radial-gradient(circle at 84% 76%,#dcff72 0 2px,transparent 3px);
+  animation:mutationLandingSparks .62s ease-out both;
+}
+.mutation-collection-slot.just-unlocked img{animation:mutationEmblemSettle .7s cubic-bezier(.18,.78,.18,1.2) both}
+
+@keyframes mutationSlotAwait{
+  0%{box-shadow:inset 0 2px rgba(255,255,255,.68),0 3px 0 rgba(49,68,74,.14)}
+  55%,100%{border-color:#57dd7c;box-shadow:inset 0 2px #fff,0 0 15px rgba(75,237,119,.72)}
+}
+@keyframes mutationPrizeFlight{
+  0%{opacity:1;transform:translate(0,0) scale(1);filter:drop-shadow(0 9px 3px rgba(13,44,55,.3))}
+  12%{opacity:1;transform:translate(0,-7px) scale(1.07);filter:brightness(1.22) drop-shadow(0 12px 4px rgba(13,44,55,.25))}
+  28%{opacity:1;transform:translate(0,2px) scale(.91);filter:brightness(1.08) drop-shadow(0 7px 3px rgba(13,44,55,.24))}
+  68%{opacity:1;transform:translate(var(--mutation-prize-mid-x),var(--mutation-prize-mid-y)) scale(.58) rotate(7deg);filter:brightness(1.12) drop-shadow(0 5px 3px rgba(13,44,55,.2))}
+  94%{opacity:1;transform:translate(var(--mutation-prize-x),var(--mutation-prize-y)) scale(var(--mutation-prize-scale)) rotate(0);filter:brightness(1.55) drop-shadow(0 0 8px #82ff8f)}
+  100%{opacity:0;transform:translate(var(--mutation-prize-x),var(--mutation-prize-y)) scale(var(--mutation-prize-scale));filter:brightness(1.3)}
+}
+@keyframes mutationSlotLanding{
+  0%{transform:scale(.9);filter:brightness(1.6)}
+  45%{transform:scale(1.1);filter:brightness(1.22);box-shadow:inset 0 2px #fff,0 0 19px #5cef83}
+  72%{transform:scale(.97)}
+  100%{transform:none;filter:none}
+}
+@keyframes mutationLandingRing{0%{opacity:.95;transform:scale(.62)}100%{opacity:0;transform:scale(1.34)}}
+@keyframes mutationLandingSparks{0%{opacity:0;transform:scale(.72)}34%{opacity:1}100%{opacity:0;transform:scale(1.28)}}
+@keyframes mutationEmblemSettle{0%{opacity:.35;transform:scale(.72)}45%{opacity:1;transform:scale(1.12)}72%{transform:scale(.96)}100%{opacity:1;transform:none}}
+
+/* V42: эмблема летит одним непрерывным движением без промежуточных поз. */
+.mutation-collection-slot.is-receiving{
+  animation:none!important;border-color:#57dd7c!important;
+  box-shadow:inset 0 2px #fff,0 0 13px rgba(75,237,119,.58)!important;
+  transition:border-color .25s,box-shadow .25s;
+}
+.mutation-prize.is-collecting>img{
+  opacity:0;animation:none!important;
+  transform:translate(var(--mutation-prize-x),var(--mutation-prize-y)) scale(var(--mutation-prize-scale))!important;
+  filter:brightness(1.18) drop-shadow(0 2px 2px rgba(13,44,55,.18))!important;
+  transition:transform .74s cubic-bezier(.24,.58,.2,1),filter .74s ease,opacity .06s linear .7s!important;
+}
+.mutation-collection-slot.just-unlocked{transform:none!important;filter:none!important;animation:none!important}
+.mutation-collection-slot.just-unlocked img{transform:none!important;opacity:1!important;animation:none!important}
+
+/* V43: единая ось правого узла и непрерывный перелёт награды в коллекцию. */
+.mutation-side-feed{
+  right:10px!important;width:72px!important;justify-items:center!important;
+}
+.mutation-side-feed .mutation-inlet,
+.mutation-feed-count{
+  margin-inline:auto!important;
+}
+.mutation-dispenser{
+  right:10px!important;width:72px!important;
+}
+
+.mutation-prize-flyer{
+  position:fixed;z-index:9999;display:block;margin:0;padding:0;border:0;
+  object-fit:contain;object-position:center;pointer-events:none;
+  opacity:1;transform:translate3d(0,0,0) scale(1);transform-origin:center;
+  filter:drop-shadow(0 9px 3px rgba(13,44,55,.3));
+  transition:transform .74s cubic-bezier(.24,.58,.2,1),filter .74s ease,opacity .06s linear .69s;
+  will-change:transform,filter,opacity;
+}
+.mutation-prize-flyer.is-flying{
+  opacity:0;
+  transform:translate3d(var(--mutation-prize-x),var(--mutation-prize-y),0) scale(var(--mutation-prize-scale));
+  filter:brightness(1.2) drop-shadow(0 2px 2px rgba(13,44,55,.18));
+}
+.mutation-prize.is-collecting>img{
+  opacity:0!important;transform:none!important;animation:none!important;transition:none!important;
+}
+
+@media(max-width:370px){
+  .mutation-side-feed{right:6px!important;width:72px!important}
+  .mutation-dispenser{right:6px!important;width:72px!important}
+}
+
+/* V23: компактная и стабильная раскладка админ-панели с тестовыми колбами. */
+.admin-tools-modal .admin-infinite-flasks{
+  position:relative;width:auto;height:62px;min-height:62px;display:flex;align-items:center;justify-content:flex-start;gap:7px;padding:8px 9px;
+  border:2px solid #38715a;border-radius:15px;background:linear-gradient(180deg,#f4fff7,#bfe9cf);color:#20513d;text-align:left;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.86),inset 0 -4px 5px rgba(42,118,80,.1)!important;
+}
+.admin-tools-modal .admin-infinite-flasks img{width:34px;height:34px;flex:0 0 34px;display:block;object-fit:contain}
+.admin-tools-modal .admin-infinite-flasks>span{display:flex;min-width:0;flex-direction:column;gap:3px}
+.admin-tools-modal .admin-infinite-flasks span b{font-size:7px;line-height:1.05;white-space:normal}.admin-tools-modal .admin-infinite-flasks span small{font-size:6.5px;font-weight:900;line-height:1;color:#527364}
+.admin-tools-modal .admin-infinite-flasks>i{position:absolute;right:6px;bottom:5px;width:17px;height:17px;display:grid;place-items:center;border:2px solid #fff;border-radius:50%;background:#78978a;color:#fff;font-size:10px;font-style:normal;font-weight:1000;box-shadow:0 1px 0 rgba(34,61,55,.25)}
+.admin-tools-modal .admin-infinite-flasks.active{border-color:#16774a;background:linear-gradient(180deg,#eaffef,#62d995);color:#0b5030;box-shadow:inset 0 2px 1px #fff,0 0 12px rgba(43,211,112,.35)!important}
+.admin-tools-modal .admin-infinite-flasks.active span small{color:#096739}.admin-tools-modal .admin-infinite-flasks.active>i{background:#087a45;box-shadow:0 0 7px #39e986}
+.admin-tools-modal .admin-restart-btn{grid-column:1/-1;height:52px;min-height:52px;justify-content:center}
+.admin-tools-modal .admin-reset-progress{grid-column:1/-1}
+
+@media(max-width:370px){
+  .admin-tools-modal .admin-infinite-flasks,.admin-tools-modal .admin-unlock-all{height:57px;min-height:57px;padding:6px}
+  .admin-tools-modal .admin-infinite-flasks img{width:30px;height:30px;flex-basis:30px}.admin-tools-modal .admin-infinite-flasks span b{font-size:6.2px}
+}
+
+/* V24: шкала исследования визуально выходит прямо из колбы. */
+body[data-screen="home"] .research-wallet-track{
+  width:calc(100% + 16px);
+  margin-left:-16px;
+}
+
+/* V25: фиолетово-синяя маркировка категории «Космос». */
+#homeScreen .food-category-badge.family-cosmos{
+  --food-family-fill:#7958df!important;
+  --food-family-line:#352579!important;
+  --food-family-ink:#fff!important;
+}
+#homeScreen .recipe-category-slot.family-cosmos{
+  border-color:#352579!important;
+  background:linear-gradient(145deg,#9a75f4,#5057c9)!important;
+  color:#fff!important;
+}
+#homeScreen .family-cosmos,.recipe-book-family.family-cosmos{
+  --recipe-category-icon:url("assets/ui/recipe-categories/mutation-cosmos.png");
+}
+#homeScreen .family-gigantism,.recipe-book-family.family-gigantism{
+  --recipe-category-icon:url("assets/ui/recipe-categories/mutation-gigantism.png");
+}
+#homeScreen .family-wind,.recipe-book-family.family-wind{
+  --recipe-category-icon:url("assets/ui/recipe-categories/mutation-wind.png?v=2");
+}
+
+/* Космос использует ту же геометрию эмблемы, что Огонь, Мороз и Электричество. */
+#homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge.family-cosmos{
+  width:29px!important;
+  height:29px!important;
+  top:-22px!important;
+}
+@media(max-width:370px){
+  #homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge.family-cosmos{
+    width:27px!important;
+    height:27px!important;
+    top:-20px!important;
+  }
+}
+
+/* V44: живой огонь мутации и чуть более крупная подача еды. */
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{
+  width:90px!important;height:24px!important;
+}
+#homeScreen .food-card.conveyor-food-pick .food-model{
+  width:80px!important;height:80px!important;max-height:80px!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-fire>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.mutation-family-damage>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(255,183,55,.66),0 0 13px rgba(255,91,35,.24)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-ice>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.mutation-family-frost>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(153,239,255,.78),0 0 13px rgba(54,171,229,.3)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-electric>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(255,230,84,.82),0 0 13px rgba(255,184,29,.28)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-cosmos>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(145,115,255,.78),0 0 14px rgba(72,75,229,.34)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-blast>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.mutation-family-explosion>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(255,157,62,.82),0 0 14px rgba(236,58,37,.32)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-wind>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(187,250,255,.84),0 0 14px rgba(73,194,218,.28)!important;
+}
+html.short-viewport #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{
+  width:83px!important;height:22px!important;
+}
+html.short-viewport #homeScreen .food-card.conveyor-food-pick .food-model{
+  width:74px!important;height:74px!important;max-height:74px!important;
+}
+
+.mutation-element-fx{
+  position:absolute;display:block;pointer-events:none;overflow:visible;
+}
+.mutation-fire-fx{
+  --fire-core:#fff3a0;--fire-mid:#ffbd31;--fire-hot:#ff632e;--fire-deep:#d92e1e;
+  isolation:isolate;
+}
+.mutation-fire-fx:before{
+  content:"";position:absolute;z-index:0;left:8%;right:8%;bottom:5%;height:29%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(255,240,130,.78),rgba(255,128,43,.42) 42%,rgba(239,65,29,.12) 64%,transparent 76%);
+  filter:blur(3px);animation:mutationFireHeat 1.65s ease-in-out infinite alternate;
+}
+.mutation-fire-fx:after{
+  content:"";position:absolute;z-index:1;left:29%;right:29%;bottom:20%;height:43%;
+  border-radius:48% 52% 42% 58%;
+  background:linear-gradient(180deg,transparent,rgba(255,210,126,.12) 36%,rgba(255,116,57,.22));
+  filter:blur(6px);opacity:.52;animation:mutationFireBreath 2.35s ease-in-out infinite alternate;
+}
+.mutation-fire-fx>b{display:none!important}
+.mutation-fire-fx>i{
+  --spark-x:0px;--spark-drift:0px;--spark-rise:-34px;position:absolute;z-index:4;left:50%;bottom:31%;
+  width:4px;height:4px;border-radius:50%;background:var(--fire-core);
+  box-shadow:0 0 3px #fff0a1,0 0 7px #ff6b27;opacity:0;
+  animation:mutationFireSpark 2s cubic-bezier(.2,.52,.28,1) infinite;
+}
+.mutation-fire-fx>i:nth-of-type(1){--spark-x:-25px;--spark-drift:-8px;--spark-rise:-39px;animation-delay:-.2s}
+.mutation-fire-fx>i:nth-of-type(2){--spark-x:-8px;--spark-drift:5px;--spark-rise:-50px;width:3px;height:3px;animation-delay:-1.48s}
+.mutation-fire-fx>i:nth-of-type(3){--spark-x:17px;--spark-drift:8px;--spark-rise:-43px;animation-delay:-.82s}
+.mutation-fire-fx>i:nth-of-type(4){--spark-x:29px;--spark-drift:-5px;--spark-rise:-34px;width:3px;height:3px;animation-delay:-1.77s}
+.mutation-fire-fx>i:nth-of-type(5){--spark-x:5px;--spark-drift:-9px;--spark-rise:-56px;width:2px;height:2px;animation-delay:-1.13s}
+
+.mutation-frost-fx{
+  --frost-core:#f1ffff;--frost-mid:#9feeff;--frost-blue:#52bde9;isolation:isolate;
+}
+.mutation-frost-fx:before{
+  content:"";position:absolute;z-index:0;left:7%;right:7%;bottom:4%;height:30%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(233,255,255,.92),rgba(112,218,247,.48) 43%,rgba(49,151,215,.12) 66%,transparent 77%);
+  filter:blur(2.5px);animation:mutationFrostGlow 2.1s ease-in-out infinite alternate;
+}
+.mutation-frost-fx:after{
+  content:"";position:absolute;z-index:1;left:21%;right:21%;bottom:17%;height:43%;border-radius:48%;
+  background:linear-gradient(180deg,transparent,rgba(221,252,255,.2) 38%,rgba(126,218,244,.28));
+  filter:blur(7px);opacity:.58;animation:mutationFrostMist 2.8s ease-in-out infinite alternate;
+}
+.mutation-frost-fx>i{
+  --flake-x:0px;--flake-drift:0px;--flake-rise:-35px;position:absolute;z-index:4;left:50%;bottom:25%;
+  width:7px;height:7px;opacity:0;filter:drop-shadow(0 0 3px #9fefff);
+  animation:mutationFrostFlake 3.15s cubic-bezier(.18,.46,.27,1) infinite;
+}
+.mutation-frost-fx>i:before,.mutation-frost-fx>i:after{
+  content:"";position:absolute;left:50%;top:50%;width:7px;height:2px;border-radius:2px;background:var(--frost-core);box-shadow:0 0 2px var(--frost-blue);transform:translate(-50%,-50%);
+}
+.mutation-frost-fx>i:after{transform:translate(-50%,-50%) rotate(90deg)}
+.mutation-frost-fx>i:nth-of-type(1){--flake-x:-27px;--flake-drift:-6px;--flake-rise:-40px;animation-delay:-.35s}
+.mutation-frost-fx>i:nth-of-type(2){--flake-x:-10px;--flake-drift:7px;--flake-rise:-53px;width:5px;height:5px;animation-delay:-2.1s}
+.mutation-frost-fx>i:nth-of-type(3){--flake-x:12px;--flake-drift:-5px;--flake-rise:-47px;animation-delay:-1.2s}
+.mutation-frost-fx>i:nth-of-type(4){--flake-x:28px;--flake-drift:7px;--flake-rise:-36px;width:5px;height:5px;animation-delay:-2.7s}
+.mutation-frost-fx>i:nth-of-type(5){--flake-x:2px;--flake-drift:9px;--flake-rise:-60px;width:4px;height:4px;animation-delay:-1.75s}
+
+.mutation-electric-fx{--electric-core:#fffbd0;--electric-yellow:#ffe04d;--electric-deep:#f1a51c;isolation:isolate}
+.mutation-electric-fx:before{
+  content:"";position:absolute;z-index:0;left:8%;right:8%;bottom:4%;height:29%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(255,251,178,.9),rgba(255,216,62,.48) 43%,rgba(241,158,24,.11) 67%,transparent 77%);
+  filter:blur(2.5px);animation:mutationElectricGlow 1.22s steps(2,end) infinite;
+}
+.mutation-electric-fx:after{
+  content:"";position:absolute;z-index:1;left:24%;right:24%;bottom:17%;height:40%;border-radius:48%;
+  background:radial-gradient(ellipse,rgba(255,231,91,.22),transparent 68%);filter:blur(5px);
+  animation:mutationElectricHaze 1.5s ease-in-out infinite alternate;
+}
+.mutation-electric-fx>i{
+  --bolt-x:0px;--bolt-y:0px;--bolt-r:0deg;position:absolute;z-index:4;left:50%;top:49%;width:10px;height:14px;
+  background:linear-gradient(180deg,var(--electric-core),var(--electric-yellow) 46%,var(--electric-deep));
+  clip-path:polygon(54% 0,100% 0,67% 37%,96% 37%,28% 100%,46% 55%,12% 55%);
+  filter:brightness(1.15) drop-shadow(0 0 2px #fff3a0) drop-shadow(0 0 5px #ffc21f);opacity:0;
+  transform:translate(var(--bolt-x),var(--bolt-y)) rotate(var(--bolt-r)) scale(.45);
+  animation:mutationElectricBolt 1.72s cubic-bezier(.2,.7,.24,1) infinite;
+}
+#homeScreen .food-mutation-fx.mutation-electric-fx{z-index:4}
+.mutation-electric-fx>i:nth-of-type(1){--bolt-x:-37px;--bolt-y:-9px;--bolt-r:-62deg;animation-delay:-.18s}
+.mutation-electric-fx>i:nth-of-type(2){--bolt-x:-20px;--bolt-y:-38px;--bolt-r:-20deg;width:8px;height:11px;animation-delay:-1.15s}
+.mutation-electric-fx>i:nth-of-type(3){--bolt-x:27px;--bolt-y:-31px;--bolt-r:29deg;animation-delay:-.71s}
+.mutation-electric-fx>i:nth-of-type(4){--bolt-x:35px;--bolt-y:2px;--bolt-r:66deg;width:8px;height:11px;animation-delay:-1.48s}
+.mutation-electric-fx>i:nth-of-type(5){--bolt-x:4px;--bolt-y:-47px;--bolt-r:4deg;width:7px;height:10px;animation-delay:-.43s}
+
+.mutation-cosmos-fx{--cosmos-core:#e9e3ff;--cosmos-violet:#a985ff;--cosmos-blue:#5d6cff;isolation:isolate}
+.mutation-cosmos-fx:before{
+  content:"";position:absolute;z-index:0;left:7%;right:7%;bottom:3%;height:31%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(227,216,255,.9),rgba(137,103,244,.5) 42%,rgba(66,70,216,.14) 66%,transparent 78%);
+  filter:blur(3px);animation:mutationCosmosGlow 2.55s ease-in-out infinite alternate;
+}
+.mutation-cosmos-fx:after{
+  content:"";position:absolute;z-index:1;left:23%;right:23%;top:19%;bottom:19%;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,rgba(255,255,255,.22) 0 2%,transparent 4%),radial-gradient(circle at 70% 62%,rgba(145,159,255,.28) 0 2%,transparent 5%),radial-gradient(ellipse,rgba(103,70,220,.15),transparent 67%);
+  filter:blur(2px);animation:mutationCosmosMist 3.2s ease-in-out infinite alternate;
+}
+.mutation-cosmos-fx>i{
+  --orbit-radius:39px;--orbit-angle:0deg;position:absolute;z-index:4;left:50%;top:48%;width:4px;height:4px;border-radius:50%;
+  background:var(--cosmos-core);box-shadow:0 0 3px #fff,0 0 7px var(--cosmos-violet);opacity:.25;
+  transform:rotate(var(--orbit-angle)) translateX(var(--orbit-radius));transform-origin:0 0;
+  animation:mutationCosmosOrbit 5.4s linear infinite;
+}
+.mutation-cosmos-fx>i:after{content:"";position:absolute;inset:-2px;background:inherit;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:.72}
+.mutation-cosmos-fx>i:nth-of-type(1){--orbit-radius:39px;--orbit-angle:18deg;animation-delay:-.4s}
+.mutation-cosmos-fx>i:nth-of-type(2){--orbit-radius:33px;--orbit-angle:102deg;width:3px;height:3px;animation-duration:6.4s;animation-delay:-2.8s}
+.mutation-cosmos-fx>i:nth-of-type(3){--orbit-radius:43px;--orbit-angle:188deg;animation-duration:7.1s;animation-delay:-4.5s}
+.mutation-cosmos-fx>i:nth-of-type(4){--orbit-radius:36px;--orbit-angle:266deg;width:3px;height:3px;animation-duration:5.9s;animation-delay:-1.7s}
+.mutation-cosmos-fx>i:nth-of-type(5){--orbit-radius:29px;--orbit-angle:328deg;width:2px;height:2px;animation-duration:7.8s;animation-delay:-5.6s}
+
+.mutation-blast-fx{--blast-core:#fff2a3;--blast-hot:#ff9b31;--blast-red:#ed4934;isolation:isolate}
+.mutation-blast-fx:before{
+  content:"";position:absolute;z-index:0;left:7%;right:7%;bottom:3%;height:31%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 59%,rgba(255,239,139,.9),rgba(255,137,48,.5) 42%,rgba(225,49,39,.14) 66%,transparent 78%);
+  filter:blur(2.5px);animation:mutationBlastPressure 2.35s cubic-bezier(.2,.7,.25,1) infinite;
+}
+.mutation-blast-fx:after{
+  content:"";position:absolute;z-index:1;left:29%;right:29%;bottom:21%;height:40%;border-radius:47%;
+  background:radial-gradient(circle,rgba(255,225,112,.3),rgba(244,88,40,.12) 48%,transparent 72%);
+  filter:blur(4px);animation:mutationBlastFlash 2.35s ease-out infinite;
+}
+.mutation-blast-fx>i{
+  --shard-x:0px;--shard-y:-34px;--shard-r:0deg;position:absolute;z-index:4;left:50%;bottom:29%;
+  width:5px;height:5px;border-radius:1px;background:linear-gradient(135deg,var(--blast-core),var(--blast-hot) 55%,var(--blast-red));
+  box-shadow:0 0 4px rgba(255,112,40,.78);opacity:0;
+  animation:mutationBlastShard 2.35s cubic-bezier(.12,.64,.22,1) infinite;
+}
+.mutation-blast-fx>i:nth-of-type(1){--shard-x:-34px;--shard-y:-24px;--shard-r:-75deg;animation-delay:-.08s}
+.mutation-blast-fx>i:nth-of-type(2){--shard-x:-17px;--shard-y:-45px;--shard-r:-28deg;width:4px;height:6px;animation-delay:-.02s}
+.mutation-blast-fx>i:nth-of-type(3){--shard-x:7px;--shard-y:-51px;--shard-r:18deg;width:4px;height:4px;animation-delay:-.13s}
+.mutation-blast-fx>i:nth-of-type(4){--shard-x:29px;--shard-y:-36px;--shard-r:63deg;width:5px;height:4px;animation-delay:-.05s}
+.mutation-blast-fx>i:nth-of-type(5){--shard-x:38px;--shard-y:-14px;--shard-r:96deg;width:3px;height:5px;animation-delay:-.17s}
+
+.mutation-wind-fx{--wind-core:#f2ffff;--wind-mid:#a9edf4;--wind-blue:#56bdd3;isolation:isolate}
+.mutation-wind-fx:before{
+  content:"";position:absolute;z-index:0;left:7%;right:7%;bottom:3%;height:30%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(235,255,255,.88),rgba(137,226,238,.45) 43%,rgba(56,167,198,.1) 67%,transparent 78%);
+  filter:blur(3px);animation:mutationWindGlow 2.2s ease-in-out infinite alternate;
+}
+.mutation-wind-fx:after{
+  content:"";position:absolute;z-index:1;left:18%;right:18%;bottom:18%;height:42%;border-radius:48%;
+  background:linear-gradient(105deg,transparent 12%,rgba(218,253,255,.22) 47%,transparent 78%);
+  filter:blur(5px);animation:mutationWindMist 2.65s ease-in-out infinite;
+}
+.mutation-wind-fx>i{
+  --wind-y:0px;--wind-width:25px;position:absolute;z-index:4;left:50%;top:50%;width:var(--wind-width);height:9px;
+  border-top:2px solid var(--wind-core);border-radius:50%;opacity:0;
+  filter:drop-shadow(0 0 2px var(--wind-mid));transform:translate(-46px,var(--wind-y)) scaleX(.55);
+  animation:mutationWindStroke 2.75s cubic-bezier(.18,.56,.27,1) infinite;
+}
+.mutation-wind-fx>i:after{content:"";position:absolute;right:-1px;top:-3px;width:4px;height:4px;border-radius:50%;background:var(--wind-core);box-shadow:0 0 4px var(--wind-mid)}
+.mutation-wind-fx>i:nth-of-type(1){--wind-y:-31px;--wind-width:22px;animation-delay:-.2s}
+.mutation-wind-fx>i:nth-of-type(2){--wind-y:-14px;--wind-width:30px;animation-delay:-1.72s;animation-duration:3.05s}
+.mutation-wind-fx>i:nth-of-type(3){--wind-y:4px;--wind-width:24px;animation-delay:-.88s;animation-duration:2.45s}
+.mutation-wind-fx>i:nth-of-type(4){--wind-y:20px;--wind-width:28px;animation-delay:-2.36s;animation-duration:3.2s}
+.mutation-wind-fx>i:nth-of-type(5){--wind-y:-42px;--wind-width:18px;animation-delay:-1.14s;animation-duration:3.45s}
+
+#homeScreen .food-mutation-fx{
+  z-index:2;left:50%;bottom:4px;width:96px;height:92px;transform:translateX(-50%);
+  transition:opacity .16s ease,filter .16s ease;
+}
+#homeScreen .food-card.conveyor-food-pick.drag-source>.food-category-badge,
+#homeScreen .food-card.conveyor-food-pick.food-picked>.food-category-badge{
+  opacity:0!important;transition:opacity .12s ease!important;
+}
+#homeScreen .food-card.conveyor-food-pick.drag-source>.food-mutation-fx,
+#homeScreen .food-card.conveyor-food-pick.food-picked>.food-mutation-fx{
+  opacity:0!important;
+}
+.food-drag-mutation-fx{
+  z-index:1;left:50%;top:50%;width:102px;height:102px;transform:translate(-50%,-52%);
+}
+.food-drag-art{position:relative;z-index:3}
+
+.mutation-dispenser .mutation-mystery>img{position:relative;z-index:3}
+.mutation-dispenser .mutation-vended-fx{
+  z-index:1;left:50%;top:50%;width:76px;height:76px;transform:translate(-50%,-50%);
+}
+.mutation-prize-emblem{
+  position:relative;width:190px;height:190px;display:grid;place-items:center;
+}
+.mutation-prize-emblem>img{
+  position:relative;z-index:3;width:184px;height:184px;display:block;object-fit:contain;object-position:center;
+  filter:drop-shadow(0 9px 3px rgba(13,44,55,.3));transform-origin:center;
+}
+.mutation-prize.is-visible .mutation-prize-emblem>img{
+  animation:mutationPrizeAppear .72s cubic-bezier(.16,.8,.2,1.2) both;
+}
+.mutation-prize-emblem .mutation-prize-fx{
+  z-index:1;left:50%;top:50%;width:218px;height:218px;transform:translate(-50%,-50%);
+}
+.mutation-prize.is-collecting .mutation-prize-emblem>img{
+  opacity:0!important;animation:none!important;transition:none!important;
+}
+
+@keyframes mutationFireHeat{
+  from{opacity:.52;transform:scale(.92,.84);filter:blur(4px)}
+  to{opacity:.88;transform:scale(1.06,1.08);filter:blur(3px)}
+}
+@keyframes mutationFireBreath{
+  from{opacity:.24;transform:translate(-3px,3px) scale(.9,.82)}
+  to{opacity:.58;transform:translate(4px,-6px) scale(1.08,1.16)}
+}
+@keyframes mutationFireSpark{
+  0%,12%{opacity:0;transform:translate(var(--spark-x),5px) scale(.25)}
+  20%{opacity:.96;transform:translate(var(--spark-x),0) scale(1)}
+  72%{opacity:.68}
+  100%{opacity:0;transform:translate(calc(var(--spark-x) + var(--spark-drift)),var(--spark-rise)) scale(.34)}
+}
+@keyframes mutationFrostGlow{
+  from{opacity:.62;transform:scale(.92,.86)}
+  to{opacity:1;transform:scale(1.07,1.08)}
+}
+@keyframes mutationFrostMist{
+  from{opacity:.28;transform:translate(-4px,3px) scale(.9,.82)}
+  to{opacity:.6;transform:translate(5px,-7px) scale(1.1,1.17)}
+}
+@keyframes mutationFrostFlake{
+  0%,13%{opacity:0;transform:translate(var(--flake-x),5px) rotate(0deg) scale(.35)}
+  22%{opacity:.94;transform:translate(var(--flake-x),0) rotate(24deg) scale(1)}
+  72%{opacity:.72}
+  100%{opacity:0;transform:translate(calc(var(--flake-x) + var(--flake-drift)),var(--flake-rise)) rotate(155deg) scale(.55)}
+}
+@keyframes mutationElectricGlow{
+  0%,100%{opacity:.56;transform:scale(.94,.88)}
+  42%{opacity:1;transform:scale(1.08,1.06)}
+  58%{opacity:.68;transform:scale(.99,.93)}
+}
+@keyframes mutationElectricHaze{from{opacity:.2;transform:scale(.9)}to{opacity:.5;transform:scale(1.1)}}
+@keyframes mutationElectricBolt{
+  0%,52%,100%{opacity:0;filter:brightness(1.05) drop-shadow(0 0 1px #fff3a0)}
+  58%{opacity:.38;transform:translate(var(--bolt-x),var(--bolt-y)) rotate(var(--bolt-r)) scale(.48)}
+  65%{opacity:1;transform:translate(var(--bolt-x),var(--bolt-y)) rotate(var(--bolt-r)) scale(1.08);filter:brightness(1.2) drop-shadow(0 0 3px #fff3a0) drop-shadow(0 0 6px #ffc21f)}
+  79%{opacity:.82;transform:translate(var(--bolt-x),var(--bolt-y)) rotate(var(--bolt-r)) scale(.9)}
+  91%{opacity:0;transform:translate(var(--bolt-x),calc(var(--bolt-y) - 4px)) rotate(var(--bolt-r)) scale(.58)}
+}
+@keyframes mutationCosmosGlow{from{opacity:.5;transform:scale(.91,.86)}to{opacity:.94;transform:scale(1.08,1.09)}}
+@keyframes mutationCosmosMist{from{opacity:.34;transform:translate(-3px,2px) scale(.9)}to{opacity:.68;transform:translate(4px,-3px) scale(1.08)}}
+@keyframes mutationCosmosOrbit{
+  0%{opacity:0;transform:rotate(var(--orbit-angle)) translateX(var(--orbit-radius)) scale(.55)}
+  14%{opacity:.9}
+  52%{opacity:.45}
+  82%{opacity:.9}
+  100%{opacity:0;transform:rotate(calc(var(--orbit-angle) + 360deg)) translateX(var(--orbit-radius)) scale(1.05)}
+}
+@keyframes mutationBlastPressure{
+  0%,70%,100%{opacity:.5;transform:scale(.93,.87)}
+  76%{opacity:1;transform:scale(1.13,1.18)}
+  84%{opacity:.72;transform:scale(1.02,.96)}
+}
+@keyframes mutationBlastFlash{
+  0%,70%,100%{opacity:.08;transform:scale(.55)}
+  76%{opacity:.88;transform:scale(1.16)}
+  88%{opacity:0;transform:scale(1.34)}
+}
+@keyframes mutationBlastShard{
+  0%,69%,100%{opacity:0;transform:translate(0,0) rotate(0deg) scale(.4)}
+  75%{opacity:1;transform:translate(0,-3px) rotate(0deg) scale(1)}
+  91%{opacity:.58}
+  100%{opacity:0;transform:translate(var(--shard-x),var(--shard-y)) rotate(var(--shard-r)) scale(.42)}
+}
+@keyframes mutationWindGlow{from{opacity:.48;transform:scale(.92,.86)}to{opacity:.9;transform:scale(1.08,1.07)}}
+@keyframes mutationWindMist{
+  0%{opacity:0;transform:translateX(-13px) skewX(-6deg)}
+  24%{opacity:.56}
+  76%{opacity:.34}
+  100%{opacity:0;transform:translateX(14px) skewX(5deg)}
+}
+@keyframes mutationWindStroke{
+  0%,12%{opacity:0;transform:translate(-47px,var(--wind-y)) scaleX(.5)}
+  24%{opacity:.86}
+  66%{opacity:.72;transform:translate(4px,calc(var(--wind-y) - 3px)) scaleX(1)}
+  100%{opacity:0;transform:translate(35px,calc(var(--wind-y) - 6px)) scaleX(.62)}
+}
+
+/* V45: deeper cosmos, cleaner green wind and slightly clearer elemental signatures. */
+#homeScreen .food-card.conveyor-food-pick.mutation-family-fire>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.mutation-family-damage>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff,0 0 8px rgba(255,190,61,.8),0 0 17px rgba(255,78,30,.34)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-ice>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.mutation-family-frost>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff,0 0 8px rgba(176,247,255,.92),0 0 17px rgba(47,170,231,.38)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-electric>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff,0 0 8px rgba(255,237,90,.96),0 0 17px rgba(255,177,19,.38)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-cosmos>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.52),inset 0 2px 0 #fff,0 0 9px rgba(183,126,255,.92),0 0 19px rgba(75,53,225,.5)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-blast>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.mutation-family-explosion>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff,0 0 8px rgba(255,173,66,.94),0 0 17px rgba(232,51,35,.4)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-wind>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff,0 0 8px rgba(207,255,205,.9),0 0 17px rgba(57,193,99,.34)!important;
+}
+
+.mutation-fire-fx:before,.mutation-frost-fx:before,.mutation-electric-fx:before,.mutation-blast-fx:before{
+  filter:blur(2px) saturate(1.18) contrast(1.08);
+}
+.mutation-fire-fx>i{box-shadow:0 0 3px #fff3a0,0 0 8px #ff5a20,0 0 12px rgba(255,79,26,.42)}
+.mutation-frost-fx>i{filter:brightness(1.14) drop-shadow(0 0 3px #a9f5ff) drop-shadow(0 0 5px rgba(55,165,232,.55))}
+.mutation-electric-fx>i{filter:brightness(1.22) drop-shadow(0 0 3px #fff5a0) drop-shadow(0 0 7px #ffba17)}
+.mutation-blast-fx>i{box-shadow:0 0 4px rgba(255,242,154,.9),0 0 8px rgba(255,83,34,.68)}
+
+.mutation-cosmos-fx{
+  --cosmos-core:#fff8ff;--cosmos-violet:#bc73ff;--cosmos-blue:#526eff;--cosmos-deep:#25116f;
+  isolation:isolate;
+}
+.mutation-cosmos-fx:before{
+  left:5%;right:5%;bottom:1%;height:38%;border-radius:50%;
+  background:
+    radial-gradient(ellipse at 50% 54%,rgba(244,226,255,.96) 0 7%,rgba(156,93,255,.65) 27%,rgba(73,63,224,.32) 49%,rgba(27,15,103,.12) 67%,transparent 78%);
+  filter:blur(2px) saturate(1.35);mix-blend-mode:screen;
+  animation:mutationCosmosDepth 2.8s ease-in-out infinite alternate;
+}
+.mutation-cosmos-fx:after{
+  left:13%;right:13%;top:26%;bottom:25%;border-radius:50%;
+  background:conic-gradient(from 24deg,transparent 0 9%,rgba(187,116,255,.15) 17%,rgba(236,219,255,.94) 23%,rgba(98,128,255,.72) 29%,transparent 38% 62%,rgba(111,84,246,.2) 70%,rgba(217,192,255,.88) 76%,transparent 86%);
+  -webkit-mask:radial-gradient(ellipse at center,transparent 0 54%,#000 58% 63%,transparent 67%);
+  mask:radial-gradient(ellipse at center,transparent 0 54%,#000 58% 63%,transparent 67%);
+  filter:drop-shadow(0 0 3px rgba(181,121,255,.86));opacity:.8;
+  animation:mutationCosmosDisc 7.5s linear infinite;
+}
+.mutation-cosmos-fx>i{
+  --orbit-radius:42px;--orbit-angle:0deg;top:48%;width:5px;height:5px;
+  background:var(--cosmos-core);box-shadow:0 0 3px #fff,0 0 8px var(--cosmos-violet),0 0 12px rgba(81,103,255,.55);opacity:0;
+  animation:mutationCosmosOrbitV2 6.2s linear infinite;
+}
+.mutation-cosmos-fx>i:before{
+  content:"";position:absolute;right:2px;top:50%;width:14px;height:2px;border-radius:100%;
+  background:linear-gradient(90deg,transparent,rgba(168,129,255,.22),rgba(245,235,255,.9));
+  filter:blur(.3px);transform:translateY(-50%);transform-origin:right center;
+}
+.mutation-cosmos-fx>i:after{
+  inset:-3px;background:inherit;filter:drop-shadow(0 0 2px #fff);
+}
+.mutation-cosmos-fx>i:nth-of-type(1){--orbit-radius:41px;--orbit-angle:12deg;animation-delay:-.6s}
+.mutation-cosmos-fx>i:nth-of-type(2){--orbit-radius:34px;--orbit-angle:91deg;width:3px;height:3px;animation-duration:7.2s;animation-delay:-3.2s}
+.mutation-cosmos-fx>i:nth-of-type(3){--orbit-radius:45px;--orbit-angle:176deg;width:4px;height:4px;animation-duration:8s;animation-delay:-5.1s}
+.mutation-cosmos-fx>i:nth-of-type(4){--orbit-radius:38px;--orbit-angle:252deg;width:3px;height:3px;animation-duration:6.7s;animation-delay:-2.1s}
+.mutation-cosmos-fx>i:nth-of-type(5){--orbit-radius:29px;--orbit-angle:322deg;width:3px;height:3px;animation-duration:8.6s;animation-delay:-6.4s}
+
+.mutation-wind-fx{
+  --wind-core:#f5fff1;--wind-mid:#baffb2;--wind-green:#4fd270;--wind-deep:#18854e;
+  isolation:isolate;
+}
+.mutation-wind-fx:before{
+  left:6%;right:6%;bottom:2%;height:33%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(240,255,232,.88),rgba(129,232,147,.46) 43%,rgba(31,153,85,.13) 66%,transparent 78%);
+  filter:blur(2.5px) saturate(1.16);animation:mutationWindGlowV2 2.7s ease-in-out infinite alternate;
+}
+.mutation-wind-fx:after{
+  left:14%;right:14%;bottom:18%;height:45%;
+  background:linear-gradient(104deg,transparent 8%,rgba(229,255,224,.08) 25%,rgba(213,255,210,.3) 49%,rgba(113,224,144,.1) 68%,transparent 88%);
+  filter:blur(5px);animation:mutationWindMistV2 3.6s ease-in-out infinite;
+}
+.mutation-wind-fx>i{
+  --wind-y:0px;--wind-width:30px;left:50%;top:50%;width:var(--wind-width);height:11px;
+  border-top:2px solid rgba(244,255,239,.96);border-bottom:1px solid rgba(112,232,139,.65);border-radius:50%;
+  filter:drop-shadow(0 0 2px rgba(155,255,169,.92)) drop-shadow(0 0 4px rgba(52,189,99,.38));transform:translate(-49px,var(--wind-y)) scaleX(.45) rotate(-3deg);
+  animation:mutationWindThread 3.45s cubic-bezier(.22,.56,.32,1) infinite;
+}
+.mutation-wind-fx>i:before{
+  content:"";position:absolute;left:7px;top:4px;width:58%;height:7px;border-top:1px solid rgba(206,255,203,.62);border-radius:50%;
+}
+.mutation-wind-fx>i:after{
+  content:"";position:absolute;right:-4px;top:-5px;width:8px;height:5px;border-radius:85% 15% 80% 20%;
+  background:linear-gradient(135deg,#f4fff0,#7df092 60%,#25a85e);box-shadow:0 0 5px rgba(137,249,153,.9);
+  transform:rotate(18deg);
+}
+.mutation-wind-fx>i:nth-of-type(1){--wind-y:-32px;--wind-width:25px;animation-delay:-.35s}
+.mutation-wind-fx>i:nth-of-type(2){--wind-y:-15px;--wind-width:35px;animation-delay:-2.1s;animation-duration:3.8s}
+.mutation-wind-fx>i:nth-of-type(3){--wind-y:3px;--wind-width:29px;animation-delay:-1.12s;animation-duration:3.2s}
+.mutation-wind-fx>i:nth-of-type(4){--wind-y:20px;--wind-width:32px;animation-delay:-2.92s;animation-duration:4.05s}
+.mutation-wind-fx>i:nth-of-type(5){--wind-y:-44px;--wind-width:21px;animation-delay:-1.55s;animation-duration:4.3s}
+.mutation-wind-fx>i:nth-of-type(1):after,.mutation-wind-fx>i:nth-of-type(3):after{opacity:.28;transform:scale(.65) rotate(-18deg)}
+.mutation-wind-fx>i:nth-of-type(5):after{transform:scale(.78) rotate(52deg)}
+
+@keyframes mutationCosmosDepth{
+  from{opacity:.58;transform:scale(.9,.8) rotate(-3deg);filter:blur(3px) saturate(1.2)}
+  to{opacity:1;transform:scale(1.1,1.12) rotate(3deg);filter:blur(1.7px) saturate(1.48)}
+}
+@keyframes mutationCosmosDisc{
+  from{transform:rotate(-13deg) scaleY(.62) rotate(0deg)}
+  to{transform:rotate(-13deg) scaleY(.62) rotate(360deg)}
+}
+@keyframes mutationCosmosOrbitV2{
+  0%{opacity:0;transform:rotate(var(--orbit-angle)) translateX(var(--orbit-radius)) scale(.35)}
+  11%{opacity:1}
+  46%{opacity:.55;filter:brightness(1)}
+  58%{opacity:1;filter:brightness(1.6)}
+  88%{opacity:.82}
+  100%{opacity:0;transform:rotate(calc(var(--orbit-angle) + 360deg)) translateX(var(--orbit-radius)) scale(1.05)}
+}
+@keyframes mutationWindGlowV2{
+  from{opacity:.5;transform:scale(.91,.84)}
+  to{opacity:.94;transform:scale(1.08,1.06)}
+}
+@keyframes mutationWindMistV2{
+  0%{opacity:0;transform:translateX(-16px) skewX(-7deg) scaleX(.82)}
+  28%{opacity:.62}
+  72%{opacity:.3}
+  100%{opacity:0;transform:translateX(17px) skewX(5deg) scaleX(1.08)}
+}
+@keyframes mutationWindThread{
+  0%,14%{opacity:0;transform:translate(-49px,var(--wind-y)) scaleX(.42) rotate(-4deg)}
+  27%{opacity:.9}
+  63%{opacity:1;transform:translate(-1px,calc(var(--wind-y) - 4px)) scaleX(1) rotate(1deg)}
+  100%{opacity:0;transform:translate(38px,calc(var(--wind-y) - 9px)) scaleX(.6) rotate(7deg)}
+}
+
+@media(max-width:370px){
+  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:80px!important;height:21px!important}
+  #homeScreen .food-card.conveyor-food-pick .food-model{width:71px!important;height:71px!important;max-height:71px!important}
+  #homeScreen .food-mutation-fx{width:88px;height:86px}
+}
+
+/* V46: readable blast beat and a short, clean side wind gust. */
+#homeScreen .food-card.conveyor-food-pick.mutation-family-blast>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.mutation-family-explosion>.conveyor-plate{
+  animation:mutationBlastPlateHit 2.9s cubic-bezier(.22,.7,.25,1) infinite;
+}
+#homeScreen .food-mutation-fx.mutation-blast-fx{z-index:1}
+.mutation-blast-fx:before{
+  left:1%;right:1%;bottom:-1%;width:auto;height:42%;aspect-ratio:auto;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(255,255,210,.98) 0 7%,rgba(255,205,58,.92) 18%,rgba(255,125,32,.58) 38%,rgba(238,104,27,.16) 55%,transparent 73%);
+  filter:blur(1.5px) saturate(1.35) contrast(1.12);
+  animation:mutationBlastPressureV2 2.9s cubic-bezier(.18,.7,.2,1) infinite;
+}
+.mutation-blast-fx:after{
+  left:20%;right:20%;bottom:15%;width:auto;height:49%;aspect-ratio:auto;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,230,1) 0 8%,rgba(255,219,75,.92) 18%,rgba(255,91,31,.48) 38%,transparent 70%);
+  filter:blur(2.5px) saturate(1.35);
+  animation:mutationBlastFlashV2 2.9s ease-out infinite;
+}
+.mutation-blast-fx>i{
+  bottom:27%;width:6px;height:7px;border-radius:1px;
+  clip-path:polygon(50% 0,100% 38%,69% 100%,11% 76%,0 24%);
+  background:linear-gradient(135deg,#fffbd2 0 20%,#ffc52e 38%,#ff6a27 68%,#d92d25);
+  box-shadow:0 0 4px rgba(255,249,190,1),0 0 10px rgba(255,70,27,.82);
+  animation:mutationBlastShardV2 2.9s cubic-bezier(.12,.68,.18,1) infinite;
+  animation-delay:0s!important;
+}
+.mutation-blast-fx>i:nth-of-type(1){--shard-x:-53px;--shard-y:-35px;--shard-r:-124deg}
+.mutation-blast-fx>i:nth-of-type(2){--shard-x:-31px;--shard-y:-61px;--shard-r:-58deg;width:5px;height:8px}
+.mutation-blast-fx>i:nth-of-type(3){--shard-x:7px;--shard-y:-68px;--shard-r:35deg;width:5px;height:6px}
+.mutation-blast-fx>i:nth-of-type(4){--shard-x:43px;--shard-y:-49px;--shard-r:112deg;width:6px;height:5px}
+.mutation-blast-fx>i:nth-of-type(5){--shard-x:57px;--shard-y:-22px;--shard-r:168deg;width:5px;height:7px}
+
+.mutation-wind-fx:before{
+  left:4%;right:4%;bottom:2%;height:31%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(239,255,231,.76),rgba(113,222,137,.32) 43%,rgba(27,145,76,.08) 65%,transparent 78%);
+  filter:blur(3px);opacity:0;
+  animation:mutationWindBaseGust 5.4s ease-in-out infinite;
+}
+.mutation-wind-fx:after{
+  left:-5%;right:-5%;top:28%;bottom:25%;border-radius:0;
+  background:linear-gradient(90deg,transparent 4%,rgba(224,255,220,.05) 21%,rgba(218,255,214,.28) 48%,rgba(98,218,128,.08) 74%,transparent 94%);
+  filter:blur(5px);opacity:0;
+  animation:mutationWindAirSweep 5.4s ease-out infinite;
+}
+.mutation-wind-fx>i{
+  --wind-y:0px;--wind-width:34px;left:50%;top:50%;width:var(--wind-width);height:3px;
+  border:0!important;border-radius:999px;
+  background:linear-gradient(90deg,transparent 0%,rgba(182,248,189,.22) 14%,rgba(241,255,237,.98) 52%,rgba(105,223,132,.62) 78%,transparent 100%);
+  box-shadow:0 0 3px rgba(172,255,184,.55);
+  filter:drop-shadow(0 0 2px rgba(124,240,146,.72));opacity:0;
+  transform:translate(-58px,var(--wind-y)) scaleX(.32);
+  animation:mutationWindStraightGust 5.4s cubic-bezier(.18,.63,.28,1) infinite;
+}
+.mutation-wind-fx>i:before,.mutation-wind-fx>i:after{content:none!important}
+.mutation-wind-fx>i:nth-of-type(1){--wind-y:-34px;--wind-width:31px;animation-delay:0s}
+.mutation-wind-fx>i:nth-of-type(2){--wind-y:-18px;--wind-width:43px;animation-delay:.07s;animation-duration:5.4s}
+.mutation-wind-fx>i:nth-of-type(3){--wind-y:-3px;--wind-width:35px;animation-delay:.14s;animation-duration:5.4s}
+.mutation-wind-fx>i:nth-of-type(4){--wind-y:13px;--wind-width:39px;animation-delay:.2s;animation-duration:5.4s}
+.mutation-wind-fx>i:nth-of-type(5){--wind-y:27px;--wind-width:27px;animation-delay:.25s;animation-duration:5.4s}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-wind>.food-model-wrap{
+  transform-origin:50% 100%;animation:mutationWindFoodSway 5.4s ease-in-out infinite;will-change:transform;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-wind>.conveyor-plate{
+  animation:mutationWindPlateGust 5.4s ease-in-out infinite;will-change:filter;
+}
+
+@keyframes mutationBlastPlateHit{
+  0%,52%,92%,100%{filter:brightness(1) saturate(1) drop-shadow(0 0 0 transparent)}
+  57%{filter:brightness(1.62) saturate(1.55) drop-shadow(0 0 6px #fff09a) drop-shadow(0 0 13px #ff4722)}
+  70%{filter:brightness(1.26) saturate(1.34) drop-shadow(0 0 8px rgba(255,78,30,.8))}
+  84%{filter:brightness(1.06) saturate(1.1) drop-shadow(0 0 3px rgba(255,116,40,.32))}
+}
+@keyframes mutationBlastPressureV2{
+  0%,52%,100%{opacity:.16;transform:scale(.82,.72)}
+  57%{opacity:1;transform:scale(1.03,.97)}
+  70%{opacity:.96;transform:scale(1.4,1.52)}
+  86%{opacity:.36;transform:scale(1.68,1.72)}
+  94%{opacity:0;transform:scale(1.8,1.8)}
+}
+@keyframes mutationBlastFlashV2{
+  0%,53%,100%{opacity:0;transform:scale(.36)}
+  57%{opacity:1;transform:scale(.9)}
+  64%{opacity:.96;transform:scale(1.25)}
+  76%{opacity:.3;transform:scale(1.55)}
+  86%{opacity:0;transform:scale(1.72)}
+}
+@keyframes mutationBlastShardV2{
+  0%,54%,100%{opacity:0;transform:translate(0,2px) rotate(0deg) scale(.35)}
+  58%{opacity:1;transform:translate(0,-2px) rotate(0deg) scale(1.2)}
+  72%{opacity:1}
+  86%{opacity:.72}
+  94%{opacity:0;transform:translate(var(--shard-x),var(--shard-y)) rotate(var(--shard-r)) scale(.48)}
+}
+@keyframes mutationWindBaseGust{
+  0%,12%,54%,100%{opacity:0;transform:scale(.9,.82)}
+  22%{opacity:.72;transform:scale(1.03,.98)}
+  38%{opacity:.48;transform:scale(1.1,1.04)}
+}
+@keyframes mutationWindAirSweep{
+  0%,11%,55%,100%{opacity:0;transform:translateX(-18px) scaleX(.72)}
+  23%{opacity:.64}
+  43%{opacity:.26;transform:translateX(13px) scaleX(1.12)}
+}
+@keyframes mutationWindStraightGust{
+  0%,11%{opacity:0;transform:translate(-58px,var(--wind-y)) scaleX(.28)}
+  18%{opacity:.9}
+  34%{opacity:1;transform:translate(-4px,calc(var(--wind-y) - 1px)) scaleX(1)}
+  49%{opacity:0;transform:translate(45px,calc(var(--wind-y) - 2px)) scaleX(.58)}
+  50%,100%{opacity:0;transform:translate(45px,calc(var(--wind-y) - 2px)) scaleX(.58)}
+}
+@keyframes mutationWindFoodSway{
+  0%,13%,53%,100%{transform:translateX(0) rotate(0deg)}
+  20%{transform:translateX(1px) rotate(1.2deg)}
+  27%{transform:translateX(2px) rotate(2.1deg)}
+  35%{transform:translateX(.5px) rotate(-.7deg)}
+  43%{transform:translateX(1px) rotate(.55deg)}
+  51%{transform:translateX(0) rotate(0deg)}
+}
+@keyframes mutationWindPlateGust{
+  0%,13%,53%,100%{filter:brightness(1) drop-shadow(0 0 0 transparent)}
+  24%{filter:brightness(1.15) drop-shadow(0 0 5px rgba(176,255,177,.8)) drop-shadow(0 0 9px rgba(45,187,92,.44))}
+  42%{filter:brightness(1.06) drop-shadow(0 0 3px rgba(112,232,139,.38))}
+}
+
+/* V87: три лабораторных дозатора над пустыми тарелками конвейера. */
+#homeScreen>.card.conveyor{
+  transform:translateY(7px)!important;
+  margin-bottom:-7px!important;
+}
+#homeScreen .conveyor-dispensers{
+  position:absolute;z-index:36;left:32px;right:32px;top:18px;height:55px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
+  pointer-events:none;overflow:visible;
+}
+#homeScreen .conveyor-dispensers.hidden{display:none!important}
+#homeScreen .conveyor-dispenser{
+  --pipe-accent:#90a7b5;position:relative;justify-self:center;width:48px;height:55px;
+  filter:drop-shadow(0 3px 1px rgba(0,0,0,.42));
+}
+#homeScreen .conveyor-dispenser.family-ice{--pipe-accent:#74dbf5}
+#homeScreen .conveyor-dispenser.family-fire{--pipe-accent:#ff8b45}
+#homeScreen .conveyor-dispenser.family-electric{--pipe-accent:#ffe65b}
+#homeScreen .conveyor-pipe-feed{
+  position:absolute;z-index:1;left:50%;top:-20px;width:18px;height:30px;
+  border:2px solid #263b49;border-top:0;border-radius:0 0 5px 5px;
+  background:linear-gradient(90deg,#4d6572 0 18%,#a9bec7 19% 43%,#718b98 44% 75%,#3e5663 76%);
+  box-shadow:inset 2px 0 0 rgba(255,255,255,.18),inset -2px 0 0 rgba(18,35,45,.28);
+  transform:translateX(-50%);
+}
+#homeScreen .conveyor-pipe-socket{
+  position:absolute;z-index:4;left:50%;top:2px;width:36px;height:36px;
+  display:grid;place-items:center;overflow:hidden;
+  border:3px solid #263b49;border-radius:50%;
+  background:radial-gradient(circle at 38% 28%,#f1fbfa 0 12%,#b8d0d1 13% 37%,#4e6975 69%,#263e4b 100%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.46),inset 0 -4px 5px rgba(24,48,58,.34),0 2px 0 rgba(150,182,190,.5);
+  transform:translateX(-50%);
+}
+#homeScreen .conveyor-pipe-socket:after{
+  content:"";position:absolute;inset:2px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(255,255,255,.54),transparent 36% 72%,rgba(15,35,45,.2));
+  pointer-events:none;
+}
+#homeScreen .conveyor-pipe-socket>img{
+  width:31px;height:31px;display:block;object-fit:cover;border-radius:50%;
+  transform:scale(1.07);filter:drop-shadow(0 1px 1px rgba(10,26,35,.3));
+}
+#homeScreen .conveyor-pipe-nozzle{
+  position:absolute;z-index:3;left:50%;top:34px;width:29px;height:19px;
+  border:2px solid #263b49;border-radius:5px 5px 9px 9px;
+  background:linear-gradient(90deg,#455e6b,#a8bec6 31%,#708b97 67%,#3a515e);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.28),0 2px 0 rgba(8,20,27,.28);
+  transform:translateX(-50%);
+}
+#homeScreen .conveyor-pipe-nozzle:after{
+  content:"";position:absolute;left:50%;bottom:-6px;width:21px;height:8px;
+  border:2px solid #233946;border-radius:2px 2px 7px 7px;
+  background:linear-gradient(180deg,#263e4a,#0c1921);
+  transform:translateX(-50%);
+}
+#homeScreen .conveyor-pipe-nozzle>b{
+  position:absolute;z-index:2;left:50%;bottom:-4px;width:13px;height:5px;border-radius:50%;
+  background:#071015;box-shadow:0 0 0 2px #526b77,inset 0 1px 2px #000;
+  transform:translateX(-50%);
+}
+#homeScreen .conveyor-pipe-pulse{
+  position:absolute;z-index:2;left:50%;top:45px;width:24px;height:42px;opacity:0;
+  border-radius:50%;background:linear-gradient(180deg,var(--pipe-accent),transparent 78%);
+  filter:blur(3px);transform:translateX(-50%) scale(.35,.2);
+}
+#homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-socket{
+  animation:conveyorEmblemFlash .48s cubic-bezier(.18,.78,.22,1) var(--dispense-delay,0ms) both;
+}
+#homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-nozzle{
+  animation:conveyorNozzlePop .42s cubic-bezier(.2,.8,.2,1) var(--dispense-delay,0ms) both;
+}
+#homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-pulse{
+  animation:conveyorPipePulse .4s ease-out var(--dispense-delay,0ms) both;
+}
+#homeScreen .food-card.conveyor-food-pick.awaiting-dispense>:not(.conveyor-plate){opacity:0!important}
+#homeScreen .food-card.conveyor-food-pick.food-dropping>.food-model-wrap{
+  animation:conveyorFoodDrop .46s cubic-bezier(.18,.78,.2,1.16) var(--dispense-delay,0ms) both!important;
+}
+#homeScreen .food-card.conveyor-food-pick.food-dropping>.food-mutation-fx{
+  animation:conveyorFoodFxArrive .42s ease-out calc(var(--dispense-delay,0ms) + 155ms) both!important;
+}
+#homeScreen .conveyor.is-dispensing .food-choices,
+#homeScreen .conveyor.is-dispensing .reroll-btn{pointer-events:none!important}
+
+@keyframes conveyorEmblemFlash{
+  0%,100%{filter:brightness(1);transform:translateX(-50%) scale(1)}
+  32%{filter:brightness(1.65) drop-shadow(0 0 7px var(--pipe-accent));transform:translateX(-50%) scale(1.13)}
+  62%{filter:brightness(1.18) drop-shadow(0 0 3px var(--pipe-accent));transform:translateX(-50%) scale(.97)}
+}
+@keyframes conveyorNozzlePop{
+  0%,100%{transform:translateX(-50%) translateY(0)}
+  28%{transform:translateX(-50%) translateY(3px) scaleY(.88)}
+  62%{transform:translateX(-50%) translateY(-1px) scaleY(1.04)}
+}
+@keyframes conveyorPipePulse{
+  0%{opacity:0;transform:translateX(-50%) scale(.3,.15)}
+  34%{opacity:.78;transform:translateX(-50%) scale(.72,1)}
+  100%{opacity:0;transform:translateX(-50%) translateY(18px) scale(.28,1.25)}
+}
+@keyframes conveyorFoodDrop{
+  0%{opacity:0;transform:translateY(-61px) scale(.72)}
+  48%{opacity:1;transform:translateY(5px) scale(1.06,.92)}
+  72%{transform:translateY(-3px) scale(.97,1.04)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes conveyorFoodFxArrive{
+  0%{opacity:0;transform:scale(.72)}
+  55%{opacity:1;transform:scale(1.08)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+/* Чуть больше воздуха над машиной; кнопка ниже, меньше и строго по центру. */
+#homeScreen .conveyor-controls{bottom:-78px!important;width:56px!important;height:56px!important;min-height:56px!important}
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode,
+#homeScreen .conveyor-controls .reroll-icon-well{
+  width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{width:63px!important;height:63px!important}
+
+@media(max-width:370px){
+  #homeScreen>.card.conveyor{transform:translateY(5px)!important;margin-bottom:-5px!important}
+  #homeScreen .conveyor-dispensers{left:30px;right:30px;top:17px;gap:3px}
+  #homeScreen .conveyor-dispenser{transform:scale(.92);transform-origin:50% 0}
+  #homeScreen .conveyor-controls{bottom:-71px!important;width:51px!important;height:51px!important;min-height:51px!important}
+  #homeScreen .conveyor-controls .reroll-btn,
+  #homeScreen .conveyor-controls .reroll-btn.ad-mode,
+  #homeScreen .conveyor-controls .reroll-icon-well{width:51px!important;height:51px!important;min-width:51px!important;min-height:51px!important}
+  #homeScreen .conveyor-controls .reroll-icon{width:58px!important;height:58px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-socket,
+  #homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-nozzle,
+  #homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-pulse,
+  #homeScreen .food-card.conveyor-food-pick.food-dropping>.food-model-wrap,
+  #homeScreen .food-card.conveyor-food-pick.food-dropping>.food-mutation-fx{animation-duration:.01ms!important;animation-delay:0ms!important}
+}
+
+/* V88: короткие широкие трубы и чистая последовательность выдачи. */
+#homeScreen .conveyor-choice-count{display:none!important}
+#homeScreen .conveyor-dispensers{
+  left:32px;right:32px;top:1px;height:61px;gap:7px;
+}
+#homeScreen .conveyor-dispenser{
+  width:98px;height:67px;filter:drop-shadow(0 3px 1px rgba(0,0,0,.4));
+}
+#homeScreen .conveyor-pipe-feed{
+  top:-9px;width:48px;height:31px;border-width:3px;border-radius:0 0 9px 9px;
+  background:linear-gradient(90deg,#3f5663 0 16%,#b5c8cf 17% 43%,#77909b 44% 74%,#394f5c 75%);
+  box-shadow:inset 5px 0 0 rgba(255,255,255,.16),inset -5px 0 0 rgba(18,35,45,.3),0 2px 0 rgba(5,13,18,.35);
+}
+#homeScreen .conveyor-pipe-nozzle{
+  left:50%;top:17px;width:92px;height:39px;
+  border:3px solid #263b49;border-radius:13px 13px 23px 23px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.28) 0 3px,transparent 4px),
+    linear-gradient(90deg,#3e5663 0 7%,#8fa8b2 22%,#c3d2d7 43%,#748e99 68%,#3a515e 94%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.34),inset 0 -6px 0 rgba(20,38,47,.22),0 3px 0 rgba(8,20,27,.34);
+}
+#homeScreen .conveyor-pipe-nozzle:before{
+  content:"";position:absolute;left:10px;right:10px;top:9px;height:2px;border-radius:2px;
+  background:rgba(39,61,72,.4);box-shadow:0 3px 0 rgba(255,255,255,.16);
+}
+#homeScreen .conveyor-pipe-nozzle:after{
+  left:50%;bottom:-8px;width:80px;height:16px;
+  border:3px solid #223742;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 38%,#172832 0 31%,#071116 34% 67%,#020608 70%);
+  box-shadow:inset 0 2px 4px #020608,0 2px 0 rgba(125,155,167,.4);
+}
+#homeScreen .conveyor-pipe-nozzle>b{
+  z-index:3;bottom:-3px;width:70px;height:8px;border-radius:50%;
+  background:#03080b;box-shadow:inset 0 2px 3px #000;
+}
+#homeScreen .conveyor-pipe-socket{
+  z-index:5;top:-1px;width:41px;height:41px;border-width:3px;
+  background:radial-gradient(circle at 38% 28%,#f5fcfb 0 10%,#bfd2d4 11% 34%,#526d78 66%,#263e4b 100%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.54),inset 0 -4px 5px rgba(24,48,58,.3),0 2px 0 rgba(150,182,190,.46),0 0 0 3px rgba(37,59,71,.22);
+}
+#homeScreen .conveyor-pipe-socket>img{width:36px;height:36px;object-fit:contain;transform:none}
+#homeScreen .conveyor-pipe-pulse{top:48px;width:72px;height:35px;filter:blur(4px)}
+
+/* Пустая тарелка остаётся нейтральной до приземления продукта. */
+#homeScreen .food-card.conveyor-food-pick:not(.food-ready)>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff!important;
+  filter:none!important;
+}
+#homeScreen .food-card.conveyor-food-pick .food-model{
+  width:74px!important;height:74px!important;max-height:74px!important;
+}
+#homeScreen .food-card.conveyor-food-pick.food-dropping>.food-mutation-fx{
+  animation:conveyorFoodFxArrive .32s ease-out calc(var(--dispense-delay,0ms) + 520ms) both!important;
+}
+@keyframes conveyorFoodDrop{
+  0%{opacity:0;transform:translateY(-68px) scale(.72)}
+  53%{opacity:1;transform:translateY(4px) scale(1.06,.91)}
+  75%{transform:translateY(-3px) scale(.97,1.04)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes conveyorFoodFxArrive{
+  0%{opacity:0;filter:brightness(.8);transform:translateX(-50%) scale(.84)}
+  62%{opacity:1;filter:brightness(1.12);transform:translateX(-50%) scale(1.04)}
+  100%{opacity:1;filter:brightness(1);transform:translateX(-50%) scale(1)}
+}
+
+@media(max-width:370px){
+  #homeScreen .conveyor-dispensers{left:30px;right:30px;top:1px;gap:3px}
+  #homeScreen .conveyor-dispenser{width:92px;transform:scale(.88);transform-origin:50% 0}
+  #homeScreen .food-card.conveyor-food-pick .food-model{width:69px!important;height:69px!important;max-height:69px!important}
+}
+
+/* V89: точное центрирование эффектов и более читаемые Огонь/Мороз. */
+#homeScreen .conveyor-controls{
+  bottom:-64px!important;
+}
+#homeScreen .food-mutation-fx.mutation-fire-fx:before{
+  left:4%;right:4%;height:34%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(255,248,151,.96),rgba(255,139,36,.67) 40%,rgba(241,55,24,.24) 65%,transparent 79%);
+  filter:blur(2px) saturate(1.18);
+}
+#homeScreen .food-mutation-fx.mutation-fire-fx:after{
+  left:24%;right:24%;
+  background:linear-gradient(180deg,transparent,rgba(255,222,129,.2) 34%,rgba(255,83,35,.38));
+  filter:blur(5px);
+}
+#homeScreen .food-mutation-fx.mutation-fire-fx>i{
+  width:5px;height:5px;background:#fff6a4;
+  box-shadow:0 0 3px #fff,0 0 8px #ff6a20,0 0 13px rgba(246,49,24,.55);
+}
+#homeScreen .food-mutation-fx.mutation-frost-fx:before{
+  left:3%;right:3%;height:35%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(247,255,255,1),rgba(105,226,255,.68) 41%,rgba(32,137,220,.25) 66%,transparent 79%);
+  filter:blur(2px) saturate(1.14);
+}
+#homeScreen .food-mutation-fx.mutation-frost-fx:after{
+  left:17%;right:17%;
+  background:linear-gradient(180deg,transparent,rgba(229,254,255,.3) 36%,rgba(84,199,242,.42));
+  filter:blur(5px);
+}
+#homeScreen .food-mutation-fx.mutation-frost-fx>i{
+  filter:brightness(1.24) drop-shadow(0 0 3px #eaffff) drop-shadow(0 0 7px #4bc8ff);
+}
+@media(max-width:370px){
+  #homeScreen .conveyor-controls{bottom:-58px!important}
+}

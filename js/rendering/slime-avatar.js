@@ -11,7 +11,7 @@
       targetCtx.bezierCurveTo(radius * .91, radius * .65, radius * .55, radius * .83, 0, radius * .84);
       targetCtx.bezierCurveTo(-radius * .55, radius * .83, -radius * .91, radius * .65, -radius * .92, radius * .15);
       targetCtx.bezierCurveTo(-radius * .9, -radius * .33, -radius * .58, -radius * .67, 0, -radius * .68);
-    } else if (skinId === 'ball') {
+    } else if (skinId === 'ball' || skinId === 'coin') {
       targetCtx.arc(0, 0, radius * .91, 0, Math.PI * 2);
     } else if (skinId === 'cat') {
       targetCtx.moveTo(0, -radius * .83);
@@ -120,7 +120,9 @@
     skin = 'classic',
     scaleX = 1, scaleY = 1, rotation = 0, alpha = 1,
     gazeX = 0, gazeY = 0, blink = false, aura = '', petPoint = null, tipSway = 0,
-    timestamp = performance.now()
+    timestamp = performance.now(), bodyPaint = null, backLayer = null, frontLayer = null, afterLayer = null,
+    bodyHighlight = true, outlineColor = '#26334a', faceColor = null,
+    faceScaleX = 1, faceScaleY = 1
   }) {
     if (aura) {
       targetCtx.save();
@@ -206,7 +208,8 @@
     targetCtx.scale(scaleX, scaleY);
 
     const skinId = String(skin || 'classic');
-    const outline = '#26334a';
+    const outline = outlineColor;
+    const faceInk = faceColor || outline;
     const gradient = targetCtx.createRadialGradient(-radius * .25, -radius * .35, radius * .12, 0, 0, radius * 1.1);
     gradient.addColorStop(0, colors[0]);
     gradient.addColorStop(.58, colors[1]);
@@ -215,6 +218,9 @@
     targetCtx.strokeStyle = outline;
     targetCtx.lineWidth = Math.max(2.7, radius * .09);
     const tipX = tipSway * radius;
+    const layerState = { radius, tipX, skinId, timestamp, colors };
+
+    if (typeof backLayer === 'function') backLayer(targetCtx, layerState);
 
     if (skinId === 'cat') {
       for (const side of [-1, 1]) {
@@ -242,17 +248,27 @@
 
     targetCtx.fillStyle = gradient;
     traceSlimeBody(targetCtx, skinId, radius, tipX);
-    targetCtx.fill();
+    if (typeof bodyPaint === 'function') {
+      targetCtx.save();
+      targetCtx.clip();
+      bodyPaint(targetCtx, layerState);
+      targetCtx.restore();
+      traceSlimeBody(targetCtx, skinId, radius, tipX);
+    } else {
+      targetCtx.fill();
+    }
     targetCtx.stroke();
 
     drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp);
 
-    targetCtx.globalAlpha = alpha * .25;
-    targetCtx.fillStyle = '#fff';
-    targetCtx.beginPath();
-    targetCtx.ellipse(-radius * .28, -radius * .32, radius * .23, radius * .13, -.5, 0, Math.PI * 2);
-    targetCtx.fill();
-    targetCtx.globalAlpha = alpha;
+    if (bodyHighlight) {
+      targetCtx.globalAlpha = alpha * .25;
+      targetCtx.fillStyle = '#fff';
+      targetCtx.beginPath();
+      targetCtx.ellipse(-radius * .28, -radius * .32, radius * .23, radius * .13, -.5, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.globalAlpha = alpha;
+    }
 
     if (petPoint) {
       targetCtx.globalAlpha = alpha * .62;
@@ -356,6 +372,9 @@
       targetCtx.globalAlpha = alpha;
     }
 
+    if (typeof frontLayer === 'function') frontLayer(targetCtx, layerState);
+
+    targetCtx.scale(faceScaleX, faceScaleY);
     const eyeY = -radius * .12;
     const eyeX = radius * .245;
     const chewPulse = (Math.sin(timestamp / 48 - Math.PI / 2) + 1) / 2;
@@ -373,7 +392,7 @@
     targetCtx.globalAlpha = alpha;
 
     if (emotion === 'hurt') {
-      targetCtx.strokeStyle = outline;
+      targetCtx.strokeStyle = faceInk;
       targetCtx.lineWidth = Math.max(2.5, radius * .085);
       for (const side of [-1, 1]) {
         const eyeCenter = eyeX * side;
@@ -384,12 +403,12 @@
     } else {
       const squint = emotion === 'impact' || emotion === 'power';
       if (squint) {
-        targetCtx.strokeStyle = outline;
+        targetCtx.strokeStyle = faceInk;
         targetCtx.lineWidth = Math.max(2.5, radius * .08);
         targetCtx.beginPath(); targetCtx.moveTo(-eyeX - radius * .11, eyeY - radius * .03); targetCtx.lineTo(-eyeX + radius * .11, eyeY + radius * .06); targetCtx.stroke();
         targetCtx.beginPath(); targetCtx.moveTo(eyeX + radius * .11, eyeY - radius * .03); targetCtx.lineTo(eyeX - radius * .11, eyeY + radius * .06); targetCtx.stroke();
       } else if (blink || closedHappy || chewSquint || anticipationSquint) {
-        targetCtx.strokeStyle = outline;
+        targetCtx.strokeStyle = faceInk;
         targetCtx.lineWidth = Math.max(2.5, radius * .075);
         for (const side of [-1, 1]) {
           targetCtx.beginPath();
@@ -400,7 +419,7 @@
         const wide = emotion === 'joy' || emotion === 'surprised' || emotion === 'hungry';
         const eyeW = radius * (wide ? .185 : .17);
         const eyeH = radius * (wide ? .225 : .205);
-        targetCtx.strokeStyle = outline;
+        targetCtx.strokeStyle = faceInk;
         targetCtx.lineWidth = Math.max(2.2, radius * .07);
         for (const side of [-1, 1]) {
           const eyeCenter = eyeX * side;
@@ -408,15 +427,15 @@
           targetCtx.beginPath(); targetCtx.ellipse(eyeCenter, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
           const pupilX = eyeCenter + gazeX * radius * .055;
           const pupilY = eyeY + radius * .015 + gazeY * radius * .05;
-          targetCtx.fillStyle = outline;
+          targetCtx.fillStyle = faceInk;
           targetCtx.beginPath(); targetCtx.ellipse(pupilX, pupilY, radius * .065, radius * .095, 0, 0, Math.PI * 2); targetCtx.fill();
           targetCtx.fillStyle = '#fff';
           targetCtx.beginPath(); targetCtx.arc(pupilX - radius * .018, pupilY - radius * .03, Math.max(1, radius * .018), 0, Math.PI * 2); targetCtx.fill();
         }
       }
 
-      targetCtx.strokeStyle = outline;
-      targetCtx.fillStyle = outline;
+      targetCtx.strokeStyle = faceInk;
+      targetCtx.fillStyle = faceInk;
       targetCtx.lineWidth = Math.max(2.3, radius * .075);
       if (emotion === 'surprised' || emotion === 'hungry') {
         targetCtx.beginPath(); targetCtx.ellipse(0, radius * .27, radius * .115, radius * (emotion === 'hungry' ? .18 : .16), 0, 0, Math.PI * 2); targetCtx.fill();
@@ -453,7 +472,7 @@
 
     if (skinId === 'cat') {
       targetCtx.globalAlpha = alpha * .75;
-      targetCtx.strokeStyle = outline;
+      targetCtx.strokeStyle = faceInk;
       targetCtx.lineWidth = Math.max(1.4, radius * .035);
       for (const side of [-1, 1]) {
         for (let index = -1; index <= 1; index += 1) {
@@ -465,6 +484,7 @@
       }
       targetCtx.globalAlpha = alpha;
     }
+    if (typeof afterLayer === 'function') afterLayer(targetCtx, layerState);
     targetCtx.restore();
   }
 

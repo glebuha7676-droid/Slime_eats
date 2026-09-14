@@ -14,9 +14,22 @@
   } = config;
   const foodRarities = new Set(config.FOOD_RARITIES);
   const foodCategories = new Set(config.FOOD_CATEGORIES);
+  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'gigantism', 'wind', 'blast']);
   const worldSprites = {};
   const editorSprites = {};
   const thumbnailFitCache = new Map();
+
+  const worldBackgrounds = Object.freeze(Object.fromEntries([
+    [1, 'world-1-depths'],
+    [2, 'world-2-ice'],
+    [3, 'world-3-factory'],
+    [4, 'world-4-magma']
+  ].map(([worldId, name]) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = versionedAsset(`assets/backgrounds/${name}.webp`);
+    return [worldId, image];
+  })));
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -108,7 +121,7 @@
   function foodImageSource(food) {
     const customImage = String(food.image || '').trim();
     const isEmbeddedImage = /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(customImage);
-    const isProjectAsset = /^assets\/(?:ЕДА|food)\/[\p{L}\p{N} _()./-]+\.(?:png|jpe?g|webp|gif)$/iu.test(customImage);
+    const isProjectAsset = /^assets\/(?:ЕДА|food|ui\/recipe-categories)\/[\p{L}\p{N} _()./-]+\.(?:png|jpe?g|webp|gif)$/iu.test(customImage);
     if (isEmbeddedImage) return customImage;
     return versionedAsset(isProjectAsset ? customImage : `${FOOD_ASSET_ROOT}${food.id}.webp`);
   }
@@ -200,6 +213,8 @@
     const rarity = foodRarities.has(legacyRarity) ? legacyRarity : 'common';
     const legacyCategories = { mass: 'health', power: 'damage', defense: 'shield', bounce: 'shield', magic: 'shield' };
     const category = foodCategories.has(value.category) ? value.category : (legacyCategories[value.category] || 'health');
+    const defaultRecipeFamily = { damage: 'fire', health: 'mass', shield: 'protection' }[category] || 'mass';
+    const recipeFamily = recipeFamilies.has(value.recipeFamily) ? value.recipeFamily : defaultRecipeFamily;
     const image = String(value.image || '').trim();
     const hasArtTransform = ['artX', 'artY', 'artScale'].some(key => Object.hasOwn(value, key));
     const numericStats = Number(value.statVersion) >= 2;
@@ -209,6 +224,8 @@
       icon: String(value.icon || '🍓').slice(0, 8),
       rarity,
       category,
+      recipeFamily,
+      ...(value.requiresMutation ? { requiresMutation: String(value.requiresMutation).trim() } : {}),
       minConveyor: Math.round(clampNumber(value.minConveyor || 1, 1, 5)),
       health: clampNumber(value.health ?? value.mass, 0, 999),
       healthPenalty: clampNumber(value.healthPenalty, 0, 999),
@@ -261,7 +278,7 @@
           }, {}))
         };
       });
-      return [...mergedBase, ...catalog.filter(food => !baseIds.has(food.id))];
+      return mergedBase;
     } catch (_) {
       return baseCatalog;
     }
@@ -270,6 +287,7 @@
   window.SlimeGameAssets = Object.freeze({
     FOODS: loadFoodCatalog(),
     WORLD_SPRITES: worldSprites,
+    WORLD_BACKGROUNDS: worldBackgrounds,
     CRACK_STAGE_SPRITES: crackStageSprites,
     VFX_SPRITES: vfxSprites,
     versionedAsset,

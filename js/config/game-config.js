@@ -27,6 +27,7 @@
     },
     {
       id: 2, name: 'Ледяная пещера', targetDepth: 550, reward: 700,
+      active: false, status: 'paused',
       pathWidth: 3, minPathWidth: 2, turnRate: .18,
       hardCap: .15, reinforcedCap: .02, oreChance: .06, specialChance: .115,
       sky: '#4b7f97', earth: '#244452', deep: '#10232d', accent: '#67e8f9', icon: '🧊',
@@ -86,7 +87,7 @@
 
   const WORLD_SPRITE_NAMES = {
     1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'heal', 'portal'],
-    2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'cryo', 'heal', 'portal'],
+    2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'cryo', 'snowflake', 'heal', 'portal'],
     3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'jelly-bounce', 'heal', 'portal'],
     4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'geyser', 'meteor', 'heal', 'portal']
   };
@@ -137,8 +138,12 @@
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 18,
+    schemaVersion: 20,
     coins: 20,
+    researchUnits: 0,
+    researchProgress: 0,
+    mutationProgress: 0,
+    unlockedMutations: [],
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
     lastRunDepth: {},
@@ -178,7 +183,7 @@
     VIEW_H: 650,
     LEVEL_COUNT: 5,
     LEVEL_DEPTH_RATIOS: [.36, .52, .68, .84, 1],
-    ASSET_REVISION: '20260829-3',
+    ASSET_REVISION: '20260911-2',
     FOOD_ASSET_ROOT: 'assets/ЕДА/Общий пул/',
     UI_ASSET_ROOT: 'assets/ui/',
     FOOD_EDITOR_STORAGE_KEY: 'slime_food_catalog_v3',

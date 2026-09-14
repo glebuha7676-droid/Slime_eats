@@ -1122,7 +1122,7 @@
   .food-card:not(.encyclopedia-rarity-tab) .food-stat-grid.count-1 .food-stat-cell>b{font-size:14px!important}
 }
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen .food-choices>.food-card,#homeScreen .food-choices>.conveyor-gap,
   .food-card.drag-ghost:not(.encyclopedia-rarity-tab){width:112px!important;min-width:112px!important;max-width:112px!important}
   #homeScreen .conveyor-machine .food-choices{grid-template-columns:repeat(3,112px)!important;gap:5px!important}

@@ -172,7 +172,7 @@ body[data-screen="drop"] .world-summary .currency-values>small{
 #homeScreen .conveyor{z-index:8;margin-bottom:0}
 #homeScreen .food-choices{z-index:24}
 #homeScreen .level-start-card{margin-bottom:0}
-@media(max-width:430px){#homeScreen.active{gap:4px}.topbar.world-summary{margin-bottom:4px}}
+@media(max-width:430px), (min-width:700px){#homeScreen.active{gap:4px}.topbar.world-summary{margin-bottom:4px}}
 
 /* One preparation hub: a single shell with compact internal sections. */
 #homeScreen.active{
@@ -193,7 +193,7 @@ body[data-screen="drop"] .world-summary .currency-values>small{
 }
 #homeScreen>.admin-tools{border-radius:0 0 16px 16px}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen.active{gap:0}
   #homeScreen>.conveyor{padding:4px 3px 1px}
   #homeScreen>.level-start-card{padding:7px}
@@ -254,7 +254,7 @@ body[data-screen="drop"] .world-summary .currency-values>small{
 #homeScreen>.bottom-actions{background:#f5f0e7}
 #homeScreen>.admin-tools{background:#e8f2f0!important}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.conveyor{padding:5px 4px 4px}
   .conveyor-controls{gap:5px;margin-inline:2px;padding-left:7px}
   .conveyor-control-copy{padding-left:9px}.conveyor-control-copy b{font-size:7.5px}
@@ -339,7 +339,7 @@ body[data-screen="drop"] .world-summary .currency-values>small{
 #homeScreen .reroll-btn:active{transform:translateY(2px);box-shadow:none}
 #homeScreen .reroll-btn:disabled{opacity:.58;filter:saturate(.55)}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   .slime-quickbar{top:-3px;padding-inline:5px}
   #homeScreen .food-choices{margin-inline:28px}
   .conveyor-controls{margin-inline:2px;padding:2px}
@@ -397,7 +397,7 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
 #homeScreen .slime-stage>.rarity-bursts .rarity-burst{z-index:91}
 #homeScreen .food-choices{z-index:24;margin-inline:29px}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   body[data-screen="home"] .topbar.world-summary{margin-top:3px;padding:8px 9px 10px}
   .slime-quickbar{top:5px;padding-inline:5px}
   .stomach-quick-slots[data-slots="2"]{--quick-slot-size:60px;--quick-food-size:54px;gap:10px}
@@ -417,7 +417,7 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
 #homeScreen .food-choices{margin-inline:33px}
 @keyframes tunnelDepthTravel{to{background-position:0 15px,0 0}}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen .food-choices{margin-inline:29px}
 }
 
@@ -518,7 +518,7 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
 #homeScreen .conveyor.is-running .machine-mouth{filter:brightness(1.12)}
 #homeScreen .conveyor.is-running .food-card{pointer-events:none}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen .conveyor-machine{--machine-tunnel-w:32px;--machine-mouth-w:21px;--machine-side-space:25px;--machine-bolt-side:2px;height:222px}
 }
 
@@ -928,7 +928,7 @@ body[data-world] #homeScreen .home-tool-dock button{
 #homeScreen .home-tool-dock b{margin:0;font-size:7.3px;line-height:1;letter-spacing:0}
 #homeScreen .home-tool-dock button:active{transform:translateY(1px) scale(.98);filter:brightness(.98)}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card{--level-size:42px;padding-inline:8px}
   .play-setup-toolbar{grid-template-columns:minmax(161px,1.08fr) minmax(0,.92fr);gap:6px}
   .play-setup-control{grid-template-rows:8px 40px;gap:3px}.play-setup-label{font-size:5.5px;line-height:8px}
@@ -1012,7 +1012,7 @@ body[data-screen="home"] .world-summary .currency-values>b{font-size:13px}
 #homeScreen .endless-mode-panel .endless-home-btn{grid-column:3;grid-row:2;align-self:end;width:106px;height:54px}
 #homeScreen .home-tool-dock{grid-column:1/-1;grid-row:3;margin-top:1px}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card{
     --level-size:39px;grid-template-columns:128px minmax(0,1fr) 88px;grid-template-rows:66px 52px auto;column-gap:5px;row-gap:6px;padding-inline:7px;
   }
@@ -1084,7 +1084,7 @@ body[data-screen="home"] .world-summary .currency-values>b{font-size:13px}
 #homeScreen .endless-mode-panel .endless-home-btn>img{width:34px;height:34px;display:block;object-fit:contain}#homeScreen .endless-mode-panel .endless-home-btn>span{display:grid;gap:1px}#homeScreen .endless-mode-panel .endless-home-btn small{font-size:5px;font-weight:1000;opacity:.72}#homeScreen .endless-mode-panel .endless-home-btn b{font-size:9px}
 .game-complete-endless>span img{width:38px;height:38px;display:block;object-fit:contain}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card{padding-inline:7px}.play-setup-toolbar{grid-template-columns:minmax(164px,1.08fr) minmax(142px,.92fr);gap:5px}
   .home-world-picker{grid-template-columns:32px minmax(0,1fr) 21px;gap:3px;padding-inline:4px}.home-world-emblem{width:31px;height:31px}.home-world-emblem img{width:29px;height:29px}.home-world-copy b{font-size:7.6px}.home-world-chevron{width:19px;height:19px;font-size:13px}
   .home-mode-tabs{gap:2px}.home-mode-tab{padding-inline:2px}.home-mode-tab>span{font-size:6px}
@@ -1196,32 +1196,35 @@ body[data-screen="drop"] .app{height:100dvh;min-height:100dvh;overflow:hidden}
 
 #dropScreen .shaft{height:min(635px,calc(100dvh - 198px));min-height:320px}
 .shaft-health{
-  position:absolute;z-index:9;right:8px;top:8px;width:160px;min-height:50px;display:grid;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto 11px;column-gap:7px;align-items:center;
-  padding:5px 8px 7px;border:2px solid #34415a;border-radius:16px;
-  background:linear-gradient(180deg,#fff9fb 0%,#ffe7eb 58%,#f8cfd7 100%);color:#29354b;
-  box-shadow:0 2px 3px rgba(24,34,51,.2),inset 0 2px 1px rgba(255,255,255,.94),inset 0 -4px 5px rgba(192,85,109,.12);pointer-events:none;
+  position:absolute;z-index:9;right:8px;top:8px;width:151px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  padding:4px 8px 5px;border:2px solid #4b2f42;border-radius:16px;
+  background:linear-gradient(180deg,#fff8fa 0%,#ffe1e8 100%);color:#5f2137;
+  box-shadow:0 3px 0 rgba(28,34,48,.18),inset 0 2px 0 #fff,inset 0 -3px 0 rgba(187,70,97,.12);pointer-events:none;
+  transform-origin:50% 20%;
 }
-.shaft-health>img{
-  grid-row:1/3;width:34px;height:34px;display:block;object-fit:contain;padding:3px;border:2px solid #a84058;border-radius:11px;
-  background:linear-gradient(145deg,#fff,#ffdce4);box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(67,43,51,.16);filter:drop-shadow(0 1px 1px rgba(80,36,47,.16));
+.shaft-health-title{font-size:7px;font-weight:1000;line-height:1;letter-spacing:.9px;color:#91354f;text-shadow:0 1px #fff}
+.run-hearts{height:32px;display:flex;align-items:center;justify-content:center;gap:6px}
+.run-heart{
+  position:relative;display:grid;place-items:center;width:34px;height:31px;color:#f0445d;
+  font:1000 31px/1 Arial,sans-serif;-webkit-text-stroke:2px #79243d;
+  text-shadow:0 2px 0 #5a2839,0 3px 4px rgba(68,27,42,.23);transform-origin:50% 64%;
+  transition:color .18s ease,opacity .18s ease,transform .18s ease,filter .18s ease;
 }
-.shaft-health>span{position:relative;z-index:1;min-width:0;display:flex;align-items:baseline;justify-content:space-between;gap:5px}
-.shaft-health small{font-size:7px;font-weight:1000;letter-spacing:.45px;color:#a13c55}
-.shaft-health b{font-size:13px;line-height:1;color:#29354b;white-space:nowrap;text-shadow:0 1px #fff}
-.shaft-health>i{position:relative;height:11px;overflow:hidden;border:2px solid #34415a;border-radius:999px;background:#b9c0ca;box-shadow:inset 0 2px 2px rgba(48,58,76,.24),0 1px 0 #fff}
-.shaft-health>i>em{position:relative;display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#27ad69 0%,#58d98a 62%,#9bf1b5 100%);box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -2px 2px rgba(25,112,70,.18);transition:width .16s ease,background .18s ease}
-.shaft-health>i>em:after{content:"";position:absolute;left:8%;right:8%;top:1px;height:2px;border-radius:999px;background:rgba(255,255,255,.7)}
-.shaft-health.is-low{background:linear-gradient(180deg,#fff4f5,#ffd7db 58%,#f4b9c1);animation:lowHealthShell .55s ease-in-out infinite alternate}
-.shaft-health.is-low b,.shaft-health.is-low small{color:#a7233b}
-.shaft-health.is-low>img{border-color:#ba263f;background:linear-gradient(145deg,#fff,#ffcbd2)}
-.shaft-health.is-low>i>em{background:linear-gradient(90deg,#d92f48,#ff5f70 62%,#ff9ba4);animation:lowHealthPulse .55s ease-in-out infinite alternate}
-@keyframes lowHealthPulse{to{filter:brightness(1.2)}}
-@keyframes lowHealthShell{to{filter:brightness(1.04);box-shadow:0 2px 5px rgba(159,34,55,.3),inset 0 2px 1px rgba(255,255,255,.94),inset 0 -4px 5px rgba(192,45,71,.16)}}
+.run-heart:after{content:"";position:absolute;left:9px;top:6px;width:7px;height:4px;border-radius:50%;background:rgba(255,255,255,.8);transform:rotate(-25deg)}
+.run-heart.is-empty{color:#cbb7bd;-webkit-text-stroke-color:#806d74;text-shadow:0 1px 0 #6f6267;opacity:.62;transform:scale(.88);filter:saturate(.25)}
+.run-heart.is-empty:after{opacity:.32}
+.run-heart.is-lost{animation:runHeartLost .6s cubic-bezier(.2,.8,.2,1) both}
+.run-heart.is-empty.is-lost{color:#f0445d;-webkit-text-stroke-color:#79243d;opacity:1;filter:none}
+.shaft-health.is-low{border-color:#a72f48;animation:lowHeartPulse .72s ease-in-out infinite alternate}
+.shaft-health.is-hit{animation:heartHudHit .4s ease both}
+@keyframes runHeartLost{0%{opacity:1;transform:translateY(0) scale(1)}35%{opacity:1;transform:translateY(-10px) scale(1.34) rotate(-8deg)}100%{opacity:.62;transform:translateY(0) scale(.88)}}
+@keyframes heartHudHit{18%{transform:translateX(-4px) rotate(-1deg)}40%{transform:translateX(4px) rotate(1deg)}65%{transform:translateX(-2px)}100%{transform:none}}
+@keyframes lowHeartPulse{to{filter:brightness(1.05);box-shadow:0 3px 0 rgba(28,34,48,.18),0 0 9px rgba(231,55,86,.28),inset 0 2px 0 #fff}}
 
 @media(max-width:370px){
   #dropScreen .run-route{height:68px;padding-inline:10px}.run-route-track{margin-inline:8px}
   #dropScreen .shaft{height:min(620px,calc(100dvh - 198px));min-height:310px}
-  .shaft-health{width:153px}
+  .shaft-health{width:145px}
   #dropScreen .barrier-control{bottom:18px}
   #dropScreen .barrier-control .barrier-btn{width:60px;height:60px}
 }
@@ -1513,7 +1516,7 @@ body[data-world] .ad-modal .ad-btn{
 #homeScreen>.play-setup-card .level-buttons{width:max-content;grid-template-columns:repeat(5,var(--level-size));gap:5px}
 #homeScreen>.play-setup-card .level-btn{box-sizing:border-box;width:var(--level-size);height:var(--level-size);min-width:var(--level-size);border-radius:12px}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card{
     --level-size:39px;grid-template-columns:128px minmax(0,1fr) 88px;grid-template-rows:66px 34px 52px auto;
     column-gap:5px;row-gap:6px;padding-inline:7px;
@@ -1672,7 +1675,7 @@ body[data-world] .ad-modal .ad-btn{
   box-shadow:inset 0 2px 0 rgba(255,255,255,.56);
 }
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card>.play-setup-toolbar>.world-control:after{right:-5px;width:5px}
   #homeScreen>.play-setup-card .home-world-copy>b{font-size:7.3px}
   #homeScreen>.play-setup-card>.home-route-progress{grid-template-rows:13px 12px;padding-inline:4px}
@@ -1820,7 +1823,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
   display:block;align-self:center;color:#5b400a;font-size:14px;line-height:1;letter-spacing:.45px;text-align:center;text-shadow:0 1px rgba(255,255,255,.72);
 }
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card{
     --level-size:39px;grid-template-columns:128px minmax(0,1fr) 90px;grid-template-rows:55px 37px 52px auto;
     column-gap:5px;row-gap:6px;padding-inline:7px;
@@ -1961,7 +1964,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 #homeScreen .reroll-btn:not(.ad-mode) .reroll-copy b{color:#49345f;text-shadow:0 1px rgba(255,255,255,.72)}
 #homeScreen .reroll-btn:not(.ad-mode)>em{border-color:#39825b;background:#effcf3;color:#17613f}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card{grid-template-rows:55px 42px 52px auto}
   #homeScreen>.play-setup-card .home-world-selector{height:47px}
   #homeScreen>.play-setup-card .home-world-menu{top:51px;width:280px;gap:6px;padding:6px}
@@ -2074,7 +2077,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 #homeScreen>.play-setup-card .endless-stat-card b{align-self:flex-start}
 #homeScreen>.play-setup-card .endless-stat-card b{color:#303574;font-size:12.5px;line-height:1;font-weight:1000;white-space:nowrap}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card .home-mode-tab{grid-template-columns:26px minmax(0,1fr);gap:4px;padding-inline:4px}
   #homeScreen>.play-setup-card .home-mode-icon,#homeScreen>.play-setup-card .home-mode-endless-icon img{width:25px;height:25px}
   #homeScreen>.play-setup-card .home-mode-tab>span>b{font-size:8.2px}
@@ -2135,7 +2138,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 #homeScreen>.play-setup-card .endless-stat-card small{color:#343d78}
 #homeScreen>.play-setup-card .endless-stat-card b{color:#242d70}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card[data-mode="endless"]{grid-template-rows:55px 42px 52px auto}
   #homeScreen>.play-setup-card[data-mode="endless"]>.play-setup-toolbar>.mode-control{height:52px}
   #homeScreen>.play-setup-card[data-mode="endless"]>#endlessModePanel>.endless-home-btn{width:90px;height:52px}
@@ -2346,7 +2349,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 @keyframes launchSlimeReady{0%,100%{transform:translateY(1px) scale(1)}45%{transform:translateY(-3px) scale(1.025,.98)}65%{transform:translateY(0) scale(.985,1.02)}}
 @keyframes launchSparkle{0%,100%{opacity:.25;transform:scale(.65) rotate(0)}45%{opacity:1;transform:scale(1.2) rotate(45deg)}70%{opacity:.48;transform:scale(.82) rotate(75deg)}}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen .food-choices>.conveyor-start-card{width:222px;min-width:222px;height:187px;min-height:187px;padding:7px 8px 8px;border-width:3px;border-radius:21px;box-shadow:0 4px 0 color-mix(in srgb,var(--world-line) 78%,#34415a),inset 0 0 0 2px rgba(255,255,255,.84),inset 0 -7px 0 color-mix(in srgb,var(--world-accent-bottom) 18%,transparent)}
   #homeScreen .food-choices>.conveyor-start-card:before{inset:4px;border-radius:15px}
   .launch-card-ready{height:24px;padding-right:8px}.launch-card-ready>i{width:16px;height:16px;font-size:9px}.launch-card-ready>b{font-size:7px}
@@ -2398,7 +2401,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 .launch-card-enter .launch-card-booms>i:nth-child(2){animation-delay:.43s}.launch-card-enter .launch-card-booms>i:nth-child(3){animation-delay:.55s}
 @keyframes launchMiniBoom{0%{opacity:0;transform:scale(.15) rotate(-18deg)}32%{opacity:1;transform:scale(1.22) rotate(8deg)}70%{opacity:.78;transform:scale(.94) rotate(18deg)}100%{opacity:0;transform:scale(1.38) rotate(28deg)}}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen>.play-setup-card{grid-template-columns:120px minmax(0,1fr);grid-template-rows:55px 37px 58px auto;column-gap:6px}
   #homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{grid-template-rows:8px 47px}
   #homeScreen>.play-setup-card .level-buttons{gap:4px}
@@ -2471,7 +2474,7 @@ body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-
 #homeScreen .slime-hero-layout .stat-rail-right{width:116px}
 #homeScreen .stomach-card-viewer{left:116px;right:116px}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen .food-choices>.conveyor-start-card{width:100%;min-width:0;max-width:none;height:187px;min-height:187px;padding:9px;border-radius:18px}
   .launch-card-world{left:10px;top:10px;padding:6px 8px;border-radius:10px}.launch-card-world>b{font-size:10px}.launch-card-world>small{font-size:5.3px}
   .launch-card-stage{right:10px;top:10px;min-height:25px;padding:4px 7px;font-size:6px}
@@ -2649,7 +2652,7 @@ body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-
   transform:none;
 }
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   #homeScreen .slime-hero-layout .stat-rail-right{gap:5px}
   #homeScreen .stat-rail-right .stat-pill{min-height:53px;grid-template-columns:34px minmax(0,1fr);column-gap:4px;padding:4px 4px 4px 3px;border-radius:14px}
   #homeScreen .stat-rail-right .stat-icon{width:34px;height:34px;border-radius:10px}
@@ -2827,6 +2830,174 @@ html.short-viewport #homeScreen .slime-hero-layout{min-height:158px}
 html.short-viewport #homeScreen .slime-playground{height:152px}
 html.short-viewport #homeScreen .stomach-rail{height:136px;gap:3px;padding-block:3px}
 html.short-viewport #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--quick-food-size:45px;height:112px;gap:6px}
+
+/* V68: компактный пищевой конвейер — еда на тарелках, отдельная боковая кнопка. */
+#homeScreen>.card.conveyor{
+  padding:5px!important;background:#cbd3dc!important;
+}
+#homeScreen .conveyor-workbench{
+  position:relative;display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:6px;padding:5px;
+  border:2px solid #3f4c5d;border-radius:14px;background:linear-gradient(180deg,#aeb8c4,#758291);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.66),inset 0 -3px 0 rgba(37,47,61,.24),0 2px 0 rgba(44,54,70,.24);
+}
+#homeScreen .conveyor-machine{
+  --machine-tunnel-w:29px;--machine-mouth-w:20px;--machine-side-space:25px;
+  --machine-housing-top:0px;--machine-housing-bottom:0px;--machine-mouth-rise:0px;
+  position:relative;isolation:isolate;width:100%;height:142px;margin:0;overflow:hidden;
+  border:2px solid #313d4d;border-radius:10px;background:linear-gradient(180deg,#192632 0%,#101923 64%,#25313e 100%);
+  box-shadow:inset 0 0 0 2px rgba(135,163,188,.16),inset 0 7px 15px rgba(0,0,0,.32);
+}
+#homeScreen .conveyor-machine:before,#homeScreen .conveyor-machine:after{display:none}
+#homeScreen .conveyor-choice-count{
+  position:absolute;z-index:60;left:50%;top:3px;min-width:118px;max-width:calc(100% - 64px);height:22px;
+  display:grid;place-items:center;padding:0 10px;border:2px solid #455064;border-radius:8px;
+  background:#f7fafc;color:#354157;font-size:8px;line-height:1;font-weight:1000;letter-spacing:.35px;
+  box-shadow:0 2px 0 rgba(14,21,30,.42),inset 0 1px 0 #fff;transform:translateX(-50%);white-space:nowrap;
+}
+#homeScreen .conveyor-machine .food-choices{
+  position:absolute!important;z-index:20;left:29px;right:29px;top:25px;bottom:20px;
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;align-items:end;gap:4px!important;
+  margin:0!important;padding:0 2px 5px!important;overflow:visible;clip-path:none!important;
+}
+#homeScreen .food-choices>.food-card.conveyor-food-pick,
+.food-card.drag-ghost.conveyor-food-pick{
+  position:relative!important;width:100%!important;min-width:0!important;max-width:none!important;height:94px!important;min-height:94px!important;max-height:94px!important;
+  align-self:end;margin:0!important;padding:0!important;overflow:visible;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;filter:none;text-align:center;
+}
+#homeScreen .food-card.conveyor-food-pick:not(.tunnel-enter):not(.leaving):not(.secret-card-awakening){animation:none!important}
+#homeScreen .food-card.conveyor-food-pick:before,#homeScreen .food-card.conveyor-food-pick:after{display:none!important}
+#homeScreen .food-card.conveyor-food-pick>.rarity,
+#homeScreen .food-card.conveyor-food-pick>.food-name,
+#homeScreen .food-card.conveyor-food-pick>.food-card-description,
+#homeScreen .food-card.conveyor-food-pick>.food-stat-grid,
+#homeScreen .food-card.conveyor-food-pick>.food-epic-motes,
+#homeScreen .food-card.conveyor-food-pick>.food-special-sparkles,
+#homeScreen .food-card.conveyor-food-pick>.food-special-neon,
+#homeScreen .food-card.conveyor-food-pick>.food-secret-neon{display:none!important}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
+.food-card.drag-ghost.conveyor-food-pick>.conveyor-plate{
+  position:absolute;z-index:1;left:50%;bottom:2px;width:min(88%,78px);height:24px;display:block;
+  border:2px solid #65717e;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#fff 0 48%,#dbe0e5 50% 70%,#a7b0ba 72% 100%);
+  box-shadow:0 3px 0 rgba(12,19,27,.55),inset 0 2px 0 #fff;transform:translateX(-50%);pointer-events:none;
+}
+#homeScreen .food-card.conveyor-food-pick>.food-model-wrap,
+.food-card.drag-ghost.conveyor-food-pick>.food-model-wrap{
+  position:absolute!important;z-index:3!important;inset:0 0 16px!important;width:auto!important;height:auto!important;min-height:0!important;
+  display:grid!important;place-items:end center!important;margin:0!important;padding:0 0 2px!important;overflow:visible!important;
+  border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.food-model-wrap:before{display:none!important}
+#homeScreen .food-card.conveyor-food-pick .food-model,
+.food-card.drag-ghost.conveyor-food-pick .food-model{
+  position:relative!important;top:0!important;width:76px!important;height:76px!important;max-width:96%!important;max-height:76px!important;
+  object-fit:contain;filter:drop-shadow(0 3px 1px rgba(0,0,0,.3))!important;
+}
+#homeScreen .food-card.conveyor-food-pick.secret-unknown>.secret-unknown-center{
+  position:absolute!important;z-index:4!important;left:50%!important;top:14px!important;width:60px!important;height:58px!important;
+  display:grid!important;place-items:center!important;border:2px solid #a92f54!important;border-radius:18px!important;
+  background:#651a38!important;box-shadow:inset 0 2px 0 rgba(255,158,180,.32),0 3px 1px rgba(0,0,0,.34)!important;
+  color:#ffd9e1!important;font-size:19px!important;letter-spacing:1px!important;transform:translateX(-50%)!important;
+}
+#homeScreen .machine-belt{
+  left:17px;right:17px;bottom:5px;height:25px;border:2px solid #283442;border-radius:12px;
+  background:repeating-linear-gradient(90deg,#4c5867 0 13px,#758292 13px 24px,#303b49 24px 29px);
+  background-size:29px 100%;box-shadow:inset 0 4px 0 rgba(255,255,255,.17),inset 0 -4px 0 rgba(0,0,0,.3),0 2px 0 #101820;
+}
+#homeScreen .machine-belt:before{top:6px;height:2px;box-shadow:0 9px 0 rgba(17,25,34,.32)}
+#homeScreen .machine-belt>i{
+  position:absolute;z-index:2;top:50%;width:14px;height:14px;border:2px solid #28323e;border-radius:50%;
+  background:#7f8b99;box-shadow:inset 0 2px 0 rgba(255,255,255,.34);transform:translate(-50%,-50%);
+}
+#homeScreen .machine-belt>i:nth-child(1){left:5%}#homeScreen .machine-belt>i:nth-child(2){left:23%}
+#homeScreen .machine-belt>i:nth-child(3){left:41%}#homeScreen .machine-belt>i:nth-child(4){left:59%}
+#homeScreen .machine-belt>i:nth-child(5){left:77%}#homeScreen .machine-belt>i:nth-child(6){left:95%}
+#homeScreen .machine-tunnel{
+  z-index:35;top:0;bottom:0;width:29px;border:0;background:linear-gradient(90deg,#8f9aa7,#c3cbd3 46%,#6c7887);
+  box-shadow:inset 0 0 0 2px #374354,inset 3px 0 0 rgba(255,255,255,.26);pointer-events:none;
+}
+#homeScreen .machine-tunnel-left{left:0;border-radius:8px 3px 3px 8px}
+#homeScreen .machine-tunnel-right{right:0;border-radius:3px 8px 8px 3px}
+#homeScreen .machine-mouth{top:17px;bottom:13px;width:20px;border:3px solid #667383;background:#05090e}
+#homeScreen .machine-tunnel-left .machine-mouth{right:0;border-right:0;border-radius:5px 0 0 5px}
+#homeScreen .machine-tunnel-right .machine-mouth{left:0;border-left:0;border-radius:0 5px 5px 0}
+#homeScreen .machine-rail-bridge{display:none}
+#homeScreen .conveyor-controls{
+  position:relative;z-index:40;height:142px;min-height:0;display:block;margin:0;padding:4px;
+  border:2px solid #3f4a5b;border-radius:10px;background:linear-gradient(180deg,#dbe1e7,#9da8b5);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.68),inset 0 -3px 0 rgba(45,57,72,.2);
+}
+#homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  position:relative!important;width:100%!important;height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:flex-start!important;gap:3px!important;margin:0!important;padding:3px!important;
+  overflow:visible!important;border:0!important;border-radius:7px!important;background:#2e3948!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)!important;
+  color:#fff!important;transform:none!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  position:relative;z-index:2;width:70px;height:70px;flex:0 0 70px;display:grid;place-items:center;
+  border:3px solid #4d2c72;border-radius:50%;background:linear-gradient(180deg,#cf8af1,#8f48c7);
+  box-shadow:0 3px 0 #38224e,inset 0 3px 0 rgba(255,255,255,.5),0 0 0 2px #c7d0d9;
+}
+#homeScreen .conveyor-controls .reroll-icon{width:52px;height:52px;flex:none;padding:0;border:0;background:none}
+#homeScreen .conveyor-controls .reroll-copy{width:100%;height:13px;display:grid;place-items:center}
+#homeScreen .conveyor-controls .reroll-copy b{color:#fff;font-size:7px;letter-spacing:.25px;text-shadow:0 1px #151d29}
+#homeScreen .conveyor-controls .reroll-btn>em{
+  width:100%;min-height:29px;display:grid;place-items:center;padding:2px;border:1px solid #616d7b;border-radius:6px;
+  background:#414d5b;color:#f8fbff;font-size:6.6px;line-height:1.08;font-style:normal;font-weight:1000;text-align:center;
+}
+#homeScreen .conveyor-controls .reroll-btn:active .reroll-icon-well{transform:translateY(2px);box-shadow:0 1px 0 #38224e,inset 0 2px 0 rgba(255,255,255,.38),0 0 0 2px #c7d0d9}
+#homeScreen .food-choices>.conveyor-start-card{
+  grid-column:1/-1!important;width:100%!important;min-width:0!important;max-width:none!important;height:94px!important;min-height:94px!important;max-height:94px!important;
+  align-self:end!important;margin:0!important;border-radius:14px!important;
+}
+
+/* Три понятные желейные жизни вместо типографских символов. */
+.shaft-health{
+  width:174px;height:55px;display:grid;grid-template-columns:minmax(0,1fr) 34px;grid-template-rows:13px 32px;
+  align-items:center;gap:1px 4px;padding:4px 7px 5px;border-color:#8d2742;border-radius:15px;
+  background:linear-gradient(180deg,#fff8fa,#ffdbe4);box-shadow:0 3px 0 rgba(76,28,44,.28),inset 0 2px 0 #fff,inset 0 -3px 0 rgba(190,56,86,.12);
+}
+.shaft-health-title{grid-column:1/-1;color:#84223d;font-size:7.5px;letter-spacing:1px}
+.run-hearts{grid-column:1;grid-row:2;height:32px;gap:2px;justify-content:flex-start}
+.run-heart{width:31px;height:31px;display:grid;place-items:center;color:transparent;font-size:0;text-shadow:none;-webkit-text-stroke:0}
+.run-heart:after{display:none}
+.run-heart>img{width:31px;height:31px;display:block;object-fit:contain;filter:drop-shadow(0 2px 0 rgba(91,21,42,.3))}
+.run-heart.is-empty{opacity:.35;transform:scale(.88);filter:grayscale(1)}
+.run-heart.is-empty>img{filter:grayscale(1) drop-shadow(0 1px 0 rgba(80,62,69,.24))}
+.run-heart.is-empty.is-lost{opacity:1;filter:none}
+.run-heart.is-empty.is-lost>img{filter:drop-shadow(0 2px 0 rgba(91,21,42,.3))}
+.shaft-health-count{
+  grid-column:2;grid-row:2;width:34px;height:25px;display:grid;grid-template-columns:1fr auto;place-items:center;padding:0 4px;
+  border:2px solid #a43b57;border-radius:9px;background:#fff;color:#8a2944;font-size:8px;line-height:1;font-weight:1000;
+  box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(112,39,61,.2);
+}
+.shaft-health-count b{font-size:13px;color:#d92f50}
+
+@media(max-width:430px), (min-width:700px){
+  #homeScreen>.card.conveyor{padding:4px!important}
+  #homeScreen .conveyor-workbench{grid-template-columns:minmax(0,1fr) 82px;gap:5px;padding:4px}
+  #homeScreen .conveyor-machine,#homeScreen .conveyor-controls{height:134px}
+  #homeScreen .conveyor-machine .food-choices{left:26px;right:26px;top:24px;bottom:19px;gap:2px!important}
+  #homeScreen .machine-tunnel{width:27px}.conveyor-machine .machine-mouth{width:19px}
+  #homeScreen .food-choices>.food-card.conveyor-food-pick{height:88px!important;min-height:88px!important;max-height:88px!important}
+  #homeScreen .food-card.conveyor-food-pick .food-model{width:69px!important;height:69px!important;max-height:69px!important}
+  #homeScreen .conveyor-controls .reroll-icon-well{width:64px;height:64px;flex-basis:64px}
+  #homeScreen .conveyor-controls .reroll-icon{width:47px;height:47px}
+  #homeScreen .food-choices>.conveyor-start-card{height:88px!important;min-height:88px!important;max-height:88px!important}
+}
+@media(max-width:370px){
+  #homeScreen .conveyor-workbench{grid-template-columns:minmax(0,1fr) 74px;gap:4px;padding:3px}
+  #homeScreen .conveyor-machine,#homeScreen .conveyor-controls{height:126px}
+  #homeScreen .conveyor-choice-count{min-width:108px;height:20px;font-size:7.3px}
+  #homeScreen .conveyor-machine .food-choices{left:24px;right:24px;top:22px;bottom:18px;gap:1px!important}
+  #homeScreen .machine-tunnel{width:25px}.conveyor-machine .machine-mouth{width:18px}
+  #homeScreen .food-choices>.food-card.conveyor-food-pick{height:83px!important;min-height:83px!important;max-height:83px!important}
+  #homeScreen .food-card.conveyor-food-pick .food-model{width:62px!important;height:62px!important;max-height:62px!important}
+  #homeScreen .conveyor-controls .reroll-icon-well{width:57px;height:57px;flex-basis:57px}
+  #homeScreen .conveyor-controls .reroll-icon{width:43px;height:43px}
+  #homeScreen .conveyor-controls .reroll-btn>em{min-height:27px;font-size:6px}
+  #homeScreen .food-choices>.conveyor-start-card{height:83px!important;min-height:83px!important;max-height:83px!important}
+}
 html.short-viewport #homeScreen .stat-rail-right{gap:3px}
 html.short-viewport #homeScreen .stat-rail-right .stat-pill{min-height:44px;padding-block:2px}
 html.short-viewport #homeScreen>.play-setup-card{
@@ -2844,4 +3015,2467 @@ html.short-viewport #homeScreen>.play-setup-card .bottom-actions button{min-heig
   #dropScreen .drop-hud{min-height:28px}
   #dropScreen .run-route{height:46px;min-height:46px}
   #dropScreen .run-menu-btn{top:max(6px,var(--safe-top));right:max(6px,var(--safe-right))}
+}
+
+/* === Единый портретный viewport ===
+   Телефон использует реальную область браузера. На десктопе тот же интерфейс
+   вписывается целиком в 9:16 и получает только внешний контур без выреза. */
+html,body{overflow:hidden;overscroll-behavior:none}
+.phone-viewport{
+  position:relative;isolation:isolate;width:100%;height:var(--app-height,100dvh);margin:0 auto;overflow:hidden;
+  background:var(--world-bg-bottom,var(--bg));
+}
+
+@media(min-width:700px){
+  html,body{width:100%;height:100%;min-height:100%}
+  body,body[data-screen="home"],body[data-screen="drop"]{
+    width:100%!important;height:100dvh!important;min-height:100dvh!important;
+    display:grid;place-items:center;margin:0;padding:12px;overflow:hidden!important;
+  }
+  .phone-viewport{
+    box-sizing:border-box;width:auto;height:min(764px,calc(100dvh - 24px));max-width:calc(100vw - 24px);
+    aspect-ratio:9 / 16;border:5px solid #303c4a;border-radius:32px;
+    box-shadow:0 10px 26px rgba(34,49,63,.26),inset 0 0 0 2px rgba(255,255,255,.62),0 0 0 1px rgba(20,29,39,.32);
+  }
+  .phone-viewport>.app{
+    width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;margin:0!important;
+  }
+  .phone-viewport>.overlay,
+  .phone-viewport>.secret-discovery-overlay,
+  .phone-viewport>.encyclopedia-card-viewer{position:absolute!important;inset:0!important}
+  .phone-viewport>.toast{position:absolute}
+}
+
+/* === V90: новый экран кормления и рецептов ===
+   Единственная внешняя граница на ПК — рамка phone-viewport. Внутренний
+   экран занимает её целиком и использует ту же раскладку на телефоне. */
+body[data-screen="home"] .phone-viewport>.app{
+  display:grid!important;grid-template-rows:48px minmax(0,1fr);height:100%!important;min-height:0!important;max-height:100%!important;padding:0!important;
+  background:#edf8f4;overflow:hidden!important;
+}
+body[data-screen="home"] .phone-viewport,
+body[data-screen="home"] .app,
+body[data-screen="home"] .game-shell,
+body[data-screen="home"] #homeScreen{max-width:100%!important}
+body[data-screen="home"] .topbar.world-summary{
+  box-sizing:border-box;width:100%;height:48px!important;min-height:48px!important;margin:0!important;padding:4px 9px!important;
+  border:0!important;border-radius:0!important;box-shadow:inset 0 -2px 0 rgba(41,105,83,.2)!important;
+}
+body[data-screen="home"] .game-shell{height:100%;min-height:0!important;overflow:hidden!important}
+body[data-screen="home"] #homeScreen.active{
+  box-sizing:border-box;width:100%;height:100%!important;min-height:0!important;padding:5px!important;margin:0!important;
+  display:grid!important;grid-template-rows:minmax(184px,30%) minmax(176px,27%) minmax(0,1fr)!important;
+  gap:5px!important;align-content:stretch!important;overflow:hidden!important;
+  border:0!important;border-radius:0!important;background:#edf8f4!important;box-shadow:none!important;
+  transform:none!important;
+}
+body.home-height-fitted #homeScreen.active{box-shadow:none!important}
+body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!important;min-height:0;overflow:hidden}
+
+/* Желудок, слайм и книга — одна понятная строка. */
+#homeScreen>.slime-stage{display:block!important;width:100%!important;max-width:100%!important;height:100%;padding:6px 7px!important;border-radius:16px;overflow:visible}
+#homeScreen .slime-hero-layout{
+  width:100%;height:100%;min-height:0!important;padding:0!important;
+  display:grid;grid-template-columns:minmax(148px,1fr) minmax(112px,132px) 78px;gap:5px;align-items:center;
+}
+#homeScreen .slime-playground{width:100%;height:100%!important;min-height:0;align-self:stretch}
+#homeScreen .stomach-rail{
+  box-sizing:border-box;width:100%;height:112px!important;min-width:0;padding:8px 5px 7px!important;gap:8px!important;
+  justify-content:center;border:2px solid #8196a3;border-radius:17px;background:#f6fbf8;
+  box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(58,81,91,.16);
+}
+#homeScreen .stomach-rail-title{font-size:8px;letter-spacing:.9px;color:#40566a}
+#homeScreen .stomach-quick-slots,
+#homeScreen .stomach-quick-slots[data-slots="3"]{
+  --quick-slot-size:46px;--quick-food-size:43px;
+  width:auto!important;height:48px!important;display:grid!important;grid-template-columns:repeat(3,var(--quick-slot-size))!important;
+  grid-template-rows:var(--quick-slot-size)!important;align-items:center!important;justify-content:center!important;gap:4px!important;
+}
+#homeScreen .stomach-quick-slots[data-slots="3"] .stomach-quick-slot{
+  grid-column:auto!important;align-self:center!important;justify-self:center!important;
+}
+#homeScreen .stomach-quick-slot{border-radius:14px!important}
+#homeScreen .stomach-quick-slot .slot-effect-star{right:-5px!important;bottom:-7px!important;width:17px!important;height:17px!important;font-size:12px!important}
+#homeScreen .legacy-home-stats{display:none!important}
+
+#homeScreen .recipe-rail{
+  box-sizing:border-box;width:78px;height:174px;display:grid;grid-template-rows:76px 24px 68px;gap:3px;
+  align-content:center;align-items:center;justify-items:center;padding:4px;
+  border:2px solid #8196a3;border-radius:17px;background:#f6fbf8;
+  box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(58,81,91,.16);
+}
+#homeScreen .recipe-book-button{
+  box-sizing:border-box;width:66px;height:76px;display:grid;grid-template-rows:54px 14px;place-items:center;padding:3px 2px;
+  border:2px solid #496a88;border-radius:14px;background:#e9f4ff;color:#304c68;
+  box-shadow:inset 0 2px 0 #fff,0 2px 0 #b7c7d2;
+}
+#homeScreen .recipe-book-button img{width:53px;height:53px;object-fit:contain;filter:drop-shadow(0 1px 0 rgba(36,49,71,.22))}
+#homeScreen .recipe-book-button span{font-size:6.4px;line-height:1;font-weight:1000;letter-spacing:.4px}
+#homeScreen .recipe-category-slots{width:66px;height:24px;display:grid;grid-template-columns:repeat(3,20px);gap:3px;place-content:center}
+#homeScreen .recipe-category-slot{
+  box-sizing:border-box;width:20px;height:20px;display:grid;place-items:center;border:2px solid #8696a4;border-radius:50%;
+  background:#e8eef1;color:#fff;font-size:11px;line-height:1;font-weight:1000;box-shadow:inset 0 1px 0 #fff;
+}
+#homeScreen .recipe-category-slot.filled{border-color:#435970;background:#6a7f91;animation:recipeCategoryPop .28s cubic-bezier(.2,.85,.25,1.25)}
+#homeScreen .recipe-category-slot.family-health,#homeScreen .recipe-category-slot.family-mass{border-color:#9b5a20;background:#f2a83b}
+#homeScreen .recipe-category-slot.family-damage,#homeScreen .recipe-category-slot.family-fire{border-color:#a7382e;background:#f45b48}
+#homeScreen .recipe-category-slot.family-shield,#homeScreen .recipe-category-slot.family-protection,#homeScreen .recipe-category-slot.family-ice{border-color:#2875a7;background:#59bfea}
+#homeScreen .recipe-category-slot.family-electric{border-color:#806319;background:#ffd94d;color:#59420b}
+#homeScreen .recipe-category-slot.family-bounce{border-color:#4c8d42;background:#87d66d}
+#homeScreen .recipe-category-slot.family-gold{border-color:#9d6c12;background:#ffd259;color:#664506}
+#homeScreen .recipe-category-slot.family-blast{border-color:#8b3c34;background:#ff775d}
+#homeScreen .recipe-category-slot.family-secret{border-color:#8d2142;background:#3f1024}
+#homeScreen .recipe-result-slot{
+  position:relative;box-sizing:border-box;width:66px;height:66px;display:grid;grid-template-rows:48px 12px;place-items:center;padding:2px;
+  overflow:hidden;border:2px dashed #8395a2;border-radius:14px;background:#eef4f2;color:#657787;
+  box-shadow:inset 0 2px 4px rgba(54,77,88,.1);
+}
+#homeScreen .recipe-result-plate{position:absolute;left:50%;top:31px;width:49px;height:16px;border:2px solid #98a4ad;border-radius:50%;background:#fff;transform:translateX(-50%)}
+#homeScreen .recipe-result-symbol{position:relative;z-index:2;margin-top:4px;font-size:20px;font-weight:1000;color:#8797a2}
+#homeScreen .recipe-result-slot small{position:relative;z-index:3;max-width:60px;overflow:hidden;color:#536878;font-size:5.4px;line-height:1;font-weight:1000;text-align:center;text-overflow:ellipsis;white-space:nowrap}
+#homeScreen .recipe-result-slot.has-recipe{border-style:solid;border-color:#b17418;background:#fff5c9;box-shadow:inset 0 2px 0 #fff,0 0 8px rgba(255,188,45,.45)}
+#homeScreen .recipe-result-art{position:relative;z-index:2;width:48px;height:46px;display:grid;place-items:center}
+#homeScreen .recipe-result-food{width:46px!important;height:46px!important;object-fit:contain;filter:drop-shadow(0 2px 1px rgba(61,46,29,.24))}
+#homeScreen .recipe-result-slot.has-recipe small{color:#855611}
+#homeScreen .recipe-result-slot.no-recipe{border-style:solid;border-color:#a07076;background:#fff1f2}
+@keyframes recipeCategoryPop{from{opacity:.35;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
+
+/* Конвейер занимает всю ширину; обновление теперь под лентой. */
+#homeScreen>.card.conveyor{height:100%;padding:4px!important}
+#homeScreen .conveyor-workbench{
+  box-sizing:border-box;width:100%;height:100%;display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr) 38px!important;gap:4px!important;padding:4px!important;border-radius:13px;
+}
+#homeScreen .conveyor-machine{width:100%;height:100%!important;min-height:132px;border-radius:10px}
+#homeScreen .conveyor-machine .food-choices{left:31px;right:31px;top:26px;bottom:18px;gap:8px!important}
+#homeScreen .machine-tunnel{width:32px}
+#homeScreen .conveyor-machine .machine-mouth{width:22px}
+#homeScreen .food-choices>.food-card.conveyor-food-pick{height:96px!important;min-height:96px!important;max-height:96px!important;touch-action:none!important}
+#homeScreen .food-card.conveyor-food-pick .food-model{width:78px!important;height:78px!important;max-height:78px!important}
+#homeScreen .conveyor-controls{
+  box-sizing:border-box;width:100%;height:38px!important;min-height:38px!important;display:grid!important;place-items:center;padding:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+#homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  box-sizing:border-box;width:min(270px,82%)!important;height:38px!important;display:grid!important;
+  grid-template-columns:34px minmax(0,1fr) 94px!important;grid-template-rows:1fr!important;align-items:center!important;
+  gap:6px!important;padding:2px 5px!important;border:2px solid #4f2d72!important;border-radius:14px!important;
+  background:#ad6ddd!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.52),0 2px 0 #54336b!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  width:29px!important;height:29px!important;min-width:29px!important;flex-basis:29px!important;border-width:2px!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.52),0 1px 0 #38224e!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{width:23px!important;height:23px!important}
+#homeScreen .conveyor-controls .reroll-copy{height:auto!important;display:block!important;text-align:center}
+#homeScreen .conveyor-controls .reroll-copy b{font-size:8px!important;letter-spacing:.55px!important}
+#homeScreen .conveyor-controls .reroll-btn>em{
+  box-sizing:border-box;width:94px!important;min-height:25px!important;padding:2px 4px!important;border-color:#69517a!important;
+  background:#f9f5ff!important;color:#513568!important;font-size:6.2px!important;text-shadow:none!important;
+}
+
+/* Нижняя зона растягивается до нижнего края телефона, без пустого хвоста. */
+#homeScreen>.play-setup-card{
+  box-sizing:border-box;width:100%;height:100%;min-height:0!important;margin:0!important;padding:6px 7px 7px!important;
+  display:grid!important;grid-template-columns:120px minmax(0,1fr)!important;
+  grid-template-rows:56px 34px 50px minmax(66px,1fr)!important;column-gap:6px!important;row-gap:4px!important;
+  border-radius:15px!important;overflow:hidden!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar{display:contents!important}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{grid-column:1;grid-row:1!important;height:56px!important}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{grid-column:2;grid-row:1!important;width:100%!important;align-self:center}
+#homeScreen>.play-setup-card>.home-route-progress{grid-column:1/-1!important;grid-row:2!important}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{grid-column:1/-1!important;grid-row:3!important;height:50px!important}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  box-sizing:border-box;grid-column:1/-1!important;grid-row:4!important;align-self:stretch!important;width:100%;height:100%;min-height:62px;
+  margin:0!important;padding:6px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;
+  border:1px solid rgba(47,94,79,.28)!important;border-radius:14px!important;background:rgba(244,255,250,.72)!important;
+}
+#homeScreen .home-tool-dock button,#homeScreen body[data-world] .home-tool-dock button{
+  box-sizing:border-box;width:100%;height:100%!important;min-height:52px!important;display:flex!important;flex-direction:row!important;
+  align-items:center!important;justify-content:center!important;gap:7px!important;padding:5px 9px!important;
+  border:2px solid #5f7b78!important;border-radius:14px!important;background:#f8fffc!important;
+  box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(40,75,69,.22)!important;
+}
+#homeScreen .home-tool-dock .action-icon,#homeScreen .home-tool-dock .action-icon img{width:44px!important;height:44px!important}
+#homeScreen .home-tool-dock .action-icon img[src*="accessories-cap"]{transform:scale(1.08)}
+#homeScreen .home-tool-dock b{font-size:8.5px!important;letter-spacing:.35px!important;color:#2e514d}
+
+/* Перетаскивание: лёгкий отдельный призрак без копии всей DOM-карты. */
+body[data-screen="home"],body[data-screen="home"] .phone-viewport{overscroll-behavior:none!important;overflow:hidden!important}
+#homeScreen .conveyor-food-pick{touch-action:none!important;-webkit-user-drag:none!important}
+body.food-dragging{touch-action:none!important;cursor:grabbing}
+.food-drag-ghost{
+  position:fixed;z-index:3200;left:0;top:0;width:90px;height:94px;pointer-events:none;contain:layout paint;
+  transform:translate(-50%,-50%) scale(1);will-change:left,top,transform;filter:drop-shadow(0 7px 5px rgba(16,28,38,.28));
+}
+.food-drag-plate{position:absolute;left:50%;bottom:2px;width:76px;height:22px;border:2px solid #65717e;border-radius:50%;background:#fff;box-shadow:0 3px 0 rgba(12,19,27,.42);transform:translateX(-50%)}
+.food-drag-art{position:absolute;inset:0 0 14px;display:grid;place-items:end center}
+.food-drag-model{width:76px!important;height:76px!important;object-fit:contain;filter:drop-shadow(0 2px 1px rgba(0,0,0,.28))}
+.food-drag-ghost.accept{transform:translate(-50%,-55%) scale(1.1)}
+.food-drag-ghost.returning{transition:left .2s ease,top .2s ease,transform .2s ease,opacity .18s ease}
+
+@media(max-width:370px){
+  body[data-screen="home"] #homeScreen.active{grid-template-rows:minmax(170px,29%) minmax(164px,27%) minmax(0,1fr)!important;padding:4px!important;gap:4px!important}
+  #homeScreen>.slime-stage{padding-inline:5px!important}
+  #homeScreen .slime-hero-layout{grid-template-columns:minmax(122px,1fr) minmax(100px,112px) 66px;gap:4px}
+  #homeScreen .stomach-rail{height:100px!important;padding-inline:3px!important;gap:6px!important}
+  #homeScreen .stomach-quick-slots,#homeScreen .stomach-quick-slots[data-slots="3"]{--quick-slot-size:39px;--quick-food-size:37px;gap:2px!important}
+  #homeScreen .recipe-rail{width:66px;height:156px;grid-template-rows:66px 21px 59px;padding:3px}
+  #homeScreen .recipe-book-button{width:56px;height:66px;grid-template-rows:47px 12px}
+  #homeScreen .recipe-book-button img{width:46px;height:46px}
+  #homeScreen .recipe-category-slots{width:58px;grid-template-columns:repeat(3,18px);gap:1px}
+  #homeScreen .recipe-category-slot{width:18px;height:18px;font-size:9px}
+  #homeScreen .recipe-result-slot{width:56px;height:58px;grid-template-rows:41px 11px}
+  #homeScreen .recipe-result-plate{top:27px;width:42px;height:14px}
+  #homeScreen .recipe-result-food{width:40px!important;height:40px!important}
+  #homeScreen .conveyor-machine .food-choices{gap:3px!important}
+  #homeScreen .food-card.conveyor-food-pick .food-model{width:67px!important;height:67px!important;max-height:67px!important}
+  #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:min(248px,88%)!important;grid-template-columns:31px minmax(0,1fr) 84px!important;gap:3px!important}
+  #homeScreen .conveyor-controls .reroll-btn>em{width:84px!important;font-size:5.6px!important}
+  #homeScreen>.play-setup-card{grid-template-columns:112px minmax(0,1fr)!important;padding-inline:5px!important;column-gap:4px!important}
+  #homeScreen .home-tool-dock .action-icon,#homeScreen .home-tool-dock .action-icon img{width:38px!important;height:38px!important}
+  #homeScreen .home-tool-dock b{font-size:7.4px!important}
+}
+
+/* Книга рецептов заменяет старую энциклопедию на главном экране. */
+.recipe-book-panel{display:grid;gap:12px}
+.recipe-book-families{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.recipe-book-family{min-width:0;height:42px;display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:6px;padding:5px 7px;border:2px solid #758696;border-radius:12px;background:#f7fbfa;box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(43,60,72,.13)}
+.recipe-book-family i{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#7b8d9c;color:#fff;font-size:15px;font-style:normal;font-weight:1000}
+.recipe-book-family b{overflow:hidden;color:#405568;font-size:8px;letter-spacing:.35px;text-overflow:ellipsis}
+.recipe-book-family.family-mass i{background:#eda640}.recipe-book-family.family-fire i{background:#ef5e4d}.recipe-book-family.family-ice i{background:#57b9e4}.recipe-book-family.family-electric i{background:#ffd54b;color:#60490f}
+.recipe-book-family.family-bounce i{background:#82cb68}.recipe-book-family.family-gold i{background:#f7c84b;color:#62450a}.recipe-book-family.family-blast i{background:#ef735a}.recipe-book-family.family-protection i{background:#4f92c7}
+.recipe-book-list{display:grid;gap:8px}
+.recipe-book-empty{display:grid;justify-items:center;gap:7px;padding:18px 12px;border:2px dashed #8aa0ac;border-radius:16px;background:#eff8f5;text-align:center}
+.recipe-book-empty img{width:82px;height:82px;object-fit:contain;filter:drop-shadow(0 3px 2px rgba(30,49,66,.2))}
+.recipe-book-empty b{color:#304b60;font-size:12px}.recipe-book-empty p{max-width:250px;margin:0;color:#647987;font-size:9px;line-height:1.35;font-weight:750}
+.recipe-book-entry{display:grid;grid-template-columns:62px minmax(0,1fr);align-items:center;gap:9px;padding:8px;border:2px solid #77909b;border-radius:14px;background:#f8fffc}
+.recipe-book-dish{width:60px;height:60px;display:grid;place-items:center;border:2px solid #9d7b32;border-radius:14px;background:#fff3c9;color:#9a7021;font-size:24px;font-weight:1000}.recipe-book-dish img{width:55px;height:55px;object-fit:contain}
+.recipe-book-entry>span:last-child{display:grid;gap:4px}.recipe-book-entry b{font-size:11px}.recipe-book-entry small{color:#6b7884;font-size:8px;font-weight:800}.recipe-book-entry.locked{filter:grayscale(.7);opacity:.58}
+
+/* === V92: цельный конвейер от тоннеля до тоннеля === */
+#homeScreen>.card.conveyor{padding:0!important;border-radius:14px!important;background:#7c8997!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 3px 0 rgba(38,49,62,.24)!important}
+#homeScreen .conveyor-workbench{width:100%;height:100%;padding:4px 0 5px!important;gap:5px!important;border:0!important;border-radius:12px!important;background:#8e9aa7!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.42),inset 0 -3px 0 rgba(37,48,60,.2)!important}
+#homeScreen .conveyor-machine{--machine-tunnel-w:38px;--machine-mouth-w:25px;width:100%;height:100%!important;margin:0!important;border-width:2px 0!important;border-radius:0!important;background:#111a24!important;box-shadow:inset 0 7px 15px rgba(0,0,0,.35),inset 0 -2px 0 rgba(157,178,194,.15)!important}
+#homeScreen .conveyor-machine .food-choices{left:38px!important;right:38px!important;top:24px!important;bottom:25px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;padding:0!important;align-items:end!important}
+#homeScreen .food-choices>.food-card.conveyor-food-pick{height:94px!important;min-height:94px!important;max-height:94px!important;align-self:end!important}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,.food-drag-ghost.conveyor-food-pick>.conveyor-plate{left:50%!important;bottom:0!important;width:78px!important;height:22px!important;border:2px solid #66727e!important;background:radial-gradient(ellipse at 50% 34%,#fff 0 46%,#dfe5e9 48% 70%,#aab4bd 72% 100%)!important;box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff!important;transform:translateX(-50%)!important}
+#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{inset:0 0 7px!important;padding:0!important;place-items:end center!important}
+#homeScreen .food-card.conveyor-food-pick .food-model{width:72px!important;height:72px!important;max-width:92%!important;max-height:72px!important;transform:translateY(2px)!important;transform-origin:50% 100%!important}
+#homeScreen .machine-belt{z-index:18;left:0!important;right:0!important;bottom:4px!important;width:auto!important;height:31px!important;border-width:2px 0!important;border-radius:0!important;background:repeating-linear-gradient(90deg,#414d5a 0 15px,#6f7d8b 15px 27px,#2e3945 27px 32px)!important;background-size:32px 100%!important;box-shadow:inset 0 4px 0 rgba(255,255,255,.16),inset 0 -5px 0 rgba(0,0,0,.3),0 -2px 0 #202b36!important}
+#homeScreen .machine-belt:before{top:7px!important;height:2px!important;box-shadow:0 11px 0 rgba(14,22,30,.38)!important}
+#homeScreen .machine-belt>i{top:50%!important;width:15px!important;height:15px!important;border:2px solid #26313d!important;background:#84919d!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.38),0 1px 0 rgba(0,0,0,.3)!important}
+#homeScreen .machine-belt>i:nth-child(1){left:7%!important}#homeScreen .machine-belt>i:nth-child(2){left:24.2%!important}#homeScreen .machine-belt>i:nth-child(3){left:41.5%!important}#homeScreen .machine-belt>i:nth-child(4){left:58.5%!important}#homeScreen .machine-belt>i:nth-child(5){left:75.8%!important}#homeScreen .machine-belt>i:nth-child(6){left:93%!important}
+#homeScreen .machine-tunnel{z-index:40!important;top:0!important;bottom:0!important;width:38px!important;border:0!important;border-radius:0!important;background:linear-gradient(90deg,#697684,#c2cbd3 48%,#667380)!important;box-shadow:inset 0 0 0 2px #354250,inset 3px 0 0 rgba(255,255,255,.24)!important}
+#homeScreen .machine-tunnel-left{left:0!important}#homeScreen .machine-tunnel-right{right:0!important}
+#homeScreen .machine-mouth{top:9px!important;bottom:7px!important;width:25px!important;border:3px solid #596675!important;background:#030609!important;box-shadow:inset 0 0 10px #000,0 0 0 1px rgba(255,255,255,.09)!important}
+#homeScreen .machine-tunnel-left .machine-mouth{right:0!important;border-right:0!important;border-radius:7px 0 0 7px!important}#homeScreen .machine-tunnel-right .machine-mouth{left:0!important;border-left:0!important;border-radius:0 7px 7px 0!important}
+#homeScreen .conveyor-choice-count{top:4px!important;z-index:60!important}#homeScreen .conveyor-controls{padding:1px 0 0!important}
+@media(max-width:370px){#homeScreen .conveyor-machine{--machine-tunnel-w:32px;--machine-mouth-w:21px}#homeScreen .conveyor-machine .food-choices{left:32px!important;right:32px!important;gap:2px!important;bottom:24px!important}#homeScreen .machine-tunnel{width:32px!important}.conveyor-machine .machine-mouth{width:21px!important}#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:68px!important;height:20px!important}#homeScreen .food-card.conveyor-food-pick .food-model{width:63px!important;height:63px!important;max-height:63px!important}}
+
+/* === V91: симметричная верхняя сцена и более свободное управление === */
+body[data-screen="home"] #homeScreen.active{
+  grid-template-rows:minmax(178px,26%) minmax(204px,30%) minmax(0,1fr)!important;
+}
+#homeScreen .slime-hero-layout{
+  grid-template-columns:92px minmax(0,1fr) 92px!important;gap:7px!important;align-items:start!important;padding-top:5px!important;
+}
+#homeScreen .stomach-rail,#homeScreen .recipe-rail{
+  box-sizing:border-box;width:92px!important;height:166px!important;align-self:start!important;margin:0!important;
+}
+#homeScreen .stomach-rail{
+  justify-content:flex-start!important;gap:6px!important;padding:5px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+#homeScreen .stomach-quick-slots,#homeScreen .stomach-quick-slots[data-slots="3"]{
+  --quick-slot-size:43px;--quick-food-size:40px;width:46px!important;height:139px!important;
+  grid-template-columns:43px!important;grid-template-rows:repeat(3,43px)!important;gap:5px!important;
+}
+#homeScreen .stomach-quick-slots[data-slots="3"] .stomach-quick-slot{grid-column:1!important;grid-row:auto!important}
+#homeScreen .recipe-rail{
+  grid-template-rows:68px 23px 67px!important;gap:4px!important;padding:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+#homeScreen .recipe-book-button{width:72px;height:68px;grid-template-rows:49px 12px;padding:2px}
+#homeScreen .recipe-book-button img{width:48px;height:48px}
+#homeScreen .recipe-category-slots{width:72px;height:23px;grid-template-columns:repeat(3,21px);gap:3px}
+#homeScreen .recipe-category-slot{width:21px;height:21px}
+#homeScreen .recipe-result-slot{width:72px;height:67px;grid-template-rows:49px 12px}
+#homeScreen .recipe-result-plate{top:31px;width:52px}
+#homeScreen .slime-playground{height:176px!important;align-self:start!important}
+#homeScreen .slime-playground .slime{margin-bottom:21px!important}
+
+#homeScreen .conveyor-workbench{grid-template-rows:minmax(0,1fr) 54px!important;gap:5px!important}
+#homeScreen .conveyor-controls{height:54px!important;min-height:54px!important}
+#homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  width:min(304px,88%)!important;height:48px!important;grid-template-columns:40px minmax(0,1fr) 108px!important;gap:7px!important;padding:3px 7px!important;border-radius:16px!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{width:36px!important;height:36px!important;min-width:36px!important;flex-basis:36px!important}
+#homeScreen .conveyor-controls .reroll-icon{width:28px!important;height:28px!important}
+#homeScreen .conveyor-controls .reroll-copy b{font-size:9px!important}
+#homeScreen .conveyor-controls .reroll-btn>em{width:108px!important;min-height:31px!important;font-size:6.8px!important}
+
+#homeScreen>.play-setup-card{
+  grid-template-rows:64px 38px 55px minmax(58px,1fr)!important;row-gap:5px!important;padding-top:8px!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{height:62px!important}
+#homeScreen>.play-setup-card .home-world-picker{height:60px!important}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{height:53px!important}
+#homeScreen>.play-setup-card .home-mode-tabs{height:52px!important}
+#homeScreen>.play-setup-card .level-btn{height:50px!important}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  height:62px!important;min-height:62px!important;align-self:end!important;padding:5px!important;gap:7px!important;
+}
+#homeScreen .home-tool-dock button{
+  height:50px!important;min-height:50px!important;padding:4px 8px!important;gap:6px!important;border-radius:13px!important;
+}
+#homeScreen .home-tool-dock .action-icon,#homeScreen .home-tool-dock .action-icon img{width:34px!important;height:34px!important}
+#homeScreen .home-tool-dock b{font-size:8px!important}
+
+@media(max-width:370px){
+  body[data-screen="home"] #homeScreen.active{grid-template-rows:minmax(165px,25%) minmax(190px,30%) minmax(0,1fr)!important}
+  #homeScreen .slime-hero-layout{grid-template-columns:76px minmax(0,1fr) 76px!important;gap:4px!important;padding-top:3px!important}
+  #homeScreen .stomach-rail,#homeScreen .recipe-rail{width:76px!important;height:154px!important}
+  #homeScreen .stomach-quick-slots,#homeScreen .stomach-quick-slots[data-slots="3"]{--quick-slot-size:38px;--quick-food-size:36px;width:40px!important;height:122px!important;grid-template-columns:38px!important;grid-template-rows:repeat(3,38px)!important;gap:4px!important}
+  #homeScreen .recipe-rail{grid-template-rows:62px 20px 62px!important;gap:4px!important}
+  #homeScreen .recipe-book-button{width:64px;height:62px;grid-template-rows:44px 11px}
+  #homeScreen .recipe-book-button img{width:43px;height:43px}
+  #homeScreen .recipe-category-slots{width:64px;height:20px;grid-template-columns:repeat(3,19px);gap:2px}
+  #homeScreen .recipe-category-slot{width:19px;height:19px;font-size:9px}
+  #homeScreen .recipe-result-slot{width:64px;height:62px;grid-template-rows:45px 11px}
+  #homeScreen .slime-playground{height:158px!important}
+  #homeScreen .slime-playground .slime{margin-bottom:18px!important}
+  #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:min(278px,92%)!important;grid-template-columns:38px minmax(0,1fr) 98px!important;gap:4px!important}
+  #homeScreen .conveyor-controls .reroll-btn>em{width:98px!important;font-size:6.1px!important}
+  #homeScreen>.play-setup-card{grid-template-rows:60px 36px 52px minmax(56px,1fr)!important}
+  #homeScreen>.play-setup-card>.home-tool-dock{height:58px!important;min-height:58px!important}
+  #homeScreen .home-tool-dock button{height:46px!important;min-height:46px!important}
+  #homeScreen .home-tool-dock .action-icon,#homeScreen .home-tool-dock .action-icon img{width:30px!important;height:30px!important}
+}
+
+/* === V94: цельное полотно конвейера без декоративных шестерёнок === */
+#homeScreen .conveyor-machine .food-choices{
+  bottom:13px!important;
+}
+#homeScreen .machine-belt{
+  z-index:18!important;left:0!important;right:0!important;bottom:0!important;
+  width:auto!important;height:35px!important;overflow:hidden!important;
+  border:0!important;border-top:3px solid #1d2731!important;border-bottom:3px solid #17212a!important;border-radius:0!important;
+  background:linear-gradient(180deg,#667482 0 4px,#46525f 4px 19px,#27323d 19px 100%)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.16),inset 0 -3px 0 rgba(0,0,0,.34),0 -2px 0 #85919c!important;
+  isolation:isolate;
+}
+#homeScreen .machine-belt:after{
+  content:"";position:absolute;z-index:1;left:-64px;top:3px;width:calc(100% + 64px);height:16px;
+  background:repeating-linear-gradient(90deg,#7f8b97 0 25px,#55616d 25px 29px,#303b46 29px 32px);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.19),inset 0 -3px 0 rgba(8,14,20,.28);
+  animation:none;will-change:transform;
+}
+#homeScreen .machine-belt:before{
+  content:""!important;position:absolute!important;z-index:4!important;left:0!important;right:0!important;top:18px!important;height:2px!important;
+  background:#18222c!important;box-shadow:0 11px 0 rgba(154,168,180,.18)!important;pointer-events:none;
+}
+#homeScreen .machine-belt>i{
+  z-index:3!important;top:25px!important;width:11px!important;height:11px!important;
+  border:2px solid #1d2731!important;border-radius:50%!important;
+  background:radial-gradient(circle at 40% 35%,#d8e0e6 0 2px,#7c8995 3px 100%)!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.14)!important;
+  animation:none!important;
+}
+#homeScreen .machine-belt>i:nth-child(1){left:5%!important}
+#homeScreen .machine-belt>i:nth-child(2){left:23%!important}
+#homeScreen .machine-belt>i:nth-child(3){left:41%!important}
+#homeScreen .machine-belt>i:nth-child(4){left:59%!important}
+#homeScreen .machine-belt>i:nth-child(5){left:77%!important}
+#homeScreen .machine-belt>i:nth-child(6){left:95%!important}
+#homeScreen .conveyor.is-running .machine-belt{animation:none!important}
+#homeScreen .conveyor.is-running .machine-belt:after{animation:conveyorTrackTravel .28s linear infinite!important}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
+.food-drag-ghost.conveyor-food-pick>.conveyor-plate{
+  bottom:0!important;width:76px!important;height:21px!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{
+  inset:0 0 2px!important;
+}
+#homeScreen .food-card.conveyor-food-pick .food-model{
+  transform:translateY(5px)!important;
+}
+@keyframes conveyorTrackTravel{to{transform:translate3d(32px,0,0)}}
+
+@media(max-width:370px){
+  #homeScreen .conveyor-machine .food-choices{bottom:12px!important}
+  #homeScreen .machine-belt{height:33px!important}
+  #homeScreen .machine-belt>i{top:24px!important;width:10px!important;height:10px!important}
+  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:67px!important;height:19px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #homeScreen .machine-belt:after,#homeScreen .machine-belt>i{animation:none!important}
+}
+
+/* === V96: узкие теневые проёмы, лента проходит поверх и исчезает внутри === */
+#homeScreen .conveyor-machine{
+  --machine-tunnel-w:32px;--machine-mouth-w:24px;
+}
+#homeScreen .conveyor-machine .food-choices{
+  left:32px!important;right:32px!important;
+}
+#homeScreen .machine-tunnel{
+  z-index:12!important;top:7px!important;bottom:2px!important;width:32px!important;overflow:hidden!important;
+  border:0!important;border-radius:0!important;
+  background:#020407!important;box-shadow:inset 0 0 15px #000!important;
+}
+#homeScreen .machine-tunnel-left{left:0!important;border-radius:0 7px 7px 0!important}
+#homeScreen .machine-tunnel-right{
+  right:0!important;border-radius:7px 0 0 7px!important;background:#020407!important;
+}
+#homeScreen .machine-mouth{
+  z-index:5!important;top:3px!important;bottom:1px!important;width:24px!important;overflow:hidden!important;
+  border:0!important;background:#010204!important;
+  filter:none!important;
+}
+#homeScreen .machine-tunnel-left .machine-mouth{
+  right:0!important;border-radius:7px 0 0 7px!important;
+  box-shadow:inset 9px 0 13px #000,inset 0 0 10px rgba(73,100,121,.1)!important;
+}
+#homeScreen .machine-tunnel-right .machine-mouth{
+  left:0!important;border-radius:0 7px 7px 0!important;
+  box-shadow:inset -9px 0 13px #000,inset 0 0 10px rgba(73,100,121,.1)!important;
+}
+#homeScreen .machine-tunnel:before,#homeScreen .machine-tunnel:after{display:none!important}
+#homeScreen .conveyor-machine:before,#homeScreen .conveyor-machine:after{
+  content:""!important;display:block!important;position:absolute!important;z-index:48!important;
+  top:0!important;bottom:0!important;width:32px!important;height:auto!important;border-radius:0!important;pointer-events:none!important;box-shadow:none!important;
+}
+#homeScreen .conveyor-machine:before{
+  left:0!important;
+  background:linear-gradient(90deg,#53606d 0 5px,#b8c2cb 5px 9px,#64717e 9px 12px,#020407 12px 100%)!important;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 35px),12px calc(100% - 35px),12px 100%,0 100%)!important;
+}
+#homeScreen .conveyor-machine:after{
+  right:0!important;
+  background:linear-gradient(90deg,#020407 0 calc(100% - 12px),#64717e calc(100% - 12px) calc(100% - 9px),#b7c1ca calc(100% - 9px) calc(100% - 5px),#53606d calc(100% - 5px))!important;
+  clip-path:polygon(0 0,100% 0,100% 100%,calc(100% - 12px) 100%,calc(100% - 12px) calc(100% - 35px),0 calc(100% - 35px))!important;
+}
+#homeScreen .machine-belt{
+  z-index:20!important;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 25px,#000 calc(100% - 25px),transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 25px,#000 calc(100% - 25px),transparent 100%);
+}
+#homeScreen .machine-mouth:before{
+  content:""!important;position:absolute!important;inset:0!important;opacity:1!important;
+  background:linear-gradient(180deg,rgba(74,96,114,.13),transparent 25% 74%,rgba(0,0,0,.5)),repeating-linear-gradient(180deg,rgba(111,136,154,.07) 0 2px,transparent 2px 13px)!important;
+  animation:none!important;
+}
+#homeScreen .conveyor.is-running .machine-mouth:before{
+  animation:tunnelDepthTravel .3s linear infinite!important;
+}
+#homeScreen .machine-tunnel:before,#homeScreen .machine-tunnel:after{
+  z-index:8!important;width:5px!important;height:5px!important;border:1px solid #35414e!important;border-radius:50%!important;
+  background:#909da8!important;box-shadow:inset 1px 1px 0 rgba(255,255,255,.58)!important;
+}
+#homeScreen .machine-tunnel:before{top:4px!important}
+#homeScreen .machine-tunnel:after{bottom:4px!important}
+#homeScreen .machine-tunnel-left:before,#homeScreen .machine-tunnel-left:after{left:4px!important}
+#homeScreen .machine-tunnel-right:before,#homeScreen .machine-tunnel-right:after{right:4px!important}
+
+@media(max-width:370px){
+  #homeScreen .conveyor-machine{--machine-tunnel-w:38px;--machine-mouth-w:28px}
+  #homeScreen .conveyor-machine .food-choices{left:37px!important;right:37px!important}
+  #homeScreen .machine-tunnel{width:38px!important}
+  #homeScreen .machine-mouth{width:28px!important;top:9px!important}
+}
+
+/* === V97: полноширинный конвейер и встроенный боковой реролл === */
+#homeScreen>.card.conveyor{
+  width:calc(100% + 10px)!important;margin-inline:-5px!important;
+  border-left:0!important;border-right:0!important;border-radius:0!important;
+}
+#homeScreen .conveyor-workbench{
+  width:100%!important;height:100%!important;display:grid!important;
+  grid-template-columns:minmax(0,1fr) 80px!important;grid-template-rows:minmax(0,1fr)!important;
+  gap:0!important;padding:0!important;border:0!important;border-radius:0!important;
+}
+#homeScreen .conveyor-machine{
+  min-width:0!important;height:100%!important;border-left:0!important;border-radius:0!important;
+}
+#homeScreen .conveyor-controls{
+  box-sizing:border-box!important;width:80px!important;height:100%!important;min-height:0!important;
+  display:grid!important;place-items:center!important;margin:0!important;padding:5px!important;
+  border:0!important;border-left:3px solid #354250!important;border-radius:0!important;
+  background:linear-gradient(180deg,#c6cfd7,#7f8c99)!important;
+  box-shadow:inset 2px 0 0 rgba(255,255,255,.34),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(31,42,53,.24)!important;
+}
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  box-sizing:border-box!important;width:68px!important;height:calc(100% - 2px)!important;min-height:0!important;
+  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:minmax(56px,1fr) 17px 29px!important;
+  place-items:center!important;align-content:center!important;gap:2px!important;margin:0!important;padding:4px!important;
+  border:2px solid #313d4c!important;border-radius:12px!important;background:#303b49!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.1),0 3px 0 #222c37!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  width:57px!important;height:57px!important;min-width:57px!important;min-height:57px!important;flex-basis:57px!important;
+  align-self:end!important;border-width:3px!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{width:43px!important;height:43px!important}
+#homeScreen .conveyor-controls .reroll-copy{
+  width:100%!important;height:17px!important;display:grid!important;place-items:center!important;
+}
+#homeScreen .conveyor-controls .reroll-copy b{
+  font-size:7.4px!important;line-height:1!important;letter-spacing:.55px!important;white-space:nowrap!important;
+}
+#homeScreen .conveyor-controls .reroll-btn>em{
+  box-sizing:border-box!important;width:100%!important;min-height:27px!important;height:27px!important;padding:2px!important;
+  font-size:5.8px!important;line-height:1.05!important;border-radius:6px!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
+.food-drag-ghost.conveyor-food-pick>.conveyor-plate{
+  left:50%!important;bottom:0!important;transform:translateX(-50%)!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{
+  inset:0 0 14px!important;place-items:end center!important;
+}
+#homeScreen .food-card.conveyor-food-pick .food-model{
+  left:0!important;transform:translateY(5px)!important;transform-origin:50% 100%!important;
+}
+#homeScreen .conveyor.launch-ready .conveyor-workbench{grid-template-columns:minmax(0,1fr)!important}
+
+@media(max-width:370px){
+  #homeScreen .conveyor-workbench{grid-template-columns:minmax(0,1fr) 72px!important}
+  #homeScreen .conveyor-controls{width:72px!important;padding:4px!important}
+  #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:62px!important;grid-template-rows:minmax(51px,1fr) 16px 27px!important;padding:3px!important}
+  #homeScreen .conveyor-controls .reroll-icon-well{width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;flex-basis:52px!important}
+  #homeScreen .conveyor-controls .reroll-icon{width:39px!important;height:39px!important}
+  #homeScreen .conveyor-controls .reroll-copy b{font-size:6.8px!important}
+  #homeScreen .conveyor-controls .reroll-btn>em{height:25px!important;min-height:25px!important;font-size:5.2px!important}
+  #homeScreen .conveyor-machine .food-choices{left:33px!important;right:33px!important;gap:1px!important}
+}
+
+/* === V98: вертикальный рычаг реролла вместо круглой кнопки === */
+#homeScreen .conveyor-workbench{
+  grid-template-columns:minmax(0,1fr) 72px!important;
+}
+#homeScreen .conveyor-controls{
+  width:72px!important;padding:4px!important;
+  background:linear-gradient(90deg,#75818e 0,#c4cdd5 18%,#929eaa 52%,#687581 100%)!important;
+}
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  width:62px!important;height:calc(100% - 2px)!important;
+  grid-template-columns:1fr!important;grid-template-rows:minmax(78px,1fr) 17px 28px!important;
+  gap:2px!important;padding:4px!important;border:2px solid #2d3946!important;border-radius:10px!important;
+  background:linear-gradient(180deg,#3c4855,#27323e)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.12),inset 0 -3px 0 rgba(0,0,0,.28),0 2px 0 #202a34!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  position:relative!important;align-self:center!important;width:44px!important;height:86px!important;
+  min-width:44px!important;min-height:86px!important;flex-basis:86px!important;overflow:hidden!important;
+  border:3px solid #252f3a!important;border-radius:18px!important;
+  background:linear-gradient(90deg,#313d49 0 24%,#080c11 34% 66%,#313d49 76% 100%)!important;
+  box-shadow:inset 0 3px 6px #030507,inset 0 0 0 2px rgba(255,255,255,.08),0 2px 0 rgba(255,255,255,.18)!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{display:none!important}
+#homeScreen .conveyor-controls .reroll-icon-well:before{
+  content:"";position:absolute;z-index:3;left:50%;top:1px;width:34px;height:55px;
+  background:
+    radial-gradient(circle at 50% 14px,#fff 0 3px,#e4b7ff 4px 7px,#ad58dc 8px 12px,#55276f 13px 15px,transparent 16px),
+    linear-gradient(90deg,transparent 0 13px,#54616d 13px 15px,#d8dfe5 15px 18px,#77838e 18px 21px,transparent 21px) 0 12px/100% 43px no-repeat;
+  filter:drop-shadow(0 2px 1px rgba(0,0,0,.65));transform:translateX(-50%);transform-origin:50% 50%;
+}
+#homeScreen .conveyor-controls .reroll-icon-well:after{
+  content:"▼";position:absolute;z-index:1;left:50%;bottom:3px;color:#9e5bc4;font-size:10px;line-height:1;
+  text-shadow:0 1px #05070a;transform:translateX(-50%);opacity:.72;
+}
+#homeScreen .conveyor-controls .reroll-copy{align-self:center!important}
+#homeScreen .conveyor-controls .reroll-copy b{
+  color:#f3ddff!important;font-size:7px!important;letter-spacing:.65px!important;text-shadow:0 1px #12091b!important;
+}
+#homeScreen .conveyor-controls .reroll-btn>em{
+  width:54px!important;height:26px!important;min-height:26px!important;padding:2px!important;
+  border-color:#65717d!important;background:#46515d!important;font-size:5.3px!important;
+}
+#homeScreen .conveyor-controls .reroll-btn:active .reroll-icon-well{transform:none!important}
+#homeScreen .conveyor-controls .reroll-btn:active .reroll-icon-well:before{transform:translate(-50%,26px)!important}
+#homeScreen .conveyor.is-rerolling .reroll-icon-well{
+  animation:rerollLeverTrack 1.55s ease-in-out both;
+}
+#homeScreen .conveyor.is-rerolling .reroll-icon-well:before{
+  animation:rerollLeverPull 1.55s cubic-bezier(.34,.02,.22,1) both;
+}
+#homeScreen .conveyor.is-rerolling .reroll-icon-well:after{
+  animation:rerollLeverArrow 1.55s ease both;
+}
+@keyframes rerollLeverPull{
+  0%,7%{transform:translate(-50%,0)}
+  34%,55%{transform:translate(-50%,29px)}
+  76%{transform:translate(-50%,-2px)}
+  88%,100%{transform:translate(-50%,0)}
+}
+@keyframes rerollLeverTrack{
+  0%,100%{box-shadow:inset 0 3px 6px #030507,inset 0 0 0 2px rgba(255,255,255,.08),0 2px 0 rgba(255,255,255,.18)}
+  30%,58%{box-shadow:inset 0 3px 8px #020304,inset 0 0 8px rgba(194,91,238,.62),0 0 7px rgba(189,82,231,.38)}
+}
+@keyframes rerollLeverArrow{0%,100%{opacity:.72}30%,58%{opacity:1;color:#f0bdff;transform:translateX(-50%) scale(1.18)}}
+
+@media(max-width:370px){
+  #homeScreen .conveyor-workbench{grid-template-columns:minmax(0,1fr) 66px!important}
+  #homeScreen .conveyor-controls{width:66px!important;padding:3px!important}
+  #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:58px!important;grid-template-rows:minmax(73px,1fr) 16px 25px!important;padding:3px!important}
+  #homeScreen .conveyor-controls .reroll-icon-well{width:41px!important;height:80px!important;min-width:41px!important;min-height:80px!important;flex-basis:80px!important}
+  #homeScreen .conveyor-controls .reroll-btn>em{width:50px!important;height:23px!important;min-height:23px!important;font-size:4.9px!important}
+}
+
+/* === V99: компактный полноширинный мультяшный конвейер === */
+body[data-screen="home"] #homeScreen.active{
+  grid-template-rows:minmax(178px,26%) minmax(148px,21%) minmax(0,1fr)!important;
+}
+#homeScreen>.card.conveyor{
+  width:calc(100% + 10px)!important;margin-inline:-5px!important;padding:0!important;
+  overflow:hidden!important;border:0!important;border-top:3px solid #405063!important;border-bottom:3px solid #405063!important;border-radius:0!important;
+  background:#9caeba!important;
+  box-shadow:inset 0 3px 0 #dce7ec,inset 0 -4px 0 #718492,0 3px 0 rgba(37,49,61,.22)!important;
+}
+#homeScreen .conveyor-workbench{
+  width:100%!important;height:100%!important;display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;
+  gap:0!important;padding:4px 0!important;border:0!important;border-radius:0!important;
+  background:#93a5b2!important;box-shadow:none!important;
+}
+#homeScreen .conveyor-machine{
+  width:100%!important;height:100%!important;min-height:0!important;margin:0!important;
+  overflow:hidden!important;border:0!important;border-radius:0!important;
+  background:linear-gradient(180deg,#1a2733 0,#0e1720 72%,#263541 100%)!important;
+  box-shadow:inset 0 4px 0 rgba(142,177,196,.22),inset 0 -3px 0 rgba(0,0,0,.32)!important;
+}
+#homeScreen .conveyor-controls{display:none!important}
+#homeScreen .conveyor-choice-count{
+  top:4px!important;height:20px!important;min-width:116px!important;
+  border:2px solid #3c4a5c!important;border-radius:8px!important;
+  background:#f6fbf8!important;color:#354359!important;font-size:7.6px!important;
+  box-shadow:0 2px 0 #1e2935,inset 0 1px 0 #fff!important;
+}
+#homeScreen .conveyor-machine .food-choices{
+  left:32px!important;right:32px!important;top:22px!important;bottom:10px!important;
+  gap:7px!important;padding:0!important;
+}
+#homeScreen .food-choices>.food-card.conveyor-food-pick{
+  height:83px!important;min-height:83px!important;max-height:83px!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
+.food-drag-ghost.conveyor-food-pick>.conveyor-plate{
+  bottom:0!important;width:72px!important;height:19px!important;
+  border-color:#62717e!important;background:radial-gradient(ellipse at 50% 34%,#fff 0 48%,#e2e8eb 50% 70%,#a9b5be 72% 100%)!important;
+  box-shadow:0 3px 0 rgba(7,13,19,.46),inset 0 2px 0 #fff!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{
+  inset:0 0 12px!important;
+}
+#homeScreen .food-card.conveyor-food-pick .food-model{
+  width:66px!important;height:66px!important;max-height:66px!important;transform:translateY(5px)!important;
+}
+#homeScreen .machine-belt{
+  bottom:0!important;height:31px!important;border-top-width:3px!important;border-bottom-width:3px!important;
+  background:linear-gradient(180deg,#657482 0 4px,#43515e 4px 17px,#26333e 17px 100%)!important;
+}
+#homeScreen .machine-belt:after{top:3px!important;height:14px!important}
+#homeScreen .machine-belt:before{top:16px!important;box-shadow:0 9px 0 rgba(154,168,180,.18)!important}
+#homeScreen .machine-belt>i{top:22px!important;width:10px!important;height:10px!important}
+#homeScreen .conveyor-machine:before{
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 31px),12px calc(100% - 31px),12px 100%,0 100%)!important;
+}
+#homeScreen .conveyor-machine:after{
+  clip-path:polygon(0 0,100% 0,100% 100%,calc(100% - 12px) 100%,calc(100% - 12px) calc(100% - 31px),0 calc(100% - 31px))!important;
+}
+#homeScreen .conveyor.launch-ready .conveyor-workbench{grid-template-columns:minmax(0,1fr)!important}
+
+@media(max-width:370px){
+  body[data-screen="home"] #homeScreen.active{grid-template-rows:minmax(165px,25%) minmax(138px,21%) minmax(0,1fr)!important}
+  #homeScreen .conveyor-machine .food-choices{left:30px!important;right:30px!important;top:21px!important;bottom:9px!important;gap:3px!important}
+  #homeScreen .food-choices>.food-card.conveyor-food-pick{height:77px!important;min-height:77px!important;max-height:77px!important}
+  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:65px!important;height:18px!important}
+  #homeScreen .food-card.conveyor-food-pick .food-model{width:60px!important;height:60px!important;max-height:60px!important}
+}
+
+/* === V100: центральная панель реролла под конвейером === */
+#homeScreen>.card.conveyor{overflow:visible!important;z-index:20!important}
+#homeScreen .conveyor-workbench{position:relative!important;overflow:visible!important}
+#homeScreen .conveyor-controls{
+  position:absolute!important;z-index:70!important;left:50%!important;right:auto!important;bottom:-22px!important;
+  width:220px!important;height:46px!important;min-height:46px!important;display:grid!important;place-items:center!important;
+  margin:0!important;padding:3px!important;border:2px solid #405063!important;border-radius:15px!important;
+  background:#9eacb8!important;
+  box-shadow:inset 0 2px 0 #e9f0f3,0 3px 0 #354354,0 5px 7px rgba(30,43,55,.2)!important;
+  transform:translateX(-50%)!important;
+}
+#homeScreen .conveyor-controls:before,#homeScreen .conveyor-controls:after{
+  content:"";position:absolute;z-index:-1;top:-8px;width:13px;height:12px;
+  border:2px solid #405063;border-bottom:0;border-radius:5px 5px 0 0;background:#83929e;
+}
+#homeScreen .conveyor-controls:before{left:25px}
+#homeScreen .conveyor-controls:after{right:25px}
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  box-sizing:border-box!important;width:210px!important;height:38px!important;min-height:38px!important;
+  display:grid!important;grid-template-columns:38px minmax(0,1fr) 76px!important;grid-template-rows:1fr!important;
+  align-items:center!important;gap:5px!important;margin:0!important;padding:3px 5px!important;
+  border:2px solid #59327d!important;border-radius:11px!important;
+  background:#b96bdf!important;color:#fff!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -4px 0 rgba(94,35,128,.25),0 2px 0 #43275d!important;
+  transform:none!important;
+}
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{background:#9f62d2!important}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  position:relative!important;width:31px!important;height:31px!important;min-width:31px!important;min-height:31px!important;flex-basis:31px!important;
+  align-self:center!important;overflow:visible!important;border:2px solid #f2dcff!important;border-radius:50%!important;
+  background:#7743a6!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 1px 0 #402254!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well:before,#homeScreen .conveyor-controls .reroll-icon-well:after{display:none!important}
+#homeScreen .conveyor-controls .reroll-icon{display:block!important;width:24px!important;height:24px!important}
+#homeScreen .conveyor-controls .reroll-copy{width:100%!important;height:auto!important;display:grid!important;place-items:center!important}
+#homeScreen .conveyor-controls .reroll-copy b{
+  color:#fff!important;font-size:9px!important;line-height:1!important;letter-spacing:.8px!important;text-shadow:0 1px #4d2769!important;
+}
+#homeScreen .conveyor-controls .reroll-btn>em{
+  box-sizing:border-box!important;width:76px!important;height:27px!important;min-height:27px!important;display:grid!important;place-items:center!important;
+  padding:2px 4px!important;border:2px solid #4a5967!important;border-radius:8px!important;
+  background:#f6faf7!important;color:#405061!important;font-size:6.4px!important;line-height:1!important;font-weight:1000!important;
+  box-shadow:inset 0 2px 0 #fff,0 1px 0 rgba(54,66,79,.35)!important;
+}
+#homeScreen .conveyor-controls .reroll-btn:active{transform:translateY(2px)!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(94,35,128,.2),0 0 0 #43275d!important}
+#homeScreen .conveyor.is-rerolling .reroll-icon-well{animation:none!important}
+#homeScreen .conveyor.is-rerolling .reroll-icon{animation:rerollControlSpin .48s linear infinite}
+#homeScreen .conveyor.launch-ready .conveyor-controls{display:none!important}
+#homeScreen>.play-setup-card{padding-top:27px!important}
+@keyframes rerollControlSpin{to{transform:rotate(360deg)}}
+
+@media(max-width:370px){
+  #homeScreen .conveyor-controls{bottom:-20px!important;width:196px!important;height:42px!important;min-height:42px!important}
+  #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:186px!important;height:34px!important;min-height:34px!important;grid-template-columns:34px minmax(0,1fr) 69px!important;gap:3px!important;padding:2px 4px!important}
+  #homeScreen .conveyor-controls .reroll-icon-well{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;flex-basis:28px!important}
+  #homeScreen .conveyor-controls .reroll-icon{width:21px!important;height:21px!important}
+  #homeScreen .conveyor-controls .reroll-copy b{font-size:8px!important}
+  #homeScreen .conveyor-controls .reroll-btn>em{width:69px!important;height:24px!important;min-height:24px!important;font-size:5.8px!important}
+  #homeScreen>.play-setup-card{padding-top:24px!important}
+}
+
+/* === V101: полноширинные секции до внутренних контуров экрана === */
+#homeScreen>.card.conveyor,
+#homeScreen>.play-setup-card{
+  box-sizing:border-box!important;width:calc(100% + 10px)!important;
+  margin-left:-5px!important;margin-right:-5px!important;justify-self:center!important;
+  border-left:0!important;border-right:0!important;border-radius:0!important;
+}
+#homeScreen>.play-setup-card{
+  padding-left:10px!important;padding-right:10px!important;
+  background:#28a77d!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.18),inset 0 -3px 0 rgba(20,106,80,.22)!important;
+}
+#homeScreen>.card.conveyor{
+  box-shadow:inset 0 3px 0 #dce7ec,inset 0 -4px 0 #718492,0 3px 0 rgba(37,49,61,.22)!important;
+}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card{padding-left:8px!important;padding-right:8px!important}
+}
+
+/* === V102: заземлённый слайм и свободный выбор уровней === */
+body[data-screen="home"] #homeScreen.active{
+  padding:5px 5px 0!important;
+  grid-template-rows:minmax(182px,26%) minmax(148px,21%) minmax(0,1fr)!important;
+}
+#homeScreen>.slime-stage{overflow:visible!important}
+#homeScreen .slime-playground{
+  overflow:visible!important;align-items:flex-end!important;justify-content:center!important;
+}
+#homeScreen .slime-playground .slime{
+  box-sizing:border-box!important;width:140px!important;height:140px!important;max-width:calc(100% - 4px)!important;
+  flex:0 0 auto!important;margin-bottom:0!important;overflow:visible!important;
+}
+#homeScreen .menu-slime-canvas{
+  width:100%!important;height:100%!important;inset:0!important;
+}
+#homeScreen .slime-playground:after{
+  bottom:5px!important;width:136px!important;height:18px!important;
+}
+
+#homeScreen>.play-setup-card{
+  height:100%!important;min-height:0!important;align-self:stretch!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:56px 62px 36px 52px minmax(64px,1fr)!important;
+  column-gap:0!important;row-gap:5px!important;padding:28px 10px 0!important;
+  overflow:hidden!important;border-bottom:0!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar{display:contents!important}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{
+  grid-column:1!important;grid-row:1!important;width:100%!important;height:56px!important;min-height:56px!important;
+}
+#homeScreen>.play-setup-card .home-world-picker{width:100%!important;height:56px!important}
+#homeScreen>.play-setup-card>#campaignModePanel,
+#homeScreen>.play-setup-card>#endlessModePanel{
+  grid-column:1!important;grid-row:2!important;width:100%!important;height:62px!important;min-height:62px!important;
+  margin:0!important;padding:3px!important;border:0!important;border-radius:14px!important;
+  background:rgba(243,255,249,.2)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){display:block!important}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  grid-column:1!important;grid-row:auto!important;width:100%!important;max-width:none!important;height:100%!important;
+  display:grid!important;align-items:center!important;
+}
+#homeScreen>.play-setup-card .level-buttons{
+  box-sizing:border-box!important;width:100%!important;height:56px!important;
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:7px!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;height:54px!important;min-height:54px!important;
+  border-width:2px!important;border-radius:14px!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:20px!important}
+#homeScreen>.play-setup-card .level-btn.active>span{font-size:21px!important}
+#homeScreen>.play-setup-card>.home-route-progress{
+  grid-column:1!important;grid-row:3!important;width:100%!important;height:36px!important;min-height:36px!important;margin:0!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{
+  grid-column:1!important;grid-row:4!important;width:100%!important;height:52px!important;min-height:52px!important;
+}
+#homeScreen>.play-setup-card .home-mode-tabs{width:100%!important;height:52px!important}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  grid-column:1!important;grid-row:5!important;width:100%!important;height:100%!important;min-height:64px!important;
+  align-self:stretch!important;margin:0!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:50px 52px 32px 44px minmax(54px,1fr)!important;
+  row-gap:4px!important;padding-top:24px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.world-control,
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{height:50px!important;min-height:50px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel,
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel{height:52px!important;min-height:52px!important;padding:2px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-buttons{height:48px!important;gap:5px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn{height:48px!important;min-height:48px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn>span{font-size:18px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{height:32px!important;min-height:32px!important}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control,
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs{height:44px!important;min-height:44px!important}
+
+@media(max-width:370px){
+  body[data-screen="home"] #homeScreen.active{grid-template-rows:minmax(172px,25%) minmax(138px,20%) minmax(0,1fr)!important}
+  #homeScreen .slime-playground .slime{width:132px!important;height:132px!important}
+  #homeScreen .slime-playground:after{width:126px!important}
+  #homeScreen>.play-setup-card{padding-left:8px!important;padding-right:8px!important}
+  #homeScreen>.play-setup-card .level-buttons{gap:5px!important}
+  #homeScreen>.play-setup-card .level-btn{border-radius:12px!important}
+}
+
+/* === V103: желудок-пирамида и понятная цепочка рецепта === */
+#homeScreen .slime-hero-layout{
+  position:relative!important;grid-template-columns:106px minmax(0,1fr) 100px!important;
+  gap:8px!important;align-items:center!important;padding-top:0!important;
+}
+#homeScreen .stomach-rail,
+#homeScreen .recipe-rail{
+  position:relative!important;box-sizing:border-box!important;height:166px!important;align-self:center!important;
+  border:2px solid #78909b!important;border-radius:18px!important;background:#f7fcf9!important;
+  box-shadow:inset 0 2px 0 #fff,inset 0 -3px 0 rgba(91,125,122,.09),0 2px 0 rgba(48,75,82,.17)!important;
+}
+#homeScreen .stomach-rail{
+  width:106px!important;display:grid!important;grid-template-rows:20px 106px 16px!important;
+  justify-items:center!important;align-content:center!important;gap:4px!important;padding:5px!important;
+}
+#homeScreen .stomach-rail-title{
+  grid-row:1!important;align-self:center!important;color:#385365!important;font-size:8px!important;line-height:1!important;letter-spacing:1px!important;
+}
+#homeScreen .stomach-quick-slots,
+#homeScreen .stomach-quick-slots[data-slots="3"]{
+  --quick-slot-size:49px;--quick-food-size:46px;
+  box-sizing:border-box!important;width:102px!important;height:104px!important;
+  display:grid!important;grid-template-columns:repeat(2,49px)!important;grid-template-rows:repeat(2,49px)!important;
+  place-content:center!important;gap:5px 4px!important;margin:0!important;
+  grid-row:2!important;
+}
+#homeScreen .stomach-quick-slots[data-slots="3"] .stomach-quick-slot:nth-child(1){grid-column:1/-1!important;grid-row:1!important}
+#homeScreen .stomach-quick-slots[data-slots="3"] .stomach-quick-slot:nth-child(2){grid-column:1!important;grid-row:2!important}
+#homeScreen .stomach-quick-slots[data-slots="3"] .stomach-quick-slot:nth-child(3){grid-column:2!important;grid-row:2!important}
+#homeScreen .stomach-quick-slot{
+  width:49px!important;height:49px!important;align-self:center!important;justify-self:center!important;border-radius:15px!important;
+}
+#homeScreen .stomach-rail:before{
+  content:"ЕДА";grid-row:3!important;align-self:center;color:#77909a;font-size:5.5px;line-height:1;font-weight:1000;letter-spacing:.8px;
+}
+#homeScreen .stomach-rail:after,
+#homeScreen .recipe-rail:before{
+  content:"›";position:absolute;z-index:8;top:50%;width:20px;height:20px;display:grid;place-items:center;
+  border:2px solid #5e7f83;border-radius:50%;background:#dff5eb;color:#3d7864;font-size:18px;line-height:1;font-weight:1000;
+  box-shadow:0 2px 0 rgba(52,83,82,.2),inset 0 1px 0 #fff;transform:translateY(-50%);
+}
+#homeScreen .stomach-rail:after{right:-16px}
+
+#homeScreen .recipe-rail{
+  width:100px!important;display:grid!important;grid-template-rows:67px 30px 61px!important;
+  place-items:center!important;align-content:center!important;gap:2px!important;padding:3px!important;
+}
+#homeScreen .recipe-rail:before{left:-16px}
+#homeScreen .recipe-book-button{
+  width:88px!important;height:65px!important;grid-template-rows:46px 12px!important;padding:2px!important;
+  border-radius:14px!important;
+}
+#homeScreen .recipe-book-button img{width:46px!important;height:46px!important}
+#homeScreen .recipe-book-button span{font-size:6.4px!important;letter-spacing:.55px!important}
+#homeScreen .recipe-category-slots{
+  position:relative!important;box-sizing:border-box!important;width:88px!important;height:30px!important;
+  display:grid!important;grid-template-columns:repeat(3,22px)!important;place-content:center!important;gap:4px!important;
+  border:1px solid #9aacb2!important;border-radius:12px!important;background:#e8f1ee!important;
+  box-shadow:inset 0 2px 3px rgba(57,83,88,.09)!important;
+}
+#homeScreen .recipe-category-slot{width:22px!important;height:22px!important}
+#homeScreen .recipe-category-slots:after{
+  content:"▼";position:absolute;z-index:5;left:50%;bottom:-10px;color:#5b817b;font-size:9px;line-height:1;
+  text-shadow:0 1px #fff;transform:translateX(-50%);
+}
+#homeScreen .recipe-result-slot{
+  width:88px!important;height:59px!important;grid-template-rows:42px 11px!important;
+  border-radius:14px!important;
+}
+#homeScreen .recipe-result-plate{top:27px!important;width:57px!important;height:17px!important}
+#homeScreen .recipe-result-art{width:51px!important;height:43px!important}
+#homeScreen .recipe-result-food{width:49px!important;height:43px!important}
+#homeScreen .recipe-result-slot small{max-width:80px!important;font-size:5.7px!important}
+
+#homeScreen .slime-playground{
+  border-color:#78909b!important;border-radius:20px!important;
+  background:linear-gradient(180deg,#e5f7f1 0 71%,#b8d8cc 71% 74%,#dbe9e3 74%)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.72),inset 0 -4px 0 rgba(79,117,105,.08)!important;
+}
+
+@media(max-width:370px){
+  #homeScreen .slime-hero-layout{grid-template-columns:88px minmax(0,1fr) 86px!important;gap:6px!important}
+  #homeScreen .stomach-rail,#homeScreen .recipe-rail{height:158px!important}
+  #homeScreen .stomach-rail{width:88px!important;grid-template-rows:18px 91px 14px!important;padding:4px!important}
+  #homeScreen .stomach-quick-slots,#homeScreen .stomach-quick-slots[data-slots="3"]{--quick-slot-size:43px;--quick-food-size:40px;width:88px!important;height:90px!important;grid-template-columns:repeat(2,43px)!important;grid-template-rows:repeat(2,43px)!important;gap:4px 2px!important}
+  #homeScreen .stomach-quick-slot{width:43px!important;height:43px!important}
+  #homeScreen .recipe-rail{width:86px!important;grid-template-rows:62px 27px 59px!important;padding:2px!important}
+  #homeScreen .recipe-book-button{width:76px!important;height:60px!important;grid-template-rows:42px 11px!important}
+  #homeScreen .recipe-book-button img{width:42px!important;height:42px!important}
+  #homeScreen .recipe-category-slots{width:76px!important;height:27px!important;grid-template-columns:repeat(3,20px)!important;gap:3px!important}
+  #homeScreen .recipe-category-slot{width:20px!important;height:20px!important}
+  #homeScreen .recipe-result-slot{width:76px!important;height:57px!important}
+  #homeScreen .stomach-rail:after{right:-14px}
+  #homeScreen .recipe-rail:before{left:-14px}
+}
+
+/* === V104: симметричная сцена без лишних внешних рамок === */
+#homeScreen .slime-hero-layout{
+  grid-template-columns:100px minmax(0,1fr) 100px!important;
+  gap:8px!important;align-items:center!important;
+}
+#homeScreen .stomach-rail,
+#homeScreen .recipe-rail{
+  box-sizing:border-box!important;width:100px!important;height:166px!important;
+  align-self:center!important;margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+#homeScreen .stomach-rail{
+  grid-template-rows:20px 106px!important;align-content:center!important;gap:5px!important;
+}
+#homeScreen .stomach-rail-title{grid-row:1!important;text-align:center!important}
+#homeScreen .stomach-quick-slots,
+#homeScreen .stomach-quick-slots[data-slots="3"]{
+  grid-row:2!important;justify-self:center!important;
+}
+#homeScreen .stomach-rail:before{display:none!important;content:none!important}
+#homeScreen .recipe-rail{
+  grid-template-rows:67px 30px 61px!important;align-content:center!important;gap:2px!important;
+}
+#homeScreen .stomach-rail:after,
+#homeScreen .recipe-rail:before{
+  width:14px!important;height:20px!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;color:#4f8273!important;font-size:19px!important;
+}
+#homeScreen .stomach-rail:after{right:-12px!important}
+#homeScreen .recipe-rail:before{left:-12px!important}
+#homeScreen .slime-playground{justify-self:stretch!important;align-self:center!important}
+
+@media(max-width:370px){
+  #homeScreen .slime-hero-layout{grid-template-columns:86px minmax(0,1fr) 86px!important;gap:6px!important}
+  #homeScreen .stomach-rail,#homeScreen .recipe-rail{width:86px!important;height:158px!important}
+  #homeScreen .stomach-rail{grid-template-rows:18px 91px!important;gap:4px!important}
+  #homeScreen .stomach-rail:after{right:-10px!important}
+  #homeScreen .recipe-rail:before{left:-10px!important}
+}
+
+/* === V105: уровни отдельным рядом, действия закреплены внизу === */
+#homeScreen>.play-setup-card{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:56px 62px 36px 52px minmax(0,1fr) 68px!important;
+  row-gap:6px!important;padding:29px 10px 5px!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{
+  grid-column:1!important;grid-row:1!important;height:56px!important;min-height:56px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel,
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){
+  display:block!important;grid-column:1!important;grid-row:2!important;
+  width:100%!important;height:62px!important;min-height:62px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  grid-column:auto!important;grid-row:auto!important;width:100%!important;height:100%!important;
+  max-width:none!important;margin:0!important;align-self:stretch!important;
+}
+#homeScreen>.play-setup-card .level-buttons{
+  width:100%!important;height:56px!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:8px!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  width:100%!important;height:56px!important;min-width:0!important;min-height:56px!important;border-radius:14px!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:20px!important}
+#homeScreen>.play-setup-card>.home-route-progress{grid-column:1!important;grid-row:3!important}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{grid-column:1!important;grid-row:4!important}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  grid-column:1!important;grid-row:6!important;align-self:end!important;
+  width:100%!important;height:68px!important;min-height:68px!important;margin:0!important;padding:5px!important;
+}
+#homeScreen .home-tool-dock button{height:56px!important;min-height:56px!important;padding:5px 10px!important;gap:8px!important}
+#homeScreen .home-tool-dock .action-icon,#homeScreen .home-tool-dock .action-icon img{width:38px!important;height:38px!important}
+#homeScreen .home-tool-dock b{font-size:9px!important}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:49px 54px 32px 44px minmax(0,1fr) 58px!important;
+  row-gap:4px!important;padding:24px 8px 3px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel,
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){height:54px!important;min-height:54px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-buttons{height:50px!important;gap:5px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn{height:50px!important;min-height:50px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{height:58px!important;min-height:58px!important;padding:4px!important}
+html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min-height:48px!important}
+
+/* === V125: финальная геометрия уровней, должна оставаться последней === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
+  row-gap:3px!important;
+}
+#homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(5px,1fr) 54px 118px 48px 56px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  position:relative!important;display:block!important;
+  height:90px!important;min-height:90px!important;overflow:visible!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  position:absolute!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;
+  width:100%!important;height:88px!important;min-height:88px!important;
+  display:grid!important;grid-template-rows:18px 68px!important;gap:2px!important;
+  margin:0!important;padding:0!important;transform:none!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{
+  grid-row:1!important;align-self:end!important;margin:0 0 0 2px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  grid-row:2!important;height:68px!important;min-height:68px!important;
+  align-self:end!important;margin:0!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 82px 46px 50px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(2px,1fr) 48px 112px 46px 50px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  height:82px!important;min-height:82px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:80px!important;min-height:80px!important;
+  grid-template-rows:16px 62px!important;gap:2px!important;transform:none!important;
+}
+
+/* === V127: оба режима живут в одной сетке === */
+/* Режим не должен менять высоту секции: меняется только её содержимое. */
+#homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
+}
+#homeScreen>.play-setup-card[data-mode="endless"] .home-endless-rank{
+  display:grid!important;
+  box-sizing:border-box!important;width:100%!important;height:54px!important;min-height:54px!important;
+}
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  box-sizing:border-box!important;width:100%!important;height:90px!important;min-height:90px!important;
+}
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:4px!important;
+  align-content:stretch!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card{
+  box-sizing:border-box!important;height:auto!important;min-height:0!important;
+  grid-template-columns:28px minmax(0,1fr)!important;column-gap:4px!important;
+  padding:3px 5px!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card>img{width:27px!important;height:27px!important}
+#homeScreen>.play-setup-card .endless-stat-card small{font-size:5.3px!important;line-height:1.02!important}
+#homeScreen>.play-setup-card .endless-stat-card b{font-size:10px!important;line-height:1!important}
+
+html.short-viewport #homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(2px,1fr) 48px 82px 46px 50px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card[data-mode="endless"] .home-endless-rank{
+  height:48px!important;min-height:48px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:82px!important;min-height:82px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card{
+  grid-template-columns:25px minmax(0,1fr)!important;padding:2px 4px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:24px!important;height:24px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card small{font-size:4.8px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:9px!important}
+
+/* Зелёная игровая зона начинается непосредственно над выбором мира. */
+#homeScreen>.play-setup-card{
+  background:linear-gradient(180deg,
+    transparent 0 calc(100% - 270px),
+    var(--route-top) calc(100% - 264px),
+    var(--route-bottom) 100%)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card{
+  background:linear-gradient(180deg,
+    transparent 0 calc(100% - 248px),
+    var(--route-top) calc(100% - 242px),
+    var(--route-bottom) 100%)!important;
+}
+
+/* === V123: убран реальный пустой участок между уровнями и шкалой === */
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  position:relative!important;display:block!important;overflow:visible!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  position:absolute!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;
+  width:100%!important;height:88px!important;min-height:88px!important;
+  display:grid!important;grid-template-rows:18px 68px!important;gap:2px!important;
+  margin:0!important;padding:0!important;transform:none!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{
+  grid-row:1!important;align-self:end!important;margin:0 0 0 2px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  grid-row:2!important;align-self:end!important;margin:0!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:80px!important;min-height:80px!important;
+  grid-template-rows:16px 62px!important;gap:2px!important;
+  transform:none!important;
+}
+
+/* === V124: высота строки равна реальному блоку уровней === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  height:90px!important;min-height:90px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:88px!important;min-height:88px!important;bottom:0!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 82px 46px 50px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  height:82px!important;min-height:82px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:80px!important;min-height:80px!important;bottom:0!important;
+}
+html.short-viewport #homeScreen .home-tool-dock .action-icon,
+html.short-viewport #homeScreen .home-tool-dock .action-icon img{width:32px!important;height:32px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card{padding-left:8px!important;padding-right:8px!important}
+  #homeScreen>.play-setup-card .level-buttons{gap:5px!important}
+  #homeScreen>.play-setup-card .level-btn>span{font-size:18px!important}
+}
+
+/* === V106: нижняя компактная группа с понятным выбором мира === */
+#homeScreen>.play-setup-card{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr) 54px 54px 34px 50px 64px!important;
+  row-gap:6px!important;padding:28px 10px 5px!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{
+  grid-column:1!important;grid-row:2!important;width:100%!important;height:54px!important;min-height:54px!important;
+  display:grid!important;place-items:center!important;
+}
+#homeScreen>.play-setup-card .home-world-selector{width:min(100%,280px)!important;height:54px!important}
+#homeScreen>.play-setup-card .home-world-picker{
+  width:100%!important;height:54px!important;grid-template-columns:42px minmax(0,1fr) 25px!important;
+  gap:7px!important;padding:4px 7px!important;border-radius:15px!important;
+}
+#homeScreen>.play-setup-card .home-world-emblem{width:40px!important;height:40px!important}
+#homeScreen>.play-setup-card .home-world-emblem img{width:37px!important;height:37px!important}
+#homeScreen>.play-setup-card .home-world-copy{display:grid!important;align-content:center!important;justify-items:start!important;gap:3px!important;text-align:left!important}
+#homeScreen>.play-setup-card .home-world-copy>small{
+  display:block!important;color:#58756d!important;font-size:5.8px!important;line-height:1!important;font-weight:1000!important;letter-spacing:1px!important;
+}
+#homeScreen>.play-setup-card .home-world-copy>b{font-size:9.2px!important;line-height:1.05!important}
+#homeScreen>.play-setup-card .home-world-chevron{width:23px!important;height:23px!important}
+
+#homeScreen>.play-setup-card>#campaignModePanel,
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){
+  grid-column:1!important;grid-row:3!important;width:100%!important;height:54px!important;min-height:54px!important;
+  display:grid!important;place-items:center!important;padding:2px 0!important;background:transparent!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  width:min(100%,340px)!important;height:50px!important;display:grid!important;place-items:center!important;
+}
+#homeScreen>.play-setup-card .level-buttons{
+  width:100%!important;height:50px!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:7px!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  height:48px!important;min-height:48px!important;border-width:2px!important;border-radius:13px!important;
+  box-shadow:0 2px 0 color-mix(in srgb,var(--world-line) 55%,#35415a),inset 0 2px 0 rgba(255,255,255,.72)!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:18px!important}
+#homeScreen>.play-setup-card .level-btn.active>span{font-size:19px!important}
+#homeScreen>.play-setup-card>.home-route-progress{
+  grid-column:1!important;grid-row:4!important;width:100%!important;height:34px!important;min-height:34px!important;margin:0!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{
+  grid-column:1!important;grid-row:5!important;width:100%!important;height:50px!important;min-height:50px!important;
+}
+#homeScreen>.play-setup-card .home-mode-tabs{height:50px!important}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  grid-column:1!important;grid-row:6!important;width:100%!important;height:64px!important;min-height:64px!important;
+  align-self:end!important;margin:0!important;padding:4px!important;
+}
+#homeScreen .home-tool-dock button{height:54px!important;min-height:54px!important}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(0,1fr) 48px 50px 30px 44px 56px!important;
+  row-gap:4px!important;padding:24px 8px 3px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.world-control,
+html.short-viewport #homeScreen>.play-setup-card .home-world-selector,
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{height:48px!important;min-height:48px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-emblem{width:36px!important;height:36px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-emblem img{width:34px!important;height:34px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel,
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){height:50px!important;min-height:50px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker,
+html.short-viewport #homeScreen>.play-setup-card .level-buttons{height:46px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn{height:44px!important;min-height:44px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn>span{font-size:17px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{height:30px!important;min-height:30px!important}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control,
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs{height:44px!important;min-height:44px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{height:56px!important;min-height:56px!important;padding:3px!important}
+html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min-height:48px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card .home-world-selector{width:min(100%,260px)!important}
+  #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{width:100%!important}
+  #homeScreen>.play-setup-card .level-buttons{gap:5px!important}
+}
+
+/* === V108: простой выбор мира, полноширинные уровни и поднятая глубина === */
+#homeScreen>.play-setup-card .home-world-picker{
+  grid-template-columns:46px minmax(0,1fr) 27px!important;
+  gap:8px!important;padding-left:9px!important;padding-right:9px!important;
+}
+#homeScreen>.play-setup-card .home-world-copy{justify-items:start!important;text-align:left!important}
+#homeScreen>.play-setup-card>#campaignModePanel,
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){padding-left:0!important;padding-right:0!important}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;
+}
+#homeScreen>.play-setup-card .level-buttons{
+  box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important;
+}
+#homeScreen>.play-setup-card .level-btn{width:100%!important;max-width:none!important;margin:0!important}
+#homeScreen>.play-setup-card>.home-route-progress{
+  position:relative!important;top:-4px!important;align-self:start!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{
+  grid-template-columns:40px minmax(0,1fr) 23px!important;gap:6px!important;
+}
+@media(max-width:370px){
+  #homeScreen>.play-setup-card .home-world-picker{grid-template-columns:38px minmax(0,1fr) 21px!important;gap:5px!important}
+  #homeScreen>.play-setup-card .level-buttons{gap:5px!important}
+  #homeScreen>.play-setup-card>.home-route-progress{top:-3px!important}
+}
+
+/* === V107: полноширинная карточка мира и ровная шкала уровней === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(0,1fr) 62px 54px 34px 50px 64px!important;
+  row-gap:6px!important;padding-left:9px!important;padding-right:9px!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{
+  grid-row:2!important;height:62px!important;min-height:62px!important;
+}
+#homeScreen>.play-setup-card .home-world-selector{
+  width:100%!important;max-width:none!important;height:62px!important;
+}
+#homeScreen>.play-setup-card .home-world-picker{
+  width:100%!important;height:62px!important;
+  grid-template-columns:46px minmax(0,1fr) 112px 25px!important;
+  gap:7px!important;padding:5px 8px!important;border:2px solid #55766d!important;border-radius:16px!important;
+  background:#f6fcf9!important;box-shadow:inset 0 2px 0 #fff,0 3px 0 rgba(40,92,75,.25)!important;
+}
+#homeScreen>.play-setup-card .home-world-emblem{width:44px!important;height:44px!important}
+#homeScreen>.play-setup-card .home-world-emblem img{width:41px!important;height:41px!important}
+#homeScreen>.play-setup-card .home-world-copy{min-width:0!important;gap:3px!important}
+#homeScreen>.play-setup-card .home-world-copy>small{
+  color:#568071!important;font-size:6.2px!important;letter-spacing:1px!important;
+}
+#homeScreen>.play-setup-card .home-world-copy>b{
+  max-width:100%!important;overflow:hidden!important;color:#294e45!important;font-size:9.5px!important;
+  line-height:1.08!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+#homeScreen .home-world-summary{
+  min-width:0;height:46px;display:grid;grid-template-rows:21px 21px;align-content:center;gap:2px;
+}
+#homeScreen .home-world-stars{
+  min-width:104px;height:21px;display:flex;align-items:center;justify-content:center;gap:2px;padding:2px 6px;
+  border:1px solid #d29d27;border-radius:8px;background:#fff5c9;color:#bc7c12;
+  box-shadow:inset 0 1px 0 #fff;
+}
+#homeScreen .home-world-stars>i{font-size:10px;line-height:1;font-style:normal;text-shadow:0 1px #fff}
+#homeScreen .home-world-stars>b{margin-left:3px;color:#72511c;font-size:7.2px;line-height:1;white-space:nowrap}
+#homeScreen .home-world-complete{
+  min-width:104px;height:21px;display:flex;align-items:center;justify-content:center;gap:4px;padding:2px 6px;
+  border:1px solid #91a29c;border-radius:8px;background:#e8efec;color:#80908a;
+}
+#homeScreen .home-world-complete>i{
+  width:14px;height:14px;display:grid;place-items:center;border:1px solid currentColor;border-radius:50%;
+  font-size:8px;line-height:1;font-style:normal;font-weight:1000;
+}
+#homeScreen .home-world-complete>small{font-size:5.8px;line-height:1;font-weight:1000;letter-spacing:.35px}
+#homeScreen .home-world-complete.is-complete{border-color:#27845f;background:#d9f6e7;color:#247554}
+#homeScreen>.play-setup-card .home-world-chevron{width:23px!important;height:23px!important}
+
+#homeScreen>.play-setup-card>#campaignModePanel,
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){
+  grid-row:3!important;width:100%!important;height:54px!important;min-height:54px!important;padding:2px 0!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{width:100%!important;max-width:none!important;height:50px!important}
+#homeScreen>.play-setup-card .level-buttons{
+  width:100%!important;height:50px!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:7px!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  width:100%!important;height:48px!important;min-height:48px!important;border-radius:12px!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:18px!important}
+#homeScreen>.play-setup-card .level-btn.active>span{font-size:19px!important}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(0,1fr) 56px 50px 30px 44px 56px!important;
+  padding-left:7px!important;padding-right:7px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.world-control,
+html.short-viewport #homeScreen>.play-setup-card .home-world-selector,
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{height:56px!important;min-height:56px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{grid-template-columns:40px minmax(0,1fr) 101px 22px!important;gap:5px!important;padding:4px 6px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-emblem{width:38px!important;height:38px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-emblem img{width:36px!important;height:36px!important}
+html.short-viewport #homeScreen .home-world-stars,
+html.short-viewport #homeScreen .home-world-complete{min-width:94px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-copy>b{font-size:8.5px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card .home-world-picker{grid-template-columns:38px minmax(0,1fr) 91px 20px!important;gap:4px!important;padding-inline:5px!important}
+  #homeScreen .home-world-stars,#homeScreen .home-world-complete{min-width:86px!important;padding-inline:3px!important}
+  #homeScreen .home-world-stars>i{font-size:8px!important}
+  #homeScreen .home-world-stars>b{font-size:6.5px!important}
+  #homeScreen .home-world-complete>small{font-size:5.2px!important}
+  #homeScreen>.play-setup-card .level-buttons{gap:5px!important}
+}
+
+/* === V109: единая нижняя панель и компактное управление конвейером === */
+#homeScreen>.play-setup-card{
+  box-sizing:border-box!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:minmax(18px,1fr) 54px 58px 36px 50px 64px!important;
+  align-content:stretch!important;
+  row-gap:6px!important;
+  padding:30px 10px 5px!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar{display:contents!important}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{
+  grid-column:1!important;grid-row:2!important;
+  width:100%!important;height:54px!important;min-height:54px!important;
+  display:block!important;
+}
+#homeScreen>.play-setup-card .home-world-selector{
+  box-sizing:border-box!important;width:100%!important;max-width:none!important;height:54px!important;
+  margin:0!important;
+}
+#homeScreen>.play-setup-card .home-world-picker{
+  box-sizing:border-box!important;width:100%!important;height:54px!important;min-height:54px!important;
+  grid-template-columns:42px minmax(0,1fr) 24px!important;
+  gap:7px!important;padding:4px 8px!important;
+  border:2px solid #496d64!important;border-radius:15px!important;
+  background:#f5fcf8!important;
+  box-shadow:inset 0 2px 0 #fff,0 3px 0 rgba(27,89,69,.28)!important;
+}
+#homeScreen>.play-setup-card .home-world-emblem{width:40px!important;height:40px!important}
+#homeScreen>.play-setup-card .home-world-emblem img{width:37px!important;height:37px!important}
+#homeScreen>.play-setup-card .home-world-copy{min-width:0!important;justify-items:start!important;text-align:left!important}
+#homeScreen>.play-setup-card .home-world-copy>b{font-size:9.4px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#homeScreen>.play-setup-card .home-world-chevron{width:22px!important;height:22px!important}
+
+#homeScreen>.play-setup-card>#campaignModePanel,
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){
+  box-sizing:border-box!important;grid-column:1!important;grid-row:3!important;
+  width:100%!important;max-width:none!important;height:58px!important;min-height:58px!important;
+  display:block!important;margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker,
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  box-sizing:border-box!important;width:100%!important;min-width:100%!important;max-width:none!important;
+  height:58px!important;margin:0!important;padding:0!important;
+  justify-self:stretch!important;align-self:stretch!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{display:block!important}
+#homeScreen>.play-setup-card .level-buttons{
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  align-items:stretch!important;gap:6px!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:none!important;
+  height:56px!important;min-height:56px!important;margin:0!important;padding:0!important;
+  border-width:2px!important;border-radius:13px!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:20px!important}
+#homeScreen>.play-setup-card .level-btn.active>span{font-size:21px!important}
+
+#homeScreen>.play-setup-card>.home-route-progress{
+  box-sizing:border-box!important;grid-column:1!important;grid-row:4!important;
+  position:relative!important;top:-3px!important;
+  width:100%!important;height:36px!important;min-height:36px!important;
+  align-self:start!important;margin:0!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{
+  grid-column:1!important;grid-row:5!important;
+  width:100%!important;height:50px!important;min-height:50px!important;
+}
+#homeScreen>.play-setup-card .home-mode-tabs{
+  box-sizing:border-box!important;width:100%!important;height:50px!important;
+  padding:3px!important;border:2px solid rgba(230,255,245,.82)!important;border-radius:14px!important;
+  background:rgba(15,126,93,.34)!important;
+  box-shadow:inset 0 2px 3px rgba(18,89,72,.18),0 1px 0 rgba(255,255,255,.22)!important;
+}
+#homeScreen>.play-setup-card .home-mode-tab{border-radius:10px!important}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  box-sizing:border-box!important;grid-column:1!important;grid-row:6!important;
+  width:100%!important;height:64px!important;min-height:64px!important;
+  align-self:end!important;margin:0!important;padding:4px!important;gap:6px!important;
+  border:2px solid #4e756b!important;border-radius:14px 14px 0 0!important;
+  background:rgba(235,250,243,.72)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.8)!important;
+}
+#homeScreen .home-tool-dock button{
+  height:54px!important;min-height:54px!important;border-width:2px!important;border-radius:11px!important;
+  box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(37,91,75,.22)!important;
+}
+
+#homeScreen .conveyor-controls{
+  left:50%!important;right:auto!important;bottom:-20px!important;
+  box-sizing:border-box!important;width:174px!important;height:42px!important;min-height:42px!important;
+  padding:3px!important;border:2px solid #405063!important;border-radius:13px!important;
+  background:#82929e!important;
+  box-shadow:inset 0 2px 0 #dce6eb,0 3px 0 #354354,0 4px 6px rgba(25,40,52,.18)!important;
+  transform:translateX(-50%)!important;
+}
+#homeScreen .conveyor-controls:before,
+#homeScreen .conveyor-controls:after{display:none!important}
+#homeScreen .conveyor-controls .reroll-btn,
+#homeScreen .conveyor-controls .reroll-btn.ad-mode{
+  box-sizing:border-box!important;width:164px!important;height:34px!important;min-height:34px!important;
+  grid-template-columns:30px minmax(0,1fr) 62px!important;grid-template-rows:1fr!important;
+  gap:3px!important;padding:2px 4px!important;
+  border:2px solid #573176!important;border-radius:9px!important;
+  background:#ad5ed4!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.38),inset 0 -3px 0 rgba(93,37,127,.24),0 2px 0 #43275d!important;
+}
+#homeScreen .conveyor-controls .reroll-icon-well{
+  width:27px!important;height:27px!important;min-width:27px!important;min-height:27px!important;flex-basis:27px!important;
+  border-width:2px!important;
+}
+#homeScreen .conveyor-controls .reroll-icon{width:20px!important;height:20px!important}
+#homeScreen .conveyor-controls .reroll-copy b{font-size:8px!important;letter-spacing:.65px!important}
+#homeScreen .conveyor-controls .reroll-btn>em{
+  box-sizing:border-box!important;width:62px!important;height:24px!important;min-height:24px!important;
+  padding:2px!important;border-width:1px!important;border-radius:6px!important;font-size:5.8px!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(8px,1fr) 48px 51px 31px 44px 56px!important;
+  row-gap:5px!important;padding:26px 8px 3px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.world-control,
+html.short-viewport #homeScreen>.play-setup-card .home-world-selector,
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{height:48px!important;min-height:48px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-selector{width:100%!important;max-width:none!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker{grid-template-columns:37px minmax(0,1fr) 21px!important;gap:5px!important;padding:3px 7px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-emblem{width:36px!important;height:36px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-emblem img{width:34px!important;height:34px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel,
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker,
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{height:51px!important;min-height:51px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn{height:49px!important;min-height:49px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn>span{font-size:18px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{height:31px!important;min-height:31px!important;top:-2px!important}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control,
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs{height:44px!important;min-height:44px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{height:56px!important;min-height:56px!important;padding:3px!important}
+html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min-height:48px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card{padding-left:7px!important;padding-right:7px!important}
+  #homeScreen>.play-setup-card .home-world-selector{width:100%!important;max-width:none!important}
+  #homeScreen>.play-setup-card .level-buttons{gap:4px!important}
+  #homeScreen>.play-setup-card .level-btn{border-radius:11px!important}
+  #homeScreen .conveyor-controls{width:162px!important}
+  #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:152px!important;grid-template-columns:28px minmax(0,1fr) 58px!important}
+  #homeScreen .conveyor-controls .reroll-btn>em{width:58px!important;font-size:5.3px!important}
+}
+
+/* === V110: постоянные тарелки — с конвейера забирается только еда === */
+#homeScreen .conveyor-plates{
+  position:absolute;z-index:19;left:32px;right:32px;top:22px;bottom:10px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:7px;
+  margin:0;padding:0;pointer-events:none;
+}
+#homeScreen .conveyor-plates>i{
+  position:relative;justify-self:center;display:block;width:min(82%,76px);height:20px;
+  border:2px solid #61717d;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 31%,#fff 0 45%,#edf2f4 47% 61%,#c2ccd2 63% 76%,#8d9ba6 78% 100%);
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 0 1px rgba(200,216,224,.24);
+}
+#homeScreen .conveyor-plates>i:after{
+  content:"";position:absolute;left:14%;right:14%;top:24%;height:34%;
+  border-radius:50%;border:1px solid rgba(145,160,170,.48);background:rgba(255,255,255,.3);
+}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{display:none!important}
+#homeScreen .food-card.conveyor-food-pick.drag-source{opacity:1!important}
+#homeScreen .food-card.conveyor-food-pick.drag-source>.food-model-wrap,
+#homeScreen .food-card.conveyor-food-pick.food-picked>.food-model-wrap,
+#homeScreen .food-card.conveyor-food-pick.food-picked>.secret-unknown-center{opacity:0!important}
+.food-drag-ghost{height:82px!important;filter:drop-shadow(0 6px 4px rgba(16,28,38,.3))!important}
+.food-drag-plate{display:none!important}
+.food-drag-art{inset:0!important;place-items:center!important}
+#homeScreen .conveyor.launch-ready .conveyor-plates{opacity:0!important}
+
+@media(max-width:370px){
+  #homeScreen .conveyor-plates{left:30px;right:30px;top:21px;bottom:9px;gap:3px}
+  #homeScreen .conveyor-plates>i{width:min(84%,68px);height:18px}
+}
+
+/* === V111: тарелки поверх ленты, еда поверх тарелок === */
+#homeScreen .conveyor-machine .conveyor-plates{
+  z-index:25!important;display:grid!important;visibility:visible!important;opacity:1!important;
+}
+#homeScreen .conveyor-machine .conveyor-plates>i{
+  z-index:1!important;display:block!important;visibility:visible!important;opacity:1!important;
+}
+#homeScreen .conveyor-machine .food-choices{z-index:30!important}
+#homeScreen .conveyor.launch-ready .conveyor-plates{opacity:1!important}
+
+/* === V112: индивидуальная тарелка каждого продукта === */
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  z-index:1!important;bottom:0!important;width:76px!important;height:20px!important;
+  border:2px solid #61717d!important;border-radius:50%!important;
+  background:radial-gradient(ellipse at 50% 31%,#fff 0 45%,#edf2f4 47% 61%,#c2ccd2 63% 76%,#8d9ba6 78% 100%)!important;
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 0 1px rgba(200,216,224,.24)!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate:after{
+  content:"";position:absolute;left:14%;right:14%;top:24%;height:34%;
+  border-radius:50%;border:1px solid rgba(145,160,170,.48);background:rgba(255,255,255,.3);
+}
+#homeScreen .food-card.conveyor-food-pick.drag-source>.conveyor-plate,
+#homeScreen .food-card.conveyor-food-pick.food-picked>.conveyor-plate{opacity:1!important}
+@media(max-width:370px){
+  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:68px!important;height:18px!important}
+}
+
+/* === V113: компактная строка мира и режимов, стабильное переключение === */
+#homeScreen>.play-setup-card{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:minmax(18px,1fr) 54px 58px 36px minmax(64px,1fr)!important;
+  column-gap:7px!important;row-gap:6px!important;
+  padding:30px 10px 5px!important;
+}
+#homeScreen>.play-setup-card>.play-setup-toolbar{display:contents!important}
+#homeScreen>.play-setup-card>.play-setup-toolbar>.world-control{
+  grid-column:1!important;grid-row:2!important;
+  box-sizing:border-box!important;width:100%!important;height:54px!important;min-height:54px!important;
+  display:block!important;margin:0!important;
+}
+#homeScreen>.play-setup-card .home-world-selector,
+#homeScreen>.play-setup-card .home-world-picker{
+  box-sizing:border-box!important;width:100%!important;max-width:none!important;height:54px!important;min-height:54px!important;
+}
+#homeScreen>.play-setup-card .home-world-picker{
+  grid-template-columns:39px minmax(0,1fr) 20px!important;gap:5px!important;padding:4px 6px!important;
+  border-radius:14px!important;
+}
+#homeScreen>.play-setup-card .home-world-emblem{width:37px!important;height:37px!important}
+#homeScreen>.play-setup-card .home-world-emblem img{width:35px!important;height:35px!important}
+#homeScreen>.play-setup-card .home-world-copy{gap:2px!important}
+#homeScreen>.play-setup-card .home-world-copy>small{font-size:5.6px!important}
+#homeScreen>.play-setup-card .home-world-copy>b{font-size:8.2px!important}
+#homeScreen>.play-setup-card .home-world-chevron{width:19px!important;height:19px!important}
+
+#homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control{
+  grid-column:2!important;grid-row:2!important;
+  box-sizing:border-box!important;width:100%!important;height:54px!important;min-height:54px!important;
+}
+#homeScreen>.play-setup-card .home-mode-tabs{
+  box-sizing:border-box!important;width:100%!important;height:54px!important;min-height:54px!important;
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;
+  padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+#homeScreen>.play-setup-card .home-mode-tab{
+  box-sizing:border-box!important;min-width:0!important;height:54px!important;
+  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:28px 13px!important;
+  place-items:center!important;gap:2px!important;padding:4px 2px!important;
+  border:2px solid #4e7168!important;border-radius:13px!important;background:#f5fcf8!important;
+  box-shadow:inset 0 2px 0 #fff,0 3px 0 rgba(35,83,69,.25)!important;
+  color:#345950!important;text-shadow:none!important;
+}
+#homeScreen>.play-setup-card .home-mode-tab.active{
+  border-color:var(--world-line)!important;background:var(--world-accent-top)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.7),0 3px 0 color-mix(in srgb,var(--world-line) 68%,#31443f)!important;
+  color:var(--world-text)!important;
+}
+#homeScreen>.play-setup-card .home-mode-icon{width:27px!important;height:27px!important;margin:0!important}
+#homeScreen>.play-setup-card .home-mode-tab>span{display:block!important;min-width:0!important;line-height:1!important}
+#homeScreen>.play-setup-card .home-mode-tab>span>b{display:block!important;font-size:7px!important;line-height:1!important;letter-spacing:0!important;white-space:nowrap!important}
+#homeScreen>.play-setup-card .home-mode-tab>span>small{display:none!important}
+#homeScreen>.play-setup-card .home-mode-lock{width:15px!important;height:15px!important;right:1px!important;top:1px!important}
+
+#homeScreen .home-endless-rank{display:none}
+#homeScreen>.play-setup-card[data-mode="endless"] .home-world-selector{display:none!important}
+#homeScreen>.play-setup-card[data-mode="endless"] .home-endless-rank{
+  box-sizing:border-box;width:100%;height:54px;display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:7px;
+  padding:5px 8px;border:2px solid #66498f;border-radius:14px;background:#f5efff;
+  box-shadow:inset 0 2px 0 #fff,0 3px 0 rgba(63,42,103,.28);color:#4f3975;
+}
+#homeScreen .home-rank-emblem{
+  width:38px;height:38px;display:grid;place-items:center;border:2px solid #684598;border-radius:12px;
+  background:#d9b8ff;color:#fff;font-size:18px;line-height:1;text-shadow:0 1px #5b3787;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.58),0 2px 0 rgba(65,42,96,.2);
+}
+#homeScreen .home-endless-rank>span:last-child{min-width:0;display:grid;gap:3px;text-align:left}
+#homeScreen .home-endless-rank small{font-size:5.6px;line-height:1;font-weight:1000;letter-spacing:.7px}
+#homeScreen .home-endless-rank b{font-size:9px;line-height:1;font-weight:1000;letter-spacing:.5px}
+
+#homeScreen>.play-setup-card>#campaignModePanel,
+#homeScreen>.play-setup-card>#endlessModePanel{display:none!important}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){
+  box-sizing:border-box!important;grid-column:1/-1!important;grid-row:3!important;
+  width:100%!important;max-width:none!important;height:58px!important;min-height:58px!important;
+  margin:0!important;padding:0!important;border:0!important;background:transparent!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){display:block!important}
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){display:block!important}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker,
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  width:100%!important;min-width:100%!important;max-width:none!important;height:58px!important;
+}
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  box-sizing:border-box!important;width:100%!important;height:58px!important;min-height:58px!important;
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important;
+  padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card{
+  box-sizing:border-box!important;min-width:0!important;height:56px!important;
+  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:28px 12px!important;place-items:center!important;gap:2px!important;
+  padding:4px 2px!important;border:2px solid #7254a3!important;border-radius:12px!important;background:#f5efff!important;
+  box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(55,37,90,.22)!important;text-align:center!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card+.endless-stat-card{border-left-width:2px!important}
+#homeScreen>.play-setup-card .endless-stat-card>img{grid-row:1!important;width:27px!important;height:27px!important;padding:0!important;border:0!important;background:transparent!important}
+#homeScreen>.play-setup-card .endless-stat-card>span{grid-row:2!important;display:block!important;min-width:0!important;text-align:center!important}
+#homeScreen>.play-setup-card .endless-stat-card small{display:none!important}
+#homeScreen>.play-setup-card .endless-stat-card b{display:block!important;font-size:9px!important;line-height:1!important;text-align:center!important}
+
+#homeScreen>.play-setup-card>.home-route-progress{
+  grid-column:1/-1!important;grid-row:4!important;top:-3px!important;
+}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  grid-column:1/-1!important;grid-row:5!important;align-self:end!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:minmax(7px,1fr) 48px 51px 31px minmax(56px,1fr)!important;
+  column-gap:5px!important;row-gap:5px!important;padding:26px 8px 3px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.world-control,
+html.short-viewport #homeScreen>.play-setup-card>.play-setup-toolbar>.mode-control,
+html.short-viewport #homeScreen>.play-setup-card .home-world-selector,
+html.short-viewport #homeScreen>.play-setup-card .home-world-picker,
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs,
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tab,
+html.short-viewport #homeScreen>.play-setup-card[data-mode="endless"] .home-endless-rank{height:48px!important;min-height:48px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tab{grid-template-rows:24px 11px!important;padding-block:3px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-mode-icon{width:23px!important;height:23px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-mode-tab>span>b{font-size:6.3px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker,
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons,
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{height:51px!important;min-height:51px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn,
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card{height:49px!important;min-height:49px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card{grid-template-rows:23px 10px!important;padding-block:3px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:23px!important;height:23px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:8px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card{column-gap:4px!important;padding-left:7px!important;padding-right:7px!important}
+  #homeScreen>.play-setup-card .home-world-picker{grid-template-columns:34px minmax(0,1fr) 17px!important;gap:3px!important;padding-inline:4px!important}
+  #homeScreen>.play-setup-card .home-world-emblem{width:33px!important;height:33px!important}
+  #homeScreen>.play-setup-card .home-world-emblem img{width:31px!important;height:31px!important}
+  #homeScreen>.play-setup-card .home-world-copy>b{font-size:7px!important}
+  #homeScreen>.play-setup-card .home-mode-tabs{gap:3px!important}
+  #homeScreen>.play-setup-card .home-mode-tab>span>b{font-size:5.8px!important}
+}
+
+/* === V114: читаемый мир, сетка рекордов 2×2 и чистый нижний ряд === */
+#homeScreen>.play-setup-card .home-world-copy>small{
+  font-size:6.6px!important;line-height:1!important;letter-spacing:.75px!important;
+}
+#homeScreen>.play-setup-card .home-world-copy>b{
+  font-size:10px!important;line-height:1.08!important;letter-spacing:.05px!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress{top:-7px!important}
+
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(8px,1fr) 54px 104px 36px minmax(58px,1fr)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:104px!important;min-height:104px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  display:grid!important;align-items:end!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{height:92px!important;min-height:92px!important}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{height:72px!important;min-height:72px!important}
+#homeScreen>.play-setup-card .level-btn{
+  height:70px!important;min-height:70px!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:22px!important}
+#homeScreen>.play-setup-card .level-btn.active>span{font-size:23px!important}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  position:relative!important;padding-top:18px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{
+  content:"ВЫБЕРИ УРОВЕНЬ";position:absolute;left:2px;top:2px;
+  color:rgba(235,255,247,.92);font-size:6.5px;line-height:1;font-weight:1000;letter-spacing:.8px;
+}
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:5px!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card{
+  height:49px!important;min-height:49px!important;
+  grid-template-columns:35px minmax(0,1fr)!important;grid-template-rows:auto auto!important;
+  align-content:center!important;justify-items:start!important;column-gap:5px!important;row-gap:1px!important;
+  padding:3px 6px!important;text-align:left!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card>img{
+  grid-column:1!important;grid-row:1/3!important;width:33px!important;height:33px!important;align-self:center!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card>span{
+  grid-column:2!important;grid-row:1/3!important;min-width:0!important;display:grid!important;align-content:center!important;gap:2px!important;text-align:left!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card small{
+  display:block!important;max-width:100%!important;overflow:hidden!important;
+  color:#62508d!important;font-size:6px!important;line-height:1!important;font-weight:1000!important;
+  letter-spacing:.1px!important;white-space:nowrap!important;text-overflow:ellipsis!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card b{
+  display:block!important;color:#372768!important;font-size:11.5px!important;line-height:1!important;text-align:left!important;
+}
+
+#homeScreen>.play-setup-card>.home-tool-dock{
+  height:56px!important;min-height:56px!important;padding:0!important;gap:7px!important;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+#homeScreen .home-tool-dock button{height:54px!important;min-height:54px!important}
+
+html.short-viewport #homeScreen>.play-setup-card .home-world-copy>small{font-size:6px!important}
+html.short-viewport #homeScreen>.play-setup-card .home-world-copy>b{font-size:8.8px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{top:-5px!important}
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(3px,1fr) 48px 94px 31px minmax(52px,1fr)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{height:94px!important;min-height:94px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{height:84px!important;min-height:84px!important;padding-top:16px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{height:66px!important;min-height:66px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn{height:64px!important;min-height:64px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn>span{font-size:20px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn.active>span{font-size:21px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card{height:44px!important;min-height:44px!important;grid-template-columns:30px minmax(0,1fr)!important;padding:2px 5px!important;column-gap:4px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:28px!important;height:28px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card small{font-size:5.3px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:10px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{height:50px!important;min-height:50px!important;padding:0!important}
+html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min-height:48px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card .home-world-copy>small{font-size:5.5px!important}
+  #homeScreen>.play-setup-card .home-world-copy>b{font-size:7.8px!important}
+  #homeScreen>.play-setup-card .endless-stat-card small{font-size:5.1px!important}
+  #homeScreen>.play-setup-card .endless-stat-card b{font-size:9.5px!important}
+}
+
+/* === V115: квадратные уровни и ровная шкала глубины === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(8px,1fr) 54px 104px 38px minmax(58px,1fr)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  height:74px!important;min-height:74px!important;align-items:end!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+  aspect-ratio:1/1!important;align-self:end!important;border-radius:13px!important;
+}
+
+#homeScreen>.play-setup-card>.home-route-progress{
+  box-sizing:border-box!important;position:relative!important;top:-3px!important;
+  width:100%!important;height:38px!important;min-height:38px!important;
+  display:grid!important;grid-template-rows:14px 14px!important;gap:2px!important;
+  margin:0!important;padding:3px 5px 3px!important;
+  border:0!important;border-radius:10px!important;overflow:hidden!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{
+  box-sizing:border-box!important;width:100%!important;height:14px!important;min-height:14px!important;
+  display:flex!important;align-items:center!important;margin:0!important;padding:0 1px!important;line-height:1!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-track{
+  box-sizing:border-box!important;position:relative!important;width:100%!important;height:14px!important;min-height:14px!important;
+  margin:0!important;padding:0!important;border:2px solid color-mix(in srgb,var(--route-deep) 82%,#26364a)!important;
+  border-radius:7px!important;overflow:hidden!important;
+  background:color-mix(in srgb,var(--route-deep) 65%,#29384c)!important;
+  box-shadow:inset 0 2px 3px rgba(12,24,37,.34)!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-track .world-fill{
+  box-sizing:border-box!important;height:100%!important;min-height:0!important;margin:0!important;
+  border-radius:4px!important;overflow:hidden!important;
+}
+#homeScreen>.play-setup-card .world-record-marker{
+  top:0!important;bottom:0!important;width:3px!important;height:auto!important;margin-left:-1px!important;
+  border-radius:1px!important;box-shadow:-1px 0 #334159,1px 0 #334159!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(3px,1fr) 48px 94px 34px minmax(52px,1fr)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{height:68px!important;min-height:68px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{
+  top:-2px!important;height:34px!important;min-height:34px!important;
+  grid-template-rows:12px 13px!important;gap:2px!important;padding:2px 4px 3px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{height:12px!important;min-height:12px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-track{height:13px!important;min-height:13px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{height:64px!important;min-height:64px!important}
+  #homeScreen>.play-setup-card .level-buttons{gap:4px!important}
+  #homeScreen>.play-setup-card .level-btn{border-radius:11px!important}
+}
+
+/* === V116: крупнее уровни, контрастнее глубина, полная статистика === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 118px 44px minmax(58px,1fr)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:118px!important;min-height:118px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  box-sizing:border-box!important;width:100%!important;height:104px!important;min-height:104px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  box-sizing:border-box!important;width:100%!important;min-width:100%!important;max-width:none!important;
+  height:84px!important;min-height:84px!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:4px!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  width:100%!important;max-width:none!important;aspect-ratio:1/1!important;
+  border-width:2px!important;border-radius:14px!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:23px!important}
+#homeScreen>.play-setup-card .level-btn.active>span{font-size:24px!important}
+
+#homeScreen>.play-setup-card>.home-route-progress{
+  top:-2px!important;height:44px!important;min-height:44px!important;
+  grid-template-rows:15px 18px!important;gap:3px!important;padding:3px 5px 3px!important;
+  border:1px solid rgba(24,87,68,.48)!important;border-radius:11px!important;
+  background:rgba(18,117,88,.76)!important;
+  box-shadow:inset 0 2px 4px rgba(9,61,46,.32),inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{
+  height:15px!important;min-height:15px!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-copy span{color:#fff!important;font-size:6.8px!important}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-copy span strong{color:#fff4a1!important;font-size:12px!important}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-copy>b{
+  background:rgba(8,65,49,.56)!important;color:#fff4a1!important;font-size:8px!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-track{
+  height:18px!important;min-height:18px!important;border:2px solid #294f47!important;border-radius:8px!important;
+  background:#164e43!important;box-shadow:inset 0 3px 4px rgba(5,35,29,.48),0 1px 0 rgba(255,255,255,.2)!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-track .world-fill{
+  border-radius:5px!important;background:linear-gradient(90deg,#ffae22 0%,#ffd83f 55%,#fff083 100%)!important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.65),inset 0 -2px 1px rgba(165,91,0,.28)!important;
+}
+
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;align-items:stretch!important;gap:6px!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card{
+  width:100%!important;height:56px!important;min-height:56px!important;align-self:stretch!important;
+  grid-template-columns:40px minmax(0,1fr)!important;column-gap:7px!important;padding:4px 8px!important;
+  border-width:2px!important;border-radius:13px!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card>img{width:38px!important;height:38px!important}
+#homeScreen>.play-setup-card .endless-stat-card small{font-size:6.5px!important;line-height:1.05!important}
+#homeScreen>.play-setup-card .endless-stat-card b{font-size:13px!important;line-height:1!important}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 104px 40px minmax(52px,1fr)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{height:104px!important;min-height:104px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{height:92px!important;min-height:92px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{height:74px!important;min-height:74px!important;gap:4px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn>span{font-size:21px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn.active>span{font-size:22px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{
+  height:40px!important;min-height:40px!important;grid-template-rows:13px 16px!important;gap:3px!important;padding:3px 4px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{height:13px!important;min-height:13px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-track{height:16px!important;min-height:16px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card{height:49px!important;min-height:49px!important;grid-template-columns:34px minmax(0,1fr)!important;column-gap:5px!important;padding:3px 6px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:32px!important;height:32px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card small{font-size:5.6px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:11px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{gap:3px!important}
+  #homeScreen>.play-setup-card .endless-stat-card{grid-template-columns:31px minmax(0,1fr)!important;padding-inline:4px!important;column-gap:4px!important}
+  #homeScreen>.play-setup-card .endless-stat-card>img{width:29px!important;height:29px!important}
+  #homeScreen>.play-setup-card .endless-stat-card small{font-size:5.1px!important}
+  #homeScreen>.play-setup-card .endless-stat-card b{font-size:10px!important}
+}
+
+/* === V117: удаление старой второй колонки панели уровней === */
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;
+  align-items:end!important;justify-items:stretch!important;gap:0!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  grid-column:1!important;grid-row:1!important;width:100%!important;min-width:100%!important;max-width:none!important;
+  justify-self:stretch!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  width:100%!important;min-width:100%!important;max-width:none!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;justify-content:stretch!important;
+}
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 118px 48px minmax(58px,1fr)!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress{
+  height:48px!important;min-height:48px!important;grid-template-rows:16px 20px!important;gap:3px!important;
+  padding:3px 5px 4px!important;border-color:#246653!important;background:#117253!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{height:16px!important;min-height:16px!important}
+#homeScreen>.play-setup-card>.home-route-progress .world-progress-track{
+  height:20px!important;min-height:20px!important;border-width:2px!important;border-color:#183f39!important;
+  background:#0b453b!important;
+}
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){width:100%!important;max-width:none!important}
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  width:100%!important;max-width:none!important;align-content:stretch!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 104px 43px minmax(52px,1fr)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{
+  height:43px!important;min-height:43px!important;grid-template-rows:14px 18px!important;gap:3px!important;padding:3px 4px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{height:14px!important;min-height:14px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-track{height:18px!important;min-height:18px!important}
+
+/* Низкий экран сохраняет ту же геометрию, а не возвращает старые размеры. */
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(0,1fr) 48px 112px 46px minmax(52px,1fr)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:112px!important;min-height:112px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:98px!important;min-height:98px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  width:100%!important;min-width:100%!important;height:80px!important;min-height:80px!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .level-btn{
+  width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+  aspect-ratio:1/1!important;align-self:end!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{
+  height:46px!important;min-height:46px!important;grid-template-rows:15px 19px!important;
+  gap:3px!important;padding:3px 4px 4px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{height:15px!important;min-height:15px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-track{height:19px!important;min-height:19px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card{
+  height:53px!important;min-height:53px!important;grid-template-columns:38px minmax(0,1fr)!important;
+  column-gap:6px!important;padding:4px 7px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:36px!important;height:36px!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card small{font-size:6.2px!important;line-height:1.05!important}
+html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:12px!important;line-height:1!important}
+
+/* === V118: компактные квадратные уровни и цельный фон секции === */
+#homeScreen>.play-setup-card{
+  background:linear-gradient(180deg,var(--route-top),var(--route-bottom))!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.16),inset 0 -3px 0 rgba(12,77,58,.22)!important;
+}
+#homeScreen>.play-setup-card:before{display:none!important;content:none!important}
+
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  box-sizing:border-box!important;width:100%!important;height:90px!important;min-height:90px!important;
+  display:grid!important;grid-template-rows:18px 68px!important;align-content:end!important;gap:2px!important;
+  margin:0!important;padding:0!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{
+  content:"ВЫБЕРИ УРОВЕНЬ"!important;position:static!important;grid-row:1!important;
+  display:block!important;align-self:end!important;margin:0 0 0 2px!important;
+  color:#f3fff9!important;font-size:8px!important;line-height:1!important;font-weight:1000!important;
+  letter-spacing:.7px!important;text-shadow:0 1px rgba(12,72,54,.48)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  grid-row:2!important;box-sizing:border-box!important;width:100%!important;min-width:100%!important;height:68px!important;min-height:68px!important;
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,68px))!important;
+  justify-content:space-between!important;align-items:end!important;gap:0!important;
+}
+#homeScreen>.play-setup-card .level-btn{
+  box-sizing:border-box!important;width:100%!important;height:auto!important;min-width:0!important;min-height:0!important;
+  aspect-ratio:1/1!important;align-self:end!important;border-radius:13px!important;
+}
+#homeScreen>.play-setup-card .level-btn>span{font-size:21px!important}
+#homeScreen>.play-setup-card .level-btn.active>span{font-size:22px!important}
+
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:82px!important;min-height:82px!important;grid-template-rows:16px 62px!important;gap:2px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{font-size:7.3px!important}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  height:62px!important;min-height:62px!important;grid-template-columns:repeat(5,minmax(0,62px))!important;gap:0!important;
+}
+html.short-viewport #homeScreen>.play-setup-card .level-btn>span{font-size:19px!important}
+html.short-viewport #homeScreen>.play-setup-card .level-btn.active>span{font-size:20px!important}
+
+@media(max-width:370px){
+  #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{height:78px!important;min-height:78px!important;grid-template-rows:16px 58px!important;gap:2px!important}
+  #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{height:58px!important;min-height:58px!important;grid-template-columns:repeat(5,minmax(0,58px))!important}
+  #homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{font-size:7px!important}
+}
+
+/* === V119: чуть крупнее конвейер и новый горизонтальный запуск === */
+body[data-screen="home"] #homeScreen.active{
+  grid-template-rows:minmax(188px,27%) minmax(156px,22%) minmax(0,1fr)!important;
+  gap:5px!important;
+}
+#homeScreen>.card.conveyor{min-height:156px!important}
+#homeScreen .conveyor-machine .food-choices{
+  left:32px!important;right:32px!important;top:23px!important;bottom:10px!important;gap:7px!important;
+}
+#homeScreen .food-choices>.food-card.conveyor-food-pick{
+  height:91px!important;min-height:91px!important;max-height:91px!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{
+  width:82px!important;height:22px!important;bottom:0!important;
+}
+#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{inset:0 0 14px!important}
+#homeScreen .food-card.conveyor-food-pick .food-model{
+  width:74px!important;height:74px!important;max-height:74px!important;transform:translateY(5px)!important;
+}
+
+#homeScreen .food-choices>.conveyor-start-card{
+  position:relative!important;isolation:isolate!important;grid-column:1/-1!important;
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:none!important;
+  height:108px!important;min-height:108px!important;max-height:108px!important;
+  align-self:end!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  border:3px solid #303b52!important;border-radius:16px!important;
+  background-image:linear-gradient(90deg,rgba(245,252,249,.94) 0 46%,rgba(245,252,249,.48) 62%,rgba(20,31,46,.18) 100%),var(--launch-card-cave)!important;
+  background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;
+  box-shadow:0 4px 0 #243047,inset 0 0 0 2px rgba(255,255,255,.76)!important;
+  color:#25344c!important;text-align:left!important;
+}
+#homeScreen .food-choices>.conveyor-start-card:before{
+  content:""!important;position:absolute!important;z-index:1!important;inset:5px!important;
+  border:2px solid rgba(255,255,255,.76)!important;border-radius:10px!important;background:transparent!important;
+  box-shadow:inset 0 0 0 1px rgba(38,50,70,.2)!important;pointer-events:none!important;
+}
+#homeScreen .food-choices>.conveyor-start-card:after{
+  content:""!important;position:absolute!important;z-index:1!important;left:auto!important;right:0!important;top:0!important;bottom:0!important;
+  width:46%!important;height:auto!important;border-radius:0!important;
+  background:linear-gradient(90deg,transparent,rgba(17,27,41,.3))!important;transform:none!important;pointer-events:none!important;
+}
+#homeScreen .conveyor-start-card .launch-card-world{
+  position:absolute!important;z-index:5!important;left:14px!important;top:15px!important;
+  box-sizing:border-box!important;max-width:52%!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:3px!important;
+  padding:7px 10px!important;border:2px solid rgba(47,67,74,.72)!important;border-radius:10px!important;
+  background:rgba(250,255,252,.92)!important;box-shadow:0 2px 0 rgba(35,55,61,.3),inset 0 1px 0 #fff!important;
+}
+#homeScreen .conveyor-start-card .launch-card-world>small{
+  color:var(--world-accent-deep)!important;font-size:6.5px!important;line-height:1!important;letter-spacing:.7px!important;
+}
+#homeScreen .conveyor-start-card .launch-card-world>b{
+  max-width:100%!important;overflow:hidden!important;color:#253d45!important;font-size:11px!important;line-height:1.05!important;
+  text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+#homeScreen .conveyor-start-card .launch-card-stage{
+  position:absolute!important;z-index:5!important;left:14px!important;right:auto!important;top:auto!important;bottom:13px!important;
+  min-height:24px!important;padding:4px 8px!important;border:2px solid rgba(47,67,74,.68)!important;border-radius:8px!important;
+  background:rgba(250,255,252,.9)!important;box-shadow:0 2px 0 rgba(35,55,61,.26)!important;
+  color:#314852!important;font-size:6.5px!important;line-height:1!important;letter-spacing:.35px!important;
+}
+#homeScreen .conveyor-start-card .launch-card-action{
+  position:absolute!important;z-index:6!important;left:auto!important;right:13px!important;top:50%!important;bottom:auto!important;
+  box-sizing:border-box!important;width:128px!important;height:67px!important;margin:0!important;
+  display:grid!important;grid-template-columns:16px minmax(0,1fr) 16px!important;place-items:center!important;gap:4px!important;
+  border:3px solid color-mix(in srgb,var(--world-line) 78%,#34415a)!important;border-radius:15px!important;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--world-accent-top) 70%,white),var(--world-accent-top) 35%,var(--world-accent-bottom))!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.78),inset 0 -5px 0 color-mix(in srgb,var(--world-line) 18%,transparent),0 4px 0 color-mix(in srgb,var(--world-line) 75%,#29354a)!important;
+  transform:translateY(-50%)!important;
+}
+#homeScreen .conveyor-start-card .launch-card-action>b{
+  color:var(--world-text)!important;font-size:21px!important;line-height:1!important;font-weight:1000!important;letter-spacing:1.8px!important;
+}
+#homeScreen .conveyor-start-card .launch-card-action>i{width:12px!important;height:12px!important}
+#homeScreen .conveyor-start-card .launch-card-sparkles>i{width:8px!important;height:8px!important}
+#homeScreen .conveyor-start-card .launch-card-sparkles>i:nth-child(1){left:48%!important;top:14%!important}
+#homeScreen .conveyor-start-card .launch-card-sparkles>i:nth-child(2){right:5%!important;top:9%!important}
+#homeScreen .conveyor-start-card .launch-card-sparkles>i:nth-child(3){left:54%!important;top:auto!important;bottom:9%!important}
+#homeScreen .conveyor-start-card .launch-card-sparkles>i:nth-child(4){right:7%!important;top:auto!important;bottom:7%!important}
+#homeScreen .conveyor-start-card .launch-card-booms>i:nth-child(1){left:auto!important;right:125px!important;top:10px!important}
+#homeScreen .conveyor-start-card .launch-card-booms>i:nth-child(2){right:4px!important;top:45px!important}
+#homeScreen .conveyor-start-card .launch-card-booms>i:nth-child(3){left:auto!important;right:96px!important;bottom:3px!important}
+#homeScreen .food-choices>.conveyor-start-card:active .launch-card-action{
+  transform:translateY(calc(-50% + 2px)) scale(.98)!important;
+}
+
+html.short-viewport body[data-screen="home"] #homeScreen.active{
+  grid-template-rows:minmax(178px,26%) minmax(148px,22%) minmax(0,1fr)!important;
+}
+html.short-viewport #homeScreen>.card.conveyor{min-height:148px!important}
+html.short-viewport #homeScreen .food-choices>.food-card.conveyor-food-pick{height:85px!important;min-height:85px!important;max-height:85px!important}
+html.short-viewport #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:75px!important;height:20px!important}
+html.short-viewport #homeScreen .food-card.conveyor-food-pick .food-model{width:68px!important;height:68px!important;max-height:68px!important}
+html.short-viewport #homeScreen .food-choices>.conveyor-start-card{height:100px!important;min-height:100px!important;max-height:100px!important}
+html.short-viewport #homeScreen .conveyor-start-card .launch-card-action{width:118px!important;height:61px!important;right:11px!important}
+html.short-viewport #homeScreen .conveyor-start-card .launch-card-action>b{font-size:19px!important}
+html.short-viewport #homeScreen .conveyor-start-card .launch-card-world{left:11px!important;top:12px!important;padding:6px 8px!important}
+html.short-viewport #homeScreen .conveyor-start-card .launch-card-stage{left:11px!important;bottom:10px!important}
+
+@media(max-width:370px){
+  body[data-screen="home"] #homeScreen.active{grid-template-rows:minmax(176px,26%) minmax(146px,22%) minmax(0,1fr)!important}
+  #homeScreen>.card.conveyor{min-height:146px!important}
+  #homeScreen .conveyor-machine .food-choices{left:30px!important;right:30px!important;top:22px!important;bottom:9px!important;gap:3px!important}
+  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:72px!important;height:19px!important}
+  #homeScreen .food-card.conveyor-food-pick .food-model{width:65px!important;height:65px!important;max-height:65px!important}
+  #homeScreen .food-choices>.conveyor-start-card{height:96px!important;min-height:96px!important;max-height:96px!important}
+  #homeScreen .conveyor-start-card .launch-card-world{max-width:50%!important;padding:5px 7px!important}
+  #homeScreen .conveyor-start-card .launch-card-world>b{font-size:9px!important}
+  #homeScreen .conveyor-start-card .launch-card-stage{font-size:5.8px!important;padding-inline:6px!important}
+  #homeScreen .conveyor-start-card .launch-card-action{width:108px!important;height:58px!important;right:9px!important;grid-template-columns:12px minmax(0,1fr) 12px!important}
+  #homeScreen .conveyor-start-card .launch-card-action>b{font-size:17px!important;letter-spacing:1.2px!important}
+  #homeScreen .conveyor-start-card .launch-card-action>i{width:9px!important;height:9px!important}
+}
+
+/* === V120: нижняя группа плотнее по вертикали === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 118px 48px 56px!important;
+  row-gap:3px!important;
+}
+#homeScreen>.play-setup-card>.home-route-progress{top:-1px!important}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  height:56px!important;min-height:56px!important;align-self:stretch!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 112px 46px 50px!important;
+  row-gap:3px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{top:-1px!important}
+html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{
+  height:50px!important;min-height:50px!important;align-self:stretch!important;
+}
+
+/* === V121: нижняя навигация собрана в один плотный блок === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 116px 47px 54px!important;
+  row-gap:2px!important;
+  background:linear-gradient(180deg,
+    transparent 0 calc(100% - 293px),
+    var(--route-top) calc(100% - 289px),
+    var(--route-bottom) 100%)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){
+  height:116px!important;min-height:116px!important;align-self:end!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:92px!important;min-height:92px!important;
+  grid-template-rows:14px 68px!important;align-content:end!important;gap:5px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{
+  align-self:start!important;margin:0 0 0 2px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  height:68px!important;min-height:68px!important;align-self:end!important;
+}
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:116px!important;min-height:116px!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card{height:55px!important;min-height:55px!important}
+#homeScreen>.play-setup-card>.home-route-progress{
+  top:0!important;height:47px!important;min-height:47px!important;align-self:start!important;
+}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  height:54px!important;min-height:54px!important;align-self:start!important;
+}
+#homeScreen .home-tool-dock button{height:52px!important;min-height:52px!important}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 112px 46px 49px!important;
+  row-gap:2px!important;
+  background:linear-gradient(180deg,
+    transparent 0 calc(100% - 273px),
+    var(--route-top) calc(100% - 269px),
+    var(--route-bottom) 100%)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:112px!important;min-height:112px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:83px!important;min-height:83px!important;
+  grid-template-rows:14px 62px!important;align-content:end!important;gap:5px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  height:62px!important;min-height:62px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{
+  top:0!important;height:46px!important;min-height:46px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{
+  height:49px!important;min-height:49px!important;align-self:start!important;
+}
+html.short-viewport #homeScreen .home-tool-dock button{height:47px!important;min-height:47px!important}
+
+/* === V122: уровни ближе к неизменной шкале метров === */
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 118px 48px 56px!important;
+  row-gap:3px!important;
+  background:linear-gradient(180deg,var(--route-top),var(--route-bottom))!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+#homeScreen>.play-setup-card>#endlessModePanel:not(.hidden){
+  height:118px!important;min-height:118px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:90px!important;min-height:90px!important;
+  grid-template-rows:18px 68px!important;gap:2px!important;
+  transform:translateY(7px)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{
+  align-self:end!important;margin:0 0 0 2px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  height:68px!important;min-height:68px!important;
+}
+#homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:118px!important;min-height:118px!important;
+}
+#homeScreen>.play-setup-card .endless-stat-card{height:56px!important;min-height:56px!important}
+#homeScreen>.play-setup-card>.home-route-progress{
+  top:-1px!important;height:48px!important;min-height:48px!important;
+}
+#homeScreen>.play-setup-card>.home-tool-dock{
+  height:56px!important;min-height:56px!important;align-self:stretch!important;
+}
+#homeScreen .home-tool-dock button{height:54px!important;min-height:54px!important}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 112px 46px 50px!important;
+  row-gap:3px!important;
+  background:linear-gradient(180deg,var(--route-top),var(--route-bottom))!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel:not(.hidden),
+html.short-viewport #homeScreen>.play-setup-card>#endlessModePanel>.endless-mode-records{
+  height:112px!important;min-height:112px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:82px!important;min-height:82px!important;
+  grid-template-rows:16px 62px!important;gap:2px!important;
+  transform:translateY(6px)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  height:62px!important;min-height:62px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{
+  top:-1px!important;height:46px!important;min-height:46px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{
+  height:50px!important;min-height:50px!important;align-self:stretch!important;
+}
+html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min-height:48px!important}
+
+/* === V126: итоговая геометрия — после всех прежних правил === */
+#homeScreen>.slime-stage{
+  box-sizing:border-box!important;width:100%!important;max-width:100%!important;
+  margin:0!important;padding-left:7px!important;padding-right:7px!important;
+  position:relative!important;isolation:isolate!important;background:transparent!important;
+}
+#homeScreen>.slime-stage:after{
+  content:""!important;display:block!important;position:absolute!important;z-index:0!important;
+  inset:-5px!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;
+  background:linear-gradient(180deg,var(--world-panel),var(--world-panel-soft))!important;
+  pointer-events:none!important;
+}
+#homeScreen>.slime-stage>.slime-hero-layout{position:relative!important;z-index:1!important}
+body.secret-meal-ui-impact #homeScreen>.slime-stage:after{animation:secretMealPanelImpact .82s cubic-bezier(.18,.8,.2,1) both}
+#homeScreen>.play-setup-card .home-mode-tabs{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:stretch!important;
+}
+#homeScreen>.play-setup-card .home-mode-tab,
+#homeScreen>.play-setup-card .home-mode-tab.active{
+  box-sizing:border-box!important;height:54px!important;min-height:54px!important;
+  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:28px 13px!important;
+  place-items:center!important;align-self:stretch!important;transform:none!important;
+}
+#homeScreen>.play-setup-card #endlessModeBtn.active{
+  border-color:var(--world-line)!important;background:var(--world-accent-top)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.7),0 3px 0 color-mix(in srgb,var(--world-line) 68%,#31443f)!important;
+  color:var(--world-text)!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{transform:translateY(-4px)!important}
+@media(max-width:370px){
+  #homeScreen>.slime-stage{
+    width:100%!important;margin:0!important;padding-left:5px!important;padding-right:5px!important;
+  }
+  #homeScreen>.slime-stage:after{inset:-4px!important}
+  #homeScreen>.play-setup-card .home-mode-tab,
+  #homeScreen>.play-setup-card .home-mode-tab.active{
+    height:48px!important;min-height:48px!important;grid-template-rows:24px 11px!important;
+  }
+  #homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{transform:translateY(-3px)!important}
+}
+#homeScreen .conveyor-machine .food-choices{
+  overflow:visible!important;clip-path:inset(-22px -24px -8px -24px)!important;
+}
+#homeScreen .machine-tunnel{z-index:8!important}
+#homeScreen .machine-mouth{z-index:1!important}
+#homeScreen .conveyor-machine:before,
+#homeScreen .conveyor-machine:after{z-index:40!important}
+#homeScreen .conveyor-machine:before{
+  background:linear-gradient(90deg,#53606d 0 5px,#b8c2cb 5px 9px,#64717e 9px 12px,transparent 12px 100%)!important;
+}
+#homeScreen .conveyor-machine:after{
+  background:linear-gradient(90deg,transparent 0 calc(100% - 12px),#64717e calc(100% - 12px) calc(100% - 9px),#b7c1ca calc(100% - 9px) calc(100% - 5px),#53606d calc(100% - 5px))!important;
+}
+#homeScreen .machine-belt{z-index:20!important}
+#homeScreen .conveyor-machine .food-choices{z-index:30!important}
+#homeScreen>.play-setup-card>.home-route-progress{
+  background:transparent!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;
+}
+#homeScreen>.play-setup-card{
+  background:linear-gradient(180deg,
+    transparent 0 calc(100% - 270px),
+    var(--route-top) calc(100% - 264px),
+    var(--route-bottom) 100%)!important;
+}
+html.short-viewport #homeScreen>.play-setup-card{
+  background:linear-gradient(180deg,
+    transparent 0 calc(100% - 248px),
+    var(--route-top) calc(100% - 242px),
+    var(--route-bottom) 100%)!important;
+}
+#homeScreen>.play-setup-card{
+  grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
+  row-gap:3px!important;
+}
+#homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(5px,1fr) 54px 118px 48px 56px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  position:relative!important;display:block!important;
+  height:90px!important;min-height:90px!important;overflow:visible!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  position:absolute!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;
+  width:100%!important;height:88px!important;min-height:88px!important;
+  display:grid!important;grid-template-rows:18px 68px!important;gap:2px!important;
+  margin:0!important;padding:0!important;transform:none!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{
+  grid-row:1!important;align-self:end!important;margin:0 0 0 2px!important;
+}
+#homeScreen>.play-setup-card>#campaignModePanel>.level-picker>.level-buttons{
+  grid-row:2!important;height:68px!important;min-height:68px!important;
+  align-self:end!important;margin:0!important;
+}
+
+html.short-viewport #homeScreen>.play-setup-card{
+  grid-template-rows:minmax(2px,1fr) 48px 82px 46px 50px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card[data-mode="endless"]{
+  grid-template-rows:minmax(2px,1fr) 48px 112px 46px 50px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
+  height:82px!important;min-height:82px!important;
+}
+html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picker{
+  height:80px!important;min-height:80px!important;
+  grid-template-rows:16px 62px!important;gap:2px!important;transform:none!important;
 }

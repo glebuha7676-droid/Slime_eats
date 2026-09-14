@@ -24,10 +24,13 @@
     UPGRADES: UPGRADE_DATA
   } = CONFIG;
   const WORLDS = structuredClone(CONFIG.WORLDS);
+  const ACTIVE_WORLDS = WORLDS.filter(world => world.active !== false);
+  const ACTIVE_WORLD_IDS = Object.freeze(ACTIVE_WORLDS.map(world => world.id));
   const defaultSave = structuredClone(CONFIG.DEFAULT_SAVE);
   const {
     FOODS,
     WORLD_SPRITES,
+    WORLD_BACKGROUNDS,
     CRACK_STAGE_SPRITES,
     VFX_SPRITES,
     versionedAsset,
@@ -42,8 +45,27 @@
   const BASE_DAMAGE = 10;
   const BASE_SHIELD = 25;
   const BASE_SHIELD_CHARGES = 2;
+  const STOMACH_CAPACITY = 3;
   const FREEZE_ZONE_CHARGE_MS = 1000;
   const FREEZE_ZONE_DURATION_MS = 3000;
+  const UNLIMITED_FREE_REROLLS = true;
+  const SPEED_PRESSURE_RAMP_MS = 1000;
+  const SPEED_BURST_CHARGE_MS = 5000;
+  const SPEED_BURST_WINDOW_MS = 1400;
+  const COSMOS_ASCENT_ARM_DISTANCE = 1.15;
+  const COSMOS_ENTRY_FALL_DISTANCE = .9;
+  const ELEMENTAL_ABILITY_DURATION_MS = Object.freeze({
+    frost: 3000,
+    electric: 3000,
+    fire: 5000,
+    cosmos: 3000,
+    gigantism: 3000,
+    wind: 3000,
+    gold: 3000,
+    explosion: 3000,
+    mass: 4000,
+    mobility: 5000
+  });
 
   // Данные из встроенного редактора миров. Значения остаются безопасными:
   // если редактор ещё не использовался, игра работает на исходных настройках.
@@ -67,8 +89,11 @@
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const els = {
+    phoneViewport: $('#phoneViewport'),
     app: $('#app'),
-    coinsLabel: $('#coinsLabel'), runCoinsGain: $('#runCoinsGain'), worldLabel: $('#worldLabel'), worldIcon: $('#worldIcon'),
+    coinsLabel: $('#coinsLabel'), runCoinsGain: $('#runCoinsGain'),
+    researchUnitsLabel: $('#researchUnitsLabel'), researchProgressBar: $('#researchProgressBar'),
+    worldLabel: $('#worldLabel'), worldIcon: $('#worldIcon'),
     worldEyebrow: $('#worldEyebrow'), levelPassedBadge: $('#levelPassedBadge'), worldProgressPrefix: $('#worldProgressPrefix'), worldProgressText: $('#worldProgressText'),
     worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
@@ -80,9 +105,11 @@
     closeAdminToolsBtn: $('#closeAdminToolsBtn'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
     adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'), adminResetProgressBtn: $('#adminResetProgressBtn'),
-    conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
+    adminInfiniteFlasksBtn: $('#adminInfiniteFlasksBtn'), adminInfiniteFlasksState: $('#adminInfiniteFlasksState'),
+    conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), conveyorDispensers: $('#conveyorDispensers'), conveyorChoiceCount: $('#conveyorChoiceCount'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
     foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'),
     stomachQuickSlots: $('#stomachQuickSlots'), stomachCardViewer: $('#stomachCardViewer'),
+    recipeCategorySlots: $('#recipeCategorySlots'),
     playSetupCard: $('#playSetupCard'), homeWorldPicker: $('#homeWorldPicker'), homeWorldMenu: $('#homeWorldMenu'),
     homeWorldSelect: $('#homeWorldSelect'), homeWorldPickerIcon: $('#homeWorldPickerIcon'),
     homeWorldPickerEyebrow: $('#homeWorldPickerEyebrow'), homeWorldPickerName: $('#homeWorldPickerName'), homeWorldBest: $('#homeWorldBest'),
@@ -90,7 +117,8 @@
     endlessModeHint: $('#endlessModeHint'), campaignModePanel: $('#campaignModePanel'), endlessModePanel: $('#endlessModePanel'),
     endlessBestScore: $('#endlessBestScore'), endlessBestDepth: $('#endlessBestDepth'), endlessBestLaps: $('#endlessBestLaps'),
     endlessRuns: $('#endlessRuns'), startDropBtn: $('#startDropBtn'), startEndlessBtn: $('#startEndlessBtn'),
-    depthLabel: $('#depthLabel'), runMassLabel: $('#runMassLabel'), runHealthBar: $('#runHealthBar'),
+    depthLabel: $('#depthLabel'), runHeartHud: $('.shaft-health'), runHearts: $$('.run-heart'), runHeartCount: $('#runHeartCount'),
+    runResearchHud: $('#runResearchHud'), runResearchScore: $('#runResearchScore'), runResearchGain: $('#runResearchGain'),
     routeProgress: $('#routeProgress'), routeBestMarker: $('#routeBestMarker'), routeBestLabel: $('#routeBestLabel'),
     routeSlimeMarker: $('#routeSlimeMarker'), routeTargetLabel: $('#routeTargetLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'),
@@ -101,7 +129,9 @@
     panelOverlay: $('#panelOverlay'), panelTitle: $('#panelTitle'), panelContent: $('#panelContent'), closePanelBtn: $('#closePanelBtn'),
     secretDiscoveryOverlay: $('#secretDiscoveryOverlay'), secretDiscoveryEye: $('#secretDiscoveryEye'), secretDiscoveryCard: $('#secretDiscoveryCard'),
     resultOverlay: $('#resultOverlay'), resultBadge: $('#resultBadge'), resultTitle: $('#resultTitle'), resultText: $('#resultText'),
-    resultWorldIcon: $('#resultWorldIcon'), resultWorldName: $('#resultWorldName'), resultDepth: $('#resultDepth'), resultCoins: $('#resultCoins'),
+    resultWorldIcon: $('#resultWorldIcon'), resultWorldName: $('#resultWorldName'), resultCoins: $('#resultCoins'),
+    resultResearchFlask: $('#resultResearchFlask'), resultResearchUnits: $('#resultResearchUnits'),
+    resultResearchData: $('#resultResearchData'), resultResearchProgress: $('#resultResearchProgress'), resultResearchStream: $('#resultResearchStream'),
     resultMultiplierLabel: $('#resultMultiplierLabel'), resultMultiplierTrack: $('#resultMultiplierTrack'),
     resultMultiplierNeedle: $('#resultMultiplierNeedle'), resultMultiplierHint: $('#resultMultiplierHint'),
     resultMultiplierBtn: $('#resultMultiplierBtn'), continueBtn: $('#continueBtn'),
@@ -126,10 +156,24 @@
   let foodFlyerToken = 0;
   let slimeInteractionTimer = null;
   let resultCoinAnimationId = 0;
+  let resultResearchAnimationId = 0;
+  let runResearchPulseTimer = 0;
   let resultRevealToken = 0;
   let autoResumeRunAfterVisibility = false;
   const RESULT_MULTIPLIERS = [.5, 1, 1.5, 2, 1.5, 1, .5];
   const RESULT_SWEEP_MS = 900;
+  const MUTATION_STEPS = 10;
+  const STARTER_MUTATIONS = Object.freeze([
+    { id: 'fire', name: 'ОГОНЬ', image: 'assets/ui/recipe-categories/fire-aligned.png' },
+    { id: 'electric', name: 'ЭЛЕКТРИЧЕСТВО', image: 'assets/ui/recipe-categories/electricity-aligned.png' },
+    { id: 'frost', name: 'МОРОЗ', image: 'assets/ui/recipe-categories/frost-aligned.png' }
+  ]);
+  const MUTATION_DISCOVERIES = Object.freeze([
+    { id: 'explosion', name: 'ВЗРЫВ', image: 'assets/ui/recipe-categories/mutation-explosion.png' },
+    { id: 'wind', name: 'ВЕТЕР', image: 'assets/ui/recipe-categories/mutation-wind.png?v=2' },
+    { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/mutation-cosmos.png' },
+    { id: 'gigantism', name: 'ГИГАНТИЗМ', image: 'assets/ui/recipe-categories/mutation-gigantism.png' }
+  ]);
   const TRAILS = Object.freeze([
     { id: 'none', name: 'Без следа', cost: 0 },
     { id: 'redJelly', name: 'Красное желе', cost: 250, asset: 'assets/ui/trails/trail-red.png', colors: ['rgba(255,54,69,0)', 'rgba(255,76,88,.48)', 'rgba(239,42,57,.94)'], glow: '#ff5964' },
@@ -148,6 +192,18 @@
   let menuSlimeAnimationId = 0;
   let menuSlimeLastFrame = 0;
   let menuMealFxStartedAt = 0;
+  let menuLaunchInProgress = false;
+  const menuReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const menuCategoryVisual = {
+    fire: 0, fireFrom: 0, fireTarget: 0, fireStartedAt: 0,
+    frost: 0, frostFrom: 0, frostTarget: 0, frostStartedAt: 0,
+    electric: 0, electricFrom: 0, electricTarget: 0, electricStartedAt: 0,
+    cosmos: 0, cosmosFrom: 0, cosmosTarget: 0, cosmosStartedAt: 0,
+    gigantism: 0, gigantismFrom: 0, gigantismTarget: 0, gigantismStartedAt: 0,
+    wind: 0, windFrom: 0, windTarget: 0, windStartedAt: 0,
+    explosion: 0, explosionFrom: 0, explosionTarget: 0, explosionStartedAt: 0,
+    mass: 0, massFrom: 0, massTarget: 0, massStartedAt: 0
+  };
   let menuStatFeedbackTimers = [];
   const menuGaze = { x: 0, y: 0 };
   const menuPetPoint = { x: 0, y: 0 };
@@ -159,6 +215,13 @@
   let cloudSaveInFlight = null;
   let saveUpdatedAt = 0;
   let saveRevision = 0;
+  let mutationAnimationToken = 0;
+  let mutationAnimating = false;
+  let pendingMutationReveal = null;
+  let mutationFeedHoldTimer = 0;
+  let mutationFeedHoldStartedAt = 0;
+  let mutationFeedHoldActive = false;
+  let adminInfiniteResearch = false;
   let save = loadSave();
   const { sound, stopAllSounds } = window.SlimeAudio.createAudioSystem({
     isEnabled: () => save.sound
@@ -219,7 +282,8 @@
   function saveProgressScore(value) {
     const worldBest = Object.values(value.worldBest || {}).reduce((sum, depth) => sum + Math.max(0, +depth || 0), 0);
     const unlocks = Object.values(value.unlockedLevels || {}).reduce((sum, level) => sum + Math.max(0, +level || 0), 0);
-    return worldBest * 100000 + unlocks * 10000 + Math.max(0, +value.totalRuns || 0) * 100 + Math.min(99, Math.floor(+value.coins || 0));
+    return worldBest * 100000 + unlocks * 10000 + Math.max(0, +value.totalRuns || 0) * 100
+      + Math.min(99, Math.floor(+value.researchUnits || 0)) + Math.min(.99, Math.max(0, +value.researchProgress || 0) / 100);
   }
 
   function chooseNewestSave(candidates) {
@@ -242,7 +306,15 @@
     const merged = { ...structuredClone(defaultSave), ...value };
     merged.schemaVersion = defaultSave.schemaVersion;
     merged.coins = Math.max(0, Number.isFinite(+merged.coins) ? +merged.coins : defaultSave.coins);
-    merged.world = clamp(Math.round(+merged.world || 1), 1, WORLDS.length);
+    merged.researchUnits = Math.max(0, Math.floor(Number.isFinite(+merged.researchUnits) ? +merged.researchUnits : 0));
+    merged.researchProgress = clamp(Math.floor(Number.isFinite(+merged.researchProgress) ? +merged.researchProgress : 0), 0, 99);
+    merged.unlockedMutations = Array.isArray(value.unlockedMutations)
+      ? [...new Set(value.unlockedMutations.filter(id => MUTATION_DISCOVERIES.some(mutation => mutation.id === id)))]
+      : [];
+    const mutationCost = MUTATION_STEPS * (merged.unlockedMutations.length + 1);
+    merged.mutationProgress = clamp(Math.floor(Number.isFinite(+merged.mutationProgress) ? +merged.mutationProgress : 0), 0, mutationCost);
+    const requestedWorld = Math.round(+merged.world || 1);
+    merged.world = ACTIVE_WORLD_IDS.includes(requestedWorld) ? requestedWorld : requestedWorld === 2 ? 3 : ACTIVE_WORLD_IDS[0];
     // Старые сохранения могли хранить до шести ячеек. Новая сборка компактна
     // и честно ограничена четырьмя; уже открытые ячейки не отнимаются ниже 1.
     merged.stomachLevel = clamp(sourceStomachLevel, 1, UPGRADE_DATA.stomachLevel.max);
@@ -261,8 +333,8 @@
     merged.totalRuns = Math.max(0, Math.round(+merged.totalRuns || 0));
     merged.worldBest = { ...defaultSave.worldBest };
     for (const world of WORLDS) merged.worldBest[world.id] = clamp(+(value.worldBest?.[world.id] || 0), 0, world.targetDepth);
-    const finalWorld = WORLDS[WORLDS.length - 1];
-    merged.gameCompleted = Boolean(value.gameCompleted || (finalWorld && merged.worldBest[finalWorld.id] >= finalWorld.targetDepth));
+    const finalWorld = ACTIVE_WORLDS[ACTIVE_WORLDS.length - 1];
+    merged.gameCompleted = Boolean(value.gameCompleted || (finalWorld && merged.worldBest[finalWorld.id] >= levelTargetDepth(finalWorld, LEVEL_COUNT)));
     merged.lastRunDepth = {};
     merged.levelFailures = {};
     for (const world of WORLDS) {
@@ -331,8 +403,9 @@
 
   function restoreSession(raw) {
     if (!raw || raw.worldId !== save.world || !Array.isArray(raw.foods) || !Array.isArray(raw.offer)) return false;
-    const foodById = id => FOODS.find(food => food.id === id);
-    const foods = raw.foods.map(foodById).filter(Boolean).slice(0, save.stomachLevel);
+    // Старый сохранённый конвейер не должен обходить открытие новых категорий.
+    const foodById = id => FOODS.find(food => food.id === id && foodAvailableInWorld(food));
+    const foods = raw.foods.map(foodById).filter(Boolean).slice(0, STOMACH_CAPACITY);
     const offer = raw.offer.slice(0, 3).map(id => id ? foodById(id) || null : null);
     // Полный желудок восстанавливается сразу на финальном этапе: пустые
     // заглушки не должны создавать перед старт-картой лишний ряд.
@@ -355,7 +428,7 @@
     };
     // Если сохранение попало ровно между выбором карты и приездом новой тройки,
     // не оставляем игрока с пустой лентой после возвращения в игру.
-    if (!session.offer.some(Boolean) && !stomachIsFull(foods)) generateOffer(session.baseEpicBoost);
+    if (session.offer.filter(Boolean).length < 3 && !stomachIsFull(foods)) generateOffer(session.baseEpicBoost);
     const consumedSecrets = foods.filter(food => food.rarity === 'secret').map(food => food.id);
     if (consumedSecrets.length) save.revealedSecretFoods = [...new Set([...(save.revealedSecretFoods || []), ...consumedSecrets])];
     discoverFoods([...foods, ...session.offer.filter(food => food && food.rarity !== 'secret')]);
@@ -569,9 +642,12 @@
     const nextWidth = Math.round(window.visualViewport?.width || window.innerWidth || 0);
     const nextHeight = Math.round(window.visualViewport?.height || window.innerHeight || 0);
     if (!nextWidth || !nextHeight) return;
+    const desktopPortrait = window.matchMedia('(min-width:700px)').matches;
+    const framedHeight = Math.round(els.phoneViewport?.getBoundingClientRect().height || nextHeight);
+    const layoutHeight = desktopPortrait ? framedHeight : nextHeight;
     const widthChanged = !lastViewportWidth || Math.abs(nextWidth - lastViewportWidth) > 2;
-    if (reset || widthChanged || !lastViewportHeight) lastViewportHeight = nextHeight;
-    else lastViewportHeight = Math.min(lastViewportHeight, nextHeight);
+    if (desktopPortrait || reset || widthChanged || !lastViewportHeight) lastViewportHeight = layoutHeight;
+    else lastViewportHeight = Math.min(lastViewportHeight, layoutHeight);
     lastViewportWidth = nextWidth;
     document.documentElement.style.setProperty('--app-height', `${lastViewportHeight}px`);
     document.documentElement.classList.toggle('compact-viewport', lastViewportHeight < 780);
@@ -639,10 +715,10 @@
   function round1(value) { return Math.round(value * 10) / 10; }
   function stomachFoodCount(foods = session?.foods || []) { return foods.length; }
   function canAddToStomach(food, foods = session?.foods || []) {
-    return Boolean(food) && stomachFoodCount(foods) < save.stomachLevel;
+    return Boolean(food) && stomachFoodCount(foods) < STOMACH_CAPACITY;
   }
   function stomachIsFull(foods = session?.foods || []) {
-    return stomachFoodCount(foods) >= save.stomachLevel;
+    return stomachFoodCount(foods) >= STOMACH_CAPACITY;
   }
   function levelConfig(world, level) {
     const entries = WORLD_LEVELS[world.id];
@@ -668,7 +744,7 @@
   function levelTargetDepth(world, level) {
     // Кампания имеет одну ясную шкалу: +100 м за уровень и +50 м за новый мир.
     // Настройки редактора могут менять состав блоков, но не длину уровня.
-    const worldIndex = clamp(Math.round(world?.id || 1) - 1, 0, WORLDS.length - 1);
+    const worldIndex = Math.max(0, ACTIVE_WORLD_IDS.indexOf(Math.round(world?.id || ACTIVE_WORLD_IDS[0])));
     const levelIndex = clamp(Math.round(level || 1) - 1, 0, LEVEL_COUNT - 1);
     return 100 + worldIndex * 50 + levelIndex * 100;
   }
@@ -684,13 +760,19 @@
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
   function yesterdayKey() { const d = new Date(); d.setDate(d.getDate() - 1); return todayKey(d); }
-  function currentWorld() { return WORLDS[clamp(save.world - 1, 0, WORLDS.length - 1)]; }
+  function worldDisplayNumber(worldId) {
+    const index = ACTIVE_WORLD_IDS.indexOf(Number(worldId));
+    return index >= 0 ? index + 1 : 0;
+  }
+  function currentWorld() { return WORLDS.find(world => world.id === Number(save.world)) || ACTIVE_WORLDS[0]; }
   function worldIsUnlocked(worldId) {
-    const world = WORLDS.find(item => item.id === Number(worldId));
-    if (!world) return false;
-    if (world.id === 1 || world.id <= save.world) return true;
-    const previous = WORLDS.find(item => item.id === world.id - 1);
-    return Boolean(previous && (save.worldBest?.[previous.id] || 0) >= previous.targetDepth);
+    const index = ACTIVE_WORLD_IDS.indexOf(Number(worldId));
+    if (index < 0) return false;
+    if (index === 0) return true;
+    const world = ACTIVE_WORLDS[index];
+    if ((save.worldBest?.[world.id] || 0) > 0 || save.world === world.id) return true;
+    const previous = ACTIVE_WORLDS[index - 1];
+    return Boolean(previous && (save.worldBest?.[previous.id] || 0) >= levelTargetDepth(previous, LEVEL_COUNT));
   }
   function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 
@@ -793,7 +875,7 @@
   }
 
   function revealedSecretCardInnerMarkup(food) {
-    return `${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
+    return `<span class="conveyor-plate" aria-hidden="true"></span>${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
   }
 
   function revealSecretCardInPlace(food, source, curtain = null) {
@@ -915,26 +997,27 @@
     if (!els.playSetupCard) return;
     const world = currentWorld();
     if (els.homeWorldPickerIcon) els.homeWorldPickerIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
-    if (els.homeWorldPickerEyebrow) els.homeWorldPickerEyebrow.textContent = `МИР ${world.id}`;
+    if (els.homeWorldPickerEyebrow) els.homeWorldPickerEyebrow.textContent = `МИР ${worldDisplayNumber(world.id)}`;
     if (els.homeWorldPickerName) els.homeWorldPickerName.textContent = world.name;
     if (els.homeWorldBest) els.homeWorldBest.textContent = `${Math.floor(save.worldBest?.[world.id] || 0).toLocaleString('ru-RU')} М`;
     if (els.homeWorldSelect) {
       const selectedValue = String(world.id);
-      els.homeWorldSelect.replaceChildren(...WORLDS.map(item => {
+      els.homeWorldSelect.replaceChildren(...ACTIVE_WORLDS.map(item => {
         const option = document.createElement('option');
         const unlocked = worldIsUnlocked(item.id);
         option.value = String(item.id);
         option.disabled = !unlocked;
-        option.textContent = `${unlocked ? '' : '🔒 '}${item.id}. ${item.name}`;
+        option.textContent = `${unlocked ? '' : '🔒 '}${worldDisplayNumber(item.id)}. ${item.name}`;
         return option;
       }));
       els.homeWorldSelect.value = selectedValue;
     }
     if (els.homeWorldMenu) {
       const options = document.createDocumentFragment();
-      WORLDS.forEach(item => {
+      ACTIVE_WORLDS.forEach(item => {
         const unlocked = worldIsUnlocked(item.id);
         const selected = item.id === world.id;
+        const displayNumber = worldDisplayNumber(item.id);
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `home-world-option${selected ? ' active' : ''}${unlocked ? '' : ' locked'}`;
@@ -942,7 +1025,7 @@
         button.disabled = !unlocked;
         button.setAttribute('role', 'option');
         button.setAttribute('aria-selected', String(selected));
-        button.setAttribute('aria-label', unlocked ? `Мир ${item.id}. ${item.name}` : `Мир ${item.id} закрыт`);
+        button.setAttribute('aria-label', unlocked ? `Мир ${displayNumber}. ${item.name}` : `Мир ${displayNumber} закрыт`);
 
         const emblem = document.createElement('span');
         emblem.className = 'home-world-option-icon';
@@ -955,7 +1038,7 @@
         const copy = document.createElement('span');
         copy.className = 'home-world-option-copy';
         const eyebrow = document.createElement('small');
-        eyebrow.textContent = `МИР ${item.id}`;
+        eyebrow.textContent = `МИР ${displayNumber}`;
         const name = document.createElement('b');
         name.textContent = item.name;
         copy.append(eyebrow, name);
@@ -1001,10 +1084,10 @@
     if (els.endlessModeHint) els.endlessModeHint.textContent = endlessUnlocked ? 'БЕЗ КОНЦА' : 'ОТКРОЕТСЯ ПОСЛЕ ИГРЫ';
     els.campaignModePanel?.classList.toggle('hidden', activeMode !== 'campaign');
     els.endlessModePanel?.classList.toggle('hidden', activeMode !== 'endless');
-    const endlessScore = Math.max(0, ...WORLDS.map(item => +(save.endlessBestScore?.[item.id] || 0)));
-    const endlessDepth = Math.max(0, ...WORLDS.map(item => +(save.endlessBestDepth?.[item.id] || 0)));
-    const endlessLaps = Math.max(0, ...WORLDS.map(item => Math.floor(+(save.endlessBestDepth?.[item.id] || 0) / Math.max(1, levelTargetDepth(item, LEVEL_COUNT)))));
-    const endlessRunCount = WORLDS.reduce((sum, item) => sum + Math.max(0, +(save.endlessRuns?.[item.id] || 0)), 0);
+    const endlessScore = Math.max(0, ...ACTIVE_WORLDS.map(item => +(save.endlessBestScore?.[item.id] || 0)));
+    const endlessDepth = Math.max(0, ...ACTIVE_WORLDS.map(item => +(save.endlessBestDepth?.[item.id] || 0)));
+    const endlessLaps = Math.max(0, ...ACTIVE_WORLDS.map(item => Math.floor(+(save.endlessBestDepth?.[item.id] || 0) / Math.max(1, levelTargetDepth(item, LEVEL_COUNT)))));
+    const endlessRunCount = ACTIVE_WORLDS.reduce((sum, item) => sum + Math.max(0, +(save.endlessRuns?.[item.id] || 0)), 0);
     if (els.endlessBestScore) els.endlessBestScore.textContent = formatCompactNumber(endlessScore);
     if (els.endlessBestDepth) els.endlessBestDepth.textContent = `${Math.floor(endlessDepth).toLocaleString('ru-RU')} М`;
     if (els.endlessBestLaps) els.endlessBestLaps.textContent = formatCompactNumber(endlessLaps);
@@ -1060,7 +1143,7 @@
     sound('tap');
     feedback(8);
     newDraft();
-    showToast(`Мир ${nextWorldId} · ${currentWorld().name}`);
+    showToast(`Мир ${worldDisplayNumber(nextWorldId)} · ${currentWorld().name}`);
   }
 
   function selectLevel(level) {
@@ -1083,6 +1166,10 @@
   function updatePersistentUI() {
     els.coinsLabel.textContent = formatCompactNumber(save.coins);
     els.coinsLabel.title = `${Math.floor(save.coins).toLocaleString('ru-RU')} монет`;
+    if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
+    if (els.researchProgressBar) els.researchProgressBar.style.width = `${save.researchProgress}%`;
+    const researchWallet = els.researchUnitsLabel?.closest('.research-wallet');
+    researchWallet?.setAttribute('aria-label', adminInfiniteResearch ? 'Исследование: бесконечные колбы' : `Исследование: ${save.researchUnits} единиц, заполнение ${save.researchProgress} из 100`);
     const world = currentWorld();
     document.body.dataset.world = String(world.id);
     ensureWorldSprites(world.id);
@@ -1098,7 +1185,7 @@
     if (els.worldProgressMarker) els.worldProgressMarker.style.left = `${worldProgress}%`;
     els.worldProgressBar.parentElement.setAttribute('aria-valuenow', String(Math.round(worldProgress)));
     els.worldHint.textContent = `${targetDepth} М`;
-    if (els.adminWorldValue) els.adminWorldValue.textContent = `МИР ${world.id}`;
+    if (els.adminWorldValue) els.adminWorldValue.textContent = worldDisplayNumber(world.id) ? `МИР ${worldDisplayNumber(world.id)}` : 'МИР 2 · ПАУЗА';
     renderHomePlaySetup();
     renderLevelPicker();
     applySkin();
@@ -1114,8 +1201,8 @@
     els.worldLabel.textContent = world.name;
     if (els.worldEyebrow) {
       els.worldEyebrow.textContent = isDrop
-        ? (run?.endless ? `МИР ${world.id} · БЕСКОНЕЧНЫЙ РЕЖИМ` : `МИР ${world.id} · УРОВЕНЬ ${level}`)
-        : `МИР ${world.id}`;
+        ? (run?.endless ? `МИР ${worldDisplayNumber(world.id)} · БЕСКОНЕЧНЫЙ РЕЖИМ` : `МИР ${worldDisplayNumber(world.id)} · УРОВЕНЬ ${level}`)
+        : `МИР ${worldDisplayNumber(world.id)}`;
     }
     if (els.worldIcon) els.worldIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
     if (els.levelPassedBadge) els.levelPassedBadge.hidden = !(isDrop && !run?.endless && completedBefore);
@@ -1175,7 +1262,7 @@
     }, delay);
   }
 
-  const MENU_SLIME_STATES = ['booped', 'petting', 'petted'];
+  const MENU_SLIME_STATES = ['booped', 'petting', 'petted', 'portal-surprised'];
   const MEAL_REACTION_CLASSES = ['meal-common', 'meal-rare', 'meal-epic', 'meal-special', 'meal-secret'];
 
   function clearMenuMealReaction() {
@@ -1292,6 +1379,8 @@
   }
 
   function newDraft() {
+    resetRoomLaunchVisuals();
+    menuLaunchInProgress = false;
     cancelSecretDiscovery();
     const bonusEpic = save.pendingEpicBoost || 0;
     const bonusHealth = save.pendingHealthBoost || 0;
@@ -1311,18 +1400,20 @@
       rerollPending: false,
       offerTransition: false
     };
+    syncMenuCategoryVisuals({ instant: true });
     generateOffer(session.baseEpicBoost);
     showScreen('home');
     els.conveyor.classList.add('is-running');
     renderDraft({ offerMotion: 'enter' });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!session) return;
       els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
         card.classList.remove('tunnel-enter');
         card.style.removeProperty('--conveyor-delay');
         card.style.removeProperty('--conveyor-duration');
       });
+      await playConveyorDispense(reducedMotion);
       els.conveyor.classList.remove('is-running');
     }, reducedMotion ? 30 : 850);
     persist();
@@ -1350,7 +1441,7 @@
   }
 
   function resetProgressFromAdmin() {
-    if (!window.confirm('Сбросить весь прогресс, улучшения, монеты и текущий набор еды?')) return;
+    if (!window.confirm('Сбросить весь прогресс, улучшения, исследование, монеты и текущий набор еды?')) return;
     const storage = saveStorage || browserStorage();
     try {
       storage?.removeItem(SAVE_KEY);
@@ -1360,6 +1451,7 @@
       console.warn('Save reset cleanup failed:', error);
     }
     save = structuredClone(defaultSave);
+    adminInfiniteResearch = false;
     saveUpdatedAt = Date.now();
     saveRevision += 1;
     session = null;
@@ -1374,6 +1466,8 @@
   function unlockEverythingFromAdmin() {
     const coinGrant = 9999999;
     save.coins = Math.max(save.coins, coinGrant);
+    save.researchUnits = Math.max(save.researchUnits, 9999);
+    save.researchProgress = 0;
     save.world = 1;
     save.stomachLevel = 4;
     save.conveyorLevel = 5;
@@ -1396,7 +1490,23 @@
     sound('coin');
     feedback([20, 35, 20]);
     newDraft();
-    showToast('Всё, кроме карточек, открыто · 9 999 999 монет');
+    showToast('Всё, кроме карточек, открыто · монеты и исследование выданы');
+  }
+
+  function syncAdminInfiniteFlasksUI() {
+    els.adminInfiniteFlasksBtn?.classList.toggle('active', adminInfiniteResearch);
+    els.adminInfiniteFlasksBtn?.setAttribute('aria-pressed', String(adminInfiniteResearch));
+    els.adminInfiniteFlasksBtn?.setAttribute('aria-label', `${adminInfiniteResearch ? 'Выключить' : 'Включить'} бесконечные колбы исследования`);
+    if (els.adminInfiniteFlasksState) els.adminInfiniteFlasksState.textContent = adminInfiniteResearch ? 'ВКЛЮЧЕНО' : 'ВЫКЛЮЧЕНО';
+  }
+
+  function toggleAdminInfiniteFlasks() {
+    adminInfiniteResearch = !adminInfiniteResearch;
+    syncAdminInfiniteFlasksUI();
+    updatePersistentUI();
+    sound('tap');
+    feedback(adminInfiniteResearch ? [5, 9, 5] : 5);
+    showToast(adminInfiniteResearch ? 'Бесконечные колбы включены' : 'Бесконечные колбы выключены');
   }
 
   function rarityWeights(boost = 0, rareBoost = 0) {
@@ -1434,6 +1544,8 @@
   }
 
   function foodAvailableInWorld(food) {
+    if (!['ice', 'fire', 'electric'].includes(foodRecipeFamily(food))) return false;
+    if (food?.requiresMutation && !(save.unlockedMutations || []).includes(food.requiresMutation)) return false;
     return !Array.isArray(food.worlds) || !food.worlds.length || food.worlds.includes(save.world);
   }
 
@@ -1461,9 +1573,27 @@
     return changed;
   }
 
-  function randomFood(exclude = [], minimumRarity = null, rollBoost = 0, rareBoost = 0) {
+  function completionRecipeFamily() {
+    const counts = (session?.foods || []).reduce((result, food) => {
+      if (food?.rarity === 'secret') return result;
+      const family = foodRecipeFamily(food);
+      result[family] = (result[family] || 0) + 1;
+      return result;
+    }, {});
+    return Object.entries(counts).find(([, count]) => count === 2)?.[0] || '';
+  }
+
+  function randomFood(exclude = [], minimumRarity = null, rollBoost = 0, rareBoost = 0, preferredFamily = '') {
     let rarity = weightedRarity(rarityWeights(rollBoost, rareBoost));
     if (minimumRarity && rarityRank(rarity) < rarityRank(minimumRarity)) rarity = minimumRarity;
+    if (preferredFamily) {
+      const preferredPool = FOODS.filter(food => foodAvailableInWorld(food)
+        && foodRecipeFamily(food) === preferredFamily
+        && food.minConveyor <= save.conveyorLevel
+        && (!minimumRarity || rarityRank(food.rarity) >= rarityRank(minimumRarity))
+        && !exclude.includes(food.id));
+      if (preferredPool.length) return preferredPool[Math.floor(Math.random() * preferredPool.length)];
+    }
     let pool = FOODS.filter(food => foodAvailableInWorld(food) && food.rarity === rarity && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
     if (!pool.length) {
       const order = ['secret', 'special', 'epic', 'rare', 'common'];
@@ -1473,25 +1603,37 @@
         if (pool.length) break;
       }
     }
-    return pool[Math.floor(Math.random() * pool.length)] || FOODS[0];
+    if (!pool.length) {
+      pool = FOODS.filter(food => foodAvailableInWorld(food) && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
+    }
+    return pool[Math.floor(Math.random() * pool.length)] || null;
   }
 
   function generateOffer(rollBoost = 0, rareBoost = 0, { resetRerolls = true } = {}) {
     const offer = [null, null, null];
-    const used = [];
+    const activeFamilies = ['ice', 'fire', 'electric'];
+    const used = (session?.foods || []).map(food => food.id);
     const pity = save.foodPity || structuredClone(defaultSave.foodPity);
-
     let guaranteed = null;
-    if (pity.noSecret >= 8) guaranteed = 'secret';
-    else if (pity.noSpecial >= 3) guaranteed = 'special';
-    else if (save.conveyorLevel >= 2 && pity.noEpic >= 5) guaranteed = 'epic';
+    const rarityAvailable = rarity => FOODS.some(food => food.rarity === rarity && foodAvailableInWorld(food) && food.minConveyor <= save.conveyorLevel && !used.includes(food.id));
+    if (pity.noSecret >= 8 && rarityAvailable('secret')) guaranteed = 'secret';
+    else if (pity.noSpecial >= 3 && rarityAvailable('special')) guaranteed = 'special';
+    else if (save.conveyorLevel >= 2 && pity.noEpic >= 5 && rarityAvailable('epic')) guaranteed = 'epic';
     else if (session.commonOnlyStreak >= 2) guaranteed = 'rare';
     const guaranteedSlot = Math.floor(Math.random() * 3);
 
     for (let i = 0; i < 3; i += 1) {
-      const food = randomFood(used, i === guaranteedSlot ? guaranteed : null, rollBoost, rareBoost);
+      const family = activeFamilies[i];
+      let food = randomFood(used, i === guaranteedSlot ? guaranteed : null, rollBoost, rareBoost, family);
+      if (!food || foodRecipeFamily(food) !== family) {
+        const familyPool = FOODS.filter(item => foodAvailableInWorld(item)
+          && foodRecipeFamily(item) === family
+          && item.minConveyor <= save.conveyorLevel
+          && !used.includes(item.id));
+        food = familyPool[Math.floor(Math.random() * familyPool.length)] || null;
+      }
       offer[i] = food;
-      used.push(food.id);
+      if (food) used.push(food.id);
     }
     session.offer = offer;
     if (resetRerolls) {
@@ -1500,11 +1642,11 @@
     }
     discoverFoods(offer);
     session.offersSeen += 1;
-    session.commonOnlyStreak = offer.some(food => rarityRank(food.rarity) >= 1) ? 0 : session.commonOnlyStreak + 1;
+    session.commonOnlyStreak = offer.some(food => food && rarityRank(food.rarity) >= 1) ? 0 : session.commonOnlyStreak + 1;
 
-    pity.noEpic = offer.some(food => food.rarity === 'epic') ? 0 : pity.noEpic + 1;
-    pity.noSpecial = offer.some(food => food.rarity === 'special') ? 0 : pity.noSpecial + 1;
-    pity.noSecret = offer.some(food => food.rarity === 'secret') ? 0 : pity.noSecret + 1;
+    pity.noEpic = offer.some(food => food?.rarity === 'epic') ? 0 : pity.noEpic + 1;
+    pity.noSpecial = offer.some(food => food?.rarity === 'special') ? 0 : pity.noSpecial + 1;
+    pity.noSecret = offer.some(food => food?.rarity === 'secret') ? 0 : pity.noSecret + 1;
     save.foodPity = pity;
     persist();
   }
@@ -1540,6 +1682,40 @@
       return '<span class="food-secret-neon" aria-hidden="true"></span>';
     }
     return '';
+  }
+
+  function mutationElementFxMarkup(family, extraClass = '') {
+    const sourceFamily = String(family || '').toLowerCase();
+    const normalizedFamily = sourceFamily === 'damage' ? 'fire' : sourceFamily === 'frost' ? 'ice' : sourceFamily;
+    if (normalizedFamily === 'fire') {
+      return `<span class="mutation-element-fx mutation-fire-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
+    if (normalizedFamily === 'ice') {
+      return `<span class="mutation-element-fx mutation-frost-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
+    if (normalizedFamily === 'electric') {
+      return `<span class="mutation-element-fx mutation-electric-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
+    if (normalizedFamily === 'cosmos') {
+      return `<span class="mutation-element-fx mutation-cosmos-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
+    if (normalizedFamily === 'blast' || normalizedFamily === 'explosion') {
+      return `<span class="mutation-element-fx mutation-blast-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
+    if (normalizedFamily === 'wind') {
+      return `<span class="mutation-element-fx mutation-wind-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
+    return '';
+  }
+
+  function foodCategoryBadgeMarkup(food, unknown = false) {
+    const family = unknown ? 'secret' : foodRecipeFamily(food);
+    const meta = RECIPE_FAMILY_META[family] || RECIPE_FAMILY_META.mixed;
+    const icon = RECIPE_FAMILY_ICONS[family];
+    const content = unknown || !icon
+      ? (unknown ? '?' : meta.glyph)
+      : `<img src="${versionedAsset(icon)}" alt="" aria-hidden="true">`;
+    return `<span class="food-category-badge family-${family}" title="${meta.label}" aria-label="${meta.label}">${content}</span>`;
   }
 
   function foodCardStatItems(food) {
@@ -1845,13 +2021,10 @@
     slot.type = 'button';
     slot.className = `stomach-quick-slot ${locked ? 'locked' : ''} ${food ? `filled ${food.rarity}` : ''}`;
     if (food) {
-      const effectStar = (food.description || food.effectText)
-        ? '<span class="slot-effect-star" aria-hidden="true">★</span>'
-        : '';
-      slot.innerHTML = `${effectStar}<span class="slot-art">${foodArtMarkup(food, 'food-mini-model')}</span>`;
+      slot.innerHTML = `<span class="slot-art">${foodArtMarkup(food, 'food-mini-model')}</span>`;
       centerFoodThumbnail(slot.querySelector('.food-mini-model'));
-      slot.setAttribute('aria-label', `${index + 1}. ячейка. ${food.name}. ${RARITY_LABELS[food.rarity]}${food.description || food.effectText ? '. Есть описание эффекта' : ''}. Показать свойства`);
-      slot.title = `${food.name}${food.description || food.effectText ? ' · ★ эффект' : ''}`;
+      slot.setAttribute('aria-label', `${index + 1}. ячейка. ${food.name}. Показать свойства`);
+      slot.title = food.name;
       slot.addEventListener('click', () => showStomachFoodInfo(food, index, slot));
     } else if (locked) {
       slot.innerHTML = '<img class="slot-lock" src="assets/ui/lock.webp" alt="" aria-hidden="true">';
@@ -1867,14 +2040,66 @@
   }
 
   function renderStomachSlots() {
-    const capacity = save.stomachLevel;
+    const capacity = STOMACH_CAPACITY;
     els.stomachQuickSlots?.replaceChildren();
-    if (els.stomachQuickSlots) els.stomachQuickSlots.dataset.slots = '4';
-    // Четыре позиции всегда на виду: закрытые явно показывают будущую прокачку.
-    for (let index = 0; index < 4; index += 1) {
-      els.stomachQuickSlots?.appendChild(createStomachSlot(session.foods[index], index, { locked: index >= capacity }));
+    if (els.stomachQuickSlots) els.stomachQuickSlots.dataset.slots = String(STOMACH_CAPACITY);
+    for (let index = 0; index < STOMACH_CAPACITY; index += 1) {
+      els.stomachQuickSlots?.appendChild(createStomachSlot(session.foods[index], index));
     }
     els.stomachQuickSlots?.classList.toggle('is-full', stomachIsFull());
+    renderRecipeWorkbench();
+  }
+
+  const RECIPE_FAMILY_META = {
+    mass: { glyph: '●', label: 'МАССА' }, health: { glyph: '●', label: 'СЫТНОСТЬ' },
+    fire: { glyph: '▲', label: 'ОГОНЬ' }, damage: { glyph: '▲', label: 'СИЛА' },
+    ice: { glyph: '◆', label: 'ЛЁД' }, electric: { glyph: 'ϟ', label: 'ТОК' },
+    cosmos: { glyph: '✦', label: 'КОСМОС' },
+    gigantism: { glyph: '●', label: 'ГИГАНТИЗМ' },
+    wind: { glyph: '≈', label: 'ВЕТЕР' },
+    bounce: { glyph: '↟', label: 'СКОРОСТЬ' }, gold: { glyph: '●', label: 'ЗОЛОТО' },
+    blast: { glyph: '✦', label: 'ВЗРЫВ' }, protection: { glyph: '⬟', label: 'ЗАЩИТА' },
+    shield: { glyph: '⬟', label: 'ЗАЩИТА' }, secret: { glyph: '?', label: 'СЕКРЕТ' },
+    mixed: { glyph: '•', label: 'ЕДА' }
+  };
+
+  const RECIPE_FAMILY_ICONS = Object.freeze({
+    fire: 'assets/ui/recipe-categories/fire-aligned.png',
+    damage: 'assets/ui/recipe-categories/fire-aligned.png',
+    ice: 'assets/ui/recipe-categories/frost-aligned.png',
+    electric: 'assets/ui/recipe-categories/electricity-aligned.png',
+    cosmos: 'assets/ui/recipe-categories/mutation-cosmos.png',
+    gigantism: 'assets/ui/recipe-categories/mutation-gigantism.png',
+    wind: 'assets/ui/recipe-categories/mutation-wind.png?v=2',
+    gold: 'assets/ui/recipe-categories/gold-aligned.png',
+    bounce: 'assets/ui/recipe-categories/mobility-aligned.png',
+    mass: 'assets/ui/recipe-categories/weight-aligned.png',
+    health: 'assets/ui/recipe-categories/weight-aligned.png',
+    protection: 'assets/ui/recipe-categories/protection-aligned.png',
+    shield: 'assets/ui/recipe-categories/protection-aligned.png',
+    blast: 'assets/ui/recipe-categories/explosion-aligned.png'
+  });
+
+  function foodRecipeFamily(food) {
+    return String(food?.recipeFamily || food?.family || food?.category || 'mixed').toLowerCase();
+  }
+
+  function renderRecipeWorkbench() {
+    if (!els.recipeCategorySlots) return;
+    els.recipeCategorySlots.replaceChildren();
+    for (let index = 0; index < STOMACH_CAPACITY; index += 1) {
+      const food = session.foods[index];
+      const family = food ? foodRecipeFamily(food) : 'empty';
+      const meta = RECIPE_FAMILY_META[family] || RECIPE_FAMILY_META.mixed;
+      const marker = document.createElement('span');
+      marker.className = `recipe-category-slot ${food ? `filled family-${family}` : 'empty'}`;
+      const icon = RECIPE_FAMILY_ICONS[family];
+      if (food && icon) marker.innerHTML = `<img src="${versionedAsset(icon)}" alt="" aria-hidden="true">`;
+      else marker.textContent = food ? meta.glyph : '';
+      marker.title = food ? meta.label : `Пустое место ${index + 1}`;
+      marker.setAttribute('aria-label', food ? `${index + 1}. ${meta.label}` : `${index + 1}. Пусто`);
+      els.recipeCategorySlots.appendChild(marker);
+    }
   }
 
   function hideFoodInfo(closeStomachViewer = true) {
@@ -1896,13 +2121,18 @@
       if (els.foodInfo.classList.contains('hidden') || !source.isConnected) return;
       const card = source.getBoundingClientRect();
       const panel = els.foodInfo.getBoundingClientRect();
+      const viewport = els.phoneViewport?.getBoundingClientRect() || { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
       const safe = 8;
       const gap = 10;
-      const left = clamp(card.left + card.width / 2 - panel.width / 2, safe, window.innerWidth - panel.width - safe);
-      const below = card.top - panel.height - gap < safe;
+      const minLeft = viewport.left + safe;
+      const maxLeft = Math.max(minLeft, viewport.right - panel.width - safe);
+      const minTop = viewport.top + safe;
+      const maxTop = Math.max(minTop, viewport.bottom - panel.height - safe);
+      const left = clamp(card.left + card.width / 2 - panel.width / 2, minLeft, maxLeft);
+      const below = card.top - panel.height - gap < minTop;
       const top = below
-        ? clamp(card.bottom + gap, safe, window.innerHeight - panel.height - safe)
-        : Math.max(safe, card.top - panel.height - gap);
+        ? clamp(card.bottom + gap, minTop, maxTop)
+        : Math.max(minTop, card.top - panel.height - gap);
       els.foodInfo.style.left = `${left}px`;
       els.foodInfo.style.top = `${top}px`;
       els.foodInfo.style.setProperty('--caret-x', `${clamp(card.left + card.width / 2 - left, 22, panel.width - 22)}px`);
@@ -1979,45 +2209,120 @@
     button.innerHTML = `
       <span class="launch-card-booms" aria-hidden="true"><i></i><i></i><i></i></span>
       <span class="launch-card-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <span class="launch-card-world"><small>МИР ${world.id}</small><b>${world.name}</b></span>
+      <span class="launch-card-world"><small>МИР ${worldDisplayNumber(world.id)}</small><b>${world.name}</b></span>
       <span class="launch-card-stage">${stageLabel}</span>
       <span class="launch-card-action"><i aria-hidden="true"></i><b>СТАРТ</b><i aria-hidden="true"></i></span>`;
-    button.addEventListener('click', () => startDrop({ endless: save.homeMode === 'endless' }));
+    button.addEventListener('click', () => { void beginRoomLaunch({ endless: save.homeMode === 'endless' }); });
     els.foodChoices.appendChild(button);
   }
 
   function refreshConveyorStartCard() {
-    if (!stomachIsFull() || !els.foodChoices?.querySelector('.conveyor-start-card')) return;
-    els.foodChoices.replaceChildren();
-    renderConveyorStartCard();
+    if (!stomachIsFull()) return;
+    els.foodChoices?.replaceChildren();
+  }
+
+  function renderConveyorDispensers() {
+    if (!els.conveyorDispensers) return;
+    const foods = stomachIsFull() ? [] : (session?.offer || []);
+    const offerKey = foods.map(food => food?.id || '-').join('|');
+    els.conveyorDispensers.classList.toggle('hidden', !foods.length);
+    if (els.conveyorDispensers.dataset.offerKey === offerKey) return;
+    els.conveyorDispensers.dataset.offerKey = offerKey;
+    els.conveyorDispensers.innerHTML = foods.map((food, index) => {
+      if (!food) return '<span class="conveyor-dispenser empty" aria-hidden="true"></span>';
+      const family = foodRecipeFamily(food);
+      const icon = RECIPE_FAMILY_ICONS[family];
+      return `<span class="conveyor-dispenser family-${family}" data-dispenser-index="${index}">
+        <i class="conveyor-pipe-feed"></i>
+        <span class="conveyor-pipe-socket">${icon ? `<img src="${versionedAsset(icon)}" alt="">` : ''}</span>
+        <i class="conveyor-pipe-nozzle"><b></b></i>
+        <i class="conveyor-pipe-pulse"></i>
+      </span>`;
+    }).join('');
+  }
+
+  async function playConveyorDispense(reducedMotion = false) {
+    const cards = [...els.foodChoices.querySelectorAll('.food-card.awaiting-dispense')];
+    if (!cards.length) return;
+    const dispensers = [...(els.conveyorDispensers?.querySelectorAll('.conveyor-dispenser') || [])];
+    els.conveyor.classList.add('is-dispensing');
+    cards.forEach((card, index) => {
+      const delayMs = reducedMotion ? 0 : index * 65;
+      card.style.setProperty('--dispense-delay', `${delayMs}ms`);
+      card.classList.remove('awaiting-dispense');
+      card.classList.add('food-dropping');
+      setTimeout(() => {
+        if (card.isConnected) card.classList.add('food-ready');
+      }, reducedMotion ? 0 : delayMs + 520);
+      const dispenser = dispensers[index];
+      if (dispenser) {
+        dispenser.style.setProperty('--dispense-delay', `${delayMs}ms`);
+        dispenser.classList.add('is-dispensing');
+      }
+    });
+    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 980));
+    cards.forEach(card => {
+      card.classList.remove('food-dropping');
+      card.style.removeProperty('--dispense-delay');
+    });
+    dispensers.forEach(dispenser => {
+      dispenser.classList.remove('is-dispensing');
+      dispenser.style.removeProperty('--dispense-delay');
+    });
+    els.conveyor.classList.remove('is-dispensing');
+  }
+
+  async function settleConveyorArrival(reducedMotion = false) {
+    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 850));
+    els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
+      card.classList.remove('tunnel-enter');
+      card.style.removeProperty('--conveyor-delay');
+      card.style.removeProperty('--conveyor-duration');
+    });
+    await playConveyorDispense(reducedMotion);
+  }
+
+  function releaseConveyorControl() {
+    const full = stomachIsFull();
+    const rerollBlocked = session.rerollPending || session.offerTransition || adInFlight;
+    els.rerollBtn.disabled = rerollBlocked || (!UNLIMITED_FREE_REROLLS && !full && session.freeRerolls <= 0 && session.adRerolls > 0);
+    scheduleHomeFit();
   }
 
   function renderDraft({ offerMotion = 'static', showLaunchCard = true } = {}) {
     recalcStats();
     updatePersistentUI();
     const full = stomachIsFull();
+    els.slimeStage?.classList.toggle('portal-ready', full);
+    if (els.conveyorChoiceCount) {
+      els.conveyorChoiceCount.textContent = full
+        ? 'ВЫБОР ГОТОВ'
+        : `ВЫБЕРИ ЕДУ ${stomachFoodCount()}/${STOMACH_CAPACITY}`;
+    }
 
     const mealInProgress = ['eat', 'chewing', 'savoring'].some(name => els.slime.classList.contains(name));
     if (!mealInProgress) {
-      els.healthLabel.textContent = Math.round(session.stats.health);
-      els.damageLabel.textContent = `${Math.round(session.stats.damage)}`;
-      els.shieldLabel.textContent = `${Math.round(session.stats.shield)}`;
-      els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
-      els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
+      if (els.healthLabel) els.healthLabel.textContent = Math.round(session.stats.health);
+      if (els.damageLabel) els.damageLabel.textContent = `${Math.round(session.stats.damage)}`;
+      if (els.shieldLabel) els.shieldLabel.textContent = `${Math.round(session.stats.shield)}`;
+      if (els.shieldChargesLabel) {
+        els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
+        els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
+      }
     }
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
     if (els.startDropBtn) {
       els.startDropBtn.disabled = !full;
       els.startDropBtn.classList.toggle('stomach-locked', !full);
-      els.startDropBtn.setAttribute('aria-label', full ? 'Начать падение' : `Сначала заполни желудок: ${stomachFoodCount()} из ${save.stomachLevel}`);
+      els.startDropBtn.setAttribute('aria-label', full ? 'Начать падение' : `Сначала заполни желудок: ${stomachFoodCount()} из ${STOMACH_CAPACITY}`);
     }
     if (els.startEndlessBtn) {
       els.startEndlessBtn.disabled = !full || !save.gameCompleted;
       els.startEndlessBtn.classList.toggle('stomach-locked', !full);
     }
-    els.conveyor.classList.toggle('launch-ready', full && showLaunchCard);
+    els.conveyor.classList.remove('launch-ready');
     clearFoodPreview();
-    els.rerollBtn.disabled = full || session.rerollPending || adInFlight;
+    els.rerollBtn.disabled = session.rerollPending || session.offerTransition || adInFlight;
 
     // Еда меняет характеристики и эффекты, но не размер слайма.
     els.slime.style.width = '124px';
@@ -2027,6 +2332,7 @@
     renderStomachSlots();
 
     els.foodChoices.innerHTML = '';
+    renderConveyorDispensers();
     session.offer.forEach((food, index) => {
       if (!food) {
         const gap = document.createElement('div');
@@ -2038,10 +2344,12 @@
       const button = document.createElement('button');
       const unknownSecret = !secretFoodIsRevealed(food);
       const cardType = foodCardType(food);
+      const recipeFamily = foodRecipeFamily(food);
+      const foodMutationFx = mutationElementFxMarkup(recipeFamily, 'food-mutation-fx');
       const tunnelInDistance = 112 + index * 110;
       const tunnelOutDistance = 112 + (session.offer.length - 1 - index) * 110;
       const cardLocked = !canAddToStomach(food);
-      button.className = `food-card ${food.rarity} food-type-${cardType} ${unknownSecret ? 'secret-unknown' : ''} ${offerMotion === 'enter' ? 'tunnel-enter' : ''} ${cardLocked ? 'locked' : ''}`;
+      button.className = `food-card conveyor-food-pick mutation-family-${recipeFamily} ${food.rarity} food-type-${cardType} ${unknownSecret ? 'secret-unknown' : ''} ${offerMotion === 'enter' ? 'tunnel-enter awaiting-dispense' : 'food-ready'} ${cardLocked ? 'locked' : ''}`;
       if (offerMotion === 'enter') {
         const arrivalSequence = Math.max(0, session.offer.length - 1 - index);
         button.style.setProperty('--conveyor-delay', `${arrivalSequence * 140}ms`);
@@ -2055,8 +2363,8 @@
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
       button.innerHTML = unknownSecret
-        ? `${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>СЕКРЕТНОЕ</span></span></span><span class="secret-unknown-center" aria-hidden="true"><span class="secret-question-marks">???</span><span class="secret-awaken-main-eye"><i></i></span></span><span class="secret-awaken-side-eyes" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></span><span class="food-name secret-unknown-copy"><span class="food-name-text">НАЖМИ</span></span><span class="food-card-description empty"><em aria-hidden="true">—</em></span><span class="secret-awaken-aura" aria-hidden="true"></span>`
-        : `${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
+        ? `<span class="conveyor-plate" aria-hidden="true"></span>${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>СЕКРЕТНОЕ</span></span></span><span class="secret-unknown-center" aria-hidden="true"><span class="secret-question-marks">???</span><span class="secret-awaken-main-eye"><i></i></span></span><span class="secret-awaken-side-eyes" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></span><span class="food-name secret-unknown-copy"><span class="food-name-text">НАЖМИ</span></span><span class="food-card-description empty"><em aria-hidden="true">—</em></span><span class="secret-awaken-aura" aria-hidden="true"></span>`
+        : `<span class="conveyor-plate" aria-hidden="true"></span>${foodMutationFx}${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
       button.type = 'button';
       const cardSummary = [
         foodStatItems(food).slice(0, 4).map(item => item.label).join(', '),
@@ -2073,27 +2381,31 @@
       });
       els.foodChoices.appendChild(button);
     });
-    if (full && showLaunchCard) renderConveyorStartCard({ entering: offerMotion === 'launch' });
-
-    const rerollBlocked = full || session.rerollPending || session.offerTransition || adInFlight;
+    const rerollBlocked = session.rerollPending || session.offerTransition || adInFlight;
+    els.rerollBtn.classList.toggle('confirm-mode', full);
+    els.rerollBtn.setAttribute('aria-label', full ? 'Выбор готов. Начать падение' : 'Обновить еду на конвейере');
     if (full) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ВЫБОР ГОТОВ';
       if (els.rerollText) els.rerollText.textContent = 'ЖЕЛУДОК ЗАПОЛНЕН';
       els.rerollBtn.classList.remove('ad-mode');
+    } else if (UNLIMITED_FREE_REROLLS) {
+      if (els.rerollTitle) els.rerollTitle.textContent = 'РЕРОЛЛ';
+      if (els.rerollText) els.rerollText.textContent = 'БЕСПЛАТНО ∞';
+      els.rerollBtn.classList.remove('ad-mode');
     } else if (session.freeRerolls > 0) {
-      if (els.rerollTitle) els.rerollTitle.textContent = 'ОБНОВИТЬ';
+      if (els.rerollTitle) els.rerollTitle.textContent = 'РЕРОЛЛ';
       if (els.rerollText) els.rerollText.textContent = 'БЕСПЛАТНО ×1';
       els.rerollBtn.classList.remove('ad-mode');
     } else if (session.adRerolls === 0) {
-      if (els.rerollTitle) els.rerollTitle.textContent = 'ОБНОВИТЬ';
-      if (els.rerollText) els.rerollText.textContent = `РЕДКИЕ +${10 + save.rerollLevel * 5}%`;
+      if (els.rerollTitle) els.rerollTitle.textContent = 'РЕРОЛЛ';
+      if (els.rerollText) els.rerollText.textContent = '▶ ВИДЕО';
       els.rerollBtn.classList.add('ad-mode');
     } else {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ВЫБОР ГОТОВ';
       if (els.rerollText) els.rerollText.textContent = 'НОВАЯ ТРОЙКА ПОСЛЕ ВЫБОРА';
       els.rerollBtn.classList.remove('ad-mode');
     }
-    els.rerollBtn.disabled = rerollBlocked || (session.freeRerolls <= 0 && session.adRerolls > 0);
+    els.rerollBtn.disabled = rerollBlocked || (!UNLIMITED_FREE_REROLLS && !full && session.freeRerolls <= 0 && session.adRerolls > 0);
 
     if (selectedFoodOfferIndex !== null && !session.offer[selectedFoodOfferIndex]) hideFoodInfo();
     scheduleHomeFit();
@@ -2104,6 +2416,7 @@
     if (secretSequenceActive || !canAddToStomach(food) || event.button > 0) return;
     if (!secretFoodIsRevealed(food)) return;
     event.preventDefault();
+    source.setPointerCapture?.(event.pointerId);
     document.body.classList.add('food-dragging');
     showFoodPreview(food);
     els.slime.classList.add('expect-food', 'tracking-food');
@@ -2113,36 +2426,44 @@
     const startY = event.clientY;
     let moved = false;
     let ghost = null;
+    let dragFrame = 0;
+    let dragX = startX;
+    let dragY = startY;
+
+    const paintDrag = () => {
+      dragFrame = 0;
+      setMenuGazePoint(dragX, dragY);
+      if (!moved || !ghost) return;
+      ghost.style.left = `${dragX}px`;
+      ghost.style.top = `${dragY}px`;
+      const accepted = pointInsideElement(dragX, dragY, els.slime);
+      ghost.classList.toggle('accept', accepted);
+      els.slime.classList.toggle('drop-ready', accepted);
+    };
 
     const onMove = moveEvent => {
-      setMenuGazePoint(moveEvent.clientX, moveEvent.clientY);
+      if (moveEvent.cancelable) moveEvent.preventDefault();
+      dragX = moveEvent.clientX;
+      dragY = moveEvent.clientY;
       const distance = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
       if (!moved && distance > 7) {
         moved = true;
         hideFoodInfo();
-        ghost = source.cloneNode(true);
-        ghost.classList.add('drag-ghost');
-        ghost.classList.remove('tunnel-enter', 'leaving');
-        ghost.style.animationDelay = '0ms';
-        ghost.style.setProperty('width', `${sourceRectAtStart.width}px`, 'important');
-        ghost.style.setProperty('min-width', `${sourceRectAtStart.width}px`, 'important');
-        ghost.style.setProperty('max-width', `${sourceRectAtStart.width}px`, 'important');
+        ghost = document.createElement('div');
+        ghost.className = 'food-drag-ghost';
+        ghost.innerHTML = `<span class="food-drag-art">${foodArtMarkup(food, 'food-drag-model')}</span>`;
         document.body.appendChild(ghost);
         source.classList.add('drag-source');
       }
-      if (!moved || !ghost) return;
-      ghost.style.left = `${moveEvent.clientX}px`;
-      ghost.style.top = `${moveEvent.clientY}px`;
-      const accepted = pointInsideElement(moveEvent.clientX, moveEvent.clientY, els.slime);
-      ghost.classList.toggle('accept', accepted);
-      els.slime.classList.toggle('drop-ready', accepted);
-      showFoodPreview(food);
+      if (!dragFrame) dragFrame = requestAnimationFrame(paintDrag);
     };
 
     const onUp = upEvent => {
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       document.removeEventListener('pointercancel', onUp);
+      if (dragFrame) cancelAnimationFrame(dragFrame);
+      source.releasePointerCapture?.(event.pointerId);
       document.body.classList.remove('food-dragging');
       els.slime.classList.remove('drop-ready', 'expect-food', 'tracking-food');
       clearFoodPreview(true);
@@ -2179,7 +2500,8 @@
         const mouthRect = els.menuSlimeMouth?.getBoundingClientRect();
         if (mouthRect) setMenuGazePoint(mouthRect.left + mouthRect.width / 2, mouthRect.top + mouthRect.height / 2);
         resetMenuGaze(300);
-        chooseFood(offerIndex, source);
+        source.classList.add('food-picked');
+        chooseFood(offerIndex);
       } else resetMenuGaze();
     };
 
@@ -2253,9 +2575,12 @@
             document.body.classList.add('secret-meal-ui-impact');
           }
           recalcStats();
+          syncMenuCategoryVisuals();
           showMenuStatChange(statsBeforeMeal, statsAfterMeal);
-          els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
-          els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
+          if (els.shieldChargesLabel) {
+            els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
+            els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
+          }
           sound(['epic', 'special', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
           menuEmotionTimer = setTimeout(() => {
             clearMenuMealReaction();
@@ -2288,34 +2613,25 @@
     });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 620));
-    // После последней еды лента на мгновение очищается и привозит отдельную
-    // большую карточку запуска — это финальный этап подготовки к забегу.
+    // После третьей еды круг реролла становится кнопкой подтверждения.
     if (stomachIsFull()) {
       session.offer = [];
       renderDraft({ showLaunchCard: false });
       persist();
-      await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 210));
-      renderDraft({ offerMotion: 'launch' });
       sound('happy');
       feedback([8, 18, 8]);
-      await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 760));
-      els.foodChoices.querySelector('.conveyor-start-card')?.classList.remove('launch-card-enter');
       session.offerTransition = false;
       els.conveyor.classList.remove('is-running', 'is-selecting');
+      renderDraft({ showLaunchCard: false });
       return;
     }
     generateOffer(session.baseEpicBoost);
     renderDraft({ offerMotion: 'enter' });
     persist();
-    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 850));
-    els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
-      card.classList.remove('tunnel-enter');
-      card.style.removeProperty('--conveyor-delay');
-      card.style.removeProperty('--conveyor-duration');
-    });
+    await settleConveyorArrival(reducedMotion);
     session.offerTransition = false;
     els.conveyor.classList.remove('is-running', 'is-selecting');
-    renderDraft();
+    releaseConveyorControl();
   }
 
 
@@ -2331,7 +2647,9 @@
     let rollBoost = session.baseEpicBoost || 0;
     let rareBoost = 0;
     try {
-      if (session.freeRerolls > 0) {
+      if (UNLIMITED_FREE_REROLLS) {
+        // Временный тестовый режим: прокрутки ничего не расходуют и не вызывают рекламу.
+      } else if (session.freeRerolls > 0) {
         session.freeRerolls -= 1;
       } else if (session.adRerolls === 0) {
         const rewarded = await showRewardedAd('Новая тройка еды. Для этой выдачи шанс редкой еды повышен на 10%.');
@@ -2341,7 +2659,7 @@
       } else return;
       sound(rollBoost >= 10 || rareBoost >= 10 ? 'epic' : 'reroll');
       feedback(6);
-      els.conveyor.classList.add('is-running');
+      els.conveyor.classList.add('is-running', 'is-rerolling');
       const visibleCards = [...els.foodChoices.querySelectorAll('.food-card')];
       visibleCards.forEach(card => {
         const offerIndex = Number(card.dataset.offerIndex || 0);
@@ -2355,17 +2673,59 @@
       generateOffer(rollBoost, rareBoost, { resetRerolls: false });
       renderDraft({ offerMotion: 'enter' });
       persist();
-      await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 850));
-      els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
-        card.classList.remove('tunnel-enter');
-        card.style.removeProperty('--conveyor-delay');
-        card.style.removeProperty('--conveyor-duration');
-      });
+      await settleConveyorArrival(reducedMotion);
     } finally {
       session.rerollPending = false;
-      els.conveyor.classList.remove('is-running');
-      renderDraft();
+      els.conveyor.classList.remove('is-running', 'is-rerolling');
+      releaseConveyorControl();
     }
+  }
+
+  function activateConveyorControl() {
+    if (stomachIsFull()) {
+      void beginRoomLaunch({ endless: save.homeMode === 'endless' });
+      return;
+    }
+    void rerollOffer();
+  }
+
+  function resetRoomLaunchVisuals() {
+    els.slimeStage?.classList.remove('launch-charging', 'launch-opening');
+    els.slime?.classList.remove('portal-surprised');
+    document.body.classList.remove('room-launch-active');
+  }
+
+  async function beginRoomLaunch(options = {}) {
+    if (menuLaunchInProgress) return;
+    const endless = options?.endless === true;
+    if (!stomachIsFull() || secretSequenceActive || menuSlimeIsBusy() || (endless && !save.gameCompleted)) {
+      startDrop({ endless });
+      return;
+    }
+
+    menuLaunchInProgress = true;
+    hideFoodInfo();
+    hideStomachCardViewer();
+    clearMenuSlimeInteraction();
+    els.rerollBtn.disabled = true;
+    document.body.classList.add('room-launch-active');
+    els.slimeStage.classList.add('launch-charging');
+    els.slime.classList.add('portal-surprised');
+    sound('tap');
+    feedback(7);
+
+    await new Promise(resolve => setTimeout(resolve, menuReducedMotion ? 35 : 110));
+    if (!menuLaunchInProgress) return;
+    els.slimeStage.classList.add('launch-opening');
+    sound('bounce');
+    feedback([8, 18, 10]);
+
+    await new Promise(resolve => setTimeout(resolve, menuReducedMotion ? 130 : 960));
+    if (!menuLaunchInProgress) return;
+    sound('epic');
+    startDrop({ endless, fromPortal: true });
+    menuLaunchInProgress = false;
+    setTimeout(resetRoomLaunchVisuals, menuReducedMotion ? 90 : 900);
   }
 
   // ===== ЗАБЕГ: запуск, пауза и физическая сцена =====
@@ -2375,7 +2735,10 @@
       'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'freezeUntil',
       'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
       'lastTrailSampleAt', 'lastUiUpdateAt', 'gravitySwitchFlashUntil', 'growthResetUntil', 'edgePortalFlashUntil',
-      'timeSlowUntil', 'lastSplitAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt'
+      'timeSlowUntil', 'hurtSlowUntil', 'lastHeartLossAt', 'lastSplitAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt',
+      'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil',
+      'gigantismStartedAt', 'gigantismDeflateStartedAt', 'gigantismDeflateUntil',
+      'windDashUntil', 'windDashCooldownUntil', 'windBounceFlashUntil'
     ];
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
     if (run.geyserCapture) {
@@ -2393,6 +2756,11 @@
     for (const shower of run.meteorShowers || []) {
       for (const strike of shower.strikes || []) {
         for (const key of ['warnedAt', 'fallAt', 'impactAt', 'impactedAt']) if (strike[key] > 0) strike[key] += delta;
+      }
+    }
+    for (const block of run.blocks || []) {
+      for (const key of ['fireIgnitedAt', 'fireDamageAt', 'fireFlashUntil', 'electricFlashStartedAt', 'electricFlashUntil', 'frostFlashUntil', 'frostTransformStartedAt', 'frostReservedUntil', 'goldFlashUntil', 'snowballGhostUntil', 'blackHoleSuctionStartedAt']) {
+        if (block[key] > 0) block[key] += delta;
       }
     }
   }
@@ -2495,9 +2863,10 @@
 
   function startDrop(options = {}) {
     const endless = options?.endless === true;
+    const fromPortal = options?.fromPortal === true;
     GAME_BALANCE = window.SlimeBalance?.load?.() || GAME_BALANCE;
     if (!stomachIsFull()) {
-      const remaining = Math.max(0, save.stomachLevel - stomachFoodCount());
+      const remaining = Math.max(0, STOMACH_CAPACITY - stomachFoodCount());
       showToast(`Сначала выбери ещё ${remaining} ${remaining === 1 ? 'карту' : remaining < 5 ? 'карты' : 'карт'}`);
       feedback([10, 18, 10]);
       return;
@@ -2507,8 +2876,10 @@
       return;
     }
     if (endless && !save.gameCompleted) return showToast('Бесконечный мир откроется после прохождения игры');
-    sound('tap');
-    feedback([10, 25, 12]);
+    if (!fromPortal) {
+      sound('tap');
+      feedback([10, 25, 12]);
+    }
     const baseWorld = currentWorld();
     const level = endless ? LEVEL_COUNT : selectedLevelForWorld(baseWorld.id);
     const world = {
@@ -2522,10 +2893,20 @@
     const cellSize = world.cellSize || BALANCE.gridCell;
     const columns = Math.floor(VIEW_W / cellSize);
     const gridOffsetX = (VIEW_W - columns * cellSize) / 2;
-    const startLane = columns % 2
+    const categoryVisuals = menuCategoryLevels();
+    const elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'gigantism', 'wind', 'explosion'].find(key => categoryVisuals[key] >= 3) || '';
+    const slimeRadius = massRadiusForLevel(categoryVisuals.mass, cellSize);
+    const startLane = fromPortal
       ? Math.floor(columns / 2)
-      : Math.floor(columns / 2) - (Math.random() < .5 ? 1 : 0);
+      : columns % 2
+        ? Math.floor(columns / 2)
+        : Math.floor(columns / 2) - (Math.random() < .5 ? 1 : 0);
     const startX = gridOffsetX + startLane * cellSize + cellSize / 2;
+    const launchEntryStartedAt = performance.now();
+    if (fromPortal) {
+      document.body.classList.add('portal-arrival');
+      setTimeout(() => document.body.classList.remove('portal-arrival'), 1200);
+    }
     run = {
       worldId: world.id,
       level,
@@ -2540,21 +2921,57 @@
       generationDifficulty,
       endlessLap: 1,
       endlessDepthOffset: 0,
+      launchEntryStartedAt: fromPortal ? launchEntryStartedAt : 0,
+      launchEntryUntil: fromPortal ? launchEntryStartedAt + 1200 : 0,
       // Портал — самостоятельный финал. Крепостной стены перед ним больше нет.
       portalY: finishY + cellSize * .35,
       blocks: [], honeyZones: [], jellyZones: [], freezeZones: [], particles: [], trails: [], specialEffects: [],
       meteorShowers: [], miniSlimes: [],
       slime: {
         x: startX,
-        y: 78,
-        vx: rand(-65, 65),
-        vy: 40,
-        radius: 28,
+        y: fromPortal ? -42 : 78,
+        vx: fromPortal ? rand(-18, 18) : rand(-65, 65),
+        vy: fromPortal ? 720 : 40,
+        radius: slimeRadius,
         wobble: 0
       },
+      categoryVisuals,
+      elementalAbilityType,
+      elementalAbilityCharges: elementalAbilityType ? 1 : 0,
+      elementalAbilityActive: '',
+      elementalAbilityUntil: 0,
+      elementalAbilityNextTickAt: 0,
+      elementalAuraId: 0,
+      goldRushUntil: 0,
+      blastCounter: 0,
+      categoryBlastDepth: 0,
+      massPierceRowsLeft: 0,
+      massPierceStrongLeft: 0,
+      massPierceRows: new Set(),
+      massPierceTriggered: false,
+      speedPressure: 0,
+      speedBurstChargeMs: 0,
+      speedBurstReady: false,
+      speedBurstBlocksLeft: 0,
+      speedBurstUntil: 0,
+      cosmosAscentDistance: 0,
+      cosmosReverseReady: false,
+      cosmosBoostBlocksLeft: 0,
+      cosmosFallDistance: 0,
+      cosmosCometCharge: 0,
+      cosmosCometStartedAt: 0,
+      cosmosCometIgnitedAt: 0,
+      cosmosCometFadeUntil: 0,
+      gigantismStartedAt: 0,
+      gigantismDeflateStartedAt: 0,
+      gigantismDeflateUntil: 0,
+      windDashBlocksLeft: 0,
+      windDashUntil: 0,
+      windDashCooldownUntil: 0,
+      windBounceFlashUntil: 0,
       steer: {
-        keyLeft: false, keyRight: false, keyDown: false,
-        touchX: 0, touchDown: 0, pointerId: null,
+        keyLeft: false, keyRight: false, keyUp: false, keyDown: false,
+        touchX: 0, touchY: 0, touchDown: 0, pointerId: null,
         originX: 0, originY: 0, gravityGestureLocked: false
       },
       gravityDirection: 1,
@@ -2564,14 +2981,19 @@
       growthStacks: 0,
       growthResetUntil: 0,
       timeSlowUntil: 0,
+      hurtSlowUntil: 0,
       lastSplitAt: 0,
       geyserCapture: null,
       geyserLaunchGraceUntil: 0,
       geyserBreaksLeft: 0,
-      health: session.stats.health,
-      startHealth: session.stats.health,
-      maxHealth: Math.max(1, Math.round(session.stats.health)),
-      visualHealth: session.stats.health,
+      // Сердца — самостоятельное правило забега. Старые числовые бонусы еды
+      // больше не меняют запас ошибок и силу удара по блокам.
+      health: 3,
+      startHealth: 3,
+      maxHealth: 3,
+      visualHealth: 3,
+      lastHeartLossAt: 0,
+      lastLostHeartIndex: -1,
       healthFlash: 0,
       healthFlashTime: 0,
       hurtFlashUntil: 0,
@@ -2589,20 +3011,21 @@
       lastFrozenImpactAt: 0,
       emotion: 'joy',
       emotionUntil: 0,
-      damage: session.stats.damage,
+      damage: 1,
       shield: session.stats.shield,
       barrier: 0,
       barrierFlashUntil: 0,
       bounceControlLockUntil: 0,
       bounceControlRestoreUntil: 0,
       coinMultiplier: session.stats.coinMultiplier,
-      effects: { ...session.effects },
+      effects: { ...session.effects, gravitySwitch: session.effects.gravitySwitch || categoryVisuals.cosmos >= 1 },
       blocksBrokenForHeal: 0,
       lowHealthDamageActive: false,
       bouncePowerReady: false,
       shieldCharges: session.stats.shieldCharges,
       maxShieldCharges: session.stats.shieldCharges,
       coins: 0,
+      researchData: 0,
       comboCount: 0,
       comboMultiplier: 1,
       comboRows: new Set(),
@@ -2621,17 +3044,17 @@
       rewardPending: false,
       rewardMultiplier: 1,
       rewardMeter: null,
-      cameraY: 0,
+      cameraY: fromPortal ? -68 : 0,
       lastTime: 0,
       lastFrameGateAt: 0,
       animationId: 0,
-      shake: 0,
+      shake: fromPortal ? 4.5 : 0,
       hitCooldowns: new Map(),
-      damageInvulnerableUntil: 0,
+      damageInvulnerableUntil: fromPortal ? launchEntryStartedAt + 620 : 0,
       bounceGraceUntil: 0,
       impactGroupId: 0,
       lowMotionTime: 0,
-      lastPosition: { x: startX, y: 78 },
+      lastPosition: { x: startX, y: fromPortal ? -45 : 78 },
       trailPoints: [],
       nextTrailPointId: 0,
       lastTrailSampleAt: 0
@@ -2740,7 +3163,7 @@
     const cell = runState.cellSize || BALANCE.gridCell;
     const columns = runState.columns || Math.floor(VIEW_W / cell);
     const gridOffsetX = runState.gridOffsetX || 0;
-    const startY = 190;
+    const startY = 285;
     // Оставляем перед порталом чистый вход: последний ряд блоков не заменяется стеной.
     const rows = Math.max(8, Math.floor((finishY - cell - startY) / cell));
     const unlocks = levelFeatures(world, runState.level);
@@ -2806,11 +3229,14 @@
         let maxHp = blockHpForTier(finalTier, world, progress, row, col, inPath);
         if (special === 'coin') maxHp *= .66;
         if (special === 'spring') maxHp = 1;
-        if (special === 'boss') maxHp *= 4.4;
-        const editedBlock = customVisual || editorBlock(world.id, special === 'gel' ? 'heal' : special || (hazard ? 'hazard' : finalTier));
-        if (customVisual) maxHp *= editedBlock?.hp || 1;
-        if (oreType) maxHp = Math.round(oreType.hp[0]);
-        // Опасность не имеет прочности: она всегда отражает слайма и наносит 30 HP.
+        if (special === 'boss') maxHp = 3;
+        // Старые множители редактора больше не вмешиваются в новую систему
+        // прочности: материал требует только один, два или три удара.
+        if (oreType) {
+          const oreHits = { coal: 1, iron: 2, gold: 2, diamond: 3 };
+          maxHp = oreHits[oreType.id] || 2;
+        }
+        // Опасный блок взрывается от первого столкновения.
         if (hazard) maxHp = 1;
         // Все вспомогательные блоки срабатывают от первого касания — число на
         // плитке это честно показывает, а не маскирует триггер за «5 HP».
@@ -2822,15 +3248,15 @@
         rowBlocks.push({
           id: id++, row, col, x: gridOffsetX + col * cell, y, w: cell, h: cell,
           hp: maxHp, maxHp, material, special, tier: finalTier, dead: Boolean(authored?.dead),
-          path: authored?.path ?? inPath, segment: meta.kind, hazard, unbreakable: hazard || special === 'jelly', hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
+          path: authored?.path ?? inPath, segment: meta.kind, hazard, unbreakable: special === 'jelly', hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
           environmentRemoved: authored?.environment || '',
+          researchValue: special || hazard ? 0 : researchValueForTier(finalTier, oreType),
+          researchAwarded: false,
           // Grass belongs only to the surface layer of World 1.
           topGrass: world.id === 1 && row === 0 && !special && finalTier === 'soft',
-          coins: special
-            ? 0
-            : oreType
-              ? Math.max(0, Math.round(GAME_BALANCE?.ores?.[oreType.id]?.coins ?? (10 + maxHp * .45) * oreType.reward))
-              : blockRewardForTier(finalTier)
+          coins: oreType
+            ? Math.max(0, Math.round(GAME_BALANCE?.ores?.[oreType.id]?.coins ?? (10 + maxHp * .45) * oreType.reward))
+            : 0
         });
       }
 
@@ -2854,7 +3280,8 @@
           if (world.id === 2) block.material = 'iceLight';
           if (world.id === 4) block.material = 'ash';
           block.maxHp = block.hp = blockHpForTier(block.tier, world, progress, row, block.col, true);
-          block.coins = blockRewardForTier('soft');
+          block.coins = 0;
+          block.researchValue = 1;
         }
       }
       blocks.push(...rowBlocks);
@@ -3126,12 +3553,9 @@
   }
 
   function blockHpForTier(tier, world, progress, row, col, inPath = false) {
-    const worldStep = Math.max(0, Math.round(world?.id || 1) - 1);
-    const base = (tier === 'soft' || tier === 'dense') ? 10
-      : tier === 'hard' ? 20 + worldStep * 10
-        : tier === 'reinforced' ? 60 + worldStep * 20
-          : tier === 'ore' ? 10 : 1;
-    return Math.round(base * Math.max(1, world?.endlessScale || 1));
+    if (tier === 'hard' || tier === 'ore') return 2;
+    if (tier === 'reinforced') return 3;
+    return 1;
   }
 
   function blockRewardForTier(tier) {
@@ -3139,6 +3563,14 @@
     if (!id) return 0;
     const fallback = id === 'weak' ? 4 : id === 'normal' ? 10 : 22;
     return Math.max(0, Math.round(GAME_BALANCE?.rewards?.[id] ?? fallback));
+  }
+
+  function researchValueForTier(tier, oreType = null) {
+    if (oreType) return ({ coal: 2, iron: 4, gold: 6, diamond: 10 })[oreType.id] || 2;
+    if (tier === 'reinforced') return 3;
+    if (tier === 'hard') return 2;
+    if (tier === 'soft' || tier === 'dense') return 1;
+    return 0;
   }
 
   function chooseMaterial(world, progress, special, tier = 'dense') {
@@ -3178,7 +3610,9 @@
     if (!run.lastTime) run.lastTime = timestamp;
     const dt = Math.min(.034, (timestamp - run.lastTime) / 1000);
     run.lastTime = timestamp;
-    const simulationScale = timestamp < (run.timeSlowUntil || 0) ? .46 : 1;
+    const simulationScale = timestamp < (run.timeSlowUntil || 0)
+      ? .46
+      : timestamp < (run.hurtSlowUntil || 0) ? .58 : 1;
     const simulationDt = dt * simulationScale;
 
     const speed = Math.hypot(run.slime.vx, run.slime.vy);
@@ -3187,8 +3621,8 @@
     const safeTravel = Math.max(5, Math.min(run.slime.radius * .24, run.cellSize * .14));
     const substeps = clamp(Math.ceil(speed * simulationDt / safeTravel), 1, 12);
     for (let i = 0; i < substeps; i += 1) updatePhysics(simulationDt / substeps, timestamp);
+    updateElementalEffects(timestamp);
     updateMiniSlimes(simulationDt, timestamp);
-    refreshLowHealthDamage(true);
     updateMeteorShowers(timestamp);
     updateSlimeTrail(simulationDt, timestamp);
     updateParticles(simulationDt);
@@ -3267,7 +3701,7 @@
       }
 
       const collisions = blocksNearY(mini.y, mini.radius)
-        .filter(block => !block.dead && block.y + block.h > mini.y - mini.radius && block.y < mini.y + mini.radius)
+        .filter(block => !block.dead && !block.blackHoleSuctionStartedAt && block.y + block.h > mini.y - mini.radius && block.y < mini.y + mini.radius)
         .map(block => ({ block, collision: circleRectCollision(mini, block) }))
         .filter(item => item.collision)
         .sort((a, b) => b.collision.penetration - a.collision.penetration);
@@ -3521,7 +3955,10 @@
       updateGeyserCapture(dt, timestamp);
       return;
     }
-    const frozen = isSlimeFrozen(timestamp);
+    const drillActive = speedDrillActive(timestamp) || windTornadoActive(timestamp);
+    const frozen = !drillActive && isSlimeFrozen(timestamp);
+    updateSpeedPassive(dt, timestamp);
+    updateWindDash(timestamp);
     const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
     const honeyAtStart = honeyZoneForSlime(s);
     const honeyDrag = Boolean(honeyAtStart);
@@ -3529,23 +3966,29 @@
     const jellyDrag = Boolean(jellyAtStart);
     const freezeWaterAtStart = freezeZoneForSlime(s);
     const freezeWaterDrag = Boolean(freezeWaterAtStart);
-    const worldGravity = (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (frozen ? 1.48 : freezeWaterDrag ? .28 : honeyDrag ? .24 : jellyDrag ? .08 : 1);
+    const worldGravity = drillActive ? 0 : (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (frozen ? 1.48 : freezeWaterDrag ? .28 : honeyDrag ? .24 : jellyDrag ? .08 : 1);
     const previousX = s.x;
     const previousY = s.y;
+    const launchArrivalActive = run.launchEntryUntil && timestamp < run.launchEntryUntil;
 
-    const terminalSpeed = frozen
+    const baseTerminalSpeed = frozen
       ? (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld) * 1.18
       : freezeWaterDrag ? 118 : honeyDrag ? 132 : jellyDrag ? 165
         : (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld);
-    s.vy = clamp(s.vy + worldGravity * gravityDirection * dt, -terminalSpeed, terminalSpeed);
-    applyFallSteering(s, dt, timestamp);
-    if (honeyDrag && !frozen) {
+    const speedPressure = elementalLevel('mobility') >= 1 ? run.speedPressure || 0 : 0;
+    const terminalSpeed = baseTerminalSpeed * (1 + speedPressure * .5);
+    if (drillActive) applySpeedDrillSteering(s, dt);
+    else {
+      s.vy = clamp(s.vy + worldGravity * gravityDirection * dt, -terminalSpeed, terminalSpeed);
+      applyFallSteering(s, dt, timestamp);
+    }
+    if (!drillActive && honeyDrag && !frozen) {
       s.vx *= Math.pow(.32, dt);
       s.vy *= Math.pow(.085, dt);
-    } else if (freezeWaterDrag && !frozen) {
+    } else if (!drillActive && freezeWaterDrag && !frozen) {
       s.vx *= Math.pow(.48, dt);
       s.vy = lerp(s.vy, 86, clamp(dt * 3.8, 0, 1));
-    } else if (jellyDrag && !frozen) {
+    } else if (!drillActive && jellyDrag && !frozen) {
       const jellyAge = Math.max(0, timestamp - (run.jellyEnteredAt || timestamp));
       const dive = jellyDiveInput();
       const targetVy = dive > .08
@@ -3558,6 +4001,7 @@
     }
     s.x += s.vx * dt;
     s.y += s.vy * dt;
+    updateCosmosCometEntry(previousY, timestamp);
     updateHoneyState(s, timestamp);
     updateJellyState(s, timestamp);
     updateFreezeZoneState(s, timestamp);
@@ -3568,16 +4012,20 @@
     } else {
       if (s.x - s.radius < 4) {
         s.x = s.radius + 4;
-        s.vx = clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
+        s.vx = drillActive ? Math.max(0, s.vx) : clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
         run.shake = Math.max(run.shake, 3);
       }
       if (s.x + s.radius > VIEW_W - 4) {
         s.x = VIEW_W - s.radius - 4;
-        s.vx = -clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
+        s.vx = drillActive ? Math.min(0, s.vx) : -clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
         run.shake = Math.max(run.shake, 3);
       }
     }
-    if (run.effects.gravitySwitch && s.y - s.radius < 4) {
+    if (!launchArrivalActive && drillActive && s.y - s.radius < 4) {
+      s.y = s.radius + 4;
+      s.vy = Math.max(0, s.vy);
+    }
+    if (!launchArrivalActive && run.effects.gravitySwitch && s.y - s.radius < 4) {
       s.y = s.radius + 4;
       s.vy = Math.max(78, Math.abs(s.vy) * .58);
       run.gravitySwitchFlashUntil = timestamp + 520;
@@ -3590,7 +4038,7 @@
     run.maxDepth = Math.max(run.maxDepth, run.depth);
 
     const collisions = blocksNearY(s.y, s.radius)
-      .filter(block => !block.dead && !blockHiddenByPortalExit(block) && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
+      .filter(block => !block.dead && !block.blackHoleSuctionStartedAt && timestamp >= (block.snowballGhostUntil || 0) && !blockHiddenByPortalExit(block) && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
       .map(block => ({ block, collision: circleRectCollision(s, block) }))
       .filter(item => item.collision)
       .sort((a, b) => b.collision.penetration - a.collision.penetration);
@@ -3617,17 +4065,29 @@
       return;
     }
 
-    const targetCamera = clamp(s.y - 158, 0, run.portalY - VIEW_H + 105);
-    run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * 4.25, 0, 1));
+    if (launchArrivalActive) {
+      const entryProgress = clamp((timestamp - run.launchEntryStartedAt) / Math.max(1, run.launchEntryUntil - run.launchEntryStartedAt), 0, 1);
+      const cameraProgress = clamp((entryProgress - .1) / .68, 0, 1);
+      const cameraEase = 1 - Math.pow(1 - cameraProgress, 3);
+      run.cameraY = lerp(-68, 0, cameraEase);
+    } else {
+      const targetCamera = clamp(s.y - 158, 0, run.portalY - VIEW_H + 105);
+      run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * 4.25, 0, 1));
+    }
 
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt * 20);
-    run.visualHealth = lerp(run.visualHealth, Math.max(0, run.health), clamp(dt * 11, 0, 1));
-    const healthScale = .82 + .18 * Math.sqrt(clamp(run.health / Math.max(1, run.startHealth), 0, 1));
+    run.visualHealth = run.health;
+    const healthScale = 1;
     const growthScale = run.effects.blockGrowth ? 1 + Math.min(1.15, (run.growthStacks || 0) * .025) : 1;
-    s.radius = lerp(s.radius, 28 * healthScale * growthScale, clamp(dt * 5.5, 0, 1));
+    const massRadius = massRadiusForLevel(elementalLevel('mass'), run.cellSize);
+    const normalRadius = massRadius * healthScale * growthScale;
+    const targetRadius = gigantismRadiusAt(timestamp, normalRadius);
+    const changingGigantism = gigantismActive(timestamp) || timestamp < (run.gigantismDeflateUntil || 0);
+    s.radius = lerp(s.radius, targetRadius, clamp(dt * (changingGigantism ? 19 : 5.5), 0, 1));
     if (run.healthFlashTime > 0) run.healthFlashTime = Math.max(0, run.healthFlashTime - dt);
 
     const speedNow = Math.hypot(s.vx, s.vy);
+    if (s.vy * gravityDirection < 185) resetMassPierce();
     if (speedNow < 34 && s.y > 180) run.lowMotionTime += dt;
     else run.lowMotionTime = 0;
     if (run.lowMotionTime > 1.0) {
@@ -3754,12 +4214,192 @@
   }
 
   function fallSteeringVector() {
-    if (!run?.steer) return { x: 0, down: 0 };
+    if (!run?.steer) return { x: 0, y: 0, down: 0 };
     const keyboardX = Number(run.steer.keyRight) - Number(run.steer.keyLeft);
+    const keyboardY = Number(run.steer.keyDown) - Number(run.steer.keyUp);
+    const y = clamp(keyboardY + (run.steer.touchY || 0), -1, 1);
     return {
       x: clamp(keyboardX + (run.steer.touchX || 0), -1, 1),
-      down: clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1)
+      y,
+      down: clamp(Math.max(y, Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1)
     };
+  }
+
+  function applySpeedDrillSteering(slime, dt) {
+    const steering = fallSteeringVector();
+    const inputLength = Math.hypot(steering.x, steering.y);
+    const currentSpeed = Math.max(1, Math.hypot(slime.vx, slime.vy));
+    const driveSpeed = windTornadoActive() ? 455 : 500;
+    let directionX = slime.vx / currentSpeed;
+    let directionY = slime.vy / currentSpeed;
+    if (inputLength > .08) {
+      directionX = steering.x / inputLength;
+      directionY = steering.y / inputLength;
+    } else if (currentSpeed < 80) {
+      directionX = 0;
+      directionY = 1;
+    }
+    const response = clamp(dt * (inputLength > .08 ? 11 : 5.5), 0, 1);
+    slime.vx = lerp(slime.vx, directionX * driveSpeed, response);
+    slime.vy = lerp(slime.vy, directionY * driveSpeed, response);
+  }
+
+  function updateSpeedPassive(dt, timestamp = performance.now()) {
+    if (!run) return;
+    const level = elementalLevel('mobility');
+    const steering = fallSteeringVector();
+    const downHeld = steering.down > .12;
+    const pressureTarget = level >= 1 && downHeld ? steering.down : 0;
+    const pressureStep = dt * 1000 / SPEED_PRESSURE_RAMP_MS;
+    run.speedPressure = pressureTarget > run.speedPressure
+      ? Math.min(pressureTarget, run.speedPressure + pressureStep)
+      : Math.max(pressureTarget, run.speedPressure - pressureStep);
+
+    if (run.speedBurstBlocksLeft > 0 && timestamp >= run.speedBurstUntil) {
+      run.speedBurstBlocksLeft = 0;
+      run.speedBurstUntil = 0;
+    }
+    if (level < 2) {
+      run.speedBurstChargeMs = 0;
+      run.speedBurstReady = false;
+      run.speedBurstBlocksLeft = 0;
+      run.speedBurstUntil = 0;
+      return;
+    }
+    if (run.speedBurstReady || run.speedBurstBlocksLeft > 0 || speedDrillActive(timestamp) || isSlimeFrozen(timestamp)) return;
+    if (downHeld && run.slime.vy > 35) {
+      run.speedBurstChargeMs = Math.min(SPEED_BURST_CHARGE_MS, run.speedBurstChargeMs + dt * 1000 * steering.down);
+      if (run.speedBurstChargeMs >= SPEED_BURST_CHARGE_MS) {
+        run.speedBurstReady = true;
+        impact('БУР-РЫВОК ГОТОВ');
+        sound('tap');
+        feedback(7);
+      }
+    }
+  }
+
+  function updateWindDash(timestamp = performance.now()) {
+    if (!run) return;
+    if (run.windDashBlocksLeft > 0 && timestamp >= run.windDashUntil) {
+      run.windDashBlocksLeft = 0;
+      run.windDashUntil = 0;
+    }
+  }
+
+  function windDashActive(timestamp = performance.now()) {
+    return Boolean(run && elementalLevel('wind') >= 2 && run.windDashBlocksLeft > 0 && timestamp < run.windDashUntil);
+  }
+
+  function windDashPiercesBlock(block, timestamp = performance.now()) {
+    return Boolean(windDashActive(timestamp) && block && !block.unbreakable && !block.hazard);
+  }
+
+  function consumeWindDashBlock(timestamp = performance.now()) {
+    if (!windDashActive(timestamp)) return 0;
+    run.windDashBlocksLeft = Math.max(0, run.windDashBlocksLeft - 1);
+    if (run.windDashBlocksLeft <= 0) {
+      run.windDashUntil = 0;
+      run.windDashCooldownUntil = timestamp + 520;
+    }
+    return run.windDashBlocksLeft;
+  }
+
+  function speedBurstPiercesBlock(block, isFalling, timestamp = performance.now()) {
+    if (!run || elementalLevel('mobility') < 2 || speedDrillActive(timestamp) || block.unbreakable || !isFalling) return false;
+    if (run.speedBurstBlocksLeft > 0) return timestamp < run.speedBurstUntil;
+    if (!run.speedBurstReady) return false;
+    run.speedBurstReady = false;
+    run.speedBurstChargeMs = 0;
+    run.speedBurstBlocksLeft = Math.random() < .5 ? 2 : 3;
+    run.speedBurstUntil = timestamp + SPEED_BURST_WINDOW_MS;
+    const gravityDirection = Math.sign(run.gravityDirection || 1);
+    run.slime.vx *= .35;
+    run.slime.vy = gravityDirection * Math.max(430, Math.abs(run.slime.vy));
+    run.shake = Math.max(run.shake, 5);
+    feedback([8, 12, 8]);
+    return true;
+  }
+
+  function consumeSpeedBurstBlock(timestamp = performance.now()) {
+    run.speedBurstBlocksLeft = Math.max(0, run.speedBurstBlocksLeft - 1);
+    const gravityDirection = Math.sign(run.gravityDirection || 1);
+    if (run.speedBurstBlocksLeft > 0) {
+      run.slime.vy = gravityDirection * Math.max(430, Math.abs(run.slime.vy));
+    } else {
+      run.speedBurstUntil = 0;
+      run.slime.vy = gravityDirection * Math.max(250, Math.abs(run.slime.vy) * .72);
+    }
+    return run.speedBurstBlocksLeft;
+  }
+
+  function cosmosBoostActive() {
+    return Boolean(run && elementalLevel('cosmos') >= 2 && run.cosmosBoostBlocksLeft > 0);
+  }
+
+  function consumeCosmosBoostBlock(timestamp = performance.now()) {
+    if (!cosmosBoostActive()) return 0;
+    run.cosmosBoostBlocksLeft = Math.max(0, run.cosmosBoostBlocksLeft - 1);
+    if (run.cosmosBoostBlocksLeft > 0 && run.gravityDirection > 0) {
+      run.slime.vy = Math.max(440, Math.abs(run.slime.vy));
+    } else if (run.cosmosBoostBlocksLeft <= 0) {
+      run.cosmosCometCharge = 0;
+      run.cosmosCometFadeUntil = timestamp + 420;
+    }
+    return run.cosmosBoostBlocksLeft;
+  }
+
+  function igniteCosmosComet(timestamp = performance.now()) {
+    if (!run || run.cosmosBoostBlocksLeft > 0) return false;
+    run.cosmosReverseReady = false;
+    run.cosmosAscentDistance = 0;
+    run.cosmosFallDistance = 0;
+    run.cosmosCometCharge = 1;
+    run.cosmosCometIgnitedAt = timestamp;
+    run.cosmosBoostBlocksLeft = 5;
+    run.slime.vx *= .62;
+    run.slime.vy = Math.max(500, Math.abs(run.slime.vy) * 1.34);
+    run.shake = Math.max(run.shake, 6.5);
+    pushElementalEffect('cosmosBoost', run.slime.x, run.slime.y, { life: .76, maxLife: .76, ignition: true });
+    impact('КОМЕТА · ПРОБОЙ 5 БЛОКОВ');
+    sound('epic');
+    feedback([9, 16, 10]);
+    return true;
+  }
+
+  function updateCosmosCometEntry(previousY, timestamp = performance.now()) {
+    if (!run || elementalLevel('cosmos') < 2) return;
+    const s = run.slime;
+    const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
+
+    if (gravityDirection < 0) {
+      if (s.y < previousY) run.cosmosAscentDistance += previousY - s.y;
+      if (run.cosmosAscentDistance >= run.cellSize * COSMOS_ASCENT_ARM_DISTANCE) run.cosmosReverseReady = true;
+      run.cosmosFallDistance = 0;
+      run.cosmosCometCharge = 0;
+      run.cosmosCometStartedAt = 0;
+      return;
+    }
+
+    if (cosmosBoostActive()) {
+      run.cosmosCometCharge = 1;
+      return;
+    }
+    if (!run.cosmosReverseReady) return;
+    if (s.vy <= 0) {
+      if (s.vy < -30) {
+        run.cosmosFallDistance = 0;
+        run.cosmosCometCharge = 0;
+        run.cosmosCometStartedAt = 0;
+      }
+      return;
+    }
+
+    if (!run.cosmosCometStartedAt) run.cosmosCometStartedAt = timestamp;
+    run.cosmosFallDistance += Math.max(0, s.y - previousY);
+    const distanceCharge = run.cosmosFallDistance / Math.max(1, run.cellSize * COSMOS_ENTRY_FALL_DISTANCE);
+    const speedCharge = (s.vy - 55) / 285;
+    run.cosmosCometCharge = clamp(Math.max(distanceCharge, speedCharge * .9), 0, 1);
+    if (run.cosmosCometCharge >= 1) igniteCosmosComet(timestamp);
   }
 
   function setSecretGravityDirection(direction, timestamp = performance.now()) {
@@ -3768,6 +4408,23 @@
     if (run.gravityDirection === nextDirection) return true;
     run.gravityDirection = nextDirection;
     run.slime.vy *= .55;
+    if (elementalLevel('cosmos') >= 2) {
+      if (nextDirection < 0) {
+        run.cosmosAscentDistance = 0;
+        run.cosmosReverseReady = false;
+        run.cosmosBoostBlocksLeft = 0;
+        run.cosmosFallDistance = 0;
+        run.cosmosCometCharge = 0;
+        run.cosmosCometStartedAt = 0;
+        run.cosmosCometFadeUntil = 0;
+      } else if (run.cosmosReverseReady) {
+        // Разворот вниз только запускает вход в атмосферу. Само усиление
+        // включится позже, когда слайм действительно наберёт скорость падения.
+        run.cosmosFallDistance = 0;
+        run.cosmosCometCharge = 0;
+        run.cosmosCometStartedAt = 0;
+      }
+    }
     run.gravitySwitchFlashUntil = timestamp + 620;
     run.emotion = 'surprised';
     run.emotionUntil = timestamp + 420;
@@ -3777,7 +4434,8 @@
   }
 
   function applyFallSteering(slime, dt, timestamp = performance.now()) {
-    if (!run?.steer || run.portalEntry || isSlimeFrozen(timestamp)) return;
+    const launchControlLocked = run?.launchEntryStartedAt && timestamp < run.launchEntryStartedAt + 420;
+    if (!run?.steer || run.portalEntry || launchControlLocked || isSlimeFrozen(timestamp)) return;
     const steering = fallSteeringVector();
     const lockUntil = run.bounceControlLockUntil || 0;
     const restoreUntil = Math.max(lockUntil, run.bounceControlRestoreUntil || 0);
@@ -3786,9 +4444,14 @@
       : restoreUntil > lockUntil
         ? clamp((timestamp - lockUntil) / (restoreUntil - lockUntil), 0, 1)
         : 1;
-    if (Math.abs(steering.x) > .01 && steeringAuthority > 0) {
-      const controlSpeed = 220;
-      const acceleration = 250 * steeringAuthority;
+    const massControl = elementalLevel('mass') >= 2 ? .7 : 1;
+    const activeMassControl = run.elementalAbilityActive === 'mass' && timestamp < run.elementalAbilityUntil ? .35 : 1;
+    const mobilityLevel = elementalLevel('mobility');
+    const mobilityControl = [1, 1.12, 1.22, 1.22][mobilityLevel] || 1;
+    const effectiveAuthority = steeringAuthority * massControl * activeMassControl * mobilityControl;
+    if (Math.abs(steering.x) > .01 && effectiveAuthority > 0) {
+      const controlSpeed = [220, 245, 265, 265][mobilityLevel] || 220;
+      const acceleration = [250, 300, 340, 340][mobilityLevel] * effectiveAuthority;
       const nextVx = slime.vx + steering.x * acceleration * dt;
       slime.vx = Math.sign(nextVx) === Math.sign(steering.x)
         ? Math.sign(steering.x) * Math.min(Math.abs(nextVx), controlSpeed)
@@ -3796,8 +4459,12 @@
     }
     // Downward input increases weight only after the rebound has established
     // its trajectory; holding it can never flatten an impact into a block.
-    if (steering.down > .01 && steeringAuthority > 0) {
-      slime.vy += 235 * steering.down * steeringAuthority * dt;
+    if (steering.down > .01 && effectiveAuthority > 0) {
+      const pressure = mobilityLevel >= 1 ? run.speedPressure || 0 : 0;
+      const diveAcceleration = mobilityLevel >= 1 ? 300 + pressure * 420 : 235;
+      const baseTerminalSpeed = BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld;
+      const maxDiveSpeed = baseTerminalSpeed * (1 + pressure * .5);
+      slime.vy = Math.min(maxDiveSpeed, slime.vy + diveAcceleration * steering.down * effectiveAuthority * dt);
     }
   }
 
@@ -3914,9 +4581,13 @@
     const hazardRatio = clamp((inwardSpeed - 45) / 375, 0, 1);
     const regularCurve = regularRatio * regularRatio * (3 - 2 * regularRatio);
     const hazardCurve = hazardRatio * hazardRatio * (3 - 2 * hazardRatio);
-    const normalSpeed = hazard
+    const baseNormalSpeed = hazard
       ? lerp(195, 285, hazardCurve)
       : lerp(BALANCE.bounceMin, BALANCE.bounceMax, regularCurve);
+    const mobilityLevel = elementalLevel('mobility');
+    const pressure = mobilityLevel >= 1 ? run.speedPressure || 0 : 0;
+    const downwardBounceScale = ny < -.45 ? 1 - pressure * .25 : 1;
+    const normalSpeed = baseNormalSpeed * downwardBounceScale;
     const tangentKeep = hazard ? .32 : .50;
     let tangentX = (slime.vx - incomingNormal * nx) * tangentKeep;
     let tangentY = (slime.vy - incomingNormal * ny) * tangentKeep;
@@ -3937,7 +4608,7 @@
     if (Math.abs(steering.x) > .01) {
       if (Math.abs(nx) < .34) {
         // На горизонтальной поверхности ввод лишь направляет следующий полёт.
-        const steeringAssist = hazard ? 82 : lerp(46, 78, regularCurve);
+        const steeringAssist = (hazard ? 82 : lerp(46, 78, regularCurve)) * (1 + mobilityLevel * .2);
         slime.vx = clamp(slime.vx * .52 + steering.x * steeringAssist, -BALANCE.sideBounceMax, BALANCE.sideBounceMax);
       } else if (Math.sign(steering.x) === Math.sign(nx)) {
         // У боковой стенки разрешено помочь отскоку наружу, но не продавить её.
@@ -3945,9 +4616,41 @@
       }
     }
 
+    const windLevel = elementalLevel('wind');
+    if (windLevel >= 1 && !windTornadoActive(timestamp)) {
+      const beforeWind = Math.max(1, Math.hypot(slime.vx, slime.vy));
+      const windBoost = 1.13 + regularCurve * .09;
+      const boostedSpeed = Math.min(425, beforeWind * windBoost + 18);
+      slime.vx = slime.vx / beforeWind * boostedSpeed;
+      slime.vy = slime.vy / beforeWind * boostedSpeed;
+      run.windBounceFlashUntil = timestamp + 360;
+      pushElementalEffect('windBounce', slime.x, slime.y, { life: .42, maxLife: .42 });
+
+      if (windLevel >= 2
+        && boostedSpeed >= 285
+        && !windDashActive(timestamp)
+        && timestamp >= (run.windDashCooldownUntil || 0)) {
+        run.windDashBlocksLeft = 3;
+        run.windDashUntil = timestamp + 1450;
+        run.windDashCooldownUntil = timestamp + 2050;
+        const dashScale = 390 / Math.max(1, boostedSpeed);
+        if (boostedSpeed < 390) {
+          slime.vx *= dashScale;
+          slime.vy *= dashScale;
+        }
+        run.shake = Math.max(run.shake, 4.5);
+        pushElementalEffect('windDash', slime.x, slime.y, { life: .62, maxLife: .62 });
+        impact('ВОЗДУШНЫЙ РЫВОК · 3 БЛОКА');
+        sound('epic');
+        feedback([7, 11, 7]);
+      }
+    }
+
+    const lockReduction = mobilityLevel >= 2 ? 70 : mobilityLevel >= 1 ? 42 : 0;
+    const restoreReduction = mobilityLevel >= 2 ? 155 : mobilityLevel >= 1 ? 90 : 0;
     run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + (hazard ? 70 : 20);
-    run.bounceControlLockUntil = timestamp + (hazard ? 70 : 90);
-    run.bounceControlRestoreUntil = timestamp + (hazard ? 250 : 285);
+    run.bounceControlLockUntil = timestamp + Math.max(10, (hazard ? 70 : 90) - lockReduction);
+    run.bounceControlRestoreUntil = timestamp + Math.max(75, (hazard ? 250 : 285) - restoreReduction);
   }
 
   function activateJellyBounce(block, collision, timestamp) {
@@ -3995,23 +4698,641 @@
     return true;
   }
 
+  function resolveHazardHit(block, collision, timestamp) {
+    const slime = run.slime;
+    const centerX = block.x + block.w / 2;
+    const centerY = block.y + block.h / 2;
+    block.dead = true;
+    block.hp = 0;
+    run.blocksDestroyed += 1;
+    createDebris(block, 16, true);
+    spawnSpecialBurst('bomb', centerX, centerY);
+    run.shake = Math.max(run.shake, 8.5);
+
+    // Во время двухсекундной неуязвимости опасности всё равно исчезают,
+    // но больше не отнимают сердца и не запирают слайма в группе блоков.
+    if (timestamp < run.damageInvulnerableUntil) {
+      sound('break');
+      return false;
+    }
+
+    const healthBefore = run.health;
+    run.health = Math.max(0, run.health - 1);
+    run.lastLostHeartIndex = Math.max(0, healthBefore - 1);
+    run.lastHeartLossAt = timestamp;
+    run.damageInvulnerableUntil = timestamp + 2000;
+    run.hurtSlowUntil = Math.max(run.hurtSlowUntil || 0, timestamp + 380);
+    run.hurtFlashUntil = timestamp + 2000;
+    run.healthFlash = -1;
+    run.healthFlashTime = .34;
+    run.emotion = 'hurt';
+    run.emotionUntil = timestamp + 620;
+    run.flightDistance = 0;
+    resetCombo();
+
+    slime.x += collision.nx * (collision.penetration + 7);
+    slime.y += collision.ny * (collision.penetration + 7);
+    applyBlockBounce(slime, collision, { hazard: true, timestamp });
+    slime.vx += collision.nx * 58;
+    slime.vy += collision.ny * 58;
+
+    impact('−1 СЕРДЦЕ');
+    sound('hitHard');
+    feedback([18, 28, 12]);
+    updateRunUI();
+    if (run.health <= 0) endRun(false, 'У слайма закончились сердца');
+    return true;
+  }
+
+  function elementalLevel(type) {
+    return clamp(Math.round(run?.categoryVisuals?.[type] || 0), 0, 3);
+  }
+
+  function speedDrillActive(timestamp = performance.now()) {
+    return Boolean(run?.elementalAbilityActive === 'mobility' && timestamp < run.elementalAbilityUntil);
+  }
+
+  function windTornadoActive(timestamp = performance.now()) {
+    return Boolean(run?.elementalAbilityActive === 'wind' && timestamp < run.elementalAbilityUntil);
+  }
+
+  function gigantismActive(timestamp = performance.now()) {
+    return Boolean(run?.elementalAbilityActive === 'gigantism' && timestamp < run.elementalAbilityUntil);
+  }
+
+  function gigantismRadiusAt(timestamp, normalRadius) {
+    if (!run || elementalLevel('gigantism') < 3) return normalRadius;
+    const giantRadius = run.cellSize * 2;
+    if (gigantismActive(timestamp)) {
+      const progress = clamp((timestamp - (run.gigantismStartedAt || timestamp)) / 245, 0, 1);
+      const offset = progress - 1;
+      const inflated = 1 + 2.72 * offset * offset * offset + 1.72 * offset * offset;
+      return lerp(normalRadius, giantRadius, inflated);
+    }
+    if (timestamp < (run.gigantismDeflateUntil || 0)) {
+      const duration = Math.max(1, run.gigantismDeflateUntil - run.gigantismDeflateStartedAt);
+      const progress = clamp((timestamp - run.gigantismDeflateStartedAt) / duration, 0, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const wobble = Math.sin(progress * Math.PI * 5) * (1 - progress) * normalRadius * .16;
+      return Math.max(normalRadius, lerp(giantRadius, normalRadius, eased) + wobble);
+    }
+    return normalRadius;
+  }
+
+  function massRadiusForLevel(level, cellSize = BALANCE.gridCell) {
+    if (level >= 2) return cellSize * .88;
+    if (level >= 1) return cellSize * .66;
+    return 28;
+  }
+
+  function resetMassPierce() {
+    if (!run) return;
+    run.massPierceRowsLeft = 0;
+    run.massPierceStrongLeft = 0;
+    run.massPierceRows?.clear?.();
+    run.massPierceTriggered = false;
+  }
+
+  function prepareMassPierce(impactSpeed, isFalling) {
+    const level = elementalLevel('mass');
+    const triggerSpeed = level >= 2 ? 150 : 180;
+    if (level < 1 || !isFalling || impactSpeed < triggerSpeed || run.massPierceTriggered) return;
+    run.massPierceTriggered = true;
+    run.massPierceRowsLeft = level >= 2 ? Math.floor(rand(4, 7)) : Math.floor(rand(2, 5));
+    run.massPierceStrongLeft = level >= 2 ? Math.floor(rand(1, 4)) : 0;
+    run.massPierceRows.clear();
+  }
+
+  function massPiercesBlock(block, timestamp = performance.now()) {
+    if (!elementalDamageable(block) || block.special || block.hazard || block.tier === 'ore') return false;
+    const active = run.elementalAbilityActive === 'mass' && timestamp < run.elementalAbilityUntil;
+    if (active) return true;
+    const ordinary = block.tier === 'soft' || block.tier === 'dense';
+    if (ordinary) {
+      if (run.massPierceRows.has(block.row)) return true;
+      if (run.massPierceRowsLeft <= 0) return false;
+      run.massPierceRows.add(block.row);
+      run.massPierceRowsLeft -= 1;
+      return true;
+    }
+    if (elementalLevel('mass') >= 2 && run.massPierceStrongLeft > 0 && ['hard', 'reinforced'].includes(block.tier)) {
+      run.massPierceStrongLeft -= 1;
+      return true;
+    }
+    return false;
+  }
+
+  function blockCenter(block) {
+    return { x: block.x + block.w / 2, y: block.y + block.h / 2 };
+  }
+
+  function nearbyGridBlocks(source, predicate = () => true) {
+    return (run?.blocks || []).filter(block => {
+      if (block === source || block.dead) return false;
+      const rowDistance = Math.abs(block.row - source.row);
+      const columnDistance = Math.abs(block.col - source.col);
+      return rowDistance <= 1 && columnDistance <= 1 && rowDistance + columnDistance > 0 && predicate(block);
+    });
+  }
+
+  function transferGigantismOverflow(source, amount, timestamp = performance.now()) {
+    if (!source || amount <= 0 || elementalLevel('gigantism') < 2) return false;
+    const candidates = nearbyGridBlocks(source, block => elementalDamageable(block)
+      && !block.hazard
+      && !block.special
+      && block.tier !== 'ore')
+      .sort((a, b) => {
+        const score = block => (block.row > source.row ? 100 : block.row === source.row ? 35 : 0)
+          - Math.abs(block.col - source.col) * 18
+          + block.row;
+        return score(b) - score(a);
+      });
+    const target = candidates[0];
+    if (!target) return false;
+    const from = blockCenter(source);
+    const to = blockCenter(target);
+    pushElementalEffect('gigantismOverflow', from.x, from.y, { toX: to.x, toY: to.y, amount });
+    damageBlockByElement(target, amount, 'gigantismOverflow', timestamp);
+    return true;
+  }
+
+  function elementalDamageable(block) {
+    return Boolean(block && !block.dead && !block.unbreakable);
+  }
+
+  function frostFreezable(block) {
+    return Boolean(
+      elementalDamageable(block)
+      && !block.hazard
+      && !block.special
+      && block.tier !== 'ore'
+      && !block.frozenOre
+    );
+  }
+
+  function goldEligible(block) {
+    return Boolean(elementalDamageable(block) && !block.hazard && !block.special);
+  }
+
+  function blockIsGolden(block, timestamp = performance.now()) {
+    return Boolean(goldEligible(block) && (block.elementalGolden || timestamp < (run?.goldRushUntil || 0)));
+  }
+
+  function goldifyBlock(block, timestamp = performance.now()) {
+    if (!goldEligible(block) || block.elementalGolden) return false;
+    block.elementalGolden = true;
+    block.goldFlashUntil = timestamp + 700;
+    block.maxHp = 1;
+    block.hp = 1;
+    createDebris(block, 3, false);
+    return true;
+  }
+
+  function throwGoldCoin(source, timestamp = performance.now()) {
+    const candidates = run.blocks
+      .filter(block => goldEligible(block) && !block.elementalGolden && block.row > source.row)
+      .map(block => ({ block, distance: block.row - source.row }))
+      .filter(item => item.distance <= 7)
+      .sort((a, b) => a.distance - b.distance + rand(-3, 3));
+    const target = candidates[Math.floor(Math.random() * Math.min(5, candidates.length))]?.block;
+    if (!target || !goldifyBlock(target, timestamp)) return false;
+    const from = blockCenter(source);
+    const to = blockCenter(target);
+    pushElementalEffect('coinArc', from.x, from.y, { toX: to.x, toY: to.y });
+    return true;
+  }
+
+  function triggerCategoryBlast(source, damage, timestamp = performance.now()) {
+    if (!source || run.categoryBlastDepth >= 2) return 0;
+    const center = blockCenter(source);
+    pushElementalEffect('categoryBlast', center.x, center.y, { damage });
+    const targets = nearbyGridBlocks(source, elementalDamageable);
+    run.categoryBlastDepth += 1;
+    let hit = 0;
+    try {
+      for (const target of targets) {
+        damageBlockByElement(target, damage, 'categoryBlast', timestamp);
+        hit += 1;
+      }
+    } finally {
+      run.categoryBlastDepth -= 1;
+    }
+    run.shake = Math.max(run.shake, damage >= 2 ? 5.5 : 3.5);
+    return hit;
+  }
+
+  function pushElementalEffect(type, x, y, extra = {}) {
+    if (!run?.specialEffects) return;
+    const life = type === 'electricArc' ? .42
+      : type === 'firePulse' ? .5
+        : type === 'frostTouch' ? .38
+          : type === 'snowShard' ? .72
+            : type === 'snowballArc' ? 1.02
+        : type === 'snowballKnockback' ? .62
+          : type === 'coinArc' ? .72
+            : type === 'categoryBlast' ? .48
+              : .58;
+    run.specialEffects.push({ type, x, y, life, maxLife: life, ...extra });
+    if (run.specialEffects.length > 36) run.specialEffects.shift();
+  }
+
+  function markFrostTransformation(block, timestamp, kind) {
+    block.frostTransformStartedAt = timestamp;
+    block.frostTransformDuration = kind === 'snowflake' ? 620 : 470;
+    block.frostReservedUntil = 0;
+    const center = blockCenter(block);
+    pushElementalEffect('frostTouch', center.x, center.y, { compact: kind !== 'snowflake' });
+  }
+
+  function turnBlockToSnow(block, timestamp = performance.now()) {
+    if (!frostFreezable(block) || block.elementalSnow || block.elementalSnowflake) return false;
+    ensureWorldSprites(2);
+    block.elementalSnow = true;
+    block.elementalFrozen = false;
+    block.elementalFrostPower = 0;
+    block.maxHp = 1;
+    block.hp = 1;
+    block.frostFlashUntil = timestamp + 520;
+    markFrostTransformation(block, timestamp, 'snow');
+    createDebris(block, 2, false);
+    return true;
+  }
+
+  function turnBlockToSnowflake(block, timestamp = performance.now()) {
+    if (!frostFreezable(block) || block.elementalSnowflake) return false;
+    ensureWorldSprites(2);
+    block.elementalSnow = false;
+    block.elementalSnowflake = true;
+    block.elementalFrozen = false;
+    block.maxHp = 1;
+    block.hp = 1;
+    block.frostFlashUntil = timestamp + 760;
+    markFrostTransformation(block, timestamp, 'snowflake');
+    return true;
+  }
+
+  function frostTargetAvailable(block, timestamp = performance.now()) {
+    return frostFreezable(block)
+      && !block.elementalSnow
+      && !block.elementalSnowflake
+      && timestamp >= (block.frostReservedUntil || 0);
+  }
+
+  function gridDistance(a, b) {
+    return Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col));
+  }
+
+  function chooseSpacedFrostTargets(candidates, count, source = null) {
+    const selected = [];
+    const tryDistance = minimum => {
+      for (const block of candidates) {
+        if (selected.length >= count) break;
+        if (selected.includes(block)) continue;
+        if (source && gridDistance(block, source) < 2) continue;
+        if (selected.every(other => gridDistance(block, other) >= minimum)) selected.push(block);
+      }
+    };
+    tryDistance(3);
+    if (selected.length < count) tryDistance(2);
+    return selected;
+  }
+
+  function reserveFrostProjectileTarget(block, timestamp, duration, delay = 0) {
+    block.frostReservedUntil = timestamp + (duration + delay + .3) * 1000;
+  }
+
+  function snowTargetScore(block, source, preferVisible = true) {
+    const center = blockCenter(block);
+    const downward = clamp((block.row - source.row) / 8, -1, 1);
+    const visible = center.y >= run.cameraY - run.cellSize && center.y <= run.cameraY + VIEW_H + run.cellSize;
+    return Math.random() * 1.8 + Math.max(0, downward) * 2.5 + (downward >= 0 ? 1.4 : 0) + (preferVisible && visible ? .8 : 0);
+  }
+
+  function scatterSnowShards(source, timestamp = performance.now()) {
+    if (elementalLevel('frost') < 2 || Math.random() >= .35) return 0;
+    const count = 2 + Math.floor(Math.random() * 4);
+    const maxY = run.cameraY + VIEW_H + run.cellSize * 4;
+    const ranked = run.blocks
+      .filter(block => frostTargetAvailable(block, timestamp) && block.row >= source.row + 2 && blockCenter(block).y <= maxY)
+      .map(block => ({ block, score: snowTargetScore(block, source, true) }))
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.block);
+    const candidates = chooseSpacedFrostTargets(ranked, count, source);
+    const from = blockCenter(source);
+    for (const block of candidates) {
+      const to = blockCenter(block);
+      const delay = candidates.indexOf(block) * .055;
+      reserveFrostProjectileTarget(block, timestamp, .72, delay);
+      pushElementalEffect('snowShard', from.x, from.y, {
+        toX: to.x, toY: to.y, targetBlockId: block.id, transformKind: 'snow', delay
+      });
+    }
+    return candidates.length;
+  }
+
+  function detonateSnowflakeBlock(source, timestamp = performance.now()) {
+    let transformed = 0;
+    for (const block of nearbyGridBlocks(source, frostFreezable)) {
+      if (turnBlockToSnow(block, timestamp)) transformed += 1;
+    }
+    const center = blockCenter(source);
+    pushElementalEffect('frostPulse', center.x, center.y);
+    run.shake = Math.max(run.shake, 3.8);
+    return transformed;
+  }
+
+  function seedFrostSnowflakes(timestamp = performance.now()) {
+    ensureWorldSprites(2);
+    const source = {
+      row: Math.floor((run.slime.y - 285) / run.cellSize),
+      col: Math.floor((run.slime.x - run.gridLeft) / run.cellSize)
+    };
+    const targetCount = 7 + Math.floor(Math.random() * 4);
+    const viewportBottom = run.cameraY + VIEW_H;
+    const candidates = run.blocks
+      .filter(block => frostTargetAvailable(block, timestamp) && block.row >= source.row + 3)
+      .map(block => {
+        const center = blockCenter(block);
+        const visible = center.y <= viewportBottom + run.cellSize;
+        const depthBonus = clamp((block.row - source.row) / 16, 0, 1) * 1.4;
+        return { block, score: snowTargetScore(block, source, visible) + depthBonus + Math.random() };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.block);
+    const targets = chooseSpacedFrostTargets(candidates, targetCount, source);
+    const origin = { x: run.slime.x, y: run.slime.y };
+    targets.forEach((block, index) => {
+      const target = blockCenter(block);
+      const delay = .16 + index * .115;
+      reserveFrostProjectileTarget(block, timestamp, 1.02, delay);
+      pushElementalEffect('snowballArc', origin.x, origin.y, {
+        toX: target.x, toY: target.y, targetBlockId: block.id, transformKind: 'snowflake', delay
+      });
+    });
+    return targets.length;
+  }
+
+  function igniteBlock(block, timestamp = performance.now(), auraId = 0) {
+    if (!elementalDamageable(block)) return false;
+    if (auraId && block.lastFireAuraId === auraId) return false;
+    if (auraId) block.lastFireAuraId = auraId;
+    if (block.fireDamageAt > timestamp) return false;
+    block.fireIgnitedAt = timestamp;
+    block.fireDamageAt = timestamp + 1000;
+    block.fireFlashUntil = block.fireDamageAt + 360;
+    return true;
+  }
+
+  function spreadFireFrom(source, timestamp) {
+    if (elementalLevel('fire') < 2) return;
+    const candidates = nearbyGridBlocks(source, elementalDamageable)
+      .filter(block => !(block.fireDamageAt > timestamp))
+      .sort(() => Math.random() - .5);
+    const target = candidates[0];
+    if (!target) return;
+    igniteBlock(target, timestamp);
+    const from = blockCenter(source);
+    const to = blockCenter(target);
+    pushElementalEffect('firePulse', to.x, to.y, { fromX: from.x, fromY: from.y });
+  }
+
+  function damageBlockByElement(block, amount, cause, timestamp = performance.now()) {
+    if (!elementalDamageable(block)) return false;
+    const damage = Math.max(0, amount);
+    block.hp = Math.max(0, block.hp - damage);
+    if (cause === 'electric') {
+      const blue = elementalLevel('electric') >= 3 || (run.elementalAbilityActive === 'electric' && timestamp < run.elementalAbilityUntil);
+      block.electricFlashStartedAt = timestamp;
+      block.electricFlashUntil = timestamp + 430;
+      block.electricFlashColor = blue ? 'blue' : 'yellow';
+    }
+    if (block.hp > 0) {
+      createDebris(block, 2, false);
+      return false;
+    }
+    block.hp = 0;
+    destroyBlock(block, cause, timestamp);
+    if (cause === 'fire') spreadFireFrom(block, timestamp);
+    return true;
+  }
+
+  function electricChainTargets(first, count) {
+    if (!first || count <= 0) return [];
+    const targets = [first];
+    const visited = new Set([first.id]);
+    let current = first;
+    while (targets.length < count) {
+      const preferSideStep = targets.length % 4 === 3 && Math.random() < .72;
+      const score = block => {
+        const rowStep = block.row - current.row;
+        const columnStep = Math.abs(block.col - current.col);
+        const direction = preferSideStep
+          ? (rowStep === 0 ? 95 : rowStep > 0 ? 62 : -55)
+          : (rowStep > 0 ? 112 : rowStep === 0 ? 38 : -68);
+        return direction - columnStep * 6 + block.row * 1.8 + rand(-13, 13);
+      };
+      const candidates = nearbyGridBlocks(current, elementalDamageable)
+        .filter(block => !visited.has(block.id))
+        .sort((a, b) => score(b) - score(a));
+      if (!candidates.length) break;
+      current = candidates[0];
+      visited.add(current.id);
+      targets.push(current);
+    }
+    return targets;
+  }
+
+  function strikeElectricChain(first, count, origin, timestamp = performance.now()) {
+    const targets = electricChainTargets(first, count);
+    if (!targets.length) return 0;
+    const points = [origin, ...targets.map(blockCenter)];
+    const blue = elementalLevel('electric') >= 3 || (run.elementalAbilityActive === 'electric' && timestamp < run.elementalAbilityUntil);
+    targets.forEach((block, index) => {
+      damageBlockByElement(block, 1, 'electric', timestamp);
+      block.electricFlashStartedAt = timestamp + index * 54;
+      block.electricFlashUntil = block.electricFlashStartedAt + 430;
+      block.electricFlashColor = blue ? 'blue' : 'yellow';
+    });
+    const life = .34 + targets.length * .075;
+    pushElementalEffect('electricArc', origin.x, origin.y, {
+      points, colorMode: blue ? 'blue' : 'yellow', seed: Math.random() * 1000, life, maxLife: life
+    });
+    return targets.length;
+  }
+
+  function dischargeFromImpact(source, count, timestamp) {
+    const candidates = nearbyGridBlocks(source, elementalDamageable).sort((a, b) => {
+      const score = block => (block.row > source.row ? 80 : block.row === source.row ? 24 : -45) + block.row * 1.4 + rand(-18, 18);
+      return score(b) - score(a);
+    });
+    const first = candidates[0];
+    return first ? strikeElectricChain(first, count, blockCenter(source), timestamp) : 0;
+  }
+
+  function startBlackHoleSuction(block, timestamp = performance.now()) {
+    if (!elementalDamageable(block) || block.blackHoleSuctionStartedAt) return false;
+    block.blackHoleSuctionStartedAt = timestamp;
+    block.blackHoleSuctionDuration = rand(420, 700);
+    block.blackHoleSuctionSpin = rand(-2.8, 2.8);
+    return true;
+  }
+
+  function updateBlackHoleSuction(timestamp = performance.now()) {
+    if (!run) return;
+    for (const block of run.blocks) {
+      if (block.dead || !block.blackHoleSuctionStartedAt) continue;
+      const progress = clamp((timestamp - block.blackHoleSuctionStartedAt) / Math.max(1, block.blackHoleSuctionDuration), 0, 1);
+      if (progress < 1) continue;
+      block.x = run.slime.x - block.w / 2;
+      block.y = run.slime.y - block.h / 2;
+      destroyBlock(block, 'cosmos', timestamp);
+    }
+  }
+
+  function pullBlocksIntoBlackHole(timestamp = performance.now()) {
+    const center = { x: run.slime.x, y: run.slime.y };
+    const radius = run.cellSize * 3.35;
+    const candidates = run.blocks
+      .filter(block => elementalDamageable(block) && !block.blackHoleSuctionStartedAt)
+      .map(block => ({ block, center: blockCenter(block) }))
+      .map(item => ({ ...item, distance: Math.hypot(item.center.x - center.x, item.center.y - center.y) }))
+      .filter(item => item.distance <= radius)
+      .sort((a, b) => a.distance - b.distance + rand(-9, 9));
+    let pulled = 0;
+    for (const item of candidates.slice(0, 4)) {
+      if (startBlackHoleSuction(item.block, timestamp + pulled * 28)) pulled += 1;
+    }
+    return pulled;
+  }
+
+  function updateElementalEffects(timestamp = performance.now()) {
+    if (!run || run.ended) return;
+
+    updateBlackHoleSuction(timestamp);
+
+    for (const block of run.blocks) {
+      if (block.dead || !block.fireDamageAt || timestamp < block.fireDamageAt) continue;
+      block.fireDamageAt = 0;
+      damageBlockByElement(block, 1, 'fire', timestamp);
+    }
+
+    const active = run.elementalAbilityActive;
+    if (!active) return;
+    if (timestamp >= run.elementalAbilityUntil) {
+      run.elementalAbilityActive = '';
+      run.elementalAbilityNextTickAt = 0;
+      if (active === 'mass') resetMassPierce();
+      if (active === 'gigantism') {
+        run.gigantismDeflateStartedAt = timestamp;
+        run.gigantismDeflateUntil = timestamp + 620;
+        run.emotion = 'surprised';
+        run.emotionUntil = timestamp + 620;
+        pushElementalEffect('gigantismDeflate', run.slime.x, run.slime.y, { life: .72, maxLife: .72 });
+        impact('ПШ-Ш-Ш… ОБРАТНО!');
+        feedback([5, 8, 4]);
+      }
+      return;
+    }
+    if (timestamp < run.elementalAbilityNextTickAt) return;
+
+    const center = { x: run.slime.x, y: run.slime.y };
+    if (active === 'frost') {
+      run.elementalAbilityNextTickAt = timestamp + 240;
+    } else if (active === 'electric') {
+      const candidates = run.blocks
+        .filter(elementalDamageable)
+        .map(block => ({ block, distance: Math.hypot(blockCenter(block).x - center.x, blockCenter(block).y - center.y) }))
+        .filter(item => item.distance <= run.cellSize * 2.45)
+        .sort((a, b) => (b.block.row - a.block.row) * 26 + a.distance - b.distance + rand(-18, 18));
+      if (candidates[0]) strikeElectricChain(candidates[0].block, 1 + Math.floor(Math.random() * 4), center, timestamp);
+      run.elementalAbilityNextTickAt = timestamp + 155;
+    } else if (active === 'fire') {
+      for (const block of run.blocks) {
+        if (!elementalDamageable(block)) continue;
+        const target = blockCenter(block);
+        if (Math.hypot(target.x - center.x, target.y - center.y) <= run.cellSize * 1.55) {
+          igniteBlock(block, timestamp, run.elementalAuraId);
+        }
+      }
+      run.elementalAbilityNextTickAt = timestamp + 220;
+    } else if (active === 'cosmos') {
+      pullBlocksIntoBlackHole(timestamp);
+      run.slime.vx *= .985;
+      run.slime.vy *= .985;
+      run.elementalAbilityNextTickAt = timestamp + 120;
+    } else if (active === 'mass') {
+      run.slime.vy = Math.max(390, run.slime.vy);
+      run.slime.vx *= .92;
+      run.massPierceTriggered = true;
+      run.elementalAbilityNextTickAt = timestamp + 50;
+    } else if (active === 'mobility') {
+      run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, run.elementalAbilityUntil);
+      run.elementalAbilityNextTickAt = timestamp + 90;
+    } else if (active === 'wind') {
+      run.elementalAbilityNextTickAt = timestamp + 70;
+    } else if (active === 'gigantism') {
+      run.slime.vy = Math.max(170, run.slime.vy);
+      run.elementalAbilityNextTickAt = timestamp + 70;
+    } else {
+      // Золотая лихорадка и цепная реакция срабатывают непосредственно при ударах.
+      run.elementalAbilityNextTickAt = timestamp + 180;
+    }
+  }
+
   function resolveBlockHit(block, collision, timestamp = performance.now()) {
     const s = run.slime;
-    if (block.special === 'pandora') return activatePandoraBox(block, timestamp);
-    if (block.special === 'jelly') return activateJellyBounce(block, collision, timestamp);
-    if (block.special === 'geyser') return activateGeyser(block, timestamp);
-    if (block.special === 'spring') return activateSpring(block, collision, timestamp);
+    const drillActive = speedDrillActive(timestamp) || windTornadoActive(timestamp);
+
+    const fireLevel = elementalLevel('fire');
+    const electricLevel = elementalLevel('electric');
+    if (fireLevel >= 1) igniteBlock(block, timestamp);
+    if (electricLevel >= 1) dischargeFromImpact(block, electricLevel >= 2 ? 1 + Math.floor(Math.random() * 4) : 1, timestamp);
+    if (block.dead) return false;
+
+    if (block.hazard) {
+      return resolveHazardHit(block, collision, timestamp);
+    }
+    if (block.special === 'pandora') {
+      return activatePandoraBox(block, timestamp);
+    }
+    if (block.special === 'jelly' && !drillActive) return activateJellyBounce(block, collision, timestamp);
+    if (block.special === 'geyser' && !drillActive) return activateGeyser(block, timestamp);
+    if (block.special === 'spring' && !drillActive) return activateSpring(block, collision, timestamp);
     const frozenSlime = isSlimeFrozen(timestamp);
     const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
     const isFalling = s.vy * gravityDirection > 0;
     const tierData = BLOCK_TIERS[block.tier] || BLOCK_TIERS.dense;
     const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
-    const unbreakable = Boolean(block.hazard || block.unbreakable);
-    // Урон всегда снимается с прочности один к одному. Опасный блок —
-    // исключение: это непробиваемая преграда, а не ещё один запас HP.
+    const unbreakable = Boolean(block.unbreakable);
     const shieldWasActive = run.barrier > 0;
     const bouncePowerUsed = Boolean(run.effects.bouncePower && run.bouncePowerReady);
-    let damage = Math.max(1, run.damage + (shieldWasActive && run.effects.shieldDamageBoost ? 25 : 0) + (bouncePowerUsed ? 30 : 0));
+    const gigantismLevel = elementalLevel('gigantism');
+    const gigantismPowered = gigantismActive(timestamp);
+    let damage = gigantismLevel >= 1 && !block.special && block.tier !== 'ore' ? 2 : 1;
+    if (gigantismPowered) damage = Math.max(damage, 3);
+    prepareMassPierce(impactSpeed, isFalling);
+    const frostLevel = elementalLevel('frost');
+    if (frostLevel >= 1 && frostFreezable(block) && !block.elementalSnow && !block.elementalSnowflake && block.hp > 1) {
+      turnBlockToSnow(block, timestamp);
+      damage = 0;
+    }
+    const goldLevel = elementalLevel('gold');
+    const goldenBeforeHit = blockIsGolden(block, timestamp);
+    let goldTransformed = false;
+    if (goldLevel >= 1 && goldEligible(block)) {
+      if (goldenBeforeHit) damage = block.hp;
+      else if (block.tier !== 'soft' && block.hp > 1) {
+        goldTransformed = goldifyBlock(block, timestamp);
+        if (goldTransformed) damage = 0;
+      }
+    }
+    const cosmosBoosted = cosmosBoostActive();
+    const cosmosPiercing = cosmosBoosted
+      && !unbreakable
+      && !block.special
+      && ['soft', 'dense', 'hard', 'reinforced'].includes(block.tier);
+    if (cosmosPiercing) damage = block.hp;
+    else if (cosmosBoosted && damage > 0) damage += 1;
     const hpBefore = block.hp;
     if (bouncePowerUsed) {
       run.bouncePowerReady = false;
@@ -4021,9 +5342,18 @@
     if (breaksOnTouch && !unbreakable) damage = hpBefore;
     const geyserPiercing = !unbreakable && run.geyserBreaksLeft > 0 && block.special !== 'geyser';
     if (geyserPiercing) damage = hpBefore;
-    const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || damage >= hpBefore);
+    const massPiercing = massPiercesBlock(block, timestamp);
+    if (massPiercing) damage = hpBefore;
+    const speedBurstPiercing = speedBurstPiercesBlock(block, isFalling, timestamp);
+    if (speedBurstPiercing) damage = hpBefore;
+    const windDashPiercing = windDashPiercesBlock(block, timestamp);
+    if (windDashPiercing) damage = hpBefore;
+    const drillPiercing = drillActive && !unbreakable;
+    if (drillPiercing) damage = hpBefore;
+    const gigantismOverflow = gigantismLevel >= 2 ? Math.max(0, damage - hpBefore) : 0;
+    const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || massPiercing || speedBurstPiercing || windDashPiercing || drillPiercing || damage >= hpBefore);
     const oreBlock = block.tier === 'ore' || block.frozenOre;
-    let healthLoss = unbreakable ? 30 : (destroysImmediately || oreBlock ? 0 : 5);
+    let healthLoss = 0;
     const regularBlock = !unbreakable && !block.special && !oreBlock;
     if (run.effects.blockGrowth && regularBlock) healthLoss = 0;
     if (frozenSlime || breaksOnTouch) healthLoss = 0;
@@ -4052,7 +5382,7 @@
       run.growthStacks = 0;
       run.growthResetUntil = timestamp + 560;
     }
-    if (healthLoss > 0) run.damageInvulnerableUntil = timestamp + 1000;
+    if (healthLoss > 0) run.damageInvulnerableUntil = timestamp + 2000;
     if (!frozenSlime) {
       run.healthFlash = healthLoss > 0 ? -1 : 1;
       run.healthFlashTime = .22;
@@ -4063,7 +5393,7 @@
       run.emotion = destroysImmediately ? 'impact' : healthLoss > 0 ? 'hurt' : 'focused';
       run.emotionUntil = timestamp + (destroysImmediately ? 260 : healthLoss > 0 ? 430 : 260);
     }
-    
+
     if (destroysImmediately) {
       block.hp = 0;
       const withinComboGrace = run.comboCount > 0 && timestamp <= run.comboGraceUntil;
@@ -4077,16 +5407,34 @@
         comboStepReached = comboResult.multiplierChanged;
       }
       else resetCombo();
-      destroyBlock(block, damage);
+      destroyBlock(block, 'impact', timestamp);
+      if (gigantismOverflow > 0) transferGigantismOverflow(block, gigantismOverflow, timestamp);
+      if (cosmosBoosted) consumeCosmosBoostBlock(timestamp);
       if (geyserPiercing) run.geyserBreaksLeft = Math.max(0, run.geyserBreaksLeft - 1);
-      const drag = block.tier === 'soft' ? BALANCE.weakBreakDrag : BALANCE.denseBreakDrag;
-      const travelDirection = Math.sign(s.vy) || gravityDirection;
-      s.vy = travelDirection * Math.max(110, Math.abs(s.vy) * drag * tierData.drag);
-      s.vx *= .95;
+      const speedBurstBlocksLeft = speedBurstPiercing ? consumeSpeedBurstBlock(timestamp) : -1;
+      const windDashBlocksLeft = windDashPiercing ? consumeWindDashBlock(timestamp) : -1;
+      if (!drillPiercing && !speedBurstPiercing && !windDashPiercing && !cosmosBoosted) {
+        const drag = block.tier === 'soft' ? BALANCE.weakBreakDrag : BALANCE.denseBreakDrag;
+        const travelDirection = Math.sign(s.vy) || gravityDirection;
+        s.vy = massPiercing
+          ? travelDirection * Math.max(310, Math.abs(s.vy) * .94)
+          : travelDirection * Math.max(110, Math.abs(s.vy) * drag * tierData.drag);
+        s.vx *= .95;
+      } else if (cosmosBoosted && run.cosmosBoostBlocksLeft > 0) {
+        s.vy = Math.max(440, Math.abs(s.vy));
+        s.vx *= .96;
+      } else if (windDashPiercing && windDashBlocksLeft > 0) {
+        const speed = Math.max(1, Math.hypot(s.vx, s.vy));
+        const keptSpeed = Math.max(390, speed);
+        s.vx = s.vx / speed * keptSpeed;
+        s.vy = s.vy / speed * keptSpeed;
+      }
       let keep = block.tier === 'soft' ? BALANCE.flightKeepSoft : block.tier === 'dense' || block.tier === 'special' || block.tier === 'ore' ? BALANCE.flightKeepDense : BALANCE.flightKeepHard;
       run.flightDistance *= keep;
 
-      if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
+      if (speedBurstPiercing) impact(speedBurstBlocksLeft > 0 ? `БУР-РЫВОК · ЕЩЁ ${speedBurstBlocksLeft}` : 'БУР-РЫВОК');
+      else if (windDashPiercing) impact(windDashBlocksLeft > 0 ? `ВОЗДУШНЫЙ РЫВОК · ЕЩЁ ${windDashBlocksLeft}` : 'ВОЗДУШНЫЙ РЫВОК');
+      else if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
       else if (!block.special && run.comboCount < 2) impact('ПРОБОЙ · БЕЗ УРОНА');
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
       if (shieldWasActive && run.barrier <= 0) finishShield(timestamp);
@@ -4096,6 +5444,7 @@
 
     preserveCombo(timestamp);
     if (!unbreakable) block.hp = Math.max(.05, block.hp - damage);
+    if (cosmosBoosted) consumeCosmosBoostBlock(timestamp);
     if (frozenSlime) {
       slideFrozenSlime(block, collision, timestamp);
       createDebris(block, 3, false);
@@ -4113,18 +5462,17 @@
     }
     run.flightDistance = 0;
 
-    const damageMessage = convertedHealth > 0
-      ? `ЩИТ · +${Math.round(convertedHealth)} HP`
-      : barrierAbsorbed > 0 && healthLoss <= 0
-        ? `ЩИТ −${Math.round(barrierAbsorbed)}`
-        : `−${Math.round(healthLoss)} HP`;
-    impact(block.special === 'spring'
-      ? `ПРУЖИНА · ${damageMessage}`
+    const hitsLeft = Math.max(1, Math.ceil(block.hp));
+    const hitsLabel = hitsLeft === 1 ? 'ЕЩЁ 1 УДАР' : `ЕЩЁ ${hitsLeft} УДАРА`;
+    impact(goldTransformed
+      ? 'БЛОК СТАЛ ЗОЛОТЫМ · ЕЩЁ 1 УДАР'
+      : block.special === 'spring'
+      ? 'ПРУЖИНА'
       : block.special === 'boss'
-        ? `СТРАЖ НЕДР · ${damageMessage} · ${Math.ceil(block.hp)} HP`
+        ? `СТРАЖ НЕДР · ${hitsLabel}`
         : unbreakable
-          ? `ОПАСНЫЙ БЛОК · ${damageMessage}`
-          : `РИКОШЕТ · ${damageMessage} · ${Math.ceil(block.hp)} HP`);
+          ? 'БЛОК НЕ ПОДДАЁТСЯ'
+          : `БЛОК ТРЕСНУЛ · ${hitsLabel}`);
     sound(block.special === 'spring' ? 'bounce' : block.hazard || block.special === 'boss' ? 'hitHard' : 'hit');
     createDebris(block, 3, false);
     if (shieldWasActive && run.barrier <= 0) finishShield(timestamp);
@@ -4264,12 +5612,17 @@
     run.comboGraceUntil = 0;
   }
 
-  function destroyBlock(block) {
+  function destroyBlock(block, cause = 'impact', timestamp = performance.now()) {
+    if (!block || block.dead) return;
+    if (typeof cause !== 'string') cause = 'impact';
+    const wasGolden = blockIsGolden(block, timestamp);
+    const wasSnow = Boolean(block.elementalSnow);
+    const wasSnowflake = Boolean(block.elementalSnowflake);
     block.dead = true;
     run.blocksDestroyed += 1;
     if (run.effects.blockGrowth) run.growthStacks = Math.min(46, (run.growthStacks || 0) + 1);
     registerBrokenBlock(block);
-    const reward = block.coins * run.comboMultiplier * run.coinMultiplier;
+    const reward = block.coins * run.comboMultiplier * run.coinMultiplier * (wasGolden ? 2 : 1);
     run.coins += reward;
     createDebris(block, block.special === 'geyser' ? 0 : block.special === 'bomb' ? 8 : 9, true);
 
@@ -4296,14 +5649,59 @@
       impact('СТРАЖ НЕДР ПОБЕЖДЁН!');
       sound('epic');
     }
+
+    if (wasSnowflake) detonateSnowflakeBlock(block, timestamp);
+    else if (wasSnow) scatterSnowShards(block, timestamp);
+
+    if (wasGolden && elementalLevel('gold') >= 2 && Math.random() < .35) {
+      throwGoldCoin(block, timestamp);
+    }
+
+    const explosionLevel = elementalLevel('explosion');
+    const chainActive = run.elementalAbilityActive === 'explosion' && timestamp < run.elementalAbilityUntil;
+    if (chainActive && run.categoryBlastDepth < 2) {
+      triggerCategoryBlast(block, 2, timestamp);
+    } else if (cause !== 'categoryBlast' && explosionLevel >= 1) {
+      run.blastCounter += 1;
+      const threshold = explosionLevel >= 2 ? 8 : 10;
+      if (run.blastCounter >= threshold) {
+        run.blastCounter = 0;
+        triggerCategoryBlast(block, explosionLevel >= 2 ? 2 : 1, timestamp);
+      }
+    }
   }
 
   function registerBrokenBlock(block) {
+    awardResearchData(block);
     if (!run?.effects?.breakHealEveryFive) return;
     run.blocksBrokenForHeal += 1;
     if (run.blocksBrokenForHeal % 5 !== 0) return;
     spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
     healRun(5, '5-Й СЛОМАННЫЙ БЛОК');
+  }
+
+  function awardResearchData(block) {
+    if (!run || !block || block.researchAwarded) return 0;
+    block.researchAwarded = true;
+    const amount = Math.max(0, Math.round(block.researchValue || 0));
+    if (!amount) return 0;
+    run.researchData += amount;
+    if (els.runResearchScore) els.runResearchScore.textContent = run.researchData.toLocaleString('ru-RU');
+    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Данные исследования за забег: ${run.researchData}`);
+    if (els.runResearchGain) {
+      els.runResearchGain.textContent = `+${amount}`;
+      els.runResearchGain.classList.remove('is-visible');
+      void els.runResearchGain.offsetWidth;
+      els.runResearchGain.classList.add('is-visible');
+      clearTimeout(runResearchPulseTimer);
+      runResearchPulseTimer = setTimeout(() => els.runResearchGain?.classList.remove('is-visible'), 460);
+    }
+    if (els.runResearchHud) {
+      els.runResearchHud.classList.remove('is-collecting');
+      void els.runResearchHud.offsetWidth;
+      els.runResearchHud.classList.add('is-collecting');
+    }
+    return amount;
   }
 
   function weakenCryoArea4x4(source) {
@@ -4403,6 +5801,7 @@
       if (block.dead || Math.abs(block.row - row) > 1 || Math.abs(block.col - col) > 1) continue;
       block.dead = true;
       run.blocksDestroyed += 1;
+      registerBrokenBlock(block);
       run.coins += block.coins * .6 * run.coinMultiplier;
       createDebris(block, 6, true);
       destroyed += 1;
@@ -4451,7 +5850,7 @@
 
   function healRun(amount, label = 'ЛЕЧЕНИЕ') {
     const before = run.health;
-    run.health = Math.min(run.maxHealth, run.health + amount);
+    run.health = Math.min(run.maxHealth, run.health + 1);
     const healed = Math.max(0, run.health - before);
     const timestamp = performance.now();
     run.healthFlash = 1;
@@ -4459,7 +5858,7 @@
     run.healGlowUntil = timestamp + 980;
     run.emotion = 'joy';
     run.emotionUntil = timestamp + 720;
-    impact(healed > 0 ? `${label} · +${Math.ceil(healed)} ЗДОРОВЬЯ` : `${label} · ЗДОРОВЬЕ ПОЛНОЕ`);
+    impact(healed > 0 ? `${label} · +1 СЕРДЦЕ` : `${label} · СЕРДЦА ПОЛНЫЕ`);
     sound('happy');
     feedback([7, 12, 7]);
   }
@@ -4667,12 +6066,119 @@
 
   function updateSpecialEffects(dt) {
     if (!run?.specialEffects) return;
-    for (const effect of run.specialEffects) effect.life -= dt;
+    const timestamp = performance.now();
+    for (const effect of run.specialEffects) {
+      if ((effect.delay || 0) > 0) {
+        effect.delay = Math.max(0, effect.delay - dt);
+        continue;
+      }
+      effect.life -= dt;
+      if (effect.life > 0 || effect.resolved || !effect.targetBlockId) continue;
+      effect.resolved = true;
+      const target = run.blocks.find(block => block.id === effect.targetBlockId);
+      if (!target || target.dead) continue;
+      if (effect.transformKind === 'snowflake') turnBlockToSnowflake(target, timestamp);
+      else if (effect.transformKind === 'snow') turnBlockToSnow(target, timestamp);
+      target.frostReservedUntil = 0;
+    }
     run.specialEffects = run.specialEffects.filter(effect => effect.life > 0);
   }
 
+  function activateElementalAbility(timestamp = performance.now()) {
+    const type = run?.elementalAbilityType;
+    if (!type || run.elementalAbilityCharges <= 0 || run.elementalAbilityActive) return false;
+    const duration = ELEMENTAL_ABILITY_DURATION_MS[type];
+    if (!duration) return false;
+    run.elementalAbilityCharges -= 1;
+    run.elementalAbilityActive = type;
+    run.elementalAbilityUntil = timestamp + duration;
+    run.elementalAbilityNextTickAt = timestamp;
+    run.elementalAuraId += 1;
+
+    if (type === 'frost') {
+      const seeded = seedFrostSnowflakes(timestamp);
+      pushElementalEffect('frostPulse', run.slime.x, run.slime.y, { ultimate: true });
+      impact(`СНЕЖНЫЙ ЗАЛП · ${seeded}`);
+    } else if (type === 'electric') {
+      pushElementalEffect('electricArc', run.slime.x, run.slime.y, {
+        points: [{ x: run.slime.x, y: run.slime.y }], colorMode: 'blue', burst: true, seed: Math.random() * 1000
+      });
+      impact('ЧИСТАЯ ЭНЕРГИЯ · 3с');
+    } else if (type === 'fire') {
+      impact('ЖИВОЕ ПЛАМЯ · 5с');
+    } else if (type === 'cosmos') {
+      pullBlocksIntoBlackHole(timestamp);
+      run.shake = Math.max(run.shake, 5);
+      impact('ЧЁРНАЯ ДЫРА · 3с');
+    } else if (type === 'gigantism') {
+      run.gigantismStartedAt = timestamp;
+      run.gigantismDeflateStartedAt = 0;
+      run.gigantismDeflateUntil = 0;
+      run.slime.vx *= .72;
+      run.slime.vy = Math.max(235, run.slime.vy);
+      run.shake = Math.max(run.shake, 8);
+      run.emotion = 'surprised';
+      run.emotionUntil = timestamp + 360;
+      pushElementalEffect('gigantismPulse', run.slime.x, run.slime.y, { life: .68, maxLife: .68 });
+      impact('ГИГАНТИЗМ · 3с');
+    } else if (type === 'wind') {
+      run.windDashBlocksLeft = 0;
+      run.windDashUntil = 0;
+      run.freezeUntil = Math.min(run.freezeUntil || timestamp, timestamp);
+      const steering = fallSteeringVector();
+      const inputLength = Math.hypot(steering.x, steering.y);
+      const currentSpeed = Math.max(1, Math.hypot(run.slime.vx, run.slime.vy));
+      const directionX = inputLength > .08 ? steering.x / inputLength : run.slime.vx / currentSpeed;
+      const directionY = inputLength > .08 ? steering.y / inputLength : run.slime.vy / currentSpeed;
+      run.slime.vx = directionX * 455;
+      run.slime.vy = directionY * 455;
+      run.shake = Math.max(run.shake, 6);
+      pushElementalEffect('windTornadoStart', run.slime.x, run.slime.y, { life: .72, maxLife: .72 });
+      impact('УПРАВЛЯЕМОЕ ТОРНАДО · 3с');
+    } else if (type === 'gold') {
+      run.goldRushUntil = run.elementalAbilityUntil;
+      pushElementalEffect('coinArc', run.slime.x, run.slime.y, { toX: run.slime.x, toY: run.slime.y + run.cellSize * 1.8 });
+      impact('ЗОЛОТАЯ ЛИХОРАДКА · 3с');
+    } else if (type === 'explosion') {
+      pushElementalEffect('categoryBlast', run.slime.x, run.slime.y, { damage: 2 });
+      impact('ЦЕПНАЯ РЕАКЦИЯ · 3с');
+    } else if (type === 'mass') {
+      resetMassPierce();
+      run.massPierceTriggered = true;
+      run.slime.vy = Math.max(390, run.slime.vy);
+      run.slime.vx *= .35;
+      impact('ТЯЖЁЛЫЙ РЫВОК · 4с');
+    } else if (type === 'mobility') {
+      run.speedBurstBlocksLeft = 0;
+      run.speedBurstUntil = 0;
+      run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, run.elementalAbilityUntil);
+      run.freezeUntil = Math.min(run.freezeUntil || timestamp, timestamp);
+      const steering = fallSteeringVector();
+      const inputLength = Math.hypot(steering.x, steering.y);
+      const currentSpeed = Math.hypot(run.slime.vx, run.slime.vy);
+      const directionX = inputLength > .08
+        ? steering.x / inputLength
+        : currentSpeed > 80 ? run.slime.vx / currentSpeed : 0;
+      const directionY = inputLength > .08
+        ? steering.y / inputLength
+        : currentSpeed > 80 ? run.slime.vy / currentSpeed : 1;
+      run.slime.vx = directionX * 430;
+      run.slime.vy = directionY * 430;
+      impact('СКОРОСТНОЙ БУР · 5с');
+    }
+    sound('epic');
+    feedback([12, 20, 12]);
+    updateRunUI();
+    return true;
+  }
+
   function activateAbility() {
-    if (!run || run.ended || run.paused || run.shieldCharges <= 0 || run.barrier > 0) return;
+    if (!run || run.ended || run.paused) return;
+    if (run.elementalAbilityCharges > 0 || run.elementalAbilityActive) {
+      activateElementalAbility();
+      return;
+    }
+    if (run.shieldCharges <= 0 || run.barrier > 0) return;
     run.shieldCharges -= 1;
     run.barrier = Math.max(0, run.shield);
     const timestamp = performance.now();
@@ -4701,6 +6207,8 @@
     const bestPosition = clamp(3 + bestRatio * 94, 3, 90);
     const showPreviousBest = !run.endless && previousBest > 0 && previousBest < targetDepth;
     els.depthLabel.textContent = `${currentDepth} М`;
+    if (els.runResearchScore) els.runResearchScore.textContent = Math.max(0, Math.floor(run.researchData || 0)).toLocaleString('ru-RU');
+    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Данные исследования за забег: ${Math.max(0, Math.floor(run.researchData || 0))}`);
     if (els.runCoinsGain) {
       const earnedCoins = Math.max(0, Math.floor(run.coins));
       els.runCoinsGain.textContent = `+${formatCompactNumber(earnedCoins)}`;
@@ -4712,15 +6220,69 @@
     els.routeBestLabel.textContent = showPreviousBest ? `ПРОШЛЫЙ ${previousBest} М` : '';
     els.routeBestMarker.style.left = `${bestPosition}%`;
     els.routeBestMarker.classList.toggle('hidden', !showPreviousBest);
-    els.runMassLabel.textContent = `${Math.max(0, Math.ceil(run.health))}/${Math.ceil(run.maxHealth)}`;
-    els.runHealthBar.style.width = `${clamp(run.health / Math.max(1, run.maxHealth) * 100, 0, 100)}%`;
-    els.runHealthBar.closest('.shaft-health')?.classList.toggle('is-low', run.health / Math.max(1, run.maxHealth) <= .3);
+    const currentHearts = clamp(Math.round(run.health), 0, 3);
+    const now = performance.now();
+    els.runHearts.forEach((heart, index) => {
+      heart.classList.toggle('is-empty', index >= currentHearts);
+      heart.classList.toggle('is-lost', index === run.lastLostHeartIndex && now - run.lastHeartLossAt < 620);
+    });
+    const heartLabel = `${currentHearts} из 3 сердец`;
+    if (els.runHeartCount) els.runHeartCount.textContent = String(currentHearts);
+    els.runHeartHud?.setAttribute('aria-label', heartLabel);
+    els.runHeartHud?.classList.toggle('is-low', currentHearts === 1);
+    els.runHeartHud?.classList.toggle('is-hit', now - run.lastHeartLossAt < 420);
+    els.runHeartHud?.querySelector('.run-hearts')?.setAttribute('aria-label', heartLabel);
+    const elementalActive = run.elementalAbilityActive && now < run.elementalAbilityUntil;
+    const showElemental = Boolean(elementalActive || run.elementalAbilityCharges > 0);
+    const abilityIcon = els.abilityBtn.querySelector('img');
+    if (showElemental) {
+      const type = run.elementalAbilityType;
+      const labels = {
+        frost: 'СНЕЖНЫЙ ЗАЛП',
+        electric: 'ЧИСТАЯ ЭНЕРГИЯ',
+        fire: 'ЖИВОЕ ПЛАМЯ',
+        cosmos: 'ЧЁРНАЯ ДЫРА',
+        gigantism: 'ГИГАНТИЗМ',
+        wind: 'ТОРНАДО',
+        gold: 'ЗОЛОТАЯ ЛИХОРАДКА',
+        explosion: 'ЦЕПНАЯ РЕАКЦИЯ',
+        mass: 'ТЯЖЁЛЫЙ РЫВОК',
+        mobility: 'СКОРОСТНОЙ БУР'
+      };
+      const icons = {
+        frost: 'frost-aligned.png',
+        electric: 'electricity-aligned.png',
+        fire: 'fire-aligned.png',
+        cosmos: 'mutation-cosmos.png',
+        gigantism: 'mutation-gigantism.png',
+        wind: 'mutation-wind.png?v=2',
+        gold: 'gold-aligned.png',
+        explosion: 'explosion-aligned.png',
+        mass: 'weight-aligned.png',
+        mobility: 'mobility-aligned.png'
+      };
+      const duration = ELEMENTAL_ABILITY_DURATION_MS[type] || 1;
+      const remaining = Math.max(0, run.elementalAbilityUntil - now);
+      const ready = run.elementalAbilityCharges > 0 && !elementalActive && !run.ended && !run.paused;
+      if (abilityIcon) abilityIcon.src = `assets/ui/recipe-categories/${icons[type]}`;
+      els.abilityPercent.textContent = elementalActive ? `${Math.max(.1, remaining / 1000).toFixed(1)}с` : `${run.elementalAbilityCharges}`;
+      els.abilityBtn.style.setProperty('--ability', `${elementalActive ? remaining / duration * 100 : 100}%`);
+      els.abilityBtn.disabled = !ready;
+      els.abilityBtn.classList.toggle('is-ready', ready);
+      els.abilityBtn.classList.toggle('is-active', Boolean(elementalActive));
+      els.abilityBtn.setAttribute('aria-label', elementalActive ? `${labels[type]} действует` : `Активировать: ${labels[type]}`);
+      els.abilityText.textContent = elementalActive ? `${labels[type]} · ${(remaining / 1000).toFixed(1)}с` : `${labels[type]} · 1 ЗАРЯД`;
+      return;
+    }
+
     const charges = clamp(Math.round(run.shieldCharges), 0, run.maxShieldCharges);
+    if (abilityIcon) abilityIcon.src = 'assets/ui/stat-defense.webp';
     els.abilityPercent.textContent = `${charges}`;
     els.abilityBtn.style.setProperty('--ability', `${charges / Math.max(1, run.maxShieldCharges) * 100}%`);
     els.abilityBtn.disabled = charges <= 0 || run.barrier > 0 || run.ended || run.paused;
     els.abilityBtn.classList.toggle('is-ready', charges > 0 && run.barrier <= 0 && !run.ended);
     els.abilityBtn.classList.toggle('is-active', run.barrier > 0);
+    els.abilityBtn.setAttribute('aria-label', 'Активировать барьер');
     els.abilityText.textContent = run.barrier > 0
       ? `ЩИТ ${Math.ceil(run.barrier)}/${Math.ceil(run.shield)} · ${charges}/${run.maxShieldCharges}`
       : `ЩИТ ${Math.ceil(run.shield)} · ${charges}/${run.maxShieldCharges}`;
@@ -4741,7 +6303,8 @@
     ctx.fillStyle = gradient;
     ctx.fillRect(-15, -15, VIEW_W + 30, VIEW_H + 30);
 
-    drawBackground(world);
+    drawBackground(world, timestamp);
+    drawLaunchEntryPortal(world, timestamp);
     drawHoneyZones(timestamp, false);
     drawJellyZones(timestamp, false);
     drawFreezeZones(timestamp, false);
@@ -4752,8 +6315,8 @@
       if (block.dead) continue;
       const sy = block.y - run.cameraY;
       if (sy < -60 || sy > VIEW_H + 60) continue;
-      visibleBlocks.push(block);
-      drawBlock(block, sy, timestamp);
+      if (!block.blackHoleSuctionStartedAt) visibleBlocks.push(block);
+      drawSuctionAwareBlock(block, sy, timestamp);
     }
 
     // A thin shared grid keeps every tile aligned without blending their art.
@@ -5206,13 +6769,363 @@
     if (!run.specialEffects?.length) return;
     ctx.save();
     for (const effect of run.specialEffects) {
+      if ((effect.delay || 0) > 0) continue;
       const slimeOverlay = false;
       if (slimeOverlay !== overlayOnly) continue;
       const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
       const alpha = Math.pow(1 - progress, .94);
       const y = effect.y - run.cameraY;
       ctx.save();
-      if (effect.type === 'bomb') {
+      if (effect.type === 'snowballKnockback') {
+        const travel = effect.maxLife * progress;
+        const blockX = effect.x + (effect.vx || 0) * travel;
+        const blockY = y + (effect.vy || 0) * travel + 150 * travel * travel;
+        ctx.translate(blockX, blockY);
+        ctx.rotate(progress * 1.25 * Math.sign(effect.vx || 1));
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = effect.color || '#43516b';
+        ctx.strokeStyle = '#ff6b3d';
+        ctx.lineWidth = 3;
+        ctx.fillRect(-(effect.width || 56) / 2, -(effect.height || 56) / 2, effect.width || 56, effect.height || 56);
+        ctx.strokeRect(-(effect.width || 56) / 2 + 2, -(effect.height || 56) / 2 + 2, (effect.width || 56) - 4, (effect.height || 56) - 4);
+      } else if (effect.type === 'frostTouch') {
+        const radius = (effect.compact ? 8 : 11) + progress * (effect.compact ? 25 : 34);
+        ctx.translate(effect.x, y);
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = alpha * .92;
+        const flash = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+        flash.addColorStop(0, 'rgba(255,255,255,.96)');
+        flash.addColorStop(.28, 'rgba(177,241,255,.78)');
+        flash.addColorStop(1, 'rgba(69,176,235,0)');
+        ctx.fillStyle = flash;
+        ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#f3feff';
+        ctx.lineWidth = 2.5 - progress * 1.2;
+        ctx.shadowColor = '#46c6ff';
+        ctx.shadowBlur = 11;
+        for (let ray = 0; ray < 8; ray += 1) {
+          const angle = ray * Math.PI / 4 + effect.x * .003;
+          const inner = radius * (.2 + progress * .08);
+          const outer = radius * (.58 + (ray % 2) * .2);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+          ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+          ctx.stroke();
+        }
+      } else if (effect.type === 'snowShard' || effect.type === 'snowballArc') {
+        const toX = Number.isFinite(effect.toX) ? effect.toX : effect.x;
+        const toY = Number.isFinite(effect.toY) ? effect.toY : effect.y;
+        const flight = 1 - Math.pow(1 - progress, 1.48);
+        const arcHeight = effect.type === 'snowballArc' ? 58 : 34;
+        const shardX = lerp(effect.x, toX, flight);
+        const shardY = lerp(effect.y, toY, flight) - run.cameraY - Math.sin(flight * Math.PI) * arcHeight;
+        const previousFlight = Math.max(0, flight - (effect.type === 'snowballArc' ? .085 : .065));
+        const trailX = lerp(effect.x, toX, previousFlight);
+        const trailY = lerp(effect.y, toY, previousFlight) - run.cameraY - Math.sin(previousFlight * Math.PI) * arcHeight;
+        const size = effect.type === 'snowballArc' ? 10.5 : 6.5;
+        ctx.globalAlpha = alpha * .68;
+        ctx.strokeStyle = effect.type === 'snowballArc' ? '#94eaff' : '#6fd7ff';
+        ctx.lineWidth = effect.type === 'snowballArc' ? 7 : 4;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#25baff';
+        ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.moveTo(trailX, trailY); ctx.lineTo(shardX, shardY); ctx.stroke();
+        ctx.translate(shardX, shardY);
+        ctx.rotate(progress * Math.PI * (effect.type === 'snowballArc' ? 3 : 5));
+        ctx.globalAlpha = alpha;
+        if (effect.type === 'snowballArc') {
+          const snow = ctx.createRadialGradient(-size * .3, -size * .38, 1, 0, 0, size);
+          snow.addColorStop(0, '#ffffff');
+          snow.addColorStop(.48, '#d9f8ff');
+          snow.addColorStop(1, '#64c9ec');
+          ctx.fillStyle = snow;
+          ctx.strokeStyle = '#187eaf';
+          ctx.lineWidth = 2.3;
+          ctx.shadowColor = '#5ad6ff';
+          ctx.shadowBlur = 13;
+          ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,.92)';
+          ctx.beginPath(); ctx.arc(-size * .3, -size * .35, size * .24, 0, Math.PI * 2); ctx.fill();
+        } else {
+          ctx.fillStyle = '#ecfcff';
+          ctx.strokeStyle = '#147cae';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#4bd1ff';
+          ctx.shadowBlur = 11;
+          ctx.beginPath();
+          ctx.moveTo(size * 1.25, 0);
+          ctx.lineTo(-size * .35, size * .72);
+          ctx.lineTo(-size, 0);
+          ctx.lineTo(-size * .25, -size * .68);
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+      } else if (effect.type === 'electricArc') {
+        const points = Array.isArray(effect.points) ? effect.points : [];
+        const blue = effect.colorMode === 'blue';
+        const outerColor = blue ? '#168dff' : '#ffb300';
+        const middleColor = blue ? '#5eeaff' : '#ffe13d';
+        const coreColor = blue ? '#efffff' : '#fffde1';
+        const arcAlpha = progress < .7 ? 1 : clamp((1 - progress) / .3, 0, 1);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        if (points.length > 1) {
+          const chainProgress = clamp(progress * 1.48, 0, 1) * (points.length - 1);
+          for (let index = 1; index < points.length; index += 1) {
+            const reveal = clamp(chainProgress - (index - 1), 0, 1);
+            if (reveal <= 0) continue;
+            const from = points[index - 1];
+            const to = points[index];
+            const endX = lerp(from.x, to.x, reveal);
+            const endY = lerp(from.y, to.y, reveal);
+            const dx = endX - from.x;
+            const dy = endY - from.y;
+            const length = Math.max(1, Math.hypot(dx, dy));
+            const normalX = -dy / length;
+            const normalY = dx / length;
+            const bolt = [];
+            const joints = Math.max(3, Math.ceil(length / 17));
+            for (let joint = 0; joint <= joints; joint += 1) {
+              const part = joint / joints;
+              const edgeFade = Math.sin(part * Math.PI);
+              const noise = Math.sin((effect.seed || 0) * 2.31 + index * 7.17 + joint * 11.83) * (blue ? 8 : 6) * edgeFade;
+              bolt.push({
+                x: lerp(from.x, endX, part) + normalX * noise,
+                y: lerp(from.y, endY, part) - run.cameraY + normalY * noise
+              });
+            }
+            const strokeBolt = (color, width, blur, opacity) => {
+              ctx.globalAlpha = arcAlpha * opacity;
+              ctx.strokeStyle = color;
+              ctx.lineWidth = width;
+              ctx.shadowColor = outerColor;
+              ctx.shadowBlur = blur;
+              ctx.beginPath();
+              bolt.forEach((point, pointIndex) => pointIndex ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+              ctx.stroke();
+            };
+            strokeBolt(outerColor, blue ? 8 : 7, blue ? 18 : 15, .34);
+            strokeBolt(middleColor, blue ? 4.1 : 3.7, blue ? 12 : 9, .96);
+            strokeBolt(coreColor, 1.45, 3, 1);
+
+            if (reveal > .72) {
+              const hit = clamp((reveal - .72) / .28, 0, 1) * arcAlpha;
+              ctx.globalCompositeOperation = 'screen';
+              ctx.globalAlpha = hit * .8;
+              ctx.fillStyle = coreColor;
+              ctx.shadowColor = middleColor;
+              ctx.shadowBlur = 14;
+              ctx.beginPath(); ctx.arc(endX, endY - run.cameraY, 3.5 + hit * 4, 0, Math.PI * 2); ctx.fill();
+              ctx.globalCompositeOperation = 'source-over';
+            }
+          }
+        } else {
+          const burst = 1 - progress;
+          const glowRadius = 22 + progress * 78;
+          const glow = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, glowRadius);
+          glow.addColorStop(0, `rgba(237,255,255,${burst * .92})`);
+          glow.addColorStop(.25, `rgba(55,218,255,${burst * .58})`);
+          glow.addColorStop(1, 'rgba(20,116,255,0)');
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(effect.x, y, glowRadius, 0, Math.PI * 2); ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+          for (let boltIndex = 0; boltIndex < 10; boltIndex += 1) {
+            const angle = boltIndex * Math.PI * 2 / 10 + (effect.seed || 0);
+            const reach = 28 + progress * (52 + boltIndex % 3 * 10);
+            const tx = -Math.sin(angle), ty = Math.cos(angle);
+            const electricPoints = [
+              [effect.x + Math.cos(angle) * 13, y + Math.sin(angle) * 13],
+              [effect.x + Math.cos(angle) * reach * .48 + tx * (boltIndex % 2 ? 7 : -7), y + Math.sin(angle) * reach * .48 + ty * (boltIndex % 2 ? 7 : -7)],
+              [effect.x + Math.cos(angle) * reach, y + Math.sin(angle) * reach]
+            ];
+            ctx.globalAlpha = arcAlpha * (.68 + (boltIndex % 3) * .12);
+            ctx.strokeStyle = boltIndex % 2 ? middleColor : coreColor;
+            ctx.lineWidth = boltIndex % 2 ? 3.2 : 2.1;
+            ctx.shadowColor = outerColor;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            electricPoints.forEach((point, pointIndex) => pointIndex ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
+            ctx.stroke();
+          }
+        }
+      } else if (effect.type === 'frostPulse') {
+        const ultimateScale = effect.ultimate ? 1.45 : 1;
+        const radius = (16 + progress * 70) * ultimateScale;
+        if (effect.ultimate) {
+          const burstAlpha = Math.max(0, 1 - progress * 1.85);
+          const glow = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, radius * 1.25);
+          glow.addColorStop(0, `rgba(255,255,255,${burstAlpha * .92})`);
+          glow.addColorStop(.22, `rgba(193,246,255,${burstAlpha * .68})`);
+          glow.addColorStop(1, 'rgba(55,181,238,0)');
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(effect.x, y, radius * 1.25, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = alpha * (effect.ultimate ? 1 : .9);
+        ctx.strokeStyle = '#dffcff';
+        ctx.lineWidth = (effect.ultimate ? 5.5 : 4) - progress * 2;
+        ctx.shadowColor = '#55cfff';
+        ctx.shadowBlur = effect.ultimate ? 19 : 12;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
+        const rayCount = effect.ultimate ? 12 : 6;
+        for (let ray = 0; ray < rayCount; ray += 1) {
+          const angle = ray * Math.PI * 2 / rayCount + progress * .24;
+          ctx.beginPath();
+          ctx.moveTo(effect.x + Math.cos(angle) * radius * .58, y + Math.sin(angle) * radius * .58);
+          ctx.lineTo(effect.x + Math.cos(angle) * radius * (1 + (ray % 3) * .12), y + Math.sin(angle) * radius * (1 + (ray % 3) * .12));
+          ctx.stroke();
+        }
+      } else if (effect.type === 'firePulse') {
+        const radius = 18 + progress * 78;
+        const activationFlash = !Number.isFinite(effect.fromX) && !Number.isFinite(effect.fromY)
+          ? Math.max(0, 1 - progress * 2.35)
+          : 0;
+        if (activationFlash > .01) {
+          const flashRadius = 28 + progress * 145;
+          const flash = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, flashRadius);
+          flash.addColorStop(0, `rgba(255,255,221,${activationFlash * .92})`);
+          flash.addColorStop(.2, `rgba(255,224,92,${activationFlash * .72})`);
+          flash.addColorStop(.58, `rgba(255,105,26,${activationFlash * .3})`);
+          flash.addColorStop(1, 'rgba(255,57,18,0)');
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = flash;
+          ctx.beginPath(); ctx.arc(effect.x, y, flashRadius, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = activationFlash * .88;
+          ctx.strokeStyle = '#fff3a0';
+          ctx.lineWidth = 3.4 - progress * 1.8;
+          for (let ray = 0; ray < 10; ray += 1) {
+            const angle = ray * Math.PI / 5 + progress * .22;
+            const inner = 22 + progress * 28;
+            const outer = inner + 28 + progress * 34;
+            ctx.beginPath();
+            ctx.moveTo(effect.x + Math.cos(angle) * inner, y + Math.sin(angle) * inner);
+            ctx.lineTo(effect.x + Math.cos(angle) * outer, y + Math.sin(angle) * outer);
+            ctx.stroke();
+          }
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        ctx.globalAlpha = alpha * .82;
+        ctx.strokeStyle = '#ffb52e';
+        ctx.lineWidth = 5 - progress * 2.5;
+        ctx.shadowColor = '#ff4a1f';
+        ctx.shadowBlur = 14;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
+        if (Number.isFinite(effect.fromX) && Number.isFinite(effect.fromY)) {
+          ctx.beginPath();
+          ctx.moveTo(effect.fromX, effect.fromY - run.cameraY);
+          ctx.quadraticCurveTo((effect.fromX + effect.x) / 2, (effect.fromY + effect.y) / 2 - run.cameraY - 18, effect.x, y);
+          ctx.stroke();
+        }
+      } else if (effect.type === 'coinArc') {
+        const toX = Number.isFinite(effect.toX) ? effect.toX : effect.x;
+        const toY = Number.isFinite(effect.toY) ? effect.toY : effect.y;
+        const coinX = lerp(effect.x, toX, progress);
+        const coinY = lerp(effect.y, toY, progress) - run.cameraY - Math.sin(progress * Math.PI) * 58;
+        ctx.translate(coinX, coinY);
+        ctx.rotate(progress * Math.PI * 5);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#ffd83d';
+        ctx.strokeStyle = '#fff2a0';
+        ctx.lineWidth = 2.4;
+        ctx.shadowColor = '#ffb41f';
+        ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.ellipse(0, 0, 10 * Math.abs(Math.cos(progress * Math.PI * 5)) + 2, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else if (effect.type === 'cosmosBoost') {
+        const burst = Math.max(0, 1 - progress * 1.35);
+        const radius = 12 + progress * run.cellSize * 2.15;
+        ctx.globalCompositeOperation = 'lighter';
+        const flash = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, radius * 1.18);
+        flash.addColorStop(0, `rgba(255,255,255,${burst * .95})`);
+        flash.addColorStop(.18, `rgba(225,181,255,${burst * .82})`);
+        flash.addColorStop(.52, `rgba(123,45,255,${burst * .46})`);
+        flash.addColorStop(1, 'rgba(44,15,124,0)');
+        ctx.fillStyle = flash;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius * 1.18, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#d8b6ff';
+        ctx.lineWidth = 6 - progress * 4;
+        ctx.shadowColor = '#8b35ff';
+        ctx.shadowBlur = 22;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
+        for (let ray = 0; ray < 11; ray += 1) {
+          const angle = ray * Math.PI * 2 / 11 + progress * .18;
+          ctx.strokeStyle = ray % 3 ? '#b66cff' : '#f7ebff';
+          ctx.lineWidth = ray % 3 ? 2.6 : 4;
+          ctx.beginPath();
+          ctx.moveTo(effect.x + Math.cos(angle) * radius * .38, y + Math.sin(angle) * radius * .38);
+          ctx.lineTo(effect.x + Math.cos(angle) * radius * (1.05 + ray % 2 * .22), y + Math.sin(angle) * radius * (1.05 + ray % 2 * .22));
+          ctx.stroke();
+        }
+      } else if (effect.type === 'windBounce' || effect.type === 'windDash' || effect.type === 'windTornadoStart') {
+        const dash = effect.type === 'windDash';
+        const tornado = effect.type === 'windTornadoStart';
+        const radius = 12 + progress * run.cellSize * (tornado ? 2.5 : dash ? 1.75 : 1.05);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = alpha * (tornado ? .92 : dash ? .82 : .58);
+        ctx.strokeStyle = tornado ? '#eaffff' : dash ? '#82f4ff' : '#bffcff';
+        ctx.lineWidth = (tornado ? 6 : dash ? 4.5 : 3.2) - progress * 2.2;
+        ctx.shadowColor = '#27cce8';
+        ctx.shadowBlur = tornado ? 20 : 13;
+        for (let ring = 0; ring < (tornado ? 4 : 2); ring += 1) {
+          const ringRadius = radius * (1 - ring * .12);
+          ctx.beginPath();
+          ctx.ellipse(effect.x, y - ring * 4, ringRadius, ringRadius * (.38 + ring * .045), progress * .35 + ring * .32, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      } else if (effect.type === 'gigantismOverflow') {
+        const toX = Number.isFinite(effect.toX) ? effect.toX : effect.x;
+        const toY = (Number.isFinite(effect.toY) ? effect.toY : effect.y) - run.cameraY;
+        const travel = 1 - Math.pow(1 - progress, 2.2);
+        const px = lerp(effect.x, toX, travel);
+        const py = lerp(y, toY, travel);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = alpha * .82;
+        ctx.strokeStyle = '#baff55';
+        ctx.lineWidth = 7 - progress * 4;
+        ctx.shadowColor = '#45dc42';
+        ctx.shadowBlur = 14;
+        ctx.beginPath(); ctx.moveTo(effect.x, y); ctx.quadraticCurveTo((effect.x + toX) / 2, (y + toY) / 2 - 12, px, py); ctx.stroke();
+        ctx.fillStyle = '#f4ffbd';
+        ctx.beginPath(); ctx.arc(px, py, 5 - progress * 2, 0, Math.PI * 2); ctx.fill();
+      } else if (effect.type === 'gigantismPulse' || effect.type === 'gigantismDeflate') {
+        const deflating = effect.type === 'gigantismDeflate';
+        const radius = deflating
+          ? run.cellSize * (2.2 - progress * 1.35)
+          : 18 + progress * run.cellSize * 2.5;
+        const burst = deflating ? Math.sin(progress * Math.PI) : Math.max(0, 1 - progress * 1.15);
+        ctx.globalCompositeOperation = 'lighter';
+        const glow = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, radius);
+        glow.addColorStop(0, `rgba(244,255,184,${burst * .72})`);
+        glow.addColorStop(.42, `rgba(89,239,74,${burst * .42})`);
+        glow.addColorStop(1, 'rgba(18,151,55,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = alpha * .88;
+        ctx.strokeStyle = deflating ? '#8df184' : '#d9ff62';
+        ctx.lineWidth = 7 - progress * 4.5;
+        ctx.shadowColor = '#32d95c';
+        ctx.shadowBlur = 18;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius * (deflating ? .92 : 1), 0, Math.PI * 2); ctx.stroke();
+        const drops = deflating ? 10 : 14;
+        for (let drop = 0; drop < drops; drop += 1) {
+          const angle = drop * Math.PI * 2 / drops + (deflating ? progress * .32 : 0);
+          const distance = radius * (deflating ? .65 + progress * .55 : .68 + progress * .42);
+          ctx.globalAlpha = alpha * (.48 + drop % 3 * .16);
+          ctx.fillStyle = drop % 3 ? '#65ed59' : '#f0ff98';
+          ctx.beginPath();
+          ctx.ellipse(effect.x + Math.cos(angle) * distance, y + Math.sin(angle) * distance, 2.5 + (drop % 2) * 1.6, 4.5 + (drop % 3), angle, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (effect.type === 'categoryBlast') {
+        const radius = 12 + progress * run.cellSize * 1.75;
+        ctx.globalAlpha = alpha * .9;
+        ctx.strokeStyle = effect.damage >= 2 ? '#fff18a' : '#ffb042';
+        ctx.lineWidth = 7 - progress * 4;
+        ctx.shadowColor = '#ff4b20';
+        ctx.shadowBlur = 18;
+        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeRect(effect.x - radius * .68, y - radius * .68, radius * 1.36, radius * 1.36);
+      } else if (effect.type === 'bomb') {
         const frame = progress < .13 ? 1 : progress < .33 ? 2 : progress < .7 ? 3 : 4;
         const frameAlpha = frame === 4 ? alpha * .9 : Math.min(1, alpha * 1.16);
         const frameSize = frame === 1 ? 176 : frame === 2 ? 194 : frame === 3 ? 220 : 204;
@@ -5377,7 +7290,156 @@
     ctx.restore();
   }
 
-  function drawBackground(world) {
+  function drawLaunchEntryPortal(world, timestamp) {
+    if (!run.launchEntryUntil || timestamp >= run.launchEntryUntil) return;
+    const startedAt = run.launchEntryStartedAt || timestamp;
+    const duration = Math.max(1, run.launchEntryUntil - startedAt);
+    const progress = clamp((timestamp - startedAt) / duration, 0, 1);
+    const close = clamp((progress - .64) / .28, 0, 1);
+    const fade = 1 - clamp((progress - .84) / .16, 0, 1);
+    const eject = 1 - clamp(progress / .34, 0, 1);
+    const palettes = {
+      1: { glow: '#65f0b0', core: '#dcffad', rim: '#2c7360' },
+      2: { glow: '#65e7ff', core: '#e6fdff', rim: '#347e9b' },
+      3: { glow: '#ff82ca', core: '#fff0b6', rim: '#9b477c' },
+      4: { glow: '#ff793f', core: '#ffd36b', rim: '#89382e' }
+    };
+    const palette = palettes[world.id] || palettes[1];
+    const centerX = run.startX;
+    const centerY = 30;
+    const portalScale = Math.max(.035, (1 + eject * .08) * (1 - close * .965));
+    const pulse = 1 + Math.sin(timestamp * .006) * .025;
+    const radius = 55 * portalScale;
+
+    ctx.save();
+    ctx.globalAlpha = fade * (.72 + eject * .2);
+    const halo = ctx.createRadialGradient(centerX, centerY, radius * .35, centerX, centerY, radius + 30);
+    halo.addColorStop(0, palette.glow);
+    halo.addColorStop(.52, palette.rim);
+    halo.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * .9, 0, Math.PI * 2);
+    ctx.clip();
+    const worldArtwork = WORLD_BACKGROUNDS[world.id];
+    if (worldArtwork?.complete && worldArtwork.naturalWidth) {
+      const sourceSize = Math.min(worldArtwork.naturalWidth, worldArtwork.naturalHeight);
+      const focus = ({ 1: .1, 2: .15, 3: .18, 4: .14 })[world.id] || .12;
+      const sourceY = clamp((worldArtwork.naturalHeight - sourceSize) * focus, 0, worldArtwork.naturalHeight - sourceSize);
+      ctx.drawImage(worldArtwork, 0, sourceY, sourceSize, sourceSize, centerX - radius, centerY - radius, radius * 2, radius * 2);
+    } else {
+      ctx.fillStyle = world.deep || '#071219';
+      ctx.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+    }
+    const depth = ctx.createRadialGradient(centerX, centerY, radius * .05, centerX, centerY, radius);
+    depth.addColorStop(0, `rgba(3,8,14,${.08 + Math.sin(timestamp / 190) * .025})`);
+    depth.addColorStop(.52, 'rgba(3,8,14,.12)');
+    depth.addColorStop(.78, 'rgba(3,8,14,.38)');
+    depth.addColorStop(1, 'rgba(2,6,12,.86)');
+    ctx.fillStyle = depth;
+    ctx.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.strokeStyle = palette.core;
+    ctx.lineWidth = Math.max(1.3, 2.5 * portalScale);
+    for (let ring = 0; ring < 2; ring += 1) {
+      const phase = (progress * 3.1 + ring * .5) % 1;
+      const ringRadius = radius * (.78 - phase * .56);
+      ctx.globalAlpha = fade * Math.sin(phase * Math.PI) * (.28 + eject * .14);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    if (eject > 0) {
+      const flash = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, radius * .62);
+      flash.addColorStop(0, palette.core);
+      flash.addColorStop(.28, palette.glow);
+      flash.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.globalAlpha = fade * eject * .34;
+      ctx.fillStyle = flash;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius * .64, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const blast = 1 - clamp(progress / .38, 0, 1);
+    if (blast > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.strokeStyle = palette.core;
+      ctx.lineCap = 'round';
+      for (let streak = -2; streak <= 2; streak += 1) {
+        const offset = streak * 10;
+        const flutter = Math.sin(timestamp / 65 + streak * 1.7) * 3;
+        ctx.globalAlpha = fade * blast * (.28 + (2 - Math.abs(streak)) * .055);
+        ctx.lineWidth = streak === 0 ? 3.2 : 2.1;
+        ctx.beginPath();
+        ctx.moveTo(centerX + offset * .48, centerY + radius * .38);
+        ctx.quadraticCurveTo(centerX + offset + flutter, centerY + radius * .92, centerX + offset * 1.2, centerY + radius + 23 + Math.abs(streak) * 4);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    ctx.globalAlpha = fade;
+    ctx.shadowColor = palette.glow;
+    ctx.shadowBlur = isLowPowerDevice() ? 0 : (10 + eject * 7) * (1 - close);
+    ctx.strokeStyle = palette.rim;
+    ctx.lineWidth = Math.max(2, 7 * portalScale);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * pulse, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = palette.core;
+    ctx.lineWidth = Math.max(1.2, 2.5 * portalScale);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * .93, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+  }
+
+  function drawBackground(world, timestamp) {
+    const builtInArtwork = WORLD_BACKGROUNDS[world.id];
+    if (builtInArtwork?.complete && builtInArtwork.naturalWidth) {
+      const tileWidth = VIEW_W;
+      const tileHeight = builtInArtwork.naturalHeight * tileWidth / builtInArtwork.naturalWidth;
+      const parallaxY = run.cameraY * .18;
+      const offset = -((parallaxY % tileHeight) + tileHeight) % tileHeight;
+      ctx.save();
+      ctx.globalAlpha = world.id === 2 ? .52 : world.id === 3 ? .58 : .64;
+      for (let y = offset; y < VIEW_H + tileHeight; y += tileHeight) {
+        ctx.drawImage(builtInArtwork, 0, y, tileWidth, tileHeight + .65);
+      }
+      ctx.restore();
+
+      const veil = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+      if (world.id === 1) {
+        veil.addColorStop(0, 'rgba(12,35,29,.18)');
+        veil.addColorStop(1, 'rgba(7,17,18,.48)');
+      } else if (world.id === 2) {
+        veil.addColorStop(0, 'rgba(20,70,88,.16)');
+        veil.addColorStop(1, 'rgba(6,25,39,.46)');
+      } else if (world.id === 3) {
+        veil.addColorStop(0, 'rgba(78,28,60,.20)');
+        veil.addColorStop(1, 'rgba(30,12,35,.50)');
+      } else {
+        veil.addColorStop(0, 'rgba(71,21,17,.20)');
+        veil.addColorStop(1, 'rgba(20,8,11,.48)');
+      }
+      ctx.fillStyle = veil;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    }
+
     const background = world.editorBackground;
     const artwork = background?.image ? editorSprite(background.image) : null;
     if (artwork?.complete && artwork.naturalWidth) {
@@ -5391,35 +7453,7 @@
       ctx.drawImage(artwork, x, y, width, height);
       ctx.restore();
     }
-    const stripe = 80;
-    const offset = -(run.cameraY % stripe);
-    for (let y = offset; y < VIEW_H + stripe; y += stripe) {
-      ctx.fillStyle = 'rgba(255,255,255,.018)';
-      ctx.fillRect(0, y, VIEW_W, 2);
-      const worldY = run.cameraY + y;
-      const seed = Math.sin(worldY * .017) * 999;
-      ctx.fillStyle = 'rgba(255,255,255,.035)';
-      ctx.beginPath();
-      ctx.arc(42 + (Math.abs(seed * 13) % 340), y + 28, 7 + Math.abs(seed % 9), 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    if (world.id === 2) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(190,239,255,.13)';
-      ctx.lineWidth = 2;
-      const iceOffset = -(run.cameraY % 118);
-      for (let y = iceOffset; y < VIEW_H + 118; y += 118) {
-        const x = 28 + Math.abs(Math.sin((run.cameraY + y) * .013)) * 350;
-        ctx.beginPath();
-        ctx.moveTo(x - 13, y + 17); ctx.lineTo(x + 13, y + 17);
-        ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 30);
-        ctx.moveTo(x - 9, y + 8); ctx.lineTo(x + 9, y + 26);
-        ctx.moveTo(x + 9, y + 8); ctx.lineTo(x - 9, y + 26);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
+    drawBackdropAtmosphere(world, timestamp);
 
     const depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.floor((run.cameraY + 20) / 10));
     ctx.fillStyle = 'rgba(11,10,18,.42)';
@@ -5429,6 +7463,60 @@
     ctx.font = '900 11px system-ui';
     ctx.textAlign = 'center';
     ctx.fillText(`${depth} м`, 46, 27);
+  }
+
+  function drawBackdropAtmosphere(world, timestamp) {
+    const profiles = {
+      1: { color: '#b7ef8f', count: 9, speed: 4, drift: 7 },
+      2: { color: '#d5f7ff', count: 11, speed: 7, drift: 4 },
+      3: { color: '#ffd2dc', count: 8, speed: 3, drift: 9 },
+      4: { color: '#ff9b43', count: 13, speed: -13, drift: 11 }
+    };
+    const profile = profiles[world.id] || profiles[1];
+    const cycle = VIEW_H + 100;
+    const time = timestamp / 1000;
+
+    ctx.save();
+    for (let index = 0; index < profile.count; index += 1) {
+      const seedA = Math.sin((index + 1) * 91.371 + world.id * 17.13) * 43758.5453;
+      const seedB = Math.sin((index + 1) * 47.117 + world.id * 31.77) * 24634.6345;
+      const unitA = seedA - Math.floor(seedA);
+      const unitB = seedB - Math.floor(seedB);
+      const x = 22 + unitA * (VIEW_W - 44) + Math.sin(time * .55 + index) * profile.drift;
+      const rawY = unitB * cycle + time * profile.speed - run.cameraY * .055;
+      const y = ((rawY % cycle) + cycle) % cycle - 50;
+      const pulse = .62 + Math.sin(time * 1.3 + index * 1.7) * .25;
+      const size = 1.4 + (index % 4) * .65;
+      ctx.globalAlpha = clamp((.045 + (index % 3) * .025) * pulse, .015, .12);
+      ctx.fillStyle = profile.color;
+      ctx.strokeStyle = profile.color;
+
+      if (world.id === 2 && index % 4 === 0) {
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x - size * 2.2, y); ctx.lineTo(x + size * 2.2, y);
+        ctx.moveTo(x, y - size * 2.2); ctx.lineTo(x, y + size * 2.2);
+        ctx.stroke();
+      } else if (world.id === 3) {
+        ctx.beginPath();
+        ctx.arc(x, y, size * 1.75, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,226,235,.24)';
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+      } else if (world.id === 4) {
+        ctx.shadowColor = profile.color;
+        ctx.shadowBlur = isLowPowerDevice() ? 0 : 5;
+        ctx.beginPath();
+        ctx.ellipse(x, y, size * .55, size * 1.8, Math.sin(index) * .25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
   }
 
   function drawHoneyZones(timestamp, foreground) {
@@ -5785,6 +7873,34 @@
     ctx.restore();
   }
 
+  function drawSuctionAwareBlock(block, sy, timestamp) {
+    if (!block.blackHoleSuctionStartedAt) {
+      drawBlock(block, sy, timestamp);
+      return;
+    }
+    const progress = clamp((timestamp - block.blackHoleSuctionStartedAt) / Math.max(1, block.blackHoleSuctionDuration), 0, 1);
+    const eased = progress * progress * (3 - 2 * progress);
+    const sourceX = block.x + block.w / 2;
+    const sourceY = sy + block.h / 2;
+    const targetX = run.slime.x;
+    const targetY = run.slime.y - run.cameraY;
+    const dx = sourceX - targetX;
+    const dy = sourceY - targetY;
+    const angle = (block.blackHoleSuctionSpin || 0) * progress;
+    const shrink = 1 - eased;
+    const centerX = targetX + (dx * Math.cos(angle) - dy * Math.sin(angle)) * shrink;
+    const centerY = targetY + (dx * Math.sin(angle) + dy * Math.cos(angle)) * shrink;
+    const scale = .08 + Math.pow(shrink, 1.15) * .92;
+    ctx.save();
+    ctx.globalAlpha = clamp(1.12 - progress * .62, 0, 1);
+    ctx.translate(centerX, centerY);
+    ctx.rotate(angle + progress * .7);
+    ctx.scale(scale, scale);
+    ctx.translate(-sourceX, -sourceY);
+    drawBlock(block, sy, timestamp);
+    ctx.restore();
+  }
+
   function drawBlock(block, sy, timestamp) {
     const hpRatio = clamp(block.hp / block.maxHp, 0, 1);
     const color = materialColor(block.material, run.world, hpRatio);
@@ -5792,7 +7908,8 @@
     const tier = block.tier || 'dense';
     ctx.save();
 
-    if (WORLD_SPRITES[run.worldId] && drawWorldSprite(block, sy, hpRatio)) {
+    if (WORLD_SPRITES[run.worldId] && drawWorldSprite(block, sy, hpRatio, timestamp)) {
+      drawBlockElementalOverlay(block, sy, timestamp);
       ctx.restore();
       return;
     }
@@ -5858,16 +7975,12 @@
       }
 
       if (!drawCrackStage(block, sy, hpRatio) && crackStageFor(hpRatio)) drawCracks(block, sy, hpRatio);
-      ctx.fillStyle = '#fff';
-      ctx.font = tier === 'reinforced' ? '1000 13px system-ui' : '1000 12px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(block.unbreakable ? '⚠ 30' : Math.max(1, Math.ceil(block.hp)), block.x + block.w / 2, sy + block.h / 2 + 1);
       if (tier === 'ore') {
         ctx.font = '900 8px system-ui';
         ctx.fillStyle = 'rgba(255,255,255,.92)';
         ctx.fillText('РУДА', block.x + block.w / 2, sy + block.h - 7);
       }
+      drawBlockElementalOverlay(block, sy, timestamp);
       ctx.restore();
       return;
     }
@@ -5944,7 +8057,201 @@
     if (special === 'boss') {
       ctx.font = '1000 9px system-ui';
       ctx.fillStyle = 'rgba(255,255,255,.94)';
-      ctx.fillText(`БОСС · ${Math.max(1, Math.ceil(block.hp))}`, block.x + block.w / 2, sy + block.h - 7);
+      ctx.fillText('БОСС', block.x + block.w / 2, sy + block.h - 7);
+    }
+    drawBlockElementalOverlay(block, sy, timestamp);
+    ctx.restore();
+  }
+
+  function traceBurningTongue(target, centerX, baseY, width, height, lean = 0) {
+    target.beginPath();
+    target.moveTo(centerX - width * .5, baseY);
+    target.bezierCurveTo(
+      centerX - width * .48,
+      baseY - height * .28,
+      centerX - width * .18 + lean * .3,
+      baseY - height * .62,
+      centerX + lean,
+      baseY - height
+    );
+    target.bezierCurveTo(
+      centerX + width * .19 + lean * .25,
+      baseY - height * .66,
+      centerX + width * .5,
+      baseY - height * .32,
+      centerX + width * .5,
+      baseY
+    );
+    target.closePath();
+  }
+
+  function drawBurningBlockFlames(block, sy, timestamp, intensity) {
+    if (intensity < .01) return;
+    const x = block.x;
+    const w = block.w;
+    const h = block.h;
+    const flicker = .5 + Math.sin(timestamp / 68 + block.id * 1.73) * .5;
+    ctx.save();
+
+    const heat = ctx.createRadialGradient(x + w * .5, sy + h * .84, 2, x + w * .5, sy + h * .6, h * .72);
+    heat.addColorStop(0, `rgba(255,235,89,${intensity * (.24 + flicker * .08)})`);
+    heat.addColorStop(.42, `rgba(255,112,24,${intensity * .2})`);
+    heat.addColorStop(1, 'rgba(150,20,12,0)');
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = heat;
+    ctx.fillRect(x + 1, sy + 1, w - 2, h - 2);
+    ctx.globalCompositeOperation = 'source-over';
+
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = intensity * .78;
+    ctx.strokeStyle = '#d93414';
+    ctx.lineWidth = 6.4;
+    ctx.shadowColor = '#ff4518';
+    ctx.shadowBlur = 11 + flicker * 5;
+    roundedRect(ctx, x + 3.5, sy + 3.5, w - 7, h - 7, 6);
+    ctx.stroke();
+    ctx.globalAlpha = intensity * (.82 + flicker * .14);
+    ctx.strokeStyle = '#ff8a18';
+    ctx.lineWidth = 3.5;
+    ctx.shadowBlur = 6;
+    roundedRect(ctx, x + 4.5, sy + 4.5, w - 9, h - 9, 5.5);
+    ctx.stroke();
+    ctx.globalAlpha = intensity * (.62 + flicker * .18);
+    ctx.strokeStyle = '#ffe66d';
+    ctx.lineWidth = 1.35;
+    ctx.shadowBlur = 3;
+    roundedRect(ctx, x + 5.4, sy + 5.4, w - 10.8, h - 10.8, 5);
+    ctx.stroke();
+
+    const tongueCount = 5;
+    for (let index = 0; index < tongueCount; index += 1) {
+      const phase = timestamp / (128 + index * 9) + block.id * .91 + index * 1.77;
+      const wave = Math.sin(phase);
+      const centerX = x + w * (.12 + index * .19) + wave * 1.8;
+      const baseY = sy + h - 3;
+      const width = w * (.16 + (index % 2) * .035);
+      const height = h * (.32 + (index % 3) * .09 + (.5 + wave * .5) * .12);
+      const lean = Math.sin(phase * .73 + index) * width * .24;
+
+      ctx.globalAlpha = intensity * (.84 + flicker * .13);
+      ctx.fillStyle = '#dc3513';
+      ctx.shadowColor = '#ff4518';
+      ctx.shadowBlur = 9;
+      traceBurningTongue(ctx, centerX, baseY, width, height, lean);
+      ctx.fill();
+
+      ctx.globalAlpha = intensity * (.9 + flicker * .08);
+      ctx.fillStyle = '#ff8617';
+      ctx.shadowColor = '#ff9f1c';
+      ctx.shadowBlur = 5;
+      traceBurningTongue(ctx, centerX, baseY - 1, width * .67, height * .76, lean * .65);
+      ctx.fill();
+
+      ctx.globalAlpha = intensity * (.72 + flicker * .2);
+      ctx.fillStyle = '#ffe86a';
+      ctx.shadowColor = '#ffd93d';
+      ctx.shadowBlur = 3;
+      traceBurningTongue(ctx, centerX, baseY - 1.5, width * .34, height * .48, lean * .32);
+      ctx.fill();
+    }
+
+    ctx.globalCompositeOperation = 'screen';
+    for (let ember = 0; ember < 4; ember += 1) {
+      const phase = (timestamp / (480 + ember * 47) + block.id * .17 + ember * .29) % 1;
+      const emberAlpha = Math.sin(phase * Math.PI) * intensity;
+      const px = x + w * (.18 + ember * .21) + Math.sin(block.id + ember * 3.1) * 3;
+      const py = sy + h * (.68 - phase * .58);
+      ctx.globalAlpha = emberAlpha * .8;
+      ctx.fillStyle = ember % 2 ? '#fff09a' : '#ff9d22';
+      ctx.shadowColor = '#ff5c18';
+      ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(px, py, 1.1 + (ember % 2) * .55, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawBlockElementalOverlay(block, sy, timestamp) {
+    const x = block.x;
+    const w = block.w;
+    const h = block.h;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + 1, sy + 1, w - 2, h - 2);
+    ctx.clip();
+
+    if (blockIsGolden(block, timestamp)) {
+      const flash = timestamp < (block.goldFlashUntil || 0) ? .2 : 0;
+      const shimmer = .5 + Math.sin(timestamp / 125 + block.id * .7) * .5;
+      ctx.fillStyle = `rgba(255,197,35,${.3 + flash + shimmer * .08})`;
+      ctx.fillRect(x + 1, sy + 1, w - 2, h - 2);
+      ctx.strokeStyle = '#fff0a0';
+      ctx.lineWidth = 2.3;
+      ctx.shadowColor = '#ffb51f';
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(x + 3, sy + 3, w - 6, h - 6);
+      for (let sparkle = 0; sparkle < 3; sparkle += 1) {
+        const px = x + w * (.22 + sparkle * .27);
+        const py = sy + h * (.32 + Math.sin(timestamp / 180 + sparkle * 2 + block.id) * .14);
+        const size = 2.5 + shimmer * 1.8;
+        ctx.beginPath();
+        ctx.moveTo(px - size, py); ctx.lineTo(px + size, py);
+        ctx.moveTo(px, py - size); ctx.lineTo(px, py + size);
+        ctx.stroke();
+      }
+    }
+
+    if (block.elementalFrozen) {
+      const flash = timestamp < (block.frostFlashUntil || 0) ? .18 : 0;
+      ctx.fillStyle = `rgba(151,229,255,${.24 + flash})`;
+      ctx.fillRect(x + 1, sy + 1, w - 2, h - 2);
+      ctx.strokeStyle = 'rgba(226,251,255,.92)';
+      ctx.lineWidth = 2.2;
+      ctx.strokeRect(x + 3, sy + 3, w - 6, h - 6);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x + w * .22, sy + 3); ctx.lineTo(x + w * .48, sy + h * .43); ctx.lineTo(x + w * .36, sy + h - 3);
+      ctx.moveTo(x + w * .77, sy + 4); ctx.lineTo(x + w * .56, sy + h * .52); ctx.lineTo(x + w * .82, sy + h - 4);
+      ctx.stroke();
+    }
+
+    if (timestamp < Math.max(block.fireDamageAt || 0, block.fireFlashUntil || 0)) {
+      const age = Math.max(0, timestamp - (block.fireIgnitedAt || timestamp - 180));
+      const ignite = smoothFireVisual(age / 170);
+      const release = smoothFireVisual(((block.fireFlashUntil || timestamp) - timestamp) / 330);
+      drawBurningBlockFlames(block, sy, timestamp, ignite * release);
+    }
+
+    if (timestamp >= (block.electricFlashStartedAt || 0) && timestamp < (block.electricFlashUntil || 0)) {
+      const duration = Math.max(1, block.electricFlashUntil - (block.electricFlashStartedAt || timestamp));
+      const progress = clamp((timestamp - (block.electricFlashStartedAt || timestamp)) / duration, 0, 1);
+      const flash = Math.sin(progress * Math.PI);
+      const blue = block.electricFlashColor === 'blue';
+      const edge = blue ? '#75efff' : '#fff06a';
+      const core = blue ? '#e9ffff' : '#fffde0';
+      const glow = blue ? '#168eff' : '#ffc313';
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = .16 + flash * .38;
+      ctx.fillStyle = blue ? '#39c8ff' : '#ffd42e';
+      ctx.fillRect(x + 1, sy + 1, w - 2, h - 2);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = .48 + flash * .52;
+      ctx.strokeStyle = edge;
+      ctx.lineWidth = 2.4 + flash * 1.5;
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 9 + flash * 10;
+      ctx.strokeRect(x + 2.5, sy + 2.5, w - 5, h - 5);
+      ctx.strokeStyle = core;
+      ctx.lineWidth = 1.35;
+      ctx.shadowBlur = 5;
+      for (let spark = 0; spark < 3; spark += 1) {
+        const startX = x + w * (.18 + spark * .31);
+        const startY = sy + h * (.18 + ((block.id + spark) % 3) * .18);
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX + (spark % 2 ? -5 : 6), startY + 7);
+        ctx.lineTo(startX + (spark % 2 ? 3 : -2), startY + 13);
+        ctx.stroke();
+      }
     }
     ctx.restore();
   }
@@ -5962,9 +8269,15 @@
     const sprite = CRACK_STAGE_SPRITES?.[stage];
     if (!stage || !sprite?.complete || !sprite.naturalWidth) return false;
     const gutter = .5;
+    // У исходных трёх PNG главный разлом расположен чуть по-разному.
+    // Компенсируем это здесь, чтобы центр трещины всегда совпадал с центром плитки.
+    const centerOffset = ({ 1: .066, 2: .087, 3: -.047 })[stage] * block.w;
     ctx.save();
+    ctx.beginPath();
+    ctx.rect(block.x + gutter, sy + gutter, block.w - gutter * 2, block.h - gutter * 2);
+    ctx.clip();
     ctx.globalAlpha = .94;
-    ctx.drawImage(sprite, block.x + gutter, sy + gutter, block.w - gutter * 2, block.h - gutter * 2);
+    ctx.drawImage(sprite, block.x + gutter + centerOffset, sy + gutter, block.w - gutter * 2, block.h - gutter * 2);
     ctx.restore();
     return true;
   }
@@ -6029,11 +8342,18 @@
     ctx.restore();
   }
 
-  function drawWorldSprite(block, sy, hpRatio) {
+  function drawWorldSprite(block, sy, hpRatio, timestamp = performance.now()) {
     // Босс рисуется кодом, а не обычной плиткой: у него свои глаза и лицо.
     if (block.special === 'boss') return false;
     let spriteName;
-    if (block.hazard && run.worldId === 2) spriteName = block.hazardVariant === 'spikes' ? 'ice-spikes' : 'ice-shards';
+    const frostTransformed = block.elementalSnow || block.elementalSnowflake;
+    const frostProgress = frostTransformed && block.frostTransformStartedAt
+      ? clamp((timestamp - block.frostTransformStartedAt) / (block.frostTransformDuration || 470), 0, 1)
+      : frostTransformed ? 1 : 0;
+    const frostIsPrimary = frostTransformed && frostProgress >= .995;
+    if (frostIsPrimary && block.elementalSnowflake) spriteName = 'snowflake';
+    else if (frostIsPrimary && block.elementalSnow) spriteName = 'snow-packed';
+    else if (block.hazard && run.worldId === 2) spriteName = block.hazardVariant === 'spikes' ? 'ice-spikes' : 'ice-shards';
     else if (block.hazard && run.worldId === 3) spriteName = 'candy-hazard';
     else if (block.hazard && run.worldId === 4) spriteName = 'lava-hazard';
     else if (block.hazard) spriteName = 'stone-hazard';
@@ -6074,12 +8394,12 @@
     const editorId = block.frozen
       ? 'dense'
       : block.editorVisualId || (block.special === 'gel' ? 'heal' : block.special || (block.hazard ? 'hazard' : block.tier));
-    const edited = editorBlock(run.worldId, editorId);
+    const edited = frostIsPrimary ? null : editorBlock(run.worldId, editorId);
     if (edited?.type === 'custom' && edited.sprite) spriteName = edited.sprite;
     const oreArtwork = !block.frozen && (block.tier === 'ore' || block.frozenOre) ? edited?.oreTextures?.[block.oreType?.id || 'coal'] : null;
     const artwork = oreArtwork?.image ? oreArtwork : edited;
     const customSprite = artwork?.image ? editorSprite(artwork.image) : null;
-    const sprites = WORLD_SPRITES[run.worldId];
+    const sprites = frostIsPrimary ? ensureWorldSprites(2) : WORLD_SPRITES[run.worldId];
     const pandoraSprite = block.special === 'pandora' ? VFX_SPRITES?.['pandora-box'] : null;
     const sprite = pandoraSprite?.complete && pandoraSprite.naturalWidth
       ? pandoraSprite
@@ -6139,27 +8459,22 @@
     } else {
       ctx.drawImage(sprite, drawX, drawY, width, height);
     }
+    if (frostTransformed && !frostIsPrimary) {
+      const frostSpriteName = block.elementalSnowflake ? 'snowflake' : 'snow-packed';
+      const frostSprite = ensureWorldSprites(2)?.[frostSpriteName];
+      if (frostSprite?.complete && frostSprite.naturalWidth) {
+        const reveal = frostProgress * frostProgress * (3 - 2 * frostProgress);
+        ctx.save();
+        ctx.globalAlpha = reveal;
+        ctx.globalCompositeOperation = reveal < .72 ? 'screen' : 'source-over';
+        ctx.drawImage(frostSprite, block.x + gutter, sy + gutter, block.w - gutter * 2, block.h - gutter * 2);
+        ctx.restore();
+      }
+    }
     ctx.globalAlpha = 1;
     drawSpecialBlockAura(block, sy);
     drawCrackStage(block, sy, hpRatio);
 
-    // Вспомогательные блоки срабатывают при касании, это не запас HP.
-    // Число остаётся только у материалов и у опасной непробиваемой плитки.
-    if (!block.special || block.special === 'boss') {
-      const label = block.unbreakable ? '⚠ 30' : Math.max(1, Math.ceil(block.hp)).toString();
-      const badgeWidth = Math.max(29, 15 + label.length * 7);
-      ctx.fillStyle = 'rgba(22,28,38,.80)';
-      roundedRect(ctx, block.x + block.w / 2 - badgeWidth / 2, sy + block.h - 18, badgeWidth, 14, 7);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,.48)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = '1000 9px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, block.x + block.w / 2, sy + block.h - 11);
-    }
     return true;
   }
 
@@ -6256,6 +8571,7 @@
   }
 
   function menuSlimeEmotion() {
+    if (els.slime.classList.contains('portal-surprised')) return 'surprised';
     if (els.slime.classList.contains('petting') || els.slime.classList.contains('petted')) return 'petting';
     if (els.slime.classList.contains('pleased')) return 'pleased';
     if (els.slime.classList.contains('chewing')) return 'chewing';
@@ -6264,6 +8580,543 @@
     if (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food')) return 'hungry';
     if (els.slime.classList.contains('booped')) return 'surprised';
     return 'focused';
+  }
+
+  function menuCategoryLevels() {
+    const levels = { fire: 0, frost: 0, electric: 0, cosmos: 0, gigantism: 0, wind: 0, explosion: 0, mass: 0 };
+    const familyToCategory = {
+      fire: 'fire', damage: 'fire',
+      frost: 'frost', ice: 'frost',
+      electric: 'electric', electricity: 'electric',
+      cosmos: 'cosmos', space: 'cosmos', gravity: 'cosmos',
+      gigantism: 'gigantism', giant: 'gigantism',
+      wind: 'wind', tornado: 'wind',
+      blast: 'explosion', explosion: 'explosion'
+    };
+    for (const food of session?.foods || []) {
+      const family = foodRecipeFamily(food);
+      const category = familyToCategory[family];
+      if (category) levels[category] += 1;
+    }
+    for (const key of Object.keys(levels)) levels[key] = Math.min(3, levels[key]);
+    return levels;
+  }
+
+  function syncMenuCategoryVisuals({ instant = false } = {}) {
+    const levels = menuCategoryLevels();
+    const now = performance.now();
+    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'gigantism', 'wind', 'explosion', 'mass']) {
+      menuCategoryVisual[`${key}From`] = instant ? levels[key] : menuCategoryVisual[key];
+      menuCategoryVisual[`${key}Target`] = levels[key];
+      menuCategoryVisual[`${key}StartedAt`] = now;
+      if (instant) menuCategoryVisual[key] = levels[key];
+    }
+  }
+
+  function updateMenuCategoryVisuals(timestamp) {
+    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'gigantism', 'wind', 'explosion', 'mass']) {
+      const from = menuCategoryVisual[`${key}From`];
+      const target = menuCategoryVisual[`${key}Target`];
+      if (menuReducedMotion || Math.abs(target - from) < .001) {
+        menuCategoryVisual[key] = target;
+        continue;
+      }
+      const duration = key === 'mass' || key === 'gigantism' ? 620 : key === 'frost' ? 600 : key === 'electric' ? 520 : 540;
+      const progress = clamp((timestamp - menuCategoryVisual[`${key}StartedAt`]) / duration, 0, 1);
+      const eased = key === 'mass' || key === 'gigantism'
+        ? 1 + 1.25 * Math.pow(progress - 1, 3) + .25 * Math.pow(progress - 1, 2)
+        : 1 - Math.pow(1 - progress, 3);
+      menuCategoryVisual[key] = from + (target - from) * eased;
+      if (progress >= 1) {
+        menuCategoryVisual[key] = target;
+        menuCategoryVisual[`${key}From`] = target;
+      }
+    }
+    return menuCategoryVisual;
+  }
+
+  const smoothFireVisual = value => {
+    const normalized = clamp(value, 0, 1);
+    return normalized * normalized * (3 - 2 * normalized);
+  };
+
+  function mixFireHex(from, to, amount) {
+    const parse = color => [1, 3, 5].map(index => parseInt(color.slice(index, index + 2), 16));
+    const a = parse(from);
+    const b = parse(to);
+    return `#${a.map((value, index) => Math.round(value + (b[index] - value) * amount).toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  function drawFireEyeFlame(target, x, baseY, radius, timestamp, alpha) {
+    const time = menuReducedMotion ? 0 : timestamp / 285;
+    const sway = Math.sin(time) * radius * .018 + Math.sin(time * 1.8) * radius * .008;
+    const pulse = menuReducedMotion ? 1 : 1 + Math.sin(time * 1.43) * .055;
+    target.save();
+    target.translate(x, baseY);
+    target.scale(1 / pulse, pulse);
+    target.globalAlpha *= alpha;
+    target.shadowColor = '#ff631b';
+    target.shadowBlur = radius * .055;
+
+    target.fillStyle = '#ef4318';
+    target.beginPath();
+    target.moveTo(0, 0);
+    target.bezierCurveTo(-radius * .082, -radius * .015, -radius * .088, -radius * .105, -radius * .041, -radius * .146);
+    target.bezierCurveTo(-radius * .012, -radius * .174, sway * .55, -radius * .19, sway, -radius * .222);
+    target.bezierCurveTo(radius * .079 + sway * .35, -radius * .155, radius * .083, -radius * .054, 0, 0);
+    target.fill();
+
+    target.shadowBlur = 0;
+    target.fillStyle = '#ffad1e';
+    target.beginPath();
+    target.moveTo(0, -radius * .012);
+    target.bezierCurveTo(-radius * .047, -radius * .033, -radius * .045, -radius * .098, -radius * .018, -radius * .126);
+    target.bezierCurveTo(radius * .006, -radius * .151, sway * .2, -radius * .164, sway * .23, -radius * .181);
+    target.bezierCurveTo(radius * .043, -radius * .126, radius * .046, -radius * .057, 0, -radius * .012);
+    target.fill();
+    target.fillStyle = '#fff39a';
+    target.beginPath();
+    target.ellipse(-radius * .008, -radius * .072, radius * .019, radius * .046, -.1, 0, Math.PI * 2);
+    target.fill();
+    target.restore();
+  }
+
+  function drawFireEyes(target, x, y, radius, level, timestamp, opacity = 1) {
+    const visible = smoothFireVisual(level);
+    if (visible < .01) return;
+    const pupilY = y - radius * .105;
+    const eyeOffset = radius * .245;
+    for (const side of [-1, 1]) {
+      const px = x + eyeOffset * side;
+      target.save();
+      target.beginPath();
+      target.ellipse(px, pupilY, radius * .145, radius * .185, 0, 0, Math.PI * 2);
+      target.clip();
+      drawFireEyeFlame(target, px, pupilY + radius * .105, radius, timestamp + side * 290, visible * opacity);
+      target.restore();
+    }
+  }
+
+  function drawFireHeadFlame(target, x, y, radius, timestamp, alpha) {
+    const time = menuReducedMotion ? 0 : timestamp / 620;
+    const sway = Math.sin(time) * radius * .035;
+    const pulse = menuReducedMotion ? 1 : 1 + Math.sin(time * 1.45) * .035;
+    target.save();
+    target.translate(x, y);
+    target.scale(1 / pulse, pulse);
+    target.globalAlpha *= alpha;
+    const width = radius * .205;
+    const height = radius * .56;
+    const trace = (pathWidth, pathHeight, tipSway) => {
+      target.beginPath();
+      target.moveTo(0, radius * .025);
+      target.bezierCurveTo(-pathWidth * .94, 0, -pathWidth * .86, -pathHeight * .35, -pathWidth * .43, -pathHeight * .59);
+      target.bezierCurveTo(-pathWidth * .08, -pathHeight * .79, tipSway * .72, -pathHeight * .91, tipSway, -pathHeight);
+      target.bezierCurveTo(pathWidth * .48 + tipSway * .55, -pathHeight * .72, pathWidth * .82, -pathHeight * .38, pathWidth * .82, -pathHeight * .2);
+      target.bezierCurveTo(pathWidth * .82, -pathHeight * .045, pathWidth * .5, radius * .025, 0, radius * .025);
+      target.closePath();
+    };
+    target.shadowColor = '#ff6a18';
+    target.shadowBlur = radius * .13;
+    const outer = target.createLinearGradient(0, -height, 0, radius * .03);
+    outer.addColorStop(0, '#e93c18');
+    outer.addColorStop(.55, '#ff6b18');
+    outer.addColorStop(1, '#ff9d18');
+    target.fillStyle = outer;
+    trace(width, height, sway);
+    target.fill();
+    target.shadowBlur = radius * .045;
+    target.fillStyle = '#ffb51f';
+    trace(width * .62, height * .72, sway * .38);
+    target.fill();
+    target.shadowBlur = 0;
+    target.fillStyle = '#fff078';
+    trace(width * .3, height * .43, sway * .13);
+    target.fill();
+    target.restore();
+  }
+
+  function drawFireTip(target, x, y, radius, level, timestamp, opacity = 1) {
+    const dominant = smoothFireVisual(level - 1);
+    if (dominant < .01) return;
+    drawFireHeadFlame(target, x, y - radius * .84, radius, timestamp, dominant * opacity);
+  }
+
+  const fireContour = (() => {
+    const curves = [
+      [0, -1, .15, -.99, .16, -.86, .26, -.79],
+      [.26, -.79, .67, -.68, .93, -.31, .91, .16],
+      [.91, .16, .88, .68, .5, .92, 0, .93],
+      [0, .93, -.5, .92, -.88, .68, -.91, .16],
+      [-.91, .16, -.93, -.31, -.67, -.68, -.26, -.79],
+      [-.26, -.79, -.16, -.86, -.15, -.99, 0, -1]
+    ];
+    return curves.flatMap(curve => Array.from({ length: 24 }, (_, index) => {
+      const time = index / 24;
+      const inverse = 1 - time;
+      return [
+        inverse ** 3 * curve[0] + 3 * inverse ** 2 * time * curve[2] + 3 * inverse * time ** 2 * curve[4] + time ** 3 * curve[6],
+        inverse ** 3 * curve[1] + 3 * inverse ** 2 * time * curve[3] + 3 * inverse * time ** 2 * curve[5] + time ** 3 * curve[7]
+      ];
+    }));
+  })();
+
+  function traceFireContour(target, radius, timestamp, scale, inset = false, insetScale = .93, intensity = 1) {
+    const time = menuReducedMotion ? 0 : timestamp / 720;
+    const expansion = 1 + Math.max(0, intensity - 1) * .24;
+    target.beginPath();
+    fireContour.forEach(([x, y], index) => {
+      const angle = Math.atan2(y, x);
+      const flow = Math.sin(angle * 7 + time * 2) * .5 + Math.sin(angle * 11 - time * 2.7) * .3 + Math.sin(angle * 4 + time) * .2;
+      const heat = (.09 + Math.pow((flow + 1) * .5, 2) * .23) * scale;
+      const length = Math.hypot(x, y);
+      const px = radius * (x * expansion + x / length * heat + Math.sin(angle * 8 + time * 2) * heat * .25);
+      const lowerExtension = inset ? Math.pow(Math.max(0, y), 4) * radius * .085 : 0;
+      const py = radius * (y * expansion + y / length * heat * .5 - heat * (1.05 - y * .5)) + lowerExtension;
+      if (!index) target.moveTo(px, py);
+      else target.lineTo(px, py);
+    });
+    target.closePath();
+    if (!inset) return;
+    for (let index = fireContour.length - 1; index >= 0; index -= 1) {
+      const [x, y] = fireContour[index];
+      if (index === fireContour.length - 1) target.moveTo(x * radius * insetScale, y * radius * insetScale);
+      else target.lineTo(x * radius * insetScale, y * radius * insetScale);
+    }
+    target.closePath();
+  }
+
+  function drawFireContour(target, { radius, timestamp }, front = false, intensity = 1) {
+    target.save();
+    target.shadowColor = '#ff641c';
+    target.shadowBlur = (front ? 5 : 13) * intensity;
+    for (let index = 0; index < 3; index += 1) {
+      target.fillStyle = ['#ee421b', '#ff991b', '#ffe878'][index];
+      const insetScale = [.84, .89, .925][index];
+      traceFireContour(target, radius, timestamp + index * 90, [1, .66, .29][index] * (1 + (intensity - 1) * .55), front, insetScale, intensity);
+      target.fill('evenodd');
+      target.shadowBlur = 0;
+    }
+    if (front && intensity > 1.04) {
+      target.globalAlpha *= Math.min(.82, (intensity - 1) * .72);
+      target.strokeStyle = '#fff08a';
+      target.lineWidth = radius * (.024 + (intensity - 1) * .012);
+      target.shadowColor = '#ff7a1b';
+      target.shadowBlur = radius * .11 * intensity;
+      traceFireContour(target, radius, timestamp - 35, .48 * intensity, false, .93, intensity);
+      target.stroke();
+    }
+    target.restore();
+  }
+
+  function paintFrostBody(target, { radius, colors }, amount) {
+    const base = target.createRadialGradient(-radius * .25, -radius * .35, radius * .12, 0, 0, radius * 1.1);
+    base.addColorStop(0, colors[0]); base.addColorStop(.58, colors[1]); base.addColorStop(1, colors[2]);
+    target.fillStyle = base;
+    target.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4);
+    const frozen = target.createLinearGradient(0, -radius * .15, 0, radius);
+    frozen.addColorStop(0, 'rgba(126,214,242,0)');
+    frozen.addColorStop(.24, `rgba(118,210,240,${amount * .18})`);
+    frozen.addColorStop(.5, `rgba(128,218,245,${amount * .48})`);
+    frozen.addColorStop(.76, `rgba(193,242,255,${amount * .78})`);
+    frozen.addColorStop(1, `rgba(239,253,255,${amount * .94})`);
+    target.fillStyle = frozen;
+    target.fillRect(-radius * 1.05, -radius * .15, radius * 2.1, radius * 1.2);
+  }
+
+  function drawFrostRim(target, radius, amount) {
+    if (amount < .01) return;
+    target.save();
+    target.globalAlpha *= amount;
+    target.lineCap = 'round'; target.lineJoin = 'round';
+    target.shadowColor = '#7fdcff'; target.shadowBlur = radius * .035;
+    const frost = target.createLinearGradient(0, radius * .08, 0, radius * .96);
+    frost.addColorStop(0, 'rgba(90,190,226,.18)'); frost.addColorStop(.3, 'rgba(101,205,239,.72)'); frost.addColorStop(.72, '#bdefff'); frost.addColorStop(1, '#effdff');
+    target.strokeStyle = frost; target.lineWidth = Math.max(3, radius * .09);
+    target.beginPath();
+    target.moveTo(radius * .91, radius * .11);
+    target.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
+    target.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .11);
+    target.stroke(); target.restore();
+  }
+
+  function drawColdFace(target, radius, amount, timestamp) {
+    if (amount < .01) return;
+    target.save();
+    target.globalAlpha *= amount * .62; target.fillStyle = '#65c9f4';
+    target.beginPath();
+    target.ellipse(-radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2);
+    target.ellipse(radius * .45, radius * .14, radius * .14, radius * .075, 0, 0, Math.PI * 2); target.fill();
+    const cycleMs = 3350;
+    const cycle = (timestamp % cycleMs) / cycleMs;
+    const breathPhase = clamp((cycle - .62) / .27, 0, 1);
+    if (breathPhase > 0 && breathPhase < 1) {
+      target.shadowColor = '#8fe6ff';
+      target.shadowBlur = radius * .055;
+      for (let index = 0; index < 4; index += 1) {
+        const phase = clamp(breathPhase * 1.38 - index * .13, 0, 1);
+        if (phase <= 0 || phase >= 1) continue;
+        const puff = Math.sin(phase * Math.PI);
+        target.globalAlpha = amount * puff * (.64 - index * .055);
+        target.fillStyle = index % 2 ? '#d7f7ff' : '#f4feff';
+        target.beginPath();
+        target.ellipse(
+          radius * (.1 + phase * .53),
+          radius * (.2 - phase * .2 + Math.sin(phase * Math.PI * 2 + index) * .025),
+          radius * (.055 + phase * .07),
+          radius * (.032 + phase * .048),
+          -.12,
+          0,
+          Math.PI * 2
+        );
+        target.fill();
+      }
+    }
+    target.restore();
+  }
+
+  function drawSnowCap(target, radius, amount, timestamp) {
+    if (amount < .01) return;
+    const wobble = menuReducedMotion ? 0 : Math.sin(timestamp / 1100) * radius * .008;
+    target.save(); target.translate(0, wobble); target.globalAlpha *= amount;
+    target.shadowColor = '#78ccec'; target.shadowBlur = radius * .055;
+    const snow = target.createLinearGradient(0, -radius, 0, -radius * .48);
+    snow.addColorStop(0, '#fff'); snow.addColorStop(.68, '#dff7ff'); snow.addColorStop(1, '#8fdaf4');
+    target.fillStyle = snow; target.strokeStyle = '#5eadd1'; target.lineWidth = radius * .028;
+    target.beginPath(); target.moveTo(-radius * .57, -radius * .58);
+    target.bezierCurveTo(-radius * .47, -radius * .74, -radius * .25, -radius * .77, -radius * .12, -radius * .9);
+    target.bezierCurveTo(-radius * .055, -radius * 1.01, radius * .02, -radius * 1.08, radius * .11, -radius * .94);
+    target.bezierCurveTo(radius * .22, -radius * .8, radius * .48, -radius * .78, radius * .58, -radius * .58);
+    target.bezierCurveTo(radius * .42, -radius * .5, radius * .29, -radius * .55, radius * .18, -radius * .5);
+    target.bezierCurveTo(radius * .03, -radius * .43, -radius * .08, -radius * .57, -radius * .2, -radius * .49);
+    target.bezierCurveTo(-radius * .34, -radius * .42, -radius * .44, -radius * .54, -radius * .57, -radius * .58);
+    target.closePath(); target.fill(); target.stroke(); target.restore();
+  }
+
+  function drawSnowfall(target, x, y, radius, amount, timestamp) {
+    if (amount < .01) return;
+    [-.55, -.31, -.08, .18, .42, .61].forEach((offset, index) => {
+      const phase = (timestamp / (1700 + index * 83) + index * .16) % 1;
+      const px = x + radius * (offset + Math.sin(phase * Math.PI * 2 + index) * .055);
+      const py = y - radius * .68 + phase * radius * 1.35;
+      const size = radius * (.025 + (index % 3) * .006);
+      target.save(); target.translate(px, py); target.rotate(phase * Math.PI + index);
+      target.globalAlpha = amount * Math.sin(phase * Math.PI) * .9;
+      target.strokeStyle = '#e9fbff'; target.shadowColor = '#5fc6ef'; target.shadowBlur = radius * .035; target.lineWidth = radius * .016;
+      for (let arm = 0; arm < 3; arm += 1) {
+        const angle = arm * Math.PI / 3; target.beginPath();
+        target.moveTo(-Math.cos(angle) * size, -Math.sin(angle) * size); target.lineTo(Math.cos(angle) * size, Math.sin(angle) * size); target.stroke();
+      }
+      target.restore();
+    });
+  }
+
+  function drawSnowmanAvatar(target, options, amount, timestamp) {
+    if (amount < .001) return;
+    const alpha = Number.isFinite(options.alpha) ? options.alpha : 1;
+    drawSlimeAvatar(target, {
+      ...options, colors: ['#ffffff', '#d8f5ff', '#58afd4'], alpha: alpha * amount,
+      outlineColor: '#285b82', bodyHighlight: true,
+      backLayer: (layerTarget, state) => {
+        layerTarget.save(); layerTarget.strokeStyle = '#55301d'; layerTarget.lineCap = 'round';
+        for (const side of [-1, 1]) {
+          layerTarget.lineWidth = state.radius * .065; layerTarget.beginPath();
+          layerTarget.moveTo(side * state.radius * .76, state.radius * .08); layerTarget.lineTo(side * state.radius * 1.3, -state.radius * .25); layerTarget.stroke();
+          layerTarget.lineWidth = state.radius * .035; layerTarget.beginPath();
+          layerTarget.moveTo(side * state.radius * 1.06, -state.radius * .1); layerTarget.lineTo(side * state.radius * 1.13, -state.radius * .43);
+          layerTarget.moveTo(side * state.radius * 1.11, -state.radius * .13); layerTarget.lineTo(side * state.radius * 1.34, -state.radius * .04); layerTarget.stroke();
+        }
+        layerTarget.restore();
+      },
+      afterLayer: (layerTarget, state) => {
+        const radius = state.radius;
+        const carrot = layerTarget.createLinearGradient(0, 0, radius * .4, 0); carrot.addColorStop(0, '#ffc238'); carrot.addColorStop(1, '#f06410');
+        layerTarget.fillStyle = carrot; layerTarget.strokeStyle = '#8b3d09'; layerTarget.lineWidth = radius * .027;
+        layerTarget.beginPath(); layerTarget.moveTo(-radius * .025, -radius * .015); layerTarget.quadraticCurveTo(radius * .11, -radius * .005, radius * .29, radius * .035); layerTarget.quadraticCurveTo(radius * .12, radius * .09, radius * .015, radius * .095); layerTarget.closePath(); layerTarget.fill(); layerTarget.stroke();
+        layerTarget.fillStyle = '#203149'; layerTarget.strokeStyle = '#78d3ef'; layerTarget.lineWidth = radius * .014;
+        [.45, .7].forEach(buttonY => { layerTarget.beginPath(); layerTarget.arc(0, radius * buttonY, radius * .061, 0, Math.PI * 2); layerTarget.fill(); layerTarget.stroke(); });
+      }, timestamp
+    });
+  }
+
+  function traceElectricBolt(target, points) {
+    target.beginPath(); points.forEach(([x, y], index) => index ? target.lineTo(x, y) : target.moveTo(x, y));
+  }
+
+  function strokeElectricBolt(target, points, alpha, radius, hot = false) {
+    if (alpha < .015) return;
+    target.save(); target.globalAlpha *= alpha; target.lineCap = 'round'; target.lineJoin = 'round';
+    target.shadowColor = hot ? '#26b8ff' : '#ffc31d'; target.shadowBlur = radius * .085;
+    target.strokeStyle = hot ? '#47dfff' : '#ffd92e'; target.lineWidth = radius * .052; traceElectricBolt(target, points); target.stroke();
+    target.shadowBlur = radius * .03; target.strokeStyle = hot ? '#efffff' : '#fffbd6'; target.lineWidth = radius * .018; target.stroke(); target.restore();
+  }
+
+  function drawLightningMark(target, radius, amount) {
+    if (amount < .01) return;
+    target.save(); target.translate(0, -radius * .56); target.globalAlpha *= amount;
+    target.shadowColor = '#ffd51f'; target.shadowBlur = radius * .13; target.fillStyle = '#ffe026'; target.strokeStyle = '#b87405'; target.lineWidth = radius * .025; target.lineJoin = 'round';
+    target.beginPath(); target.moveTo(radius * .035, -radius * .17); target.lineTo(-radius * .105, radius * .005); target.lineTo(-radius * .01, radius * .005); target.lineTo(-radius * .075, radius * .18); target.lineTo(radius * .12, -radius * .045); target.lineTo(radius * .025, -radius * .045); target.closePath(); target.fill(); target.stroke(); target.restore();
+  }
+
+  function drawElectricAura(target, x, y, radius, amount, sphere = false) {
+    if (amount < .01) return;
+    target.save(); target.globalAlpha = amount;
+    const reach = sphere ? 1.3 : 1.1;
+    const glow = target.createRadialGradient(x, y, radius * .52, x, y, radius * reach);
+    if (sphere) {
+      glow.addColorStop(0, 'rgba(152,249,255,.18)'); glow.addColorStop(.58, 'rgba(44,174,255,.26)'); glow.addColorStop(1, 'rgba(32,105,255,0)');
+    } else {
+      glow.addColorStop(0, 'rgba(255,249,174,.12)'); glow.addColorStop(.58, 'rgba(255,207,38,.22)'); glow.addColorStop(1, 'rgba(255,169,16,0)');
+    }
+    target.fillStyle = glow; target.beginPath(); target.arc(x, y, radius * reach, 0, Math.PI * 2); target.fill(); target.restore();
+  }
+
+  function drawElectricSparks(target, x, y, radius, amount, timestamp, intense = false) {
+    if (amount < .01) return;
+    const count = intense ? 12 : 6;
+    for (let index = 0; index < count; index += 1) {
+      const phase = (timestamp / ((intense ? 470 : 760) + index * 31) + index * .337) % 1;
+      const activePart = intense ? .72 : .5;
+      const life = phase < activePart ? Math.sin(phase / activePart * Math.PI) : 0;
+      if (life < .06) continue;
+      const angle = index * 2.399 + Math.sin(index * 4.17) * .22;
+      const travel = phase / activePart;
+      const start = radius * (.79 + travel * .18), end = radius * (.98 + travel * (intense ? .62 : .35));
+      const tx = Math.cos(angle + Math.PI / 2), ty = Math.sin(angle + Math.PI / 2), jag = radius * (.055 + index % 3 * .014);
+      const point = (distance, offset) => [x + Math.cos(angle) * distance + tx * offset, y + Math.sin(angle) * distance + ty * offset];
+      strokeElectricBolt(target, [point(start, 0), point(start + (end - start) * .34, jag), point(start + (end - start) * .67, -jag * .72), point(end, 0)], amount * life, radius, intense);
+    }
+  }
+
+  function paintEnergySphere(target, { radius, timestamp }) {
+    const energy = target.createRadialGradient(-radius * .18, -radius * .28, radius * .04, 0, 0, radius * 1.08);
+    energy.addColorStop(0, '#afeef5'); energy.addColorStop(.32, '#86ddea'); energy.addColorStop(.68, '#63bedb'); energy.addColorStop(1, '#4d8fbc');
+    target.fillStyle = energy; target.fillRect(-radius * 1.1, -radius * 1.1, radius * 2.2, radius * 2.2);
+    const angle = timestamp / 1320, x = Math.cos(angle) * radius * .43, y = Math.sin(angle * 1.27) * radius * .34;
+    const core = target.createRadialGradient(x, y, 0, x, y, radius * .43);
+    core.addColorStop(0, 'rgba(255,255,255,.98)'); core.addColorStop(.2, 'rgba(224,255,255,.98)'); core.addColorStop(.55, 'rgba(40,235,255,.88)'); core.addColorStop(1, 'rgba(52,123,233,0)');
+    target.save(); target.globalCompositeOperation = 'screen'; target.fillStyle = core; target.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4); target.restore();
+  }
+
+  function drawEnergyTendrils(target, x, y, radius, amount, timestamp) {
+    if (amount < .01) return;
+    for (let index = 0; index < 8; index += 1) {
+      const phase = (timestamp / (520 + index * 31) + index * .347) % 1;
+      const life = Math.min(1, phase / .13) * Math.max(0, 1 - (phase - .13) / .57);
+      if (life < .055) continue;
+      const angle = index * 2.399 + Math.sin(index * 7.13) * .28;
+      const radialX = Math.cos(angle), radialY = Math.sin(angle), tangentX = -radialY, tangentY = radialX;
+      const start = radius * .9, reach = radius * (1.14 + index % 3 * .08), bend = radius * (.09 + index % 2 * .05);
+      const points = [[x + radialX * start, y + radialY * start], [x + radialX * (start + (reach - start) * .34) + tangentX * bend, y + radialY * (start + (reach - start) * .34) + tangentY * bend], [x + radialX * (start + (reach - start) * .68) - tangentX * bend * .55, y + radialY * (start + (reach - start) * .68) - tangentY * bend * .55], [x + radialX * reach, y + radialY * reach]];
+      strokeElectricBolt(target, points, amount * life, radius, true);
+    }
+  }
+
+  function drawElementalSlimeAvatar(target, options, levels, timestamp) {
+    const fireLevel = clamp(Number(levels?.fire) || 0, 0, 3);
+    const frostLevel = clamp(Number(levels?.frost) || 0, 0, 3);
+    const electricLevel = clamp(Number(levels?.electric) || 0, 0, 3);
+    if (fireLevel < .001 && frostLevel < .001 && electricLevel < .001) {
+      drawSlimeAvatar(target, options);
+      return;
+    }
+    const fireDominant = smoothFireVisual(fireLevel - 1);
+    const frostAmount = smoothFireVisual(frostLevel);
+    const frostDominant = smoothFireVisual(frostLevel - 1);
+    const electricMarked = smoothFireVisual(electricLevel);
+    const electricCharged = smoothFireVisual(electricLevel - 1);
+    const fireUltra = smoothFireVisual(fireLevel - 2);
+    const frostUltra = smoothFireVisual(frostLevel - 2);
+    const electricUltra = smoothFireVisual(electricLevel - 2);
+    const electricActive = clamp(Number(levels?.electricActive) || 0, 0, 1);
+    const electricFlash = clamp(Number(levels?.electricFlash) || 0, 0, 1);
+    const ultra = Math.max(fireUltra, frostUltra, electricUltra);
+    const fireColors = ['#ffb05a', '#f04b35', '#b7202c'];
+    const frostColors = ['#eaffff', '#69cdef', '#2694c8'];
+    const electricColors = ['#edffff', '#70e8f6', '#347ad9'];
+    let baseColors = [...(options.colors || fireColors)];
+    if (fireDominant > .001) baseColors = baseColors.map((color, index) => mixFireHex(color, fireColors[index], fireDominant));
+    if (frostDominant > .001) baseColors = baseColors.map((color, index) => mixFireHex(color, frostColors[index], frostDominant));
+    if (electricCharged > .001) baseColors = baseColors.map((color, index) => mixFireHex(color, electricColors[index], electricCharged));
+    const alpha = Number.isFinite(options.alpha) ? options.alpha : 1;
+    const eyesVisible = !options.blink && !['hurt', 'impact', 'power', 'petting', 'pleased', 'chewing', 'anticipating', 'savoring'].includes(options.emotion);
+    const x = options.x;
+    const y = options.y;
+    const radius = options.radius;
+    const originalAfterLayer = options.afterLayer;
+    const originalBodyPaint = options.bodyPaint;
+
+    drawElectricAura(target, x, y, radius, electricCharged * (1 - ultra) * alpha, false);
+
+    if (ultra < .999) {
+      drawSlimeAvatar(target, {
+        ...options,
+        colors: baseColors,
+        alpha: alpha * (1 - ultra),
+        bodyPaint: frostAmount > .001
+          ? (layerTarget, state) => paintFrostBody(layerTarget, state, frostAmount)
+          : originalBodyPaint,
+        afterLayer: (layerTarget, state) => {
+          if (typeof originalAfterLayer === 'function') originalAfterLayer(layerTarget, state);
+          drawFrostRim(layerTarget, state.radius, frostAmount);
+          drawColdFace(layerTarget, state.radius, frostAmount, timestamp);
+          drawSnowCap(layerTarget, state.radius, frostDominant, timestamp);
+          drawLightningMark(layerTarget, state.radius, electricMarked);
+          drawFireTip(layerTarget, 0, 0, state.radius, Math.min(fireLevel, 2), timestamp);
+          if (eyesVisible) drawFireEyes(layerTarget, 0, 0, state.radius, Math.min(fireLevel, 2), timestamp);
+        }
+      });
+      drawSnowfall(target, x, y, radius, frostDominant * (1 - ultra) * alpha, timestamp);
+      drawElectricSparks(target, x, y, radius, electricCharged * (1 - ultra) * alpha, timestamp, false);
+    }
+
+    if (fireUltra > .001) {
+      const originalBackLayer = options.backLayer;
+      const originalFrontLayer = options.frontLayer;
+      const activeFire = Number(levels?.fireActive) || 0;
+      const fireFlash = Number(levels?.fireFlash) || 0;
+      const fireIntensity = 1 + activeFire * (1.16 + Math.sin(timestamp / 88) * .15) + fireFlash * .88;
+      drawSlimeAvatar(target, {
+        ...options,
+        colors: fireColors,
+        alpha: alpha * fireUltra,
+        backLayer: (layerTarget, state) => {
+          if (typeof originalBackLayer === 'function') originalBackLayer(layerTarget, state);
+          drawFireContour(layerTarget, state, false, fireIntensity);
+        },
+        frontLayer: (layerTarget, state) => {
+          if (typeof originalFrontLayer === 'function') originalFrontLayer(layerTarget, state);
+          drawFireContour(layerTarget, state, true, fireIntensity);
+        },
+        afterLayer: (layerTarget, state) => {
+          if (typeof originalAfterLayer === 'function') originalAfterLayer(layerTarget, state);
+          if (eyesVisible) drawFireEyes(layerTarget, 0, 0, state.radius, 1, timestamp);
+        },
+        bodyHighlight: true
+      });
+    }
+    if (frostUltra > .001) drawSnowmanAvatar(target, options, frostUltra, timestamp);
+    if (electricUltra > .001) {
+      const activePulse = electricActive * (.9 + Math.sin(timestamp / 76) * .1);
+      const energyRadius = radius * (.82 + activePulse * .42 + electricFlash * .2);
+      if (electricActive > .01 || electricFlash > .01) {
+        const activeGlow = target.createRadialGradient(x, y, radius * .18, x, y, energyRadius * 1.48);
+        activeGlow.addColorStop(0, `rgba(235,255,255,${(.24 + electricFlash * .44) * electricUltra * alpha})`);
+        activeGlow.addColorStop(.36, `rgba(55,220,255,${(.22 + activePulse * .16) * electricUltra * alpha})`);
+        activeGlow.addColorStop(1, 'rgba(25,109,255,0)');
+        target.save(); target.globalCompositeOperation = 'screen'; target.fillStyle = activeGlow;
+        target.beginPath(); target.arc(x, y, energyRadius * 1.48, 0, Math.PI * 2); target.fill(); target.restore();
+      }
+      drawElectricAura(target, x, y, energyRadius, electricUltra * alpha * (.58 + activePulse * .58), true);
+      drawSlimeAvatar(target, {
+        ...options, colors: electricColors, alpha: alpha * electricUltra,
+        outlineColor: 'rgba(0,0,0,0)', faceColor: '#214b78', bodyHighlight: false,
+        scaleX: (options.scaleX || 1) * (1.025 + activePulse * .055),
+        scaleY: (options.scaleY || 1) * (1.025 + activePulse * .055),
+        faceScaleX: .957, faceScaleY: .957, bodyPaint: paintEnergySphere
+      });
+      drawEnergyTendrils(target, x, y, energyRadius, electricUltra * alpha * (.58 + activePulse * .7), timestamp);
+    }
   }
 
   function prepareMenuSlimeCanvas() {
@@ -6494,22 +9347,26 @@
 
   function drawMenuSlime(timestamp) {
     menuSlimeCtx.clearRect(0, 0, 180, 180);
+    const categoryVisual = updateMenuCategoryVisuals(timestamp);
     const emotion = menuSlimeEmotion();
     const rarity = MEAL_REACTION_CLASSES.find(name => els.slime.classList.contains(name))?.replace('meal-', '') || '';
     const isEating = ['eat', 'chewing', 'savoring', 'pleased'].some(name => els.slime.classList.contains(name));
     const hasMealFx = isEating && ['epic', 'special', 'secret'].includes(rarity);
     const blinkPhase = timestamp % 4700;
     const selected = skinById(save.selectedSkin);
+    const radius = 66 * (1 + categoryVisual.mass * .1 + categoryVisual.gigantism * .035);
+    const restingBottom = 91 + 66 * .93;
+    const slimeY = restingBottom - radius * .93;
     if (hasMealFx) drawMenuMealEffect(menuSlimeCtx, rarity, timestamp, 'back');
-    drawSlimeAvatar(menuSlimeCtx, {
-      x: 90, y: 91, radius: 66, emotion,
+    drawElementalSlimeAvatar(menuSlimeCtx, {
+      x: 90, y: slimeY, radius, emotion,
       skin: selected.id,
       colors: selected.colors,
       gazeX: menuGaze.x, gazeY: menuGaze.y,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
       timestamp
-    });
+    }, categoryVisual, timestamp);
     if (hasMealFx) drawMenuMealEffect(menuSlimeCtx, rarity, timestamp, 'front');
   }
 
@@ -6585,6 +9442,421 @@
     menuSlimeAnimationId = requestAnimationFrame(menuSlimeFrame);
   }
 
+  function drawActiveElementalAbility(timestamp, x, y, radius) {
+    const type = run.elementalAbilityActive;
+    if (!type || timestamp >= run.elementalAbilityUntil) return;
+    const remaining = clamp((run.elementalAbilityUntil - timestamp) / (ELEMENTAL_ABILITY_DURATION_MS[type] || 1), 0, 1);
+    ctx.save();
+    if (type === 'frost') {
+      ctx.strokeStyle = 'rgba(223,252,255,.86)';
+      ctx.lineWidth = 2.2;
+      ctx.shadowColor = '#65d5ff';
+      ctx.shadowBlur = 8;
+      for (let flake = 0; flake < 5; flake += 1) {
+        const angle = timestamp / 520 + flake * Math.PI * 2 / 5;
+        const orbit = radius * (1.18 + (flake % 2) * .18);
+        const px = x + Math.cos(angle) * orbit;
+        const py = y + Math.sin(angle) * orbit;
+        ctx.beginPath();
+        ctx.moveTo(px - 3, py); ctx.lineTo(px + 3, py);
+        ctx.moveTo(px, py - 3); ctx.lineTo(px, py + 3);
+        ctx.stroke();
+      }
+    } else if (type === 'electric') {
+      const elapsed = 1 - remaining;
+      const pulse = .5 + Math.sin(timestamp / 62) * .5;
+      const flash = clamp(1 - elapsed / .12, 0, 1);
+      const auraRadius = radius * (1.42 + pulse * .12 + flash * .18);
+      const aura = ctx.createRadialGradient(x, y, radius * .38, x, y, auraRadius);
+      aura.addColorStop(0, `rgba(235,255,255,${.23 + pulse * .1 + flash * .22})`);
+      aura.addColorStop(.48, `rgba(40,203,255,${.2 + pulse * .12})`);
+      aura.addColorStop(1, 'rgba(20,123,255,0)');
+      ctx.globalCompositeOperation = 'screen';
+      ctx.fillStyle = aura;
+      ctx.beginPath(); ctx.arc(x, y, auraRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      for (let arc = 0; arc < 8; arc += 1) {
+        const phase = (timestamp / (235 + arc * 13) + arc * .217) % 1;
+        const life = phase < .62 ? Math.sin(phase / .62 * Math.PI) : 0;
+        if (life < .04) continue;
+        const angle = arc * 2.399 + Math.sin(arc * 5.17) * .2;
+        const radialX = Math.cos(angle), radialY = Math.sin(angle);
+        const tangentX = -radialY, tangentY = radialX;
+        const start = radius * .72;
+        const reach = radius * (1.22 + phase * .98 + (arc % 3) * .12);
+        const bend = radius * (.1 + arc % 2 * .06);
+        const points = [
+          [x + radialX * start, y + radialY * start],
+          [x + radialX * lerp(start, reach, .34) + tangentX * bend, y + radialY * lerp(start, reach, .34) + tangentY * bend],
+          [x + radialX * lerp(start, reach, .68) - tangentX * bend * .72, y + radialY * lerp(start, reach, .68) - tangentY * bend * .72],
+          [x + radialX * reach, y + radialY * reach]
+        ];
+        strokeElectricBolt(ctx, points, life * (.76 + pulse * .24), radius, true);
+      }
+    } else if (type === 'fire') {
+      const duration = ELEMENTAL_ABILITY_DURATION_MS.fire || 5000;
+      const elapsed = duration * (1 - remaining);
+      const release = smoothFireVisual((duration - elapsed) / 720);
+      const rage = smoothFireVisual(elapsed / 780) * release;
+      const burst = clamp(1 - elapsed / 620, 0, 1);
+      const sparkCount = 12 + Math.round(rage * 10);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+      for (let spark = 0; spark < sparkCount; spark += 1) {
+        const cycle = timestamp / (430 - rage * 105 + spark % 4 * 31) + spark * .317;
+        const phase = cycle - Math.floor(cycle);
+        const life = Math.sin(phase * Math.PI) * release;
+        if (life < .05) continue;
+        const angle = spark * 2.399 + Math.sin(spark * 4.17) * .2;
+        const start = radius * (1.02 + rage * .22);
+        const travel = radius * (.34 + rage * .72) * phase;
+        const sx = x + Math.cos(angle) * (start + travel);
+        const sy = y + Math.sin(angle) * (start + travel) - phase * radius * (.16 + rage * .18);
+        const length = radius * (.07 + rage * .1) * (1 - phase * .45);
+        ctx.globalAlpha = life * (.48 + rage * .48);
+        ctx.strokeStyle = spark % 3 === 0 ? '#fff6a2' : spark % 2 ? '#ffc02d' : '#ff6a1d';
+        ctx.lineWidth = spark % 3 === 0 ? 2.3 : 1.7;
+        ctx.shadowColor = '#ff4b18';
+        ctx.shadowBlur = 7 + rage * 8;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx - Math.cos(angle) * length, sy - Math.sin(angle) * length);
+        ctx.stroke();
+      }
+      if (burst > .01) {
+        const progress = 1 - burst;
+        for (let spark = 0; spark < 18; spark += 1) {
+          const angle = spark * Math.PI * 2 / 18 + Math.sin(spark * 7.7) * .11;
+          const distance = radius * (1.02 + progress * (1.1 + spark % 3 * .18));
+          const length = radius * (.2 + burst * .18);
+          ctx.globalAlpha = Math.sin(progress * Math.PI) * (.68 + spark % 3 * .1);
+          ctx.strokeStyle = spark % 4 === 0 ? '#fffbd0' : spark % 2 ? '#ffd33e' : '#ff7520';
+          ctx.lineWidth = spark % 4 === 0 ? 3 : 2;
+          ctx.shadowColor = '#ff4a16';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(angle) * distance, y + Math.sin(angle) * distance);
+          ctx.lineTo(x + Math.cos(angle) * (distance + length), y + Math.sin(angle) * (distance + length));
+          ctx.stroke();
+        }
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (type === 'wind') {
+      const elapsed = 1 - remaining;
+      const appear = Math.min(1, elapsed * 8);
+      const fade = Math.min(1, remaining * 7);
+      const visibility = appear * fade;
+      const pulse = .5 + Math.sin(timestamp / 78) * .5;
+      const direction = Math.atan2(run.slime.vy, run.slime.vx);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+
+      const glow = ctx.createRadialGradient(x, y, radius * .35, x, y, radius * 1.72);
+      glow.addColorStop(0, `rgba(222,255,255,${.16 * visibility})`);
+      glow.addColorStop(.48, `rgba(69,222,235,${(.13 + pulse * .05) * visibility})`);
+      glow.addColorStop(1, 'rgba(22,174,203,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.ellipse(x, y, radius * 1.72, radius * 1.58, direction, 0, Math.PI * 2);
+      ctx.fill();
+
+      for (let band = 0; band < 7; band += 1) {
+        const centered = band - 3;
+        const vertical = centered * radius * .24;
+        const bandWidth = radius * (1.42 - Math.abs(centered) * .095 + pulse * .045);
+        const spin = timestamp / (185 + band * 17) * (band % 2 ? -1 : 1) + band * .92;
+        ctx.globalAlpha = visibility * (.46 + (band % 3) * .12);
+        ctx.strokeStyle = band % 3 === 0 ? '#f2ffff' : band % 2 ? '#75eff5' : '#36cddd';
+        ctx.lineWidth = 2.4 + (3 - Math.abs(centered)) * .32;
+        ctx.shadowColor = '#27c7df';
+        ctx.shadowBlur = 7 + pulse * 5;
+        ctx.beginPath();
+        ctx.ellipse(x, y + vertical, bandWidth, radius * (.22 + band * .008), spin * .045, spin, spin + Math.PI * 1.36);
+        ctx.stroke();
+      }
+
+      for (let mote = 0; mote < 12; mote += 1) {
+        const phase = (timestamp / (350 + mote * 15) + mote * .173) % 1;
+        const angle = mote * 2.399 + phase * 5.4;
+        const orbit = radius * (.82 + phase * .72);
+        const py = y + Math.sin(angle) * orbit * .72 + (phase - .5) * radius * .9;
+        ctx.globalAlpha = visibility * Math.sin(phase * Math.PI) * .78;
+        ctx.fillStyle = mote % 4 === 0 ? '#ffffff' : '#8ef8ff';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(angle) * orbit, py, 1.35 + (mote % 3) * .55, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (type === 'gigantism') {
+      const elapsed = 1 - remaining;
+      const pulse = .5 + Math.sin(timestamp / 82) * .5;
+      ctx.globalCompositeOperation = 'lighter';
+      const aura = ctx.createRadialGradient(x, y, radius * .68, x, y, radius * (1.2 + pulse * .035));
+      aura.addColorStop(0, 'rgba(210,255,126,0)');
+      aura.addColorStop(.72, `rgba(92,238,75,${.12 + pulse * .08})`);
+      aura.addColorStop(1, 'rgba(34,190,68,0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath(); ctx.arc(x, y, radius * 1.22, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = .45 + pulse * .24;
+      ctx.strokeStyle = '#caff6a';
+      ctx.lineWidth = 3.2;
+      ctx.shadowColor = '#3be35b';
+      ctx.shadowBlur = 13;
+      ctx.beginPath();
+      ctx.arc(x, y, radius * (1.025 + pulse * .018), elapsed * .28, elapsed * .28 + Math.PI * 1.72);
+      ctx.stroke();
+      for (let bubble = 0; bubble < 8; bubble += 1) {
+        const phase = (timestamp / (460 + bubble * 23) + bubble * .181) % 1;
+        const angle = bubble * 2.399;
+        const orbit = radius * (.78 + phase * .42);
+        ctx.globalAlpha = Math.sin(phase * Math.PI) * .55;
+        ctx.fillStyle = bubble % 2 ? '#9cff64' : '#efffa1';
+        ctx.beginPath(); ctx.arc(x + Math.cos(angle) * orbit, y + Math.sin(angle) * orbit, 2 + phase * 3.2, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (type === 'cosmos') {
+      const elapsed = 1 - remaining;
+      const pulse = .5 + Math.sin(timestamp / 92) * .5;
+      const coreRadius = radius * (.72 + pulse * .06);
+      const fieldRadius = radius * (2.75 + pulse * .22);
+      const field = ctx.createRadialGradient(x, y, coreRadius * .4, x, y, fieldRadius);
+      field.addColorStop(0, 'rgba(3,2,14,.96)');
+      field.addColorStop(.2, `rgba(53,22,116,${.72 + pulse * .12})`);
+      field.addColorStop(.48, 'rgba(89,62,214,.25)');
+      field.addColorStop(1, 'rgba(33,20,112,0)');
+      ctx.fillStyle = field;
+      ctx.beginPath(); ctx.arc(x, y, fieldRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+      for (let ring = 0; ring < 3; ring += 1) {
+        const ringRadius = radius * (1.02 + ring * .38 + pulse * .035);
+        const start = timestamp / (330 + ring * 95) * (ring % 2 ? -1 : 1) + ring * 1.7;
+        ctx.globalAlpha = (.42 - ring * .07) * Math.min(1, remaining * 4);
+        ctx.strokeStyle = ring === 1 ? '#78dfff' : ring === 2 ? '#a06cff' : '#f0eaff';
+        ctx.lineWidth = 3.5 - ring * .65;
+        ctx.shadowColor = ring === 1 ? '#2a9dff' : '#793fff';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.ellipse(x, y, ringRadius * 1.28, ringRadius * .58, start * .08, start, start + Math.PI * (1.2 + ring * .16));
+        ctx.stroke();
+      }
+      for (let mote = 0; mote < 9; mote += 1) {
+        const phase = (timestamp / (520 + mote * 17) + mote * .137) % 1;
+        const angle = mote * 2.399 + phase * 3.2;
+        const orbit = lerp(fieldRadius, coreRadius * .8, phase);
+        ctx.globalAlpha = Math.sin(phase * Math.PI) * .8;
+        ctx.fillStyle = mote % 3 ? '#83ddff' : '#e6c8ff';
+        ctx.beginPath(); ctx.arc(x + Math.cos(angle) * orbit, y + Math.sin(angle) * orbit * .72, 1.5 + phase * 1.6, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = .82 + elapsed * .08;
+      ctx.fillStyle = '#05020f';
+      ctx.shadowColor = '#8a58ff';
+      ctx.shadowBlur = 15;
+      ctx.beginPath(); ctx.arc(x, y, coreRadius, 0, Math.PI * 2); ctx.fill();
+    } else if (type === 'gold') {
+      const pulse = .5 + Math.sin(timestamp / 90) * .5;
+      ctx.globalAlpha = .8 + remaining * .2;
+      ctx.strokeStyle = '#ffe66b';
+      ctx.fillStyle = 'rgba(255,194,31,.16)';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#ffb319';
+      ctx.shadowBlur = 15;
+      ctx.beginPath(); ctx.arc(x, y, radius * (1.28 + pulse * .08), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      for (let spark = 0; spark < 7; spark += 1) {
+        const angle = timestamp / 520 + spark * Math.PI * 2 / 7;
+        const orbit = radius * (1.35 + (spark % 2) * .22);
+        ctx.fillStyle = spark % 2 ? '#fff5ae' : '#ffc31f';
+        ctx.fillRect(x + Math.cos(angle) * orbit - 2, y + Math.sin(angle) * orbit - 2, 4, 4);
+      }
+    } else if (type === 'explosion') {
+      const pulse = .5 + Math.sin(timestamp / 62) * .5;
+      ctx.globalAlpha = .72 + pulse * .2;
+      ctx.strokeStyle = '#ffd95a';
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = '#ff4a22';
+      ctx.shadowBlur = 15;
+      for (let ring = 0; ring < 2; ring += 1) {
+        ctx.beginPath(); ctx.arc(x, y, radius * (1.18 + ring * .3 + pulse * .08), timestamp / 180 + ring, timestamp / 180 + ring + Math.PI * 1.4); ctx.stroke();
+      }
+    } else if (type === 'mass') {
+      const pulse = .5 + Math.sin(timestamp / 80) * .5;
+      ctx.globalAlpha = .72;
+      ctx.strokeStyle = '#d9ecff';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#7296bd';
+      ctx.shadowBlur = 11;
+      ctx.beginPath(); ctx.arc(x, y, radius * (1.05 + pulse * .025), 0, Math.PI * 2); ctx.stroke();
+      for (let streak = -1; streak <= 1; streak += 1) {
+        const sx = x + streak * radius * .58;
+        ctx.beginPath(); ctx.moveTo(sx, y - radius * 1.9); ctx.lineTo(sx, y - radius * 1.18); ctx.stroke();
+      }
+    } else if (type === 'mobility') {
+      ctx.globalAlpha = .38;
+      ctx.strokeStyle = '#a7f6d4';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 8]);
+      ctx.lineDashOffset = -timestamp / 35;
+      ctx.beginPath(); ctx.arc(x, y, radius * 1.14, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWindMotionVisual(timestamp, x, y, radius, speed, front = false) {
+    const level = elementalLevel('wind');
+    if (level < 1 || run.portalEntry || windTornadoActive(timestamp)) return;
+    const flash = timestamp < (run.windBounceFlashUntil || 0)
+      ? clamp((run.windBounceFlashUntil - timestamp) / 360, 0, 1)
+      : 0;
+    const dash = windDashActive(timestamp);
+    const strength = Math.max(flash * .72, clamp((speed - 155) / 245, 0, 1), dash ? 1 : 0);
+    if (strength < .04) return;
+    const velocity = Math.max(1, Math.hypot(run.slime.vx, run.slime.vy));
+    const dx = run.slime.vx / velocity;
+    const dy = run.slime.vy / velocity;
+    const tx = -dy;
+    const ty = dx;
+    const tail = radius * (.55 + strength * (dash ? 2.3 : 1.25));
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    if (!front) {
+      for (let streak = 0; streak < (dash ? 9 : 5); streak += 1) {
+        const side = streak - (dash ? 4 : 2);
+        const spread = side * radius * .19;
+        const wobble = Math.sin(timestamp / 75 + streak * 1.7) * radius * .08;
+        const startX = x + tx * spread - dx * radius * .35;
+        const startY = y + ty * spread - dy * radius * .35;
+        ctx.globalAlpha = strength * (.26 + (streak % 3) * .1);
+        ctx.strokeStyle = streak % 3 ? '#75eafa' : '#eaffff';
+        ctx.lineWidth = dash ? 3.2 : 2;
+        ctx.shadowColor = '#2bcbe6';
+        ctx.shadowBlur = dash ? 11 : 6;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.quadraticCurveTo(startX - dx * tail * .5 + tx * wobble, startY - dy * tail * .5 + ty * wobble, startX - dx * tail, startY - dy * tail);
+        ctx.stroke();
+      }
+    } else {
+      ctx.globalAlpha = strength * (dash ? .72 : .38);
+      ctx.strokeStyle = dash ? '#eaffff' : '#8eeefa';
+      ctx.lineWidth = dash ? 4.2 : 2.4;
+      ctx.shadowColor = '#22cde9';
+      ctx.shadowBlur = dash ? 14 : 7;
+      const angle = Math.atan2(dy, dx);
+      ctx.beginPath();
+      ctx.arc(x, y, radius * (1.04 + strength * .08), angle - Math.PI * .62, angle + Math.PI * .62);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function cosmosCometVisualStrength(timestamp) {
+    if (!run || elementalLevel('cosmos') < 2 || run.portalEntry) return 0;
+    if (cosmosBoostActive()) return 1;
+    if (timestamp < (run.cosmosCometFadeUntil || 0)) {
+      return clamp((run.cosmosCometFadeUntil - timestamp) / 420, 0, 1);
+    }
+    return clamp(run.cosmosCometCharge || 0, 0, 1);
+  }
+
+  function drawCosmosCometVisual(timestamp, x, y, radius, front = false) {
+    const strength = cosmosCometVisualStrength(timestamp);
+    if (strength <= .01) return;
+    const active = cosmosBoostActive();
+    const ignition = run.cosmosCometIgnitedAt
+      ? clamp(1 - (timestamp - run.cosmosCometIgnitedAt) / 520, 0, 1)
+      : 0;
+    const pulse = .5 + Math.sin(timestamp / 72) * .5;
+    const wakeLength = radius * (.45 + strength * 1.72 + (active ? .78 + pulse * .2 : 0));
+    const wakeWidth = radius * (.55 + strength * .32 + (active ? .12 : 0));
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalCompositeOperation = 'lighter';
+    if (!front) {
+      const glowRadius = radius * (1.12 + strength * .78 + ignition * .3);
+      const glow = ctx.createRadialGradient(0, radius * .24, radius * .12, 0, radius * .2, glowRadius);
+      glow.addColorStop(0, `rgba(250,235,255,${.12 + strength * .18})`);
+      glow.addColorStop(.42, `rgba(174,75,255,${.1 + strength * .23})`);
+      glow.addColorStop(1, 'rgba(78,25,196,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(0, radius * .2, glowRadius, 0, Math.PI * 2); ctx.fill();
+
+      // При падении нижняя полусфера — передняя кромка. Плазма обтекает её,
+      // поднимается по бокам и собирается в след уже НАД слаймом.
+      const flame = ctx.createLinearGradient(0, radius * .88, 0, -wakeLength);
+      flame.addColorStop(0, `rgba(255,244,255,${.66 + strength * .3})`);
+      flame.addColorStop(.22, `rgba(226,120,255,${.58 + strength * .34})`);
+      flame.addColorStop(.6, `rgba(121,42,255,${.4 + strength * .28})`);
+      flame.addColorStop(1, 'rgba(46,16,155,0)');
+      ctx.fillStyle = flame;
+      ctx.shadowColor = '#9d45ff';
+      ctx.shadowBlur = 13 + strength * 16;
+      const sway = Math.sin(timestamp / 64) * radius * .09;
+      ctx.beginPath();
+      ctx.moveTo(-radius * .84, radius * .34);
+      ctx.bezierCurveTo(-radius * 1.02, -radius * .08, -wakeWidth * .72, -wakeLength * .62, sway, -wakeLength);
+      ctx.bezierCurveTo(wakeWidth * .72, -wakeLength * .62, radius * 1.02, -radius * .08, radius * .84, radius * .34);
+      ctx.quadraticCurveTo(0, radius * 1.04, -radius * .84, radius * .34);
+      ctx.closePath();
+      ctx.fill();
+
+      const inner = ctx.createLinearGradient(0, radius * .72, 0, -wakeLength * .74);
+      inner.addColorStop(0, `rgba(255,255,255,${.58 + strength * .38})`);
+      inner.addColorStop(.28, `rgba(238,173,255,${.5 + strength * .34})`);
+      inner.addColorStop(1, 'rgba(128,54,255,0)');
+      ctx.fillStyle = inner;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(-radius * .48, radius * .5);
+      ctx.bezierCurveTo(-radius * .56, -radius * .06, -radius * .24 + sway * .35, -wakeLength * .5, sway * .38, -wakeLength * .75);
+      ctx.bezierCurveTo(radius * .28 + sway * .35, -wakeLength * .48, radius * .58, -.02 * radius, radius * .48, radius * .5);
+      ctx.quadraticCurveTo(0, radius * .78, -radius * .48, radius * .5);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.globalAlpha = .36 + strength * .38;
+      ctx.strokeStyle = '#bc66ff';
+      ctx.lineWidth = 2 + strength * 2;
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(side * radius * .82, radius * .28);
+        ctx.bezierCurveTo(side * radius * 1.04, -radius * .25, side * wakeWidth * .82, -wakeLength * .55, sway, -wakeLength * .94);
+        ctx.stroke();
+      }
+    } else {
+      // Яркая ударная кромка расположена именно ПЕРЕД падающим шаром.
+      ctx.globalAlpha = .42 + strength * .56;
+      ctx.strokeStyle = active ? '#fff4ff' : '#dfadff';
+      ctx.lineWidth = 3 + strength * 3.6;
+      ctx.shadowColor = '#922fff';
+      ctx.shadowBlur = 12 + strength * 18;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * (1.03 + strength * .055), Math.PI * .04, Math.PI * .96);
+      ctx.stroke();
+      ctx.globalAlpha = .22 + strength * .42;
+      ctx.strokeStyle = '#9e42ff';
+      ctx.lineWidth = 2 + strength * 1.5;
+      ctx.beginPath();
+      ctx.arc(0, radius * .04, radius * (1.18 + strength * .08), Math.PI * .12, Math.PI * .88);
+      ctx.stroke();
+
+      const sparks = active ? 12 : 7;
+      for (let index = 0; index < sparks; index += 1) {
+        const phase = (timestamp / (310 + index * 13) + index * .173) % 1;
+        const side = index % 2 ? 1 : -1;
+        const sparkY = radius * .36 - phase * (wakeLength + radius * .12);
+        const sparkX = side * radius * (.42 + (index % 3) * .2) * (1 - phase * .58) + Math.sin(timestamp / 90 + index * 2.4) * 3;
+        ctx.globalAlpha = (1 - phase) * (.35 + strength * .65);
+        ctx.fillStyle = index % 3 ? '#c86bff' : '#fff4ff';
+        ctx.beginPath(); ctx.arc(sparkX, sparkY, 1.3 + strength * 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
   function drawSlime(timestamp) {
     const s = run.slime;
     const screenY = s.y - run.cameraY;
@@ -6598,12 +9870,32 @@
       : 0;
     const vanishProgress = clamp((portalProgress - .08) / .92, 0, 1);
     const portalScale = Math.pow(1 - vanishProgress, 1.12);
+    const launchActive = run.launchEntryStartedAt > 0 && timestamp < run.launchEntryUntil;
+    const launchProgress = launchActive
+      ? clamp((timestamp - run.launchEntryStartedAt) / Math.max(1, run.launchEntryUntil - run.launchEntryStartedAt), 0, 1)
+      : 1;
+    const emergeProgress = clamp(launchProgress / .2, 0, 1);
+    const emergeEase = 1 - Math.pow(1 - emergeProgress, 2.7);
+    const launchScale = launchActive ? .14 + emergeEase * .86 : 1;
+    const launchAlpha = launchActive ? clamp(launchProgress / .055, 0, 1) : 1;
     if (run.portalEntry && portalScale <= .01) return;
     const speed = Math.hypot(s.vx, s.vy);
     const stretch = clamp(s.vy / 900, -.22, .3);
     const bounceSquash = clamp(Math.sin(s.wobble) * .025 + Math.abs(s.vx) / 1700, 0, .12);
     const scaleX = frozen ? 1 : 1 - stretch * .42 + bounceSquash;
     const scaleY = frozen ? 1 : 1 + stretch - bounceSquash * .55;
+    const gigantismInflateProgress = gigantismActive(timestamp)
+      ? clamp((timestamp - (run.gigantismStartedAt || timestamp)) / 245, 0, 1)
+      : 1;
+    const gigantismInflateSquash = gigantismInflateProgress < 1
+      ? Math.sin(gigantismInflateProgress * Math.PI) * .13
+      : 0;
+    const gigantismDeflateProgress = timestamp < (run.gigantismDeflateUntil || 0)
+      ? clamp((timestamp - run.gigantismDeflateStartedAt) / Math.max(1, run.gigantismDeflateUntil - run.gigantismDeflateStartedAt), 0, 1)
+      : 1;
+    const gigantismDeflateWobble = gigantismDeflateProgress < 1
+      ? Math.sin(gigantismDeflateProgress * Math.PI * 5) * (1 - gigantismDeflateProgress) * .12
+      : 0;
     const radius = s.radius;
     const emotion = frozen
       ? run.frozenEmotion
@@ -6711,6 +10003,26 @@
       ctx.restore();
     }
 
+    if (launchActive && launchProgress < .46) {
+      const launchPalette = {
+        1: ['101,240,176', '220,255,173'],
+        2: ['101,231,255', '230,253,255'],
+        3: ['255,130,202', '255,240,182'],
+        4: ['255,121,63', '255,211,107']
+      }[run.worldId] || ['101,240,176', '220,255,173'];
+      const glowStrength = 1 - launchProgress / .46;
+      const launchGlow = ctx.createRadialGradient(s.x, screenY, radius * .08, s.x, screenY, radius * 2.15);
+      launchGlow.addColorStop(0, `rgba(${launchPalette[1]},${.34 * glowStrength})`);
+      launchGlow.addColorStop(.42, `rgba(${launchPalette[0]},${.26 * glowStrength})`);
+      launchGlow.addColorStop(1, `rgba(${launchPalette[0]},0)`);
+      ctx.save();
+      ctx.fillStyle = launchGlow;
+      ctx.beginPath();
+      ctx.arc(s.x, screenY, radius * 2.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     const avatarOptions = {
       x: s.x,
       y: screenY,
@@ -6722,16 +10034,46 @@
         : hurtActive && hurtPulse > .32
           ? ['#fff1f0', '#ff7377', '#cf3347']
           : selected.colors,
-      scaleX: scaleX * portalScale,
-      scaleY: scaleY * portalScale,
-      rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.8,
-      alpha: run.portalEntry ? Math.pow(1 - vanishProgress, .72) : 1,
+      scaleX: scaleX * (1 + gigantismInflateSquash + gigantismDeflateWobble) * portalScale * launchScale,
+      scaleY: scaleY * (1 - gigantismInflateSquash * .45 - gigantismDeflateWobble * .6) * portalScale * launchScale,
+      rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.8 + gigantismDeflateWobble * .22,
+      alpha: (run.portalEntry ? Math.pow(1 - vanishProgress, .72) : 1) * launchAlpha,
       timestamp
     };
-    drawSlimeAvatar(ctx, avatarOptions);
+    const fireLevel = run.categoryVisuals?.fire || 0;
+    const fireRadius = radius * portalScale * launchScale;
+    const fireAbilityActive = run.elementalAbilityActive === 'fire' && timestamp < run.elementalAbilityUntil;
+    const fireAbilityDuration = ELEMENTAL_ABILITY_DURATION_MS.fire || 5000;
+    const fireAbilityRemaining = fireAbilityActive ? Math.max(0, run.elementalAbilityUntil - timestamp) : 0;
+    const fireAbilityElapsed = fireAbilityActive ? fireAbilityDuration - fireAbilityRemaining : fireAbilityDuration;
+    const electricAbilityActive = run.elementalAbilityActive === 'electric' && timestamp < run.elementalAbilityUntil;
+    const electricAbilityDuration = ELEMENTAL_ABILITY_DURATION_MS.electric || 3000;
+    const electricAbilityRemaining = electricAbilityActive ? Math.max(0, run.elementalAbilityUntil - timestamp) : 0;
+    const electricAbilityElapsed = electricAbilityActive ? electricAbilityDuration - electricAbilityRemaining : electricAbilityDuration;
+    const elementalVisuals = {
+      ...run.categoryVisuals,
+      fireActive: fireAbilityActive
+        ? smoothFireVisual(fireAbilityElapsed / 780) * smoothFireVisual(fireAbilityRemaining / 720)
+        : 0,
+      fireFlash: fireAbilityActive ? clamp(1 - fireAbilityElapsed / 360, 0, 1) : 0,
+      electricActive: electricAbilityActive
+        ? smoothFireVisual(electricAbilityElapsed / 260) * smoothFireVisual(electricAbilityRemaining / 380)
+        : 0,
+      electricFlash: electricAbilityActive ? clamp(1 - electricAbilityElapsed / 280, 0, 1) : 0
+    };
+    if (!frozen) drawWindMotionVisual(timestamp, s.x, screenY, fireRadius, speed, false);
+    if (!frozen) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, false);
+    drawElementalSlimeAvatar(ctx, avatarOptions, elementalVisuals, timestamp);
+    if (!frozen) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, true);
+    if (!frozen) drawWindMotionVisual(timestamp, s.x, screenY, fireRadius, speed, true);
+    drawActiveElementalAbility(timestamp, s.x, screenY, fireRadius);
     if (run.effects.edgePortals && !run.portalEntry) {
-      if (s.x - radius < 0) drawSlimeAvatar(ctx, { ...avatarOptions, x: s.x + VIEW_W });
-      if (s.x + radius > VIEW_W) drawSlimeAvatar(ctx, { ...avatarOptions, x: s.x - VIEW_W });
+      if (s.x - radius < 0) {
+        drawElementalSlimeAvatar(ctx, { ...avatarOptions, x: s.x + VIEW_W }, elementalVisuals, timestamp);
+      }
+      if (s.x + radius > VIEW_W) {
+        drawElementalSlimeAvatar(ctx, { ...avatarOptions, x: s.x - VIEW_W }, elementalVisuals, timestamp);
+      }
     }
 
     if (!run.portalEntry && timestamp < (run.gravitySwitchFlashUntil || 0)) {
@@ -6788,8 +10130,6 @@
 
     if (frozen && !run.portalEntry) drawFrozenSlimeOverlay(s.x, screenY, radius, timestamp);
 
-    if (!run.portalEntry) drawHealthBar(s.x, screenY - radius * .98 - 22, radius);
-
     if (!run.portalEntry && speed > 260) {
       run.trails.push({ x: s.x, y: s.y, radius, life: .22 });
       if (run.trails.length > 8) run.trails.shift();
@@ -6836,36 +10176,6 @@
       ctx.fillStyle = '#f4feff';
       ctx.beginPath(); ctx.arc(fx * radius, fy * radius, fr * radius, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.restore();
-  }
-
-  function drawHealthBar(x, y, radius) {
-    const width = clamp(radius * 2.25, 74, 108);
-    const height = 12;
-    const left = clamp(x - width / 2, 6, VIEW_W - width - 6);
-    const top = clamp(y, 8, VIEW_H - 24);
-    const ratio = clamp(run.visualHealth / Math.max(1, run.maxHealth), 0, 1);
-    const fillWidth = Math.max(0, (width - 4) * ratio);
-    let fill = ratio > .55 ? '#4ade80' : ratio > .25 ? '#facc15' : '#fb7185';
-    if (run.healthFlashTime > 0 && run.healthFlash > 0) fill = '#67e8f9';
-    if (run.healthFlashTime > 0 && run.healthFlash < 0) fill = '#fff';
-
-    ctx.save();
-    ctx.fillStyle = 'rgba(10,9,17,.78)';
-    roundedRect(ctx, left, top, width, height, 6);
-    ctx.fill();
-    ctx.fillStyle = fill;
-    roundedRect(ctx, left + 2, top + 2, fillWidth, height - 4, 4);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.68)';
-    ctx.lineWidth = 1;
-    roundedRect(ctx, left, top, width, height, 6);
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '900 8px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`${Math.max(0, Math.ceil(run.health))} / ${Math.ceil(run.maxHealth)}`, left + width / 2, top + height / 2 + .5);
     ctx.restore();
   }
 
@@ -6932,8 +10242,6 @@
     if (!run || run.ended) return;
     const completedLap = run.endlessLap;
     const segmentDepth = run.world.targetDepth;
-    const lapReward = Math.round(run.world.reward * (1 + Math.min(1.4, (completedLap - 1) * .14)));
-    run.coins += lapReward;
     run.endlessDepthOffset += segmentDepth;
     run.endlessLap += 1;
     run.world.endlessScale = 1 + Math.min(.9, (run.endlessLap - 1) * .1);
@@ -6988,16 +10296,17 @@
       save.selectedLevels[world.id] = level + 1;
     } else {
       save.unlockedLevels[world.id] = LEVEL_COUNT;
-      const unlockedSkin = { 1: 'cat', 2: 'water', 3: 'dumpling' }[world.id];
+      const unlockedSkin = { 1: 'cat', 3: 'dumpling' }[world.id];
       if (unlockedSkin && !save.unlockedSkins.includes(unlockedSkin)) save.unlockedSkins.push(unlockedSkin);
-      if (world.id < WORLDS.length) {
-        save.world = world.id + 1;
-        save.selectedLevels[save.world] = 1;
+      const activeIndex = ACTIVE_WORLD_IDS.indexOf(world.id);
+      const nextWorldId = ACTIVE_WORLD_IDS[activeIndex + 1];
+      if (nextWorldId) {
+        save.world = nextWorldId;
+        save.selectedLevels[nextWorldId] = 1;
       }
     }
-    run.isFinalCompletion = world.id === WORLDS[WORLDS.length - 1].id && level === LEVEL_COUNT;
+    run.isFinalCompletion = world.id === ACTIVE_WORLD_IDS[ACTIVE_WORLD_IDS.length - 1] && level === LEVEL_COUNT;
     if (run.isFinalCompletion) save.gameCompleted = true;
-    run.coins += world.reward;
     sound('win');
     endRun(true, level < LEVEL_COUNT
       ? `Уровень ${level} пройден! Открыт уровень ${level + 1}.`
@@ -7117,25 +10426,73 @@
     });
   }
 
-  async function revealResultSummary(depth, coins, token) {
+  function pulseResultResearchFlask() {
+    if (!els.resultResearchFlask) return;
+    els.resultResearchFlask.classList.remove('unit-earned');
+    void els.resultResearchFlask.offsetWidth;
+    els.resultResearchFlask.classList.add('unit-earned');
+  }
+
+  function animateResultResearch(data, startProgress, startUnits, token) {
+    cancelAnimationFrame(resultResearchAnimationId);
+    const totalData = Math.max(0, Math.floor(data));
+    const duration = clamp(760 + totalData * 2.2, 880, 1900);
+    const startedAt = performance.now();
+    let lastUnits = startUnits;
+    els.resultResearchStream?.classList.add('is-pouring');
+    return new Promise(resolve => {
+      const finish = () => {
+        els.resultResearchStream?.classList.remove('is-pouring');
+        resolve();
+      };
+      const step = timestamp => {
+        if (token !== resultRevealToken || !run) return finish();
+        const ratio = clamp((timestamp - startedAt) / duration, 0, 1);
+        const eased = 1 - Math.pow(1 - ratio, 3);
+        const added = Math.round(totalData * eased);
+        const absolute = startProgress + added;
+        const units = startUnits + Math.floor(absolute / 100);
+        const progress = absolute % 100;
+        if (els.resultResearchData) els.resultResearchData.textContent = `+${added.toLocaleString('ru-RU')}`;
+        if (els.resultResearchUnits) els.resultResearchUnits.textContent = formatCompactNumber(units);
+        if (els.resultResearchProgress) els.resultResearchProgress.style.width = `${progress}%`;
+        if (units !== lastUnits) {
+          lastUnits = units;
+          pulseResultResearchFlask();
+          sound('coin');
+          feedback([4, 8, 4]);
+        }
+        if (ratio < 1) resultResearchAnimationId = requestAnimationFrame(step);
+        else finish();
+      };
+      resultResearchAnimationId = requestAnimationFrame(step);
+    });
+  }
+
+  async function revealResultSummary(researchData, coins, token) {
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const modal = els.resultOverlay.querySelector('.result-modal');
-    const depthStat = els.resultDepth.closest('.result-stat');
+    const researchStat = els.resultResearchData?.closest('.result-stat');
     const coinsStat = els.resultCoins.closest('.result-stat');
     if (!reducedMotion) await new Promise(resolve => setTimeout(resolve, 330));
     if (token !== resultRevealToken || !run) return;
 
-    depthStat?.classList.add('is-counting');
-    if (reducedMotion) els.resultDepth.textContent = `${depth.toLocaleString('ru-RU')} м`;
-    else await animateResultNumber(els.resultDepth, 0, depth, 580, value => `${value.toLocaleString('ru-RU')} м`);
+    researchStat?.classList.add('is-counting');
+    if (reducedMotion) {
+      els.resultResearchData.textContent = `+${researchData.toLocaleString('ru-RU')}`;
+      els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsAfter);
+      els.resultResearchProgress.style.width = `${run.researchProgressAfter}%`;
+    } else {
+      await animateResultResearch(researchData, run.researchProgressBefore, run.researchUnitsBefore, token);
+    }
     if (token !== resultRevealToken || !run) return;
-    depthStat?.classList.remove('is-counting');
-    depthStat?.classList.add('is-complete');
+    researchStat?.classList.remove('is-counting');
+    researchStat?.classList.add('is-complete');
     feedback(5);
 
     if (!reducedMotion) await new Promise(resolve => setTimeout(resolve, 120));
     if (token !== resultRevealToken || !run) return;
-    depthStat?.classList.remove('is-complete');
+    researchStat?.classList.remove('is-complete');
     coinsStat?.classList.add('is-counting');
     sound('coin');
     if (reducedMotion) els.resultCoins.textContent = `+${formatCompactNumber(coins)}`;
@@ -7181,7 +10538,15 @@
       save.worldBest[run.worldId] = Math.max(save.worldBest[run.worldId] || 0, Math.min(run.maxDepth, run.world.targetDepth));
       save.lastRunDepth[`${run.worldId}:${run.level}`] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
     }
-    const baseCoins = Math.max(1, Math.floor(run.coins));
+    const baseCoins = Math.max(0, Math.floor(run.coins));
+    const researchData = Math.max(0, Math.floor(run.researchData || 0));
+    run.researchUnitsBefore = save.researchUnits;
+    run.researchProgressBefore = save.researchProgress;
+    const researchTotal = save.researchProgress + researchData;
+    save.researchUnits += Math.floor(researchTotal / 100);
+    save.researchProgress = researchTotal % 100;
+    run.researchUnitsAfter = save.researchUnits;
+    run.researchProgressAfter = save.researchProgress;
     save.coins += baseCoins;
     run.awardedCoins = baseCoins;
     run.finalCoins = baseCoins;
@@ -7194,7 +10559,7 @@
     const resultModal = els.resultOverlay.querySelector('.result-modal');
     resultModal?.classList.remove('reward-locked', 'reward-claimed', 'result-reveal-ready');
     resultModal?.classList.add('result-reveal-pending');
-    els.resultDepth.closest('.result-stat')?.classList.remove('is-counting', 'is-complete');
+    els.resultResearchData?.closest('.result-stat')?.classList.remove('is-counting', 'is-complete');
     els.resultCoins.closest('.result-stat')?.classList.remove('is-counting', 'is-complete');
     els.resultWorldIcon.src = versionedAsset(`assets/ui/world-icons/world-${run.worldId}.webp`);
     els.resultWorldName.textContent = run.world.name;
@@ -7205,7 +10570,9 @@
       : 'ЗАБЕГ ОКОНЧЕН';
     els.resultTitle.textContent = run.endless ? 'Бесконечный забег' : 'Результат забега';
     els.resultText.textContent = reason;
-    els.resultDepth.textContent = '0 м';
+    els.resultResearchData.textContent = '+0';
+    els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsBefore);
+    els.resultResearchProgress.style.width = `${run.researchProgressBefore}%`;
     els.resultCoins.textContent = '+0';
     els.resultMultiplierLabel.textContent = formatResultMultiplier(RESULT_MULTIPLIERS[0]);
     els.resultMultiplierHint.textContent = 'Нажми, чтобы остановить стрелку';
@@ -7219,7 +10586,7 @@
     requestAnimationFrame(() => {
       els.resultOverlay.classList.add('is-arriving');
       els.resultOverlay.querySelector('.modal')?.focus();
-      revealResultSummary(Math.max(0, Math.floor(run.maxDepth)), baseCoins, revealToken);
+      revealResultSummary(researchData, baseCoins, revealToken);
     });
     if (!completed) sound('fail');
   }
@@ -7228,7 +10595,7 @@
     if (!run || run.rewardClaimed || run.rewardPending || adInFlight) return;
     run.rewardPending = true;
     const multiplier = stopResultMeter();
-    const totalCoins = Math.max(1, Math.round(run.awardedCoins * multiplier));
+    const totalCoins = Math.max(0, Math.round(run.awardedCoins * multiplier));
     run.rewardMultiplier = multiplier;
     els.resultOverlay.querySelector('.result-modal')?.classList.add('reward-locked');
     els.resultMultiplierHint.textContent = `Поймано ${formatResultMultiplier(multiplier)} · подтверди награду`;
@@ -7296,6 +10663,7 @@
     resultRevealToken += 1;
     stopResultMeter();
     cancelAnimationFrame(resultCoinAnimationId);
+    cancelAnimationFrame(resultResearchAnimationId);
     els.resultOverlay.classList.add('hidden');
     els.resultOverlay.classList.remove('is-arriving');
     syncInteractionLayers();
@@ -7335,10 +10703,385 @@
     if (type === 'upgrades') renderUpgradesPanel();
     if (type === 'shop' || type === 'skins') renderShopPanel(activeShopTab);
     if (type === 'rewards') renderRewardsPanel();
+    if (type === 'recipes') renderRecipesPanel();
     if (type === 'encyclopedia') renderEncyclopediaPanel(activeEncyclopediaTab, save.world);
     els.panelOverlay.classList.remove('hidden');
     syncInteractionLayers();
     requestAnimationFrame(() => els.panelOverlay.querySelector('.modal')?.focus());
+  }
+
+  function renderRecipesPanel() {
+    stopMutationFeedHold();
+    mutationAnimationToken += 1;
+    mutationAnimating = false;
+    $('#mutationPrize')?.remove();
+    const researchBalance = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
+    els.panelTitle.innerHTML = `<span>Мутации</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+    const unlocked = new Set(save.unlockedMutations || []);
+    const allUnlocked = unlocked.size >= MUTATION_DISCOVERIES.length;
+    const mutationCost = MUTATION_STEPS * (unlocked.size + 1);
+    const readyToReveal = save.mutationProgress >= mutationCost && !allUnlocked;
+    const remaining = Math.max(0, mutationCost - save.mutationProgress);
+    const collectionCapacity = 9;
+    const visibleUnlockedCount = STARTER_MUTATIONS.length + unlocked.size;
+    const futureMutations = Array.from({ length: Math.max(0, collectionCapacity - STARTER_MUTATIONS.length - MUTATION_DISCOVERIES.length) }, (_, index) => ({ id: `future-${index + 1}`, future: true }));
+    const collection = [...STARTER_MUTATIONS.map(mutation => ({ ...mutation, starter: true })), ...MUTATION_DISCOVERIES, ...futureMutations].map(mutation => {
+      if (mutation.future) return `<span class="mutation-collection-slot future locked" data-mutation-slot="${mutation.id}" aria-label="Неизвестная будущая мутация"><i>?</i></span>`;
+      if (mutation.starter) return `<span class="mutation-collection-slot starter unlocked${mutation.name.length > 9 ? ' long-name' : ''}" data-mutation-slot="${mutation.id}" aria-label="${mutation.name}. Начальная мутация"><img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b></span>`;
+      const isUnlocked = unlocked.has(mutation.id);
+      return `<span class="mutation-collection-slot ${isUnlocked ? 'unlocked' : 'locked'}${isUnlocked && mutation.name.length > 9 ? ' long-name' : ''}" data-mutation-slot="${mutation.id}" aria-label="${isUnlocked ? mutation.name : 'Неизвестная мутация'}">
+        ${isUnlocked ? `<img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b>` : '<i>?</i>'}
+      </span>`;
+    }).join('');
+    const fillPercent = allUnlocked ? 100 : Math.min(100, save.mutationProgress / mutationCost * 100);
+    const reactorArcPaths = [
+      '1,16 18,16 31,5 46,23 63,9 78,18 99,11',
+      '1,13 15,13 28,23 43,7 58,17 73,4 99,15',
+      '1,18 17,18 29,8 43,21 57,11 72,24 99,12',
+      '1,11 16,11 30,20 46,6 60,22 78,10 99,17'
+    ];
+    const reactorEnergyArcs = Array.from({ length: 14 }, (_, index) => {
+      const points = reactorArcPaths[index % reactorArcPaths.length];
+      const glowId = `reactor-bolt-glow-${index}`;
+      const coreId = `reactor-bolt-core-${index}`;
+      return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#38e77e" stop-opacity="0"></stop><stop offset=".28" stop-color="#21ee72" stop-opacity=".62"></stop><stop offset=".62" stop-color="#13dd63"></stop><stop offset="1" stop-color="#66ff8d"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efffd3" stop-opacity="0"></stop><stop offset=".34" stop-color="#efffd3" stop-opacity=".72"></stop><stop offset="1" stop-color="#f8ffe7"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
+    }).join('');
+    els.panelContent.innerHTML = `<div class="panel-section mutation-lab-panel">
+      <button id="mutationCapsuleBtn" class="mutation-capsule ${allUnlocked ? 'is-complete' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все тестовые мутации открыты' : readyToReveal ? 'Открывается новая мутация' : `Добавить одну колбу. Осталось ${remaining}`}">
+        <span class="mutation-side-feed" aria-hidden="true">
+          <span id="mutationInlet" class="mutation-inlet"><i></i></span>
+          <span class="mutation-feed-count"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationRemaining">${allUnlocked || readyToReveal ? '✓' : remaining}</b></span>
+        </span>
+        <span class="mutation-dispenser">
+          <span class="mutation-dispenser-mouth">
+            <span class="mutation-dispenser-flap" aria-hidden="true"></span>
+            <span id="mutationMystery" class="mutation-mystery"><i>?</i></span>
+          </span>
+          <span class="mutation-dispenser-tray" aria-hidden="true"></span>
+        </span>
+        <span class="mutation-machine-top" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="mutation-glass">
+          <span class="mutation-liquid-chamber" aria-hidden="true">
+            <span id="mutationLiquid" class="mutation-liquid" style="height:${fillPercent}%"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          </span>
+          <span class="mutation-reactor-energy" aria-hidden="true">${reactorEnergyArcs}</span>
+          <span id="mutationImpact" class="mutation-impact" aria-hidden="true"></span>
+        </span>
+        <span id="mutationCapsuleHint" class="mutation-capsule-hint">${allUnlocked ? 'ВСЕ ДОСТУПНЫЕ МУТАЦИИ ОТКРЫТЫ' : adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ · ДОБАВИТЬ КОЛБУ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ'}</span>
+      </button>
+      <div class="mutation-collection-head"><b>МУТАЦИИ</b><span>${visibleUnlockedCount}/${collectionCapacity}</span></div>
+      <div id="mutationCollection" class="mutation-collection">${collection}</div>
+    </div>`;
+    const capsuleButton = $('#mutationCapsuleBtn');
+    capsuleButton?.addEventListener('click', handleMutationCapsuleClick);
+    capsuleButton?.addEventListener('pointerdown', startMutationFeedHold);
+    capsuleButton?.addEventListener('pointerup', stopMutationFeedHold);
+    capsuleButton?.addEventListener('pointercancel', stopMutationFeedHold);
+    capsuleButton?.addEventListener('lostpointercapture', stopMutationFeedHold);
+    if (readyToReveal && capsuleButton) {
+      const token = mutationAnimationToken;
+      mutationAnimating = true;
+      requestAnimationFrame(() => revealRandomMutation(token, capsuleButton));
+    }
+  }
+
+  function mutationDelay(ms) {
+    return new Promise(resolve => window.setTimeout(resolve, ms));
+  }
+
+  function currentMutationCost() {
+    return MUTATION_STEPS * ((save.unlockedMutations || []).length + 1);
+  }
+
+  function handleMutationCapsuleClick(event) {
+    const button = $('#mutationCapsuleBtn');
+    if (!button) return;
+    if (button.dataset.revealStage === 'core') {
+      if (!event?.target?.closest?.('#mutationMystery')) {
+        feedback(2);
+        return;
+      }
+      revealSynthesizedMutation(mutationAnimationToken, button);
+      return;
+    }
+    // Мышь и касание обрабатываются на pointerdown, чтобы удержание не давало
+    // лишнюю колбу после отпускания. Click остаётся для клавиатуры.
+    if (!event?.detail) investMutationResearch();
+  }
+
+  function stopMutationFeedHold() {
+    const wasFeeding = mutationFeedHoldActive;
+    mutationFeedHoldActive = false;
+    mutationFeedHoldStartedAt = 0;
+    window.clearTimeout(mutationFeedHoldTimer);
+    mutationFeedHoldTimer = 0;
+    const button = $('#mutationCapsuleBtn');
+    button?.classList.remove('is-auto-feeding');
+    if (wasFeeding && button && !button.disabled && !mutationAnimating) {
+      const hint = $('#mutationCapsuleHint');
+      if (hint) hint.textContent = adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ · ДОБАВИТЬ КОЛБЫ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+    }
+  }
+
+  function mutationHoldFlightDuration() {
+    const heldFor = Math.max(0, performance.now() - mutationFeedHoldStartedAt);
+    // Разгон длится около трёх секунд; безопасный предел — одна колба за 260 мс.
+    return Math.max(170, 500 - heldFor * .165);
+  }
+
+  function scheduleMutationFeedHold(button, previousFlightDuration) {
+    if (!mutationFeedHoldActive || !button || button.disabled || mutationAnimating) {
+      stopMutationFeedHold();
+      return;
+    }
+    // Следующий запуск идёт после прибытия предыдущей колбы: очередь не обгоняет жидкость.
+    const nextDelay = Math.max(165, Number(previousFlightDuration) || mutationHoldFlightDuration());
+    mutationFeedHoldTimer = window.setTimeout(() => {
+      if (!mutationFeedHoldActive || button !== $('#mutationCapsuleBtn')) return;
+      const flightDuration = mutationHoldFlightDuration();
+      const invested = investMutationResearch({ flightDuration });
+      if (!invested || mutationAnimating || button.disabled) {
+        stopMutationFeedHold();
+        return;
+      }
+      scheduleMutationFeedHold(button, flightDuration);
+    }, nextDelay);
+  }
+
+  function startMutationFeedHold(event) {
+    const button = event.currentTarget;
+    if (!button || button.disabled || mutationAnimating || button.dataset.revealStage === 'core') return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    stopMutationFeedHold();
+    mutationFeedHoldActive = true;
+    mutationFeedHoldStartedAt = performance.now();
+    button.classList.add('is-auto-feeding');
+    try { button.setPointerCapture(event.pointerId); } catch (_) {}
+    const firstFlightDuration = mutationHoldFlightDuration();
+    const invested = investMutationResearch({ flightDuration: firstFlightDuration });
+    if (!invested || mutationAnimating || button.disabled) {
+      stopMutationFeedHold();
+      return;
+    }
+    scheduleMutationFeedHold(button, firstFlightDuration);
+  }
+
+  function investMutationResearch(options = {}) {
+    const button = $('#mutationCapsuleBtn');
+    if (!button || button.disabled || mutationAnimating) return false;
+    if (!adminInfiniteResearch && save.researchUnits < 1) {
+      button.classList.remove('needs-research');
+      void button.offsetWidth;
+      button.classList.add('needs-research');
+      showToast('Нужна 1 колба исследования');
+      feedback(7);
+      return false;
+    }
+    const token = mutationAnimationToken;
+    if (!adminInfiniteResearch) save.researchUnits -= 1;
+    save.mutationProgress += 1;
+    persist();
+    updatePersistentUI();
+    const balance = $('#mutationPanelBalance');
+    if (balance) balance.textContent = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
+    sound('tap');
+
+    const flyingFlask = document.createElement('img');
+    flyingFlask.className = 'mutation-invest-flask';
+    flyingFlask.src = versionedAsset('assets/ui/research-flask.png');
+    flyingFlask.alt = '';
+    const flightLayer = els.panelOverlay.querySelector('.panel-modal') || button;
+    const sourceRect = els.panelTitle.querySelector('.mutation-panel-balance')?.getBoundingClientRect();
+    const targetRect = $('#mutationInlet')?.getBoundingClientRect();
+    const layerRect = flightLayer.getBoundingClientRect();
+    const startX = (sourceRect?.left || layerRect.right) + (sourceRect?.width || 0) / 2 - layerRect.left;
+    const startY = (sourceRect?.top || layerRect.top) + (sourceRect?.height || 0) / 2 - layerRect.top;
+    const endX = (targetRect?.left || layerRect.left) + (targetRect?.width || layerRect.width) / 2 - layerRect.left;
+    const endY = (targetRect?.top || layerRect.top) + (targetRect?.height || layerRect.height) / 2 - layerRect.top;
+    flyingFlask.style.setProperty('--mutation-start-x', `${startX}px`);
+    flyingFlask.style.setProperty('--mutation-start-y', `${startY}px`);
+    flyingFlask.style.setProperty('--mutation-mid-x', `${(startX + endX) / 2 + 12}px`);
+    flyingFlask.style.setProperty('--mutation-mid-y', `${Math.min(startY, endY) - 48}px`);
+    flyingFlask.style.setProperty('--mutation-end-x', `${endX}px`);
+    flyingFlask.style.setProperty('--mutation-end-y', `${endY}px`);
+    const requestedFlightDuration = Number(options.flightDuration);
+    const flightDuration = menuReducedMotion ? 70 : clamp(Number.isFinite(requestedFlightDuration) ? requestedFlightDuration : 500, 165, 560);
+    flyingFlask.style.setProperty('--mutation-flight-duration', `${flightDuration}ms`);
+    flightLayer.appendChild(flyingFlask);
+    const mutationCost = currentMutationCost();
+    const remaining = mutationCost - save.mutationProgress;
+    const nextFillPercent = Math.min(100, save.mutationProgress / mutationCost * 100);
+    button.setAttribute('aria-label', `Добавить одну колбу. Осталось ${Math.max(0, remaining)}`);
+    const remainingLabel = $('#mutationRemaining');
+    if (remainingLabel) remainingLabel.textContent = remaining > 0 ? String(remaining) : '✓';
+    window.setTimeout(() => {
+      flyingFlask.remove();
+      if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+      const liquid = $('#mutationLiquid');
+      if (liquid) {
+        liquid.style.height = `${nextFillPercent}%`;
+        liquid.classList.remove('is-splashing');
+        void liquid.offsetWidth;
+        liquid.classList.add('is-splashing');
+      }
+      const impact = $('#mutationImpact');
+      impact?.classList.remove('is-visible');
+      if (impact) void impact.offsetWidth;
+      impact?.classList.add('is-visible');
+      button.classList.remove('received-research');
+      void button.offsetWidth;
+      button.classList.add('received-research');
+      sound('coin');
+      feedback(4);
+    }, flightDuration);
+    if (save.mutationProgress >= mutationCost) {
+      mutationAnimating = true;
+      button.disabled = true;
+      stopMutationFeedHold();
+      window.setTimeout(() => revealRandomMutation(token, button), menuReducedMotion ? 100 : flightDuration);
+      return true;
+    }
+    const hint = $('#mutationCapsuleHint');
+    if (hint) hint.textContent = mutationFeedHoldActive ? 'УДЕРЖИВАЙ · УСКОРЕННАЯ ПОДАЧА' : adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ · ДОБАВИТЬ КОЛБУ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+    return true;
+  }
+
+  async function revealRandomMutation(token, button) {
+    const locked = MUTATION_DISCOVERIES.filter(mutation => !(save.unlockedMutations || []).includes(mutation.id));
+    const pendingStillLocked = pendingMutationReveal && locked.some(mutation => mutation.id === pendingMutationReveal.id);
+    const mutation = pendingStillLocked ? pendingMutationReveal : locked[Math.floor(Math.random() * locked.length)];
+    if (!mutation) {
+      pendingMutationReveal = null;
+      save.mutationProgress = 0;
+      persist();
+      renderRecipesPanel();
+      return;
+    }
+    pendingMutationReveal = mutation;
+    const mutationImageSrc = versionedAsset(mutation.image);
+    const mutationImagePreload = new Image();
+    mutationImagePreload.src = mutationImageSrc;
+    const mutationImageReady = typeof mutationImagePreload.decode === 'function'
+      ? mutationImagePreload.decode().catch(() => undefined)
+      : Promise.resolve();
+    const mystery = $('#mutationMystery');
+    const hint = $('#mutationCapsuleHint');
+    button.disabled = true;
+    button.classList.add('is-pressurizing');
+    if (hint) hint.textContent = 'РЕАКТОР ЗАПОЛНЕН…';
+    sound('epic');
+    feedback([8, 14, 8]);
+    await mutationDelay(menuReducedMotion ? 100 : 520);
+    if (token !== mutationAnimationToken || !mystery || els.panelOverlay.classList.contains('hidden')) return;
+    button.classList.remove('is-pressurizing');
+    button.classList.add('is-processing');
+    if (hint) hint.textContent = 'ИДЁТ СИНТЕЗ · ДАВЛЕНИЕ РАСТЁТ…';
+    feedback([5, 8, 5]);
+    await mutationDelay(menuReducedMotion ? 100 : 2300);
+    if (token !== mutationAnimationToken || !mystery || els.panelOverlay.classList.contains('hidden')) return;
+    button.classList.remove('is-processing');
+    button.classList.add('is-synthesis-ready');
+    if (hint) hint.textContent = 'СИНТЕЗ ЗАВЕРШЁН';
+    sound('happy');
+    feedback([7, 12, 7]);
+    await mutationImageReady;
+    if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+    mystery.innerHTML = `${mutationElementFxMarkup(mutation.id, 'mutation-vended-fx')}<img src="${mutationImageSrc}" alt="${mutation.name}">`;
+    mystery.classList.add('is-vended');
+    await mutationDelay(menuReducedMotion ? 100 : 720);
+    if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+    button.classList.add('is-drain-armed');
+    void button.offsetWidth;
+    button.classList.add('is-draining');
+    if (hint) hint.textContent = 'СЛИВ РЕАГЕНТА…';
+    feedback(5);
+    await mutationDelay(menuReducedMotion ? 100 : 860);
+    if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+    button.classList.remove('is-synthesis-ready', 'is-drain-armed', 'is-draining');
+    void mystery.offsetWidth;
+    button.classList.add('is-dispensing');
+    if (hint) hint.textContent = 'ВЫДАЧА НОВОЙ МУТАЦИИ…';
+    sound('coin');
+    feedback([5, 9, 5]);
+    await mutationDelay(menuReducedMotion ? 100 : 460);
+    if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+    button.classList.remove('is-dispensing');
+    button.classList.add('is-core-ready');
+    button.dataset.revealStage = 'core';
+    button.disabled = false;
+    if (hint) hint.textContent = 'НАЖМИ НА ЭМБЛЕМУ';
+    feedback([5, 8]);
+  }
+
+  async function revealSynthesizedMutation(token, button) {
+    const mutation = pendingMutationReveal;
+    const mystery = $('#mutationMystery');
+    const hint = $('#mutationCapsuleHint');
+    if (!mutation || !mystery || button.dataset.revealStage !== 'core') return;
+    button.dataset.revealStage = 'revealing';
+    button.disabled = true;
+    button.classList.remove('is-core-ready');
+    button.classList.add('is-output-selected');
+    if (hint) hint.textContent = `ПОЛУЧЕНА МУТАЦИЯ · ${mutation.name}`;
+    sound('epic');
+    feedback([10, 18, 10]);
+    await mutationDelay(menuReducedMotion ? 80 : 480);
+    if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+    const prize = document.createElement('button');
+    prize.id = 'mutationPrize';
+    prize.className = `mutation-prize mutation-family-${mutation.id}`;
+    prize.type = 'button';
+    prize.innerHTML = `<small>НОВАЯ МУТАЦИЯ</small><span class="mutation-prize-emblem">${mutationElementFxMarkup(mutation.id, 'mutation-prize-fx')}<img src="${versionedAsset(mutation.image)}" alt=""></span><b>${mutation.name}</b><span>НАЖМИ, ЧТОБЫ ЗАБРАТЬ</span>`;
+    prize.setAttribute('aria-label', `Новая мутация: ${mutation.name}. Нажми, чтобы добавить в коллекцию`);
+    const modal = els.panelOverlay.querySelector('.panel-modal');
+    modal?.appendChild(prize);
+    requestAnimationFrame(() => prize.classList.add('is-visible'));
+    prize.addEventListener('click', () => collectSynthesizedMutation(token, mutation, prize), { once: true });
+  }
+
+  async function collectSynthesizedMutation(token, mutation, prize) {
+    if (!mutation || !prize || prize.classList.contains('is-collecting')) return;
+    const target = $(`[data-mutation-slot="${mutation.id}"]`);
+    const prizeImage = prize.querySelector('img');
+    let prizeFlyer = null;
+    if (target && prizeImage) {
+      const sourceRect = prizeImage.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const flightX = targetRect.left + targetRect.width / 2 - (sourceRect.left + sourceRect.width / 2);
+      const flightY = targetRect.top + targetRect.height / 2 - (sourceRect.top + sourceRect.height / 2);
+      const flightScale = Math.min(targetRect.width, targetRect.height) * .72 / Math.max(1, sourceRect.width);
+      prizeFlyer = prizeImage.cloneNode(true);
+      prizeFlyer.className = 'mutation-prize-flyer';
+      prizeFlyer.style.left = `${sourceRect.left}px`;
+      prizeFlyer.style.top = `${sourceRect.top}px`;
+      prizeFlyer.style.width = `${sourceRect.width}px`;
+      prizeFlyer.style.height = `${sourceRect.height}px`;
+      prizeFlyer.style.setProperty('--mutation-prize-x', `${flightX}px`);
+      prizeFlyer.style.setProperty('--mutation-prize-y', `${flightY}px`);
+      prizeFlyer.style.setProperty('--mutation-prize-scale', `${flightScale}`);
+      document.body.appendChild(prizeFlyer);
+      void prizeFlyer.offsetWidth;
+      requestAnimationFrame(() => prizeFlyer?.classList.add('is-flying'));
+      target.classList.add('is-receiving');
+    }
+    const capsule = $('#mutationCapsuleBtn');
+    capsule?.classList.remove('is-output-selected');
+    capsule?.classList.add('is-dispenser-closing');
+    prize.classList.add('is-collecting');
+    sound('coin');
+    feedback([7, 12, 7]);
+    await mutationDelay(menuReducedMotion ? 100 : 780);
+    prizeFlyer?.remove();
+    if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+    save.unlockedMutations = [...new Set([...(save.unlockedMutations || []), mutation.id])];
+    save.mutationProgress = 0;
+    pendingMutationReveal = null;
+    persist();
+    mutationAnimating = false;
+    renderRecipesPanel();
+    const unlockedSlot = $(`[data-mutation-slot="${mutation.id}"]`);
+    requestAnimationFrame(() => unlockedSlot?.classList.add('just-unlocked'));
   }
 
   function renderUpgradesPanel() {
@@ -7370,7 +11113,7 @@
 
   function renderShopPanel(tab = 'skins') {
     activeShopTab = tab === 'trails' ? 'trails' : 'skins';
-    els.panelTitle.textContent = 'Магазин';
+    els.panelTitle.textContent = 'Аксессуары';
     if (activeShopTab === 'trails') renderTrailsPanel();
     else renderSkinsPanel();
     $$('[data-shop-tab]').forEach(button => button.addEventListener('click', () => switchShopTab(button.dataset.shopTab)));
@@ -7540,7 +11283,7 @@
   }
 
   function encyclopediaUnlockedWorldIds() {
-    return WORLDS.filter(world => worldIsUnlocked(world.id)).map(world => world.id);
+    return ACTIVE_WORLDS.filter(world => worldIsUnlocked(world.id)).map(world => world.id);
   }
 
   function renderEncyclopediaPanel(tab = 'foods', worldId = save.world) {
@@ -7549,13 +11292,13 @@
     const unlockedWorldIds = encyclopediaUnlockedWorldIds();
     activeEncyclopediaTab = tab === 'blocks' ? 'blocks' : 'foods';
     activeEncyclopediaWorld = unlockedWorldIds.includes(+worldId) ? +worldId : unlockedWorldIds[0] || 1;
-    els.panelTitle.textContent = 'Энциклопедия';
+    els.panelTitle.textContent = 'Книга рецептов';
     els.panelContent.innerHTML = encyclopedia.render({
       activeTab: activeEncyclopediaTab,
       activeWorld: activeEncyclopediaWorld,
       activeRarity: activeEncyclopediaRarity,
       unlockedWorldIds,
-      worlds: WORLDS,
+      worlds: ACTIVE_WORLDS,
       foods: FOODS,
       discoveredFoods: save.discoveredFoods || [],
       revealedSecretFoods: save.revealedSecretFoods || [],
@@ -7614,7 +11357,7 @@
     viewer.setAttribute('aria-modal', 'true');
     viewer.setAttribute('aria-label', `Карточка: ${food.name}`);
     viewer.innerHTML = `<div class="encyclopedia-card-viewer-stage"><button class="encyclopedia-card-viewer-close" type="button" aria-label="Закрыть крупную карточку">×</button><div class="encyclopedia-card-viewer-card">${inspectFoodCardMarkup(food)}</div><small>Нажми ещё раз, чтобы закрыть</small></div>`;
-    document.body.appendChild(viewer);
+    (els.phoneViewport || document.body).appendChild(viewer);
     syncInteractionLayers();
     const close = () => {
       viewer.classList.add('closing');
@@ -7734,6 +11477,7 @@
   function openAdminTools() {
     if (!els.adminToolsOverlay || !els.adminToolsOverlay.classList.contains('hidden')) return;
     hideFoodInfo();
+    syncAdminInfiniteFlasksUI();
     lastFocusedElement = document.activeElement;
     els.adminToolsOverlay.classList.remove('hidden');
     els.adminMenuBtn?.setAttribute('aria-expanded', 'true');
@@ -7752,6 +11496,9 @@
   }
 
   function closePanel() {
+    stopMutationFeedHold();
+    mutationAnimationToken += 1;
+    mutationAnimating = false;
     els.panelOverlay.classList.add('hidden');
     syncInteractionLayers();
     if (lastFocusedElement?.focus) lastFocusedElement.focus();
@@ -7762,7 +11509,7 @@
     const maxDistance = 35;
     let dx = event.clientX - run.steer.originX;
     let dy = event.clientY - run.steer.originY;
-    if (!run.effects.gravitySwitch) dy = Math.max(0, dy);
+    if (!run.effects.gravitySwitch && !speedDrillActive()) dy = Math.max(0, dy);
     const distance = Math.hypot(dx, dy);
     if (distance > maxDistance) {
       dx = dx / distance * maxDistance;
@@ -7773,6 +11520,7 @@
     // The gravity secret keeps its up/down switch, while a downward hold still
     // acts as the regular dive input (most visibly inside jelly zones).
     run.steer.touchDown = clamp(vertical, 0, 1);
+    run.steer.touchY = speedDrillActive() ? vertical : 0;
     if (run.effects.gravitySwitch) {
       if (Math.abs(vertical) < .18) run.steer.gravityGestureLocked = false;
       else if (Math.abs(vertical) >= .42 && !run.steer.gravityGestureLocked) {
@@ -7793,6 +11541,7 @@
     run.steer.originX = event.clientX;
     run.steer.originY = event.clientY;
     run.steer.touchX = 0;
+    run.steer.touchY = 0;
     run.steer.touchDown = 0;
     run.steer.gravityGestureLocked = false;
     const localX = clamp(event.clientX - rect.left, 43, rect.width - 43);
@@ -7816,6 +11565,7 @@
     if (run?.steer) {
       run.steer.pointerId = null;
       run.steer.touchX = 0;
+      run.steer.touchY = 0;
       run.steer.touchDown = 0;
       run.steer.gravityGestureLocked = false;
     }
@@ -7835,9 +11585,11 @@
       if (pressed) setSecretGravityDirection(code === 'ArrowUp' || code === 'KeyW' ? -1 : 1);
       return true;
     }
+    if (pressed && !speedDrillActive() && (code === 'ArrowUp' || code === 'KeyW')) return false;
     const key = {
       ArrowLeft: 'keyLeft', KeyA: 'keyLeft',
       ArrowRight: 'keyRight', KeyD: 'keyRight',
+      ArrowUp: 'keyUp', KeyW: 'keyUp',
       ArrowDown: 'keyDown', KeyS: 'keyDown'
     }[code];
     if (!key) return false;
@@ -7849,6 +11601,7 @@
     if (run?.steer) {
       run.steer.keyLeft = false;
       run.steer.keyRight = false;
+      run.steer.keyUp = false;
       run.steer.keyDown = false;
     }
     endTouchJoystick();
@@ -7857,7 +11610,7 @@
   // ===== СОБЫТИЯ И ЗАПУСК ПРИЛОЖЕНИЯ =====
   function bindEvents() {
     bindMenuSlimeInteractions();
-    els.rerollBtn.addEventListener('click', rerollOffer);
+    els.rerollBtn.addEventListener('click', activateConveyorControl);
     els.levelButtons?.addEventListener('click', event => {
       const button = event.target.closest('.level-btn');
       if (!button) return;
@@ -7882,8 +11635,8 @@
     });
     els.campaignModeBtn?.addEventListener('click', () => selectHomeMode('campaign'));
     els.endlessModeBtn?.addEventListener('click', () => selectHomeMode('endless'));
-    els.startDropBtn?.addEventListener('click', startDrop);
-    els.startEndlessBtn?.addEventListener('click', () => startDrop({ endless: true }));
+    els.startDropBtn?.addEventListener('click', () => { void beginRoomLaunch(); });
+    els.startEndlessBtn?.addEventListener('click', () => { void beginRoomLaunch({ endless: true }); });
     els.adminMenuBtn?.addEventListener('click', openAdminTools);
     els.closeAdminToolsBtn?.addEventListener('click', closeAdminTools);
     els.adminToolsOverlay?.addEventListener('click', event => { if (event.target === els.adminToolsOverlay) closeAdminTools(); });
@@ -7891,6 +11644,7 @@
     els.adminPrevWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(-1));
     els.adminNextWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(1));
     els.adminUnlockAllBtn?.addEventListener('click', unlockEverythingFromAdmin);
+    els.adminInfiniteFlasksBtn?.addEventListener('click', toggleAdminInfiniteFlasks);
     els.adminResetProgressBtn?.addEventListener('click', resetProgressFromAdmin);
     els.abilityBtn.addEventListener('click', activateAbility);
     els.shaft.addEventListener('pointerdown', event => {
@@ -8021,10 +11775,13 @@
     updatePersistentUI();
     if (save.pendingWheel) finishPendingWheel(false);
     if (restoreSession(save.activeDraft)) {
+      syncMenuCategoryVisuals({ instant: true });
       showScreen('home');
       renderDraft();
       persist();
     } else newDraft();
+    document.documentElement.classList.remove('app-booting');
+    document.documentElement.classList.add('app-ready');
     yandexPlatform?.ysdk?.features?.LoadingAPI?.ready?.();
     window.SlimeGameDebug = {
       reset: () => {
@@ -8034,6 +11791,7 @@
         location.reload();
       },
       addCoins: (amount = 1000) => { save.coins += amount; persist(); },
+      addResearch: (amount = 100) => { save.researchUnits += Math.max(0, Math.floor(amount)); persist(); updatePersistentUI(); },
       unlockFood: () => { save.conveyorLevel = 5; persist(); newDraft(); },
       secretDiscovery: (foodId = '', play = false) => forceSecretDiscoveryForDebug(foodId, { play }),
       maxStomach: () => { save.stomachLevel = 4; persist(); newDraft(); },
@@ -8074,6 +11832,58 @@
         summary[key] = (summary[key] || 0) + 1;
         return summary;
       }, {}) : null,
+      elementalBlockSummary: () => run ? run.blocks.reduce((summary, block) => {
+        if (!block.dead && block.elementalSnow) summary.snow += 1;
+        if (!block.dead && block.elementalSnowflake) summary.snowflakes += 1;
+        if (!block.dead && block.fireDamageAt > performance.now()) summary.burning += 1;
+        if (!block.dead && block.electricFlashUntil > performance.now()) summary.electrified += 1;
+        return summary;
+      }, { snow: 0, snowflakes: 0, burning: 0, electrified: 0 }) : null,
+      elementalLevels: (levels = {}) => {
+        if (!run || run.ended) return null;
+        for (const key of ['fire', 'frost', 'electric', 'cosmos', 'gigantism', 'wind', 'explosion']) {
+          if (Object.hasOwn(levels, key)) run.categoryVisuals[key] = clamp(Math.round(levels[key]), 0, 3);
+        }
+        run.effects.gravitySwitch = elementalLevel('cosmos') >= 1 || session.effects.gravitySwitch;
+        run.elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'gigantism', 'wind', 'explosion'].find(key => run.categoryVisuals[key] >= 3) || '';
+        run.elementalAbilityCharges = run.elementalAbilityType ? 1 : 0;
+        run.elementalAbilityActive = '';
+        run.elementalAbilityUntil = 0;
+        run.goldRushUntil = 0;
+        run.speedPressure = 0;
+        run.speedBurstChargeMs = 0;
+        run.speedBurstReady = false;
+        run.speedBurstBlocksLeft = 0;
+        run.speedBurstUntil = 0;
+        run.windDashBlocksLeft = 0;
+        run.windDashUntil = 0;
+        run.windDashCooldownUntil = 0;
+        run.windBounceFlashUntil = 0;
+        resetMassPierce();
+        updateRunUI();
+        return { ...run.categoryVisuals, ability: run.elementalAbilityType };
+      },
+      elementalState: () => run ? {
+        levels: {
+          fire: elementalLevel('fire'), frost: elementalLevel('frost'), electric: elementalLevel('electric'),
+          gold: elementalLevel('gold'), explosion: elementalLevel('explosion'), mass: elementalLevel('mass'),
+          mobility: elementalLevel('mobility'), cosmos: elementalLevel('cosmos'), gigantism: elementalLevel('gigantism'),
+          wind: elementalLevel('wind')
+        },
+        ability: run.elementalAbilityType,
+        charges: run.elementalAbilityCharges,
+          active: run.elementalAbilityActive,
+          blastCounter: run.blastCounter,
+          massPierceRowsLeft: run.massPierceRowsLeft,
+          speedPressure: run.speedPressure,
+          speedBurstChargeMs: run.speedBurstChargeMs,
+          speedBurstReady: run.speedBurstReady,
+          speedBurstBlocksLeft: run.speedBurstBlocksLeft,
+          cosmosAscentDistance: run.cosmosAscentDistance,
+          cosmosReverseReady: run.cosmosReverseReady,
+          cosmosBoostBlocksLeft: run.cosmosBoostBlocksLeft,
+          affectedBlocks: run.blocks.filter(block => !block.dead && (block.elementalSnow || block.elementalSnowflake || block.elementalGolden || block.fireDamageAt || block.electricFlashUntil)).length
+      } : null,
       save: () => structuredClone(save),
       saveStatus: () => ({
         storage: saveStorage === browserStorage() ? 'local' : yandexPlatform?.available ? 'yandex-safe' : 'fallback',
@@ -8093,5 +11903,7 @@
     bindEvents();
     updatePersistentUI();
     newDraft();
+    document.documentElement.classList.remove('app-booting');
+    document.documentElement.classList.add('app-ready');
   });
 })();

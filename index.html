@@ -1,19 +1,26 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" class="app-booting">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#7757d8" />
   <meta name="color-scheme" content="light" />
+  <style>
+    html.app-booting .phone-viewport{visibility:hidden!important;opacity:0!important}
+    html.app-ready .phone-viewport{animation:appBootReveal .14s ease-out both}
+    @keyframes appBootReveal{from{opacity:0}to{opacity:1}}
+  </style>
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=81" />
-  <link rel="stylesheet" href="food-cards.css?v=92" />
-  <link rel="stylesheet" href="home-layout.css?v=116" />
+  <link rel="stylesheet" href="styles.css?v=86" />
+  <link rel="stylesheet" href="food-cards.css?v=94" />
+  <link rel="stylesheet" href="home-layout.css?v=178" />
+  <link rel="stylesheet" href="home-mode-fix.css?v=90" />
 </head>
 <body>
+  <div id="phoneViewport" class="phone-viewport">
   <div id="app" class="app">
-    <header class="topbar world-summary" aria-label="Мир, рекорд и монеты">
+    <header class="topbar world-summary" aria-label="Мир, исследование и монеты">
       <div class="world-summary-head">
         <div class="world-identity">
           <span class="world-emblem" aria-hidden="true"><img id="worldIcon" src="assets/ui/world-icons/world-1.webp" alt=""></span>
@@ -25,41 +32,55 @@
         <button id="adminMenuBtn" class="header-admin-btn" type="button" aria-label="Открыть админ-меню" aria-controls="adminToolsOverlay" aria-expanded="false">
           <img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true">
         </button>
-        <div class="currency" aria-label="Монеты">
+        <div class="research-wallet" aria-label="Исследование: 0 единиц, заполнение 0 из 100">
+          <span class="research-wallet-flask" aria-hidden="true">
+            <img src="assets/ui/research-flask.png?v=1" alt="">
+            <b id="researchUnitsLabel">0</b>
+          </span>
+          <span class="research-wallet-track" aria-hidden="true"><i id="researchProgressBar"></i></span>
+        </div>
+        <div class="currency coin-wallet" aria-label="Монеты">
           <img class="currency-icon" src="assets/ui/coin.webp" alt="" aria-hidden="true">
           <div class="currency-values"><b id="coinsLabel">0</b><small id="runCoinsGain" aria-label="Монеты за забег">+0</small></div>
         </div>
+        <button class="header-rewards-btn" data-panel="rewards" type="button" aria-label="Открыть награды">
+          <img src="assets/ui/gift.webp" alt="" aria-hidden="true">
+        </button>
       </div>
     </header>
 
     <main class="game-shell">
       <section id="homeScreen" class="screen active" aria-label="Подготовка слайма">
-        <section id="slimeStage" class="slime-stage card" aria-label="Слайм и его характеристики">
+        <section id="slimeStage" class="slime-stage card" aria-label="Слайм, желудок и мутации">
           <div class="slime-hero-layout">
             <div class="stomach-rail" aria-label="Желудок слайма">
               <span class="stomach-rail-title">ЖЕЛУДОК</span>
               <div id="stomachQuickSlots" class="stomach-quick-slots" aria-label="Ячейки желудка"></div>
+              <div id="recipeCategorySlots" class="recipe-category-slots" aria-label="Категории выбранной еды"></div>
             </div>
             <div class="slime-playground">
+              <div id="launchPortal" class="launch-portal" aria-hidden="true">
+                <span class="launch-portal-core"></span>
+                <span class="launch-portal-depth launch-portal-depth-back"></span>
+                <span class="launch-portal-depth launch-portal-depth-inner"></span>
+                <span class="launch-portal-rim"></span>
+              </div>
               <div id="slime" class="slime skin-classic" role="button" tabindex="0" aria-label="Слайм. Нажми или погладь его">
                 <canvas id="menuSlimeCanvas" class="menu-slime-canvas" width="180" height="180" aria-hidden="true"></canvas>
                 <div id="menuSlimeMouth" class="menu-slime-mouth-target" aria-hidden="true"></div>
                 <div id="foodInside" class="food-inside"></div>
               </div>
+              <span class="launch-portal-front" aria-hidden="true"></span>
             </div>
-            <div class="stat-rail stat-rail-right">
-              <div class="stat-pill health">
-                <span class="stat-icon"><img src="assets/ui/stat-health.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>ЗДОРОВЬЕ</small><span class="stat-values"><b id="healthLabel">100</b><em id="healthCompare"></em></span></span>
-              </div>
-              <div class="stat-pill damage">
-                <span class="stat-icon"><img src="assets/ui/stat-power.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>УРОН</small><span class="stat-values"><b id="damageLabel">10</b><em id="damageCompare"></em></span></span>
-              </div>
-              <div class="stat-pill shield">
-                <span class="stat-icon"><img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true"></span>
-                <span class="stat-copy"><small>ЩИТ</small><span class="stat-values"><b id="shieldLabel">25</b><em id="shieldCompare"></em><span class="shield-charge-badge" aria-label="Заряды щита" title="Заряды щита"><b id="shieldChargesLabel">2</b></span></span></span>
-              </div>
+            <div class="recipe-rail" aria-label="Мутации и аксессуары">
+              <button class="recipe-book-button mutation-lab-button" data-panel="recipes" type="button" aria-label="Открыть лабораторию мутаций">
+                <img src="assets/ui/mutation-lab-slime.png?v=1" alt="" aria-hidden="true">
+                <span>МУТАЦИИ</span>
+              </button>
+              <button class="recipe-accessories-button" data-panel="shop" type="button" aria-label="Открыть аксессуары">
+                <img src="assets/ui/accessories-cap.png?v=2" alt="" aria-hidden="true">
+                <span>АКСЕССУАРЫ</span>
+              </button>
             </div>
           </div>
           <div id="stomachCardViewer" class="stomach-card-viewer hidden" aria-live="polite"></div>
@@ -67,23 +88,27 @@
         </section>
 
         <div id="conveyor" class="conveyor card">
-          <div class="conveyor-machine" aria-label="Конвейер с едой">
-            <div class="machine-belt" aria-hidden="true"></div>
-            <div id="foodChoices" class="food-choices" aria-label="Доступная еда"></div>
-            <span class="machine-rail-bridge machine-rail-bridge-left" aria-hidden="true"></span>
-            <span class="machine-rail-bridge machine-rail-bridge-right" aria-hidden="true"></span>
-            <div class="machine-tunnel machine-tunnel-left" aria-hidden="true"><i class="machine-mouth"></i></div>
-            <div class="machine-tunnel machine-tunnel-right" aria-hidden="true"><i class="machine-mouth"></i></div>
+          <div class="conveyor-workbench">
+            <div class="conveyor-machine" aria-label="Конвейер с едой">
+              <div id="conveyorChoiceCount" class="conveyor-choice-count" aria-live="polite">ВЫБЕРИ ЕДУ 0/3</div>
+              <div id="conveyorDispensers" class="conveyor-dispensers" aria-hidden="true"></div>
+              <div class="machine-belt" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div id="foodChoices" class="food-choices" aria-label="Доступная еда"></div>
+              <span class="machine-rail-bridge machine-rail-bridge-left" aria-hidden="true"></span>
+              <span class="machine-rail-bridge machine-rail-bridge-right" aria-hidden="true"></span>
+              <div class="machine-tunnel machine-tunnel-left" aria-hidden="true"><i class="machine-mouth"></i></div>
+              <div class="machine-tunnel machine-tunnel-right" aria-hidden="true"><i class="machine-mouth"></i></div>
+            </div>
+            <div class="conveyor-controls">
+              <button id="rerollBtn" class="reroll-btn" type="button">
+                <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll-button-v2.png?v=1" alt="" aria-hidden="true"></span>
+                <span class="reroll-copy"><b id="rerollTitle">РЕРОЛЛ</b></span>
+                <em id="rerollText">БЕСПЛАТНО ∞</em>
+              </button>
+            </div>
           </div>
           <div id="foodInfo" class="food-info hidden" role="region" aria-live="polite">
             <div class="food-info-copy"><p id="foodInfoStats"></p><p id="foodInfoEffect" class="food-info-effect"></p></div>
-          </div>
-          <div class="conveyor-controls">
-            <button id="rerollBtn" class="reroll-btn" type="button">
-              <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll.webp" alt="" aria-hidden="true"></span>
-              <span class="reroll-copy"><b id="rerollTitle">ОБНОВИТЬ</b></span>
-              <em id="rerollText">БЕСПЛАТНО ×1</em>
-            </button>
           </div>
         </div>
 
@@ -94,12 +119,17 @@
                 <button id="homeWorldPicker" class="home-world-picker" type="button" aria-label="Выбрать мир" aria-haspopup="listbox" aria-controls="homeWorldMenu" aria-expanded="false">
                   <span class="home-world-emblem"><img id="homeWorldPickerIcon" src="assets/ui/world-icons/world-1.webp" alt="" aria-hidden="true"></span>
                   <span class="home-world-copy">
+                    <small id="homeWorldPickerEyebrow">МИР 1</small>
                     <b id="homeWorldPickerName">Зелёная долина</b>
                   </span>
                   <span class="home-world-chevron" aria-hidden="true"><img src="assets/ui/world-picker-chevron.png?v=1" alt=""></span>
                 </button>
                 <div id="homeWorldMenu" class="home-world-menu" role="listbox" aria-label="Миры" hidden></div>
                 <select id="homeWorldSelect" class="home-world-native-select" tabindex="-1" aria-hidden="true" hidden></select>
+              </div>
+              <div class="home-endless-rank" aria-label="Будущий ранг слайма">
+                <span class="home-rank-emblem" aria-hidden="true">◆</span>
+                <span><small>РАНГ СЛАЙМА</small><b>СКОРО</b></span>
               </div>
             </div>
             <div class="play-setup-control mode-control">
@@ -143,12 +173,6 @@
             </div>
           </div>
 
-          <nav class="bottom-actions home-tool-dock" aria-label="Развитие">
-            <button data-panel="upgrades" type="button"><span class="action-icon"><img src="assets/ui/upgrade.webp" alt=""></span><b>Прокачка</b></button>
-            <button data-panel="shop" type="button"><span class="action-icon"><img src="assets/ui/shop-cart.png?v=20260812-4" alt=""></span><b>Магазин</b></button>
-            <button data-panel="rewards" type="button"><span class="action-icon"><img src="assets/ui/gift.webp" alt=""></span><b>Бонусы</b></button>
-            <button data-panel="encyclopedia" type="button"><span class="action-icon"><img src="assets/ui/encyclopedia-book.png?v=20260813-1" alt=""></span><b>Энциклопедия</b></button>
-          </nav>
         </section>
 
       </section>
@@ -174,10 +198,19 @@
           <canvas id="physicsCanvas" aria-label="Слайм падает через блоки"></canvas>
           <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true"><span>МЕНЮ</span></button>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
-          <div class="shaft-health" aria-label="Здоровье слайма">
-            <img src="assets/ui/stat-health.webp" alt="" aria-hidden="true">
-            <span><small>ЗДОРОВЬЕ</small><b id="runMassLabel">0/0</b></span>
-            <i><em id="runHealthBar"></em></i>
+          <div class="shaft-health" aria-label="У слайма три сердца">
+            <span class="shaft-health-title" aria-hidden="true">ЖИЗНИ</span>
+            <div class="run-hearts" role="img" aria-label="3 из 3 сердец">
+              <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+              <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+              <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+            </div>
+            <span class="shaft-health-count"><b id="runHeartCount">3</b>/3</span>
+          </div>
+          <div id="runResearchHud" class="run-research-hud" aria-label="Данные исследования за забег: 0">
+            <img src="assets/ui/research-flask.png?v=1" alt="" aria-hidden="true">
+            <span><small>ИССЛЕДОВАНИЕ</small><b id="runResearchScore">0</b></span>
+            <i id="runResearchGain" aria-hidden="true">+1</i>
           </div>
           <div class="barrier-control" aria-label="Щит с зарядами">
             <button id="abilityBtn" class="ability-btn barrier-btn" type="button" aria-label="Активировать барьер" disabled>
@@ -212,6 +245,9 @@
         </div>
         <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать монеты и открыть игровой прогресс" title="Выдать монеты и открыть игровой прогресс">
           <img src="assets/ui/coin.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Монеты и прогресс</small></span><i aria-hidden="true">+</i>
+        </button>
+        <button id="adminInfiniteFlasksBtn" class="admin-infinite-flasks" type="button" aria-pressed="false" aria-label="Включить бесконечные колбы исследования">
+          <img src="assets/ui/research-flask.png?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
         </button>
         <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
         <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
@@ -265,9 +301,17 @@
       <p id="resultText">Слайм остановился.</p>
 
       <div class="result-summary" aria-label="Результат забега">
-        <div class="result-stat result-depth-stat">
-          <img src="assets/ui/finish.webp" alt="" aria-hidden="true">
-          <span><small>ПРОЙДЕНО</small><b id="resultDepth">0 м</b></span>
+        <div class="result-stat result-research-stat">
+          <span id="resultResearchFlask" class="result-research-flask" aria-hidden="true">
+            <img src="assets/ui/research-flask.png?v=1" alt="">
+            <b id="resultResearchUnits">0</b>
+          </span>
+          <span class="result-research-copy">
+            <small>ИССЛЕДОВАНИЕ</small>
+            <b id="resultResearchData">+0</b>
+            <span class="result-research-track" aria-hidden="true"><i id="resultResearchProgress"></i></span>
+          </span>
+          <span id="resultResearchStream" class="result-research-stream" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
         </div>
         <div class="result-stat result-coins-stat">
           <img src="assets/ui/coin.webp" alt="" aria-hidden="true">
@@ -328,19 +372,20 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
   <script src="/sdk.js"></script>
   <script src="published/food.js?v=1"></script>
   <script src="published/worlds.js?v=1"></script>
-  <script src="food-catalog.js?v=13"></script>
+  <script src="food-catalog.js?v=22"></script>
   <script src="world-catalog.js?v=22"></script>
   <script src="js/generation/section-catalog.js?v=12"></script>
   <script src="balance/balance-catalog.js?v=8"></script>
-  <script src="js/config/game-config.js?v=64"></script>
+  <script src="js/config/game-config.js?v=68"></script>
   <script src="js/platform/yandex-platform.js?v=1"></script>
-  <script src="js/core/game-assets.js?v=22"></script>
+  <script src="js/core/game-assets.js?v=30"></script>
   <script src="js/core/audio.js?v=2"></script>
-  <script src="js/rendering/slime-avatar.js?v=9"></script>
+  <script src="js/rendering/slime-avatar.js?v=10"></script>
   <script src="js/ui/encyclopedia.js?v=18"></script>
-  <script src="game.js?v=204"></script>
+  <script src="game.js?v=309"></script>
 </body>
 </html>

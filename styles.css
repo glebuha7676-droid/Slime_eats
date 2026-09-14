@@ -155,7 +155,7 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 /* Keep encyclopedia controls authoritative after the shared card stylesheet. */
 .encyclopedia-food-unknown.secret{filter:none;opacity:.72;background:radial-gradient(circle at 50% 42%,rgba(255,47,84,.16),transparent 38%),#170309!important;border-color:#8f1029!important;box-shadow:0 3px 0 #280006,0 0 10px rgba(255,23,71,.25)!important}.encyclopedia-food-unknown.secret .rarity:before{background:#4b0a17!important}.encyclopedia-food-unknown.secret .encyclopedia-unknown-mark{color:#ff496a;font-size:36px;letter-spacing:3px;text-shadow:0 0 8px #ff1747}.encyclopedia-food-unknown.secret .encyclopedia-unknown-label{color:#d7798b}
 .encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.food-card{width:auto!important;min-width:0!important;max-width:none!important;height:43px!important;min-height:43px!important;max-height:43px!important;padding:0!important;overflow:visible!important}.encyclopedia-rarity-tab .rarity-name i,.encyclopedia-rarity-tab.legendary .rarity-name i,.encyclopedia-rarity-tab.prismatic .rarity-name i,.encyclopedia-rarity-tab.secret .rarity-name i{position:relative!important;left:auto!important;top:auto!important;animation:none!important}.encyclopedia-rarity-tab.legendary .rarity-name i:before,.encyclopedia-rarity-tab.prismatic .rarity-name i:before,.encyclopedia-rarity-tab.secret:after,.encyclopedia-rarity-tab.prismatic:after{animation:none!important}.encyclopedia-food-row>.food-card.encyclopedia-food-card{pointer-events:auto;cursor:pointer;touch-action:pan-x}.encyclopedia-food-row>.food-card.encyclopedia-food-unknown{pointer-events:none!important}
-@media(max-width:430px){.bottom-actions{gap:4px}.bottom-actions b{font-size:7.8px;letter-spacing:-.15px}.encyclopedia-modal{padding:10px}.encyclopedia-world-tabs,.encyclopedia-rarity-tabs{top:53px}.encyclopedia-rarity-tabs{gap:3px;padding:4px}.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.food-card{height:40px!important;min-height:40px!important;max-height:40px!important}.encyclopedia-rarity-tab .rarity-name i{width:18px;height:18px}.encyclopedia-rarity-tab.secret .rarity-name i{width:21px;height:15px}.encyclopedia-food-page>.encyclopedia-page-head{grid-template-columns:1fr}.encyclopedia-collection-progress{grid-template-columns:75px minmax(55px,1fr) 33px}.encyclopedia-collection-progress>span{min-width:75px}.encyclopedia-collection-progress>img{width:33px;height:33px}.encyclopedia-food-row>.food-card.encyclopedia-food-card{flex-basis:112px;width:112px;min-width:112px;max-width:112px}.encyclopedia-block-card{grid-template-columns:70px minmax(0,1fr);gap:8px}.encyclopedia-block-art{width:68px;height:68px}.encyclopedia-block-art img{width:65px;height:65px}.encyclopedia-block-copy p{font-size:8px}.encyclopedia-card-viewer-stage{min-width:238px;min-height:398px}.encyclopedia-card-viewer-card{width:112px;zoom:1.4;margin:28px 0 18px}.encyclopedia-card-viewer-card .encyclopedia-food-card{width:112px!important;min-width:112px!important;max-width:112px!important}.encyclopedia-card-viewer-close{right:-25px}}
+@media(max-width:430px), (min-width:700px){.bottom-actions{gap:4px}.bottom-actions b{font-size:7.8px;letter-spacing:-.15px}.encyclopedia-modal{padding:10px}.encyclopedia-world-tabs,.encyclopedia-rarity-tabs{top:53px}.encyclopedia-rarity-tabs{gap:3px;padding:4px}.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.food-card{height:40px!important;min-height:40px!important;max-height:40px!important}.encyclopedia-rarity-tab .rarity-name i{width:18px;height:18px}.encyclopedia-rarity-tab.secret .rarity-name i{width:21px;height:15px}.encyclopedia-food-page>.encyclopedia-page-head{grid-template-columns:1fr}.encyclopedia-collection-progress{grid-template-columns:75px minmax(55px,1fr) 33px}.encyclopedia-collection-progress>span{min-width:75px}.encyclopedia-collection-progress>img{width:33px;height:33px}.encyclopedia-food-row>.food-card.encyclopedia-food-card{flex-basis:112px;width:112px;min-width:112px;max-width:112px}.encyclopedia-block-card{grid-template-columns:70px minmax(0,1fr);gap:8px}.encyclopedia-block-art{width:68px;height:68px}.encyclopedia-block-art img{width:65px;height:65px}.encyclopedia-block-copy p{font-size:8px}.encyclopedia-card-viewer-stage{min-width:238px;min-height:398px}.encyclopedia-card-viewer-card{width:112px;zoom:1.4;margin:28px 0 18px}.encyclopedia-card-viewer-card .encyclopedia-food-card{width:112px!important;min-width:112px!important;max-width:112px!important}.encyclopedia-card-viewer-close{right:-25px}}
 @media(max-width:370px){.encyclopedia-food-row>.food-card.encyclopedia-food-card{flex-basis:104px;width:104px;min-width:104px;max-width:104px}.encyclopedia-card-viewer-card{width:104px;zoom:1.44}.encyclopedia-card-viewer-card .encyclopedia-food-card{width:104px!important;min-width:104px!important;max-width:104px!important}}
 
 /* === ГЛАВНЫЙ ЭКРАН: герой и характеристики === */
@@ -508,7 +508,7 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 @keyframes secretViewerHaloIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.72)}65%{opacity:.8;transform:translate(-50%,-50%) scale(1.04)}100%{opacity:.56;transform:translate(-50%,-50%) scale(1)}}
 @keyframes secretViewerTitleIn{from{opacity:0;transform:translate(-50%,9px) scale(.92)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @keyframes secretViewerCardClose{from{left:50%;top:50%;opacity:1;transform:translate(-50%,-50%) scale(var(--secret-viewer-scale))}to{left:50%;top:54%;opacity:0;transform:translate(-50%,-50%) scale(var(--secret-viewer-close))}}
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   .secret-discovery-overlay.phase-card-flight .secret-discovery-card{--secret-viewer-scale:1.4;--secret-viewer-overshoot:1.449;--secret-viewer-close:1.232;width:112px}
   .secret-discovery-overlay.phase-card-flight .secret-discovery-card>.food-card{width:112px!important;min-width:112px!important;max-width:112px!important}
   .secret-discovery-overlay.phase-card-flight .secret-discovery-title{top:6%}
@@ -592,7 +592,7 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .reroll-btn:active{transform:translateY(2px);box-shadow:none}.reroll-btn:disabled{transform:none!important;filter:grayscale(.35)}
 .food-mini-model{width:36px;height:36px;display:block;object-fit:contain}
 
-@media(max-width:430px){.food-mini-model{width:39px;height:39px}.launch-btn{width:100%;min-height:54px}
+@media(max-width:430px), (min-width:700px){.food-mini-model{width:39px;height:39px}.launch-btn{width:100%;min-height:54px}
 }
 @media(max-width:370px){.food-mini-model{width:38px;height:38px}
 }
@@ -647,7 +647,7 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 
 /* V14 располагается выше V13 в истории файла; эти правила фиксируют финальный каскад. */
 .reroll-btn>.reroll-copy{width:auto;height:auto;display:flex;place-items:initial;font-size:inherit;line-height:normal}.food-mini-model{width:36px;height:36px}
-@media(max-width:430px){.food-mini-model{width:39px;height:39px}.launch-btn{width:100%}
+@media(max-width:430px), (min-width:700px){.food-mini-model{width:39px;height:39px}.launch-btn{width:100%}
 }
 @media(max-width:370px){.food-mini-model{width:38px;height:38px}
 }
@@ -723,7 +723,7 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 @keyframes comboSpark{0%{opacity:0;scale:.2}45%{opacity:1;scale:1.45}100%{opacity:0;scale:.7}}
 @keyframes comboFlash{0%{opacity:0;scale:.65}24%{opacity:1}100%{opacity:0;scale:1.22}}
 @keyframes comboRainbow{to{background-position:240% 0}}
-@media(max-width:430px){.impact-text.combo-impact{top:27%}.combo-impact .combo-line{gap:6px;padding:6px 11px 7px}.combo-impact .combo-line:before{left:-19px}.combo-impact .combo-line:after{right:-19px}}
+@media(max-width:430px), (min-width:700px){.impact-text.combo-impact{top:27%}.combo-impact .combo-line{gap:6px;padding:6px 11px 7px}.combo-impact .combo-line:before{left:-19px}.combo-impact .combo-line:after{right:-19px}}
 
 /* Компактное комбо следует рядом со слаймом и не перекрывает шахту. */
 .impact-text.combo-impact{
@@ -757,7 +757,7 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   24%{opacity:.92;transform:translate(-50%,-2px) scale(var(--combo-power))}
   100%{opacity:0;transform:translate(-50%,-13px) scale(1)}
 }
-@media(max-width:430px){.impact-text.combo-impact{gap:1px}.combo-impact .combo-line{gap:4px;padding:3px 7px 4px}.combo-impact .combo-line:before{left:-12px}.combo-impact .combo-line:after{right:-12px}}
+@media(max-width:430px), (min-width:700px){.impact-text.combo-impact{gap:1px}.combo-impact .combo-line{gap:4px;padding:3px 7px 4px}.combo-impact .combo-line:before{left:-12px}.combo-impact .combo-line:after{right:-12px}}
 
 /* Один динамический джойстик появляется под пальцем. Вверх намеренно отключён. */
 .fall-controls{position:absolute;z-index:11;inset:0;overflow:hidden;pointer-events:none;touch-action:none}
@@ -855,7 +855,7 @@ body{-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 }
 button,.food-card,.stomach-quick-slot{touch-action:manipulation}
 
-@media(max-width:430px){
+@media(max-width:430px), (min-width:700px){
   .app{
     padding-right:max(6px,var(--safe-right));
     padding-left:max(6px,var(--safe-left));
