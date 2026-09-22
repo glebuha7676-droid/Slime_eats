@@ -57,9 +57,10 @@
     gravityBase: 240,
     gravityPerWorld: 0,
     maxFallSpeedBase: 360,
+    maxFallSpeedWorld1: 305,
     maxFallSpeedPerWorld: 0,
-    weakBreakDrag: .992,
-    denseBreakDrag: .955,
+    weakBreakDrag: .96,
+    denseBreakDrag: .92,
     flightKeepSoft: .80,
     flightKeepDense: .55,
     flightKeepHard: .28,
@@ -79,10 +80,6 @@
     reinforced: { label: 'Усиленный', shock: 1.22, drag: .88, coin: 2.05 },
     ore: { label: 'Руда', shock: .86, drag: .94, coin: 3.55 },
     special: { label: 'Особый', shock: .72, drag: .96, coin: 1.30 }
-  };
-
-  const RARITY_LABELS = {
-    common: 'Обычная', rare: 'Редкая', epic: 'Эпическая', special: 'Особая', secret: 'Секретная'
   };
 
   const WORLD_SPRITE_NAMES = {
@@ -122,28 +119,19 @@
   const UPGRADES = {
     stomachLevel: {
       name: 'Желудок', icon: 'stomach', max: 4,
-      description: 'Вместимость: от 1 до 4 блюд. Каждая карта — заметный выбор.',
+      description: 'Увеличивает количество продуктов в одном забеге.',
       costs: [0, 45, 180, 650]
-    },
-    conveyorLevel: {
-      name: 'Конвейер', icon: 'conveyor', max: 5,
-      description: 'Снижает шанс обычной еды и открывает эпические, особые и секретные карточки.',
-      costs: [0, 90, 340, 1150, 3600]
-    },
-    rerollLevel: {
-      name: 'Удача конвейера', icon: 'reroll', max: 3,
-      description: '+5% к редким картам после рекламного обновления.',
-      costs: [180, 900, 3500]
     }
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 20,
+    schemaVersion: 22,
     coins: 20,
     researchUnits: 0,
     researchProgress: 0,
     mutationProgress: 0,
     unlockedMutations: [],
+    activeMutationPool: ['frost', 'fire', 'electric'],
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
     lastRunDepth: {},
@@ -151,8 +139,6 @@
     selectedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
     unlockedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
     stomachLevel: 1,
-    conveyorLevel: 1,
-    rerollLevel: 0,
     bestDepth: 0,
     endlessBestScore: { 1: 0, 2: 0, 3: 0, 4: 0 },
     endlessBestDepth: { 1: 0, 2: 0, 3: 0, 4: 0 },
@@ -162,12 +148,9 @@
     unlockedSkins: ['classic'],
     selectedTrail: 'none',
     unlockedTrails: ['none'],
-    discoveredFoods: [],
-    revealedSecretFoods: [],
     lastDailyDate: '', dailyStreak: 0,
     lastWheelDate: '', wheelAdDate: '', wheelAdSpins: 0,
-    pendingEpicBoost: 0, pendingHealthBoost: 0, pendingExtraRerolls: 0,
-    foodPity: { noEpic: 0, noSpecial: 0, noSecret: 0 },
+    pendingHealthBoost: 0, pendingExtraRerolls: 0,
     activeDraft: null,
     pendingWheel: null,
     totalRuns: 0,
@@ -180,20 +163,16 @@
     CLOUD_SAVE_KEY: 'slimeSave',
     LEGACY_SAVE_KEYS: ['slime_feed_and_fall_v10', 'slime_feed_and_fall_v9', 'slime_feed_and_fall_v8', 'slime_feed_and_fall_v7', 'slime_feed_and_fall_v6', 'slime_feed_and_fall_v5', 'slime_feed_and_fall_v4', 'slime_feed_and_fall_v3'],
     VIEW_W: 440,
-    VIEW_H: 650,
+    VIEW_H: 840,
     LEVEL_COUNT: 5,
     LEVEL_DEPTH_RATIOS: [.36, .52, .68, .84, 1],
-    ASSET_REVISION: '20260911-2',
+    ASSET_REVISION: '20260921-1',
     FOOD_ASSET_ROOT: 'assets/ЕДА/Общий пул/',
     UI_ASSET_ROOT: 'assets/ui/',
-    FOOD_EDITOR_STORAGE_KEY: 'slime_food_catalog_v3',
-    FOOD_RARITIES: ['common', 'rare', 'epic', 'special', 'secret'],
-    FOOD_CATEGORIES: ['health', 'damage', 'shield', 'secret'],
     WORLD_LEVELS,
     WORLDS,
     PHYSICS,
     BLOCK_TIERS,
-    RARITY_LABELS,
     WORLD_SPRITE_NAMES,
     ORE_TYPES,
     FOOD_ART_OFFSETS,

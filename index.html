@@ -12,10 +12,18 @@
   </style>
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="styles.css?v=86" />
-  <link rel="stylesheet" href="food-cards.css?v=94" />
-  <link rel="stylesheet" href="home-layout.css?v=178" />
-  <link rel="stylesheet" href="home-mode-fix.css?v=90" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-body-reference-v1.png?v=2" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-sockets-reference-v1.png?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-pupils-reference-v1.png?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-cheeks-reference-v1.png?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-expressions-v1.png?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.png?v=1" />
+  <link rel="stylesheet" href="styles.css?v=88" />
+  <link rel="stylesheet" href="home-layout.css?v=181" />
+  <link rel="stylesheet" href="home-mode-fix.css?v=98" />
+  <link rel="stylesheet" href="home-visual-refresh.css?v=38" />
+  <link rel="stylesheet" href="drop-visual-refresh.css?v=3" />
+  <link rel="stylesheet" href="lab-redesign.css?v=14" />
 </head>
 <body>
   <div id="phoneViewport" class="phone-viewport">
@@ -51,40 +59,43 @@
 
     <main class="game-shell">
       <section id="homeScreen" class="screen active" aria-label="Подготовка слайма">
-        <section id="slimeStage" class="slime-stage card" aria-label="Слайм, желудок и мутации">
+        <section id="slimeStage" class="slime-stage card" aria-label="Слайм и выбранные мутации">
           <div class="slime-hero-layout">
-            <div class="stomach-rail" aria-label="Желудок слайма">
-              <span class="stomach-rail-title">ЖЕЛУДОК</span>
-              <div id="stomachQuickSlots" class="stomach-quick-slots" aria-label="Ячейки желудка"></div>
-              <div id="recipeCategorySlots" class="recipe-category-slots" aria-label="Категории выбранной еды"></div>
-            </div>
-            <div class="slime-playground">
-              <div id="launchPortal" class="launch-portal" aria-hidden="true">
-                <span class="launch-portal-core"></span>
-                <span class="launch-portal-depth launch-portal-depth-back"></span>
-                <span class="launch-portal-depth launch-portal-depth-inner"></span>
-                <span class="launch-portal-rim"></span>
-              </div>
-              <div id="slime" class="slime skin-classic" role="button" tabindex="0" aria-label="Слайм. Нажми или погладь его">
-                <canvas id="menuSlimeCanvas" class="menu-slime-canvas" width="180" height="180" aria-hidden="true"></canvas>
-                <div id="menuSlimeMouth" class="menu-slime-mouth-target" aria-hidden="true"></div>
-                <div id="foodInside" class="food-inside"></div>
-              </div>
-              <span class="launch-portal-front" aria-hidden="true"></span>
-            </div>
-            <div class="recipe-rail" aria-label="Мутации и аксессуары">
-              <button class="recipe-book-button mutation-lab-button" data-panel="recipes" type="button" aria-label="Открыть лабораторию мутаций">
-                <img src="assets/ui/mutation-lab-slime.png?v=1" alt="" aria-hidden="true">
-                <span>МУТАЦИИ</span>
+            <div class="recipe-rail" aria-label="Лаборатория и аксессуары">
+              <button class="recipe-book-button mutation-lab-button" data-panel="recipes" type="button" aria-label="Открыть лабораторию">
+                <img src="assets/ui/laboratory-icon-v1.png?v=1" alt="" aria-hidden="true">
+                <span>ЛАБОРАТОРИЯ</span>
               </button>
               <button class="recipe-accessories-button" data-panel="shop" type="button" aria-label="Открыть аксессуары">
                 <img src="assets/ui/accessories-cap.png?v=2" alt="" aria-hidden="true">
                 <span>АКСЕССУАРЫ</span>
               </button>
             </div>
+            <div class="slime-center-stage">
+              <div class="slime-playground">
+                <div class="lab-portal-frame" aria-hidden="true"></div>
+                <div id="launchPortal" class="launch-portal" aria-hidden="true">
+                  <span class="launch-portal-core"></span>
+                  <span class="launch-portal-depth launch-portal-depth-back"></span>
+                  <span class="launch-portal-depth launch-portal-depth-inner"></span>
+                  <span class="launch-portal-rim"></span>
+                </div>
+                <div id="slime" class="slime skin-classic" role="button" tabindex="0" aria-label="Слайм. Нажми или погладь его">
+                  <canvas id="menuSlimeCanvas" class="menu-slime-canvas" width="180" height="180" aria-hidden="true"></canvas>
+                  <div id="menuSlimeMouth" class="menu-slime-mouth-target" aria-hidden="true"></div>
+                  <div id="foodInside" class="food-inside"></div>
+                </div>
+                <span class="launch-portal-front" aria-hidden="true"></span>
+              </div>
+              <div class="slime-mutation-summary" aria-label="Мутации выбранной еды">
+                <div id="recipeCategorySlots" class="recipe-category-slots" aria-label="Мутации выбранной еды"></div>
+                <div id="stomachQuickSlots" class="stomach-quick-slots stomach-slots-hidden" aria-hidden="true"></div>
+              </div>
+              <div id="slimeFeedCount" class="slime-feed-count" aria-live="polite">СЪЕДЕНО 0 ИЗ 3</div>
+            </div>
           </div>
-          <div id="stomachCardViewer" class="stomach-card-viewer hidden" aria-live="polite"></div>
-          <div id="rarityBursts" class="rarity-bursts" aria-live="polite"></div>
+          <span class="stage-foliage stage-foliage-left" aria-hidden="true"></span>
+          <span class="stage-foliage stage-foliage-right" aria-hidden="true"></span>
         </section>
 
         <div id="conveyor" class="conveyor card">
@@ -96,19 +107,11 @@
               <div id="foodChoices" class="food-choices" aria-label="Доступная еда"></div>
               <span class="machine-rail-bridge machine-rail-bridge-left" aria-hidden="true"></span>
               <span class="machine-rail-bridge machine-rail-bridge-right" aria-hidden="true"></span>
+              <span class="machine-wall-decor machine-wall-decor-left" aria-hidden="true"></span>
+              <span class="machine-wall-decor machine-wall-decor-right" aria-hidden="true"></span>
               <div class="machine-tunnel machine-tunnel-left" aria-hidden="true"><i class="machine-mouth"></i></div>
               <div class="machine-tunnel machine-tunnel-right" aria-hidden="true"><i class="machine-mouth"></i></div>
             </div>
-            <div class="conveyor-controls">
-              <button id="rerollBtn" class="reroll-btn" type="button">
-                <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll-button-v2.png?v=1" alt="" aria-hidden="true"></span>
-                <span class="reroll-copy"><b id="rerollTitle">РЕРОЛЛ</b></span>
-                <em id="rerollText">БЕСПЛАТНО ∞</em>
-              </button>
-            </div>
-          </div>
-          <div id="foodInfo" class="food-info hidden" role="region" aria-live="polite">
-            <div class="food-info-copy"><p id="foodInfoStats"></p><p id="foodInfoEffect" class="food-info-effect"></p></div>
           </div>
         </div>
 
@@ -162,6 +165,16 @@
             </div>
           </div>
 
+          <div class="home-reroll-row" aria-label="Управление конвейером">
+            <div class="conveyor-controls">
+              <button id="rerollBtn" class="reroll-btn" type="button">
+                <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll-button-v2.png?v=1" alt="" aria-hidden="true"></span>
+                <span class="reroll-copy"><b id="rerollTitle">РЕРОЛЛ</b></span>
+                <em id="rerollText">БЕСПЛАТНО ∞</em>
+              </button>
+            </div>
+          </div>
+
           <div class="home-route-progress" aria-label="Прогресс выбранного уровня">
             <div class="world-progress-copy">
               <span><i id="worldProgressPrefix">ВЫ ПРОШЛИ</i> <strong id="worldProgressText">0 м</strong></span>
@@ -178,40 +191,39 @@
       </section>
 
       <section id="dropScreen" class="screen" aria-label="Забег">
-        <div class="run-route card compact" aria-label="Прогресс падения до портала">
-          <div class="run-route-labels" aria-hidden="true">
-            <span>0 М</span>
-            <b id="depthLabel">0 М</b>
-            <strong id="routeTargetLabel">120 М</strong>
-          </div>
-          <div class="run-route-track">
-            <span id="routeProgress" class="run-route-progress"></span>
-            <span id="routeBestMarker" class="run-route-best" aria-hidden="true"><small id="routeBestLabel">РЕКОРД 0 М</small><i></i></span>
-            <span id="routeSlimeMarker" class="run-route-slime" aria-hidden="true">
-              <img src="assets/ui/slime.webp" alt="">
-            </span>
-            <span class="run-route-portal" aria-hidden="true"></span>
-          </div>
-        </div>
-
         <div class="shaft" id="shaft">
           <canvas id="physicsCanvas" aria-label="Слайм падает через блоки"></canvas>
-          <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true"><span>МЕНЮ</span></button>
-          <div id="impactText" class="impact-text" aria-live="polite"></div>
-          <div class="shaft-health" aria-label="У слайма три сердца">
-            <span class="shaft-health-title" aria-hidden="true">ЖИЗНИ</span>
-            <div class="run-hearts" role="img" aria-label="3 из 3 сердец">
-              <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
-              <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
-              <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+          <div class="run-top-hud" aria-label="Состояние забега">
+            <div class="shaft-health" aria-label="У слайма три сердца">
+              <span class="shaft-health-title" aria-hidden="true">ЖИЗНИ</span>
+              <div class="run-hearts" role="img" aria-label="3 из 3 сердец">
+                <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+                <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+                <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+              </div>
+              <span class="shaft-health-count"><b id="runHeartCount">3</b>/3</span>
             </div>
-            <span class="shaft-health-count"><b id="runHeartCount">3</b>/3</span>
+            <div class="run-route card compact" aria-label="Прогресс падения до портала">
+              <div class="run-route-labels" aria-hidden="true">
+                <span>0 М</span>
+                <b id="depthLabel">0 М</b>
+                <strong id="routeTargetLabel">120 М</strong>
+              </div>
+              <div class="run-route-track">
+                <span id="routeProgress" class="run-route-progress"></span>
+                <span id="routeBestMarker" class="run-route-best" aria-hidden="true"><small id="routeBestLabel">РЕКОРД 0 М</small><i></i></span>
+                <span id="routeSlimeMarker" class="run-route-slime" aria-hidden="true"><img src="assets/ui/slime.webp" alt=""></span>
+                <span class="run-route-portal" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div id="runResearchHud" class="run-research-hud" aria-label="Данные исследования за забег: 0">
+              <img src="assets/ui/research-flask.png?v=1" alt="" aria-hidden="true">
+              <span><small>ИССЛЕДОВАНИЕ</small><b id="runResearchScore">0</b></span>
+              <i id="runResearchGain" aria-hidden="true">+1</i>
+            </div>
+            <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/pause-button-v2.png?v=1" alt="" aria-hidden="true"><span>ПАУЗА</span></button>
           </div>
-          <div id="runResearchHud" class="run-research-hud" aria-label="Данные исследования за забег: 0">
-            <img src="assets/ui/research-flask.png?v=1" alt="" aria-hidden="true">
-            <span><small>ИССЛЕДОВАНИЕ</small><b id="runResearchScore">0</b></span>
-            <i id="runResearchGain" aria-hidden="true">+1</i>
-          </div>
+          <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div class="barrier-control" aria-label="Щит с зарядами">
             <button id="abilityBtn" class="ability-btn barrier-btn" type="button" aria-label="Активировать барьер" disabled>
               <img src="assets/ui/stat-defense.webp" alt="" aria-hidden="true">
@@ -252,7 +264,7 @@
         <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
         <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
       </div>
-      <div class="admin-editor-links" aria-label="Инструменты"><a href="tools/generation/index.html">ГЕНЕРАЦИЯ</a><a href="editors/world/world-editor.html">РЕДАКТОР МИРОВ</a><a href="balance/index.html">БАЛАНС</a></div>
+      <div class="admin-editor-links" aria-label="Инструменты"><a href="tools/generation/index.html">ГЕНЕРАТОР УРОВНЕЙ</a></div>
     </section>
   </div>
 
@@ -261,16 +273,6 @@
       <div class="modal-head"><h2 id="panelTitle">Прокачка</h2><button class="icon-btn" id="closePanelBtn" type="button" aria-label="Закрыть">✕</button></div>
       <div id="panelContent" class="panel-content"></div>
     </div>
-  </div>
-
-  <div id="secretDiscoveryOverlay" class="secret-discovery-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="secretDiscoveryTitle">
-    <div class="secret-discovery-veil" aria-hidden="true"></div>
-    <div id="secretDiscoveryEye" class="secret-discovery-eye" aria-hidden="true"><span><i></i></span></div>
-    <div class="secret-discovery-wave" aria-hidden="true"></div>
-    <div class="secret-discovery-particles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <h2 id="secretDiscoveryTitle" class="secret-discovery-title">СЕКРЕТ ОТКРЫТ</h2>
-    <div id="secretDiscoveryCard" class="secret-discovery-card" tabindex="-1"></div>
-    <p class="secret-discovery-hint">Нажми в любом месте, чтобы продолжить</p>
   </div>
 
   <div id="runMenuOverlay" class="overlay run-menu-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="runMenuTitle">
@@ -374,18 +376,16 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </div>
   <script src="/sdk.js"></script>
-  <script src="published/food.js?v=1"></script>
-  <script src="published/worlds.js?v=1"></script>
-  <script src="food-catalog.js?v=22"></script>
-  <script src="world-catalog.js?v=22"></script>
-  <script src="js/generation/section-catalog.js?v=12"></script>
-  <script src="balance/balance-catalog.js?v=8"></script>
-  <script src="js/config/game-config.js?v=68"></script>
-  <script src="js/platform/yandex-platform.js?v=1"></script>
-  <script src="js/core/game-assets.js?v=30"></script>
+  <script src="food-catalog.js?v=23"></script>
+  <script src="world-catalog.js?v=23"></script>
+  <script src="js/generation/section-catalog.js?v=13"></script>
+  <script src="js/config/gameplay-balance.js?v=2"></script>
+  <script src="js/config/game-config.js?v=73"></script>
+  <script src="js/platform/yandex-platform.js?v=2"></script>
+  <script src="js/core/game-assets.js?v=31"></script>
   <script src="js/core/audio.js?v=2"></script>
-  <script src="js/rendering/slime-avatar.js?v=10"></script>
-  <script src="js/ui/encyclopedia.js?v=18"></script>
-  <script src="game.js?v=309"></script>
+  <script src="js/rendering/slime-avatar.js?v=35"></script>
+  <script src="js/ui/encyclopedia.js?v=19"></script>
+  <script src="game.js?v=349"></script>
 </body>
 </html>

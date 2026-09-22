@@ -18,7 +18,6 @@
     WORLD_LEVELS,
     PHYSICS: BALANCE,
     BLOCK_TIERS,
-    RARITY_LABELS,
     ORE_TYPES,
     SKINS,
     UPGRADES: UPGRADE_DATA
@@ -35,7 +34,7 @@
     VFX_SPRITES,
     versionedAsset,
     ensureWorldSprites,
-    editorSprite,
+    projectSprite,
     foodArtMarkup,
     centerFoodThumbnail,
     uiIconMarkup
@@ -67,23 +66,21 @@
     mobility: 5000
   });
 
-  // Данные из встроенного редактора миров. Значения остаются безопасными:
-  // если редактор ещё не использовался, игра работает на исходных настройках.
-  const EDITOR_WORLDS = window.SlimeWorldCatalog?.load?.() || { worlds: [] };
+  const WORLD_CONTENT = window.SlimeWorldCatalog?.load?.() || { worlds: [] };
   let GAME_BALANCE = window.SlimeBalance?.load?.() || window.SlimeBalance?.defaults?.() || null;
-  function editorWorld(worldId) { return EDITOR_WORLDS.worlds?.find(item => +item.id === +worldId) || null; }
-  function editorBlock(worldId, id) { return editorWorld(worldId)?.blocks?.find(item => item.id === id) || null; }
-  function editorLevel(worldId, level) { return editorWorld(worldId)?.levels?.[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)] || null; }
+  function contentWorld(worldId) { return WORLD_CONTENT.worlds?.find(item => +item.id === +worldId) || null; }
+  function contentBlock(worldId, id) { return contentWorld(worldId)?.blocks?.find(item => item.id === id) || null; }
+  function contentLevel(worldId, level) { return contentWorld(worldId)?.levels?.[clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1)] || null; }
   function gameplayZone(worldId, level, progress) { return window.SlimeBalance?.getZone?.(GAME_BALANCE, worldId, level, progress) || null; }
   WORLDS.forEach(world => {
-    const edited = editorWorld(world.id);
+    const edited = contentWorld(world.id);
     if (!edited) return;
     world.name = edited.name || world.name;
     world.accent = edited.accent || world.accent;
     world.sky = edited.background?.top || world.sky;
     world.earth = edited.background?.top || world.earth;
     world.deep = edited.background?.bottom || world.deep;
-    world.editorBackground = edited.background || null;
+    world.backgroundArt = edited.background || null;
   });
 
   const $ = selector => document.querySelector(selector);
@@ -98,8 +95,7 @@
     worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
     menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
-    foodInside: $('#foodInside'), rarityBursts: $('#rarityBursts'), healthLabel: $('#healthLabel'), damageLabel: $('#damageLabel'),
-    shieldLabel: $('#shieldLabel'), shieldChargesLabel: $('#shieldChargesLabel'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
+    foodInside: $('#foodInside'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
     healthCompare: $('#healthCompare'), damageCompare: $('#damageCompare'), shieldCompare: $('#shieldCompare'),
     startDropLabel: $('#startDropLabel'), adminMenuBtn: $('#adminMenuBtn'), adminToolsOverlay: $('#adminToolsOverlay'),
     closeAdminToolsBtn: $('#closeAdminToolsBtn'), adminRestartBtn: $('#adminRestartBtn'),
@@ -107,9 +103,8 @@
     adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'), adminResetProgressBtn: $('#adminResetProgressBtn'),
     adminInfiniteFlasksBtn: $('#adminInfiniteFlasksBtn'), adminInfiniteFlasksState: $('#adminInfiniteFlasksState'),
     conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), conveyorDispensers: $('#conveyorDispensers'), conveyorChoiceCount: $('#conveyorChoiceCount'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
-    foodInfo: $('#foodInfo'), foodInfoStats: $('#foodInfoStats'), foodInfoEffect: $('#foodInfoEffect'),
-    stomachQuickSlots: $('#stomachQuickSlots'), stomachCardViewer: $('#stomachCardViewer'),
-    recipeCategorySlots: $('#recipeCategorySlots'),
+    stomachQuickSlots: $('#stomachQuickSlots'),
+    recipeCategorySlots: $('#recipeCategorySlots'), slimeFeedCount: $('#slimeFeedCount'),
     playSetupCard: $('#playSetupCard'), homeWorldPicker: $('#homeWorldPicker'), homeWorldMenu: $('#homeWorldMenu'),
     homeWorldSelect: $('#homeWorldSelect'), homeWorldPickerIcon: $('#homeWorldPickerIcon'),
     homeWorldPickerEyebrow: $('#homeWorldPickerEyebrow'), homeWorldPickerName: $('#homeWorldPickerName'), homeWorldBest: $('#homeWorldBest'),
@@ -127,7 +122,6 @@
     runMenuOverlay: $('#runMenuOverlay'), resumeRunBtn: $('#resumeRunBtn'), restartRunBtn: $('#restartRunBtn'),
     finishRunBtn: $('#finishRunBtn'), toggleRunSoundBtn: $('#toggleRunSoundBtn'), runSoundIcon: $('#runSoundIcon'), runSoundLabel: $('#runSoundLabel'),
     panelOverlay: $('#panelOverlay'), panelTitle: $('#panelTitle'), panelContent: $('#panelContent'), closePanelBtn: $('#closePanelBtn'),
-    secretDiscoveryOverlay: $('#secretDiscoveryOverlay'), secretDiscoveryEye: $('#secretDiscoveryEye'), secretDiscoveryCard: $('#secretDiscoveryCard'),
     resultOverlay: $('#resultOverlay'), resultBadge: $('#resultBadge'), resultTitle: $('#resultTitle'), resultText: $('#resultText'),
     resultWorldIcon: $('#resultWorldIcon'), resultWorldName: $('#resultWorldName'), resultCoins: $('#resultCoins'),
     resultResearchFlask: $('#resultResearchFlask'), resultResearchUnits: $('#resultResearchUnits'),
@@ -144,15 +138,10 @@
   let run = null;
   let pendingAdResolver = null;
   let adInFlight = false;
-  let suppressFoodClickUntil = 0;
   let lastFocusedElement = null;
   let menuEmotionTimer = null;
+  let menuChewStartedAt = 0;
   let menuGazeTimer = null;
-  let secretSequenceToken = 0;
-  let secretSequenceActive = false;
-  let secretRevealCanClose = false;
-  let secretRevealResolver = null;
-  let secretSequenceSource = null;
   let foodFlyerToken = 0;
   let slimeInteractionTimer = null;
   let resultCoinAnimationId = 0;
@@ -160,20 +149,42 @@
   let runResearchPulseTimer = 0;
   let resultRevealToken = 0;
   let autoResumeRunAfterVisibility = false;
+  let activeLaboratoryTab = 'mutations';
+  let selectedConveyorSlot = 0;
+  let selectedLaboratoryMutationId = 'fire';
+  let laboratoryReplaceMode = false;
   const RESULT_MULTIPLIERS = [.5, 1, 1.5, 2, 1.5, 1, .5];
   const RESULT_SWEEP_MS = 900;
   const MUTATION_STEPS = 10;
   const STARTER_MUTATIONS = Object.freeze([
-    { id: 'fire', name: 'ОГОНЬ', image: 'assets/ui/recipe-categories/fire-aligned.png' },
-    { id: 'electric', name: 'ЭЛЕКТРИЧЕСТВО', image: 'assets/ui/recipe-categories/electricity-aligned.png' },
-    { id: 'frost', name: 'МОРОЗ', image: 'assets/ui/recipe-categories/frost-aligned.png' }
+    { id: 'fire', name: 'ОГОНЬ', image: 'assets/ui/recipe-categories/emblem-v2-fire.png' },
+    { id: 'electric', name: 'ЭЛЕКТРИЧЕСТВО', image: 'assets/ui/recipe-categories/emblem-v2-electric.png' },
+    { id: 'frost', name: 'МОРОЗ', image: 'assets/ui/recipe-categories/emblem-v2-frost.png' }
   ]);
   const MUTATION_DISCOVERIES = Object.freeze([
-    { id: 'explosion', name: 'ВЗРЫВ', image: 'assets/ui/recipe-categories/mutation-explosion.png' },
-    { id: 'wind', name: 'ВЕТЕР', image: 'assets/ui/recipe-categories/mutation-wind.png?v=2' },
-    { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/mutation-cosmos.png' },
-    { id: 'gigantism', name: 'ГИГАНТИЗМ', image: 'assets/ui/recipe-categories/mutation-gigantism.png' }
+    { id: 'explosion', name: 'ВЗРЫВ', image: 'assets/ui/recipe-categories/emblem-v2-explosion.png' },
+    { id: 'wind', name: 'ВЕТЕР', image: 'assets/ui/recipe-categories/emblem-v2-wind.png' },
+    { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/emblem-v2-cosmos.png' },
+    { id: 'gigantism', name: 'ГИГАНТИЗМ', image: 'assets/ui/recipe-categories/emblem-v2-gigantism.png' }
   ]);
+  const MUTATION_DETAILS = Object.freeze({
+    fire: { stage1: 'Поджигает повреждённые блоки и наносит им дополнительный урон.', stage2: 'Огонь распространяется сильнее и помогает быстрее прожигать путь.' },
+    electric: { stage1: 'Накапливает электрический заряд во время столкновений.', stage2: 'Разряд становится мощнее и цепляет больше целей.' },
+    frost: { stage1: 'Смягчает опасные столкновения и охлаждает препятствия.', stage2: 'Мороз крепнет и даёт слайму более надёжную защиту.' },
+    explosion: { stage1: 'Разрушенные блоки заряжают локальный взрыв.', stage2: 'Взрыв срабатывает чаще и задевает больше соседних блоков.' },
+    wind: { stage1: 'Ускоряет отскок и делает движение слайма отзывчивее.', stage2: 'Открывает воздушный рывок, пробивающий несколько блоков.' },
+    cosmos: { stage1: 'Меняет направление притяжения и помогает управлять падением.', stage2: 'Заряжает кометный вход и позволяет пробивать препятствия.' },
+    gigantism: { stage1: 'Увеличивает силу удара по обычным блокам.', stage2: 'Лишний урон переносится на соседнее препятствие.' }
+  });
+  const MUTATION_SYNTH_COLORS = Object.freeze({
+    fire: { filter: 'hue-rotate(214deg) saturate(1.55) brightness(1.08)', glow: '#ff6b32' },
+    electric: { filter: 'hue-rotate(292deg) saturate(1.35) brightness(1.14)', glow: '#ffe43d' },
+    frost: { filter: 'hue-rotate(42deg) saturate(1.12) brightness(1.16)', glow: '#6eeaff' },
+    explosion: { filter: 'hue-rotate(218deg) saturate(1.75) brightness(1.03)', glow: '#ff4d35' },
+    wind: { filter: 'hue-rotate(7deg) saturate(.82) brightness(1.15)', glow: '#72efc4' },
+    cosmos: { filter: 'hue-rotate(105deg) saturate(1.72) brightness(.92)', glow: '#bd62ff' },
+    gigantism: { filter: 'hue-rotate(340deg) saturate(1.24) brightness(1.08)', glow: '#9ceb4c' }
+  });
   const TRAILS = Object.freeze([
     { id: 'none', name: 'Без следа', cost: 0 },
     { id: 'redJelly', name: 'Красное желе', cost: 250, asset: 'assets/ui/trails/trail-red.png', colors: ['rgba(255,54,69,0)', 'rgba(255,76,88,.48)', 'rgba(239,42,57,.94)'], glow: '#ff5964' },
@@ -191,7 +202,6 @@
   let slimePointer = null;
   let menuSlimeAnimationId = 0;
   let menuSlimeLastFrame = 0;
-  let menuMealFxStartedAt = 0;
   let menuLaunchInProgress = false;
   const menuReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const menuCategoryVisual = {
@@ -204,7 +214,6 @@
     explosion: 0, explosionFrom: 0, explosionTarget: 0, explosionStartedAt: 0,
     mass: 0, massFrom: 0, massTarget: 0, massStartedAt: 0
   };
-  let menuStatFeedbackTimers = [];
   const menuGaze = { x: 0, y: 0 };
   const menuPetPoint = { x: 0, y: 0 };
   const SAVE_BACKUP_KEY = `${SAVE_KEY}_backup`;
@@ -228,16 +237,11 @@
   });
   let toastTimer = null;
   let dragState = null;
-  let selectedFoodOfferIndex = null;
-  let selectedFoodInfoKey = null;
   let activeShopTab = 'skins';
-  let activeEncyclopediaTab = 'foods';
   let activeEncyclopediaWorld = save.world;
-  let activeEncyclopediaRarity = 'common';
   const ctx = els.canvas.getContext('2d');
   const menuSlimeCtx = els.menuSlimeCanvas.getContext('2d');
 
-  // ===== СОХРАНЕНИЕ И ВОССТАНОВЛЕНИЕ СЕССИИ =====
   function browserStorage() {
     try {
       return window.localStorage;
@@ -301,25 +305,30 @@
   }
 
   function normalizeSave(value) {
-    const sourceSchema = Math.max(0, Math.round(+value.schemaVersion || 0));
     const sourceStomachLevel = Math.round(+value.stomachLevel || 1);
     const merged = { ...structuredClone(defaultSave), ...value };
     merged.schemaVersion = defaultSave.schemaVersion;
+    for (const obsoleteKey of ['conveyorLevel', 'rerollLevel', 'discoveredFoods', 'revealedSecretFoods', 'pendingEpicBoost', 'foodPity']) {
+      delete merged[obsoleteKey];
+    }
     merged.coins = Math.max(0, Number.isFinite(+merged.coins) ? +merged.coins : defaultSave.coins);
     merged.researchUnits = Math.max(0, Math.floor(Number.isFinite(+merged.researchUnits) ? +merged.researchUnits : 0));
     merged.researchProgress = clamp(Math.floor(Number.isFinite(+merged.researchProgress) ? +merged.researchProgress : 0), 0, 99);
     merged.unlockedMutations = Array.isArray(value.unlockedMutations)
       ? [...new Set(value.unlockedMutations.filter(id => MUTATION_DISCOVERIES.some(mutation => mutation.id === id)))]
       : [];
+    const availableMutationIds = new Set([...STARTER_MUTATIONS.map(item => item.id), ...merged.unlockedMutations]);
+    const requestedMutationPool = Array.isArray(value.activeMutationPool) ? value.activeMutationPool : defaultSave.activeMutationPool;
+    merged.activeMutationPool = [...new Set(requestedMutationPool.filter(id => availableMutationIds.has(id)))].slice(0, 3);
+    for (const starter of STARTER_MUTATIONS) {
+      if (merged.activeMutationPool.length >= 3) break;
+      if (!merged.activeMutationPool.includes(starter.id)) merged.activeMutationPool.push(starter.id);
+    }
     const mutationCost = MUTATION_STEPS * (merged.unlockedMutations.length + 1);
     merged.mutationProgress = clamp(Math.floor(Number.isFinite(+merged.mutationProgress) ? +merged.mutationProgress : 0), 0, mutationCost);
     const requestedWorld = Math.round(+merged.world || 1);
     merged.world = ACTIVE_WORLD_IDS.includes(requestedWorld) ? requestedWorld : requestedWorld === 2 ? 3 : ACTIVE_WORLD_IDS[0];
-    // Старые сохранения могли хранить до шести ячеек. Новая сборка компактна
-    // и честно ограничена четырьмя; уже открытые ячейки не отнимаются ниже 1.
     merged.stomachLevel = clamp(sourceStomachLevel, 1, UPGRADE_DATA.stomachLevel.max);
-    merged.conveyorLevel = clamp(Math.round(+merged.conveyorLevel || 1), 1, UPGRADE_DATA.conveyorLevel.max);
-    merged.rerollLevel = clamp(Math.round(+merged.rerollLevel || 0), 0, UPGRADE_DATA.rerollLevel.max);
     merged.bestDepth = Math.max(0, +merged.bestDepth || 0);
     merged.endlessBestScore = { ...defaultSave.endlessBestScore };
     merged.endlessBestDepth = { ...defaultSave.endlessBestDepth };
@@ -367,16 +376,8 @@
       : ['none'];
     if (!merged.unlockedTrails.includes('none')) merged.unlockedTrails.unshift('none');
     if (!TRAILS.some(trail => trail.id === merged.selectedTrail) || !merged.unlockedTrails.includes(merged.selectedTrail)) merged.selectedTrail = 'none';
-    merged.discoveredFoods = Array.isArray(value.discoveredFoods)
-      ? [...new Set(value.discoveredFoods.filter(id => FOODS.some(food => food.id === id)))]
-      : [];
-    merged.revealedSecretFoods = Array.isArray(value.revealedSecretFoods)
-      ? [...new Set(value.revealedSecretFoods.filter(id => FOODS.some(food => food.id === id && food.rarity === 'secret')))]
-      : [];
-    merged.foodPity = { ...defaultSave.foodPity };
-    for (const key of Object.keys(merged.foodPity)) merged.foodPity[key] = clamp(Math.round(+(value.foodPity?.[key] || 0)), 0, 10000);
     merged.pendingHealthBoost = Math.max(0, Math.round(+(value.pendingHealthBoost ?? value.pendingMassBoost) || 0));
-    for (const key of ['pendingEpicBoost', 'pendingExtraRerolls', 'wheelAdSpins', 'dailyStreak']) {
+    for (const key of ['pendingExtraRerolls', 'wheelAdSpins', 'dailyStreak']) {
       merged[key] = Math.max(0, Math.round(+merged[key] || 0));
     }
     merged.dailyStreak = clamp(merged.dailyStreak, 0, 7);
@@ -392,46 +393,32 @@
       worldId: save.world,
       foods: session.foods.map(food => food.id),
       offer: session.offer.map(food => food?.id || null),
-      commonOnlyStreak: session.commonOnlyStreak,
       offersSeen: session.offersSeen,
       freeRerolls: session.freeRerolls,
       adRerolls: session.adRerolls,
-      baseEpicBoost: session.baseEpicBoost,
       healthBoost: session.healthBoost
     };
   }
 
   function restoreSession(raw) {
     if (!raw || raw.worldId !== save.world || !Array.isArray(raw.foods) || !Array.isArray(raw.offer)) return false;
-    // Старый сохранённый конвейер не должен обходить открытие новых категорий.
     const foodById = id => FOODS.find(food => food.id === id && foodAvailableInWorld(food));
     const foods = raw.foods.map(foodById).filter(Boolean).slice(0, STOMACH_CAPACITY);
     const offer = raw.offer.slice(0, 3).map(id => id ? foodById(id) || null : null);
-    // Полный желудок восстанавливается сразу на финальном этапе: пустые
-    // заглушки не должны создавать перед старт-картой лишний ряд.
     if (stomachIsFull(foods)) offer.length = 0;
     else while (offer.length < 3) offer.push(null);
     if (!offer.some(Boolean) && !foods.length) return false;
     session = {
       foods, offer,
-      commonOnlyStreak: Math.max(0, Math.round(+raw.commonOnlyStreak || 0)),
-      noEpicStreak: 0,
       offersSeen: Math.max(1, Math.round(+raw.offersSeen || 1)),
-      // У каждой тройки свой один бесплатный и один рекламный переролл.
       freeRerolls: 1,
       adRerolls: 0,
-      baseEpicBoost: clamp(+raw.baseEpicBoost || 0, 0, 10),
       healthBoost: clamp(+(raw.healthBoost ?? raw.massBoost) || 0, 0, 100),
       stats: {}, effects: {}, combo: null,
       rerollPending: false,
       offerTransition: false
     };
-    // Если сохранение попало ровно между выбором карты и приездом новой тройки,
-    // не оставляем игрока с пустой лентой после возвращения в игру.
-    if (session.offer.filter(Boolean).length < 3 && !stomachIsFull(foods)) generateOffer(session.baseEpicBoost);
-    const consumedSecrets = foods.filter(food => food.rarity === 'secret').map(food => food.id);
-    if (consumedSecrets.length) save.revealedSecretFoods = [...new Set([...(save.revealedSecretFoods || []), ...consumedSecrets])];
-    discoverFoods([...foods, ...session.offer.filter(food => food && food.rarity !== 'secret')]);
+    if (session.offer.filter(Boolean).length < 3 && !stomachIsFull(foods)) generateOffer();
     return true;
   }
 
@@ -676,9 +663,7 @@
   }
 
   function visibleInteractionLayer() {
-    const viewer = document.querySelector('.encyclopedia-card-viewer');
-    if (viewer) return viewer;
-    return [els.secretDiscoveryOverlay, els.adOverlay, els.gameCompleteOverlay, els.runMenuOverlay, els.resultOverlay, els.adminToolsOverlay, els.panelOverlay]
+    return [els.adOverlay, els.gameCompleteOverlay, els.runMenuOverlay, els.resultOverlay, els.adminToolsOverlay, els.panelOverlay]
       .find(layer => layer && !layer.classList.contains('hidden')) || null;
   }
 
@@ -686,15 +671,13 @@
     const activeLayer = visibleInteractionLayer();
     const screen = document.body.dataset.screen || 'home';
     const modalOpen = Boolean(activeLayer || adInFlight);
-    const secretRevealOpen = activeLayer === els.secretDiscoveryOverlay && secretSequenceActive;
-    const pauseScene = modalOpen && !secretRevealOpen;
+    const pauseScene = modalOpen;
     els.app.inert = modalOpen;
     els.homeScreen.inert = modalOpen || screen !== 'home';
     els.dropScreen.inert = modalOpen || screen !== 'drop';
-    [els.panelOverlay, els.adminToolsOverlay, els.secretDiscoveryOverlay, els.runMenuOverlay, els.resultOverlay, els.gameCompleteOverlay, els.adOverlay].forEach(layer => {
+    [els.panelOverlay, els.adminToolsOverlay, els.runMenuOverlay, els.resultOverlay, els.gameCompleteOverlay, els.adOverlay].forEach(layer => {
       if (layer) layer.inert = layer !== activeLayer;
     });
-    document.querySelectorAll('.encyclopedia-card-viewer').forEach(layer => { layer.inert = layer !== activeLayer; });
     document.body.classList.toggle('ui-modal-open', pauseScene);
     if (pauseScene && menuSlimeAnimationId) {
       cancelAnimationFrame(menuSlimeAnimationId);
@@ -704,7 +687,7 @@
 
   function initializeInteractionLayers() {
     const observer = new MutationObserver(syncInteractionLayers);
-    [els.panelOverlay, els.adminToolsOverlay, els.secretDiscoveryOverlay, els.runMenuOverlay, els.resultOverlay, els.gameCompleteOverlay, els.adOverlay].forEach(layer => {
+    [els.panelOverlay, els.adminToolsOverlay, els.runMenuOverlay, els.resultOverlay, els.gameCompleteOverlay, els.adOverlay].forEach(layer => {
       if (layer) observer.observe(layer, { attributes: true, attributeFilter: ['class'] });
     });
     observer.observe(document.body, { childList: true });
@@ -724,7 +707,7 @@
     const entries = WORLD_LEVELS[world.id];
     const index = clamp(Math.round(level) - 1, 0, LEVEL_COUNT - 1);
     const fallback = entries?.[index] || null;
-    const edited = editorLevel(world.id, level);
+    const edited = contentLevel(world.id, level);
     if (!edited) return fallback;
     const enabled = Array.isArray(edited.enabled) ? edited.enabled : [];
     return {
@@ -742,8 +725,6 @@
   }
 
   function levelTargetDepth(world, level) {
-    // Кампания имеет одну ясную шкалу: +100 м за уровень и +50 м за новый мир.
-    // Настройки редактора могут менять состав блоков, но не длину уровня.
     const worldIndex = Math.max(0, ACTIVE_WORLD_IDS.indexOf(Math.round(world?.id || ACTIVE_WORLD_IDS[0])));
     const levelIndex = clamp(Math.round(level || 1) - 1, 0, LEVEL_COUNT - 1);
     return 100 + worldIndex * 50 + levelIndex * 100;
@@ -783,192 +764,10 @@
     toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1800);
   }
 
-  function showRarityBurst(food) {
-    if (!els.rarityBursts) return;
-    const titles = {
-      common: 'НЯМ!', rare: 'ОГО, РЕДКОЕ!', epic: 'ЭПИЧНО!', special: 'ОСОБАЯ!', secret: 'СЕКРЕТ АКТИВЕН!'
-    };
-    const burst = document.createElement('span');
-    burst.className = `rarity-burst ${food.rarity}`;
-    burst.textContent = titles[food.rarity] || 'ВКУСНО!';
-    els.rarityBursts.replaceChildren(burst);
-    setTimeout(() => burst.remove(), 1500);
-  }
-
-  const waitForSecretPhase = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
-
-  function escapeMarkup(value) {
-    return String(value ?? '').replace(/[&<>"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character]));
-  }
-
-  function inspectFoodCardMarkup(food) {
-    const encyclopedia = window.SlimeEncyclopedia;
-    if (encyclopedia?.foodCardMarkup) {
-      return encyclopedia.foodCardMarkup(food, {
-        rarityLabels: RARITY_LABELS,
-        foodArtMarkup,
-        foodStatItems,
-        foodStatGridMarkup,
-        foodNameMarkup,
-        foodCardBodyMarkup,
-        foodCardDecorMarkup
-      });
-    }
-    const cardType = foodCardType(food);
-    return `<article class="food-card encyclopedia-food-card ${food.rarity} food-type-${cardType}">${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}</article>`;
-  }
-
-  function waitForSecretCardDismiss(food, token, sourceCard) {
-    els.secretDiscoveryCard.innerHTML = inspectFoodCardMarkup(food);
-    secretRevealCanClose = false;
-    requestAnimationFrame(() => {
-      if (token !== secretSequenceToken) return;
-      const sourceRect = sourceCard?.isConnected ? sourceCard.getBoundingClientRect() : null;
-      const sourceX = sourceRect ? sourceRect.left + sourceRect.width / 2 : innerWidth / 2;
-      const sourceY = sourceRect ? sourceRect.top + sourceRect.height / 2 : innerHeight * .68;
-      const baseWidth = els.secretDiscoveryCard.offsetWidth || 134;
-      const sourceScale = sourceRect ? sourceRect.width / baseWidth : .9;
-      els.secretDiscoveryCard.style.setProperty('--secret-flight-x', `${sourceX}px`);
-      els.secretDiscoveryCard.style.setProperty('--secret-flight-y', `${sourceY}px`);
-      els.secretDiscoveryCard.style.setProperty('--secret-flight-scale', String(sourceScale));
-      sourceCard?.classList.add('secret-flight-source-hidden');
-      els.secretDiscoveryOverlay.classList.add('show-card', 'flight-ready');
-      els.secretDiscoveryCard.focus({ preventScroll: true });
-      setTimeout(() => {
-        if (token === secretSequenceToken) els.secretDiscoveryOverlay.classList.add('flight-complete');
-      }, 850);
-      setTimeout(() => {
-        if (token === secretSequenceToken) secretRevealCanClose = true;
-      }, 1180);
-    });
-    return new Promise(resolve => { secretRevealResolver = resolve; });
-  }
-
-  function dismissSecretDiscovery() {
-    if (!secretSequenceActive || !secretRevealCanClose || !secretRevealResolver) return false;
-    secretRevealCanClose = false;
-    const resolve = secretRevealResolver;
-    secretRevealResolver = null;
-    els.secretDiscoveryOverlay.classList.add('card-closing');
-    sound('tap');
-    feedback(10);
-    setTimeout(resolve, 360);
-    return true;
-  }
-
-  function cancelSecretDiscovery() {
-    secretSequenceToken += 1;
-    secretSequenceActive = false;
-    secretRevealCanClose = false;
-    const resolve = secretRevealResolver;
-    secretRevealResolver = null;
-    resolve?.();
-    document.body.classList.remove('secret-discovery-active');
-    els.secretDiscoveryOverlay?.classList.add('hidden');
-    if (els.secretDiscoveryOverlay) els.secretDiscoveryOverlay.className = 'secret-discovery-overlay hidden';
-    if (els.secretDiscoveryCard) els.secretDiscoveryCard.replaceChildren();
-    secretSequenceSource?.querySelector('.secret-reveal-curtain')?.remove();
-    secretSequenceSource?.classList.remove('secret-card-awakening', 'secret-eye-open', 'secret-card-scanning', 'secret-eye-closing', 'secret-card-revealing', 'secret-card-uncovering', 'secret-card-revealed-in-place', 'secret-flight-source-hidden');
-    secretSequenceSource = null;
-    clearMenuMealReaction();
-    syncInteractionLayers();
-  }
-
-  function revealedSecretCardInnerMarkup(food) {
-    return `<span class="conveyor-plate" aria-hidden="true"></span>${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
-  }
-
-  function revealSecretCardInPlace(food, source, curtain = null) {
-    revealSecretFood(food);
-    persist({ captureDraft: false });
-    if (!source?.isConnected) return;
-    source.innerHTML = revealedSecretCardInnerMarkup(food);
-    if (curtain) source.appendChild(curtain);
-    source.classList.remove('secret-unknown', 'secret-card-awakening', 'secret-eye-open', 'secret-card-scanning', 'secret-eye-closing');
-    source.classList.add('secret-revealed', 'secret-card-revealed-in-place', 'secret-card-uncovering');
-    source.setAttribute('aria-label', `${food.name}. Секрет открыт. Нажми, чтобы посмотреть`);
-  }
-
-  async function playSecretDiscovery(food, offerIndex, source = null) {
-    if (secretSequenceActive) return;
-    secretSequenceActive = true;
-    const token = ++secretSequenceToken;
-    const sourceCard = source?.isConnected
-      ? source
-      : els.foodChoices?.querySelector(`.food-card[data-offer-index="${offerIndex}"]`);
-    secretSequenceSource = sourceCard || null;
-    clearMenuMealReaction();
-    hideFoodInfo();
-    clearMenuSlimeInteraction();
-    document.body.classList.add('secret-discovery-active');
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-card-awaken';
-    sourceCard?.classList.add('secret-card-awakening');
-    syncInteractionLayers();
-    sound('tap');
-    feedback(9);
-    await waitForSecretPhase(430);
-    if (token !== secretSequenceToken) return;
-    sourceCard?.classList.add('secret-eye-open');
-    sound('epic');
-    feedback([12, 28, 18]);
-    await waitForSecretPhase(1780);
-    if (token !== secretSequenceToken) return;
-    sourceCard?.classList.add('secret-card-scanning');
-    feedback([8, 12, 8]);
-    await waitForSecretPhase(940);
-    if (token !== secretSequenceToken) return;
-    sourceCard?.classList.add('secret-eye-closing');
-    await waitForSecretPhase(520);
-    if (token !== secretSequenceToken) return;
-    const revealCurtain = document.createElement('span');
-    revealCurtain.className = 'secret-reveal-curtain';
-    revealCurtain.setAttribute('aria-hidden', 'true');
-    sourceCard?.appendChild(revealCurtain);
-    sourceCard?.classList.add('secret-card-revealing');
-    feedback([8, 14, 10]);
-    await waitForSecretPhase(380);
-    if (token !== secretSequenceToken) return;
-    revealSecretCardInPlace(food, sourceCard, revealCurtain);
-    sound('epic');
-    await waitForSecretPhase(620);
-    if (token !== secretSequenceToken) return;
-    revealCurtain.remove();
-    sourceCard?.classList.remove('secret-card-revealing', 'secret-card-uncovering');
-    await waitForSecretPhase(430);
-    if (token !== secretSequenceToken) return;
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay phase-card-flight';
-    await waitForSecretCardDismiss(food, token, sourceCard);
-    if (token !== secretSequenceToken) return;
-    els.secretDiscoveryOverlay.className = 'secret-discovery-overlay hidden';
-    els.secretDiscoveryCard.replaceChildren();
-    document.body.classList.remove('secret-discovery-active');
-    clearMenuMealReaction();
-    renderDraft();
-    persist();
-    secretSequenceSource = null;
-    secretSequenceActive = false;
-    syncInteractionLayers();
-  }
-
-  function forceSecretDiscoveryForDebug(foodId = '', { play = false } = {}) {
-    const food = FOODS.find(item => item.rarity === 'secret' && (!foodId || item.id === foodId));
-    if (!food || secretSequenceActive || !canAddToStomach(food)) return false;
-    const slot = session.offer.findIndex(Boolean);
-    if (slot < 0) return false;
-    session.offer[slot] = food;
-    save.revealedSecretFoods = (save.revealedSecretFoods || []).filter(id => id !== food.id);
-    save.discoveredFoods = (save.discoveredFoods || []).filter(id => id !== food.id);
-    renderDraft();
-    persist();
-    if (play) playSecretDiscovery(food, slot);
-    return true;
-  }
-
   function feedback(pattern = 8) {
     if (navigator.vibrate) navigator.vibrate(pattern);
   }
 
-  // ===== ГЛАВНЫЙ ЭКРАН И ВЫБОР УРОВНЯ =====
   function renderLevelPicker() {
     if (!els.levelButtons) return;
     const world = currentWorld();
@@ -1138,8 +937,6 @@
     save.world = nextWorldId;
     save.activeDraft = null;
     session = null;
-    selectedFoodOfferIndex = null;
-    hideFoodInfo();
     sound('tap');
     feedback(8);
     newDraft();
@@ -1222,8 +1019,8 @@
     setMenuGazePoint(from.left + from.width / 2, from.top + from.height / 2);
     els.slime.classList.add('tracking-food', 'expect-food');
     const flyer = document.createElement('span');
-    flyer.className = `swallow-fruit ${food.rarity}`;
-    const swallowMs = food.rarity === 'secret' ? 300 : 340;
+    flyer.className = 'swallow-fruit';
+    const swallowMs = 340;
     flyer.style.setProperty('--swallow-time', `${swallowMs}ms`);
     flyer.innerHTML = foodArtMarkup(food, 'swallow-model');
     flyer.style.left = `${from.left + from.width / 2}px`;
@@ -1263,22 +1060,14 @@
   }
 
   const MENU_SLIME_STATES = ['booped', 'petting', 'petted', 'portal-surprised'];
-  const MEAL_REACTION_CLASSES = ['meal-common', 'meal-rare', 'meal-epic', 'meal-special', 'meal-secret'];
-
   function clearMenuMealReaction() {
     clearTimeout(menuEmotionTimer);
-    menuMealFxStartedAt = 0;
-    els.slime?.classList.remove(
-      'eat', 'chewing', 'savoring', 'pleased', 'tracking-food', 'expect-food',
-      ...MEAL_REACTION_CLASSES
-    );
-    els.slimeStage?.classList.remove('secret-meal-active', 'secret-meal-impact');
-    document.body.classList.remove('secret-meal-ui-active', 'secret-meal-ui-impact');
+    menuChewStartedAt = 0;
+    els.slime?.classList.remove('eat', 'chewing', 'savoring', 'pleased', 'tracking-food', 'expect-food');
     els.slime?.style.removeProperty('--catch-time');
     els.slime?.style.removeProperty('--chew-time');
     els.slime?.style.removeProperty('--chew-count');
     els.slime?.style.removeProperty('--happy-time');
-    els.rarityBursts?.replaceChildren();
     resetMenuGaze();
   }
 
@@ -1362,7 +1151,6 @@
   }
 
   function showScreen(name) {
-    if (name !== 'home' && secretSequenceActive) cancelSecretDiscovery();
     document.body.dataset.screen = name;
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
@@ -1381,18 +1169,14 @@
   function newDraft() {
     resetRoomLaunchVisuals();
     menuLaunchInProgress = false;
-    cancelSecretDiscovery();
-    const bonusEpic = save.pendingEpicBoost || 0;
     const bonusHealth = save.pendingHealthBoost || 0;
-    save.pendingEpicBoost = 0;
     save.pendingHealthBoost = 0;
     save.pendingExtraRerolls = 0;
     session = {
       foods: [], offer: [],
-      commonOnlyStreak: 0, noEpicStreak: 0, offersSeen: 0,
+      offersSeen: 0,
       freeRerolls: 1,
       adRerolls: 0,
-      baseEpicBoost: bonusEpic,
       healthBoost: bonusHealth,
       stats: { health: BASE_HEALTH, damage: BASE_DAMAGE, shield: BASE_SHIELD, shieldCharges: BASE_SHIELD_CHARGES, coinMultiplier: 1 },
       effects: {},
@@ -1401,7 +1185,7 @@
       offerTransition: false
     };
     syncMenuCategoryVisuals({ instant: true });
-    generateOffer(session.baseEpicBoost);
+    generateOffer();
     showScreen('home');
     els.conveyor.classList.add('is-running');
     renderDraft({ offerMotion: 'enter' });
@@ -1433,8 +1217,6 @@
     save.world = WORLDS[nextIndex].id;
     save.activeDraft = null;
     session = null;
-    selectedFoodOfferIndex = null;
-    hideFoodInfo();
     sound('tap');
     newDraft();
     showToast(`Админ: открыт мир ${save.world} — ${currentWorld().name}`);
@@ -1456,7 +1238,6 @@
     saveRevision += 1;
     session = null;
     run = null;
-    selectedFoodOfferIndex = null;
     sound('tap');
     newDraft();
     flushCloudSave(true);
@@ -1470,8 +1251,6 @@
     save.researchProgress = 0;
     save.world = 1;
     save.stomachLevel = 4;
-    save.conveyorLevel = 5;
-    save.rerollLevel = 3;
     save.unlockedSkins = SKINS.map(skin => skin.id);
     save.unlockedTrails = TRAILS.map(trail => trail.id);
     save.gameCompleted = true;
@@ -1485,7 +1264,6 @@
     }
     save.activeDraft = null;
     session = null;
-    selectedFoodOfferIndex = null;
     persist();
     sound('coin');
     feedback([20, 35, 20]);
@@ -1509,73 +1287,30 @@
     showToast(adminInfiniteResearch ? 'Бесконечные колбы включены' : 'Бесконечные колбы выключены');
   }
 
-  function rarityWeights(boost = 0, rareBoost = 0) {
-    const tables = [
-      { common: 78.85, rare: 19, epic: 1, special: 1, secret: .15 },
-      { common: 68.75, rare: 25, epic: 5, special: 1, secret: .25 },
-      { common: 57.6, rare: 30, epic: 10, special: 2, secret: .4 },
-      { common: 48.3, rare: 31, epic: 16, special: 4, secret: .7 },
-      { common: 17, rare: 15.5, epic: 60, special: 6, secret: 1.5 }
-    ];
-    const base = { ...tables[save.conveyorLevel - 1] };
-    const epicAdd = clamp(boost, 0, 10);
-    const movedToEpic = Math.min(base.common - 5, epicAdd);
-    base.common -= movedToEpic;
-    base.epic += movedToEpic;
-    const rareAdd = clamp(rareBoost, 0, 10);
-    const movedToRare = Math.min(base.common - 5, rareAdd);
-    base.common -= movedToRare;
-    base.rare += movedToRare;
-    return base;
-  }
-
-  function weightedRarity(weights) {
-    const entries = Object.entries(weights).filter(([, value]) => value > 0);
-    let roll = Math.random() * entries.reduce((sum, [, value]) => sum + value, 0);
-    for (const [rarity, value] of entries) {
-      roll -= value;
-      if (roll <= 0) return rarity;
-    }
-    return 'common';
-  }
-
-  function rarityRank(rarity) {
-    return { common: 0, rare: 1, epic: 2, special: 3, secret: 4 }[rarity] ?? 0;
-  }
-
   function foodAvailableInWorld(food) {
-    if (!['ice', 'fire', 'electric'].includes(foodRecipeFamily(food))) return false;
+    if (!activeMutationFamilies().includes(foodRecipeFamily(food))) return false;
     if (food?.requiresMutation && !(save.unlockedMutations || []).includes(food.requiresMutation)) return false;
     return !Array.isArray(food.worlds) || !food.worlds.length || food.worlds.includes(save.world);
   }
 
-  function discoverFoods(foods) {
-    if (!Array.isArray(foods) || !foods.length) return false;
-    const discovered = new Set(save.discoveredFoods || []);
-    const before = discovered.size;
-    for (const food of foods) if (food?.id && FOODS.some(item => item.id === food.id)) discovered.add(food.id);
-    if (discovered.size === before) return false;
-    save.discoveredFoods = [...discovered];
-    return true;
+  function allMutations() {
+    return [...STARTER_MUTATIONS, ...MUTATION_DISCOVERIES];
   }
 
-  function secretFoodIsRevealed(food) {
-    return food?.rarity !== 'secret' || (save.revealedSecretFoods || []).includes(food.id);
+  function mutationById(id) {
+    return allMutations().find(mutation => mutation.id === id) || null;
   }
 
-  function revealSecretFood(food) {
-    if (!food?.id || food.rarity !== 'secret') return false;
-    const revealed = new Set(save.revealedSecretFoods || []);
-    const changed = !revealed.has(food.id);
-    revealed.add(food.id);
-    save.revealedSecretFoods = [...revealed];
-    discoverFoods([food]);
-    return changed;
+  function mutationFoodFamily(id) {
+    return id === 'frost' ? 'ice' : id === 'explosion' ? 'blast' : id;
+  }
+
+  function activeMutationFamilies() {
+    return (save.activeMutationPool || ['frost', 'fire', 'electric']).map(mutationFoodFamily);
   }
 
   function completionRecipeFamily() {
     const counts = (session?.foods || []).reduce((result, food) => {
-      if (food?.rarity === 'secret') return result;
       const family = foodRecipeFamily(food);
       result[family] = (result[family] || 0) + 1;
       return result;
@@ -1583,55 +1318,23 @@
     return Object.entries(counts).find(([, count]) => count === 2)?.[0] || '';
   }
 
-  function randomFood(exclude = [], minimumRarity = null, rollBoost = 0, rareBoost = 0, preferredFamily = '') {
-    let rarity = weightedRarity(rarityWeights(rollBoost, rareBoost));
-    if (minimumRarity && rarityRank(rarity) < rarityRank(minimumRarity)) rarity = minimumRarity;
-    if (preferredFamily) {
-      const preferredPool = FOODS.filter(food => foodAvailableInWorld(food)
-        && foodRecipeFamily(food) === preferredFamily
-        && food.minConveyor <= save.conveyorLevel
-        && (!minimumRarity || rarityRank(food.rarity) >= rarityRank(minimumRarity))
-        && !exclude.includes(food.id));
-      if (preferredPool.length) return preferredPool[Math.floor(Math.random() * preferredPool.length)];
-    }
-    let pool = FOODS.filter(food => foodAvailableInWorld(food) && food.rarity === rarity && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
-    if (!pool.length) {
-      const order = ['secret', 'special', 'epic', 'rare', 'common'];
-      const allowed = minimumRarity ? order.filter(r => rarityRank(r) >= rarityRank(minimumRarity)) : order;
-      for (const fallback of allowed) {
-        pool = FOODS.filter(food => foodAvailableInWorld(food) && food.rarity === fallback && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
-        if (pool.length) break;
-      }
-    }
-    if (!pool.length) {
-      pool = FOODS.filter(food => foodAvailableInWorld(food) && food.minConveyor <= save.conveyorLevel && !exclude.includes(food.id));
-    }
+  function randomFood(exclude = [], preferredFamily = '') {
+    let pool = FOODS.filter(food => foodAvailableInWorld(food)
+      && (!preferredFamily || foodRecipeFamily(food) === preferredFamily)
+      && !exclude.includes(food.id));
+    if (!pool.length) pool = FOODS.filter(food => foodAvailableInWorld(food) && !exclude.includes(food.id));
     return pool[Math.floor(Math.random() * pool.length)] || null;
   }
 
-  function generateOffer(rollBoost = 0, rareBoost = 0, { resetRerolls = true } = {}) {
+  function generateOffer({ resetRerolls = true } = {}) {
     const offer = [null, null, null];
-    const activeFamilies = ['ice', 'fire', 'electric'];
+    const activeFamilies = activeMutationFamilies();
     const used = (session?.foods || []).map(food => food.id);
-    const pity = save.foodPity || structuredClone(defaultSave.foodPity);
-    let guaranteed = null;
-    const rarityAvailable = rarity => FOODS.some(food => food.rarity === rarity && foodAvailableInWorld(food) && food.minConveyor <= save.conveyorLevel && !used.includes(food.id));
-    if (pity.noSecret >= 8 && rarityAvailable('secret')) guaranteed = 'secret';
-    else if (pity.noSpecial >= 3 && rarityAvailable('special')) guaranteed = 'special';
-    else if (save.conveyorLevel >= 2 && pity.noEpic >= 5 && rarityAvailable('epic')) guaranteed = 'epic';
-    else if (session.commonOnlyStreak >= 2) guaranteed = 'rare';
-    const guaranteedSlot = Math.floor(Math.random() * 3);
+    const completionFamily = completionRecipeFamily();
 
     for (let i = 0; i < 3; i += 1) {
       const family = activeFamilies[i];
-      let food = randomFood(used, i === guaranteedSlot ? guaranteed : null, rollBoost, rareBoost, family);
-      if (!food || foodRecipeFamily(food) !== family) {
-        const familyPool = FOODS.filter(item => foodAvailableInWorld(item)
-          && foodRecipeFamily(item) === family
-          && item.minConveyor <= save.conveyorLevel
-          && !used.includes(item.id));
-        food = familyPool[Math.floor(Math.random() * familyPool.length)] || null;
-      }
+      const food = randomFood(used, family === completionFamily ? completionFamily : family);
       offer[i] = food;
       if (food) used.push(food.id);
     }
@@ -1640,48 +1343,8 @@
       session.freeRerolls = 1;
       session.adRerolls = 0;
     }
-    discoverFoods(offer);
     session.offersSeen += 1;
-    session.commonOnlyStreak = offer.some(food => food && rarityRank(food.rarity) >= 1) ? 0 : session.commonOnlyStreak + 1;
-
-    pity.noEpic = offer.some(food => food?.rarity === 'epic') ? 0 : pity.noEpic + 1;
-    pity.noSpecial = offer.some(food => food?.rarity === 'special') ? 0 : pity.noSpecial + 1;
-    pity.noSecret = offer.some(food => food?.rarity === 'secret') ? 0 : pity.noSecret + 1;
-    save.foodPity = pity;
     persist();
-  }
-
-  function foodCardType(food) {
-    return 'stats';
-  }
-
-  function foodStatItems(food) {
-    return [
-      { key: 'health', value: food.health || 0, score: (food.health || 0) / 20, iconName: 'stat-health', display: `+${food.health || 0}`, label: `+${food.health || 0} здоровья` },
-      { key: 'damage', value: food.damage || 0, score: (food.damage || 0) / 10, iconName: 'stat-power', display: `+${Math.round(food.damage || 0)}`, label: `+${Math.round(food.damage || 0)} урона` },
-      { key: 'shield', value: food.shield || 0, score: (food.shield || 0) / 10, iconName: 'stat-defense', display: `+${Math.round(food.shield || 0)}`, label: `+${Math.round(food.shield || 0)} щита` },
-      { key: 'shield-charges', value: food.shieldCharges || 0, score: (food.shieldCharges || 0) * 1.3, iconName: 'stat-defense', display: `+${Math.round(food.shieldCharges || 0)}`, label: `+${Math.round(food.shieldCharges || 0)} заряд щита` },
-      { key: 'coins', value: food.coinMultiplier || 0, score: (food.coinMultiplier || 0) / .45, iconName: 'coin', display: `+${Math.round((food.coinMultiplier || 0) * 100)}%`, label: `+${Math.round((food.coinMultiplier || 0) * 100)}% монет` }
-    ].filter(item => item.value > 0).sort((a, b) => b.score - a.score);
-  }
-
-  const CARD_STAT_ICONS = Object.freeze({
-    health: 'assets/ui/stat-health.webp',
-    damage: 'assets/ui/stat-power.webp',
-    shield: 'assets/ui/stat-defense.webp'
-  });
-
-  function foodCardDecorMarkup(food) {
-    if (food?.rarity === 'epic') {
-      return '<span class="food-epic-motes" aria-hidden="true"><i></i><i></i><i></i><i></i></span>';
-    }
-    if (food?.rarity === 'special') {
-      return '<span class="food-special-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="food-special-neon" aria-hidden="true"></span>';
-    }
-    if (food?.rarity === 'secret') {
-      return '<span class="food-secret-neon" aria-hidden="true"></span>';
-    }
-    return '';
   }
 
   function mutationElementFxMarkup(family, extraClass = '') {
@@ -1708,153 +1371,7 @@
     return '';
   }
 
-  function foodCategoryBadgeMarkup(food, unknown = false) {
-    const family = unknown ? 'secret' : foodRecipeFamily(food);
-    const meta = RECIPE_FAMILY_META[family] || RECIPE_FAMILY_META.mixed;
-    const icon = RECIPE_FAMILY_ICONS[family];
-    const content = unknown || !icon
-      ? (unknown ? '?' : meta.glyph)
-      : `<img src="${versionedAsset(icon)}" alt="" aria-hidden="true">`;
-    return `<span class="food-category-badge family-${family}" title="${meta.label}" aria-label="${meta.label}">${content}</span>`;
-  }
-
-  function foodCardStatItems(food) {
-    const cardOrder = { health: 0, damage: 1, shield: 2 };
-    return foodStatItems(food)
-      .filter(item => CARD_STAT_ICONS[item.key])
-      // Самая сильная характеристика всегда первой: она крупнее и стоит слева.
-      .sort((a, b) => b.score - a.score || cardOrder[a.key] - cardOrder[b.key])
-      .slice(0, 3);
-  }
-
-  function foodStatGridMarkup(food) {
-    const items = foodCardStatItems(food);
-    const strongest = Math.max(...items.map(item => item.score), 0);
-    const weakest = Math.min(...items.map(item => item.score), strongest);
-    const hasClearLeader = items.length > 1 && strongest - weakest >= .45;
-    return items.map(item => {
-      const powerClass = items.length === 1 || (hasClearLeader && item.score === strongest) ? ' power-leading' : ' power-regular';
-      return `<span class="food-stat-cell ${item.key}${powerClass}" aria-label="${item.label}"><img class="card-stat-icon" src="${versionedAsset(CARD_STAT_ICONS[item.key])}" alt="" aria-hidden="true"><b>${item.display}</b></span>`;
-    }).join('');
-  }
-
-  function foodCardDescription(food) {
-    if (food.description || food.effectText) return { text: food.description || food.effectText, effect: true };
-    const bonuses = [];
-    if (food.shieldCharges > 0) bonuses.push(`+${Math.round(food.shieldCharges)} заряд щита`);
-    if (food.coinMultiplier > 0) bonuses.push(`+${Math.round(food.coinMultiplier * 100)}% монет`);
-    return bonuses.length
-      ? { text: bonuses.join(' · '), effect: false }
-      : { text: '', effect: false };
-  }
-
-  function foodCardAnimatedTextMarkup(value, effect) {
-    let index = 0;
-    return String(value ?? '').split(/(\s+)/).map(token => {
-      if (!token) return '';
-      if (/^\s+$/.test(token)) return [...token].map(character => character === '\n' ? '<br>' : ' ').join('');
-      const letters = [...token].map(character => {
-        const properties = [`--card-letter-index:${index}`];
-        if (effect === 'secret') {
-          const lift = .75 + ((index * 7) % 5) * .13;
-          const side = (((index * 11) % 5) - 2) * .09;
-          const turn = (((index * 13) % 5) - 2) * .09;
-          properties.push(
-            `--card-chaos-up:${-lift}px`,
-            `--card-chaos-soft:${-(lift * .32)}px`,
-            `--card-chaos-down:${lift * .2}px`,
-            `--card-chaos-side:${side}px`,
-            `--card-chaos-back:${side * -.45}px`,
-            `--card-chaos-turn:${turn}deg`,
-            `--card-chaos-turn-back:${turn * -.4}deg`,
-            `--card-chaos-duration:${2.25 + ((index * 17) % 9) * .14}s`,
-            `--card-chaos-delay:${-(((index * 19) % 23) * .11)}s`
-          );
-        }
-        index += 1;
-        return `<span class="card-fx-letter" style="${properties.join(';')}">${escapeMarkup(character)}</span>`;
-      }).join('');
-      return `<span class="card-fx-word">${letters}</span>`;
-    }).join('');
-  }
-
-  function foodNameMarkup(food) {
-    const words = food.name.trim().split(/\s+/).filter(Boolean);
-    let nameForRender = food.name;
-    let twoLineClass = '';
-    if (words.length > 1) {
-      let splitAt = 1;
-      let bestDifference = Number.POSITIVE_INFINITY;
-      for (let index = 1; index < words.length; index += 1) {
-        const firstLength = words.slice(0, index).join(' ').length;
-        const secondLength = words.slice(index).join(' ').length;
-        const difference = Math.abs(firstLength - secondLength);
-        if (difference < bestDifference) {
-          bestDifference = difference;
-          splitAt = index;
-        }
-      }
-      nameForRender = `${words.slice(0, splitAt).join(' ')}\n${words.slice(splitAt).join(' ')}`;
-      twoLineClass = ' two-line';
-    }
-    const longestLine = Math.max(...nameForRender.split('\n').map(line => line.length));
-    const lengthClass = longestLine > 17 ? ' very-long' : longestLine > 12 ? ' long' : '';
-    const animated = food.rarity === 'special' || food.rarity === 'secret';
-    const renderedName = animated ? foodCardAnimatedTextMarkup(nameForRender, food.rarity) : escapeMarkup(nameForRender).replace('\n', '<br>');
-    return `<span class="food-name${lengthClass}${twoLineClass}"><span class="food-name-text">${renderedName}</span></span>`;
-  }
-
-  function foodDescriptionRichMarkup(value, rarity) {
-    const text = String(value || '');
-    const animated = rarity === 'special' || rarity === 'secret';
-    const renderText = part => animated ? foodCardAnimatedTextMarkup(part, rarity) : escapeMarkup(part);
-    const pattern = /[+-]?\d+(?:[.,]\d+)?\s*%?\s*(?:здоровь(?:я|е)|урон(?:а)?|щит(?:а)?|монет(?:ы|а|у)?|к\s+комбо|заряд(?:а|ов)?\s+щита)/giu;
-    const parts = [];
-    let cursor = 0;
-    for (const match of text.matchAll(pattern)) {
-      const index = match.index || 0;
-      if (index > cursor) parts.push(renderText(text.slice(cursor, index)));
-      const label = match[0];
-      const lowered = label.toLowerCase();
-      const kind = lowered.includes('здоров') ? 'health'
-        : lowered.includes('урон') ? 'damage'
-          : lowered.includes('щит') ? 'shield'
-            : lowered.includes('комбо') ? 'combo' : 'money';
-      const iconPath = CARD_STAT_ICONS[kind];
-      const icon = iconPath ? `<img src="${versionedAsset(iconPath)}" alt="" aria-hidden="true">` : '';
-      parts.push(`<span class="food-inline-bonus ${kind}">${icon}<b>${renderText(label)}</b></span>`);
-      cursor = index + label.length;
-    }
-    if (cursor < text.length) parts.push(renderText(text.slice(cursor)));
-    return parts.join('');
-  }
-
-  function foodCardBodyMarkup(food) {
-    const description = foodCardDescription(food);
-    const stats = foodCardStatItems(food);
-    const copyLengthClass = description.text
-      ? description.text.length > 95 ? ' copy-very-long' : description.text.length > 65 ? ' copy-long' : description.text.length > 38 ? ' copy-medium' : ' copy-short'
-      : '';
-    const descriptionMarkup = description.text
-      ? `<span class="food-card-description ${description.effect ? 'effect' : 'bonus'}${copyLengthClass}"><em>${foodDescriptionRichMarkup(description.text, food.rarity)}</em></span>`
-      : '<span class="food-card-description no-effect"><em><b>Нет эффекта</b><i aria-hidden="true">—</i></em></span>';
-    const statsMarkup = stats.length
-      ? `<span class="food-stat-grid count-${stats.length}">${foodStatGridMarkup(food)}</span>`
-      : '';
-    return `${descriptionMarkup}${statsMarkup}`;
-  }
-
-  function foodInfoStatMarkup(food) {
-    const items = foodStatItems(food).slice(0, 4);
-    if (!items.length) return '';
-    const cells = items.map(item => `
-      <span class="food-info-stat ${item.key}" aria-label="${item.label}">
-        ${uiIconMarkup(item.iconName, 'food-info-stat-icon')}<b>${item.display}</b>
-      </span>`).join('');
-    return `<strong class="food-info-kind">${uiIconMarkup('stat-health', 'food-info-kind-icon')}ХАРАКТЕРИСТИКИ</strong><span class="food-info-stat-grid count-${items.length}">${cells}</span>`;
-  }
-
-  function calculateStatsForFoods(foods) {
+  function calculateStatsForFoods() {
     const stats = {
       health: BASE_HEALTH,
       damage: BASE_DAMAGE,
@@ -1862,39 +1379,12 @@
       shieldCharges: BASE_SHIELD_CHARGES,
       coinMultiplier: 1
     };
-    const effects = {
-      medkitBoost: false,
-      breakHealEveryFive: false,
-      shieldActivationHeal: false,
-      lowHealthDamage: false,
-      bouncePower: false,
-      shieldDamageBoost: false,
-      shieldDamageToHealth: false,
-      shieldEndExplosion: false,
-      gravitySwitch: false,
-      edgePortals: false,
-      blockGrowth: false,
-      pandoraChaos: false,
-      slimeSplinters: false
-    };
-
-    for (const food of foods) {
-      stats.health += food.health || 0;
-      stats.damage += food.damage || 0;
-      stats.shield += food.shield || 0;
-      stats.health -= food.healthPenalty || 0;
-      stats.damage -= food.damagePenalty || 0;
-      stats.shield -= food.shieldPenalty || 0;
-      stats.shieldCharges += food.shieldCharges || 0;
-      stats.coinMultiplier += food.coinMultiplier || 0;
-      if (food.effect && Object.hasOwn(effects, food.effect)) effects[food.effect] = true;
-    }
     stats.health *= 1 + (session.healthBoost || 0) / 100;
     stats.health = clamp(Math.round(stats.health), 1, 999);
     stats.damage = clamp(Math.round(stats.damage), 1, 999);
     stats.shield = clamp(Math.round(stats.shield), 0, 999);
     stats.shieldCharges = clamp(Math.round(stats.shieldCharges), 1, 9);
-    return { stats, effects, combo: null };
+    return { stats, effects: {}, combo: null };
   }
 
   function recalcStats() {
@@ -1904,128 +1394,15 @@
     session.combo = result.combo;
   }
 
-  function refreshLowHealthDamage(announce = false) {
-    if (!run?.effects?.lowHealthDamage) return;
-    const active = run.health / Math.max(1, run.maxHealth) < .5;
-    if (active === run.lowHealthDamageActive) return;
-    run.lowHealthDamageActive = active;
-    run.damage = clamp(run.damage + (active ? 15 : -15), 1, 999);
-    if (announce) impact(active ? 'КРИТИЧЕСКОЕ ЗДОРОВЬЕ · +15 УРОНА' : 'ЗДОРОВЬЕ ВОССТАНОВЛЕНО · −15 УРОНА');
-  }
-
-  function finishShield(timestamp = performance.now()) {
-    if (!run?.effects?.shieldEndExplosion) return;
-    const damage = Math.max(1, Math.round(run.damage * .4));
-    const x = run.slime.x;
-    const y = run.slime.y;
-    spawnSpecialBurst('shieldBurst', x, y);
-    explodeAt(x, y, 96, .5, damage);
-    run.shake = Math.max(run.shake, 6);
-    impact(`ВЗРЫВ ЩИТА · ${damage} УРОНА`);
-    sound('epic');
-    feedback([10, 18, 10]);
-  }
-
-  function clearFoodPreview(force = false) {
-    if (force !== true && document.body.classList.contains('food-dragging')) return;
-    [els.healthCompare, els.damageCompare, els.shieldCompare].forEach(element => {
-      if (!element) return;
-      element.textContent = '';
-      element.classList.remove('negative');
-    });
-    $$('.slime-stage .stat-pill').forEach(pill => pill.classList.remove('previewing', 'preview-loss'));
-  }
-
-  function showFoodPreview(food) {
-    if (!food || !canAddToStomach(food)) return clearFoodPreview();
-    if (!secretFoodIsRevealed(food)) return clearFoodPreview();
-    const next = calculateStatsForFoods([...session.foods, food]).stats;
-    const comparisons = [
-      [els.healthCompare, next.health, session.stats.health],
-      [els.damageCompare, next.damage, session.stats.damage],
-      [els.shieldCompare, next.shield, session.stats.shield]
-    ];
-    comparisons.forEach(([element, value, current]) => {
-      if (!element) return;
-      const delta = value - current;
-      const changed = Math.abs(delta) > .001;
-      element.textContent = changed ? `${delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '';
-      element.classList.toggle('negative', delta < 0);
-      element.closest('.stat-pill')?.classList.toggle('previewing', changed);
-      element.closest('.stat-pill')?.classList.toggle('preview-loss', changed && delta < 0);
-    });
-  }
-
-  function clearMenuStatFeedback() {
-    menuStatFeedbackTimers.forEach(clearTimeout);
-    menuStatFeedbackTimers = [];
-    document.querySelectorAll('.stat-change-fly').forEach(item => item.remove());
-    $$('.slime-stage .stat-pill.stat-change-pop').forEach(pill => {
-      pill.classList.remove('stat-change-pop', 'stat-change-gain', 'stat-change-loss');
-      pill.removeAttribute('data-stat-change');
-    });
-  }
-
-  function showMenuStatChange(before, after) {
-    const changes = [
-      { key: 'health', label: els.healthLabel, value: after.health, previous: before.health },
-      { key: 'damage', label: els.damageLabel, value: after.damage, previous: before.damage },
-      { key: 'shield', label: els.shieldLabel, value: after.shield, previous: before.shield }
-    ].filter(item => Math.round(item.value) !== Math.round(item.previous));
-    if (!changes.length) return;
-
-    const mouth = els.menuSlimeMouth?.getBoundingClientRect();
-    if (!mouth) return;
-    clearMenuStatFeedback();
-    changes.forEach((change, index) => {
-      const timer = setTimeout(() => {
-        const target = change.label?.closest('.stat-pill');
-        if (!target) return;
-        const targetRect = target.getBoundingClientRect();
-        const delta = Math.round(change.value - change.previous);
-        const direction = delta > 0 ? 'gain' : 'loss';
-        const text = `${delta > 0 ? '+' : '−'}${Math.abs(delta)}`;
-        const flyer = document.createElement('span');
-        flyer.className = `stat-change-fly ${direction} ${change.key}`;
-        flyer.textContent = text;
-        flyer.style.left = `${mouth.left + mouth.width / 2}px`;
-        flyer.style.top = `${mouth.top + mouth.height / 2}px`;
-        document.body.appendChild(flyer);
-        requestAnimationFrame(() => {
-          flyer.style.left = `${targetRect.left + targetRect.width / 2}px`;
-          flyer.style.top = `${targetRect.top + targetRect.height / 2}px`;
-          flyer.classList.add('is-flying');
-        });
-        const arrivalTimer = setTimeout(() => {
-          flyer.remove();
-          change.label.textContent = Math.round(change.value);
-          target.dataset.statChange = text;
-          target.classList.remove('stat-change-pop', 'stat-change-gain', 'stat-change-loss');
-          void target.offsetWidth;
-          target.classList.add('stat-change-pop', `stat-change-${direction}`);
-          const clearTimer = setTimeout(() => {
-            target.classList.remove('stat-change-pop', 'stat-change-gain', 'stat-change-loss');
-            target.removeAttribute('data-stat-change');
-          }, 720);
-          menuStatFeedbackTimers.push(clearTimer);
-        }, 430);
-        menuStatFeedbackTimers.push(arrivalTimer);
-      }, index * 88);
-      menuStatFeedbackTimers.push(timer);
-    });
-  }
-
-  // ===== ГЛАВНЫЙ ЭКРАН: эффекты и выдача еды =====
   function createStomachSlot(food, index, { locked = false } = {}) {
     const slot = document.createElement('button');
     slot.type = 'button';
-    slot.className = `stomach-quick-slot ${locked ? 'locked' : ''} ${food ? `filled ${food.rarity}` : ''}`;
+    slot.className = `stomach-quick-slot ${locked ? 'locked' : ''} ${food ? 'filled' : ''}`;
     if (food) {
       slot.innerHTML = `<span class="slot-art">${foodArtMarkup(food, 'food-mini-model')}</span>`;
       centerFoodThumbnail(slot.querySelector('.food-mini-model'));
-      slot.setAttribute('aria-label', `${index + 1}. ячейка. ${food.name}. Показать свойства`);
+      slot.setAttribute('aria-label', `${index + 1}. ячейка. ${food.name}`);
       slot.title = food.name;
-      slot.addEventListener('click', () => showStomachFoodInfo(food, index, slot));
     } else if (locked) {
       slot.innerHTML = '<img class="slot-lock" src="assets/ui/lock.webp" alt="" aria-hidden="true">';
       slot.setAttribute('aria-label', `${index + 1}. ячейка желудка ещё не открыта`);
@@ -2047,48 +1424,54 @@
       els.stomachQuickSlots?.appendChild(createStomachSlot(session.foods[index], index));
     }
     els.stomachQuickSlots?.classList.toggle('is-full', stomachIsFull());
+    if (els.slimeFeedCount) els.slimeFeedCount.textContent = `СЪЕДЕНО ${stomachFoodCount()} ИЗ ${STOMACH_CAPACITY}`;
     renderRecipeWorkbench();
   }
 
   const RECIPE_FAMILY_META = {
-    mass: { glyph: '●', label: 'МАССА' }, health: { glyph: '●', label: 'СЫТНОСТЬ' },
-    fire: { glyph: '▲', label: 'ОГОНЬ' }, damage: { glyph: '▲', label: 'СИЛА' },
+    fire: { glyph: '▲', label: 'ОГОНЬ' },
     ice: { glyph: '◆', label: 'ЛЁД' }, electric: { glyph: 'ϟ', label: 'ТОК' },
     cosmos: { glyph: '✦', label: 'КОСМОС' },
     gigantism: { glyph: '●', label: 'ГИГАНТИЗМ' },
     wind: { glyph: '≈', label: 'ВЕТЕР' },
-    bounce: { glyph: '↟', label: 'СКОРОСТЬ' }, gold: { glyph: '●', label: 'ЗОЛОТО' },
-    blast: { glyph: '✦', label: 'ВЗРЫВ' }, protection: { glyph: '⬟', label: 'ЗАЩИТА' },
-    shield: { glyph: '⬟', label: 'ЗАЩИТА' }, secret: { glyph: '?', label: 'СЕКРЕТ' },
+    blast: { glyph: '✦', label: 'ВЗРЫВ' },
     mixed: { glyph: '•', label: 'ЕДА' }
   };
 
   const RECIPE_FAMILY_ICONS = Object.freeze({
-    fire: 'assets/ui/recipe-categories/fire-aligned.png',
-    damage: 'assets/ui/recipe-categories/fire-aligned.png',
-    ice: 'assets/ui/recipe-categories/frost-aligned.png',
-    electric: 'assets/ui/recipe-categories/electricity-aligned.png',
-    cosmos: 'assets/ui/recipe-categories/mutation-cosmos.png',
-    gigantism: 'assets/ui/recipe-categories/mutation-gigantism.png',
-    wind: 'assets/ui/recipe-categories/mutation-wind.png?v=2',
-    gold: 'assets/ui/recipe-categories/gold-aligned.png',
-    bounce: 'assets/ui/recipe-categories/mobility-aligned.png',
-    mass: 'assets/ui/recipe-categories/weight-aligned.png',
-    health: 'assets/ui/recipe-categories/weight-aligned.png',
-    protection: 'assets/ui/recipe-categories/protection-aligned.png',
-    shield: 'assets/ui/recipe-categories/protection-aligned.png',
-    blast: 'assets/ui/recipe-categories/explosion-aligned.png'
+    fire: 'assets/ui/recipe-categories/emblem-v2-fire.png',
+    ice: 'assets/ui/recipe-categories/emblem-v2-frost.png',
+    electric: 'assets/ui/recipe-categories/emblem-v2-electric.png',
+    cosmos: 'assets/ui/recipe-categories/emblem-v2-cosmos.png',
+    gigantism: 'assets/ui/recipe-categories/emblem-v2-gigantism.png',
+    wind: 'assets/ui/recipe-categories/emblem-v2-wind.png',
+    blast: 'assets/ui/recipe-categories/emblem-v2-explosion.png'
   });
 
   function foodRecipeFamily(food) {
-    return String(food?.recipeFamily || food?.family || food?.category || 'mixed').toLowerCase();
+    return String(food?.recipeFamily || 'mixed').toLowerCase();
   }
 
   function renderRecipeWorkbench() {
     if (!els.recipeCategorySlots) return;
+    const visibleSlotCount = Math.min(3, STOMACH_CAPACITY);
+    const slotFoods = Array.from({ length: visibleSlotCount }, (_, index) => session.foods[index] || null);
+    const filledFamilies = slotFoods.filter(Boolean).map(foodRecipeFamily);
+    const ultraFamily = filledFamilies.length === 3 && filledFamilies.every(family => family === filledFamilies[0])
+      ? filledFamilies[0]
+      : '';
+    const previousUltraFamily = els.recipeCategorySlots.dataset.ultraFamily || '';
+    const ultraIsNew = Boolean(ultraFamily && ultraFamily !== previousUltraFamily);
+
     els.recipeCategorySlots.replaceChildren();
-    for (let index = 0; index < STOMACH_CAPACITY; index += 1) {
-      const food = session.foods[index];
+    els.recipeCategorySlots.className = `recipe-category-slots${ultraFamily ? ` ultra-${ultraIsNew ? 'forming' : 'ready'} family-${ultraFamily}` : ''}`;
+    if (ultraFamily) els.recipeCategorySlots.dataset.ultraFamily = ultraFamily;
+    else delete els.recipeCategorySlots.dataset.ultraFamily;
+
+    const cluster = document.createElement('span');
+    cluster.className = 'recipe-category-cluster';
+    for (let index = 0; index < visibleSlotCount; index += 1) {
+      const food = slotFoods[index];
       const family = food ? foodRecipeFamily(food) : 'empty';
       const meta = RECIPE_FAMILY_META[family] || RECIPE_FAMILY_META.mixed;
       const marker = document.createElement('span');
@@ -2098,104 +1481,30 @@
       else marker.textContent = food ? meta.glyph : '';
       marker.title = food ? meta.label : `Пустое место ${index + 1}`;
       marker.setAttribute('aria-label', food ? `${index + 1}. ${meta.label}` : `${index + 1}. Пусто`);
-      els.recipeCategorySlots.appendChild(marker);
+      cluster.appendChild(marker);
     }
-  }
+    els.recipeCategorySlots.appendChild(cluster);
 
-  function hideFoodInfo(closeStomachViewer = true) {
-    selectedFoodOfferIndex = null;
-    selectedFoodInfoKey = null;
-    els.conveyor?.classList.remove('showing-food-info');
-    els.foodInfo?.classList.add('hidden');
-    els.foodInfo?.classList.remove('below');
-    els.foodInfo?.style.removeProperty('left');
-    els.foodInfo?.style.removeProperty('top');
-    $$('.food-info-source.selected').forEach(source => source.classList.remove('selected', 'food-info-source'));
-    clearFoodPreview();
-    if (closeStomachViewer) hideStomachCardViewer();
-  }
-
-  function positionFoodInfoPopover(source) {
-    if (!source || !els.foodInfo) return;
-    requestAnimationFrame(() => {
-      if (els.foodInfo.classList.contains('hidden') || !source.isConnected) return;
-      const card = source.getBoundingClientRect();
-      const panel = els.foodInfo.getBoundingClientRect();
-      const viewport = els.phoneViewport?.getBoundingClientRect() || { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
-      const safe = 8;
-      const gap = 10;
-      const minLeft = viewport.left + safe;
-      const maxLeft = Math.max(minLeft, viewport.right - panel.width - safe);
-      const minTop = viewport.top + safe;
-      const maxTop = Math.max(minTop, viewport.bottom - panel.height - safe);
-      const left = clamp(card.left + card.width / 2 - panel.width / 2, minLeft, maxLeft);
-      const below = card.top - panel.height - gap < minTop;
-      const top = below
-        ? clamp(card.bottom + gap, minTop, maxTop)
-        : Math.max(minTop, card.top - panel.height - gap);
-      els.foodInfo.style.left = `${left}px`;
-      els.foodInfo.style.top = `${top}px`;
-      els.foodInfo.style.setProperty('--caret-x', `${clamp(card.left + card.width / 2 - left, 22, panel.width - 22)}px`);
-      els.foodInfo.classList.toggle('below', below);
-    });
-  }
-
-  function presentFoodInfo(food, key, source, { offerIndex = null, preview = false } = {}) {
-    if (!food || !els.foodInfo) return;
-    if (selectedFoodInfoKey === key && !els.foodInfo.classList.contains('hidden')) {
-      hideFoodInfo();
-      return;
+    if (!ultraFamily) return;
+    const meta = RECIPE_FAMILY_META[ultraFamily] || RECIPE_FAMILY_META.mixed;
+    const ultraMarker = document.createElement('span');
+    ultraMarker.className = 'recipe-category-ultra';
+    ultraMarker.title = `Ультраформа: ${meta.label}`;
+    ultraMarker.setAttribute('aria-label', `Ультраформа: ${meta.label}`);
+    const icon = RECIPE_FAMILY_ICONS[ultraFamily];
+    if (icon) ultraMarker.innerHTML = `<img src="${versionedAsset(icon)}" alt="" aria-hidden="true">`;
+    else ultraMarker.textContent = meta.glyph;
+    const flash = document.createElement('span');
+    flash.className = 'recipe-category-ultra-flash';
+    flash.setAttribute('aria-hidden', 'true');
+    els.recipeCategorySlots.append(ultraMarker, flash);
+    if (ultraIsNew) {
+      ultraMarker.addEventListener('animationend', () => {
+        if (els.recipeCategorySlots.dataset.ultraFamily !== ultraFamily) return;
+        els.recipeCategorySlots.classList.remove('ultra-forming');
+        els.recipeCategorySlots.classList.add('ultra-ready');
+      }, { once: true });
     }
-    selectedFoodInfoKey = key;
-    selectedFoodOfferIndex = offerIndex;
-    els.conveyor?.classList.add('showing-food-info');
-    $$('.food-info-source.selected').forEach(item => item.classList.remove('selected', 'food-info-source'));
-    source?.classList.add('selected', 'food-info-source');
-    if (preview) showFoodPreview(food);
-    else clearFoodPreview();
-    const cardType = foodCardType(food);
-    const description = food.description || food.effectText || '';
-    els.foodInfoStats.innerHTML = foodInfoStatMarkup(food);
-    els.foodInfoEffect.textContent = description;
-    els.foodInfoEffect.classList.toggle('hidden', !description);
-    els.foodInfo.className = `food-info ${food.rarity} food-type-${cardType}${description ? ' has-description' : ''}`;
-    positionFoodInfoPopover(source);
-  }
-
-  function showFoodInfo(food, offerIndex, source) {
-    if (!secretFoodIsRevealed(food)) {
-      hideFoodInfo();
-      playSecretDiscovery(food, offerIndex, source);
-      return;
-    }
-    presentFoodInfo(food, `offer:${offerIndex}`, source, { offerIndex, preview: true });
-  }
-
-  function showStomachFoodInfo(food, stomachIndex, source) {
-    if (!food || !els.stomachCardViewer) return;
-    if (els.stomachCardViewer.dataset.foodId === food.id && !els.stomachCardViewer.classList.contains('hidden')) {
-      hideStomachCardViewer();
-      return;
-    }
-    hideFoodInfo(false);
-    $$('.stomach-quick-slot.selected').forEach(slot => slot.classList.remove('selected'));
-    source?.classList.add('selected');
-    const encyclopedia = window.SlimeEncyclopedia;
-    const markup = encyclopedia?.foodCardMarkup
-      ? encyclopedia.foodCardMarkup(food, { rarityLabels: RARITY_LABELS, foodArtMarkup, foodStatItems, foodStatGridMarkup, foodNameMarkup, foodCardBodyMarkup, foodCardDecorMarkup })
-      : secretCardMarkup(food);
-    els.stomachCardViewer.dataset.foodId = food.id;
-    els.stomachCardViewer.innerHTML = `<button class="stomach-card-close" type="button" aria-label="Закрыть карточку">×</button><div class="stomach-card-viewer-card">${markup}</div>`;
-    els.stomachCardViewer.className = `stomach-card-viewer ${food.rarity}`;
-    els.stomachCardViewer.querySelector('.stomach-card-close')?.addEventListener('click', hideStomachCardViewer);
-  }
-
-  function hideStomachCardViewer() {
-    if (!els.stomachCardViewer) return;
-    els.stomachCardViewer.className = 'stomach-card-viewer hidden';
-    els.stomachCardViewer.removeAttribute('data-food-id');
-    els.stomachCardViewer.replaceChildren();
-    $$('.stomach-quick-slot.selected').forEach(slot => slot.classList.remove('selected'));
   }
 
   function renderConveyorStartCard({ entering = false } = {}) {
@@ -2223,7 +1532,9 @@
 
   function renderConveyorDispensers() {
     if (!els.conveyorDispensers) return;
-    const foods = stomachIsFull() ? [] : (session?.offer || []);
+    const foods = stomachIsFull()
+      ? activeMutationFamilies().slice(0, 3).map((recipeFamily, index) => ({ id: `active-${index}-${recipeFamily}`, recipeFamily }))
+      : (session?.offer || []);
     const offerKey = foods.map(food => food?.id || '-').join('|');
     els.conveyorDispensers.classList.toggle('hidden', !foods.length);
     if (els.conveyorDispensers.dataset.offerKey === offerKey) return;
@@ -2242,7 +1553,7 @@
   }
 
   async function playConveyorDispense(reducedMotion = false) {
-    const cards = [...els.foodChoices.querySelectorAll('.food-card.awaiting-dispense')];
+    const cards = [...els.foodChoices.querySelectorAll('.conveyor-food-pick.awaiting-dispense')];
     if (!cards.length) return;
     const dispensers = [...(els.conveyorDispensers?.querySelectorAll('.conveyor-dispenser') || [])];
     els.conveyor.classList.add('is-dispensing');
@@ -2302,13 +1613,6 @@
 
     const mealInProgress = ['eat', 'chewing', 'savoring'].some(name => els.slime.classList.contains(name));
     if (!mealInProgress) {
-      if (els.healthLabel) els.healthLabel.textContent = Math.round(session.stats.health);
-      if (els.damageLabel) els.damageLabel.textContent = `${Math.round(session.stats.damage)}`;
-      if (els.shieldLabel) els.shieldLabel.textContent = `${Math.round(session.stats.shield)}`;
-      if (els.shieldChargesLabel) {
-        els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
-        els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
-      }
     }
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
     if (els.startDropBtn) {
@@ -2321,10 +1625,8 @@
       els.startEndlessBtn.classList.toggle('stomach-locked', !full);
     }
     els.conveyor.classList.remove('launch-ready');
-    clearFoodPreview();
     els.rerollBtn.disabled = session.rerollPending || session.offerTransition || adInFlight;
 
-    // Еда меняет характеристики и эффекты, но не размер слайма.
     els.slime.style.width = '124px';
     els.slime.style.height = '124px';
 
@@ -2342,14 +1644,12 @@
         return;
       }
       const button = document.createElement('button');
-      const unknownSecret = !secretFoodIsRevealed(food);
-      const cardType = foodCardType(food);
       const recipeFamily = foodRecipeFamily(food);
       const foodMutationFx = mutationElementFxMarkup(recipeFamily, 'food-mutation-fx');
       const tunnelInDistance = 112 + index * 110;
       const tunnelOutDistance = 112 + (session.offer.length - 1 - index) * 110;
       const cardLocked = !canAddToStomach(food);
-      button.className = `food-card conveyor-food-pick mutation-family-${recipeFamily} ${food.rarity} food-type-${cardType} ${unknownSecret ? 'secret-unknown' : ''} ${offerMotion === 'enter' ? 'tunnel-enter awaiting-dispense' : 'food-ready'} ${cardLocked ? 'locked' : ''}`;
+      button.className = `conveyor-food-pick mutation-family-${recipeFamily} ${offerMotion === 'enter' ? 'tunnel-enter awaiting-dispense' : 'food-ready'} ${cardLocked ? 'locked' : ''}`;
       if (offerMotion === 'enter') {
         const arrivalSequence = Math.max(0, session.offer.length - 1 - index);
         button.style.setProperty('--conveyor-delay', `${arrivalSequence * 140}ms`);
@@ -2362,23 +1662,10 @@
       button.style.setProperty('--tunnel-out-distance', `${tunnelOutDistance}%`);
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
-      button.innerHTML = unknownSecret
-        ? `<span class="conveyor-plate" aria-hidden="true"></span>${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>СЕКРЕТНОЕ</span></span></span><span class="secret-unknown-center" aria-hidden="true"><span class="secret-question-marks">???</span><span class="secret-awaken-main-eye"><i></i></span></span><span class="secret-awaken-side-eyes" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></span><span class="food-name secret-unknown-copy"><span class="food-name-text">НАЖМИ</span></span><span class="food-card-description empty"><em aria-hidden="true">—</em></span><span class="secret-awaken-aura" aria-hidden="true"></span>`
-        : `<span class="conveyor-plate" aria-hidden="true"></span>${foodMutationFx}${foodCardDecorMarkup(food)}<span class="rarity"><span class="rarity-name"><i aria-hidden="true"><b></b></i><span>${RARITY_LABELS[food.rarity]}</span></span></span><span class="food-model-wrap">${foodArtMarkup(food)}</span>${foodNameMarkup(food)}${foodCardBodyMarkup(food)}`;
+      button.innerHTML = `<span class="conveyor-plate" aria-hidden="true"></span>${foodMutationFx}<span class="food-model-wrap">${foodArtMarkup(food)}</span>`;
       button.type = 'button';
-      const cardSummary = [
-        foodStatItems(food).slice(0, 4).map(item => item.label).join(', '),
-        food.description || food.effectText || ''
-      ].filter(Boolean).join('. ');
-      button.setAttribute('aria-label', unknownSecret ? 'Неизвестная секретная карта. Нажми, чтобы раскрыть' : `${food.name}. ${cardSummary}. Открыть описание`);
+      button.setAttribute('aria-label', `${food.name}. Перетащи к слайму`);
       button.addEventListener('pointerdown', event => beginFoodDrag(event, food, index, button));
-      button.addEventListener('pointerenter', () => showFoodPreview(food));
-      button.addEventListener('pointerleave', clearFoodPreview);
-      button.addEventListener('focus', () => showFoodPreview(food));
-      button.addEventListener('blur', clearFoodPreview);
-      button.addEventListener('click', () => {
-        if (performance.now() >= suppressFoodClickUntil) showFoodInfo(food, index, button);
-      });
       els.foodChoices.appendChild(button);
     });
     const rerollBlocked = session.rerollPending || session.offerTransition || adInFlight;
@@ -2407,18 +1694,14 @@
     }
     els.rerollBtn.disabled = rerollBlocked || (!UNLIMITED_FREE_REROLLS && !full && session.freeRerolls <= 0 && session.adRerolls > 0);
 
-    if (selectedFoodOfferIndex !== null && !session.offer[selectedFoodOfferIndex]) hideFoodInfo();
     scheduleHomeFit();
   }
 
-  // ===== КОРМЛЕНИЕ: клик, перетаскивание и эмоции =====
   function beginFoodDrag(event, food, offerIndex, source) {
-    if (secretSequenceActive || !canAddToStomach(food) || event.button > 0) return;
-    if (!secretFoodIsRevealed(food)) return;
+    if (!canAddToStomach(food) || event.button > 0) return;
     event.preventDefault();
     source.setPointerCapture?.(event.pointerId);
     document.body.classList.add('food-dragging');
-    showFoodPreview(food);
     els.slime.classList.add('expect-food', 'tracking-food');
     const sourceRectAtStart = source.getBoundingClientRect();
     setMenuGazePoint(sourceRectAtStart.left + sourceRectAtStart.width / 2, sourceRectAtStart.top + sourceRectAtStart.height / 2);
@@ -2448,7 +1731,6 @@
       const distance = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
       if (!moved && distance > 7) {
         moved = true;
-        hideFoodInfo();
         ghost = document.createElement('div');
         ghost.className = 'food-drag-ghost';
         ghost.innerHTML = `<span class="food-drag-art">${foodArtMarkup(food, 'food-drag-model')}</span>`;
@@ -2466,10 +1748,8 @@
       source.releasePointerCapture?.(event.pointerId);
       document.body.classList.remove('food-dragging');
       els.slime.classList.remove('drop-ready', 'expect-food', 'tracking-food');
-      clearFoodPreview(true);
       const cancelled = upEvent.type === 'pointercancel';
       const accepted = !cancelled && moved && pointInsideElement(upEvent.clientX, upEvent.clientY, els.slime);
-      if (moved) suppressFoodClickUntil = performance.now() + 400;
       if (ghost) {
         if (accepted) {
           const rect = els.menuSlimeMouth?.getBoundingClientRect() || els.slime.getBoundingClientRect();
@@ -2516,72 +1796,40 @@
   }
 
   function chooseFood(offerIndex, source = null) {
-    if (secretSequenceActive || session.offerTransition) {
-      showToast('Секретный вкус нельзя торопить');
-      return;
-    }
+    if (session.offerTransition) return;
     const food = session.offer[offerIndex];
     if (!food) return;
     if (!canAddToStomach(food)) return;
-    if (food.rarity === 'secret' && !secretFoodIsRevealed(food)) {
-      showToast('Сначала нажми на карту и раскрой секрет');
-      return;
-    }
-    discoverFoods([food]);
-    hideFoodInfo();
     clearMenuSlimeInteraction();
-    clearMenuStatFeedback();
     animateFoodToMouth(food, source);
     const previousCombo = session.combo?.name || '';
-    const statsBeforeMeal = { ...session.stats };
     session.foods.push(food);
     session.offer[offerIndex] = null;
-    const statsAfterMeal = calculateStatsForFoods(session.foods).stats;
-    const mealReaction = {
-      common: { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, happyMs: 350 },
-      rare: { catchMs: 210, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 420 },
-      epic: { catchMs: 230, chewMs: 900, chewTime: '.3s', chews: 3, happyMs: 620 },
-      secret: { catchMs: 300, chewMs: 1350, chewTime: '.36s', chews: 4, happyMs: 1050 }
-    }[food.rarity] || { catchMs: 200, chewMs: 600, chewTime: '.3s', chews: 2, revealDelayMs: 0, happyMs: 350 };
+    const mealReaction = { catchMs: 300, chewMs: 680, chewTime: '.17s', chews: 4, happyMs: 560 };
     sound('eat', {
       biteDelay: Math.max(180, mealReaction.catchMs - 20),
       swallowDelay: mealReaction.catchMs + mealReaction.chewMs - 70
     });
     clearMenuMealReaction();
-    els.slime.classList.add(`meal-${food.rarity}`);
-    if (food.rarity === 'secret') {
-      els.slimeStage?.classList.add('secret-meal-active');
-      document.body.classList.add('secret-meal-ui-active');
-    }
     els.slime.style.setProperty('--catch-time', `${mealReaction.catchMs}ms`);
     els.slime.style.setProperty('--chew-time', mealReaction.chewTime);
     els.slime.style.setProperty('--chew-count', String(mealReaction.chews));
     els.slime.style.setProperty('--happy-time', `${mealReaction.happyMs}ms`);
-    menuMealFxStartedAt = performance.now();
     void els.slime.offsetWidth;
     els.slime.classList.add('eat');
-    showRarityBurst(food);
     menuEmotionTimer = setTimeout(() => {
       els.slime.classList.remove('eat', 'expect-food', 'tracking-food');
       els.slime.classList.add('chewing');
+      menuChewStartedAt = performance.now();
       resetMenuGaze();
       menuEmotionTimer = setTimeout(() => {
         els.slime.classList.remove('chewing');
         const revealMeal = () => {
           els.slime.classList.remove('savoring');
           els.slime.classList.add('pleased');
-          if (food.rarity === 'secret') {
-            els.slimeStage?.classList.add('secret-meal-impact');
-            document.body.classList.add('secret-meal-ui-impact');
-          }
           recalcStats();
           syncMenuCategoryVisuals();
-          showMenuStatChange(statsBeforeMeal, statsAfterMeal);
-          if (els.shieldChargesLabel) {
-            els.shieldChargesLabel.textContent = String(Math.round(session.stats.shieldCharges));
-            els.shieldChargesLabel.closest('.shield-charge-badge')?.setAttribute('aria-label', `${Math.round(session.stats.shieldCharges)} зарядов щита`);
-          }
-          sound(['epic', 'special', 'secret'].includes(food.rarity) ? 'epic' : 'happy');
+          sound('happy');
           menuEmotionTimer = setTimeout(() => {
             clearMenuMealReaction();
           }, mealReaction.happyMs);
@@ -2593,7 +1841,7 @@
       }, mealReaction.chewMs);
     }, mealReaction.catchMs);
     persist();
-    feedback(food.rarity === 'secret' ? [12, 24, 14, 34] : food.rarity === 'special' ? [12, 30, 18] : 8);
+    feedback(8);
     if (session.combo && session.combo.name !== previousCombo) showToast(`${session.combo.icon} Комбо: ${session.combo.name} — ${session.combo.text}`);
     void advanceConveyorAfterChoice(offerIndex, source);
   }
@@ -2601,9 +1849,8 @@
   async function advanceConveyorAfterChoice(chosenIndex, source) {
     if (!session || session.offerTransition) return;
     session.offerTransition = true;
-    hideFoodInfo();
     els.conveyor.classList.add('is-running', 'is-selecting');
-    const cards = [...els.foodChoices.querySelectorAll('.food-card')];
+    const cards = [...els.foodChoices.querySelectorAll('.conveyor-food-pick')];
     cards.forEach(card => {
       const index = Number(card.dataset.offerIndex || 0);
       const sequence = Math.max(0, session.offer.length - 1 - index);
@@ -2613,19 +1860,17 @@
     });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 620));
-    // После третьей еды круг реролла становится кнопкой подтверждения.
     if (stomachIsFull()) {
       session.offer = [];
+      session.offerTransition = false;
+      els.conveyor.classList.remove('is-running', 'is-selecting');
       renderDraft({ showLaunchCard: false });
       persist();
       sound('happy');
       feedback([8, 18, 8]);
-      session.offerTransition = false;
-      els.conveyor.classList.remove('is-running', 'is-selecting');
-      renderDraft({ showLaunchCard: false });
       return;
     }
-    generateOffer(session.baseEpicBoost);
+    generateOffer();
     renderDraft({ offerMotion: 'enter' });
     persist();
     await settleConveyorArrival(reducedMotion);
@@ -2636,31 +1881,22 @@
 
 
   async function rerollOffer() {
-    if (secretSequenceActive) {
-      showToast('Секретный вкус нельзя торопить');
-      return;
-    }
     if (stomachIsFull() || session.rerollPending || session.offerTransition || adInFlight) return;
     session.rerollPending = true;
-    hideFoodInfo();
     els.rerollBtn.disabled = true;
-    let rollBoost = session.baseEpicBoost || 0;
-    let rareBoost = 0;
     try {
       if (UNLIMITED_FREE_REROLLS) {
-        // Временный тестовый режим: прокрутки ничего не расходуют и не вызывают рекламу.
       } else if (session.freeRerolls > 0) {
         session.freeRerolls -= 1;
       } else if (session.adRerolls === 0) {
-        const rewarded = await showRewardedAd('Новая тройка еды. Для этой выдачи шанс редкой еды повышен на 10%.');
+        const rewarded = await showRewardedAd('Новая тройка еды.');
         if (!rewarded) return;
         session.adRerolls = 1;
-        rareBoost = 10 + save.rerollLevel * 5;
       } else return;
-      sound(rollBoost >= 10 || rareBoost >= 10 ? 'epic' : 'reroll');
+      sound('reroll');
       feedback(6);
       els.conveyor.classList.add('is-running', 'is-rerolling');
-      const visibleCards = [...els.foodChoices.querySelectorAll('.food-card')];
+      const visibleCards = [...els.foodChoices.querySelectorAll('.conveyor-food-pick')];
       visibleCards.forEach(card => {
         const offerIndex = Number(card.dataset.offerIndex || 0);
         const sequence = Math.max(0, session.offer.length - 1 - offerIndex);
@@ -2670,7 +1906,7 @@
       });
       const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
       await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 760));
-      generateOffer(rollBoost, rareBoost, { resetRerolls: false });
+      generateOffer({ resetRerolls: false });
       renderDraft({ offerMotion: 'enter' });
       persist();
       await settleConveyorArrival(reducedMotion);
@@ -2698,14 +1934,12 @@
   async function beginRoomLaunch(options = {}) {
     if (menuLaunchInProgress) return;
     const endless = options?.endless === true;
-    if (!stomachIsFull() || secretSequenceActive || menuSlimeIsBusy() || (endless && !save.gameCompleted)) {
+    if (!stomachIsFull() || menuSlimeIsBusy() || (endless && !save.gameCompleted)) {
       startDrop({ endless });
       return;
     }
 
     menuLaunchInProgress = true;
-    hideFoodInfo();
-    hideStomachCardViewer();
     clearMenuSlimeInteraction();
     els.rerollBtn.disabled = true;
     document.body.classList.add('room-launch-active');
@@ -2728,14 +1962,13 @@
     setTimeout(resetRoomLaunchVisuals, menuReducedMotion ? 90 : 900);
   }
 
-  // ===== ЗАБЕГ: запуск, пауза и физическая сцена =====
   function shiftRunClock(delta) {
     if (!run || delta <= 0) return;
     const timestampKeys = [
       'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'freezeUntil',
       'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
-      'lastTrailSampleAt', 'lastUiUpdateAt', 'gravitySwitchFlashUntil', 'growthResetUntil', 'edgePortalFlashUntil',
-      'timeSlowUntil', 'hurtSlowUntil', 'lastHeartLossAt', 'lastSplitAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt',
+      'lastTrailSampleAt', 'lastUiUpdateAt', 'gravitySwitchFlashUntil',
+      'hurtSlowUntil', 'lastHeartLossAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt',
       'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil',
       'gigantismStartedAt', 'gigantismDeflateStartedAt', 'gigantismDeflateUntil',
       'windDashUntil', 'windDashCooldownUntil', 'windBounceFlashUntil'
@@ -2743,13 +1976,6 @@
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
     if (run.geyserCapture) {
       for (const key of ['startedAt', 'readyAt', 'autoLaunchAt']) if (run.geyserCapture[key] > 0) run.geyserCapture[key] += delta;
-    }
-    if (run.edgePortalPhase?.until > 0) run.edgePortalPhase.until += delta;
-    for (const mini of run.miniSlimes || []) {
-      if (mini.invulnerableUntil > 0) mini.invulnerableUntil += delta;
-      if (mini.damageInvulnerableUntil > 0) mini.damageInvulnerableUntil += delta;
-      if (mini.launchUntil > 0) mini.launchUntil += delta;
-      if (mini.spawnedAt > 0) mini.spawnedAt += delta;
     }
     if (run.portalEntry?.startedAt > 0) run.portalEntry.startedAt += delta;
     run.hitCooldowns = new Map([...run.hitCooldowns.entries()].map(([key, value]) => [key, value > 0 ? value + delta : value]));
@@ -2781,6 +2007,7 @@
     run.animationId = 0;
     run.lastTime = 0;
     clearFallSteering();
+    yandexPlatform?.gameplay.stop();
     return true;
   }
 
@@ -2792,6 +2019,7 @@
     run.pausedAt = 0;
     run.lastTime = 0;
     run.animationId = requestAnimationFrame(gameFrame);
+    yandexPlatform?.gameplay.start();
     return true;
   }
 
@@ -2867,11 +2095,11 @@
     GAME_BALANCE = window.SlimeBalance?.load?.() || GAME_BALANCE;
     if (!stomachIsFull()) {
       const remaining = Math.max(0, STOMACH_CAPACITY - stomachFoodCount());
-      showToast(`Сначала выбери ещё ${remaining} ${remaining === 1 ? 'карту' : remaining < 5 ? 'карты' : 'карт'}`);
+      showToast(`Сначала выбери ещё ${remaining} ${remaining === 1 ? 'продукт' : 'продукта'}`);
       feedback([10, 18, 10]);
       return;
     }
-    if (secretSequenceActive || menuSlimeIsBusy()) {
+    if (menuSlimeIsBusy()) {
       showToast('Слайм ещё доедает');
       return;
     }
@@ -2890,9 +2118,12 @@
     };
     const generationDifficulty = endless ? 'mixed' : campaignGenerationDifficulty(world, level);
     const finishY = world.targetDepth * 10 + 180;
-    const cellSize = world.cellSize || BALANCE.gridCell;
-    const columns = Math.floor(VIEW_W / cellSize);
-    const gridOffsetX = (VIEW_W - columns * cellSize) / 2;
+    const preferredCellSize = world.cellSize || BALANCE.gridCell;
+    const columns = Math.max(2, Math.round(VIEW_W / preferredCellSize));
+    // Fill the shaft exactly. Six old 72px tiles occupied only 432px of the
+    // 440px canvas and left a visible four-pixel seam on both sides.
+    const cellSize = VIEW_W / columns;
+    const gridOffsetX = 0;
     const categoryVisuals = menuCategoryLevels();
     const elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'gigantism', 'wind', 'explosion'].find(key => categoryVisuals[key] >= 3) || '';
     const slimeRadius = massRadiusForLevel(categoryVisuals.mass, cellSize);
@@ -2923,10 +2154,9 @@
       endlessDepthOffset: 0,
       launchEntryStartedAt: fromPortal ? launchEntryStartedAt : 0,
       launchEntryUntil: fromPortal ? launchEntryStartedAt + 1200 : 0,
-      // Портал — самостоятельный финал. Крепостной стены перед ним больше нет.
       portalY: finishY + cellSize * .35,
       blocks: [], honeyZones: [], jellyZones: [], freezeZones: [], particles: [], trails: [], specialEffects: [],
-      meteorShowers: [], miniSlimes: [],
+      meteorShowers: [],
       slime: {
         x: startX,
         y: fromPortal ? -42 : 78,
@@ -2976,18 +2206,10 @@
       },
       gravityDirection: 1,
       gravitySwitchFlashUntil: 0,
-      edgePortalFlashUntil: 0,
-      edgePortalPhase: null,
-      growthStacks: 0,
-      growthResetUntil: 0,
-      timeSlowUntil: 0,
       hurtSlowUntil: 0,
-      lastSplitAt: 0,
       geyserCapture: null,
       geyserLaunchGraceUntil: 0,
       geyserBreaksLeft: 0,
-      // Сердца — самостоятельное правило забега. Старые числовые бонусы еды
-      // больше не меняют запас ошибок и силу удара по блокам.
       health: 3,
       startHealth: 3,
       maxHealth: 3,
@@ -3017,11 +2239,11 @@
       barrierFlashUntil: 0,
       bounceControlLockUntil: 0,
       bounceControlRestoreUntil: 0,
+      wallPushSide: 0,
+      wallReleaseX: 0,
       coinMultiplier: session.stats.coinMultiplier,
       effects: { ...session.effects, gravitySwitch: session.effects.gravitySwitch || categoryVisuals.cosmos >= 1 },
       blocksBrokenForHeal: 0,
-      lowHealthDamageActive: false,
-      bouncePowerReady: false,
       shieldCharges: session.stats.shieldCharges,
       maxShieldCharges: session.stats.shieldCharges,
       coins: 0,
@@ -3060,7 +2282,6 @@
       lastTrailSampleAt: 0
     };
     run.blocks = generateBlockField(run);
-    applySecretWorldModifiers(run);
     indexRunBlocks();
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
@@ -3069,6 +2290,7 @@
     showScreen('drop');
     clearRunImpactFeedback();
     updateRunUI();
+    yandexPlatform?.gameplay.start();
     run.animationId = requestAnimationFrame(gameFrame);
   }
 
@@ -3103,15 +2325,13 @@
           : world.id === 4
             ? ['heal', 'geyser', 'meteor']
           : ['heal', 'bomb', 'spring']);
-    // Старый баланс хранит два яблочных ключа. В самой игре они становятся
-    // одной желейкой, а их суммарный вес сохраняет прежнюю частоту особого блока.
     const worldSpecialIds = [...new Set(rawWorldSpecialIds.map(id => world.id === 3 && (id === 'appleMint' || id === 'appleRed') ? 'jelly' : id))]
       .filter(id => !(world.id === 1 && id === 'spring') && id !== 'snowflake' && id !== 'freezeZone');
     const secondaryWeight = id => id === 'jelly'
       ? (zone?.secondary?.jelly ?? ((zone?.secondary?.appleMint || 0) + (zone?.secondary?.appleRed || 0)))
       : (zone?.secondary?.[id] || 0);
     const enabledSecondary = Object.fromEntries(worldSpecialIds
-      .filter(id => editorAllows(world, level, id))
+      .filter(id => levelAllows(world, level, id))
       .map(id => [id, secondaryWeight(id)]));
     if (!Object.values(enabledSecondary).some(weight => weight > 0)) return { tier:'dense', special:null, zone };
     const selected = weightedKey(enabledSecondary, world.id === 2 ? 'cryo' : world.id === 3 ? 'jelly' : world.id === 4 ? 'geyser' : 'heal');
@@ -3126,14 +2346,14 @@
     if (token === 'w') return weak;
     if (token === 'n') return { tier: 'hard', special: null, hazard: false, path: false };
     if (token === 'h') return { tier: 'reinforced', special: null, hazard: false, path: false };
-    if (token === 'x') return unlocks?.hazards && editorAllows(world, level, 'hazard')
+    if (token === 'x') return unlocks?.hazards && levelAllows(world, level, 'hazard')
       ? { tier: 'dense', special: null, hazard: true, path: false }
       : { ...weak, path: false };
     if ('cigd'.includes(token)) {
       const oreByToken = { c: 'coal', i: 'iron', g: 'gold', d: 'diamond' };
       return { tier: 'ore', special: null, hazard: false, path: true, oreId: oreByToken[token] };
     }
-    if (token === '+') return unlocks?.medkit && editorAllows(world, level, 'heal')
+    if (token === '+') return unlocks?.medkit && levelAllows(world, level, 'heal')
       ? { tier: 'special', special: 'gel', hazard: false, path: true }
       : weak;
     if (token === 'z') {
@@ -3150,7 +2370,7 @@
       };
       const special = specialByWorld[world.id]?.[token] || null;
       const lockedBomb = special === 'bomb' && !unlocks?.dynamite;
-      return special && !lockedBomb && editorAllows(world, level, special)
+      return special && !lockedBomb && levelAllows(world, level, special)
         ? { tier: 'special', special, hazard: false, path: true }
         : weak;
     }
@@ -3164,7 +2384,6 @@
     const columns = runState.columns || Math.floor(VIEW_W / cell);
     const gridOffsetX = runState.gridOffsetX || 0;
     const startY = 285;
-    // Оставляем перед порталом чистый вход: последний ряд блоков не заменяется стеной.
     const rows = Math.max(8, Math.floor((finishY - cell - startY) / cell));
     const unlocks = levelFeatures(world, runState.level);
     const plan = createSectionPlan(world, rows, runState.level, runState.generationDifficulty);
@@ -3183,20 +2402,21 @@
       previousSection = meta.kind;
       pathCenter = clamp(pathCenter, 1, columns - 2);
 
-      let pathWidth = clamp(Math.round(lerp(world.pathWidth, world.minPathWidth, progress)), 1, 3);
+      let pathWidth = clamp(Math.round(lerp(world.pathWidth, world.minPathWidth, progress)), 2, 3);
       if (meta.kind === 'start' || meta.kind === 'safe' || meta.kind === 'tutorial' || meta.kind === 'recovery' || meta.kind === 'final') pathWidth = Math.max(pathWidth, world.id === 1 ? 3 : 2);
-      if (meta.kind === 'boss') pathWidth = 1;
+      if (meta.kind === 'boss') pathWidth = 2;
       const pathStart = clamp(Math.round(pathCenter - (pathWidth - 1) / 2), 0, columns - pathWidth);
       let pathColumns = Array.from({ length: pathWidth }, (_, index) => pathStart + index);
       pathCenter = pathStart + (pathWidth - 1) / 2;
 
-      // Развилка: два читаемых маршрута — безопасный и наградный.
-      let riskyCol = -1;
       if (meta.kind === 'fork') {
         const left = clamp(Math.floor(pathCenter) - 2, 0, columns - 1);
         const right = clamp(Math.ceil(pathCenter) + 2, 0, columns - 1);
-        pathColumns = [...new Set([left, right])];
-        riskyCol = meta.sectionIndex % 2 ? left : right;
+        // Each branch needs enough room for a bounce and a correction.
+        pathColumns = [...new Set([
+          clamp(left - 1, 0, columns - 1), left,
+          right, clamp(right + 1, 0, columns - 1)
+        ])];
       }
 
       const keyRow = meta.localRow === Math.floor(meta.length / 2);
@@ -3216,12 +2436,13 @@
         const hazard = authored
           ? authored.hazard
           : !special
+            && !inPath
             && tier !== 'ore'
-            && editorAllows(world, runState.level, 'hazard')
+            && levelAllows(world, runState.level, 'hazard')
             && Math.random() < lerp(.035, .075, progress);
         const hazardVariant = null;
         const finalTier = special ? 'special' : tier;
-        const customVisuals = editorWorld(world.id)?.blocks?.filter(item => item.type === 'custom' && item.spawnType === finalTier && editorAllows(world, runState.level, item.id)) || [];
+        const customVisuals = contentWorld(world.id)?.blocks?.filter(item => item.type === 'custom' && item.spawnType === finalTier && levelAllows(world, runState.level, item.id)) || [];
         const customVisual = customVisuals.length ? customVisuals[Math.floor(Math.random() * customVisuals.length)] : null;
         const oreType = authored?.oreId
           ? ORE_TYPES.find(ore => ore.id === authored.oreId) || chooseOreType(progress, world, balanced.zone)
@@ -3230,16 +2451,11 @@
         if (special === 'coin') maxHp *= .66;
         if (special === 'spring') maxHp = 1;
         if (special === 'boss') maxHp = 3;
-        // Старые множители редактора больше не вмешиваются в новую систему
-        // прочности: материал требует только один, два или три удара.
         if (oreType) {
           const oreHits = { coal: 1, iron: 2, gold: 2, diamond: 3 };
           maxHp = oreHits[oreType.id] || 2;
         }
-        // Опасный блок взрывается от первого столкновения.
         if (hazard) maxHp = 1;
-        // Все вспомогательные блоки срабатывают от первого касания — число на
-        // плитке это честно показывает, а не маскирует триггер за «5 HP».
         if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'jelly' || special === 'geyser' || special === 'meteor') maxHp = 1;
         if (special === 'spring') maxHp = 1;
         maxHp = Math.max(1, Math.round(maxHp));
@@ -3248,7 +2464,7 @@
         rowBlocks.push({
           id: id++, row, col, x: gridOffsetX + col * cell, y, w: cell, h: cell,
           hp: maxHp, maxHp, material, special, tier: finalTier, dead: Boolean(authored?.dead),
-          path: authored?.path ?? inPath, segment: meta.kind, hazard, unbreakable: special === 'jelly', hazardVariant, oreType, frozen: false, editorVisualId: customVisual?.id || '',
+          path: authored?.path ?? inPath, segment: meta.kind, hazard, unbreakable: hazard || special === 'jelly', hazardVariant, oreType, frozen: false, visualId: customVisual?.id || '',
           environmentRemoved: authored?.environment || '',
           researchValue: special || hazard ? 0 : researchValueForTier(finalTier, oreType),
           researchAwarded: false,
@@ -3272,7 +2488,7 @@
           block.unbreakable = false;
           block.hazardVariant = null;
           block.oreType = null;
-          block.editorVisualId = '';
+          block.visualId = '';
           block.environmentRemoved = '';
           block.path = true;
           block.topGrass = world.id === 1;
@@ -3322,10 +2538,11 @@
       });
       zones.push({
         id: `honey-${index}`,
-        x: runState.gridOffsetX + selected.startCol * cell + 3,
-        y: 190 + selected.row * cell + 3,
-        w: selected.widthCells * cell - 6,
-        h: cell * 2 - 6,
+        x: Math.min(...selected.cells.map(block => block.x)),
+        y: Math.min(...selected.cells.map(block => block.y)),
+        w: Math.max(...selected.cells.map(block => block.x + block.w)) - Math.min(...selected.cells.map(block => block.x)),
+        h: Math.max(...selected.cells.map(block => block.y + block.h)) - Math.min(...selected.cells.map(block => block.y)),
+        cells: selected.cells.map(block => ({ x: block.x, y: block.y, w: block.w, h: block.h })),
         seed: index * 1.73 + selected.row * .19
       });
     }
@@ -3372,10 +2589,11 @@
       });
       zones.push({
         id: `jelly-${index}`,
-        x: runState.gridOffsetX + selected.startCol * cell + 3,
-        y: 190 + selected.row * cell + 3,
-        w: selected.widthCells * cell - 6,
-        h: selected.heightCells * cell - 6,
+        x: Math.min(...selected.cells.map(block => block.x)),
+        y: Math.min(...selected.cells.map(block => block.y)),
+        w: Math.max(...selected.cells.map(block => block.x + block.w)) - Math.min(...selected.cells.map(block => block.x)),
+        h: Math.max(...selected.cells.map(block => block.y + block.h)) - Math.min(...selected.cells.map(block => block.y)),
+        cells: selected.cells.map(block => ({ x: block.x, y: block.y, w: block.w, h: block.h })),
         seed: selected.row * .27 + index * 1.91
       });
     }
@@ -3385,7 +2603,7 @@
   function generateFreezeZones(runState) {
     // The old snowflake tile is replaced by a readable environmental hazard:
     // the same feature slot now creates shallow icy-water pockets.
-    if (runState.worldId !== 2 || !editorAllows(runState.world, runState.level, 'snowflake')) return [];
+    if (runState.worldId !== 2 || !levelAllows(runState.world, runState.level, 'snowflake')) return [];
     const authoredZones = authoredEnvironmentZones(runState, 'freeze');
     if (authoredZones.length) return authoredZones;
     const blocks = runState.blocks || [];
@@ -3424,10 +2642,11 @@
       });
       zones.push({
         id: `freeze-water-${index}`,
-        x: runState.gridOffsetX + selected.startCol * cell + 3,
-        y: 190 + selected.row * cell + 3,
-        w: selected.widthCells * cell - 6,
-        h: selected.heightCells * cell - 6,
+        x: Math.min(...selected.cells.map(block => block.x)),
+        y: Math.min(...selected.cells.map(block => block.y)),
+        w: Math.max(...selected.cells.map(block => block.x + block.w)) - Math.min(...selected.cells.map(block => block.x)),
+        h: Math.max(...selected.cells.map(block => block.y + block.h)) - Math.min(...selected.cells.map(block => block.y)),
+        cells: selected.cells.map(block => ({ x: block.x, y: block.y, w: block.w, h: block.h })),
         seed: selected.row * .31 + index * 2.17
       });
     }
@@ -3460,45 +2679,21 @@
       const maxRow = Math.max(...component.map(block => block.row));
       const minCol = Math.min(...component.map(block => block.col));
       const maxCol = Math.max(...component.map(block => block.col));
+      const minX = Math.min(...component.map(block => block.x));
+      const maxX = Math.max(...component.map(block => block.x + block.w));
+      const minY = Math.min(...component.map(block => block.y));
+      const maxY = Math.max(...component.map(block => block.y + block.h));
       zones.push({
         id: `${environment}-authored-${zones.length}`,
-        x: runState.gridOffsetX + minCol * runState.cellSize + 3,
-        y: 190 + minRow * runState.cellSize + 3,
-        w: (maxCol - minCol + 1) * runState.cellSize - 6,
-        h: (maxRow - minRow + 1) * runState.cellSize - 6,
+        x: minX,
+        y: minY,
+        w: maxX - minX,
+        h: maxY - minY,
+        cells: component.map(block => ({ x: block.x, y: block.y, w: block.w, h: block.h })),
         seed: minRow * .27 + minCol * .61
       });
     }
     return zones;
-  }
-
-  function applySecretWorldModifiers(runState) {
-    if (!runState?.effects?.pandoraChaos) return;
-    const candidates = runState.blocks.filter(block => block.row > 2 && block.path && !block.special && !block.hazard && block.tier !== 'ore');
-    if (!candidates.length) return;
-    const desired = clamp(4 + Math.floor((runState.level || 1) / 2), 4, 7);
-    const usedRows = new Set();
-    for (let index = 0; index < desired; index += 1) {
-      const target = (index + .65) / desired;
-      const targetRow = Math.round(target * Math.max(...candidates.map(block => block.row)));
-      const pool = candidates
-        .filter(block => !usedRows.has(block.row))
-        .sort((a, b) => Math.abs(a.row - targetRow) - Math.abs(b.row - targetRow));
-      const nearestDistance = pool.length ? Math.abs(pool[0].row - targetRow) : 0;
-      const nearest = pool.filter(block => Math.abs(block.row - targetRow) <= nearestDistance + 1);
-      const block = nearest[Math.floor(Math.random() * nearest.length)] || pool[0];
-      if (!block) continue;
-      usedRows.add(block.row);
-      block.special = 'pandora';
-      block.tier = 'special';
-      block.material = 'pandora';
-      block.hp = 1;
-      block.maxHp = 1;
-      block.coins = 0;
-      block.hazard = false;
-      block.unbreakable = true;
-      block.editorVisualId = '';
-    }
   }
 
   function createSectionPlan(world, rows, level, difficultyMode = 'mixed') {
@@ -3547,8 +2742,8 @@
     return plan.slice(0, rows);
   }
 
-  function editorAllows(world, level, id) {
-    const edited = editorLevel(world.id, level);
+  function levelAllows(world, level, id) {
+    const edited = contentLevel(world.id, level);
     return !edited || !Array.isArray(edited.enabled) || edited.enabled.includes(id);
   }
 
@@ -3591,7 +2786,6 @@
     return ORE_TYPES.find(ore => ore.id === id) || ORE_TYPES[0];
   }
 
-  // ===== ФИЗИКА И СТОЛКНОВЕНИЯ =====
   function gameFrame(timestamp) {
     if (!run || run.ended || run.paused || run.portalTransitioning) return;
     // ProMotion iPhones may request 120 frames per second. Physics is designed
@@ -3610,9 +2804,7 @@
     if (!run.lastTime) run.lastTime = timestamp;
     const dt = Math.min(.034, (timestamp - run.lastTime) / 1000);
     run.lastTime = timestamp;
-    const simulationScale = timestamp < (run.timeSlowUntil || 0)
-      ? .46
-      : timestamp < (run.hurtSlowUntil || 0) ? .58 : 1;
+    const simulationScale = timestamp < (run.hurtSlowUntil || 0) ? .58 : 1;
     const simulationDt = dt * simulationScale;
 
     const speed = Math.hypot(run.slime.vx, run.slime.vy);
@@ -3622,7 +2814,6 @@
     const substeps = clamp(Math.ceil(speed * simulationDt / safeTravel), 1, 12);
     for (let i = 0; i < substeps; i += 1) updatePhysics(simulationDt / substeps, timestamp);
     updateElementalEffects(timestamp);
-    updateMiniSlimes(simulationDt, timestamp);
     updateMeteorShowers(timestamp);
     updateSlimeTrail(simulationDt, timestamp);
     updateParticles(simulationDt);
@@ -3633,122 +2824,6 @@
       updateRunUI();
     }
     if (!run.ended && !run.paused && !run.portalTransitioning) run.animationId = requestAnimationFrame(gameFrame);
-  }
-
-  function spawnMiniSlimes(collision, timestamp = performance.now()) {
-    if (!run?.effects?.slimeSplinters || timestamp - (run.lastSplitAt || 0) < 1150) return;
-    run.lastSplitAt = timestamp;
-    run.timeSlowUntil = Math.max(run.timeSlowUntil || 0, timestamp + 760);
-    const nx = collision?.nx || 0;
-    const ny = collision?.ny || -1;
-    const tangentX = -ny;
-    const tangentY = nx;
-    for (const spread of [-1, 0, 1]) {
-      const launchForce = spread === 0 ? 420 : 365;
-      run.miniSlimes.push({
-        id: `${timestamp}-${spread}`,
-        x: run.slime.x + nx * 18 + tangentX * spread * 15,
-        y: run.slime.y + ny * 18 + tangentY * spread * 15,
-        vx: nx * launchForce + tangentX * spread * 285 + rand(-18, 18),
-        vy: ny * launchForce + tangentY * spread * 285 + rand(-18, 18),
-        radius: 14,
-        health: 10,
-        wobble: rand(0, Math.PI * 2),
-        spawnedAt: timestamp,
-        launchUntil: timestamp + 340,
-        invulnerableUntil: timestamp + 3000,
-        damageInvulnerableUntil: 0,
-        hitCooldowns: new Map(),
-        dead: false
-      });
-    }
-    if (run.miniSlimes.length > 9) run.miniSlimes.splice(0, run.miniSlimes.length - 9);
-    spawnSpecialBurst('split', run.slime.x, run.slime.y);
-    run.emotion = 'surprised';
-    run.emotionUntil = timestamp + 600;
-    feedback([8, 13, 8]);
-  }
-
-  function updateMiniSlimes(dt, timestamp) {
-    if (!run?.miniSlimes?.length) return;
-    const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
-    for (const mini of run.miniSlimes) {
-      if (mini.dead) continue;
-      const miniDt = timestamp < (mini.launchUntil || 0) ? dt * 1.65 : dt;
-      mini.vy = clamp(mini.vy + (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * 1.08 * gravityDirection * miniDt, -760, 760);
-      mini.x += mini.vx * miniDt;
-      mini.y += mini.vy * miniDt;
-      mini.wobble += miniDt * (8 + Math.abs(mini.vy) / 100);
-
-      if (run.effects.edgePortals) {
-        if (mini.x < 0) {
-          const exit = prepareEdgePortalExit('right', mini.y);
-          mini.x = exit.x;
-          mini.vx = -Math.max(150, Math.abs(mini.vx));
-        } else if (mini.x >= VIEW_W) {
-          const exit = prepareEdgePortalExit('left', mini.y);
-          mini.x = exit.x;
-          mini.vx = Math.max(150, Math.abs(mini.vx));
-        }
-      } else {
-        if (mini.x - mini.radius < 4) {
-          mini.x = mini.radius + 4;
-          mini.vx = Math.max(175, Math.abs(mini.vx));
-        } else if (mini.x + mini.radius > VIEW_W - 4) {
-          mini.x = VIEW_W - mini.radius - 4;
-          mini.vx = -Math.max(175, Math.abs(mini.vx));
-        }
-      }
-
-      const collisions = blocksNearY(mini.y, mini.radius)
-        .filter(block => !block.dead && !block.blackHoleSuctionStartedAt && block.y + block.h > mini.y - mini.radius && block.y < mini.y + mini.radius)
-        .map(block => ({ block, collision: circleRectCollision(mini, block) }))
-        .filter(item => item.collision)
-        .sort((a, b) => b.collision.penetration - a.collision.penetration);
-      for (const { block, collision } of collisions) {
-        const cooldown = mini.hitCooldowns.get(block.id) || 0;
-        if (timestamp - cooldown < 110) {
-          stabilizeSlimeContact(mini, collision, .7);
-          continue;
-        }
-        mini.hitCooldowns.set(block.id, timestamp);
-        mini.x += collision.nx * (collision.penetration + 2.5);
-        mini.y += collision.ny * (collision.penetration + 2.5);
-        const incoming = mini.vx * collision.nx + mini.vy * collision.ny;
-        const tangentX = mini.vx - incoming * collision.nx;
-        const tangentY = mini.vy - incoming * collision.ny;
-        const rebound = block.hazard || block.unbreakable ? 325 : 255;
-        mini.vx = collision.nx * rebound + tangentX * .46;
-        mini.vy = collision.ny * rebound + tangentY * .46;
-
-        if ((block.hazard || block.unbreakable) && timestamp >= mini.invulnerableUntil) {
-          mini.health -= block.hazard ? 30 : 5;
-          if (mini.health <= 0) {
-            mini.dead = true;
-            spawnSpecialBurst('split', mini.x, mini.y);
-          }
-        } else if (!block.special && block.tier !== 'ore') {
-          if (block.hp <= 10) {
-            block.hp = 0;
-            destroyBlock(block);
-          } else {
-            block.hp = Math.max(.05, block.hp - 10);
-            createDebris(block, 2, false);
-            if (timestamp >= mini.invulnerableUntil && timestamp >= (mini.damageInvulnerableUntil || 0)) {
-              mini.health -= 5;
-              mini.damageInvulnerableUntil = timestamp + 650;
-              if (mini.health <= 0) {
-                mini.dead = true;
-                spawnSpecialBurst('split', mini.x, mini.y);
-              }
-            }
-          }
-        }
-        break;
-      }
-      if (mini.y - mini.radius > getPortalGeometry().bottom + 120 || mini.y + mini.radius < -120) mini.dead = true;
-    }
-    run.miniSlimes = run.miniSlimes.filter(mini => !mini.dead);
   }
 
   function isSlimeFrozen(timestamp = performance.now()) {
@@ -3896,55 +2971,6 @@
     activateFreezeZone(timestamp);
   }
 
-  function updateSecretEdgePortal(slime, timestamp) {
-    if (!run.effects.edgePortals) {
-      run.edgePortalPhase = null;
-      return;
-    }
-    const phase = run.edgePortalPhase;
-    if (phase && timestamp >= phase.until) run.edgePortalPhase = null;
-    if (slime.x < 0) {
-      const exit = prepareEdgePortalExit('right', slime.y);
-      slime.x = exit.x;
-      slime.vx = -Math.max(120, Math.abs(slime.vx));
-      run.edgePortalPhase = { exitSide: 'right', clearedCols: exit.cols, until: timestamp + 320 };
-      run.edgePortalFlashUntil = timestamp + 420;
-      spawnPortalBurst(VIEW_W - 8, slime.y);
-      feedback(3);
-    } else if (slime.x >= VIEW_W) {
-      const exit = prepareEdgePortalExit('left', slime.y);
-      slime.x = exit.x;
-      slime.vx = Math.max(120, Math.abs(slime.vx));
-      run.edgePortalPhase = { exitSide: 'left', clearedCols: exit.cols, until: timestamp + 320 };
-      run.edgePortalFlashUntil = timestamp + 420;
-      spawnPortalBurst(8, slime.y);
-      feedback(3);
-    }
-  }
-
-  function prepareEdgePortalExit(exitSide, worldY) {
-    const left = exitSide === 'left';
-    const cols = left ? [0, 1, 2] : [run.columns - 1, run.columns - 2, run.columns - 3];
-    const radius = run.slime?.radius || 28;
-    for (const block of run.blocks) {
-      if (block.dead || !cols.includes(block.col)) continue;
-      if (block.y + block.h < worldY - radius - 3 || block.y > worldY + radius + 3) continue;
-      block.dead = true;
-      block.environmentRemoved = 'edge-portal';
-    }
-    const centerCol = left ? 1 : run.columns - 2;
-    return {
-      x: run.gridOffsetX + centerCol * run.cellSize + run.cellSize / 2,
-      cols
-    };
-  }
-
-  function blockHiddenByPortalExit(block) {
-    const phase = run.edgePortalPhase;
-    if (!phase) return false;
-    return phase.clearedCols?.includes(block.col) || false;
-  }
-
   function updatePhysics(dt, timestamp) {
     const s = run.slime;
     if (run.portalEntry) {
@@ -3972,9 +2998,9 @@
     const launchArrivalActive = run.launchEntryUntil && timestamp < run.launchEntryUntil;
 
     const baseTerminalSpeed = frozen
-      ? (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld) * 1.18
+      ? normalFallSpeedLimit() * 1.18
       : freezeWaterDrag ? 118 : honeyDrag ? 132 : jellyDrag ? 165
-        : (BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld);
+        : normalFallSpeedLimit();
     const speedPressure = elementalLevel('mobility') >= 1 ? run.speedPressure || 0 : 0;
     const terminalSpeed = baseTerminalSpeed * (1 + speedPressure * .5);
     if (drillActive) applySpeedDrillSteering(s, dt);
@@ -4007,18 +3033,22 @@
     updateFreezeZoneState(s, timestamp);
     s.wobble += dt * (4 + Math.abs(s.vy) / 180);
 
-    if (run.effects.edgePortals) {
-      updateSecretEdgePortal(s, timestamp);
-    } else {
-      if (s.x - s.radius < 4) {
-        s.x = s.radius + 4;
-        s.vx = drillActive ? Math.max(0, s.vx) : clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
-        run.shake = Math.max(run.shake, 3);
+    if (s.x - s.radius < 0) {
+      s.x = s.radius;
+      if (drillActive) s.vx = Math.max(0, s.vx);
+      else {
+        s.vx = clamp(Math.abs(s.vx) * .18, 30, 42);
+        run.wallPushSide = -1;
+        run.wallReleaseX = s.x + 10;
       }
-      if (s.x + s.radius > VIEW_W - 4) {
-        s.x = VIEW_W - s.radius - 4;
-        s.vx = drillActive ? Math.min(0, s.vx) : -clamp(Math.abs(s.vx) * .58 + 18, 54, 145);
-        run.shake = Math.max(run.shake, 3);
+    }
+    if (s.x + s.radius > VIEW_W) {
+      s.x = VIEW_W - s.radius;
+      if (drillActive) s.vx = Math.min(0, s.vx);
+      else {
+        s.vx = -clamp(Math.abs(s.vx) * .18, 30, 42);
+        run.wallPushSide = 1;
+        run.wallReleaseX = s.x - 10;
       }
     }
     if (!launchArrivalActive && drillActive && s.y - s.radius < 4) {
@@ -4038,8 +3068,10 @@
     run.maxDepth = Math.max(run.maxDepth, run.depth);
 
     const collisions = blocksNearY(s.y, s.radius)
-      .filter(block => !block.dead && !block.blackHoleSuctionStartedAt && timestamp >= (block.snowballGhostUntil || 0) && !blockHiddenByPortalExit(block) && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
-      .map(block => ({ block, collision: circleRectCollision(s, block) }))
+      .filter(block => !block.dead && !block.blackHoleSuctionStartedAt && timestamp >= (block.snowballGhostUntil || 0) && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
+      // Hazards use a slightly forgiving hit radius: near-misses should look
+      // and feel like near-misses, especially under a thumb on mobile.
+      .map(block => ({ block, collision: circleRectCollision(s, block, block.hazard ? s.radius * .76 : s.radius) }))
       .filter(item => item.collision)
       .sort((a, b) => b.collision.penetration - a.collision.penetration);
 
@@ -4078,9 +3110,8 @@
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt * 20);
     run.visualHealth = run.health;
     const healthScale = 1;
-    const growthScale = run.effects.blockGrowth ? 1 + Math.min(1.15, (run.growthStacks || 0) * .025) : 1;
     const massRadius = massRadiusForLevel(elementalLevel('mass'), run.cellSize);
-    const normalRadius = massRadius * healthScale * growthScale;
+    const normalRadius = massRadius * healthScale;
     const targetRadius = gigantismRadiusAt(timestamp, normalRadius);
     const changingGigantism = gigantismActive(timestamp) || timestamp < (run.gigantismDeflateUntil || 0);
     s.radius = lerp(s.radius, targetRadius, clamp(dt * (changingGigantism ? 19 : 5.5), 0, 1));
@@ -4402,7 +3433,7 @@
     if (run.cosmosCometCharge >= 1) igniteCosmosComet(timestamp);
   }
 
-  function setSecretGravityDirection(direction, timestamp = performance.now()) {
+  function setGravityDirection(direction, timestamp = performance.now()) {
     if (!run?.effects?.gravitySwitch || run.ended || run.paused || run.portalEntry) return false;
     const nextDirection = direction < 0 ? -1 : 1;
     if (run.gravityDirection === nextDirection) return true;
@@ -4418,8 +3449,6 @@
         run.cosmosCometStartedAt = 0;
         run.cosmosCometFadeUntil = 0;
       } else if (run.cosmosReverseReady) {
-        // Разворот вниз только запускает вход в атмосферу. Само усиление
-        // включится позже, когда слайм действительно наберёт скорость падения.
         run.cosmosFallDistance = 0;
         run.cosmosCometCharge = 0;
         run.cosmosCometStartedAt = 0;
@@ -4449,23 +3478,37 @@
     const mobilityLevel = elementalLevel('mobility');
     const mobilityControl = [1, 1.12, 1.22, 1.22][mobilityLevel] || 1;
     const effectiveAuthority = steeringAuthority * massControl * activeMassControl * mobilityControl;
-    if (Math.abs(steering.x) > .01 && effectiveAuthority > 0) {
-      const controlSpeed = [220, 245, 265, 265][mobilityLevel] || 220;
-      const acceleration = [250, 300, 340, 340][mobilityLevel] * effectiveAuthority;
-      const nextVx = slime.vx + steering.x * acceleration * dt;
-      slime.vx = Math.sign(nextVx) === Math.sign(steering.x)
-        ? Math.sign(steering.x) * Math.min(Math.abs(nextVx), controlSpeed)
-        : nextVx;
+    if (effectiveAuthority > 0) {
+      let inputX = steering.x;
+      if (run.wallPushSide < 0) {
+        if (slime.x >= run.wallReleaseX) run.wallPushSide = 0;
+        else if (inputX < 0) inputX = 0;
+      } else if (run.wallPushSide > 0) {
+        if (slime.x <= run.wallReleaseX) run.wallPushSide = 0;
+        else if (inputX > 0) inputX = 0;
+      }
+      const controlSpeed = [200, 228, 248, 248][mobilityLevel] || 200;
+      const targetVx = Math.abs(inputX) > .01 ? inputX * controlSpeed : 0;
+      const reversing = Math.abs(inputX) > .01 && Math.abs(slime.vx) > 10 && Math.sign(slime.vx) !== Math.sign(inputX);
+      const responseRate = reversing ? 11 : Math.abs(inputX) > .01 ? 5.4 : 7.2;
+      const response = 1 - Math.exp(-responseRate * effectiveAuthority * dt);
+      slime.vx = lerp(slime.vx, targetVx, response);
+      if (!inputX && Math.abs(slime.vx) < 2) slime.vx = 0;
     }
     // Downward input increases weight only after the rebound has established
     // its trajectory; holding it can never flatten an impact into a block.
     if (steering.down > .01 && effectiveAuthority > 0) {
       const pressure = mobilityLevel >= 1 ? run.speedPressure || 0 : 0;
       const diveAcceleration = mobilityLevel >= 1 ? 300 + pressure * 420 : 235;
-      const baseTerminalSpeed = BALANCE.maxFallSpeedBase + run.worldId * BALANCE.maxFallSpeedPerWorld;
+      const baseTerminalSpeed = normalFallSpeedLimit();
       const maxDiveSpeed = baseTerminalSpeed * (1 + pressure * .5);
       slime.vy = Math.min(maxDiveSpeed, slime.vy + diveAcceleration * steering.down * effectiveAuthority * dt);
     }
+  }
+
+  function normalFallSpeedLimit() {
+    if (run?.worldId === 1) return BALANCE.maxFallSpeedWorld1 || 305;
+    return BALANCE.maxFallSpeedBase + (run?.worldId || 1) * BALANCE.maxFallSpeedPerWorld;
   }
 
   function getPortalGeometry() {
@@ -4530,13 +3573,13 @@
     if (progress >= 1) finishWorld();
   }
 
-  function circleRectCollision(circle, rect) {
+  function circleRectCollision(circle, rect, collisionRadius = circle.radius) {
     const closestX = clamp(circle.x, rect.x, rect.x + rect.w);
     const closestY = clamp(circle.y, rect.y, rect.y + rect.h);
     let dx = circle.x - closestX;
     let dy = circle.y - closestY;
     let distanceSq = dx * dx + dy * dy;
-    if (distanceSq >= circle.radius * circle.radius) return null;
+    if (distanceSq >= collisionRadius * collisionRadius) return null;
 
     let distance = Math.sqrt(distanceSq);
     let nx;
@@ -4558,7 +3601,7 @@
       else { nx = 1; ny = 0; }
       distance = 0;
     }
-    return { nx, ny, penetration: circle.radius - distance + insideDepth };
+    return { nx, ny, penetration: collisionRadius - distance + insideDepth };
   }
 
   function stabilizeSlimeContact(slime, collision, padding = 1.25) {
@@ -4599,19 +3642,15 @@
       tangentY *= tangentScale;
     }
 
-    // Единственный источник отскока — нормаль поверхности. Случайного выбора
-    // стороны больше нет: слайм всегда сначала уверенно выходит из блока.
-    slime.vx = nx * normalSpeed + tangentX * tangentKeep;
-    slime.vy = ny * normalSpeed + tangentY * tangentKeep;
+    slime.vx = nx * normalSpeed + tangentX;
+    slime.vy = ny * normalSpeed + tangentY;
 
     const steering = fallSteeringVector();
     if (Math.abs(steering.x) > .01) {
       if (Math.abs(nx) < .34) {
-        // На горизонтальной поверхности ввод лишь направляет следующий полёт.
-        const steeringAssist = (hazard ? 82 : lerp(46, 78, regularCurve)) * (1 + mobilityLevel * .2);
-        slime.vx = clamp(slime.vx * .52 + steering.x * steeringAssist, -BALANCE.sideBounceMax, BALANCE.sideBounceMax);
+        const steeringAssist = (hazard ? 86 : lerp(54, 86, regularCurve)) * (1 + mobilityLevel * .2);
+        slime.vx = clamp(slime.vx * .5 + steering.x * steeringAssist, -BALANCE.sideBounceMax, BALANCE.sideBounceMax);
       } else if (Math.sign(steering.x) === Math.sign(nx)) {
-        // У боковой стенки разрешено помочь отскоку наружу, но не продавить её.
         slime.vx += steering.x * (hazard ? 34 : 24);
       }
     }
@@ -4646,11 +3685,11 @@
       }
     }
 
-    const lockReduction = mobilityLevel >= 2 ? 70 : mobilityLevel >= 1 ? 42 : 0;
-    const restoreReduction = mobilityLevel >= 2 ? 155 : mobilityLevel >= 1 ? 90 : 0;
+    const lockReduction = mobilityLevel >= 2 ? 10 : mobilityLevel >= 1 ? 5 : 0;
+    const restoreReduction = mobilityLevel >= 2 ? 24 : mobilityLevel >= 1 ? 12 : 0;
     run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + (hazard ? 70 : 20);
-    run.bounceControlLockUntil = timestamp + Math.max(10, (hazard ? 70 : 90) - lockReduction);
-    run.bounceControlRestoreUntil = timestamp + Math.max(75, (hazard ? 250 : 285) - restoreReduction);
+    run.bounceControlLockUntil = timestamp + Math.max(24, 36 - lockReduction);
+    run.bounceControlRestoreUntil = timestamp + Math.max(88, 120 - restoreReduction);
   }
 
   function activateJellyBounce(block, collision, timestamp) {
@@ -4685,8 +3724,8 @@
     block.jellyNormalX = nx;
     block.jellyNormalY = ny;
     run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + 55;
-    run.bounceControlLockUntil = timestamp + 45;
-    run.bounceControlRestoreUntil = timestamp + 175;
+    run.bounceControlLockUntil = timestamp + 38;
+    run.bounceControlRestoreUntil = timestamp + 155;
     run.flightDistance = 0;
     run.emotion = 'joy';
     run.emotionUntil = timestamp + 420;
@@ -4709,8 +3748,6 @@
     spawnSpecialBurst('bomb', centerX, centerY);
     run.shake = Math.max(run.shake, 8.5);
 
-    // Во время двухсекундной неуязвимости опасности всё равно исчезают,
-    // но больше не отнимают сердца и не запирают слайма в группе блоков.
     if (timestamp < run.damageInvulnerableUntil) {
       sound('break');
       return false;
@@ -4857,7 +3894,7 @@
   }
 
   function elementalDamageable(block) {
-    return Boolean(block && !block.dead && !block.unbreakable);
+    return Boolean(block && !block.dead && !block.unbreakable && !block.hazard);
   }
 
   function frostFreezable(block) {
@@ -5274,7 +4311,6 @@
       run.slime.vy = Math.max(170, run.slime.vy);
       run.elementalAbilityNextTickAt = timestamp + 70;
     } else {
-      // Золотая лихорадка и цепная реакция срабатывают непосредственно при ударах.
       run.elementalAbilityNextTickAt = timestamp + 180;
     }
   }
@@ -5304,8 +4340,6 @@
     const tierData = BLOCK_TIERS[block.tier] || BLOCK_TIERS.dense;
     const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
     const unbreakable = Boolean(block.unbreakable);
-    const shieldWasActive = run.barrier > 0;
-    const bouncePowerUsed = Boolean(run.effects.bouncePower && run.bouncePowerReady);
     const gigantismLevel = elementalLevel('gigantism');
     const gigantismPowered = gigantismActive(timestamp);
     let damage = gigantismLevel >= 1 && !block.special && block.tier !== 'ore' ? 2 : 1;
@@ -5334,10 +4368,6 @@
     if (cosmosPiercing) damage = block.hp;
     else if (cosmosBoosted && damage > 0) damage += 1;
     const hpBefore = block.hp;
-    if (bouncePowerUsed) {
-      run.bouncePowerReady = false;
-      spawnSpecialBurst('chargedHit', block.x + block.w / 2, block.y + block.h / 2);
-    }
     const breaksOnTouch = ['bomb', 'gel', 'cryo', 'meteor'].includes(block.special);
     if (breaksOnTouch && !unbreakable) damage = hpBefore;
     const geyserPiercing = !unbreakable && run.geyserBreaksLeft > 0 && block.special !== 'geyser';
@@ -5352,36 +4382,16 @@
     if (drillPiercing) damage = hpBefore;
     const gigantismOverflow = gigantismLevel >= 2 ? Math.max(0, damage - hpBefore) : 0;
     const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || massPiercing || speedBurstPiercing || windDashPiercing || drillPiercing || damage >= hpBefore);
-    const oreBlock = block.tier === 'ore' || block.frozenOre;
     let healthLoss = 0;
-    const regularBlock = !unbreakable && !block.special && !oreBlock;
-    if (run.effects.blockGrowth && regularBlock) healthLoss = 0;
     if (frozenSlime || breaksOnTouch) healthLoss = 0;
     if (healthLoss > 0 && timestamp < run.damageInvulnerableUntil) healthLoss = 0;
-    const incomingHealthLoss = healthLoss;
     const barrierAbsorbed = Math.min(Math.max(0, run.barrier || 0), healthLoss);
     if (barrierAbsorbed > 0) {
       run.barrier = Math.max(0, run.barrier - barrierAbsorbed);
       run.barrierFlashUntil = timestamp + 380;
       healthLoss = Math.max(0, healthLoss - barrierAbsorbed);
     }
-    let convertedHealth = 0;
-    if (shieldWasActive && run.effects.shieldDamageToHealth && incomingHealthLoss > 0) {
-      const before = run.health;
-      run.health = Math.min(run.maxHealth, run.health + incomingHealthLoss);
-      convertedHealth = Math.max(0, run.health - before);
-      healthLoss = 0;
-      if (convertedHealth > 0) {
-        run.healGlowUntil = timestamp + 980;
-        spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
-      }
-    } else {
-      run.health = Math.max(0, run.health - healthLoss);
-    }
-    if (healthLoss > 0 && run.effects.blockGrowth && run.growthStacks > 0) {
-      run.growthStacks = 0;
-      run.growthResetUntil = timestamp + 560;
-    }
+    run.health = Math.max(0, run.health - healthLoss);
     if (healthLoss > 0) run.damageInvulnerableUntil = timestamp + 2000;
     if (!frozenSlime) {
       run.healthFlash = healthLoss > 0 ? -1 : 1;
@@ -5437,7 +4447,6 @@
       else if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
       else if (!block.special && run.comboCount < 2) impact('ПРОБОЙ · БЕЗ УРОНА');
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
-      if (shieldWasActive && run.barrier <= 0) finishShield(timestamp);
       if (run.health <= 0) endRun(false, 'У слайма закончилось здоровье');
       return false;
     }
@@ -5454,12 +4463,6 @@
     s.x += collision.nx * (collision.penetration + (unbreakable ? 6 : 4));
     s.y += collision.ny * (collision.penetration + (unbreakable ? 6 : 4));
     applyBlockBounce(s, collision, { hazard: unbreakable, timestamp });
-    if (healthLoss > 0 && block.hazard) spawnMiniSlimes(collision, timestamp);
-    if (run.effects.bouncePower) {
-      run.bouncePowerReady = true;
-      run.emotion = 'joy';
-      run.emotionUntil = timestamp + 360;
-    }
     run.flightDistance = 0;
 
     const hitsLeft = Math.max(1, Math.ceil(block.hp));
@@ -5475,8 +4478,6 @@
           : `БЛОК ТРЕСНУЛ · ${hitsLabel}`);
     sound(block.special === 'spring' ? 'bounce' : block.hazard || block.special === 'boss' ? 'hitHard' : 'hit');
     createDebris(block, 3, false);
-    if (shieldWasActive && run.barrier <= 0) finishShield(timestamp);
-
     if (run.health <= 0) endRun(false, 'У слайма закончилось здоровье');
     return true;
   }
@@ -5614,13 +4615,15 @@
 
   function destroyBlock(block, cause = 'impact', timestamp = performance.now()) {
     if (!block || block.dead) return;
+    // Hazards are removed only by direct slime contact in resolveHazardHit.
+    // No mutation, chained attack or explosion may clear them remotely.
+    if (block.hazard) return false;
     if (typeof cause !== 'string') cause = 'impact';
     const wasGolden = blockIsGolden(block, timestamp);
     const wasSnow = Boolean(block.elementalSnow);
     const wasSnowflake = Boolean(block.elementalSnowflake);
     block.dead = true;
     run.blocksDestroyed += 1;
-    if (run.effects.blockGrowth) run.growthStacks = Math.min(46, (run.growthStacks || 0) + 1);
     registerBrokenBlock(block);
     const reward = block.coins * run.comboMultiplier * run.coinMultiplier * (wasGolden ? 2 : 1);
     run.coins += reward;
@@ -5634,8 +4637,7 @@
       impact('БЛОК РАЗРУШЕН');
     } else if (block.special === 'gel') {
       spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
-      const heal = 25 + (run.effects.medkitBoost ? 10 : 0);
-      healRun(heal, run.effects.medkitBoost ? 'УСИЛЕННАЯ АПТЕЧКА' : 'ЛЕЧЕНИЕ');
+      healRun(25, 'ЛЕЧЕНИЕ');
     } else if (block.special === 'meteor') {
       activateMeteorShower(block);
     } else if (block.special === 'spring') {
@@ -5705,9 +4707,6 @@
   }
 
   function weakenCryoArea4x4(source) {
-    // Чётная область не имеет одной центральной клетки, поэтому крио-блок
-    // занимает верхнюю левую из четырёх центральных позиций. Две строки зоны
-    // остаются впереди по ходу падения — эффект всегда помогает продолжить путь.
     const rowStart = source.row - 1;
     const colStart = source.col - 1;
     let weakened = 0;
@@ -5721,7 +4720,7 @@
       block.hazard = false;
       block.hazardVariant = null;
       block.frozen = true;
-      block.editorVisualId = '';
+      block.visualId = '';
       block.maxHp = Math.min(block.maxHp, easyHp);
       block.hp = Math.min(block.hp, block.maxHp);
       createDebris(block, 3, false);
@@ -5798,7 +4797,7 @@
   function destroyMeteorGrid(row, col) {
     let destroyed = 0;
     for (const block of run.blocks) {
-      if (block.dead || Math.abs(block.row - row) > 1 || Math.abs(block.col - col) > 1) continue;
+      if (block.dead || block.unbreakable || block.hazard || Math.abs(block.row - row) > 1 || Math.abs(block.col - col) > 1) continue;
       block.dead = true;
       run.blocksDestroyed += 1;
       registerBrokenBlock(block);
@@ -5895,7 +4894,7 @@
     let destroyed = 0;
     const chainBombs = [];
     for (const block of run.blocks) {
-      if (block.dead || block === source) continue;
+      if (block.dead || block === source || block.unbreakable || block.hazard) continue;
       if (Math.abs(block.row - source.row) > radiusCells || Math.abs(block.col - source.col) > radiusCells) continue;
       block.dead = true;
       run.blocksDestroyed += 1;
@@ -5916,8 +4915,6 @@
     const x = source.x + source.w / 2;
     const y = source.y + source.h / 2;
     spawnSpecialBurst('bomb', x, y);
-    // В первом мире динамит всегда покрывает ровный квадрат 3×3:
-    // сам блок и по одной соседней клетке с каждой стороны.
     const result = run.worldId === 1
       ? explodeGridArea(source, 1, .6, chainDepth < 3)
       : explodeAt(x, y, radius * scale, .6, damage * scale, chainDepth < 3);
@@ -6002,7 +4999,6 @@
     run.particles = run.particles.filter(p => p.life > 0);
   }
 
-  // ===== ЭФФЕКТЫ СПЕЦИАЛЬНЫХ БЛОКОВ =====
   function spawnSpecialBurst(type, x, y, nx = 0, ny = -1) {
     if (!run) return;
     const config = {
@@ -6185,13 +5181,7 @@
     run.barrierFlashUntil = timestamp + 720;
     sound('epic');
     feedback([14, 22, 14]);
-    if (run.effects.shieldActivationHeal) {
-      spawnSpecialBurst('heal', run.slime.x, run.slime.y);
-      healRun(20, 'ЩИТ · ЛЕЧЕНИЕ');
-      refreshLowHealthDamage(true);
-    } else {
-      impact(`ЩИТ +${Math.round(run.barrier)}`);
-    }
+    impact(`ЩИТ +${Math.round(run.barrier)}`);
     updateRunUI();
   }
 
@@ -6250,14 +5240,14 @@
         mobility: 'СКОРОСТНОЙ БУР'
       };
       const icons = {
-        frost: 'frost-aligned.png',
-        electric: 'electricity-aligned.png',
-        fire: 'fire-aligned.png',
-        cosmos: 'mutation-cosmos.png',
-        gigantism: 'mutation-gigantism.png',
-        wind: 'mutation-wind.png?v=2',
+        frost: 'emblem-v2-frost.png',
+        electric: 'emblem-v2-electric.png',
+        fire: 'emblem-v2-fire.png',
+        cosmos: 'emblem-v2-cosmos.png',
+        gigantism: 'emblem-v2-gigantism.png',
+        wind: 'emblem-v2-wind.png',
         gold: 'gold-aligned.png',
-        explosion: 'explosion-aligned.png',
+        explosion: 'emblem-v2-explosion.png',
         mass: 'weight-aligned.png',
         mobility: 'mobility-aligned.png'
       };
@@ -6288,7 +5278,6 @@
       : `ЩИТ ${Math.ceil(run.shield)} · ${charges}/${run.maxShieldCharges}`;
   }
 
-  // ===== CANVAS-РЕНДЕР МИРА =====
   function renderCanvas(timestamp) {
     const world = run.world;
     const shakeX = run.shake ? rand(-run.shake, run.shake) : 0;
@@ -6321,7 +5310,6 @@
 
     // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions(visibleBlocks);
-    drawSecretEdgePortals(timestamp);
     drawGeyserCapture(timestamp);
     drawMeteorShowers(timestamp);
     drawSpecialEffects(false);
@@ -6387,50 +5375,11 @@
     ctx.globalAlpha = 1;
 
     drawSelectedTrail(timestamp);
-    drawMiniSlimes(timestamp);
     drawSlime(timestamp);
     drawHoneyZones(timestamp, true);
     drawJellyZones(timestamp, true);
     drawFreezeZones(timestamp, true);
     drawSpecialEffects(true);
-    ctx.restore();
-  }
-
-  function drawSecretEdgePortals(timestamp) {
-    if (!run?.effects?.edgePortals) return;
-    const flash = timestamp < (run.edgePortalFlashUntil || 0) ? .22 : 0;
-    const phase = timestamp / 280;
-    ctx.save();
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    for (const side of [-1, 1]) {
-      const baseX = side < 0 ? 5 : VIEW_W - 5;
-      for (let layer = 0; layer < 2; layer += 1) {
-        ctx.beginPath();
-        for (let y = -12; y <= VIEW_H + 12; y += 7) {
-          const wave = Math.sin(y * .052 + phase + side * .7) * (layer ? 1.6 : 3.2);
-          const x = baseX + side * wave;
-          if (y === -12) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.globalAlpha = (layer ? .92 : .38) + flash;
-        ctx.strokeStyle = layer ? '#fff1fc' : '#d737bd';
-        ctx.lineWidth = layer ? 2.1 : 7.5;
-        ctx.shadowColor = layer ? '#ff75df' : '#8b32d9';
-        ctx.shadowBlur = layer ? 7 : 13;
-        ctx.stroke();
-      }
-      ctx.shadowBlur = 8;
-      for (let dot = 0; dot < 8; dot += 1) {
-        const y = ((dot * 91 + timestamp / 7 * side) % (VIEW_H + 50) + VIEW_H + 50) % (VIEW_H + 50) - 25;
-        const x = baseX + side * (4 + Math.sin(dot + phase) * 2.2);
-        ctx.globalAlpha = .42 + flash;
-        ctx.fillStyle = dot % 2 ? '#ff9feb' : '#9cf8ff';
-        ctx.beginPath();
-        ctx.arc(x, y, dot % 3 === 0 ? 2.2 : 1.4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
     ctx.restore();
   }
 
@@ -7440,8 +6389,8 @@
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     }
 
-    const background = world.editorBackground;
-    const artwork = background?.image ? editorSprite(background.image) : null;
+    const background = world.backgroundArt;
+    const artwork = background?.image ? projectSprite(background.image) : null;
     if (artwork?.complete && artwork.naturalWidth) {
       const scale = background.scale || 1;
       const width = VIEW_W * scale;
@@ -7607,6 +6556,13 @@
         ctx.closePath();
       };
       ctx.save();
+      // Keep every jelly layer inside the exact grid cells it replaced. This
+      // also handles L-shaped authored pockets without covering nearby blocks.
+      if (zone.cells?.length) {
+        ctx.beginPath();
+        for (const cell of zone.cells) ctx.rect(cell.x, cell.y - run.cameraY, cell.w, cell.h);
+        ctx.clip();
+      }
       if (!foreground) {
         jellyPath();
         const base = ctx.createLinearGradient(zone.x, surfaceY, zone.x, y + zone.h);
@@ -7985,7 +6941,6 @@
       return;
     }
 
-    // Спецблоки читаются мгновенно даже на маленьком экране.
     if (special === 'bomb') {
       ctx.fillStyle = 'rgba(255,240,80,.28)';
       for (let x = block.x - block.h; x < block.x + block.w; x += 13) {
@@ -8102,26 +7057,23 @@
     ctx.fillRect(x + 1, sy + 1, w - 2, h - 2);
     ctx.globalCompositeOperation = 'source-over';
 
-    ctx.lineJoin = 'round';
+    ctx.lineJoin = 'miter';
     ctx.globalAlpha = intensity * .78;
     ctx.strokeStyle = '#d93414';
     ctx.lineWidth = 6.4;
     ctx.shadowColor = '#ff4518';
     ctx.shadowBlur = 11 + flicker * 5;
-    roundedRect(ctx, x + 3.5, sy + 3.5, w - 7, h - 7, 6);
-    ctx.stroke();
+    ctx.strokeRect(x + 3.5, sy + 3.5, w - 7, h - 7);
     ctx.globalAlpha = intensity * (.82 + flicker * .14);
     ctx.strokeStyle = '#ff8a18';
     ctx.lineWidth = 3.5;
     ctx.shadowBlur = 6;
-    roundedRect(ctx, x + 4.5, sy + 4.5, w - 9, h - 9, 5.5);
-    ctx.stroke();
+    ctx.strokeRect(x + 4.5, sy + 4.5, w - 9, h - 9);
     ctx.globalAlpha = intensity * (.62 + flicker * .18);
     ctx.strokeStyle = '#ffe66d';
     ctx.lineWidth = 1.35;
     ctx.shadowBlur = 3;
-    roundedRect(ctx, x + 5.4, sy + 5.4, w - 10.8, h - 10.8, 5);
-    ctx.stroke();
+    ctx.strokeRect(x + 5.4, sy + 5.4, w - 10.8, h - 10.8);
 
     const tongueCount = 5;
     for (let index = 0; index < tongueCount; index += 1) {
@@ -8269,8 +7221,6 @@
     const sprite = CRACK_STAGE_SPRITES?.[stage];
     if (!stage || !sprite?.complete || !sprite.naturalWidth) return false;
     const gutter = .5;
-    // У исходных трёх PNG главный разлом расположен чуть по-разному.
-    // Компенсируем это здесь, чтобы центр трещины всегда совпадал с центром плитки.
     const centerOffset = ({ 1: .066, 2: .087, 3: -.047 })[stage] * block.w;
     ctx.save();
     ctx.beginPath();
@@ -8324,8 +7274,7 @@
         ctx.strokeStyle = darkRim;
         ctx.shadowBlur = 0;
         ctx.lineWidth = 4.4;
-        roundedRect(ctx, block.x + 2.35, sy + 2.35, block.w - 4.7, block.h - 4.7, 7);
-        ctx.stroke();
+        ctx.strokeRect(block.x + 2.35, sy + 2.35, block.w - 4.7, block.h - 4.7);
       }
 
       ctx.globalAlpha = .73 + pulse * .23;
@@ -8335,15 +7284,13 @@
       ctx.lineWidth = preserveVolcanicLook
         ? (auraKey === 'hazard' ? 2.6 : 2.15)
         : (auraKey === 'hazard' ? 2.25 : 2);
-      roundedRect(ctx, block.x + 2.35, sy + 2.35, block.w - 4.7, block.h - 4.7, 7);
-      ctx.stroke();
+      ctx.strokeRect(block.x + 2.35, sy + 2.35, block.w - 4.7, block.h - 4.7);
       ctx.shadowBlur = 0;
     }
     ctx.restore();
   }
 
   function drawWorldSprite(block, sy, hpRatio, timestamp = performance.now()) {
-    // Босс рисуется кодом, а не обычной плиткой: у него свои глаза и лицо.
     if (block.special === 'boss') return false;
     let spriteName;
     const frostTransformed = block.elementalSnow || block.elementalSnowflake;
@@ -8391,14 +7338,14 @@
     else if (block.tier === 'soft') spriteName = 'dirt-grass';
     else spriteName = 'stone';
 
-    const editorId = block.frozen
+    const contentId = block.frozen
       ? 'dense'
-      : block.editorVisualId || (block.special === 'gel' ? 'heal' : block.special || (block.hazard ? 'hazard' : block.tier));
-    const edited = frostIsPrimary ? null : editorBlock(run.worldId, editorId);
+      : block.visualId || (block.special === 'gel' ? 'heal' : block.special || (block.hazard ? 'hazard' : block.tier));
+    const edited = frostIsPrimary ? null : contentBlock(run.worldId, contentId);
     if (edited?.type === 'custom' && edited.sprite) spriteName = edited.sprite;
     const oreArtwork = !block.frozen && (block.tier === 'ore' || block.frozenOre) ? edited?.oreTextures?.[block.oreType?.id || 'coal'] : null;
     const artwork = oreArtwork?.image ? oreArtwork : edited;
-    const customSprite = artwork?.image ? editorSprite(artwork.image) : null;
+    const customSprite = artwork?.image ? projectSprite(artwork.image) : null;
     const sprites = frostIsPrimary ? ensureWorldSprites(2) : WORLD_SPRITES[run.worldId];
     const pandoraSprite = block.special === 'pandora' ? VFX_SPRITES?.['pandora-box'] : null;
     const sprite = pandoraSprite?.complete && pandoraSprite.naturalWidth
@@ -8576,7 +7523,6 @@
     if (els.slime.classList.contains('pleased')) return 'pleased';
     if (els.slime.classList.contains('chewing')) return 'chewing';
     if (els.slime.classList.contains('savoring')) return 'savoring';
-    if (els.slime.classList.contains('meal-secret') && (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food'))) return 'anticipating';
     if (els.slime.classList.contains('eat') || els.slime.classList.contains('expect-food')) return 'hungry';
     if (els.slime.classList.contains('booped')) return 'surprised';
     return 'focused';
@@ -8640,13 +7586,6 @@
     return normalized * normalized * (3 - 2 * normalized);
   };
 
-  function mixFireHex(from, to, amount) {
-    const parse = color => [1, 3, 5].map(index => parseInt(color.slice(index, index + 2), 16));
-    const a = parse(from);
-    const b = parse(to);
-    return `#${a.map((value, index) => Math.round(value + (b[index] - value) * amount).toString(16).padStart(2, '0')).join('')}`;
-  }
-
   function drawFireEyeFlame(target, x, baseY, radius, timestamp, alpha) {
     const time = menuReducedMotion ? 0 : timestamp / 285;
     const sway = Math.sin(time) * radius * .018 + Math.sin(time * 1.8) * radius * .008;
@@ -8681,18 +7620,36 @@
     target.restore();
   }
 
-  function drawFireEyes(target, x, y, radius, level, timestamp, opacity = 1) {
+  function drawFireEyes(target, x, y, radius, level, timestamp, opacity = 1, cuteFace = false) {
     const visible = smoothFireVisual(level);
     if (visible < .01) return;
-    const pupilY = y - radius * .105;
-    const eyeOffset = radius * .245;
+    const pupilY = y + radius * (cuteFace ? .025 : -.105);
+    const eyeOffset = radius * (cuteFace ? .305 : .245);
     for (const side of [-1, 1]) {
       const px = x + eyeOffset * side;
+      if (cuteFace) {
+        target.save();
+        target.globalAlpha *= visible * opacity;
+        target.beginPath();
+        target.ellipse(px, pupilY + radius * .025, radius * .095, radius * .145, 0, 0, Math.PI * 2);
+        target.clip();
+        const glow = target.createRadialGradient(px, pupilY + radius * .09, 0, px, pupilY + radius * .09, radius * .115);
+        glow.addColorStop(0, '#fff2a0');
+        glow.addColorStop(.48, '#ff9a20');
+        glow.addColorStop(1, 'rgba(255,91,18,0)');
+        target.fillStyle = glow;
+        target.beginPath();
+        target.ellipse(px, pupilY + radius * .075, radius * .09, radius * .105, 0, 0, Math.PI * 2);
+        target.fill();
+        drawFireEyeFlame(target, px, pupilY + radius * .15, radius * .53, timestamp + side * 290, visible * opacity * .95);
+        target.restore();
+        continue;
+      }
       target.save();
       target.beginPath();
-      target.ellipse(px, pupilY, radius * .145, radius * .185, 0, 0, Math.PI * 2);
+      target.ellipse(px - side * radius * (cuteFace ? .018 : 0), pupilY, radius * (cuteFace ? .092 : .145), radius * (cuteFace ? .142 : .185), 0, 0, Math.PI * 2);
       target.clip();
-      drawFireEyeFlame(target, px, pupilY + radius * .105, radius, timestamp + side * 290, visible * opacity);
+      drawFireEyeFlame(target, px - side * radius * (cuteFace ? .018 : 0), pupilY + radius * (cuteFace ? .085 : .105), radius * (cuteFace ? .72 : 1), timestamp + side * 290, visible * opacity * (cuteFace ? .62 : 1));
       target.restore();
     }
   }
@@ -8705,8 +7662,8 @@
     target.translate(x, y);
     target.scale(1 / pulse, pulse);
     target.globalAlpha *= alpha;
-    const width = radius * .205;
-    const height = radius * .56;
+    const width = radius * .19;
+    const height = radius * .36;
     const trace = (pathWidth, pathHeight, tipSway) => {
       target.beginPath();
       target.moveTo(0, radius * .025);
@@ -8739,17 +7696,17 @@
   function drawFireTip(target, x, y, radius, level, timestamp, opacity = 1) {
     const dominant = smoothFireVisual(level - 1);
     if (dominant < .01) return;
-    drawFireHeadFlame(target, x, y - radius * .84, radius, timestamp, dominant * opacity);
+    drawFireHeadFlame(target, x, y - radius * .69, radius, timestamp, dominant * opacity);
   }
 
   const fireContour = (() => {
     const curves = [
-      [0, -1, .15, -.99, .16, -.86, .26, -.79],
-      [.26, -.79, .67, -.68, .93, -.31, .91, .16],
-      [.91, .16, .88, .68, .5, .92, 0, .93],
-      [0, .93, -.5, .92, -.88, .68, -.91, .16],
-      [-.91, .16, -.93, -.31, -.67, -.68, -.26, -.79],
-      [-.26, -.79, -.16, -.86, -.15, -.99, 0, -1]
+      [0, -1.03, .17, -1.02, .2, -.84, .35, -.75],
+      [.35, -.75, .76, -.59, 1.02, -.2, 1.01, .28],
+      [1.01, .28, .97, .76, .57, 1.04, 0, 1.05],
+      [0, 1.05, -.57, 1.04, -.97, .76, -1.01, .28],
+      [-1.01, .28, -1.02, -.2, -.76, -.59, -.35, -.75],
+      [-.35, -.75, -.2, -.84, -.17, -1.02, 0, -1.03]
     ];
     return curves.flatMap(curve => Array.from({ length: 24 }, (_, index) => {
       const time = index / 24;
@@ -8834,9 +7791,9 @@
     frost.addColorStop(0, 'rgba(90,190,226,.18)'); frost.addColorStop(.3, 'rgba(101,205,239,.72)'); frost.addColorStop(.72, '#bdefff'); frost.addColorStop(1, '#effdff');
     target.strokeStyle = frost; target.lineWidth = Math.max(3, radius * .09);
     target.beginPath();
-    target.moveTo(radius * .91, radius * .11);
-    target.bezierCurveTo(radius * .88, radius * .68, radius * .5, radius * .92, 0, radius * .93);
-    target.bezierCurveTo(-radius * .5, radius * .92, -radius * .88, radius * .68, -radius * .91, radius * .11);
+    target.moveTo(radius * .995, radius * .13);
+    target.bezierCurveTo(radius * .97, radius * .72, radius * .57, radius * 1.02, 0, radius * 1.04);
+    target.bezierCurveTo(-radius * .57, radius * 1.02, -radius * .97, radius * .72, -radius * .995, radius * .13);
     target.stroke(); target.restore();
   }
 
@@ -8953,7 +7910,7 @@
 
   function drawLightningMark(target, radius, amount) {
     if (amount < .01) return;
-    target.save(); target.translate(0, -radius * .56); target.globalAlpha *= amount;
+    target.save(); target.translate(0, -radius * .73); target.globalAlpha *= amount;
     target.shadowColor = '#ffd51f'; target.shadowBlur = radius * .13; target.fillStyle = '#ffe026'; target.strokeStyle = '#b87405'; target.lineWidth = radius * .025; target.lineJoin = 'round';
     target.beginPath(); target.moveTo(radius * .035, -radius * .17); target.lineTo(-radius * .105, radius * .005); target.lineTo(-radius * .01, radius * .005); target.lineTo(-radius * .075, radius * .18); target.lineTo(radius * .12, -radius * .045); target.lineTo(radius * .025, -radius * .045); target.closePath(); target.fill(); target.stroke(); target.restore();
   }
@@ -8981,21 +7938,11 @@
       if (life < .06) continue;
       const angle = index * 2.399 + Math.sin(index * 4.17) * .22;
       const travel = phase / activePart;
-      const start = radius * (.79 + travel * .18), end = radius * (.98 + travel * (intense ? .62 : .35));
+      const start = radius * (.93 + travel * .1), end = radius * (1.04 + travel * (intense ? .58 : .31));
       const tx = Math.cos(angle + Math.PI / 2), ty = Math.sin(angle + Math.PI / 2), jag = radius * (.055 + index % 3 * .014);
       const point = (distance, offset) => [x + Math.cos(angle) * distance + tx * offset, y + Math.sin(angle) * distance + ty * offset];
       strokeElectricBolt(target, [point(start, 0), point(start + (end - start) * .34, jag), point(start + (end - start) * .67, -jag * .72), point(end, 0)], amount * life, radius, intense);
     }
-  }
-
-  function paintEnergySphere(target, { radius, timestamp }) {
-    const energy = target.createRadialGradient(-radius * .18, -radius * .28, radius * .04, 0, 0, radius * 1.08);
-    energy.addColorStop(0, '#afeef5'); energy.addColorStop(.32, '#86ddea'); energy.addColorStop(.68, '#63bedb'); energy.addColorStop(1, '#4d8fbc');
-    target.fillStyle = energy; target.fillRect(-radius * 1.1, -radius * 1.1, radius * 2.2, radius * 2.2);
-    const angle = timestamp / 1320, x = Math.cos(angle) * radius * .43, y = Math.sin(angle * 1.27) * radius * .34;
-    const core = target.createRadialGradient(x, y, 0, x, y, radius * .43);
-    core.addColorStop(0, 'rgba(255,255,255,.98)'); core.addColorStop(.2, 'rgba(224,255,255,.98)'); core.addColorStop(.55, 'rgba(40,235,255,.88)'); core.addColorStop(1, 'rgba(52,123,233,0)');
-    target.save(); target.globalCompositeOperation = 'screen'; target.fillStyle = core; target.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4); target.restore();
   }
 
   function drawEnergyTendrils(target, x, y, radius, amount, timestamp) {
@@ -9012,11 +7959,83 @@
     }
   }
 
+  const ULTRA_FORM_IRIS_TINT = Object.freeze({
+    explosion: '#ff4d58',
+    frost: '#48cfff',
+    cosmos: '#b45cff',
+    electric: '#ffd83d',
+    fire: '#ff7426',
+    wind: '#42d9bd'
+  });
+
+  function drawUltraFormAccents(target, x, y, radius, form, amount, timestamp) {
+    if (!form || amount < .01) return;
+    target.save();
+    target.globalAlpha = amount;
+    target.lineCap = 'round';
+    target.lineJoin = 'round';
+    const phase = timestamp / 700;
+
+    if (form === 'fire' || form === 'explosion') {
+      const palette = form === 'fire' ? ['#fff09a', '#ff9b24', '#ff4a23'] : ['#fff2a1', '#ff6342', '#ff2638'];
+      for (let index = 0; index < 5; index += 1) {
+        const drift = (phase * (.72 + index * .05) + index * .23) % 1;
+        const side = index % 2 ? 1 : -1;
+        const px = x + side * radius * (.72 + (index % 3) * .16) + Math.sin(phase * 2 + index) * radius * .05;
+        const py = y + radius * .45 - drift * radius * 1.35;
+        const size = radius * (.018 + (1 - drift) * .018);
+        target.globalAlpha = amount * Math.sin(drift * Math.PI) * .84;
+        target.fillStyle = palette[index % palette.length];
+        target.beginPath(); target.arc(px, py, size, 0, Math.PI * 2); target.fill();
+      }
+    } else if (form === 'frost') {
+      drawSnowfall(target, x, y, radius, amount * .52, timestamp);
+    } else if (form === 'electric') {
+      drawElectricSparks(target, x, y, radius, amount * .48, timestamp, false);
+    } else if (form === 'cosmos') {
+      for (let index = 0; index < 5; index += 1) {
+        const angle = index * Math.PI * 2 / 5 + phase * .18;
+        const pulse = .5 + Math.sin(phase * 4 + index * 1.7) * .5;
+        const px = x + Math.cos(angle) * radius * (1.02 + (index % 2) * .12);
+        const py = y + Math.sin(angle) * radius * .83;
+        const size = radius * (.018 + pulse * .018);
+        target.globalAlpha = amount * (.42 + pulse * .46);
+        target.strokeStyle = index % 2 ? '#d6b0ff' : '#fff4ff';
+        target.lineWidth = Math.max(1.2, radius * .014);
+        target.beginPath(); target.moveTo(px - size, py); target.lineTo(px + size, py); target.moveTo(px, py - size); target.lineTo(px, py + size); target.stroke();
+      }
+    } else if (form === 'wind') {
+      target.strokeStyle = '#dffff8';
+      target.lineWidth = Math.max(1.4, radius * .018);
+      for (let index = 0; index < 3; index += 1) {
+        const offset = ((phase * .34 + index * .36) % 1) * radius * .7;
+        const py = y - radius * .38 + index * radius * .39;
+        target.globalAlpha = amount * (.32 + index * .12);
+        target.beginPath();
+        target.moveTo(x - radius * 1.12 + offset, py);
+        target.bezierCurveTo(x - radius * .72 + offset, py - radius * .1, x - radius * .48 + offset, py + radius * .1, x - radius * .15 + offset, py);
+        target.stroke();
+      }
+    }
+    target.restore();
+  }
+
   function drawElementalSlimeAvatar(target, options, levels, timestamp) {
     const fireLevel = clamp(Number(levels?.fire) || 0, 0, 3);
     const frostLevel = clamp(Number(levels?.frost) || 0, 0, 3);
     const electricLevel = clamp(Number(levels?.electric) || 0, 0, 3);
-    if (fireLevel < .001 && frostLevel < .001 && electricLevel < .001) {
+    const formLevels = {
+      fire: fireLevel,
+      frost: frostLevel,
+      electric: electricLevel,
+      cosmos: clamp(Number(levels?.cosmos) || 0, 0, 3),
+      wind: clamp(Number(levels?.wind) || 0, 0, 3),
+      explosion: clamp(Number(levels?.explosion) || 0, 0, 3)
+    };
+    const hybridForm = Object.keys(formLevels).find(form => formLevels[form] > 1) || '';
+    const hybrid = hybridForm ? smoothFireVisual(formLevels[hybridForm] - 1) : 0;
+    const finalBoost = hybridForm ? smoothFireVisual(formLevels[hybridForm] - 2) : 0;
+    if (fireLevel < .001 && frostLevel < .001 && electricLevel < .001 && !hybridForm) {
       drawSlimeAvatar(target, options);
       return;
     }
@@ -9025,19 +8044,12 @@
     const frostDominant = smoothFireVisual(frostLevel - 1);
     const electricMarked = smoothFireVisual(electricLevel);
     const electricCharged = smoothFireVisual(electricLevel - 1);
-    const fireUltra = smoothFireVisual(fireLevel - 2);
-    const frostUltra = smoothFireVisual(frostLevel - 2);
-    const electricUltra = smoothFireVisual(electricLevel - 2);
     const electricActive = clamp(Number(levels?.electricActive) || 0, 0, 1);
     const electricFlash = clamp(Number(levels?.electricFlash) || 0, 0, 1);
-    const ultra = Math.max(fireUltra, frostUltra, electricUltra);
-    const fireColors = ['#ffb05a', '#f04b35', '#b7202c'];
-    const frostColors = ['#eaffff', '#69cdef', '#2694c8'];
-    const electricColors = ['#edffff', '#70e8f6', '#347ad9'];
-    let baseColors = [...(options.colors || fireColors)];
-    if (fireDominant > .001) baseColors = baseColors.map((color, index) => mixFireHex(color, fireColors[index], fireDominant));
-    if (frostDominant > .001) baseColors = baseColors.map((color, index) => mixFireHex(color, frostColors[index], frostDominant));
-    if (electricCharged > .001) baseColors = baseColors.map((color, index) => mixFireHex(color, electricColors[index], electricCharged));
+    let dominantTint = '';
+    if (fireDominant > .001) dominantTint = `rgba(255,44,24,${(.72 * fireDominant).toFixed(3)})`;
+    else if (frostDominant > .001) dominantTint = `rgba(73,183,238,${(.58 * frostDominant).toFixed(3)})`;
+    else if (electricCharged > .001) dominantTint = `rgba(255,209,12,${(.7 * electricCharged).toFixed(3)})`;
     const alpha = Number.isFinite(options.alpha) ? options.alpha : 1;
     const eyesVisible = !options.blink && !['hurt', 'impact', 'power', 'petting', 'pleased', 'chewing', 'anticipating', 'savoring'].includes(options.emotion);
     const x = options.x;
@@ -9046,76 +8058,55 @@
     const originalAfterLayer = options.afterLayer;
     const originalBodyPaint = options.bodyPaint;
 
-    drawElectricAura(target, x, y, radius, electricCharged * (1 - ultra) * alpha, false);
+    drawElectricAura(target, x, y, radius, electricCharged * (1 - hybrid) * alpha, false);
 
-    if (ultra < .999) {
+    if (hybrid < .999) {
       drawSlimeAvatar(target, {
         ...options,
-        colors: baseColors,
-        alpha: alpha * (1 - ultra),
-        bodyPaint: frostAmount > .001
-          ? (layerTarget, state) => paintFrostBody(layerTarget, state, frostAmount)
-          : originalBodyPaint,
+        colors: options.colors,
+        alpha: alpha * (1 - hybrid),
+        bodyTint: dominantTint,
+        bodyPaint: originalBodyPaint,
         afterLayer: (layerTarget, state) => {
           if (typeof originalAfterLayer === 'function') originalAfterLayer(layerTarget, state);
-          drawFrostRim(layerTarget, state.radius, frostAmount);
+          drawFrostRim(layerTarget, state.radius, frostDominant);
           drawColdFace(layerTarget, state.radius, frostAmount, timestamp);
           drawSnowCap(layerTarget, state.radius, frostDominant, timestamp);
           drawLightningMark(layerTarget, state.radius, electricMarked);
           drawFireTip(layerTarget, 0, 0, state.radius, Math.min(fireLevel, 2), timestamp);
-          if (eyesVisible) drawFireEyes(layerTarget, 0, 0, state.radius, Math.min(fireLevel, 2), timestamp);
+          if (eyesVisible) drawFireEyes(layerTarget, 0, 0, state.radius, Math.min(fireLevel, 2), timestamp, 1, state.cuteV2);
         }
       });
-      drawSnowfall(target, x, y, radius, frostDominant * (1 - ultra) * alpha, timestamp);
-      drawElectricSparks(target, x, y, radius, electricCharged * (1 - ultra) * alpha, timestamp, false);
+      drawSnowfall(target, x, y, radius, frostDominant * (1 - hybrid) * alpha, timestamp);
+      drawElectricSparks(target, x, y, radius, electricCharged * (1 - hybrid) * alpha, timestamp, false);
     }
 
-    if (fireUltra > .001) {
-      const originalBackLayer = options.backLayer;
-      const originalFrontLayer = options.frontLayer;
-      const activeFire = Number(levels?.fireActive) || 0;
-      const fireFlash = Number(levels?.fireFlash) || 0;
-      const fireIntensity = 1 + activeFire * (1.16 + Math.sin(timestamp / 88) * .15) + fireFlash * .88;
-      drawSlimeAvatar(target, {
-        ...options,
-        colors: fireColors,
-        alpha: alpha * fireUltra,
-        backLayer: (layerTarget, state) => {
-          if (typeof originalBackLayer === 'function') originalBackLayer(layerTarget, state);
-          drawFireContour(layerTarget, state, false, fireIntensity);
-        },
-        frontLayer: (layerTarget, state) => {
-          if (typeof originalFrontLayer === 'function') originalFrontLayer(layerTarget, state);
-          drawFireContour(layerTarget, state, true, fireIntensity);
-        },
-        afterLayer: (layerTarget, state) => {
-          if (typeof originalAfterLayer === 'function') originalAfterLayer(layerTarget, state);
-          if (eyesVisible) drawFireEyes(layerTarget, 0, 0, state.radius, 1, timestamp);
-        },
-        bodyHighlight: true
-      });
-    }
-    if (frostUltra > .001) drawSnowmanAvatar(target, options, frostUltra, timestamp);
-    if (electricUltra > .001) {
+    if (hybrid > .001) {
       const activePulse = electricActive * (.9 + Math.sin(timestamp / 76) * .1);
       const energyRadius = radius * (.82 + activePulse * .42 + electricFlash * .2);
-      if (electricActive > .01 || electricFlash > .01) {
+      if (hybridForm === 'electric' && (electricActive > .01 || electricFlash > .01)) {
         const activeGlow = target.createRadialGradient(x, y, radius * .18, x, y, energyRadius * 1.48);
-        activeGlow.addColorStop(0, `rgba(235,255,255,${(.24 + electricFlash * .44) * electricUltra * alpha})`);
-        activeGlow.addColorStop(.36, `rgba(55,220,255,${(.22 + activePulse * .16) * electricUltra * alpha})`);
+        activeGlow.addColorStop(0, `rgba(235,255,255,${(.24 + electricFlash * .44) * hybrid * alpha})`);
+        activeGlow.addColorStop(.36, `rgba(55,220,255,${(.22 + activePulse * .16) * hybrid * alpha})`);
         activeGlow.addColorStop(1, 'rgba(25,109,255,0)');
         target.save(); target.globalCompositeOperation = 'screen'; target.fillStyle = activeGlow;
         target.beginPath(); target.arc(x, y, energyRadius * 1.48, 0, Math.PI * 2); target.fill(); target.restore();
+        drawElectricAura(target, x, y, energyRadius, hybrid * alpha * activePulse, true);
       }
-      drawElectricAura(target, x, y, energyRadius, electricUltra * alpha * (.58 + activePulse * .58), true);
+      drawUltraFormAccents(target, x, y, radius, hybridForm, hybrid * (.48 + finalBoost * .52) * alpha, timestamp);
       drawSlimeAvatar(target, {
-        ...options, colors: electricColors, alpha: alpha * electricUltra,
-        outlineColor: 'rgba(0,0,0,0)', faceColor: '#214b78', bodyHighlight: false,
-        scaleX: (options.scaleX || 1) * (1.025 + activePulse * .055),
-        scaleY: (options.scaleY || 1) * (1.025 + activePulse * .055),
-        faceScaleX: .957, faceScaleY: .957, bodyPaint: paintEnergySphere
+        ...options,
+        colors: options.colors,
+        alpha: alpha * hybrid,
+        bodyPaint: null,
+        bodyTint: '',
+        bodyHighlight: false,
+        bodyVariant: hybridForm,
+        irisTint: ULTRA_FORM_IRIS_TINT[hybridForm] || ''
       });
-      drawEnergyTendrils(target, x, y, energyRadius, electricUltra * alpha * (.58 + activePulse * .7), timestamp);
+      if (hybridForm === 'electric' && electricActive > .01) {
+        drawEnergyTendrils(target, x, y, energyRadius, hybrid * alpha * activePulse, timestamp);
+      }
     }
   }
 
@@ -9127,300 +8118,29 @@
     menuSlimeCtx.imageSmoothingEnabled = true;
   }
 
-  function drawMenuMealOrb(ctx, x, y, radius, inner, edge, alpha = 1) {
-    const glow = ctx.createRadialGradient(x - radius * .26, y - radius * .3, 0, x, y, radius);
-    glow.addColorStop(0, 'rgba(255,255,255,.95)');
-    glow.addColorStop(.26, inner);
-    glow.addColorStop(1, edge);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawMenuMealSparkle(ctx, x, y, radius, color, alpha = 1) {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x, y - radius);
-    ctx.quadraticCurveTo(x + radius * .18, y - radius * .18, x + radius, y);
-    ctx.quadraticCurveTo(x + radius * .18, y + radius * .18, x, y + radius);
-    ctx.quadraticCurveTo(x - radius * .18, y + radius * .18, x - radius, y);
-    ctx.quadraticCurveTo(x - radius * .18, y - radius * .18, x, y - radius);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawMenuMealStar(ctx, x, y, outer, inner, color, alpha = 1) {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    for (let index = 0; index < 10; index += 1) {
-      const angle = -Math.PI / 2 + index * Math.PI / 5;
-      const radius = index % 2 ? inner : outer;
-      const px = x + Math.cos(angle) * radius;
-      const py = y + Math.sin(angle) * radius;
-      if (!index) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawMenuSecretEyeShape(ctx, { x, y, width, openness, alpha, look = 0, rotation = 0, bright = false }) {
-    if (openness < .025 || alpha <= 0) return;
-    const halfWidth = width / 2;
-    const openHeight = Math.max(1.1, width * .19 * openness);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(x, y);
-    ctx.rotate(rotation);
-    ctx.shadowColor = bright ? '#ff3158' : 'rgba(255,49,88,.72)';
-    ctx.shadowBlur = bright ? 15 : 7;
-    ctx.fillStyle = bright ? '#92143c' : '#77102f';
-    ctx.strokeStyle = bright ? '#ff7890' : '#df4367';
-    ctx.lineWidth = Math.max(1.4, width * .045);
-    ctx.beginPath();
-    ctx.moveTo(-halfWidth, 0);
-    ctx.quadraticCurveTo(0, -openHeight * 1.34, halfWidth, 0);
-    ctx.quadraticCurveTo(0, openHeight * 1.34, -halfWidth, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#fff5ee';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, halfWidth * .69, openHeight, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#570822';
-    ctx.lineWidth = Math.max(1, width * .025);
-    ctx.stroke();
-    const irisRadius = Math.max(1.4, width * .115 * openness);
-    ctx.fillStyle = bright ? '#f1325e' : '#ce244f';
-    ctx.beginPath();
-    ctx.ellipse(look, 0, irisRadius, Math.max(.8, openHeight * .78), 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#1a020c';
-    ctx.beginPath();
-    ctx.ellipse(look, 0, Math.max(.8, irisRadius * .34), Math.max(.7, openHeight * .58), 0, 0, Math.PI * 2);
-    ctx.fill();
-    if (bright && openness > .72) {
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(look - irisRadius * .27, -openHeight * .32, Math.max(.8, width * .018), 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  function drawMenuMysticEye(ctx, age, intensity, small = false) {
-    if (small) {
-      const eyes = [
-        { x: 24, y: 68, width: 25, start: 110, duration: 590, rotation: -.16 },
-        { x: 35, y: 118, width: 18, start: 390, duration: 510, rotation: .1 },
-        { x: 156, y: 64, width: 23, start: 250, duration: 620, rotation: .14 },
-        { x: 148, y: 116, width: 17, start: 610, duration: 540, rotation: -.11 },
-        { x: 45, y: 39, width: 15, start: 830, duration: 470, rotation: .08 },
-        { x: 137, y: 40, width: 19, start: 980, duration: 520, rotation: -.08 }
-      ];
-      for (const eye of eyes) {
-        const progress = clamp((age - eye.start) / eye.duration, 0, 1);
-        const openness = Math.sin(progress * Math.PI);
-        drawMenuSecretEyeShape(ctx, {
-          ...eye,
-          openness,
-          alpha: intensity * Math.sin(progress * Math.PI) * .82,
-          look: Math.sin(age / 165 + eye.start) * eye.width * .055
-        });
-      }
-      return;
-    }
-    const start = 1210;
-    const open = clamp((age - start) / 320, 0, 1);
-    const close = clamp((age - 2110) / 310, 0, 1);
-    const openness = Math.sin(open * Math.PI / 2) * (1 - close);
-    drawMenuSecretEyeShape(ctx, {
-      x: 90,
-      y: 31 + Math.sin(age / 240) * 1.1,
-      width: 88,
-      openness,
-      alpha: intensity * (1 - close * .5),
-      look: Math.sin(age / 220) * 4.2,
-      bright: true
-    });
-    const impulse = clamp((age - 2410) / 250, 0, 1);
-    if (impulse > 0 && impulse < 1) {
-      ctx.save();
-      ctx.globalAlpha = intensity * (1 - impulse) * .9;
-      ctx.strokeStyle = '#ff6b8d';
-      ctx.lineWidth = 3 - impulse * 1.5;
-      ctx.shadowColor = '#ff315f';
-      ctx.shadowBlur = 10 * (1 - impulse);
-      ctx.beginPath();
-      ctx.arc(90, 31, 24 + impulse * 38, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-
-  // Редкость определяет один читаемый визуальный ответ, а жевание остаётся прежним.
-  function drawMenuMealEffect(ctx, rarity, timestamp, layer) {
-    const age = Math.max(0, timestamp - menuMealFxStartedAt);
-    const chewing = els.slime.classList.contains('chewing');
-    const pleased = els.slime.classList.contains('pleased');
-    const intensity = pleased ? .96 : chewing ? .8 : .58;
-    const pulse = .82 + Math.sin(age / 115) * .18;
-    const x = 90;
-    const y = 91;
-
-    if (rarity === 'epic') {
-      if (layer === 'back') {
-        const glow = ctx.createRadialGradient(x, y, 14, x, y, 90);
-        glow.addColorStop(0, 'rgba(224,171,255,.18)');
-        glow.addColorStop(.5, 'rgba(169,78,239,.36)');
-        glow.addColorStop(1, 'rgba(125,43,207,0)');
-        ctx.save();
-        ctx.globalAlpha = intensity * pulse;
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(x, y, 90, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-      if (layer === 'front') {
-        for (let index = 0; index < 6; index += 1) {
-          const progress = (age / 900 + index * .17) % 1;
-          const side = index % 2 ? 1 : -1;
-          const sparkleX = x + side * (28 + progress * 35);
-          const sparkleY = y + 47 - progress * 104;
-          drawMenuMealSparkle(ctx, sparkleX, sparkleY, 4.2 + (1 - progress) * 5.2, index % 2 ? '#f5d5ff' : '#bd7cff', intensity * Math.sin(progress * Math.PI));
-        }
-      }
-      return;
-    }
-
-    if (rarity === 'special') {
-      if (layer === 'back') {
-        const rainbow = [
-          ['rgba(255,116,170,.82)', 'rgba(255,87,151,0)'],
-          ['rgba(255,203,91,.86)', 'rgba(255,168,46,0)'],
-          ['rgba(120,237,162,.8)', 'rgba(67,210,127,0)'],
-          ['rgba(97,210,255,.82)', 'rgba(63,163,255,0)'],
-          ['rgba(185,128,255,.8)', 'rgba(141,91,235,0)']
-        ];
-        rainbow.forEach(([inner, edge], index) => {
-          const angle = age / 800 + index * Math.PI * 2 / rainbow.length;
-          drawMenuMealOrb(ctx, x + Math.cos(angle) * 45, y + Math.sin(angle) * 32, 13, inner, edge, intensity * .42);
-        });
-        drawMenuMealStar(ctx, x, y + 5, 76 + pulse * 5, 35, '#ffcd4d', intensity * .3);
-        drawMenuMealStar(ctx, x, y + 5, 50 + pulse * 3, 23, '#fff0a3', intensity * .42);
-      }
-      return;
-    }
-
-    if (rarity === 'secret') {
-      if (layer === 'back') {
-        const shadow = ctx.createRadialGradient(x, y + 3, 12, x, y + 3, 94);
-        shadow.addColorStop(0, 'rgba(255,84,116,.18)');
-        shadow.addColorStop(.46, 'rgba(104,7,43,.4)');
-        shadow.addColorStop(1, 'rgba(24,1,14,0)');
-        ctx.save();
-        ctx.globalAlpha = intensity * pulse;
-        ctx.fillStyle = shadow;
-        ctx.beginPath();
-        ctx.arc(x, y + 3, 94, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-      }
-      if (layer === 'front') {
-        drawMenuMysticEye(ctx, age, intensity, true);
-        drawMenuMysticEye(ctx, age, intensity, false);
-      }
-    }
-  }
-
   function drawMenuSlime(timestamp) {
     menuSlimeCtx.clearRect(0, 0, 180, 180);
     const categoryVisual = updateMenuCategoryVisuals(timestamp);
     const emotion = menuSlimeEmotion();
-    const rarity = MEAL_REACTION_CLASSES.find(name => els.slime.classList.contains(name))?.replace('meal-', '') || '';
-    const isEating = ['eat', 'chewing', 'savoring', 'pleased'].some(name => els.slime.classList.contains(name));
-    const hasMealFx = isEating && ['epic', 'special', 'secret'].includes(rarity);
+    const emotionTime = emotion === 'chewing' && menuChewStartedAt
+      ? Math.max(0, timestamp - menuChewStartedAt)
+      : 0;
     const blinkPhase = timestamp % 4700;
     const selected = skinById(save.selectedSkin);
-    const radius = 66 * (1 + categoryVisual.mass * .1 + categoryVisual.gigantism * .035);
-    const restingBottom = 91 + 66 * .93;
-    const slimeY = restingBottom - radius * .93;
-    if (hasMealFx) drawMenuMealEffect(menuSlimeCtx, rarity, timestamp, 'back');
+    const baseRadius = 70;
+    const radius = baseRadius * (1 + categoryVisual.mass * .1 + categoryVisual.gigantism * .035);
+    const restingBottom = 157;
+    const slimeY = restingBottom - radius * .98;
     drawElementalSlimeAvatar(menuSlimeCtx, {
       x: 90, y: slimeY, radius, emotion,
       skin: selected.id,
       colors: selected.colors,
       gazeX: menuGaze.x, gazeY: menuGaze.y,
+      emotionTime,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
       timestamp
     }, categoryVisual, timestamp);
-    if (hasMealFx) drawMenuMealEffect(menuSlimeCtx, rarity, timestamp, 'front');
-  }
-
-  function drawMiniSlimes(timestamp) {
-    if (!run?.miniSlimes?.length && timestamp >= (run?.timeSlowUntil || 0)) return;
-    const selected = skinById(save.selectedSkin);
-    if (timestamp < (run.timeSlowUntil || 0)) {
-      const remaining = clamp((run.timeSlowUntil - timestamp) / 760, 0, 1);
-      const pulse = .5 + Math.sin(timestamp / 75) * .5;
-      ctx.save();
-      ctx.globalAlpha = remaining * (.055 + pulse * .025);
-      ctx.fillStyle = '#a9efff';
-      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-      ctx.globalAlpha = remaining * .42;
-      ctx.strokeStyle = '#d7fbff';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(run.slime.x, run.slime.y - run.cameraY, run.slime.radius + 26 + (1 - remaining) * 34, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-    for (const mini of run.miniSlimes || []) {
-      const screenY = mini.y - run.cameraY;
-      if (screenY < -50 || screenY > VIEW_H + 50) continue;
-      const invulnerable = timestamp < mini.invulnerableUntil;
-      const arrival = clamp((timestamp - mini.spawnedAt) / 220, 0, 1);
-      const scale = (.72 + arrival * .28) * (1 + Math.sin(mini.wobble) * .04);
-      ctx.save();
-      ctx.globalAlpha = .18;
-      ctx.fillStyle = '#122117';
-      ctx.beginPath();
-      ctx.ellipse(mini.x, screenY + mini.radius * .78, mini.radius * .7, mini.radius * .22, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-      drawSlimeAvatar(ctx, {
-        x: mini.x, y: screenY, radius: mini.radius,
-        emotion: invulnerable ? 'joy' : 'focused',
-        skin: selected.id, colors: selected.colors,
-        scaleX: scale, scaleY: scale,
-        rotation: clamp(mini.vx / 1050, -.24, .24),
-        timestamp
-      });
-      if (invulnerable) {
-        const pulse = .55 + Math.sin(timestamp / 85 + mini.wobble) * .2;
-        ctx.save();
-        ctx.globalAlpha = pulse;
-        ctx.strokeStyle = '#e7fdff';
-        ctx.lineWidth = 1.8;
-        ctx.shadowColor = '#78dcff';
-        ctx.shadowBlur = 7;
-        ctx.beginPath(); ctx.arc(mini.x, screenY, mini.radius + 4, 0, Math.PI * 2); ctx.stroke();
-        ctx.restore();
-      }
-    }
   }
 
   function menuSlimeFrame(timestamp) {
@@ -9784,8 +8504,6 @@
       ctx.fillStyle = glow;
       ctx.beginPath(); ctx.arc(0, radius * .2, glowRadius, 0, Math.PI * 2); ctx.fill();
 
-      // При падении нижняя полусфера — передняя кромка. Плазма обтекает её,
-      // поднимается по бокам и собирается в след уже НАД слаймом.
       const flame = ctx.createLinearGradient(0, radius * .88, 0, -wakeLength);
       flame.addColorStop(0, `rgba(255,244,255,${.66 + strength * .3})`);
       flame.addColorStop(.22, `rgba(226,120,255,${.58 + strength * .34})`);
@@ -9827,7 +8545,6 @@
         ctx.stroke();
       }
     } else {
-      // Яркая ударная кромка расположена именно ПЕРЕД падающим шаром.
       ctx.globalAlpha = .42 + strength * .56;
       ctx.strokeStyle = active ? '#fff4ff' : '#dfadff';
       ctx.lineWidth = 3 + strength * 3.6;
@@ -9908,36 +8625,6 @@
           : speed > 245
             ? 'joy'
             : 'focused';
-
-    if (run.bouncePowerReady) {
-      const pulse = .72 + Math.sin(timestamp / 95) * .18;
-      ctx.save();
-      const aura = ctx.createRadialGradient(s.x, screenY, radius * .35, s.x, screenY, radius + 34);
-      aura.addColorStop(0, 'rgba(255,240,112,.16)');
-      aura.addColorStop(.56, `rgba(255,179,52,${.20 + pulse * .09})`);
-      aura.addColorStop(1, 'rgba(255,111,55,0)');
-      ctx.fillStyle = aura;
-      ctx.beginPath();
-      ctx.arc(s.x, screenY, radius + 34, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#ffd45a';
-      ctx.lineWidth = 2.6;
-      ctx.shadowColor = '#ff8d45';
-      ctx.shadowBlur = 10;
-      ctx.globalAlpha = .68 + pulse * .22;
-      ctx.beginPath();
-      ctx.arc(s.x, screenY, radius + 16 + pulse * 4, timestamp / 220, timestamp / 220 + Math.PI * 1.42);
-      ctx.stroke();
-      for (let spark = 0; spark < 5; spark += 1) {
-        const angle = timestamp / 320 + spark * Math.PI * 2 / 5;
-        const orbit = radius + 23 + Math.sin(timestamp / 120 + spark) * 4;
-        ctx.fillStyle = spark % 2 ? '#fff7b9' : '#ffb44c';
-        ctx.beginPath();
-        ctx.arc(s.x + Math.cos(angle) * orbit, screenY + Math.sin(angle) * orbit, 2.1, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
 
     if (run.barrier > 0) {
       ctx.save();
@@ -10067,15 +8754,6 @@
     if (!frozen) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, true);
     if (!frozen) drawWindMotionVisual(timestamp, s.x, screenY, fireRadius, speed, true);
     drawActiveElementalAbility(timestamp, s.x, screenY, fireRadius);
-    if (run.effects.edgePortals && !run.portalEntry) {
-      if (s.x - radius < 0) {
-        drawElementalSlimeAvatar(ctx, { ...avatarOptions, x: s.x + VIEW_W }, elementalVisuals, timestamp);
-      }
-      if (s.x + radius > VIEW_W) {
-        drawElementalSlimeAvatar(ctx, { ...avatarOptions, x: s.x - VIEW_W }, elementalVisuals, timestamp);
-      }
-    }
-
     if (!run.portalEntry && timestamp < (run.gravitySwitchFlashUntil || 0)) {
       const progress = clamp((run.gravitySwitchFlashUntil - timestamp) / 620, 0, 1);
       const direction = run.gravityDirection < 0 ? -1 : 1;
@@ -10097,20 +8775,6 @@
       ctx.lineTo(7, direction * 2);
       ctx.closePath();
       ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    if (!run.portalEntry && timestamp < (run.growthResetUntil || 0)) {
-      const progress = clamp((run.growthResetUntil - timestamp) / 560, 0, 1);
-      ctx.save();
-      ctx.globalAlpha = progress * .72;
-      ctx.strokeStyle = '#ff6577';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = '#ff435f';
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.arc(s.x, screenY, radius + (1 - progress) * 25, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
@@ -10199,8 +8863,6 @@
     els.shaft.style.removeProperty('--combo-y');
   }
 
-  // Обычные подсказки в шахте создавали визуальный шум. Комбо рендерится
-  // отдельной функцией ниже и остаётся единственным текстовым откликом.
   function impact() {}
 
   function comboImpact(multiplier, count) {
@@ -10237,7 +8899,6 @@
     els.shaft.style.setProperty('--combo-y', `${y / VIEW_H * 100}%`);
   }
 
-  // ===== РЕЗУЛЬТАТ ЗАБЕГА И МЕТА-ПРОГРЕССИЯ =====
   function continueEndlessWorld() {
     if (!run || run.ended) return;
     const completedLap = run.endlessLap;
@@ -10249,7 +8910,6 @@
     run.portalEntry = null;
     run.portalTransitioning = false;
     run.blocks = generateBlockField(run);
-    applySecretWorldModifiers(run);
     indexRunBlocks();
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
@@ -10263,7 +8923,6 @@
     run.particles = [];
     run.specialEffects = [];
     run.meteorShowers = [];
-    run.miniSlimes = [];
     run.hitCooldowns.clear();
     run.geyserCapture = null;
     run.slime.x = run.startX;
@@ -10271,6 +8930,8 @@
     run.slime.vx = rand(-65, 65);
     run.slime.vy = 55;
     run.slime.wobble = 0;
+    run.wallPushSide = 0;
+    run.wallReleaseX = 0;
     run.cameraY = 0;
     run.depth = run.endlessDepthOffset;
     run.maxDepth = run.endlessDepthOffset;
@@ -10524,6 +9185,7 @@
     clearRunImpactFeedback();
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
     run.ended = true;
+    yandexPlatform?.gameplay.stop();
     clearFallSteering();
     cancelAnimationFrame(run.animationId);
     save.totalRuns += 1;
@@ -10690,7 +9352,6 @@
     if (save.coins < cost) return showToast('Не хватает монет');
     save.coins -= cost;
     save[key] += 1;
-    if (key === 'conveyorLevel') generateOffer(session.baseEpicBoost);
     sound('coin');
     renderDraft();
     persist();
@@ -10704,10 +9365,89 @@
     if (type === 'shop' || type === 'skins') renderShopPanel(activeShopTab);
     if (type === 'rewards') renderRewardsPanel();
     if (type === 'recipes') renderRecipesPanel();
-    if (type === 'encyclopedia') renderEncyclopediaPanel(activeEncyclopediaTab, save.world);
+    if (type === 'encyclopedia') renderEncyclopediaPanel(save.world);
     els.panelOverlay.classList.remove('hidden');
     syncInteractionLayers();
     requestAnimationFrame(() => els.panelOverlay.querySelector('.modal')?.focus());
+  }
+
+  function laboratoryTabsMarkup() {
+    return `<div class="laboratory-tabs" role="tablist" aria-label="Разделы лаборатории">
+      <button class="laboratory-tab ${activeLaboratoryTab === 'mutations' ? 'active' : ''}" data-laboratory-tab="mutations" type="button" role="tab" aria-selected="${activeLaboratoryTab === 'mutations'}">
+        <span class="laboratory-tab-mutations" aria-hidden="true">
+          <img src="${versionedAsset(RECIPE_FAMILY_ICONS.ice)}" alt=""><img src="${versionedAsset(RECIPE_FAMILY_ICONS.fire)}" alt=""><img src="${versionedAsset(RECIPE_FAMILY_ICONS.electric)}" alt="">
+        </span><b>МУТАЦИИ</b>
+      </button>
+      <button class="laboratory-tab ${activeLaboratoryTab === 'conveyor' ? 'active' : ''}" data-laboratory-tab="conveyor" type="button" role="tab" aria-selected="${activeLaboratoryTab === 'conveyor'}">
+        <span class="laboratory-tab-conveyor" aria-hidden="true"><i></i><i></i><i></i></span><b>КОНВЕЙЕР</b>
+      </button>
+    </div>`;
+  }
+
+  function bindLaboratoryTabs() {
+    $$('[data-laboratory-tab]').forEach(button => button.addEventListener('click', () => {
+      const tab = button.dataset.laboratoryTab;
+      if (!['mutations', 'conveyor'].includes(tab) || tab === activeLaboratoryTab) return;
+      activeLaboratoryTab = tab;
+      sound('tap');
+      renderRecipesPanel();
+    }));
+  }
+
+  function renderLaboratoryConveyorPanel() {
+    const unlocked = new Set([...STARTER_MUTATIONS.map(item => item.id), ...(save.unlockedMutations || [])]);
+    const pool = save.activeMutationPool || ['frost', 'fire', 'electric'];
+    const pipes = pool.map((id, index) => {
+      const mutation = mutationById(id);
+      return `<button class="lab-feed-pipe mutation-${id} ${index === selectedConveyorSlot ? 'selected' : ''}" data-conveyor-slot="${index}" type="button" aria-label="${index + 1} дозатор: ${mutation?.name || 'пусто'}">
+        <span class="lab-pipe-neck" aria-hidden="true"></span>
+        <span class="lab-pipe-body"><span class="lab-pipe-emblem">${mutation ? `<img src="${versionedAsset(mutation.image)}" alt="">` : '<i>+</i>'}</span></span>
+        <span class="lab-pipe-mouth" aria-hidden="true"></span>
+      </button>`;
+    }).join('');
+    const slots = [...allMutations(), { id: 'future-1', future: true }, { id: 'future-2', future: true }].map(mutation => {
+      const available = !mutation.future && unlocked.has(mutation.id);
+      return `<button class="lab-pool-mutation mutation-${mutation.id} ${available ? 'available' : 'locked'} ${pool.includes(mutation.id) ? 'equipped' : ''}" ${available ? `data-pool-mutation="${mutation.id}"` : 'disabled'} type="button" aria-label="${available ? mutation.name : 'Неизвестная мутация'}">
+        ${available ? `<img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b>` : '<i>?</i>'}
+      </button>`;
+    }).join('');
+    els.panelContent.innerHTML = `<div class="laboratory-panel laboratory-conveyor-panel">
+      ${laboratoryTabsMarkup()}
+      <section class="food-synthesizer">
+        <header><small>СИСТЕМА ПОДАЧИ</small><h3>ПИЩЕВОЙ СИНТЕЗАТОР</h3><p>Выбери дозатор, затем вставь в него мутацию.</p></header>
+        <div class="lab-pipe-rack">${pipes}</div>
+        <div class="lab-synth-base" aria-hidden="true"><i></i><i></i><i></i></div>
+      </section>
+      <div class="lab-pool-head"><b>ДОСТУПНЫЕ МУТАЦИИ</b><span>3 АКТИВНЫЕ</span></div>
+      <div class="lab-mutation-pool">${slots}</div>
+    </div>`;
+    bindLaboratoryTabs();
+    $$('[data-conveyor-slot]').forEach(button => button.addEventListener('click', () => {
+      selectedConveyorSlot = clamp(Number(button.dataset.conveyorSlot), 0, 2);
+      renderLaboratoryConveyorPanel();
+    }));
+    $$('[data-pool-mutation]').forEach(button => button.addEventListener('click', () => setActiveConveyorMutation(button.dataset.poolMutation)));
+  }
+
+  function setActiveConveyorMutation(id) {
+    if (!mutationById(id)) return;
+    const pool = [...(save.activeMutationPool || ['frost', 'fire', 'electric'])];
+    const occupiedSlot = pool.indexOf(id);
+    if (occupiedSlot === selectedConveyorSlot) return;
+    if (occupiedSlot >= 0) [pool[selectedConveyorSlot], pool[occupiedSlot]] = [pool[occupiedSlot], pool[selectedConveyorSlot]];
+    else pool[selectedConveyorSlot] = id;
+    save.activeMutationPool = pool;
+    laboratoryReplaceMode = false;
+    persist();
+    sound('tap');
+    feedback(6);
+    if (session && !stomachIsFull() && !session.offerTransition) {
+      generateOffer({ resetRerolls: false });
+      renderDraft({ offerMotion: 'enter' });
+      void settleConveyorArrival(menuReducedMotion);
+    }
+    renderRecipesPanel();
+    requestAnimationFrame(() => $(`[data-lab-mutation="${id}"]`)?.classList.add('just-changed'));
   }
 
   function renderRecipesPanel() {
@@ -10715,8 +9455,157 @@
     mutationAnimationToken += 1;
     mutationAnimating = false;
     $('#mutationPrize')?.remove();
+    activeLaboratoryTab = 'mutations';
+
+    const unlocked = new Set(save.unlockedMutations || []);
+    const availableIds = new Set([...STARTER_MUTATIONS.map(item => item.id), ...unlocked]);
+    if (!availableIds.has(selectedLaboratoryMutationId)) selectedLaboratoryMutationId = STARTER_MUTATIONS[0].id;
+    const selectedMutation = mutationById(selectedLaboratoryMutationId) || STARTER_MUTATIONS[0];
+    const selectedDetails = MUTATION_DETAILS[selectedMutation.id] || { stage1: 'Открывает базовый эффект мутации.', stage2: 'Усиливает эффект после второй порции.' };
+    const activePool = save.activeMutationPool || ['frost', 'fire', 'electric'];
+    const selectedIsActive = activePool.includes(selectedMutation.id);
+    const allUnlocked = unlocked.size >= MUTATION_DISCOVERIES.length;
+    const mutationCost = MUTATION_STEPS;
+    const progress = allUnlocked ? mutationCost : Math.min(mutationCost, Math.max(0, save.mutationProgress));
+    const readyToReveal = progress >= mutationCost && !allUnlocked;
+    const remaining = Math.max(0, mutationCost - progress);
+    const fillPercent = allUnlocked ? 100 : Math.min(100, progress / mutationCost * 100);
+    const liquidFillPercent = allUnlocked ? 0 : fillPercent;
     const researchBalance = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
-    els.panelTitle.innerHTML = `<span>Мутации</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+    const collectionCapacity = 9;
+    const visibleUnlockedCount = STARTER_MUTATIONS.length + unlocked.size;
+    const futureMutations = Array.from({ length: Math.max(0, collectionCapacity - allMutations().length) }, (_, index) => ({ id: `future-${index + 1}`, future: true }));
+
+    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+
+    const collection = [...allMutations(), ...futureMutations].map(mutation => {
+      if (mutation.future) return `<button class="mutation-collection-slot future locked" type="button" disabled aria-label="Неизвестная будущая мутация"><i>?</i><b>???</b></button>`;
+      const available = availableIds.has(mutation.id);
+      const equipped = activePool.includes(mutation.id);
+      const replaceTarget = laboratoryReplaceMode && equipped && mutation.id !== selectedMutation.id;
+      return `<button class="mutation-collection-slot ${available ? 'unlocked' : 'locked'} ${selectedMutation.id === mutation.id ? 'selected' : ''} ${equipped ? 'equipped' : ''} ${replaceTarget ? 'replace-target' : ''}${mutation.name.length > 9 ? ' long-name' : ''}" type="button" ${available ? `data-lab-mutation="${mutation.id}"` : 'disabled'} aria-label="${available ? mutation.name : 'Неизвестная мутация'}">
+        ${available ? `<img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b>${equipped ? '<em>АКТИВНА</em>' : ''}` : '<i>?</i><b>???</b>'}
+      </button>`;
+    }).join('');
+
+    const reactorArcPaths = [
+      '1,16 18,16 31,5 46,23 63,9 78,18 99,11',
+      '1,13 15,13 28,23 43,7 58,17 73,4 99,15',
+      '1,18 17,18 29,8 43,21 57,11 72,24 99,12',
+      '1,11 16,11 30,20 46,6 60,22 78,10 99,17'
+    ];
+    const reactorEnergyArcs = Array.from({ length: 10 }, (_, index) => {
+      const points = reactorArcPaths[index % reactorArcPaths.length];
+      const glowId = `reactor-v2-glow-${index}`;
+      const coreId = `reactor-v2-core-${index}`;
+      return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#38e77e" stop-opacity="0"></stop><stop offset=".28" stop-color="#21ee72" stop-opacity=".62"></stop><stop offset=".62" stop-color="#13dd63"></stop><stop offset="1" stop-color="#66ff8d"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efffd3" stop-opacity="0"></stop><stop offset=".34" stop-color="#efffd3" stop-opacity=".72"></stop><stop offset="1" stop-color="#f8ffe7"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
+    }).join('');
+
+    const stageOneIcons = `<img src="${versionedAsset(selectedMutation.image)}" alt="">`;
+    const stageTwoIcons = `${stageOneIcons}${stageOneIcons}`;
+    const machineHint = allUnlocked
+      ? 'ВСЕ МУТАЦИИ ОТКРЫТЫ'
+      : readyToReveal
+        ? 'РЕАКТОР ГОТОВ · НАЖМИ СИНТЕЗ'
+        : adminInfiniteResearch || save.researchUnits > 0
+          ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ, ЧТОБЫ ДОБАВИТЬ КОЛБЫ'
+          : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+
+    els.panelContent.innerHTML = `<div class="laboratory-panel mutation-lab-v2">
+      <div class="mutation-main-grid">
+        <section class="mutation-synth-pane" aria-label="Синтезатор мутаций">
+          <header class="mutation-pane-title"><h3>СИНТЕЗАТОР</h3></header>
+          <button id="mutationCapsuleBtn" class="mutation-capsule mutation-capsule-v2 ${allUnlocked ? 'is-complete' : ''} ${readyToReveal ? 'is-ready-to-synthesize' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все мутации открыты' : readyToReveal ? 'Реактор заполнен' : `Добавить одну колбу. Осталось ${remaining}`}">
+            <span class="mutation-machine-visual" aria-hidden="true">
+              <img class="mutation-machine-art" src="${versionedAsset('assets/ui/lab-synth-machine-v1.png')}" alt="">
+              <span class="mutation-glass">
+                <span id="mutationLiquid" class="mutation-liquid-chamber" style="--liquid-fill:${liquidFillPercent}%"><span class="mutation-liquid-sprite"></span><span class="mutation-liquid-bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+                <span class="mutation-reactor-energy">${reactorEnergyArcs}</span>
+                <span id="mutationImpact" class="mutation-impact"></span>
+              </span>
+              <span id="mutationInlet" class="mutation-inlet-target"></span>
+              <span class="mutation-dispenser">
+                <span class="mutation-dispenser-mouth"><span class="mutation-dispenser-flap"></span><span id="mutationMystery" class="mutation-mystery"><i>?</i></span></span>
+                <span class="mutation-dispenser-tray"></span>
+              </span>
+            </span>
+            <span id="mutationCapsuleHint" class="mutation-capsule-hint">${machineHint}</span>
+          </button>
+          <div class="mutation-synth-progress" role="progressbar" aria-label="Прогресс синтеза" aria-valuemin="0" aria-valuemax="${mutationCost}" aria-valuenow="${progress}">
+            <span class="mutation-synth-progress-fill" style="width:${fillPercent}%"></span>
+          </div>
+          <div class="mutation-synth-controls">
+            <span class="mutation-synth-balance"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><span><small>ОСТАЛОСЬ</small><b id="mutationRemaining">${allUnlocked ? 0 : remaining}</b></span></span>
+            <button id="mutationSynthesizeBtn" class="mutation-synthesize-btn ${readyToReveal ? 'ready' : ''}" type="button" ${readyToReveal ? '' : 'disabled'}><span>СИНТЕЗ</span></button>
+          </div>
+        </section>
+
+        <section class="mutation-info-pane mutation-family-${selectedMutation.id}" aria-label="Информация о мутации ${selectedMutation.name}">
+          <span class="mutation-info-emblem">${mutationElementFxMarkup(selectedMutation.id, 'mutation-info-fx')}<img src="${versionedAsset(selectedMutation.image)}" alt=""></span>
+          <h3>${selectedMutation.name}</h3>
+          <div class="mutation-stage-list">
+            <article><span class="mutation-stage-number">1</span><span class="mutation-stage-icons">${stageOneIcons}</span><p>${selectedDetails.stage1}</p></article>
+            <article><span class="mutation-stage-number">2</span><span class="mutation-stage-icons">${stageTwoIcons}</span><p>${selectedDetails.stage2}</p></article>
+          </div>
+          <button id="mutationChooseBtn" class="mutation-choose-btn" type="button" ${selectedIsActive ? 'disabled' : ''}>${selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</button>
+          <p id="mutationReplaceHint" class="mutation-replace-hint ${laboratoryReplaceMode ? 'visible' : ''}">${laboratoryReplaceMode ? 'Нажми на мигающую активную мутацию снизу, чтобы заменить её.' : 'Выбранные мутации появляются в воронках конвейера.'}</p>
+        </section>
+      </div>
+      <div class="mutation-collection-head"><b>МУТАЦИИ</b><span>${visibleUnlockedCount}/${collectionCapacity}</span></div>
+      <div id="mutationCollection" class="mutation-collection mutation-collection-v2">${collection}</div>
+    </div>`;
+
+    const capsuleButton = $('#mutationCapsuleBtn');
+    capsuleButton?.addEventListener('click', handleMutationCapsuleClick);
+    capsuleButton?.addEventListener('pointerdown', startMutationFeedHold);
+    capsuleButton?.addEventListener('pointerup', stopMutationFeedHold);
+    capsuleButton?.addEventListener('pointercancel', stopMutationFeedHold);
+    capsuleButton?.addEventListener('lostpointercapture', stopMutationFeedHold);
+    $('#mutationSynthesizeBtn')?.addEventListener('click', () => startMutationSynthesis(capsuleButton));
+    $('#mutationChooseBtn')?.addEventListener('click', () => {
+      laboratoryReplaceMode = !laboratoryReplaceMode;
+      sound('tap');
+      renderRecipesPanel();
+    });
+    $$('[data-lab-mutation]').forEach(button => button.addEventListener('click', () => {
+      const id = button.dataset.labMutation;
+      if (laboratoryReplaceMode) {
+        const slot = activePool.indexOf(id);
+        if (slot >= 0 && id !== selectedLaboratoryMutationId) {
+          selectedConveyorSlot = slot;
+          setActiveConveyorMutation(selectedLaboratoryMutationId);
+        } else {
+          showToast('Выбери одну из мигающих активных мутаций');
+          feedback(4);
+        }
+        return;
+      }
+      selectedLaboratoryMutationId = id;
+      sound('tap');
+      renderRecipesPanel();
+    }));
+  }
+
+  function startMutationSynthesis(button) {
+    if (!button || mutationAnimating || save.mutationProgress < currentMutationCost()) return;
+    const synthButton = $('#mutationSynthesizeBtn');
+    mutationAnimating = true;
+    button.disabled = true;
+    if (synthButton) synthButton.disabled = true;
+    revealRandomMutation(mutationAnimationToken, button);
+  }
+
+  function renderRecipesPanelLegacy() {
+    stopMutationFeedHold();
+    mutationAnimationToken += 1;
+    mutationAnimating = false;
+    $('#mutationPrize')?.remove();
+    const researchBalance = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
+    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+    if (activeLaboratoryTab === 'conveyor') {
+      renderLaboratoryConveyorPanel();
+      return;
+    }
     const unlocked = new Set(save.unlockedMutations || []);
     const allUnlocked = unlocked.size >= MUTATION_DISCOVERIES.length;
     const mutationCost = MUTATION_STEPS * (unlocked.size + 1);
@@ -10746,7 +9635,7 @@
       const coreId = `reactor-bolt-core-${index}`;
       return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#38e77e" stop-opacity="0"></stop><stop offset=".28" stop-color="#21ee72" stop-opacity=".62"></stop><stop offset=".62" stop-color="#13dd63"></stop><stop offset="1" stop-color="#66ff8d"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efffd3" stop-opacity="0"></stop><stop offset=".34" stop-color="#efffd3" stop-opacity=".72"></stop><stop offset="1" stop-color="#f8ffe7"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
     }).join('');
-    els.panelContent.innerHTML = `<div class="panel-section mutation-lab-panel">
+    els.panelContent.innerHTML = `<div class="laboratory-panel">${laboratoryTabsMarkup()}<div class="panel-section mutation-lab-panel">
       <button id="mutationCapsuleBtn" class="mutation-capsule ${allUnlocked ? 'is-complete' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все тестовые мутации открыты' : readyToReveal ? 'Открывается новая мутация' : `Добавить одну колбу. Осталось ${remaining}`}">
         <span class="mutation-side-feed" aria-hidden="true">
           <span id="mutationInlet" class="mutation-inlet"><i></i></span>
@@ -10771,7 +9660,8 @@
       </button>
       <div class="mutation-collection-head"><b>МУТАЦИИ</b><span>${visibleUnlockedCount}/${collectionCapacity}</span></div>
       <div id="mutationCollection" class="mutation-collection">${collection}</div>
-    </div>`;
+    </div></div>`;
+    bindLaboratoryTabs();
     const capsuleButton = $('#mutationCapsuleBtn');
     capsuleButton?.addEventListener('click', handleMutationCapsuleClick);
     capsuleButton?.addEventListener('pointerdown', startMutationFeedHold);
@@ -10790,7 +9680,7 @@
   }
 
   function currentMutationCost() {
-    return MUTATION_STEPS * ((save.unlockedMutations || []).length + 1);
+    return MUTATION_STEPS;
   }
 
   function handleMutationCapsuleClick(event) {
@@ -10804,8 +9694,6 @@
       revealSynthesizedMutation(mutationAnimationToken, button);
       return;
     }
-    // Мышь и касание обрабатываются на pointerdown, чтобы удержание не давало
-    // лишнюю колбу после отпускания. Click остаётся для клавиатуры.
     if (!event?.detail) investMutationResearch();
   }
 
@@ -10819,13 +9707,12 @@
     button?.classList.remove('is-auto-feeding');
     if (wasFeeding && button && !button.disabled && !mutationAnimating) {
       const hint = $('#mutationCapsuleHint');
-      if (hint) hint.textContent = adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ · ДОБАВИТЬ КОЛБЫ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+      if (hint) hint.textContent = adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ, ЧТОБЫ ДОБАВИТЬ КОЛБЫ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
     }
   }
 
   function mutationHoldFlightDuration() {
     const heldFor = Math.max(0, performance.now() - mutationFeedHoldStartedAt);
-    // Разгон длится около трёх секунд; безопасный предел — одна колба за 260 мс.
     return Math.max(170, 500 - heldFor * .165);
   }
 
@@ -10834,7 +9721,6 @@
       stopMutationFeedHold();
       return;
     }
-    // Следующий запуск идёт после прибытия предыдущей колбы: очередь не обгоняет жидкость.
     const nextDelay = Math.max(165, Number(previousFlightDuration) || mutationHoldFlightDuration());
     mutationFeedHoldTimer = window.setTimeout(() => {
       if (!mutationFeedHoldActive || button !== $('#mutationCapsuleBtn')) return;
@@ -10915,12 +9801,16 @@
     button.setAttribute('aria-label', `Добавить одну колбу. Осталось ${Math.max(0, remaining)}`);
     const remainingLabel = $('#mutationRemaining');
     if (remainingLabel) remainingLabel.textContent = remaining > 0 ? String(remaining) : '✓';
+    const progressBar = $('.mutation-synth-progress');
+    progressBar?.setAttribute('aria-valuenow', String(Math.min(mutationCost, save.mutationProgress)));
+    const progressFill = $('.mutation-synth-progress-fill');
+    if (progressFill) progressFill.style.width = `${nextFillPercent}%`;
     window.setTimeout(() => {
       flyingFlask.remove();
       if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
       const liquid = $('#mutationLiquid');
       if (liquid) {
-        liquid.style.height = `${nextFillPercent}%`;
+        liquid.style.setProperty('--liquid-fill', `${nextFillPercent}%`);
         liquid.classList.remove('is-splashing');
         void liquid.offsetWidth;
         liquid.classList.add('is-splashing');
@@ -10936,14 +9826,22 @@
       feedback(4);
     }, flightDuration);
     if (save.mutationProgress >= mutationCost) {
-      mutationAnimating = true;
       button.disabled = true;
       stopMutationFeedHold();
-      window.setTimeout(() => revealRandomMutation(token, button), menuReducedMotion ? 100 : flightDuration);
+      button.classList.add('is-ready-to-synthesize');
+      const synthButton = $('#mutationSynthesizeBtn');
+      if (synthButton) {
+        synthButton.disabled = false;
+        synthButton.classList.add('ready');
+      }
+      const hint = $('#mutationCapsuleHint');
+      if (hint) hint.textContent = 'РЕАКТОР ГОТОВ · НАЖМИ СИНТЕЗ';
+      sound('happy');
+      feedback([5, 9, 5]);
       return true;
     }
     const hint = $('#mutationCapsuleHint');
-    if (hint) hint.textContent = mutationFeedHoldActive ? 'УДЕРЖИВАЙ · УСКОРЕННАЯ ПОДАЧА' : adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ · ДОБАВИТЬ КОЛБУ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+    if (hint) hint.textContent = mutationFeedHoldActive ? 'УДЕРЖИВАЙ, ЧТОБЫ БЫСТРЕЕ ДОБАВЛЯТЬ КОЛБЫ' : adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ, ЧТОБЫ ДОБАВИТЬ КОЛБЫ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
     return true;
   }
 
@@ -10959,6 +9857,10 @@
       return;
     }
     pendingMutationReveal = mutation;
+    const synthColors = MUTATION_SYNTH_COLORS[mutation.id] || MUTATION_SYNTH_COLORS.gigantism;
+    button.style.removeProperty('--mutation-liquid-filter');
+    button.style.setProperty('--mutation-result-glow', synthColors.glow);
+    button.classList.add('has-result-color');
     const mutationImageSrc = versionedAsset(mutation.image);
     const mutationImagePreload = new Image();
     mutationImagePreload.src = mutationImageSrc;
@@ -10968,17 +9870,11 @@
     const mystery = $('#mutationMystery');
     const hint = $('#mutationCapsuleHint');
     button.disabled = true;
-    button.classList.add('is-pressurizing');
-    if (hint) hint.textContent = 'РЕАКТОР ЗАПОЛНЕН…';
+    button.classList.add('is-processing');
+    if (hint) hint.textContent = 'СИНТЕЗ · ЦВЕТА СМЕШИВАЮТСЯ…';
     sound('epic');
     feedback([8, 14, 8]);
-    await mutationDelay(menuReducedMotion ? 100 : 520);
-    if (token !== mutationAnimationToken || !mystery || els.panelOverlay.classList.contains('hidden')) return;
-    button.classList.remove('is-pressurizing');
-    button.classList.add('is-processing');
-    if (hint) hint.textContent = 'ИДЁТ СИНТЕЗ · ДАВЛЕНИЕ РАСТЁТ…';
-    feedback([5, 8, 5]);
-    await mutationDelay(menuReducedMotion ? 100 : 2300);
+    await mutationDelay(menuReducedMotion ? 100 : 3000);
     if (token !== mutationAnimationToken || !mystery || els.panelOverlay.classList.contains('hidden')) return;
     button.classList.remove('is-processing');
     button.classList.add('is-synthesis-ready');
@@ -10987,12 +9883,15 @@
     feedback([7, 12, 7]);
     await mutationImageReady;
     if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
-    mystery.innerHTML = `${mutationElementFxMarkup(mutation.id, 'mutation-vended-fx')}<img src="${mutationImageSrc}" alt="${mutation.name}">`;
+    mystery.style.setProperty('--result-glow', synthColors.glow);
+    mystery.innerHTML = `<img src="${mutationImageSrc}" alt="${mutation.name}">`;
     mystery.classList.add('is-vended');
     await mutationDelay(menuReducedMotion ? 100 : 720);
     if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
     button.classList.add('is-drain-armed');
     void button.offsetWidth;
+    const liquid = $('#mutationLiquid');
+    liquid?.style.setProperty('--liquid-fill', '0%');
     button.classList.add('is-draining');
     if (hint) hint.textContent = 'СЛИВ РЕАГЕНТА…';
     feedback(5);
@@ -11276,7 +10175,7 @@
         <h3>Колесо фортуны</h3>
         <div id="wheel" class="wheel" aria-label="Колесо наград"></div>
         <div class="reward-buttons"><button id="wheelSpinBtn" class="${freeWheel ? 'primary' : 'ad-btn'}" ${save.pendingWheel || (!freeWheel && save.wheelAdSpins >= 2) ? 'disabled' : ''}>${save.pendingWheel ? 'Выбираем награду…' : wheelButton}</button></div>
-        <p class="panel-note">Награды: монеты, бонус здоровья, шанс эпической еды и дополнительная бесплатная прокрутка.</p>
+        <p class="panel-note">Награды: монеты, колбы исследования и бонус здоровья на следующий забег.</p>
       </div>`;
     $('#dailyClaimBtn').addEventListener('click', claimDaily);
     $('#wheelSpinBtn').addEventListener('click', spinWheel);
@@ -11286,89 +10185,25 @@
     return ACTIVE_WORLDS.filter(world => worldIsUnlocked(world.id)).map(world => world.id);
   }
 
-  function renderEncyclopediaPanel(tab = 'foods', worldId = save.world) {
+  function renderEncyclopediaPanel(worldId = save.world) {
     const encyclopedia = window.SlimeEncyclopedia;
     if (!encyclopedia) return;
     const unlockedWorldIds = encyclopediaUnlockedWorldIds();
-    activeEncyclopediaTab = tab === 'blocks' ? 'blocks' : 'foods';
     activeEncyclopediaWorld = unlockedWorldIds.includes(+worldId) ? +worldId : unlockedWorldIds[0] || 1;
-    els.panelTitle.textContent = 'Книга рецептов';
+    els.panelTitle.textContent = 'Справочник блоков';
     els.panelContent.innerHTML = encyclopedia.render({
-      activeTab: activeEncyclopediaTab,
       activeWorld: activeEncyclopediaWorld,
-      activeRarity: activeEncyclopediaRarity,
       unlockedWorldIds,
       worlds: ACTIVE_WORLDS,
-      foods: FOODS,
-      discoveredFoods: save.discoveredFoods || [],
-      revealedSecretFoods: save.revealedSecretFoods || [],
-      rarityLabels: RARITY_LABELS,
       balance: GAME_BALANCE,
-      versionedAsset,
-      foodArtMarkup,
-      foodStatItems,
-      foodStatGridMarkup,
-      foodCardDecorMarkup,
-      foodNameMarkup,
-      foodCardBodyMarkup
+      versionedAsset
     });
-    $$('[data-encyclopedia-tab]').forEach(button => button.addEventListener('click', () => {
-      if (button.dataset.encyclopediaTab === activeEncyclopediaTab) return;
-      sound('tap');
-      renderEncyclopediaPanel(button.dataset.encyclopediaTab, activeEncyclopediaWorld);
-    }));
     $$('[data-encyclopedia-world]').forEach(button => button.addEventListener('click', () => {
       const nextWorld = Number(button.dataset.encyclopediaWorld);
       if (!unlockedWorldIds.includes(nextWorld) || nextWorld === activeEncyclopediaWorld) return;
       sound('tap');
-      renderEncyclopediaPanel(activeEncyclopediaTab, nextWorld);
+      renderEncyclopediaPanel(nextWorld);
     }));
-    $$('[data-encyclopedia-rarity]').forEach(button => button.addEventListener('click', () => {
-      const nextRarity = button.dataset.encyclopediaRarity;
-      if (nextRarity === activeEncyclopediaRarity) return;
-      activeEncyclopediaRarity = nextRarity;
-      sound('tap');
-      renderEncyclopediaPanel(activeEncyclopediaTab, activeEncyclopediaWorld);
-    }));
-    $$('.encyclopedia-food-viewport').forEach(viewport => viewport.addEventListener('wheel', event => {
-      if (!event.deltaY || viewport.scrollWidth <= viewport.clientWidth) return;
-      event.preventDefault();
-      viewport.scrollLeft += event.deltaY;
-    }, { passive: false }));
-    $$('[data-encyclopedia-food]').forEach(card => {
-      const open = () => openEncyclopediaFood(card.dataset.encyclopediaFood, card);
-      card.addEventListener('click', open);
-      card.addEventListener('keydown', event => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        open();
-      });
-    });
-  }
-
-  function openEncyclopediaFood(foodId, sourceCard) {
-    const food = FOODS.find(item => item.id === foodId);
-    const encyclopedia = window.SlimeEncyclopedia;
-    if (!food || !encyclopedia) return;
-    document.querySelector('.encyclopedia-card-viewer')?.remove();
-    const viewer = document.createElement('div');
-    viewer.className = 'encyclopedia-card-viewer';
-    viewer.setAttribute('role', 'dialog');
-    viewer.setAttribute('aria-modal', 'true');
-    viewer.setAttribute('aria-label', `Карточка: ${food.name}`);
-    viewer.innerHTML = `<div class="encyclopedia-card-viewer-stage"><button class="encyclopedia-card-viewer-close" type="button" aria-label="Закрыть крупную карточку">×</button><div class="encyclopedia-card-viewer-card">${inspectFoodCardMarkup(food)}</div><small>Нажми ещё раз, чтобы закрыть</small></div>`;
-    (els.phoneViewport || document.body).appendChild(viewer);
-    syncInteractionLayers();
-    const close = () => {
-      viewer.classList.add('closing');
-      window.setTimeout(() => {
-        viewer.remove();
-        syncInteractionLayers();
-      }, 180);
-      sourceCard?.focus({ preventScroll: true });
-    };
-    viewer.addEventListener('click', close);
-    viewer.querySelector('.encyclopedia-card-viewer-close')?.focus();
   }
 
   function claimDaily() {
@@ -11389,9 +10224,9 @@
     { weight: 30, text: '+80 монет', apply: () => { save.coins += 80; } },
     { weight: 22, text: '+150 монет', apply: () => { save.coins += 150; } },
     { weight: 8, text: '+350 монет', apply: () => { save.coins += 350; } },
-    { weight: 15, text: '+10% эпика в следующем забеге', apply: () => { save.pendingEpicBoost += 10; } },
+    { weight: 15, text: '+1 колба исследования', apply: () => { save.researchUnits += 1; } },
     { weight: 13, text: '+20% здоровья в следующем забеге', apply: () => { save.pendingHealthBoost += 20; } },
-    { weight: 12, text: '+10% эпика в следующем забеге', apply: () => { save.pendingEpicBoost += 10; } }
+    { weight: 12, text: '+2 колбы исследования', apply: () => { save.researchUnits += 2; } }
   ];
 
   function chooseWheelReward() {
@@ -11440,12 +10275,14 @@
 
   function showRewardedAd(reason) {
     if (adInFlight) return Promise.resolve(false);
+    const resumeGameplayAfterAd = Boolean(run && !run.ended && !run.paused && pauseRun({ allowPortal: true }));
     adInFlight = true;
     syncInteractionLayers();
     const finish = promise => promise.finally(() => {
       adInFlight = false;
       document.body.classList.remove('ad-busy');
       syncInteractionLayers();
+      if (resumeGameplayAfterAd) resumeRun();
     });
     document.body.classList.add('ad-busy');
     if (window.ysdk?.adv?.showRewardedVideo) {
@@ -11476,7 +10313,6 @@
 
   function openAdminTools() {
     if (!els.adminToolsOverlay || !els.adminToolsOverlay.classList.contains('hidden')) return;
-    hideFoodInfo();
     syncAdminInfiniteFlasksUI();
     lastFocusedElement = document.activeElement;
     els.adminToolsOverlay.classList.remove('hidden');
@@ -11506,30 +10342,34 @@
 
   function updateTouchJoystick(event) {
     if (!run?.steer || run.steer.pointerId !== event.pointerId) return;
-    const maxDistance = 35;
+    const maxDistance = 32;
     let dx = event.clientX - run.steer.originX;
     let dy = event.clientY - run.steer.originY;
-    if (!run.effects.gravitySwitch && !speedDrillActive()) dy = Math.max(0, dy);
-    const distance = Math.hypot(dx, dy);
-    if (distance > maxDistance) {
-      dx = dx / distance * maxDistance;
-      dy = dy / distance * maxDistance;
+    const freeDirection = run.effects.gravitySwitch || speedDrillActive();
+    if (freeDirection) {
+      const distance = Math.hypot(dx, dy);
+      if (distance > maxDistance) {
+        dx = dx / distance * maxDistance;
+        dy = dy / distance * maxDistance;
+      }
+    } else {
+      dx = clamp(dx, -maxDistance, maxDistance);
+      dy = clamp(dy, -maxDistance, maxDistance);
     }
     run.steer.touchX = clamp(dx / maxDistance, -1, 1);
     const vertical = clamp(dy / maxDistance, -1, 1);
-    // The gravity secret keeps its up/down switch, while a downward hold still
-    // acts as the regular dive input (most visibly inside jelly zones).
-    run.steer.touchDown = clamp(vertical, 0, 1);
+    const mobilityDive = elementalLevel('mobility') >= 1;
+    run.steer.touchDown = mobilityDive ? clamp(vertical, 0, 1) : 0;
     run.steer.touchY = speedDrillActive() ? vertical : 0;
     if (run.effects.gravitySwitch) {
       if (Math.abs(vertical) < .18) run.steer.gravityGestureLocked = false;
       else if (Math.abs(vertical) >= .42 && !run.steer.gravityGestureLocked) {
-        setSecretGravityDirection(vertical < 0 ? -1 : 1);
+        setGravityDirection(vertical < 0 ? -1 : 1);
         run.steer.gravityGestureLocked = true;
       }
     }
     els.touchJoystick?.style.setProperty('--stick-x', `${round1(dx)}px`);
-    els.touchJoystick?.style.setProperty('--stick-y', `${round1(dy)}px`);
+    els.touchJoystick?.style.setProperty('--stick-y', `${round1(freeDirection || mobilityDive ? dy : 0)}px`);
   }
 
   function beginTouchJoystick(event) {
@@ -11582,7 +10422,7 @@
     if (!run?.steer || run.ended || run.paused || run.portalEntry) return false;
     if (run.effects.gravitySwitch && ['ArrowUp', 'KeyW', 'ArrowDown', 'KeyS'].includes(code)) {
       if (code === 'ArrowDown' || code === 'KeyS') run.steer.keyDown = pressed;
-      if (pressed) setSecretGravityDirection(code === 'ArrowUp' || code === 'KeyW' ? -1 : 1);
+      if (pressed) setGravityDirection(code === 'ArrowUp' || code === 'KeyW' ? -1 : 1);
       return true;
     }
     if (pressed && !speedDrillActive() && (code === 'ArrowUp' || code === 'KeyW')) return false;
@@ -11607,7 +10447,6 @@
     endTouchJoystick();
   }
 
-  // ===== СОБЫТИЯ И ЗАПУСК ПРИЛОЖЕНИЯ =====
   function bindEvents() {
     bindMenuSlimeInteractions();
     els.rerollBtn.addEventListener('click', activateConveyorControl);
@@ -11672,7 +10511,6 @@
     els.playEndlessBtn?.addEventListener('click', startEndlessFromCompletion);
     els.closePanelBtn.addEventListener('click', closePanel);
     els.panelOverlay.addEventListener('click', event => { if (event.target === els.panelOverlay) closePanel(); });
-    els.secretDiscoveryOverlay?.addEventListener('click', dismissSecretDiscovery);
     els.adRewardBtn.addEventListener('click', () => resolveDemoAd(true));
     els.adCancelBtn.addEventListener('click', () => resolveDemoAd(false));
     $$('[data-panel]').forEach(button => button.addEventListener('click', () => renderPanel(button.dataset.panel)));
@@ -11687,22 +10525,6 @@
     });
     document.addEventListener('contextmenu', event => {
       if (event.target.closest?.('#app,.overlay')) event.preventDefault();
-    });
-    document.addEventListener('pointerdown', event => {
-      if (els.foodInfo.classList.contains('hidden')) return;
-      if (event.target.closest('#foodInfo')) {
-        hideFoodInfo();
-        return;
-      }
-      if (event.target.closest('.food-card,.stomach-quick-slot')) return;
-      hideFoodInfo();
-    });
-    document.addEventListener('pointerdown', event => {
-      // Просмотр съеденной карты — лёгкая подсказка, а не отдельное окно.
-      // Повторный тап по ячейке переключает карту штатным click-обработчиком.
-      if (!els.stomachCardViewer || els.stomachCardViewer.classList.contains('hidden')) return;
-      if (event.target.closest('.stomach-quick-slot')) return;
-      hideStomachCardViewer();
     });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
@@ -11744,13 +10566,11 @@
         return;
       }
       if (event.key !== 'Escape') return;
-      if (secretSequenceActive && secretRevealCanClose) dismissSecretDiscovery();
-      else if (!els.adOverlay.classList.contains('hidden')) resolveDemoAd(false);
+      if (!els.adOverlay.classList.contains('hidden')) resolveDemoAd(false);
       else if (!els.runMenuOverlay.classList.contains('hidden')) continueRunFromMenu();
       else if (!els.gameCompleteOverlay.classList.contains('hidden')) closeGameCompleteToHome();
       else if (!els.adminToolsOverlay.classList.contains('hidden')) closeAdminTools();
       else if (!els.panelOverlay.classList.contains('hidden')) closePanel();
-      else hideFoodInfo();
     });
     document.addEventListener('keyup', event => {
       if (setKeyboardSteering(event.code || event.key, false)) event.preventDefault();
@@ -11761,9 +10581,18 @@
   async function init() {
     syncPerformanceMode();
     await initializeReliableSaves();
-    // Keep the fixed card popover outside the measured/scaled home console.
-    // This preserves exact pointer positioning on short phone screens.
-    if (els.foodInfo?.parentElement !== document.body) document.body.appendChild(els.foodInfo);
+    yandexPlatform?.subscribe({
+      onPause: () => {
+        stopAllSounds();
+        autoResumeRunAfterVisibility = pauseRun({ allowPortal: true }) || autoResumeRunAfterVisibility;
+      },
+      onResume: () => {
+        if (!document.hidden && autoResumeRunAfterVisibility) {
+          autoResumeRunAfterVisibility = false;
+          resumeRun();
+        }
+      }
+    });
     initializeInteractionLayers();
     bindEvents();
     if ('ResizeObserver' in window) {
@@ -11792,12 +10621,8 @@
       },
       addCoins: (amount = 1000) => { save.coins += amount; persist(); },
       addResearch: (amount = 100) => { save.researchUnits += Math.max(0, Math.floor(amount)); persist(); updatePersistentUI(); },
-      unlockFood: () => { save.conveyorLevel = 5; persist(); newDraft(); },
-      secretDiscovery: (foodId = '', play = false) => forceSecretDiscoveryForDebug(foodId, { play }),
       maxStomach: () => { save.stomachLevel = 4; persist(); newDraft(); },
-      maxRerolls: () => { save.rerollLevel = 3; persist(); newDraft(); },
-      setNextBonuses: ({ epic = 0, health = 0, rerolls = 0 } = {}) => {
-        save.pendingEpicBoost = clamp(Math.round(epic), 0, 10);
+      setNextBonuses: ({ health = 0, rerolls = 0 } = {}) => {
         save.pendingHealthBoost = clamp(Math.round(health), 0, 100);
         save.pendingExtraRerolls = clamp(Math.round(rerolls), 0, 20);
         save.activeDraft = null;

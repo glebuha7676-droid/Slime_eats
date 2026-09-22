@@ -1,0 +1,10 @@
+Tool mode: edit from supplied reference image
+
+Edit the supplied slime reference image into a production-ready BODY-ONLY sprite.
+
+Preserve the exact slime silhouette, proportions, broad rounded base, short soft top bump,
+thick dark-green outer outline, bright inner-green rim, neon green body colors, yellow-green
+central glow, teal-green lower shading, and every glossy body highlight. Remove only the eyes,
+pupils, cheeks, mouth, and tongue. Reconstruct those areas seamlessly with the surrounding
+green jelly gradient. Output a centered, fully visible, transparent PNG with no face, shadow,
+text, crop, or background.

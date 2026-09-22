@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Макет разрушения блока</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+  <main class="block-lab">
+    <header>
+      <span>МАКЕТ ЭФФЕКТОВ</span>
+      <h1>Каменный блок</h1>
+      <p>Трещины, горение и разрушение.</p>
+    </header>
+
+    <section class="preview" aria-label="Предпросмотр эффектов блока">
+      <div class="status">
+        <strong id="stateLabel">ЦЕЛЫЙ</strong>
+        <span id="hpLabel">4 / 4</span>
+      </div>
+      <canvas id="blockCanvas" width="640" height="640" aria-label="Каменный блок"></canvas>
+    </section>
+
+    <div class="controls">
+      <button type="button" id="damageButton" class="damage"><span>✦</span> НАНЕСТИ УРОН</button>
+      <button type="button" id="fireButton" class="fire"><span>♨</span> ПОДЖЕЧЬ</button>
+      <button type="button" id="restoreButton" class="restore"><span>↻</span> ВОССТАНОВИТЬ</button>
+    </div>
+    <p class="hint">После разрушения блок автоматически восстановится.</p>
+  </main>
+
+  <script src="block-lab.js?v=3"></script>
+</body>
+</html>

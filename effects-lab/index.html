@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#eaf7f3">
+  <title>Макет эффектов слайма</title>
+  <link rel="stylesheet" href="effects.css?v=6">
+</head>
+<body>
+  <main class="lab-shell">
+    <header class="lab-head">
+      <small>МАКЕТ ЭФФЕКТОВ</small>
+      <h1 id="effectTitle">Огненная форма</h1>
+      <p>Переключай категории и сравнивай три стадии эффекта.</p>
+    </header>
+    <nav class="effect-tabs" aria-label="Категория эффекта">
+      <button type="button" data-effect="fire" aria-pressed="true"><img src="../assets/ui/recipe-categories/fire-aligned.png" alt="">Огонь</button>
+      <button type="button" data-effect="gold" aria-pressed="false"><img src="../assets/ui/recipe-categories/gold-aligned.png" alt="">Золото</button>
+      <button type="button" data-effect="frost" aria-pressed="false"><img src="../assets/ui/recipe-categories/frost-aligned.png" alt="">Мороз</button>
+      <button type="button" data-effect="weight" aria-pressed="false"><img src="../assets/ui/recipe-categories/weight-aligned.png" alt="">Вес</button>
+      <button type="button" data-effect="electricity" aria-pressed="false"><img src="../assets/ui/recipe-categories/electricity-aligned.png" alt="">Ток</button>
+      <button type="button" data-effect="protection" aria-pressed="false"><img src="../assets/ui/recipe-categories/protection-aligned.png" alt="">Щит</button>
+      <button type="button" data-effect="mobility" aria-pressed="false"><img src="../assets/ui/recipe-categories/mobility-aligned.png" alt="">Скорость</button>
+      <button type="button" data-effect="explosion" aria-pressed="false"><img src="../assets/ui/recipe-categories/explosion-aligned.png" alt="">Взрыв</button>
+      <button type="button" data-effect="mix" aria-pressed="false"><span class="mix-mark">?</span>Синергия</button>
+    </nav>
+    <section class="mix-panel" hidden>
+      <div class="mix-slots" aria-label="Три ячейки синергии">
+        <button type="button" data-slot="0" aria-label="Первая ячейка"><span>1</span></button>
+        <button type="button" data-slot="1" aria-label="Вторая ячейка"><span>2</span></button>
+        <button type="button" data-slot="2" aria-label="Третья ячейка"><span>3</span></button>
+      </div>
+      <div class="mix-palette" aria-label="Категории">
+        <button type="button" data-pick="fire" title="Огонь"><img src="../assets/ui/recipe-categories/fire-aligned.png" alt="Огонь"></button>
+        <button type="button" data-pick="gold" title="Золото"><img src="../assets/ui/recipe-categories/gold-aligned.png" alt="Золото"></button>
+        <button type="button" data-pick="frost" title="Мороз"><img src="../assets/ui/recipe-categories/frost-aligned.png" alt="Мороз"></button>
+        <button type="button" data-pick="weight" title="Вес"><img src="../assets/ui/recipe-categories/weight-aligned.png" alt="Вес"></button>
+        <button type="button" data-pick="electricity" title="Электричество"><img src="../assets/ui/recipe-categories/electricity-aligned.png" alt="Электричество"></button>
+        <button type="button" data-pick="protection" title="Щит"><img src="../assets/ui/recipe-categories/protection-aligned.png" alt="Щит"></button>
+        <button type="button" data-pick="mobility" title="Скорость"><img src="../assets/ui/recipe-categories/mobility-aligned.png" alt="Скорость"></button>
+        <button type="button" data-pick="explosion" title="Взрыв"><img src="../assets/ui/recipe-categories/explosion-aligned.png" alt="Взрыв"></button>
+      </div>
+      <p>Выбери слот и эффект. Два одинаковых эффекта включают доминанту.</p>
+    </section>
+    <section class="preview-card" aria-label="Предпросмотр эффекта">
+      <div class="state-chip">
+        <img id="stateIcon" src="../assets/ui/recipe-categories/fire-aligned.png" alt="">
+        <span id="stateQuestion" class="state-question" hidden>?</span>
+        <span><small>СОСТОЯНИЕ</small><b id="stateName">Обычный слайм</b></span>
+      </div>
+      <div class="motion-switch" role="group" aria-label="Анимация персонажа">
+        <button type="button" data-motion="idle" aria-pressed="true">ОБЫЧНО</button>
+        <button type="button" data-motion="fall" aria-pressed="false">↓ ПАДЕНИЕ</button>
+      </div>
+      <canvas id="effectCanvas" width="360" height="420" aria-label="Слайм с выбранным эффектом"></canvas>
+      <div class="stage-floor" aria-hidden="true"></div>
+    </section>
+    <section class="controls" aria-label="Сила эффекта">
+      <button class="effect-choice" type="button" data-level="1" aria-pressed="false">
+        <img class="choice-icon" src="../assets/ui/recipe-categories/fire-aligned.png" alt="">
+        <span><b class="choice-title">1 ОГОНЬ</b><small>ЕДИНИЧНЫЙ ЭФФЕКТ</small></span>
+      </button>
+      <button class="effect-choice strong" type="button" data-level="2" aria-pressed="false">
+        <span class="double-icon" aria-hidden="true"><img src="../assets/ui/recipe-categories/fire-aligned.png" alt=""><img src="../assets/ui/recipe-categories/fire-aligned.png" alt=""></span>
+        <span><b class="choice-title">2 ОГНЯ</b><small>ДОМИНАНТНАЯ ФОРМА</small></span>
+      </button>
+      <button class="effect-choice ultra" type="button" data-level="3" aria-pressed="false">
+        <span class="triple-icon" aria-hidden="true"><img src="../assets/ui/recipe-categories/fire-aligned.png" alt=""><img src="../assets/ui/recipe-categories/fire-aligned.png" alt=""><img src="../assets/ui/recipe-categories/fire-aligned.png" alt=""></span>
+        <span><b class="choice-title">3 ОГНЯ</b><small>УЛЬТРАФОРМА</small></span>
+      </button>
+      <p>Повторный тап по выбранной кнопке возвращает обычного слайма.</p>
+    </section>
+  </main>
+  <script src="../js/config/game-config.js?v=64"></script>
+  <script src="../js/rendering/slime-avatar.js?v=16"></script>
+  <script src="effects.js?v=64"></script>
+</body>
+</html>

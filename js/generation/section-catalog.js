@@ -179,7 +179,38 @@
 
   function sanitizeRow(row) {
     const allowed = new Set(BRUSHES.map(brush => brush.id));
-    return String(row || '').padEnd(COLS, 'w').slice(0, COLS).split('').map(token => allowed.has(token) ? token : 'w').join('');
+    const cells = String(row || '').padEnd(COLS, 'w').slice(0, COLS).split('').map(token => allowed.has(token) ? token : 'w');
+    const corridorTokens = new Set(['.', 'w', 'n', 'c', 'i', 'g', 'd', '+', 'p', 'q', 'z']);
+    const groups = [];
+    for (let index = 0; index < cells.length;) {
+      if (!corridorTokens.has(cells[index])) { index += 1; continue; }
+      const start = index;
+      while (index < cells.length && corridorTokens.has(cells[index])) index += 1;
+      groups.push({ start, end: index - 1 });
+    }
+
+    // Single-cell lanes are too narrow for a bouncing slime. Widen every
+    // isolated route toward the inside so both sides remain valid choices.
+    for (const group of groups) {
+      if (group.end > group.start) continue;
+      const column = group.start;
+      const left = column - 1;
+      const right = column + 1;
+      if (left < 0 && right < cells.length) cells[right] = 'w';
+      else if (right >= cells.length && left >= 0) cells[left] = 'w';
+      else if (left >= 0 && right < cells.length) {
+        const center = (COLS - 1) / 2;
+        cells[column < center ? right : left] = 'w';
+      }
+    }
+
+    // Never leave a completely sealed row: create a two-cell central route.
+    if (!groups.length) {
+      const leftCenter = Math.floor((COLS - 1) / 2);
+      cells[leftCenter] = 'w';
+      cells[leftCenter + 1] = 'w';
+    }
+    return cells.join('');
   }
 
   function buildDefaults() {

@@ -1,0 +1,89 @@
+/* Compact full-height gameplay presentation. The cave blocks and ability keep their existing design. */
+body[data-screen="drop"] .topbar.world-summary{display:none!important}
+body[data-screen="drop"] .app{
+  width:100%!important;max-width:520px!important;height:var(--app-height,100dvh)!important;min-height:0!important;
+  padding:0!important;overflow:hidden!important;
+}
+body[data-screen="drop"] .game-shell,
+body[data-screen="drop"] #dropScreen.active{width:100%!important;height:100%!important;min-height:0!important}
+body[data-screen="drop"] #dropScreen.active{display:block!important}
+body[data-screen="drop"] #dropScreen .shaft{
+  box-sizing:border-box!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+
+#dropScreen .run-top-hud{
+  position:absolute;z-index:30;left:8px;right:8px;top:max(7px,var(--safe-top));height:50px;
+  box-sizing:border-box;display:flex;align-items:center;gap:4px;padding:4px;
+  border:3px solid #174f57;border-radius:15px;background:rgba(244,255,249,.96);
+  box-shadow:inset 0 2px rgba(255,255,255,.9),0 3px 0 rgba(5,38,43,.34),0 5px 12px rgba(3,21,26,.18);
+  pointer-events:none;
+}
+
+#dropScreen .run-top-hud .shaft-health{
+  position:relative!important;inset:auto!important;flex:0 0 87px;width:87px!important;height:38px!important;
+  box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  margin:0!important;padding:0 2px!important;border:0!important;border-radius:10px!important;
+  background:transparent!important;box-shadow:none!important;transform:none!important;pointer-events:none!important;
+}
+#dropScreen .run-top-hud .shaft-health-title,
+#dropScreen .run-top-hud .shaft-health-count{display:none!important}
+#dropScreen .run-top-hud .run-hearts{height:32px!important;display:flex!important;align-items:center!important;gap:1px!important}
+#dropScreen .run-top-hud .run-heart{width:27px!important;height:27px!important;margin:0!important}
+#dropScreen .run-top-hud .run-heart>img{width:27px!important;height:27px!important}
+
+#dropScreen .run-top-hud .run-route{
+  position:relative!important;flex:1 1 auto!important;min-width:84px!important;width:auto!important;height:38px!important;
+  box-sizing:border-box!important;margin:0!important;padding:0 7px!important;overflow:hidden!important;
+  border:1px solid #7eb5a8!important;border-radius:11px!important;background:linear-gradient(180deg,#fafffc,#dff5ea)!important;
+  box-shadow:inset 0 1px #fff!important;
+}
+#dropScreen .run-top-hud .run-route-labels{
+  width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:4px!important;color:#185b51!important;white-space:nowrap!important;
+}
+#dropScreen .run-top-hud .run-route-labels>span{display:none!important}
+#dropScreen .run-top-hud .run-route-labels>b,
+#dropScreen .run-top-hud .run-route-labels>strong{
+  min-width:0!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;
+  box-shadow:none!important;color:#185b51!important;font-size:11px!important;line-height:1!important;letter-spacing:0!important;
+}
+#dropScreen .run-top-hud .run-route-labels>b{font-size:13px!important}
+#dropScreen .run-top-hud .run-route-labels>strong:before{content:"/ ";color:#5b8b82}
+#dropScreen .run-top-hud .run-route-track{display:none!important}
+
+#dropScreen .run-top-hud .run-research-hud{
+  position:relative!important;inset:auto!important;flex:0 0 59px!important;width:59px!important;height:38px!important;
+  box-sizing:border-box!important;display:grid!important;grid-template-columns:27px minmax(0,1fr)!important;align-items:center!important;
+  margin:0!important;padding:2px 5px 2px 2px!important;border:1px solid #7eb5a8!important;border-radius:11px!important;
+  background:linear-gradient(180deg,#fafffc,#dff5ea)!important;box-shadow:inset 0 1px #fff!important;
+}
+#dropScreen .run-top-hud .run-research-hud>img{width:27px!important;height:27px!important}
+#dropScreen .run-top-hud .run-research-hud>span{display:grid!important;place-items:center!important}
+#dropScreen .run-top-hud .run-research-hud small{display:none!important}
+#dropScreen .run-top-hud .run-research-hud b{margin:0!important;color:#185b51!important;font-size:14px!important;line-height:1!important}
+#dropScreen .run-top-hud .run-research-hud>i{right:2px!important;top:-7px!important}
+
+#dropScreen .run-top-hud .run-menu-btn{
+  position:relative!important;inset:auto!important;flex:0 0 40px!important;width:40px!important;min-width:40px!important;
+  height:40px!important;min-height:40px!important;display:grid!important;place-items:center!important;overflow:visible!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;background:transparent!important;
+  box-shadow:none!important;pointer-events:auto!important;
+}
+#dropScreen .run-top-hud .run-menu-btn img{
+  position:absolute!important;left:50%!important;top:50%!important;width:69px!important;height:69px!important;
+  max-width:none!important;display:block!important;object-fit:contain!important;
+  transform:translate(-50%,-50%)!important;filter:none!important;pointer-events:none!important;
+}
+#dropScreen .run-top-hud .run-menu-btn span{display:none!important}
+#dropScreen .run-top-hud .run-menu-btn:active{transform:scale(.94)!important;box-shadow:none!important}
+
+@media(max-width:370px){
+  #dropScreen .run-top-hud{left:6px;right:6px;gap:3px;padding-inline:3px}
+  #dropScreen .run-top-hud .shaft-health{flex-basis:79px!important;width:79px!important}
+  #dropScreen .run-top-hud .run-heart,#dropScreen .run-top-hud .run-heart>img{width:25px!important;height:25px!important}
+  #dropScreen .run-top-hud .run-route{min-width:78px!important;padding-inline:5px!important}
+  #dropScreen .run-top-hud .run-route-labels>b{font-size:12px!important}
+  #dropScreen .run-top-hud .run-route-labels>strong{font-size:10px!important}
+  #dropScreen .run-top-hud .run-research-hud{flex-basis:55px!important;width:55px!important}
+}

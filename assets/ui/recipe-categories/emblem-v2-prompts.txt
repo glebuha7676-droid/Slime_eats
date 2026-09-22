@@ -1,0 +1,13 @@
+Generated with the built-in image generation tool.
+
+Shared prompt:
+Use case: logo-brand. Asset type: mutation emblem icon for a cute children's mobile game. Create ONE perfectly centered circular emblem, front-facing, on a genuinely transparent background. Exact shared container design: outer dark teal circular rim, thin bright silver inner ring, polished enamel center with a vivid colored radial glow. The complete emblem occupies exactly 88% of the square canvas, centered at 50%/50%, with equal transparent margin on all four sides. Inner symbol occupies exactly 52% of canvas width and height. Thick clean soft-cartoon shapes, high contrast at 32-48 px, subtle glossy highlight, one consistent outline weight, no text, no letters, no extra particles outside the ring, no cast shadow beyond the circle, no perspective tilt, no cropping.
+
+Subjects:
+- FIRE: red-orange center and a bold golden flame.
+- ELECTRICITY: golden-yellow center and a bold white-yellow lightning bolt.
+- FROST: cyan-blue center and a symmetrical six-point snowflake.
+- EXPLOSION: orange-red center and a round black cartoon bomb with a lit fuse.
+- WIND: emerald-mint center and a tornado made of three curved bands.
+- COSMOS: violet-blue center and a luminous purple spiral galaxy.
+- GIGANTISM: lime-green center and an expanding green slime silhouette with two growth arrows.

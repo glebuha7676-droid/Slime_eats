@@ -14,7 +14,12 @@
       available: false,
       ysdk: null,
       player: null,
-      storage: fallbackStorage
+      storage: fallbackStorage,
+      gameplay: {
+        start() {},
+        stop() {}
+      },
+      subscribe() {}
     };
 
     const localHost = /^(localhost|127(?:\.\d+){3}|\[::1\])$/.test(window.location.hostname);
@@ -27,6 +32,12 @@
       window.ysdk = ysdk;
       platform.available = true;
       platform.ysdk = ysdk;
+      platform.gameplay.start = () => ysdk.features?.GameplayAPI?.start?.();
+      platform.gameplay.stop = () => ysdk.features?.GameplayAPI?.stop?.();
+      platform.subscribe = ({ onPause, onResume } = {}) => {
+        if (typeof onPause === 'function') ysdk.on?.('game_api_pause', onPause);
+        if (typeof onResume === 'function') ysdk.on?.('game_api_resume', onResume);
+      };
 
       const [storageResult, playerResult] = await Promise.allSettled([
         typeof ysdk.getStorage === 'function' ? ysdk.getStorage() : Promise.resolve(fallbackStorage),

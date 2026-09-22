@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Пять редкостей карт · CSS-прототип</title>
+  <link rel="stylesheet" href="css-card-prototype.css">
+</head>
+<body>
+  <main class="prototype-shell">
+    <header class="prototype-head">
+      <span>ПЯТЬ РЕДКОСТЕЙ · ПРОТОТИП</span>
+      <h1>Размер конвейера</h1>
+      <p>Одна геометрия и отдельный характер каждой редкости.</p>
+    </header>
+
+    <section class="conveyor-preview" aria-label="Пять редкостей карт и закрытая секретная карта в масштабе конвейера">
+      <div class="conveyor-rail" aria-hidden="true"></div>
+
+      <article class="game-card common-card" aria-label="Буханка: плюс 20 здоровья">
+        <span class="card-gem" aria-hidden="true"><i></i></span>
+
+        <div class="card-art">
+          <img src="../../ЕДА/Общий%20пул/Буханка.webp" alt="Буханка">
+        </div>
+
+        <h2 class="card-name"><span>Буханка</span></h2>
+
+        <div class="card-copy copy-short">
+          <p class="no-effect"><b>Нет эффекта</b><em>—</em></p>
+        </div>
+
+        <div class="card-stats single" aria-label="Характеристики карты">
+          <div class="stat-chip stat-main stat-health power-1" data-power="1P" aria-label="Плюс 20 здоровья, сила 1P">
+            <img src="../stat-health.webp" alt="" aria-hidden="true">
+            <strong>+20</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-card rare-card" aria-label="Идеальная пицца: плюс 15 урона, плюс 5 щита">
+        <span class="card-gem" aria-hidden="true"><i></i></span>
+
+        <div class="card-art">
+          <img src="../../ЕДА/Общий%20пул/Идеальная%20пицца.webp" alt="Идеальная пицца">
+        </div>
+
+        <h2 class="card-name"><span>Идеальная<br>пицца</span></h2>
+
+        <div class="card-copy copy-medium">
+          <p>Каждый третий пробитый блок даёт ещё <span class="inline-bonus combo"><b>+1 к комбо</b></span>.</p>
+        </div>
+
+        <div class="card-stats" aria-label="Характеристики карты">
+          <div class="stat-chip stat-main stat-damage power-15" data-power="1.5P" aria-label="Плюс 15 урона, сила 1.5P">
+            <img src="../stat-power.webp" alt="" aria-hidden="true">
+            <strong>+15</strong>
+          </div>
+          <div class="stat-chip stat-small stat-shield power-05" data-power="0.5P" aria-label="Плюс 5 щита, сила 0.5P">
+            <img src="../stat-defense.webp" alt="" aria-hidden="true">
+            <strong>+5</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-card epic-card" aria-label="Фруктовая тарелка: плюс 20 здоровья">
+        <span class="epic-motes" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="card-gem" aria-hidden="true"><i></i></span>
+
+        <div class="card-art">
+          <img src="../../ЕДА/Общий%20пул/Фруктовая%20тарелка.webp" alt="Фруктовая тарелка">
+        </div>
+
+        <h2 class="card-name"><span>Фруктовая<br>тарелка</span></h2>
+
+        <div class="card-copy copy-medium">
+          <p>Аптечки восстанавливают на <span class="inline-bonus health"><img src="../stat-health.webp" alt="" aria-hidden="true"><b>10 здоровья</b></span> больше.</p>
+        </div>
+
+        <div class="card-stats single" aria-label="Характеристики карты">
+          <div class="stat-chip stat-main stat-health power-1" data-power="1P" aria-label="Плюс 20 здоровья, сила 1P">
+            <img src="../stat-health.webp" alt="" aria-hidden="true">
+            <strong>+20</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-card special-card" aria-label="Королевский пудинг: плюс 10 щита">
+        <span class="special-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="special-aura" aria-hidden="true"></span>
+        <span class="card-gem" aria-hidden="true"><i></i></span>
+
+        <div class="card-art">
+          <img src="../../ЕДА/Сладости/Королевский%20пудинг.webp" alt="Королевский пудинг">
+        </div>
+
+        <h2 class="card-name"><span data-letter-effect="special">Королевский<br>пудинг</span></h2>
+
+        <div class="card-copy copy-medium">
+          <p data-letter-effect="special">При активации щита его сила становится <span class="inline-bonus shield"><img src="../stat-defense.webp" alt="" aria-hidden="true"><b>на 10 больше</b></span>.</p>
+        </div>
+
+        <div class="card-stats single" aria-label="Характеристики карты">
+          <div class="stat-chip stat-main stat-shield power-1" data-power="1P" aria-label="Плюс 10 щита, сила 1P">
+            <img src="../stat-defense.webp" alt="" aria-hidden="true">
+            <strong>+10</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-card secret-card" aria-label="Засекречено: границы мира становятся порталами">
+        <span class="secret-neon" aria-hidden="true"></span>
+        <span class="card-gem" aria-hidden="true"><i></i></span>
+
+        <div class="card-art">
+          <img src="../../ЕДА/Общий%20пул/Засекречено.webp" alt="Засекречено">
+        </div>
+
+        <h2 class="card-name"><span data-letter-effect="secret">Засекречено</span></h2>
+
+        <div class="card-copy copy-medium">
+          <p data-letter-effect="secret">Границы мира становятся сквозными порталами</p>
+        </div>
+      </article>
+
+      <article class="game-card secret-card secret-locked-card" aria-label="Неоткрытая секретная карта, нажмите, чтобы открыть">
+        <span class="secret-neon" aria-hidden="true"></span>
+        <span class="card-gem" aria-hidden="true"><i></i></span>
+
+        <div class="card-art">
+          <strong class="secret-question" aria-hidden="true">???</strong>
+        </div>
+
+        <h2 class="card-name"><span data-letter-effect="secret">НАЖМИ</span></h2>
+
+        <div class="card-copy copy-short">
+          <p class="locked-dash" aria-label="Описание пока скрыто">—</p>
+        </div>
+      </article>
+    </section>
+
+    <p class="prototype-note"><b>144 × 240 px</b> на компьютере · <b>122 × 203 px</b> на телефоне</p>
+  </main>
+  <script>
+    document.querySelectorAll("[data-letter-effect]").forEach((element) => {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      let index = 0;
+
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach((node) => {
+        const fragment = document.createDocumentFragment();
+
+      (node.nodeValue.match(/\S+|\s+/g) || []).forEach((token) => {
+        if (/^\s+$/.test(token)) {
+          fragment.append(token);
+          return;
+        }
+
+        const word = document.createElement("span");
+        word.className = "fx-word";
+
+        [...token].forEach((character) => {
+          const letter = document.createElement("span");
+          letter.className = "fx-letter";
+          letter.style.setProperty("--letter-index", index);
+
+          if (element.dataset.letterEffect === "secret") {
+            const isName = Boolean(element.closest(".card-name"));
+            const lift = (isName ? 1.8 : .8) + ((index * 7) % 5) * (isName ? .2 : .12);
+            const side = (((index * 11) % 5) - 2) * (isName ? .16 : .1);
+            const turn = (((index * 13) % 5) - 2) * (isName ? .18 : .1);
+
+            letter.style.setProperty("--chaos-up", `${-lift}px`);
+            letter.style.setProperty("--chaos-up-soft", `${-(lift * .32)}px`);
+            letter.style.setProperty("--chaos-down", `${lift * .2}px`);
+            letter.style.setProperty("--chaos-side", `${side}px`);
+            letter.style.setProperty("--chaos-side-back", `${side * -.45}px`);
+            letter.style.setProperty("--chaos-turn", `${turn}deg`);
+            letter.style.setProperty("--chaos-turn-back", `${turn * -.4}deg`);
+            letter.style.setProperty("--chaos-duration", `${2.25 + ((index * 17) % 9) * .14}s`);
+            letter.style.setProperty("--chaos-delay", `${-(((index * 19) % 23) * .11)}s`);
+          }
+
+          letter.textContent = character;
+          word.append(letter);
+          index += 1;
+        });
+
+        fragment.append(word);
+      });
+
+        node.replaceWith(fragment);
+      });
+    });
+  </script>
+</body>
+</html>

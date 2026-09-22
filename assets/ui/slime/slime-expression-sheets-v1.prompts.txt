@@ -1,0 +1,14 @@
+Tool mode: built-in image generation using the supplied slime as the exact style reference.
+
+Eye expressions:
+Create a transparent 2x2 eye-expression sheet for the same slime: neutral blink,
+happy/chewing closed eyes, hurt X eyes, and determined power squint. Each cell contains
+only one matching eye pair, centered with consistent scale, deep dark-green color, glossy
+2D rendering, rounded tapered ends, and no labels or dividers.
+
+Mouth expressions:
+Create a transparent 3x3 mouth-expression sheet for the same slime: neutral open smile,
+wide joyful smile, surprised O mouth, hurt frown, satisfied closed smile, chewing open,
+chewing almost closed, closed chew left, and closed chew right. Preserve the reference's
+dark-green mouth and pink tongue palette. Each cell contains only one centered mouth with
+consistent scale and no labels or dividers.

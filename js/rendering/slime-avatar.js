@@ -2,10 +2,113 @@
   'use strict';
 
   const defaultColors = window.SlimeGameConfig?.SKINS?.[0]?.colors || ['#e9ff9c', '#67d348', '#2fa345'];
+  const referenceBodyImage = new Image();
+  const formBodySources = Object.freeze({
+    explosion: 'assets/ui/slime/forms/slime-body-explosion-v1.png?v=1',
+    frost: 'assets/ui/slime/forms/slime-body-frost-v1.png?v=1',
+    cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.png?v=1',
+    electric: 'assets/ui/slime/forms/slime-body-electric-v1.png?v=1',
+    fire: 'assets/ui/slime/forms/slime-body-fire-v1.png?v=1',
+    wind: 'assets/ui/slime/forms/slime-body-wind-v1.png?v=1'
+  });
+  const formBodyImages = Object.create(null);
+  const formBodyReady = Object.create(null);
+  const bodyTintCanvas = document.createElement('canvas');
+  const bodyTintContext = bodyTintCanvas.getContext('2d');
+  bodyTintCanvas.width = 512;
+  bodyTintCanvas.height = 512;
+  const tintedPupilLayers = new Map();
+  const referenceEyeSocketsImage = new Image();
+  const referencePupilsImage = new Image();
+  const referenceCheeksImage = new Image();
+  const referenceEyeExpressionsImage = new Image();
+  const referenceMouthExpressionsImage = new Image();
+  let referenceBodyReady = false;
+  let referenceEyeSocketsReady = false;
+  let referencePupilsReady = false;
+  let referenceCheeksReady = false;
+  let referenceEyeExpressionsReady = false;
+  let referenceMouthExpressionsReady = false;
+  referenceBodyImage.decoding = 'async';
+  referenceEyeSocketsImage.decoding = 'async';
+  referencePupilsImage.decoding = 'async';
+  referenceCheeksImage.decoding = 'async';
+  referenceEyeExpressionsImage.decoding = 'async';
+  referenceMouthExpressionsImage.decoding = 'async';
+  referenceBodyImage.onload = () => { referenceBodyReady = true; };
+  referenceEyeSocketsImage.onload = () => { referenceEyeSocketsReady = true; };
+  referencePupilsImage.onload = () => { referencePupilsReady = true; };
+  referenceCheeksImage.onload = () => { referenceCheeksReady = true; };
+  referenceEyeExpressionsImage.onload = () => { referenceEyeExpressionsReady = true; };
+  referenceMouthExpressionsImage.onload = () => { referenceMouthExpressionsReady = true; };
+  referenceBodyImage.src = 'assets/ui/slime/slime-body-reference-v1.png?v=2';
+  referenceEyeSocketsImage.src = 'assets/ui/slime/slime-eye-sockets-reference-v1.png?v=1';
+  referencePupilsImage.src = 'assets/ui/slime/slime-pupils-reference-v1.png?v=1';
+  referenceCheeksImage.src = 'assets/ui/slime/slime-cheeks-reference-v1.png?v=1';
+  referenceEyeExpressionsImage.src = 'assets/ui/slime/slime-eye-expressions-v1.png?v=1';
+  referenceMouthExpressionsImage.src = 'assets/ui/slime/slime-mouth-expressions-v1.png?v=1';
 
-  function traceSlimeBody(targetCtx, skinId, radius, tipX) {
+  Object.entries(formBodySources).forEach(([form, source]) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => { formBodyReady[form] = true; };
+    image.src = source;
+    formBodyImages[form] = image;
+  });
+
+  function drawReferenceBody(targetCtx, radius, tint = '', image = referenceBodyImage) {
+    if (!tint || !bodyTintContext) {
+      targetCtx.drawImage(image, -radius * 1.18, -radius * 1.18, radius * 2.36, radius * 2.36);
+      return;
+    }
+    bodyTintContext.clearRect(0, 0, 512, 512);
+    bodyTintContext.globalCompositeOperation = 'source-over';
+    bodyTintContext.globalAlpha = 1;
+    bodyTintContext.drawImage(image, 0, 0, 512, 512);
+    bodyTintContext.globalCompositeOperation = 'source-atop';
+    bodyTintContext.fillStyle = tint;
+    bodyTintContext.fillRect(0, 0, 512, 512);
+    bodyTintContext.globalCompositeOperation = 'source-over';
+    targetCtx.drawImage(bodyTintCanvas, -radius * 1.18, -radius * 1.18, radius * 2.36, radius * 2.36);
+  }
+
+  function tintedPupilLayer(tint) {
+    if (!tint || !referencePupilsReady) return referencePupilsImage;
+    if (tintedPupilLayers.has(tint)) return tintedPupilLayers.get(tint);
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    context.drawImage(referencePupilsImage, 0, 0, 512, 512);
+    context.globalCompositeOperation = 'color';
+    context.fillStyle = tint;
+    context.fillRect(0, 0, 512, 512);
+    context.globalCompositeOperation = 'destination-in';
+    context.drawImage(referencePupilsImage, 0, 0, 512, 512);
+    context.globalCompositeOperation = 'source-over';
+    tintedPupilLayers.set(tint, canvas);
+    return canvas;
+  }
+
+  function darkenHex(hex, factor = .52) {
+    const match = /^#([0-9a-f]{6})$/i.exec(String(hex || ''));
+    if (!match) return '#173f4a';
+    const value = Number.parseInt(match[1], 16);
+    const channel = shift => Math.round(((value >> shift) & 255) * factor);
+    return `rgb(${channel(16)},${channel(8)},${channel(0)})`;
+  }
+
+  function traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2 = false) {
     targetCtx.beginPath();
-    if (skinId === 'dumpling') {
+    if (cuteV2 && skinId === 'classic') {
+      targetCtx.moveTo(tipX, -radius * .99);
+      targetCtx.bezierCurveTo(tipX + radius * .19, -radius * .99, radius * .25, -radius * .82, radius * .42, -radius * .7);
+      targetCtx.bezierCurveTo(radius * .79, -radius * .49, radius, -radius * .1, radius, radius * .36);
+      targetCtx.bezierCurveTo(radius * .98, radius * .78, radius * .63, radius * .99, 0, radius * .99);
+      targetCtx.bezierCurveTo(-radius * .63, radius * .99, -radius * .98, radius * .78, -radius, radius * .36);
+      targetCtx.bezierCurveTo(-radius, -radius * .1, -radius * .79, -radius * .49, -radius * .42, -radius * .7);
+      targetCtx.bezierCurveTo(-radius * .25, -radius * .82, tipX - radius * .19, -radius * .99, tipX, -radius * .99);
+    } else if (skinId === 'dumpling') {
       targetCtx.moveTo(0, -radius * .68);
       targetCtx.bezierCurveTo(radius * .58, -radius * .67, radius * .9, -radius * .33, radius * .92, radius * .15);
       targetCtx.bezierCurveTo(radius * .91, radius * .65, radius * .55, radius * .83, 0, radius * .84);
@@ -37,10 +140,10 @@
     targetCtx.closePath();
   }
 
-  function drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp) {
+  function drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp, cuteV2 = false) {
     if (aura !== 'special' && aura !== 'secret') return;
     targetCtx.save();
-    traceSlimeBody(targetCtx, skinId, radius, tipX);
+    traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2);
     targetCtx.clip();
 
     if (aura === 'special') {
@@ -91,7 +194,7 @@
     targetCtx.restore();
 
     targetCtx.save();
-    traceSlimeBody(targetCtx, skinId, radius, tipX);
+    traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2);
     if (aura === 'special') {
       const outline = targetCtx.createLinearGradient(-radius, 0, radius, 0);
       outline.addColorStop(0, '#ff4f91');
@@ -115,14 +218,269 @@
     targetCtx.restore();
   }
 
+  function drawCuteFaceV2(targetCtx, {
+    radius, emotion, faceInk, alpha, gazeX, gazeY, blink, timestamp, emotionTime = 0,
+    useReferenceFace = false, irisTint = ''
+  }) {
+    const referenceEyeScale = .74;
+    const drawReferenceFaceLayer = (image, offsetX = 0, offsetY = 0, scale = referenceEyeScale) => {
+      targetCtx.save();
+      targetCtx.translate(offsetX, offsetY);
+      targetCtx.scale(scale, scale);
+      targetCtx.drawImage(image, -radius * 1.18, -radius * 1.18, radius * 2.36, radius * 2.36);
+      targetCtx.restore();
+    };
+    const drawExpressionCell = (image, columns, rows, index, centerX, centerY, width, height) => {
+      const sourceWidth = image.naturalWidth / columns;
+      const sourceHeight = image.naturalHeight / rows;
+      const column = index % columns;
+      const row = Math.floor(index / columns);
+      targetCtx.drawImage(
+        image,
+        column * sourceWidth,
+        row * sourceHeight,
+        sourceWidth,
+        sourceHeight,
+        centerX - width * .5,
+        centerY - height * .5,
+        width,
+        height
+      );
+    };
+    const eyeY = radius * .005;
+    const eyeX = radius * .305;
+    const closedHappy = emotion === 'petting' || emotion === 'pleased';
+    const closedJoyEyes = closedHappy || emotion === 'chewing' || emotion === 'savoring';
+    const closed = blink || closedHappy || emotion === 'chewing' || emotion === 'savoring' || emotion === 'anticipating';
+    const squint = emotion === 'impact' || emotion === 'power';
+    const surprised = emotion === 'surprised' || emotion === 'hungry';
+    const joyful = emotion === 'joy' || closedHappy;
+    const eyeW = radius * (surprised ? .248 : .238);
+    const eyeH = radius * (surprised ? .265 : .255);
+
+    targetCtx.save();
+    targetCtx.lineCap = 'round';
+    targetCtx.lineJoin = 'round';
+
+    if (useReferenceFace && (closedJoyEyes || blink || emotion === 'anticipating')) {
+      targetCtx.strokeStyle = faceInk;
+      targetCtx.lineWidth = Math.max(4.2, radius * .078);
+      targetCtx.lineCap = 'round';
+      for (const side of [-1, 1]) {
+        const cx = side * eyeX;
+        targetCtx.beginPath();
+        targetCtx.moveTo(cx - radius * .17, eyeY + radius * .035);
+        targetCtx.bezierCurveTo(
+          cx - radius * .095,
+          eyeY - radius * .105,
+          cx + radius * .095,
+          eyeY - radius * .105,
+          cx + radius * .17,
+          eyeY + radius * .035
+        );
+        targetCtx.stroke();
+      }
+    } else if (useReferenceFace && emotion === 'hurt') {
+      targetCtx.strokeStyle = faceInk;
+      targetCtx.lineWidth = Math.max(4.2, radius * .078);
+      for (const side of [-1, 1]) {
+        const px = side * eyeX;
+        targetCtx.beginPath();
+        targetCtx.moveTo(px - radius * .15, eyeY - radius * .105);
+        targetCtx.lineTo(px + radius * .15, eyeY + radius * .105);
+        targetCtx.stroke();
+        targetCtx.beginPath();
+        targetCtx.moveTo(px + radius * .15, eyeY - radius * .105);
+        targetCtx.lineTo(px - radius * .15, eyeY + radius * .105);
+        targetCtx.stroke();
+      }
+    } else if (useReferenceFace && squint) {
+      targetCtx.strokeStyle = faceInk;
+      targetCtx.lineWidth = Math.max(4.2, radius * .078);
+      for (const side of [-1, 1]) {
+        const cx = side * eyeX;
+        targetCtx.beginPath();
+        targetCtx.moveTo(cx - radius * .17, eyeY + radius * .025);
+        targetCtx.quadraticCurveTo(cx, eyeY - radius * .11, cx + radius * .17, eyeY + radius * .025);
+        targetCtx.stroke();
+      }
+    } else if (emotion === 'hurt') {
+      targetCtx.strokeStyle = faceInk;
+      targetCtx.lineWidth = Math.max(3, radius * .072);
+      for (const side of [-1, 1]) {
+        const px = side * eyeX;
+        targetCtx.beginPath(); targetCtx.moveTo(px - radius * .11, eyeY - radius * .08); targetCtx.lineTo(px + radius * .11, eyeY + radius * .08); targetCtx.stroke();
+        targetCtx.beginPath(); targetCtx.moveTo(px + radius * .11, eyeY - radius * .08); targetCtx.lineTo(px - radius * .11, eyeY + radius * .08); targetCtx.stroke();
+      }
+    } else if (squint) {
+      targetCtx.strokeStyle = faceInk;
+      targetCtx.lineWidth = radius * .065;
+      for (const side of [-1, 1]) {
+        targetCtx.beginPath();
+        targetCtx.moveTo(side * eyeX - radius * .12, eyeY - side * radius * .055);
+        targetCtx.lineTo(side * eyeX + radius * .12, eyeY + side * radius * .055);
+        targetCtx.stroke();
+      }
+    } else if (closed) {
+      targetCtx.strokeStyle = faceInk;
+      targetCtx.lineWidth = Math.max(3, radius * .07);
+      for (const side of [-1, 1]) {
+        targetCtx.beginPath();
+        targetCtx.arc(side * eyeX, eyeY + radius * .055, radius * .15, Math.PI + .1, Math.PI * 2 - .1);
+        targetCtx.stroke();
+      }
+    } else {
+      if (useReferenceFace) {
+        targetCtx.globalAlpha = alpha;
+        drawReferenceFaceLayer(referenceEyeSocketsImage);
+        drawReferenceFaceLayer(tintedPupilLayer(irisTint), gazeX * radius * .034, gazeY * radius * .034);
+      } else {
+        for (const side of [-1, 1]) {
+          const cx = side * eyeX;
+
+        // The reference has a heavy upper eye contour which softly disappears
+        // towards the lower edge. Two offset ellipses give that shape without
+        // the rigid, startled-looking ring produced by a uniform stroke.
+        targetCtx.fillStyle = faceInk;
+        targetCtx.beginPath();
+        targetCtx.ellipse(cx, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+
+        const whiteY = eyeY + radius * .018;
+        const whiteW = eyeW - radius * .031;
+        const whiteH = eyeH - radius * .028;
+        targetCtx.fillStyle = '#fff';
+        targetCtx.beginPath();
+        targetCtx.ellipse(cx, whiteY, whiteW, whiteH, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+
+        const pupilX = cx + gazeX * radius * .03;
+        const pupilY = eyeY + gazeY * radius * .03 + radius * .045;
+        targetCtx.save();
+        targetCtx.beginPath();
+        targetCtx.ellipse(cx, whiteY, whiteW, whiteH, 0, 0, Math.PI * 2);
+        targetCtx.clip();
+        const iris = targetCtx.createLinearGradient(pupilX, pupilY - radius * .15, pupilX, pupilY + radius * .15);
+        iris.addColorStop(0, '#082d35');
+        iris.addColorStop(.62, '#0c4737');
+        iris.addColorStop(1, '#48c539');
+        targetCtx.fillStyle = iris;
+        targetCtx.beginPath();
+        targetCtx.ellipse(pupilX, pupilY, radius * .139, radius * .151, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+
+        targetCtx.globalAlpha = alpha * .72;
+        targetCtx.fillStyle = '#55d241';
+        targetCtx.beginPath();
+        targetCtx.ellipse(pupilX, pupilY + radius * .118, radius * .112, radius * .046, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.restore();
+
+        targetCtx.fillStyle = '#fff';
+        targetCtx.beginPath();
+        targetCtx.arc(pupilX - radius * .042, pupilY - radius * .068, radius * .052, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.globalAlpha = alpha * .82;
+        targetCtx.beginPath();
+        targetCtx.arc(pupilX + radius * .058, pupilY + radius * .075, radius * .018, 0, Math.PI * 2);
+        targetCtx.fill();
+          targetCtx.globalAlpha = alpha;
+        }
+      }
+    }
+
+    targetCtx.globalAlpha = alpha * .82;
+    if (useReferenceFace) {
+      targetCtx.globalAlpha = alpha;
+      drawReferenceFaceLayer(referenceCheeksImage, 0, radius * .035, .94);
+    } else {
+      for (const side of [-1, 1]) {
+        const cheekX = side * radius * .54;
+        const cheekY = radius * .3;
+        const blush = targetCtx.createRadialGradient(cheekX - side * radius * .025, cheekY - radius * .018, 0, cheekX, cheekY, radius * .18);
+        blush.addColorStop(0, '#ffc0a9');
+        blush.addColorStop(.72, '#ff978e');
+        blush.addColorStop(.94, 'rgba(255,133,139,.72)');
+        blush.addColorStop(1, 'rgba(255,133,139,0)');
+        targetCtx.fillStyle = blush;
+        targetCtx.beginPath(); targetCtx.ellipse(cheekX, cheekY, radius * .17, radius * .085, 0, 0, Math.PI * 2); targetCtx.fill();
+      }
+    }
+    targetCtx.globalAlpha = alpha;
+
+    targetCtx.strokeStyle = faceInk;
+    targetCtx.fillStyle = faceInk;
+    targetCtx.lineWidth = Math.max(3.2, radius * .068);
+    if (useReferenceFace && referenceMouthExpressionsReady) {
+      let mouthExpression = 0;
+      let mouthOffsetX = 0;
+      if (emotion === 'hurt') mouthExpression = 3;
+      else if (emotion === 'chewing') {
+        const chewSequence = [5, 6, 7, 8, 7, 4];
+        const chewStep = Math.min(chewSequence.length - 1, Math.floor(Math.max(0, emotionTime) / 114));
+        mouthExpression = chewSequence[chewStep];
+        if (mouthExpression === 7) mouthOffsetX = -radius * .018;
+        if (mouthExpression === 8) mouthOffsetX = radius * .018;
+      } else if (emotion === 'savoring' || emotion === 'anticipating' || squint) mouthExpression = 4;
+      else if (surprised) mouthExpression = 2;
+      else if (joyful) mouthExpression = 1;
+      targetCtx.globalAlpha = alpha;
+      const mouthWidth = joyful ? radius * .58 : radius * .65;
+      drawExpressionCell(
+        referenceMouthExpressionsImage,
+        3,
+        3,
+        mouthExpression,
+        mouthOffsetX,
+        radius * .39,
+        mouthWidth,
+        radius * .56
+      );
+    } else if (emotion === 'hurt') {
+      targetCtx.beginPath(); targetCtx.arc(0, radius * .33, radius * .13, Math.PI + .2, Math.PI * 2 - .2); targetCtx.stroke();
+    } else if (emotion === 'chewing') {
+      const chew = .5 + Math.sin(timestamp / 150) * .5;
+      targetCtx.beginPath(); targetCtx.ellipse(0, radius * .235, radius * (.10 + .025 * chew), radius * (.025 + .065 * chew), 0, 0, Math.PI * 2); targetCtx.fill();
+    } else if (emotion === 'savoring' || emotion === 'anticipating' || squint) {
+      targetCtx.beginPath(); targetCtx.arc(0, radius * .16, radius * .13, .15, Math.PI - .15); targetCtx.stroke();
+    } else if (surprised) {
+      targetCtx.beginPath(); targetCtx.ellipse(0, radius * .25, radius * .115, radius * .145, 0, 0, Math.PI * 2); targetCtx.fill();
+      targetCtx.globalAlpha = alpha * .7;
+      targetCtx.fillStyle = '#ff9b9f';
+      targetCtx.beginPath(); targetCtx.ellipse(0, radius * .31, radius * .067, radius * .038, 0, 0, Math.PI * 2); targetCtx.fill();
+    } else if (joyful) {
+      targetCtx.beginPath();
+      targetCtx.moveTo(-radius * .22, radius * .19);
+      targetCtx.quadraticCurveTo(0, radius * .28, radius * .22, radius * .19);
+      targetCtx.bezierCurveTo(radius * .19, radius * .51, -radius * .19, radius * .51, -radius * .22, radius * .19);
+      targetCtx.closePath(); targetCtx.fill();
+      targetCtx.fillStyle = '#ff9b9f';
+      targetCtx.beginPath(); targetCtx.ellipse(radius * .01, radius * .41, radius * .12, radius * .06, -.08, 0, Math.PI * 2); targetCtx.fill();
+    } else {
+      const smileLift = Math.sin(timestamp / 1200) * radius * .006;
+      targetCtx.beginPath();
+      targetCtx.moveTo(-radius * .17, radius * .245 + smileLift);
+      targetCtx.quadraticCurveTo(0, radius * .315, radius * .17, radius * .245 + smileLift);
+      targetCtx.bezierCurveTo(radius * .15, radius * .45, -radius * .15, radius * .45, -radius * .17, radius * .245 + smileLift);
+      targetCtx.closePath(); targetCtx.fill();
+      targetCtx.save(); targetCtx.clip();
+      targetCtx.fillStyle = '#f69a9d';
+      targetCtx.beginPath(); targetCtx.ellipse(0, radius * .405, radius * .092, radius * .043, 0, 0, Math.PI * 2); targetCtx.fill();
+      targetCtx.restore();
+    }
+    targetCtx.restore();
+  }
+
   function drawSlimeAvatar(targetCtx, {
     x, y, radius, emotion = 'focused', colors = defaultColors,
     skin = 'classic',
     scaleX = 1, scaleY = 1, rotation = 0, alpha = 1,
     gazeX = 0, gazeY = 0, blink = false, aura = '', petPoint = null, tipSway = 0,
-    timestamp = performance.now(), bodyPaint = null, backLayer = null, frontLayer = null, afterLayer = null,
+    timestamp = performance.now(), emotionTime = 0,
+    bodyPaint = null, backLayer = null, frontLayer = null, afterLayer = null,
     bodyHighlight = true, outlineColor = '#26334a', faceColor = null,
-    faceScaleX = 1, faceScaleY = 1
+    faceScaleX = 1, faceScaleY = 1, appearance = 'classic', bodyTint = '',
+    bodyVariant = '', irisTint = ''
   }) {
     if (aura) {
       targetCtx.save();
@@ -208,17 +566,40 @@
     targetCtx.scale(scaleX, scaleY);
 
     const skinId = String(skin || 'classic');
-    const outline = outlineColor;
-    const faceInk = faceColor || outline;
-    const gradient = targetCtx.createRadialGradient(-radius * .25, -radius * .35, radius * .12, 0, 0, radius * 1.1);
+    const cuteV2 = appearance === 'cute-v2' || skinId === 'classic';
+    const usesDefaultPalette = Array.isArray(colors)
+      && colors.length === defaultColors.length
+      && colors.every((color, index) => color === defaultColors[index]);
+    const variantBodyImage = formBodyReady[bodyVariant] ? formBodyImages[bodyVariant] : null;
+    const activeBodyImage = variantBodyImage || referenceBodyImage;
+    const useReferenceBody = cuteV2
+      && skinId === 'classic'
+      && usesDefaultPalette
+      && typeof bodyPaint !== 'function'
+      && (variantBodyImage || referenceBodyReady);
+    const useReferenceFace = cuteV2
+      && skinId === 'classic'
+      && referenceEyeSocketsReady
+      && referencePupilsReady
+      && referenceCheeksReady;
+    const outline = cuteV2 && outlineColor === '#26334a'
+      ? bodyPaint
+        ? '#215a70'
+        : usesDefaultPalette
+          ? '#06483c'
+          : darkenHex(colors[2])
+      : outlineColor;
+    const faceInk = faceColor || (cuteV2 ? '#083f3b' : outline);
+    if (cuteV2 && colors.every((color, index) => color === defaultColors[index])) colors = ['#f7ff92', '#72f23e', '#0fc868'];
+    const gradient = targetCtx.createRadialGradient(-radius * (cuteV2 ? .12 : .25), -radius * (cuteV2 ? .2 : .35), radius * (cuteV2 ? .04 : .12), 0, radius * .02, radius * 1.12);
     gradient.addColorStop(0, colors[0]);
-    gradient.addColorStop(.58, colors[1]);
+    gradient.addColorStop(cuteV2 ? .42 : .58, colors[1]);
     gradient.addColorStop(1, colors[2]);
     targetCtx.fillStyle = gradient;
     targetCtx.strokeStyle = outline;
-    targetCtx.lineWidth = Math.max(2.7, radius * .09);
+    targetCtx.lineWidth = Math.max(2.7, radius * (cuteV2 ? .082 : .09));
     const tipX = tipSway * radius;
-    const layerState = { radius, tipX, skinId, timestamp, colors };
+    const layerState = { radius, tipX, skinId, timestamp, colors, cuteV2, bodyVariant };
 
     if (typeof backLayer === 'function') backLayer(targetCtx, layerState);
 
@@ -246,27 +627,63 @@
       targetCtx.fill(); targetCtx.stroke();
     }
 
-    targetCtx.fillStyle = gradient;
-    traceSlimeBody(targetCtx, skinId, radius, tipX);
-    if (typeof bodyPaint === 'function') {
-      targetCtx.save();
-      targetCtx.clip();
-      bodyPaint(targetCtx, layerState);
-      targetCtx.restore();
-      traceSlimeBody(targetCtx, skinId, radius, tipX);
+    if (useReferenceBody) {
+      drawReferenceBody(targetCtx, radius, variantBodyImage ? '' : bodyTint, activeBodyImage);
     } else {
-      targetCtx.fill();
+      targetCtx.fillStyle = gradient;
+      traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2);
+      if (typeof bodyPaint === 'function') {
+        targetCtx.save();
+        targetCtx.clip();
+        bodyPaint(targetCtx, layerState);
+        targetCtx.restore();
+        traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2);
+      } else {
+        targetCtx.fill();
+      }
+      targetCtx.stroke();
     }
-    targetCtx.stroke();
 
-    drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp);
+    if (cuteV2 && !useReferenceBody && usesDefaultPalette && typeof bodyPaint !== 'function') {
+      targetCtx.save();
+      traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2);
+      targetCtx.clip();
+      targetCtx.strokeStyle = 'rgba(91,255,99,.62)';
+      targetCtx.lineWidth = radius * .055;
+      traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2);
+      targetCtx.stroke();
+      targetCtx.restore();
+    }
 
-    if (bodyHighlight) {
-      targetCtx.globalAlpha = alpha * .25;
+    if (cuteV2 && bodyHighlight && !useReferenceBody) {
+      targetCtx.save();
+      traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2);
+      targetCtx.clip();
+      const innerGlow = targetCtx.createRadialGradient(0, -radius * .08, 0, 0, -radius * .02, radius * .74);
+      innerGlow.addColorStop(0, 'rgba(255,255,120,.42)');
+      innerGlow.addColorStop(.55, 'rgba(235,255,144,.16)');
+      innerGlow.addColorStop(1, 'rgba(255,255,255,0)');
+      targetCtx.fillStyle = innerGlow;
+      targetCtx.fillRect(-radius, -radius, radius * 2, radius * 2);
+      targetCtx.restore();
+    }
+
+    drawMealCoating(targetCtx, aura, skinId, radius, tipX, timestamp, cuteV2);
+
+    if (bodyHighlight && !useReferenceBody) {
+      targetCtx.globalAlpha = alpha * (cuteV2 ? .6 : .25);
       targetCtx.fillStyle = '#fff';
       targetCtx.beginPath();
-      targetCtx.ellipse(-radius * .28, -radius * .32, radius * .23, radius * .13, -.5, 0, Math.PI * 2);
+      targetCtx.ellipse(-radius * .35, -radius * (cuteV2 ? .54 : .36), radius * (cuteV2 ? .25 : .23), radius * (cuteV2 ? .115 : .13), -.62, 0, Math.PI * 2);
       targetCtx.fill();
+      if (cuteV2) {
+        targetCtx.globalAlpha = alpha * .6;
+        targetCtx.beginPath(); targetCtx.arc(-radius * .12, -radius * .7, radius * .06, 0, Math.PI * 2); targetCtx.fill();
+        targetCtx.globalAlpha = alpha * .58;
+        targetCtx.beginPath(); targetCtx.ellipse(radius * .16, -radius * .84, radius * .13, radius * .045, .32, 0, Math.PI * 2); targetCtx.fill();
+        targetCtx.globalAlpha = alpha * .34;
+        targetCtx.beginPath(); targetCtx.ellipse(radius * .74, -radius * .16, radius * .075, radius * .045, .65, 0, Math.PI * 2); targetCtx.fill();
+      }
       targetCtx.globalAlpha = alpha;
     }
 
@@ -375,6 +792,15 @@
     if (typeof frontLayer === 'function') frontLayer(targetCtx, layerState);
 
     targetCtx.scale(faceScaleX, faceScaleY);
+    if (cuteV2) {
+      drawCuteFaceV2(targetCtx, {
+        radius, emotion, faceInk, alpha, gazeX, gazeY, blink, timestamp, emotionTime,
+        useReferenceFace, irisTint
+      });
+      if (typeof afterLayer === 'function') afterLayer(targetCtx, layerState);
+      targetCtx.restore();
+      return;
+    }
     const eyeY = -radius * .12;
     const eyeX = radius * .245;
     const chewPulse = (Math.sin(timestamp / 48 - Math.PI / 2) + 1) / 2;

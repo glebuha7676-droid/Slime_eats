@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="720" viewBox="0 0 390 720">
+  <defs>
+    <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#c4e6dd"/><stop offset=".48" stop-color="#8ebdb3"/><stop offset="1" stop-color="#d9eee4"/></linearGradient>
+    <radialGradient id="light"><stop stop-color="#f5ffdf" stop-opacity=".9"/><stop offset="1" stop-color="#edffe4" stop-opacity="0"/></radialGradient>
+    <linearGradient id="metal"><stop stop-color="#789f99"/><stop offset=".45" stop-color="#d5eae1"/><stop offset="1" stop-color="#7fa79d"/></linearGradient>
+  </defs>
+  <path fill="url(#wall)" d="M0 0h390v720H0z"/>
+  <path d="M32 0v233q0 17 17 17h292M358 0v229" fill="none" stroke="#739e96" stroke-width="12" opacity=".35"/>
+  <path d="M32 0v231q0 17 17 17h292M358 0v229" fill="none" stroke="url(#metal)" stroke-width="7"/>
+  <rect x="72" y="59" width="246" height="195" rx="28" fill="#d9eee4" fill-opacity=".32" stroke="#effff0" stroke-opacity=".45" stroke-width="3"/>
+  <ellipse cx="195" cy="143" rx="178" ry="167" fill="url(#light)"/>
+  <g fill="#fbffde"><rect x="87" y="64" width="35" height="7" rx="3.5"/><rect x="269" y="64" width="35" height="7" rx="3.5"/></g>
+  <path d="M0 292h390v428H0z" fill="#c4ded1" opacity=".45"/>
+  <path d="M0 292h390M0 577h390M82 720l51-142m175 142-51-142" fill="none" stroke="#8bb6a5" stroke-opacity=".3" stroke-width="2"/>
+</svg>

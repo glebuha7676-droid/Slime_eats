@@ -13,8 +13,7 @@ button:focus-visible{outline:4px solid #fff;box-shadow:0 0 0 7px var(--purple)}
 button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{display:none!important}
 [inert]{pointer-events:none!important}
 .ui-modal-open #app *,.screen:not(.active) *{animation-play-state:paused!important}
-@media(max-width:540px){.modal,.shop-tabs,.encyclopedia-world-tabs,.encyclopedia-rarity-tabs,.encyclopedia-card-viewer{backdrop-filter:none!important}}
-.low-power-device .food-card:before,.low-power-device .food-card:after{animation-duration:8s!important}.low-power-device .rarity-name i:before,.low-power-device .rarity-name i:after{animation-duration:6s!important}
+@media(max-width:540px){.modal,.shop-tabs,.encyclopedia-world-tabs{backdrop-filter:none!important}}
 .app{width:100%;max-width:520px;min-height:100dvh;margin:0 auto;padding:env(safe-area-inset-top) 10px calc(20px + env(safe-area-inset-bottom));position:relative}
 .topbar{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 4px 7px}
 .currency{flex:none;display:flex;align-items:center;gap:5px;min-width:61px;justify-content:center;padding:8px 10px;background:var(--paper);border:3px solid var(--line);border-radius:16px;box-shadow:var(--lift);font-size:14px}.currency span{width:16px;height:16px;border:2px solid #9a6812;border-radius:50%;background:var(--yellow);font-size:0;position:relative}.currency span:after{content:"";position:absolute;width:4px;height:4px;left:2px;top:2px;border-radius:50%;background:#fff3a8}
@@ -30,7 +29,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .slime{width:142px;height:112px;max-width:100%;justify-self:center;align-self:end;margin-bottom:37px;position:relative;transition:width .22s ease,height .22s ease,transform .14s ease;z-index:3;animation:slimeIdle 2.4s ease-in-out infinite;touch-action:none;user-select:none;transform-origin:50% 100%}
 @keyframes slimeIdle{0%,100%{transform:scaleX(1) scaleY(1) translateY(0)}45%{transform:scaleX(1.025) scaleY(.985) translateY(2px)}55%{transform:scaleX(.985) scaleY(1.02) translateY(-1px)}}
 .slime.drop-ready,.slime.expect-food{transform:scale(1.07) translateY(-2px)}
-.rarity-bursts{position:absolute;left:50%;top:0;z-index:12;pointer-events:none}.rarity-burst{position:absolute;left:0;bottom:8px;width:max-content;max-width:180px;padding:5px 9px;border:3px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-size:9px;font-weight:1000;letter-spacing:.45px;white-space:nowrap}.rarity-burst.common{animation:titleCommon 1.05s ease-out forwards}.rarity-burst.rare{background:#dff4ff;color:#246d9e;animation:titleRare 1.2s ease-out forwards}.rarity-burst.epic{background:#eee0ff;color:#6740b4;animation:titleEpic 1.35s cubic-bezier(.18,.82,.2,1.15) forwards}.rarity-burst.legendary{background:#ffe36a;color:#624000;animation:titleLegend 1.55s cubic-bezier(.18,.84,.24,1.1) forwards}.rarity-burst.prismatic{background:linear-gradient(90deg,#f4b8ff,#aeeeff,#baffaa,#ffe36a,#ffb5ce);color:#482170;animation:titlePrism 1.65s cubic-bezier(.18,.84,.2,1.08) forwards}.rarity-burst.secret{background:#211333;color:#fff;border-color:#73f0ff;animation:titleSecret 1.15s cubic-bezier(.16,.82,.2,1) forwards}
 @keyframes titleCommon{0%{opacity:0;transform:translate(-50%,12px) scale(.7)}20%{opacity:1;transform:translate(-50%,-3px) scale(1.05)}100%{opacity:0;transform:translate(-50%,-44px)}}@keyframes titleRare{0%{opacity:0;transform:translate(-50%,8px) rotate(-8deg)}22%{opacity:1;transform:translate(-50%,-7px) rotate(5deg)}45%{transform:translate(-50%,-13px) rotate(-3deg)}100%{opacity:0;transform:translate(-50%,-49px)}}@keyframes titleEpic{0%{opacity:0;transform:translate(-50%,6px) scale(.2) rotate(-16deg)}28%{opacity:1;transform:translate(-50%,-12px) scale(1.18) rotate(5deg)}100%{opacity:0;transform:translate(-50%,-57px) scale(.95)}}@keyframes titleLegend{0%{opacity:0;transform:translate(-50%,8px) scale(.5)}18%{opacity:1;transform:translate(-50%,-14px) scale(1.25)}35%{transform:translate(-50%,-9px) scale(.98)}100%{opacity:0;transform:translate(-50%,-64px) scale(1.08)}}@keyframes titlePrism{0%{opacity:0;transform:translate(-50%,5px) rotate(-12deg)}25%{opacity:1;transform:translate(-50%,-14px) rotate(9deg) scale(1.15)}48%{transform:translate(-50%,-21px) rotate(-5deg)}100%{opacity:0;transform:translate(-50%,-70px) rotate(4deg)}}@keyframes titleSecret{0%{opacity:0;transform:translate(-55%,0)}20%{opacity:1;transform:translate(-45%,-13px)}40%{transform:translate(-53%,-20px)}100%{opacity:0;transform:translate(-50%,-72px)}}
 .food-inside{display:none}.swallow-fruit{position:fixed;z-index:700;transform:translate(-50%,-50%) scale(1);font-size:34px;pointer-events:none;transition:left var(--swallow-time,.34s) cubic-bezier(.22,.72,.25,1),top var(--swallow-time,.34s) cubic-bezier(.22,.72,.25,1),transform var(--swallow-time,.34s) ease,opacity var(--swallow-time,.34s) ease}.swallow-fruit.swallowed{transform:translate(-50%,-50%) scale(.22) rotate(18deg);opacity:.15}.stat-pill{padding:5px 6px;border:2px solid var(--line);border-radius:10px;background:#fffaf0}.stat-pill span{display:block;color:var(--muted);font-size:8px;font-weight:800}.stat-pill b{display:block;font-size:12px;margin-top:1px}
 .primary,.secondary,.ad-btn{min-height:44px;padding:10px 14px;border:3px solid var(--line);border-radius:14px;font-weight:1000;font-size:11px;box-shadow:0 3px 0 var(--line);transition:transform .08s ease,filter .12s ease}.primary{background:var(--purple);color:#fff}.secondary{background:#eee5d3}.ad-btn{background:var(--blue);color:#fff}.primary:active,.secondary:active,.ad-btn:active,.reroll-btn:active,.buy-btn:active{transform:translateY(3px);box-shadow:none}
@@ -111,7 +109,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .skin-classic{--skin1:#e9ff9c;--skin2:#67d348;--skin3:#2fa345}.skin-cat{--skin1:#ffe0e8;--skin2:#ff92ad;--skin3:#dc557b}.skin-water{--skin1:#e3fbff;--skin2:#50c9f2;--skin3:#1688c6}.skin-honey{--skin1:#fff0a6;--skin2:#f4a629;--skin3:#c96b15}.skin-dumpling{--skin1:#fff9e8;--skin2:#ead9b7;--skin3:#ba8d62}.skin-ball{--skin1:#fff;--skin2:#edf2f5;--skin3:#b9c7d1}
 .skin-card{grid-template-columns:58px minmax(0,1fr) auto;min-height:70px;transition:border-color .16s ease,background .16s ease,transform .16s ease}.skin-card.selected{border-color:#6c42a8;background:linear-gradient(135deg,#fff 0%,#f1e8ff 100%)}.skin-preview{width:54px;height:54px;overflow:hidden;border-color:color-mix(in srgb,var(--skin3) 72%,#26334a);background:linear-gradient(145deg,#fff 0%,color-mix(in srgb,var(--skin1) 58%,white) 100%);box-shadow:inset 0 1px 0 #fff}.skin-preview canvas{display:block;width:54px;height:54px}.skin-card.selected h4{color:#56308f}
 
-/* Магазин: единая геометрия карточек, ясная цена и отдельная витрина следов. */
 .shop-tabs{position:sticky;z-index:4;top:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0 0 10px;padding:4px;border:2px solid var(--world-line,var(--line));border-radius:18px;background:rgba(255,255,255,.92);box-shadow:inset 0 2px 2px rgba(53,65,90,.08);overflow:hidden;isolation:isolate;backdrop-filter:blur(5px)}
 .shop-tab-slider{position:absolute;z-index:-1;left:4px;top:4px;bottom:4px;width:calc(50% - 4px);border-radius:13px;background:linear-gradient(180deg,color-mix(in srgb,var(--world-accent-top,#d8b3f4) 58%,white),var(--world-accent-bottom,#bd79e3));box-shadow:inset 0 2px 1px rgba(255,255,255,.75),inset 0 -3px 4px color-mix(in srgb,var(--world-line,#5d427b) 16%,transparent);transition:transform .24s cubic-bezier(.2,.75,.25,1.08)}
 .shop-tab-slider.to-trails{transform:translateX(100%)}
@@ -133,7 +130,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .trail-preview{background:linear-gradient(145deg,#fdfbff,#e8f7ff)}
 @media(max-width:390px){.skin-card,.trail-card{grid-template-columns:56px minmax(0,1fr) auto;gap:7px;padding:7px}.skin-preview,.trail-preview,.skin-preview canvas,.trail-preview img{width:53px;height:53px}.skin-card .buy-btn,.trail-card .buy-btn{min-width:62px;padding-inline:6px}.shop-item-copy h4{font-size:10.5px}.shop-item-copy p{font-size:7.6px}}
 
-/* Энциклопедия: открытая еда и справочник особых блоков по мирам. */
 .encyclopedia-modal{width:min(100%,510px);padding:13px;background:linear-gradient(155deg,#fffdf8,var(--world-panel,#fff3d6));}
 .encyclopedia-modal .modal-head{margin-bottom:8px}.encyclopedia-modal .panel-content{max-height:78dvh;padding:1px 1px 8px;overscroll-behavior:contain}
 .encyclopedia-tabs{position:sticky;z-index:20;top:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:7px;padding:4px;border:2px solid var(--world-line,var(--line));border-radius:17px;background:rgba(255,255,255,.94);box-shadow:inset 0 2px 2px rgba(53,65,90,.08);overflow:hidden;isolation:isolate}
@@ -142,23 +138,14 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .encyclopedia-tab{min-height:40px;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;background:transparent;color:#778195;font-size:8.5px;font-weight:1000;letter-spacing:.35px}.encyclopedia-tab>img{width:31px;height:31px;display:block;object-fit:contain}.encyclopedia-tab.active{color:var(--world-text,var(--ink));text-shadow:0 1px rgba(255,255,255,.55)}
 .encyclopedia-world-tabs{position:sticky;z-index:18;top:56px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:9px;padding:5px;border:1.5px solid color-mix(in srgb,var(--world-line,var(--line)) 45%,transparent);border-radius:15px;background:rgba(255,255,255,.88);backdrop-filter:blur(6px)}
 .encyclopedia-world-tab{min-width:0;height:45px;display:flex;align-items:center;justify-content:center;border:2px solid color-mix(in srgb,var(--world-line,var(--line)) 62%,white);border-radius:11px;background:var(--world-panel-soft,#eee5d3);color:var(--world-text,var(--ink));box-shadow:0 2px 0 color-mix(in srgb,var(--world-line,var(--line)) 36%,transparent)}.encyclopedia-world-tab img{width:35px;height:35px;display:block;object-fit:contain}.encyclopedia-world-tab.active{border-color:var(--world-accent-deep,var(--purple-dark));background:linear-gradient(180deg,#fff,var(--world-accent-top,#d7b9ff));transform:translateY(-1px)}.encyclopedia-world-tab.locked{filter:grayscale(1);opacity:.44}.encyclopedia-world-tab.locked>span{font-size:17px}
-.encyclopedia-rarity-tabs{position:sticky;z-index:18;top:55px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-bottom:9px;padding:5px;border:1.5px solid color-mix(in srgb,var(--world-line,var(--line)) 45%,transparent);border-radius:15px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px)}
-.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.food-card{position:relative;width:auto;min-width:0;max-width:none;height:43px;min-height:43px;max-height:43px;display:grid;place-items:center;padding:0;border:2px solid #cdd4dc;border-radius:10px;background:#f4f6f8;box-shadow:0 2px 0 rgba(53,65,90,.15);overflow:visible;touch-action:manipulation}.encyclopedia-rarity-tab .rarity-name{width:100%;height:100%;display:grid;place-items:center}.encyclopedia-rarity-tab .rarity-name i,.encyclopedia-rarity-tab.legendary .rarity-name i,.encyclopedia-rarity-tab.prismatic .rarity-name i,.encyclopedia-rarity-tab.secret .rarity-name i{position:relative;left:auto;top:auto;width:20px;height:20px;display:block;animation:none!important;filter:drop-shadow(0 1px 0 rgba(35,43,59,.45))}.encyclopedia-rarity-tab.secret .rarity-name i{width:24px;height:16px}.encyclopedia-rarity-tab:before,.encyclopedia-rarity-tab:after,.encyclopedia-rarity-tab .rarity-name i:after{animation:none!important}.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.active{transform:translateY(-1px)!important;background:#fff;border-color:var(--rarity-deep,#56616d);box-shadow:0 3px 0 color-mix(in srgb,var(--rarity-deep,#56616d) 55%,transparent)}
 .encyclopedia-page{animation:encyclopediaPageIn .18s ease-out}@keyframes encyclopediaPageIn{from{opacity:0;transform:translateX(5px)}to{opacity:1;transform:none}}
 .encyclopedia-page-head{display:flex;align-items:center;gap:9px;margin-bottom:9px;padding:8px 9px;border:2px solid var(--world-line,var(--line));border-radius:14px;background:linear-gradient(135deg,#fff,var(--world-panel-soft,#eef2f5));box-shadow:inset 0 2px 1px rgba(255,255,255,.75)}
-.encyclopedia-page-head>span,.encyclopedia-collection-progress>span{flex:none;min-width:85px;padding:5px 7px;border-radius:10px;background:var(--world-accent-top,#a7dcff);text-align:center}.encyclopedia-page-head small{display:block;color:var(--world-text,var(--ink));font-size:6px;font-weight:1000;letter-spacing:.35px}.encyclopedia-page-head b{display:block;margin-top:2px;color:var(--world-accent-deep,var(--purple-dark));font-size:16px;line-height:1}.encyclopedia-page-head p{margin:0;color:var(--muted);font-size:8px;font-weight:800;line-height:1.3}.encyclopedia-food-page>.encyclopedia-page-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(118px,.8fr)}.encyclopedia-collection-progress{position:relative;display:grid;grid-template-columns:auto minmax(55px,1fr) 37px;align-items:center;gap:7px}.encyclopedia-collection-progress>span{min-width:82px}.encyclopedia-collection-progress>img{width:37px;height:37px;object-fit:contain}.encyclopedia-progress-track{height:13px;padding:2px;border:2px solid var(--world-line,var(--line));border-radius:999px;background:#e3e8ed;box-shadow:inset 0 2px 2px rgba(48,58,75,.14)}.encyclopedia-progress-track i{width:var(--collection-progress);height:100%;display:block;border-radius:999px;background:linear-gradient(180deg,#9ff2d1,#35c68d);box-shadow:inset 0 2px rgba(255,255,255,.65);transition:width .28s ease}.encyclopedia-rarity-progress{height:6px;flex:1;order:2;overflow:hidden;border-radius:999px;background:color-mix(in srgb,currentColor 18%,transparent)}.encyclopedia-rarity-progress u{width:var(--rarity-progress);height:100%;display:block;border-radius:inherit;background:currentColor;text-decoration:none}.encyclopedia-rarity-head:after{display:none!important}.encyclopedia-rarity-head>b{order:1}.encyclopedia-rarity-head>i{order:0}.encyclopedia-rarity-head>span{order:3}
-.encyclopedia-rarity-group{margin-bottom:11px}.encyclopedia-rarity-head{height:28px;display:flex;align-items:center;gap:6px;margin:0 2px 5px;color:#58616d;font-size:8px;font-weight:1000;letter-spacing:.4px;text-transform:uppercase}.encyclopedia-rarity-head:after{content:"";height:1px;flex:1;margin-left:3px;background:linear-gradient(90deg,currentColor,transparent);opacity:.32}.encyclopedia-rarity-head i{width:15px;height:15px;border-radius:50%;background:linear-gradient(145deg,#b8c0c9,#59636f);box-shadow:inset 1px 1px rgba(255,255,255,.55)}.encyclopedia-rarity-head span{order:3;min-width:32px;padding:3px 6px;border-radius:999px;background:#e5e9ed;text-align:center}.encyclopedia-rarity-group.rare .encyclopedia-rarity-head{color:#087aa9}.encyclopedia-rarity-group.rare .encyclopedia-rarity-head i{border-radius:2px;transform:rotate(45deg);background:linear-gradient(145deg,#bff5ff,#17a8d5)}.encyclopedia-rarity-group.epic .encyclopedia-rarity-head{color:#672a9f}.encyclopedia-rarity-group.epic .encyclopedia-rarity-head i{border-radius:4px;background:linear-gradient(145deg,#efc9ff,#8436bc)}.encyclopedia-rarity-group.legendary .encyclopedia-rarity-head{color:#95620c}.encyclopedia-rarity-group.legendary .encyclopedia-rarity-head i{background:linear-gradient(145deg,#fff0a5,#d89408)}.encyclopedia-rarity-group.prismatic .encyclopedia-rarity-head{color:#513092}.encyclopedia-rarity-group.prismatic .encyclopedia-rarity-head i{background:conic-gradient(#ff75bd,#8f79ff,#5edbff,#67e5a0,#ffe56a,#ff75bd)}.encyclopedia-rarity-group.secret .encyclopedia-rarity-head{color:#b51e40}.encyclopedia-rarity-group.secret .encyclopedia-rarity-head i{background:radial-gradient(circle,#ff4b70,#420714)}
-.encyclopedia-food-viewport{margin-inline:-1px;padding:24px 10px 14px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding-inline:10px;overscroll-behavior-inline:contain;scrollbar-width:thin;scrollbar-color:var(--world-accent-bottom,#999) transparent}.encyclopedia-food-row{width:max-content;display:flex;gap:12px;align-items:flex-start}.encyclopedia-food-row>.food-card.encyclopedia-food-card{flex:0 0 134px;width:134px;min-width:134px;max-width:134px;scroll-snap-align:start;pointer-events:auto;cursor:pointer;touch-action:pan-x;transition:filter .16s ease,opacity .16s ease}.encyclopedia-food-row>.food-card.encyclopedia-food-card:not(.encyclopedia-food-unknown):active{filter:brightness(1.05);opacity:.88}.encyclopedia-food-card .food-model{max-width:none}.encyclopedia-food-unknown{pointer-events:none!important;cursor:default;filter:saturate(.08) brightness(.76);opacity:.48;background:#d8dde4!important;box-shadow:0 3px 0 #6d7580!important}.encyclopedia-food-unknown .rarity-name i{filter:grayscale(1) drop-shadow(0 1px 0 #333)!important}.encyclopedia-food-unknown .rarity:before{animation:none!important;background:#929aa5!important}.encyclopedia-food-unknown:after,.encyclopedia-food-unknown:before{animation:none!important;box-shadow:none!important}.encyclopedia-unknown-mark{height:86px!important;display:grid!important;place-items:center;color:#515967;font-size:52px;font-weight:1000;line-height:1;text-shadow:0 2px rgba(255,255,255,.55)}.encyclopedia-unknown-label{font-size:7px;font-weight:1000;letter-spacing:.45px;color:#525b68}
+.encyclopedia-page-head>span,.encyclopedia-collection-progress>span{flex:none;min-width:85px;padding:5px 7px;border-radius:10px;background:var(--world-accent-top,#a7dcff);text-align:center}.encyclopedia-page-head small{display:block;color:var(--world-text,var(--ink));font-size:6px;font-weight:1000;letter-spacing:.35px}.encyclopedia-page-head b{display:block;margin-top:2px;color:var(--world-accent-deep,var(--purple-dark));font-size:16px;line-height:1}.encyclopedia-page-head p{margin:0;color:var(--muted);font-size:8px;font-weight:800;line-height:1.3}
 .encyclopedia-empty{min-height:220px;display:grid;place-items:center;align-content:center;padding:22px;border:2px dashed var(--world-line,var(--line));border-radius:18px;background:rgba(255,255,255,.62);text-align:center}.encyclopedia-empty img{width:76px;height:76px;object-fit:contain}.encyclopedia-empty b{margin-top:6px;color:var(--world-text,var(--ink));font-size:12px}.encyclopedia-empty p{max-width:230px;margin:5px 0 0;color:var(--muted);font-size:9px;line-height:1.35}
 .encyclopedia-block-list{display:grid;gap:8px}.encyclopedia-block-card{display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;align-items:center;min-height:94px;padding:8px;border:2px solid var(--world-line,var(--line));border-radius:16px;background:linear-gradient(135deg,#fff,var(--world-panel-soft,#edf1f4));box-shadow:0 3px 0 color-mix(in srgb,var(--world-line,var(--line)) 24%,transparent),inset 0 1px 0 #fff}.encyclopedia-block-art{width:78px;height:78px;display:grid;place-items:center;overflow:hidden;border:2px solid color-mix(in srgb,var(--world-line,var(--line)) 70%,white);border-radius:13px;background:var(--world-panel,#fff);box-shadow:inset 0 2px 3px rgba(42,51,70,.1)}.encyclopedia-block-art img{width:74px;height:74px;display:block;object-fit:contain}.encyclopedia-block-copy{min-width:0}.encyclopedia-block-copy small{display:inline-block;padding:3px 6px;border-radius:999px;background:var(--world-accent-top,#a7dcff);color:var(--world-accent-deep,var(--purple-dark));font-size:6.5px;font-weight:1000;letter-spacing:.45px}.encyclopedia-block-copy h3{margin:4px 0 3px;color:var(--world-text,var(--ink));font-size:11px}.encyclopedia-block-copy p{margin:0;color:#596579;font-size:8.5px;font-weight:750;line-height:1.35}
-.encyclopedia-card-viewer{position:fixed;z-index:1200;inset:0;display:grid;place-items:center;padding:18px;background:rgba(26,36,55,.64);backdrop-filter:blur(5px);animation:encyclopediaViewerIn .2s ease-out}.encyclopedia-card-viewer.closing{pointer-events:none;animation:encyclopediaViewerOut .18s ease-in forwards}.encyclopedia-card-viewer-stage{position:relative;display:grid;place-items:center;gap:10px;min-width:250px;min-height:392px}.encyclopedia-card-viewer-card{width:134px;zoom:1.25;transform-origin:center;margin:33px 0 23px;filter:drop-shadow(0 9px 10px rgba(20,27,43,.35));animation:encyclopediaCardInspect .26s cubic-bezier(.2,.8,.25,1.12) both}.encyclopedia-card-viewer-card .encyclopedia-food-card{width:134px!important;min-width:134px!important;max-width:134px!important;pointer-events:none!important}.encyclopedia-card-viewer-stage>small{color:#fff;font-size:9px;font-weight:1000;text-shadow:0 2px 0 #26334a}.encyclopedia-card-viewer-close{position:absolute;z-index:4;right:-28px;top:10px;width:38px;height:38px;border:3px solid #fff;border-radius:50%;background:#26334a;color:#fff;font-size:22px;font-weight:1000;line-height:1;box-shadow:0 3px 0 rgba(0,0,0,.28)}@keyframes encyclopediaViewerIn{from{opacity:0}to{opacity:1}}@keyframes encyclopediaViewerOut{to{opacity:0}}@keyframes encyclopediaCardInspect{from{opacity:0;transform:translateY(18px) scale(.88) rotate(-2deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
 /* Keep encyclopedia controls authoritative after the shared card stylesheet. */
-.encyclopedia-food-unknown.secret{filter:none;opacity:.72;background:radial-gradient(circle at 50% 42%,rgba(255,47,84,.16),transparent 38%),#170309!important;border-color:#8f1029!important;box-shadow:0 3px 0 #280006,0 0 10px rgba(255,23,71,.25)!important}.encyclopedia-food-unknown.secret .rarity:before{background:#4b0a17!important}.encyclopedia-food-unknown.secret .encyclopedia-unknown-mark{color:#ff496a;font-size:36px;letter-spacing:3px;text-shadow:0 0 8px #ff1747}.encyclopedia-food-unknown.secret .encyclopedia-unknown-label{color:#d7798b}
-.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.food-card{width:auto!important;min-width:0!important;max-width:none!important;height:43px!important;min-height:43px!important;max-height:43px!important;padding:0!important;overflow:visible!important}.encyclopedia-rarity-tab .rarity-name i,.encyclopedia-rarity-tab.legendary .rarity-name i,.encyclopedia-rarity-tab.prismatic .rarity-name i,.encyclopedia-rarity-tab.secret .rarity-name i{position:relative!important;left:auto!important;top:auto!important;animation:none!important}.encyclopedia-rarity-tab.legendary .rarity-name i:before,.encyclopedia-rarity-tab.prismatic .rarity-name i:before,.encyclopedia-rarity-tab.secret:after,.encyclopedia-rarity-tab.prismatic:after{animation:none!important}.encyclopedia-food-row>.food-card.encyclopedia-food-card{pointer-events:auto;cursor:pointer;touch-action:pan-x}.encyclopedia-food-row>.food-card.encyclopedia-food-unknown{pointer-events:none!important}
-@media(max-width:430px), (min-width:700px){.bottom-actions{gap:4px}.bottom-actions b{font-size:7.8px;letter-spacing:-.15px}.encyclopedia-modal{padding:10px}.encyclopedia-world-tabs,.encyclopedia-rarity-tabs{top:53px}.encyclopedia-rarity-tabs{gap:3px;padding:4px}.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.food-card{height:40px!important;min-height:40px!important;max-height:40px!important}.encyclopedia-rarity-tab .rarity-name i{width:18px;height:18px}.encyclopedia-rarity-tab.secret .rarity-name i{width:21px;height:15px}.encyclopedia-food-page>.encyclopedia-page-head{grid-template-columns:1fr}.encyclopedia-collection-progress{grid-template-columns:75px minmax(55px,1fr) 33px}.encyclopedia-collection-progress>span{min-width:75px}.encyclopedia-collection-progress>img{width:33px;height:33px}.encyclopedia-food-row>.food-card.encyclopedia-food-card{flex-basis:112px;width:112px;min-width:112px;max-width:112px}.encyclopedia-block-card{grid-template-columns:70px minmax(0,1fr);gap:8px}.encyclopedia-block-art{width:68px;height:68px}.encyclopedia-block-art img{width:65px;height:65px}.encyclopedia-block-copy p{font-size:8px}.encyclopedia-card-viewer-stage{min-width:238px;min-height:398px}.encyclopedia-card-viewer-card{width:112px;zoom:1.4;margin:28px 0 18px}.encyclopedia-card-viewer-card .encyclopedia-food-card{width:112px!important;min-width:112px!important;max-width:112px!important}.encyclopedia-card-viewer-close{right:-25px}}
-@media(max-width:370px){.encyclopedia-food-row>.food-card.encyclopedia-food-card{flex-basis:104px;width:104px;min-width:104px;max-width:104px}.encyclopedia-card-viewer-card{width:104px;zoom:1.44}.encyclopedia-card-viewer-card .encyclopedia-food-card{width:104px!important;min-width:104px!important;max-width:104px!important}}
+@media(max-width:430px), (min-width:700px){.bottom-actions{gap:4px}.bottom-actions b{font-size:7.8px;letter-spacing:-.15px}.encyclopedia-modal{padding:10px}.encyclopedia-world-tabs{top:53px}.encyclopedia-block-card{grid-template-columns:70px minmax(0,1fr);gap:8px}.encyclopedia-block-art{width:68px;height:68px}.encyclopedia-block-art img{width:65px;height:65px}.encyclopedia-block-copy p{font-size:8px}}
 
-/* === ГЛАВНЫЙ ЭКРАН: герой и характеристики === */
 .slime-stage{
   height:auto;
   display:block;
@@ -205,7 +192,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .stats-ribbon .stat-pill.previewing{border-color:#20a768;background:#e6fff1;transform:translateY(-2px)}
 .stats-ribbon .mass{background:#edfff5}.stats-ribbon .power{background:#fff0ed}.stats-ribbon .defense{background:#edf8ff}.stats-ribbon .bounce{background:#f3edff}
 
-/* === ГЕРОЙ V11: единый образ с забегом === */
 .slime-stage{padding:7px;overflow:visible;background:#edf3f8}
 .slime-hero-layout{min-height:196px;display:grid;grid-template-columns:minmax(72px,84px) minmax(138px,1fr) minmax(72px,84px);align-items:center;gap:6px;padding-top:5px}
 .slime-playground{height:190px;margin:0;overflow:visible;border:2px solid #8195a6;border-radius:18px;background:linear-gradient(180deg,#dce8f8 0 68%,#b8d2c9 68% 72%,#d7e6df 72%)}
@@ -220,14 +206,13 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .slime.chewing{animation:slimeChew var(--chew-time,.3s) ease-in-out var(--chew-count,2)}
 .slime.savoring{animation:slimeSavorHold .22s ease-out both}
 .slime.pleased{animation:slimeRareHappy var(--happy-time,.42s) cubic-bezier(.2,.78,.24,1)}
-@keyframes slimeCatch{0%,100%{transform:scale(1)}42%{transform:translateY(-2px) scaleX(.96) scaleY(1.04)}74%{transform:translateY(1px) scaleX(1.025) scaleY(.98)}}
-@keyframes slimeChew{0%,100%{transform:scale(1)}50%{transform:scaleX(1.022) scaleY(.982)}}
-@keyframes slimeSavorHold{to{transform:scaleX(1.018) scaleY(.987)}}
+@keyframes slimeCatch{0%{transform:scale(1)}22%{transform:translateY(-7px) scaleX(.94) scaleY(1.075)}48%{transform:translateY(3px) scaleX(1.105) scaleY(.88)}72%{transform:translateY(-3px) scaleX(.965) scaleY(1.045)}100%{transform:scale(1)}}
+@keyframes slimeChew{0%,100%{transform:scale(1)}28%{transform:scaleX(1.018) scaleY(.986)}55%{transform:scaleX(1.04) scaleY(.965)}78%{transform:scaleX(1.014) scaleY(.989)}}
+@keyframes slimeSavorHold{0%{transform:scale(1)}55%{transform:translateY(2px) scaleX(1.045) scaleY(.965)}100%{transform:translateY(-2px) scaleX(.985) scaleY(1.025)}}
 @keyframes slimeHappy{0%,100%{transform:scale(1)}42%{transform:scaleX(1.025) scaleY(.985)}72%{transform:scaleX(.992) scaleY(1.012)}}
 .slime.meal-rare.pleased{animation-name:slimeRareHappy}
-@keyframes slimeRareHappy{0%,100%{transform:scale(1)}38%{transform:translateY(-5px) scale(.987,1.018)}68%{transform:translateY(1px) scale(1.012,.992)}}
+@keyframes slimeRareHappy{0%,100%{transform:scale(1)}20%{transform:translateY(3px) scaleX(1.07) scaleY(.94)}47%{transform:translateY(-9px) scaleX(.94) scaleY(1.075)}72%{transform:translateY(1px) scaleX(1.045) scaleY(.97)}}
 
-/* Тактильные реакции героя в меню. */
 .slime.booped{animation:slimeBoop .58s cubic-bezier(.2,.82,.2,1)}
 @keyframes slimeBoop{0%,100%{transform:scale(1)}20%{transform:translateY(3px) scaleX(1.1) scaleY(.89)}48%{transform:translateY(-8px) scaleX(.92) scaleY(1.1)}72%{transform:translateY(1px) scaleX(1.035) scaleY(.98)}}
 .slime.petting{animation:slimePet .36s ease-in-out infinite alternate}
@@ -235,17 +220,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .slime.petted{animation:slimePetted .72s ease}
 @keyframes slimePetted{0%,100%{transform:scale(1)}35%{transform:translateY(-5px) scaleX(.95) scaleY(1.055)}62%{transform:translateY(1px) scaleX(1.035) scaleY(.98)}}
 
-/* Эффекты поедания рисуются в canvas: один чистый эффект на редкость. */
-
-/* First discovery of a secret card: a self-contained ceremony above the whole UI. */
-.secret-discovery-active{overflow:hidden}
-.secret-discovery-overlay{position:fixed;z-index:1400;inset:0;display:grid;place-items:center;overflow:hidden;isolation:isolate;touch-action:none}.secret-discovery-overlay.hidden{display:none}.secret-discovery-veil{position:absolute;z-index:0;inset:-10%;background:radial-gradient(ellipse at 50% 46%,rgba(95,5,32,.22) 0 12%,rgba(26,2,12,.82) 42%,#070207 82%);opacity:0}.secret-discovery-eye{position:absolute;z-index:3;left:50%;top:46%;width:min(230px,62vw);height:min(124px,34vw);transform:translate(-50%,-50%);opacity:0;filter:drop-shadow(0 0 17px rgba(255,30,70,.72))}.secret-discovery-eye>span{position:absolute;inset:0;overflow:hidden;border:4px solid #ff496b;border-radius:50% / 58%;background:radial-gradient(ellipse at 50% 48%,#fff3ef 0 46%,#ff9aac 57%,#7f0a29 78%,#21030d 100%);box-shadow:inset 0 0 25px rgba(133,0,35,.58),0 0 25px rgba(255,27,68,.52);transform:scaleY(.025)}.secret-discovery-eye>span:before,.secret-discovery-eye>span:after{content:"";position:absolute;z-index:3;left:-4%;width:108%;height:58%;background:linear-gradient(#29040e,#6b0a25);box-shadow:0 0 12px rgba(255,41,78,.48)}.secret-discovery-eye>span:before{top:-8%;border-radius:0 0 52% 52%;transform:translateY(0)}.secret-discovery-eye>span:after{bottom:-8%;border-radius:52% 52% 0 0;transform:translateY(0)}.secret-discovery-eye i{position:absolute;z-index:2;left:50%;top:50%;width:54px;height:62px;border:7px solid #ffd8df;border-radius:50%;background:radial-gradient(ellipse at 43% 31%,#ff93a8 0 8%,#ec3157 10% 35%,#65051e 63%,#150107 66%);box-shadow:0 0 15px #ff3158,inset 0 0 9px #35000c;transform:translate(-50%,-50%);opacity:0}.secret-discovery-eye i:after{content:"";position:absolute;left:50%;top:50%;width:13px;height:35px;border-radius:50%;background:#090105;transform:translate(-50%,-50%)}.secret-discovery-wave{position:absolute;z-index:2;left:50%;top:46%;width:130px;height:130px;border:7px solid rgba(255,226,220,.78);border-radius:50%;box-shadow:0 0 15px #ff3158,0 0 34px rgba(255,32,72,.6);opacity:0;transform:translate(-50%,-50%) scale(.15)}.secret-discovery-particles{position:absolute;z-index:1;left:50%;top:46%;width:min(310px,82vw);height:min(310px,82vw);transform:translate(-50%,-50%)}.secret-discovery-particles i{--a:0deg;position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:#ff4769;box-shadow:0 0 8px #ff1747;opacity:0;transform:rotate(var(--a)) translateX(132px)}.secret-discovery-particles i:nth-child(2){--a:58deg;width:4px;height:4px}.secret-discovery-particles i:nth-child(3){--a:121deg}.secret-discovery-particles i:nth-child(4){--a:184deg;width:5px;height:5px}.secret-discovery-particles i:nth-child(5){--a:242deg}.secret-discovery-particles i:nth-child(6){--a:306deg;width:4px;height:4px}.secret-discovery-title{position:absolute;z-index:5;left:50%;top:22%;margin:0;color:#fff0ec;font-size:clamp(21px,6vw,34px);font-weight:1000;letter-spacing:2px;text-align:center;text-shadow:0 0 8px #ff3158,0 3px 0 #550012;transform:translate(-50%,12px) scale(.82);opacity:0;white-space:nowrap}.secret-discovery-card{position:absolute;z-index:6;left:50%;top:51%;width:116px;transform:translate(-50%,-30%) scale(.35);opacity:0;filter:drop-shadow(0 14px 17px rgba(0,0,0,.48));outline:0}.secret-discovery-card>.food-card{width:116px;min-width:116px;max-width:116px;pointer-events:none}.secret-discovery-hint{position:absolute;z-index:6;left:50%;top:78%;width:max-content;max-width:86vw;margin:0;padding:7px 12px;border:1px solid rgba(255,101,130,.38);border-radius:999px;background:rgba(30,2,12,.68);color:#ffdce3;font-size:9px;font-weight:900;letter-spacing:.25px;text-align:center;transform:translateX(-50%);opacity:0}
-.secret-discovery-overlay.phase-birth .secret-discovery-veil{animation:secretDiscoveryDim 1.05s ease-out both}.secret-discovery-overlay.phase-birth .secret-discovery-eye{animation:secretDiscoveryBirth 1.05s cubic-bezier(.2,.74,.2,1) both}.secret-discovery-overlay.phase-birth .secret-discovery-eye>span{animation:secretDiscoveryClosed 1.05s ease-out both}
-.secret-discovery-overlay.phase-open .secret-discovery-veil,.secret-discovery-overlay.phase-watch .secret-discovery-veil,.secret-discovery-overlay.phase-collapse .secret-discovery-veil,.secret-discovery-overlay.phase-card .secret-discovery-veil{opacity:1}.secret-discovery-overlay.phase-open .secret-discovery-eye,.secret-discovery-overlay.phase-watch .secret-discovery-eye{opacity:1}.secret-discovery-overlay.phase-open .secret-discovery-eye>span{animation:secretDiscoveryOpen .34s cubic-bezier(.15,.88,.2,1.13) both}.secret-discovery-overlay.phase-open .secret-discovery-eye>span:before{animation:secretDiscoveryUpperLidOpen .34s cubic-bezier(.18,.8,.2,1) both}.secret-discovery-overlay.phase-open .secret-discovery-eye>span:after{animation:secretDiscoveryLowerLidOpen .34s cubic-bezier(.18,.8,.2,1) both}.secret-discovery-overlay.phase-open .secret-discovery-eye i{animation:secretDiscoveryIrisOpen .36s .07s ease-out both}.secret-discovery-overlay.phase-open .secret-discovery-wave{animation:secretDiscoveryWave .72s .06s ease-out both}.secret-discovery-overlay.phase-watch .secret-discovery-eye>span{transform:scaleY(1)}.secret-discovery-overlay.phase-watch .secret-discovery-eye>span:before{transform:translateY(-86%)}.secret-discovery-overlay.phase-watch .secret-discovery-eye>span:after{transform:translateY(86%)}.secret-discovery-overlay.phase-watch .secret-discovery-eye i{opacity:1;animation:secretDiscoveryLook 1.65s ease-in-out both}.secret-discovery-overlay.phase-watch .secret-discovery-particles i{animation:secretDiscoveryOrbit 1.6s ease-in-out infinite}
-.secret-discovery-overlay.phase-collapse .secret-discovery-eye{opacity:1;animation:secretDiscoverySuction .96s cubic-bezier(.2,.75,.16,1) both}.secret-discovery-overlay.phase-collapse .secret-discovery-eye>span{transform:scaleY(1)}.secret-discovery-overlay.phase-collapse .secret-discovery-eye>span:before{transform:translateY(-86%)}.secret-discovery-overlay.phase-collapse .secret-discovery-eye>span:after{transform:translateY(86%)}.secret-discovery-overlay.phase-collapse .secret-discovery-eye i{opacity:1}.secret-discovery-overlay.phase-collapse .secret-discovery-wave{animation:secretDiscoveryInward .88s ease-in both}.secret-discovery-overlay.phase-collapse .secret-discovery-particles i{animation:secretDiscoveryParticleSuck .82s ease-in both}.secret-discovery-overlay.phase-collapse .secret-discovery-title{animation:secretDiscoveryTitleIn .72s .48s cubic-bezier(.18,.86,.22,1.1) both}
-.secret-discovery-overlay.phase-card .secret-discovery-title{opacity:1;transform:translate(-50%,0)}.secret-discovery-overlay.phase-card .secret-discovery-card{animation:secretDiscoveryCardIn .62s cubic-bezier(.18,.82,.22,1.14) both}.secret-discovery-overlay.phase-card.show-card .secret-discovery-hint{animation:secretDiscoveryHint .4s .5s ease-out both}.secret-discovery-overlay.card-closing .secret-discovery-card{animation:secretDiscoveryCardClose .34s ease-in both}.secret-discovery-overlay.card-closing .secret-discovery-title,.secret-discovery-overlay.card-closing .secret-discovery-hint{opacity:0;transition:opacity .16s}.secret-discovery-overlay.to-slime{opacity:0;transition:opacity .34s ease}
-@keyframes secretDiscoveryDim{from{opacity:0}to{opacity:1}}@keyframes secretDiscoveryBirth{0%{opacity:0;transform:translate(-50%,-50%) scale(.55);filter:blur(10px) drop-shadow(0 0 2px #ff3158)}55%{opacity:.72;filter:blur(2px) drop-shadow(0 0 13px rgba(255,30,70,.62))}100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0) drop-shadow(0 0 17px rgba(255,30,70,.72))}}@keyframes secretDiscoveryClosed{0%{transform:scaleY(.01);opacity:0}58%{transform:scaleY(.04);opacity:1}82%{transform:scaleY(.1)}100%{transform:scaleY(.07)}}@keyframes secretDiscoveryOpen{0%{transform:scaleY(.07)}62%{transform:scaleY(1.13)}100%{transform:scaleY(1)}}@keyframes secretDiscoveryUpperLidOpen{from{transform:translateY(0)}to{transform:translateY(-86%)}}@keyframes secretDiscoveryLowerLidOpen{from{transform:translateY(0)}to{transform:translateY(86%)}}@keyframes secretDiscoveryIrisOpen{0%{opacity:0;transform:translate(-50%,-50%) scale(.08)}65%{opacity:1;transform:translate(-50%,-50%) scale(1.16)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}@keyframes secretDiscoveryWave{0%{opacity:0;transform:translate(-50%,-50%) scale(.12)}18%{opacity:.9}100%{opacity:0;transform:translate(-50%,-50%) scale(3.1)}}@keyframes secretDiscoveryLook{0%,13%{transform:translate(-50%,-50%)}28%,39%{transform:translate(calc(-50% - 35px),calc(-50% + 2px))}53%,65%{transform:translate(calc(-50% + 34px),calc(-50% - 3px))}78%,88%{transform:translate(calc(-50% + 6px),calc(-50% + 8px))}100%{transform:translate(-50%,-50%)}}@keyframes secretDiscoveryOrbit{0%,100%{opacity:.25;filter:brightness(.75)}50%{opacity:1;filter:brightness(1.4)}}@keyframes secretDiscoverySuction{0%{transform:translate(-50%,-50%) scale(1);opacity:1}24%{transform:translate(-50%,-50%) scale(1.08,.94)}70%{transform:translate(-50%,-50%) scale(.2,.43) rotate(18deg);opacity:.95}100%{transform:translate(-50%,-50%) scale(.01);opacity:0}}@keyframes secretDiscoveryInward{0%{opacity:0;transform:translate(-50%,-50%) scale(3.3)}25%{opacity:.65}100%{opacity:0;transform:translate(-50%,-50%) scale(.04)}}@keyframes secretDiscoveryParticleSuck{0%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateX(0) scale(.1)}}@keyframes secretDiscoveryTitleIn{from{opacity:0;transform:translate(-50%,12px) scale(.82)}to{opacity:1;transform:translate(-50%,0) scale(1)}}@keyframes secretDiscoveryCardIn{0%{opacity:0;transform:translate(-50%,-30%) scale(.25) rotate(-4deg)}65%{opacity:1;transform:translate(-50%,-50%) scale(1.72) rotate(1deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1.62)}}@keyframes secretDiscoveryHint{from{opacity:0;transform:translate(-50%,7px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes secretDiscoveryCardClose{from{opacity:1;transform:translate(-50%,-50%) scale(1.62)}to{opacity:0;transform:translate(-50%,18%) scale(.22)}}
-@media(prefers-reduced-motion:reduce){.secret-discovery-overlay *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 .stat-rail{display:grid;gap:8px;position:relative;z-index:8}
 .stat-rail .stat-pill{min-width:0;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:7px 4px;border:2px solid var(--line);border-radius:16px;text-align:center;background:#fff;transition:.14s ease}
@@ -256,14 +230,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 .food-dragging .stat-rail .stat-pill.previewing{z-index:2;border-width:3px;border-color:#13985a;background:#d9ffea;transform:scale(1.075)}
 .food-dragging .stat-rail .stat-values em:not(:empty){min-width:29px;padding:3px 5px;border-radius:999px;background:#159c5d;color:#fff;font-size:10px;line-height:1;box-shadow:0 2px 0 #0c7142}
 
-/* Титулы живут в верхней половине сцены и не обрезаются. */
-.rarity-bursts{top:-3px;z-index:40}.rarity-burst{max-width:230px;padding:7px 11px;border-width:2px;border-radius:12px;font-size:10px;letter-spacing:.55px;box-shadow:0 3px 0 rgba(38,51,74,.18)}
-.rarity-burst.secret{padding:9px 15px;border-color:#9df6ff;background:linear-gradient(135deg,#2a1745,#60308c);color:#fff;font-size:14px;letter-spacing:1px;box-shadow:0 4px 0 rgba(25,8,45,.5)}
-.rarity-burst.common{animation:titleCommonV11 1.35s ease-out forwards}.rarity-burst.rare{animation:titleRareV11 1.5s ease-out forwards}.rarity-burst.epic{animation:titleEpicV11 1.7s cubic-bezier(.18,.82,.2,1.1) forwards}.rarity-burst.legendary{animation:titleLegendV11 1.75s ease-out forwards}
-.rarity-burst.prismatic{border-color:#fff;background:linear-gradient(90deg,#ff86ca,#a98cff,#69c8ff,#69e6a2,#ffe36e,#ff9d70,#ff86ca);background-size:300% 100%;color:#392153;text-shadow:0 1px rgba(255,255,255,.7);box-shadow:0 0 0 3px rgba(179,119,244,.25),0 4px 0 rgba(83,53,121,.25);animation:titlePrismV11 2.15s cubic-bezier(.18,.82,.2,1.08) forwards,prismTitleFlow .7s linear infinite}
-.rarity-burst.prismatic:before,.rarity-burst.prismatic:after{content:"✦";position:absolute;top:50%;font-size:16px;color:#fff;text-shadow:0 0 5px #8f5bd5}.rarity-burst.prismatic:before{left:-17px;animation:prismStar .55s ease-in-out infinite alternate}.rarity-burst.prismatic:after{right:-17px;animation:prismStar .55s .2s ease-in-out infinite alternate}
-.rarity-burst.secret{border-color:#ff3158;background:linear-gradient(135deg,#120209,#500819 55%,#1f030b);color:#fff3ec;box-shadow:-3px 0 #ff3158,3px 0 #8f071f,0 0 18px rgba(255,35,77,.62),0 4px 0 rgba(36,1,10,.48);text-shadow:0 0 5px #ff3158;animation:titleSecretV11 2.35s cubic-bezier(.18,.82,.2,1.04) forwards}
-.rarity-burst.secret:before,.rarity-burst.secret:after{content:"◆";position:absolute;top:50%;font-size:13px}.rarity-burst.secret:before{left:-18px;color:#fff1e8}.rarity-burst.secret:after{right:-18px;color:#ff3158}
 @keyframes titleCommonV11{0%{opacity:0;transform:translate(-50%,8px) scale(.75)}22%{opacity:1;transform:translate(-50%,-5px) scale(1.05)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-50px)}}
 @keyframes titleRareV11{0%{opacity:0;transform:translate(-50%,8px) rotate(-6deg)}25%{opacity:1;transform:translate(-50%,-8px) rotate(3deg)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-55px) rotate(-2deg)}}
 @keyframes titleEpicV11{0%{opacity:0;transform:translate(-50%,8px) scale(.3) rotate(-10deg)}28%{opacity:1;transform:translate(-50%,-10px) scale(1.18) rotate(3deg)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-62px) scale(.96)}}
@@ -272,13 +238,11 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 @keyframes prismTitleFlow{to{background-position:100% 0}}@keyframes prismStar{to{transform:translateY(-50%) scale(1.35) rotate(25deg)}}
 @keyframes titleSecretV11{0%{opacity:0;transform:translate(-55%,5px) skewX(-8deg)}12%{opacity:1;transform:translate(-45%,-8px) skewX(5deg)}23%{transform:translate(-52%,-13px)}36%,72%{opacity:1;transform:translate(-50%,-22px)}100%{opacity:0;transform:translate(-47%,-82px) scale(1.08)}}
 
-/* === ГЛАВНЫЙ ЭКРАН: особые эффекты === */
 .buff-shelf{padding:10px;margin-bottom:10px;background:#fff8df}
 .buff-list{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none}.buff-list::-webkit-scrollbar{display:none}
 .launch-btn{min-height:54px;display:grid;place-items:center;padding:8px;border:3px solid var(--line);border-radius:15px;background:#6554d9;color:#fff;box-shadow:0 4px 0 #41338e;transition:transform .08s ease,background .12s ease}
 .launch-btn:active{transform:translateY(4px);box-shadow:none}.launch-btn b{display:block;font-size:14px;letter-spacing:.8px;white-space:nowrap}
 
-/* === ГЛАВНЫЙ ЭКРАН: конвейер === */
 .conveyor{position:relative;padding:9px 9px 7px;background:#f4f3ef}
 .conveyor-head{justify-content:flex-start;padding:0 3px 7px;text-align:left}.conveyor-head small{color:#737b86}.conveyor-head b{font-size:12px}.conveyor-head b span{display:inline-block;margin-left:3px;padding:2px 5px;border-radius:7px;background:#e2e4e7;color:#4d5664}
 .reroll-btn{position:relative;z-index:10;left:auto;top:auto;width:58px;height:58px;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;margin:-15px auto 0;padding:4px;border:3px solid var(--line);border-radius:50%;background:#f7f6f2;color:#46505e;box-shadow:0 3px 0 #7a8088;transform:none;font-weight:1000}
@@ -291,234 +255,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
 @media(max-height:720px){.slime-hero-layout{min-height:172px}.slime-playground{height:168px}.stat-rail .stat-pill{min-height:66px}.bottom-actions button{padding-top:6px;padding-bottom:6px}.shaft{min-height:350px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
-/* === SECRET DISCOVERY V2: пробуждение новой карточки === */
-.secret-discovery-overlay{
-  --secret-hot:#ff4b70;
-  --secret-light:#ffe2e7;
-  --secret-deep:#4a061f;
-  background:transparent;
-}
-.secret-discovery-overlay:before{
-  content:"";
-  position:absolute;
-  z-index:1;
-  left:50%;top:47%;
-  width:min(330px,86vw);height:min(370px,64vh);
-  border:0;
-  border-radius:48% 52% 45% 55% / 54% 44% 56% 46%;
-  background:radial-gradient(ellipse,rgba(255,81,114,.16),rgba(105,5,45,.13) 43%,transparent 72%);
-  box-shadow:0 0 72px rgba(255,35,78,.2);
-  opacity:0;
-  transform:translate(-50%,-50%) scale(.84);
-  pointer-events:none;
-}
-.secret-discovery-overlay:after{
-  content:"";
-  position:absolute;
-  z-index:1;
-  left:50%;top:47%;
-  width:min(350px,92vw);height:min(350px,56vh);
-  border-radius:48% 52% 45% 55% / 54% 44% 56% 46%;
-  background:radial-gradient(ellipse,rgba(255,68,104,.18),rgba(105,5,45,.18) 42%,transparent 70%);
-  opacity:0;
-  transform:translate(-50%,-50%) scale(.7);
-  pointer-events:none;
-}
-.secret-discovery-veil{
-  inset:-5%;
-  background:
-    radial-gradient(ellipse at 50% 47%,rgba(119,9,49,.16) 0 17%,rgba(42,2,22,.76) 55%,rgba(9,1,8,.96) 100%),
-    linear-gradient(180deg,rgba(64,4,30,.36),rgba(8,1,8,.95));
-}
-.secret-discovery-eye{
-  z-index:4;top:44%;width:min(116px,34vw);height:min(76px,23vw);
-  filter:drop-shadow(0 0 14px rgba(255,43,82,.72));
-}
-.secret-discovery-eye>span{
-  inset:0;border:4px solid #ff6a82;border-radius:49% 51% 48% 52% / 58% 56% 44% 42%;
-  background:linear-gradient(180deg,#a91a43,#6e0a2e);
-  box-shadow:inset 0 3px 0 rgba(255,166,181,.35),inset 0 -5px 0 rgba(54,1,22,.25),0 0 0 2px #51051f,0 0 20px rgba(255,34,76,.5);
-}
-.secret-discovery-eye>span:before,.secret-discovery-eye>span:after{
-  left:-5%;width:110%;height:57%;background:#7b0c32;box-shadow:none;
-}
-.secret-discovery-eye>span:before{top:-7%;border-radius:0 0 55% 55%}
-.secret-discovery-eye>span:after{bottom:-7%;border-radius:55% 55% 0 0}
-.secret-discovery-eye i{
-  width:30px;height:35px;border:4px solid #ffe8e7;background:radial-gradient(ellipse at 38% 28%,#ff9db0 0 8%,#ee315d 10% 38%,#680622 65%,#180108 68%);
-  box-shadow:0 0 12px #ff3158,inset 0 0 6px #39000e;
-}
-.secret-discovery-eye i:after{width:7px;height:22px;background:#130107}
-.secret-discovery-wave{
-  z-index:3;top:44%;width:96px;height:72px;border:3px solid rgba(255,210,217,.76);
-  border-radius:44% 56% 51% 49% / 58% 45% 55% 42%;
-  box-shadow:0 0 12px var(--secret-hot),0 0 25px rgba(255,43,82,.44);
-}
-.secret-discovery-particles{z-index:2;top:46%;width:min(300px,82vw);height:min(300px,82vw)}
-.secret-discovery-particles i{
-  width:6px;height:6px;border-radius:50% 50% 50% 10%;background:#ff6c88;box-shadow:0 0 7px #ff3158;
-}
-.secret-discovery-title{
-  top:12%;padding:8px 15px;border:2px solid rgba(255,95,126,.65);border-radius:14px;
-  background:rgba(74,5,31,.72);color:#fff2ed;font-size:clamp(20px,5.4vw,31px);letter-spacing:1.5px;
-  text-shadow:0 2px 0 #710626;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 18px rgba(255,40,82,.32);
-}
-.secret-discovery-card{top:52%;width:128px;filter:drop-shadow(0 15px 18px rgba(0,0,0,.5)) drop-shadow(0 0 12px rgba(255,42,80,.22))}
-.secret-discovery-card>.food-card{width:128px;min-width:128px;max-width:128px}
-.secret-discovery-hint{top:87%;border:2px solid rgba(255,100,128,.5);background:rgba(57,3,27,.82);color:#ffe7eb;font-size:9px;box-shadow:0 3px 0 rgba(17,0,8,.36)}
-
-.secret-discovery-overlay.phase-birth .secret-discovery-veil{animation:secretAwakenDim .72s ease-out both}
-.secret-discovery-overlay.phase-birth:before{animation:secretAwakenFrameIn .72s cubic-bezier(.18,.82,.2,1) both}
-.secret-discovery-overlay.phase-birth:after{animation:secretAwakenAuraIn .72s ease-out both}
-.secret-discovery-overlay.phase-birth .secret-discovery-eye{animation:secretAwakenCrestBirth .72s cubic-bezier(.18,.82,.2,1.12) both}
-.secret-discovery-overlay.phase-birth .secret-discovery-eye>span{animation:secretAwakenClosed .72s ease-out both}
-
-.secret-discovery-overlay.phase-open .secret-discovery-veil,.secret-discovery-overlay.phase-watch .secret-discovery-veil,.secret-discovery-overlay.phase-collapse .secret-discovery-veil,.secret-discovery-overlay.phase-card .secret-discovery-veil{opacity:1}
-.secret-discovery-overlay.phase-open:before,.secret-discovery-overlay.phase-watch:before,.secret-discovery-overlay.phase-collapse:before,.secret-discovery-overlay.phase-card:before{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.secret-discovery-overlay.phase-open:after,.secret-discovery-overlay.phase-watch:after,.secret-discovery-overlay.phase-collapse:after{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.secret-discovery-overlay.phase-open .secret-discovery-eye,.secret-discovery-overlay.phase-watch .secret-discovery-eye{opacity:1}
-.secret-discovery-overlay.phase-open .secret-discovery-eye>span{animation:secretAwakenOpen .42s cubic-bezier(.15,.88,.2,1.1) both}
-.secret-discovery-overlay.phase-open .secret-discovery-eye>span:before{animation:secretAwakenUpperLid .42s cubic-bezier(.18,.8,.2,1) both}
-.secret-discovery-overlay.phase-open .secret-discovery-eye>span:after{animation:secretAwakenLowerLid .42s cubic-bezier(.18,.8,.2,1) both}
-.secret-discovery-overlay.phase-open .secret-discovery-eye i{animation:secretAwakenIris .44s .04s ease-out both}
-.secret-discovery-overlay.phase-open .secret-discovery-wave{animation:secretAwakenWave .62s ease-out both}
-.secret-discovery-overlay.phase-watch .secret-discovery-eye{animation:secretAwakenFloat .82s ease-in-out infinite alternate}
-.secret-discovery-overlay.phase-watch .secret-discovery-eye>span{transform:scaleY(1)}
-.secret-discovery-overlay.phase-watch .secret-discovery-eye>span:before{transform:translateY(-86%)}
-.secret-discovery-overlay.phase-watch .secret-discovery-eye>span:after{transform:translateY(86%)}
-.secret-discovery-overlay.phase-watch .secret-discovery-eye i{opacity:1;animation:secretAwakenLook .82s ease-in-out both}
-.secret-discovery-overlay.phase-watch .secret-discovery-particles i{animation:secretAwakenMote .9s ease-in-out infinite alternate}
-
-.secret-discovery-overlay.phase-collapse .secret-discovery-eye{opacity:1;animation:secretAwakenSealAway .66s cubic-bezier(.2,.76,.18,1) both}
-.secret-discovery-overlay.phase-collapse .secret-discovery-eye>span{transform:scaleY(1)}
-.secret-discovery-overlay.phase-collapse .secret-discovery-eye>span:before{transform:translateY(-86%)}
-.secret-discovery-overlay.phase-collapse .secret-discovery-eye>span:after{transform:translateY(86%)}
-.secret-discovery-overlay.phase-collapse .secret-discovery-eye i{opacity:1}
-.secret-discovery-overlay.phase-collapse .secret-discovery-wave{animation:secretAwakenWaveIn .62s ease-in both}
-.secret-discovery-overlay.phase-collapse .secret-discovery-particles i{animation:secretAwakenMoteIn .58s ease-in both}
-.secret-discovery-overlay.phase-collapse .secret-discovery-title{animation:secretAwakenTitle .52s .18s cubic-bezier(.18,.86,.22,1.08) both}
-
-.secret-discovery-overlay.phase-card:before{opacity:.38;transform:translate(-50%,-50%) scale(.92)}
-.secret-discovery-overlay.phase-card:after{opacity:0}
-.secret-discovery-overlay.phase-card .secret-discovery-title{opacity:1;transform:translate(-50%,0)}
-.secret-discovery-overlay.phase-card .secret-discovery-card{animation:secretAwakenCardIn .58s cubic-bezier(.18,.82,.22,1.12) both}
-.secret-discovery-overlay.phase-card.show-card .secret-discovery-hint{animation:secretDiscoveryHint .35s .42s ease-out both}
-.secret-discovery-overlay.card-closing .secret-discovery-card{animation:secretAwakenCardClose .32s ease-in both}
-
-/* Пока секрет раскрывается на конвейере, прозрачный слой только блокирует управление. */
-.secret-discovery-overlay.phase-card-awaken{background:rgba(41,2,20,.035)}
-.secret-discovery-overlay.phase-card-awaken .secret-discovery-veil{opacity:.08}
-.secret-discovery-overlay.phase-card-awaken:before,.secret-discovery-overlay.phase-card-awaken:after,
-.secret-discovery-overlay.phase-card-awaken .secret-discovery-eye,
-.secret-discovery-overlay.phase-card-awaken .secret-discovery-wave,
-.secret-discovery-overlay.phase-card-awaken .secret-discovery-particles,
-.secret-discovery-overlay.phase-card-awaken .secret-discovery-title,
-.secret-discovery-overlay.phase-card-awaken .secret-discovery-card,
-.secret-discovery-overlay.phase-card-awaken .secret-discovery-hint{display:none!important}
-
-@keyframes secretAwakenDim{from{opacity:0}to{opacity:1}}
-@keyframes secretAwakenFrameIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.76)}65%{opacity:1;transform:translate(-50%,-50%) scale(1.035)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-@keyframes secretAwakenAuraIn{from{opacity:0;transform:translate(-50%,-50%) scale(.45)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-@keyframes secretAwakenCrestBirth{0%{opacity:0;transform:translate(-50%,-50%) scale(.28) rotate(-8deg);filter:blur(7px)}70%{opacity:1;transform:translate(-50%,-50%) scale(1.1) rotate(2deg);filter:blur(0)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-@keyframes secretAwakenClosed{0%{transform:scaleY(.05)}100%{transform:scaleY(.12)}}
-@keyframes secretAwakenOpen{0%{transform:scaleY(.12)}65%{transform:scaleY(1.1)}100%{transform:scaleY(1)}}
-@keyframes secretAwakenUpperLid{from{transform:translateY(0)}to{transform:translateY(-86%)}}
-@keyframes secretAwakenLowerLid{from{transform:translateY(0)}to{transform:translateY(86%)}}
-@keyframes secretAwakenIris{0%{opacity:0;transform:translate(-50%,-50%) scale(.15)}70%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-@keyframes secretAwakenWave{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}24%{opacity:.9}100%{opacity:0;transform:translate(-50%,-50%) scale(3.3) rotate(10deg)}}
-@keyframes secretAwakenFloat{from{transform:translate(-50%,-51%) scale(.99)}to{transform:translate(-50%,-47%) scale(1.025)}}
-@keyframes secretAwakenLook{0%,18%{transform:translate(-50%,-50%)}42%,58%{transform:translate(calc(-50% - 9px),calc(-50% + 1px))}78%,92%{transform:translate(calc(-50% + 9px),calc(-50% - 1px))}100%{transform:translate(-50%,-50%)}}
-@keyframes secretAwakenMote{from{opacity:.3;filter:brightness(.9)}to{opacity:1;filter:brightness(1.35)}}
-@keyframes secretAwakenSealAway{0%{transform:translate(-50%,-50%) scale(1);opacity:1}36%{transform:translate(-50%,-50%) scale(1.12,.9);opacity:1}100%{transform:translate(-50%,-95%) scale(.04);opacity:0}}
-@keyframes secretAwakenWaveIn{0%{opacity:0;transform:translate(-50%,-50%) scale(3)}32%{opacity:.72}100%{opacity:0;transform:translate(-50%,-50%) scale(.08)}}
-@keyframes secretAwakenMoteIn{from{opacity:1}to{opacity:0;transform:rotate(var(--a)) translateX(0) scale(.1)}}
-@keyframes secretAwakenTitle{from{opacity:0;transform:translate(-50%,8px) scale(.86)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
-@keyframes secretAwakenCardIn{0%{opacity:0;transform:translate(-50%,-36%) scale(.35)}68%{opacity:1;transform:translate(-50%,-50%) scale(1.48)}100%{opacity:1;transform:translate(-50%,-50%) scale(1.4)}}
-@keyframes secretAwakenCardClose{from{opacity:1;transform:translate(-50%,-50%) scale(1.4)}to{opacity:0;transform:translate(-50%,4%) scale(.32)}}
-
-.rarity-burst.secret{
-  padding:8px 15px;border:2px solid #ff6c84;border-radius:14px;background:#78102f;color:#fff4ef;
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.16),0 3px 0 #3b0619,0 0 15px rgba(255,44,84,.6);
-  text-shadow:0 2px 0 #62051f;animation:secretActiveBurst 1.48s cubic-bezier(.18,.82,.2,1) forwards;
-}
-.rarity-burst.secret:before,.rarity-burst.secret:after{content:"✦";top:50%;color:#ffd7df;font-size:12px;transform:translateY(-50%)}
-.rarity-burst.secret:before{left:-16px}.rarity-burst.secret:after{right:-16px}
-@keyframes secretActiveBurst{0%{opacity:0;transform:translate(-50%,4px) scale(.55)}22%{opacity:1;transform:translate(-50%,-12px) scale(1.08)}58%{opacity:1;transform:translate(-50%,-17px) scale(1)}100%{opacity:0;transform:translate(-50%,-52px) scale(.96)}}
-
-@media(max-height:720px){
-  .secret-discovery-title{top:8%}
-  .secret-discovery-card{top:50%}
-  .secret-discovery-hint{top:90%}
-  @keyframes secretAwakenCardIn{0%{opacity:0;transform:translate(-50%,-36%) scale(.3)}68%{opacity:1;transform:translate(-50%,-50%) scale(1.36)}100%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}}
-  @keyframes secretAwakenCardClose{from{opacity:1;transform:translate(-50%,-50%) scale(1.3)}to{opacity:0;transform:translate(-50%,4%) scale(.28)}}
-}
-
-/* SECRET DISCOVERY V3: карта сначала раскрывается на ленте, затем летит в общий просмотрщик. */
-.secret-discovery-overlay.phase-card-flight{background:transparent}
-.secret-discovery-overlay.phase-card-flight .secret-discovery-veil{
-  display:block;opacity:0;background:rgba(24,3,13,.66);backdrop-filter:blur(0);
-}
-.secret-discovery-overlay.phase-card-flight:before{
-  display:block;top:50%;width:min(305px,82vw);height:min(390px,68vh);border-radius:26px;
-  background:radial-gradient(ellipse,rgba(255,71,107,.18),rgba(100,6,43,.08) 52%,transparent 74%);
-}
-.secret-discovery-overlay.phase-card-flight:after,
-.secret-discovery-overlay.phase-card-flight .secret-discovery-eye,
-.secret-discovery-overlay.phase-card-flight .secret-discovery-wave,
-.secret-discovery-overlay.phase-card-flight .secret-discovery-particles{display:none!important}
-.secret-discovery-overlay.phase-card-flight .secret-discovery-card{
-  --secret-viewer-scale:1.25;--secret-viewer-overshoot:1.294;--secret-viewer-close:1.1;
-  display:block;left:50%;top:50%;width:134px;opacity:0;
-  transform:translate(-50%,-50%) scale(var(--secret-viewer-scale));transform-origin:center;
-  filter:drop-shadow(0 9px 10px rgba(20,27,43,.35)) drop-shadow(0 0 15px rgba(255,43,82,.28));
-}
-.secret-discovery-overlay.phase-card-flight .secret-discovery-card>.food-card{
-  width:134px!important;min-width:134px!important;max-width:134px!important;pointer-events:none!important;
-}
-.secret-discovery-overlay.phase-card-flight:not(.flight-complete) .secret-discovery-card>.food-card.secret{
-  animation:none!important;transform:none!important;
-}
-.secret-discovery-overlay.phase-card-flight.flight-complete .secret-discovery-card>.food-card.secret{
-  animation:foodSecretCardBreathe 3.4s ease-in-out infinite!important;
-}
-.secret-discovery-overlay.phase-card-flight .secret-discovery-title{
-  display:block;top:7.5%;opacity:0;transform:translate(-50%,9px) scale(.92);
-}
-.secret-discovery-overlay.phase-card-flight .secret-discovery-hint{display:block;top:91%;opacity:0}
-.secret-discovery-overlay.phase-card-flight.flight-ready .secret-discovery-veil{animation:secretViewerVeilIn .78s ease-out both}
-.secret-discovery-overlay.phase-card-flight.flight-ready:before{animation:secretViewerHaloIn .82s .38s ease-out both}
-.secret-discovery-overlay.phase-card-flight.flight-ready .secret-discovery-card{
-  animation:secretCardFlightToViewer .82s cubic-bezier(.2,.72,.22,1) both;
-}
-.secret-discovery-overlay.phase-card-flight.flight-ready .secret-discovery-title{
-  animation:secretViewerTitleIn .38s .72s cubic-bezier(.18,.8,.2,1.12) both;
-}
-.secret-discovery-overlay.phase-card-flight.flight-ready.show-card .secret-discovery-hint{
-  animation:secretDiscoveryHint .34s 1s ease-out both;
-}
-.secret-discovery-overlay.phase-card-flight.card-closing .secret-discovery-card{
-  animation:secretViewerCardClose .34s ease-in both;
-}
-.secret-discovery-overlay.phase-card-flight.card-closing .secret-discovery-veil{opacity:0;transition:opacity .28s ease}
-@keyframes secretCardFlightToViewer{
-  0%{left:var(--secret-flight-x);top:var(--secret-flight-y);opacity:1;transform:translate(-50%,-50%) scale(var(--secret-flight-scale));filter:drop-shadow(0 4px 5px rgba(20,27,43,.2))}
-  100%{left:50%;top:50%;opacity:1;transform:translate(-50%,-50%) scale(var(--secret-viewer-scale));filter:drop-shadow(0 9px 10px rgba(20,27,43,.35)) drop-shadow(0 0 15px rgba(255,43,82,.28))}
-}
-@keyframes secretViewerVeilIn{from{opacity:0;backdrop-filter:blur(0)}to{opacity:1;backdrop-filter:blur(5px)}}
-@keyframes secretViewerHaloIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.72)}65%{opacity:.8;transform:translate(-50%,-50%) scale(1.04)}100%{opacity:.56;transform:translate(-50%,-50%) scale(1)}}
-@keyframes secretViewerTitleIn{from{opacity:0;transform:translate(-50%,9px) scale(.92)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
-@keyframes secretViewerCardClose{from{left:50%;top:50%;opacity:1;transform:translate(-50%,-50%) scale(var(--secret-viewer-scale))}to{left:50%;top:54%;opacity:0;transform:translate(-50%,-50%) scale(var(--secret-viewer-close))}}
-@media(max-width:430px), (min-width:700px){
-  .secret-discovery-overlay.phase-card-flight .secret-discovery-card{--secret-viewer-scale:1.4;--secret-viewer-overshoot:1.449;--secret-viewer-close:1.232;width:112px}
-  .secret-discovery-overlay.phase-card-flight .secret-discovery-card>.food-card{width:112px!important;min-width:112px!important;max-width:112px!important}
-  .secret-discovery-overlay.phase-card-flight .secret-discovery-title{top:6%}
-}
-@media(max-width:370px){
-  .secret-discovery-overlay.phase-card-flight .secret-discovery-card{--secret-viewer-scale:1.44;--secret-viewer-overshoot:1.49;--secret-viewer-close:1.267;width:104px}
-  .secret-discovery-overlay.phase-card-flight .secret-discovery-card>.food-card{width:104px!important;min-width:104px!important;max-width:104px!important}
-}
-
-/* === V12: цельная игровая еда, ясные пиктограммы и управление забегом === */
 .stat-rail .stat-icon{
   display:grid;
   place-items:center;
@@ -555,7 +291,6 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.hidden{
   .admin-restart-btn{padding:5px 6px}.admin-restart-btn b{font-size:6px}
 }
 
-/* Админ-панель для быстрой проверки миров и сохранения. */
 .admin-tools{
   min-height:52px;margin:0 0 10px;padding:6px 8px;display:grid;grid-template-columns:minmax(74px,1fr) auto minmax(104px,1.2fr);align-items:center;gap:7px;
   background:#eff7f5!important;border-color:#48616c!important;
@@ -578,7 +313,6 @@ body[data-world="3"]{background:linear-gradient(180deg,#f6b1d0 0 112px,#fff0f7 1
 body[data-world="3"] .world-fill{background:repeating-linear-gradient(135deg,#f27abb 0 12px,#ffb7dc 12px 24px)}
 body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1d7 58%)}
 
-/* === V14: понятный реролл, крупный желудок и всплывающее описание еды === */
 .reroll-btn{
   position:relative;left:auto;top:auto;width:210px;height:66px;min-height:66px;display:grid;place-items:center;
   margin:8px auto 1px;padding:7px 14px 7px 72px;border:0;border-radius:21px;
@@ -645,7 +379,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
   .conveyor-title{gap:3px}.conveyor-title>img{width:30px;height:30px}.admin-restart-btn{min-width:86px;padding:4px 6px}.admin-restart-btn img{width:22px;height:22px}.admin-restart-btn b{font-size:5.8px}.food-mini-model{width:27px;height:27px}.launch-btn{min-height:54px;padding:5px 8px}.launch-btn img{width:31px;height:31px}
 }
 
-/* V14 располагается выше V13 в истории файла; эти правила фиксируют финальный каскад. */
 .reroll-btn>.reroll-copy{width:auto;height:auto;display:flex;place-items:initial;font-size:inherit;line-height:normal}.food-mini-model{width:36px;height:36px}
 @media(max-width:430px), (min-width:700px){.food-mini-model{width:39px;height:39px}.launch-btn{width:100%}
 }
@@ -669,7 +402,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 
 .stat-rail .stat-icon{transform:translateX(-2px)}
 
-/* Эмоциональная подача серии разрушенных слоёв. */
 .impact-text.combo-impact{
   --combo-color:#88f5ff;--combo-deep:#2779d8;--combo-glow:#7deeff;
   top:25%;display:grid;justify-items:center;gap:3px;opacity:0;
@@ -725,7 +457,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 @keyframes comboRainbow{to{background-position:240% 0}}
 @media(max-width:430px), (min-width:700px){.impact-text.combo-impact{top:27%}.combo-impact .combo-line{gap:6px;padding:6px 11px 7px}.combo-impact .combo-line:before{left:-19px}.combo-impact .combo-line:after{right:-19px}}
 
-/* Компактное комбо следует рядом со слаймом и не перекрывает шахту. */
 .impact-text.combo-impact{
   gap:1px;filter:drop-shadow(0 2px 0 rgba(26,34,58,.62));
   transform-origin:50% 50%;
@@ -759,7 +490,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 }
 @media(max-width:430px), (min-width:700px){.impact-text.combo-impact{gap:1px}.combo-impact .combo-line{gap:4px;padding:3px 7px 4px}.combo-impact .combo-line:before{left:-12px}.combo-impact .combo-line:after{right:-12px}}
 
-/* Один динамический джойстик появляется под пальцем. Вверх намеренно отключён. */
 .fall-controls{position:absolute;z-index:11;inset:0;overflow:hidden;pointer-events:none;touch-action:none}
 .touch-joystick{
   --stick-x:0px;--stick-y:0px;position:absolute;left:50%;top:72%;width:82px;height:82px;
@@ -782,7 +512,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .touch-joystick.is-active{opacity:.92;transform:translate(-50%,-50%) scale(1);visibility:visible;transition-delay:0s}
 @media(pointer:fine){.touch-joystick{display:none}}
 
-/* Активный щит находится внутри шахты, а не отнимает отдельную строку экрана. */
 .barrier-control{
   position:absolute;z-index:12;left:50%;bottom:22px;display:grid;justify-items:center;gap:3px;
   transform:translateX(-50%);pointer-events:none;
@@ -799,36 +528,6 @@ body[data-world="3"] .slime-stage{background:linear-gradient(#ffd8ea 0 58%,#fff1
 .barrier-control .barrier-btn.is-active:before{background:linear-gradient(180deg,#eaffff,#8fe5ff)}
 .barrier-control>small{padding:3px 7px;border:1px solid rgba(255,255,255,.52);border-radius:8px;background:rgba(28,43,62,.76);color:#fff;font-size:7px;font-weight:1000;line-height:1;white-space:nowrap;text-shadow:0 1px rgba(0,0,0,.25)}
 @keyframes barrierReady{to{filter:brightness(1.13);transform:scale(1.04)}}
-
-/* Encyclopedia rarity filters reuse the exact static card gems. */
-.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab .rarity-name i,
-.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.legendary .rarity-name i,
-.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.prismatic .rarity-name i,
-.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.secret .rarity-name i{
-  position:relative!important;left:auto!important;top:auto!important;
-  width:20px!important;height:20px!important;display:block!important;
-  animation:none!important
-}
-.encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.secret .rarity-name i{width:24px!important;height:16px!important}
-@media(max-width:390px){
-  .encyclopedia-rarity-tabs>.encyclopedia-rarity-tab .rarity-name i{width:18px!important;height:18px!important}
-  .encyclopedia-rarity-tabs>.encyclopedia-rarity-tab.secret .rarity-name i{width:21px!important;height:15px!important}
-}
-
-/* Special cards are effect rewards, not another numerical rarity step. */
-.rarity-burst.special{
-  border-color:#fff1a0;background:linear-gradient(105deg,#6d31b4,#f34eaa 24%,#ffbd2c 52%,#59d5f7 78%,#7b48c8);
-  background-size:220% 100%;color:#fff;text-shadow:0 1px 0 #4e2187,0 0 5px rgba(255,216,63,.9);
-  box-shadow:0 0 0 3px rgba(255,196,45,.26),0 4px 0 rgba(77,32,129,.35);
-  animation:titlePrismV11 2.05s cubic-bezier(.18,.82,.2,1.08) forwards,specialBurstFlow 1.2s ease-in-out infinite alternate;
-}
-.rarity-burst.special:before,.rarity-burst.special:after{content:"✦";position:absolute;top:50%;color:#ffe25d;font-size:15px;text-shadow:0 0 5px #fff}
-.rarity-burst.special:before{left:-17px}.rarity-burst.special:after{right:-17px}
-.encyclopedia-rarity-group.special .encyclopedia-rarity-head{color:#692cab}
-.encyclopedia-rarity-group.special .encyclopedia-rarity-head i{
-  border-radius:0;background:transparent url("assets/ui/rarity/special-gem.webp?v=20260816-2") center/contain no-repeat;box-shadow:none;
-}
-@keyframes specialBurstFlow{from{background-position:0 0}to{background-position:100% 0}}
 
 /* === iPhone / mobile viewport: safe areas without sacrificing the game scale === */
 :root{
@@ -853,7 +552,7 @@ body{-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
   padding-bottom:max(14px,var(--safe-bottom));
   padding-left:max(10px,var(--safe-left));
 }
-button,.food-card,.stomach-quick-slot{touch-action:manipulation}
+button,.conveyor-food-pick,.stomach-quick-slot{touch-action:manipulation}
 
 @media(max-width:430px), (min-width:700px){
   .app{
@@ -869,7 +568,6 @@ button,.food-card,.stomach-quick-slot{touch-action:manipulation}
 /* Safari has no cheap backdrop-filter path on several iPhone generations. */
 html.mobile-lite .overlay,
 html.mobile-lite .panel-overlay,
-html.mobile-lite .encyclopedia-card-viewer{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.ios-device .screen.active{animation-duration:.14s}
 html.ios-device canvas{image-rendering:auto}
 

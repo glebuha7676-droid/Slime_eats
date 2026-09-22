@@ -8,15 +8,12 @@
     ASSET_REVISION,
     FOOD_ASSET_ROOT,
     UI_ASSET_ROOT,
-    FOOD_EDITOR_STORAGE_KEY,
     FOOD_ART_OFFSETS,
     WORLD_SPRITE_NAMES
   } = config;
-  const foodRarities = new Set(config.FOOD_RARITIES);
-  const foodCategories = new Set(config.FOOD_CATEGORIES);
   const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'gigantism', 'wind', 'blast']);
   const worldSprites = {};
-  const editorSprites = {};
+  const projectSprites = {};
   const thumbnailFitCache = new Map();
 
   const worldBackgrounds = Object.freeze(Object.fromEntries([
@@ -108,14 +105,14 @@
     return [name, image];
   }));
 
-  function editorSprite(source) {
+  function projectSprite(source) {
     if (!source) return null;
-    if (!editorSprites[source]) {
+    if (!projectSprites[source]) {
       const image = new Image();
       image.src = versionedAsset(source);
-      editorSprites[source] = image;
+      projectSprites[source] = image;
     }
-    return editorSprites[source];
+    return projectSprites[source];
   }
 
   function foodImageSource(food) {
@@ -203,85 +200,28 @@
     return `<img class="${className}" src="${UI_ASSET_ROOT}${name}.webp" alt="" aria-hidden="true" draggable="false" decoding="async">`;
   }
 
-  function normalizeEditorFood(value) {
+  function normalizeFood(value) {
     if (!value || typeof value !== 'object') return null;
     const id = String(value.id || '').trim();
     const name = String(value.name || '').trim();
-    if (!/^[a-z][A-Za-z0-9_-]{0,47}$/.test(id) || !name) return null;
-    const clampNumber = (number, min, max) => Math.max(min, Math.min(max, Number(number) || 0));
-    const legacyRarity = value.rarity === 'legendary' || value.rarity === 'prismatic' ? 'special' : value.rarity;
-    const rarity = foodRarities.has(legacyRarity) ? legacyRarity : 'common';
-    const legacyCategories = { mass: 'health', power: 'damage', defense: 'shield', bounce: 'shield', magic: 'shield' };
-    const category = foodCategories.has(value.category) ? value.category : (legacyCategories[value.category] || 'health');
-    const defaultRecipeFamily = { damage: 'fire', health: 'mass', shield: 'protection' }[category] || 'mass';
-    const recipeFamily = recipeFamilies.has(value.recipeFamily) ? value.recipeFamily : defaultRecipeFamily;
+    const recipeFamily = String(value.recipeFamily || '').trim();
+    if (!/^[a-z][A-Za-z0-9_-]{0,47}$/.test(id) || !name || !recipeFamilies.has(recipeFamily)) return null;
     const image = String(value.image || '').trim();
-    const hasArtTransform = ['artX', 'artY', 'artScale'].some(key => Object.hasOwn(value, key));
-    const numericStats = Number(value.statVersion) >= 2;
+    if (!image) return null;
     return {
       id,
       name,
-      icon: String(value.icon || '🍓').slice(0, 8),
-      rarity,
-      category,
       recipeFamily,
-      ...(value.requiresMutation ? { requiresMutation: String(value.requiresMutation).trim() } : {}),
-      minConveyor: Math.round(clampNumber(value.minConveyor || 1, 1, 5)),
-      health: clampNumber(value.health ?? value.mass, 0, 999),
-      healthPenalty: clampNumber(value.healthPenalty, 0, 999),
-      statVersion: 4,
-      damage: clampNumber(value.damage ?? (numericStats ? value.power : Number(value.power || 0) * 10), 0, 999),
-      damagePenalty: clampNumber(value.damagePenalty, 0, 999),
-      shield: clampNumber(value.shield ?? (numericStats ? value.defense : Number(value.defense || 0) * 100), 0, 999),
-      shieldPenalty: clampNumber(value.shieldPenalty, 0, 999),
-      shieldCharges: Math.round(clampNumber(value.shieldCharges, 0, 9)),
-      coinMultiplier: clampNumber(value.coinMultiplier, 0, 99),
-      effect: String(value.effect || '').trim(),
-      effectText: String(value.effectText || '').trim(),
-      description: String(value.description || value.effectText || '').trim(),
-      ...(Array.isArray(value.worlds) ? { worlds: value.worlds.map(Number).filter(worldId => worldId >= 1 && worldId <= 4) } : {}),
-      ...(image ? { image } : {}),
-      ...(hasArtTransform ? {
-        artX: clampNumber(value.artX, -30, 30),
-        artY: clampNumber(value.artY, -30, 30),
-        artScale: clampNumber(value.artScale || 1, .55, 1.6)
-      } : {})
+      image,
+      ...(value.requiresMutation ? { requiresMutation: String(value.requiresMutation).trim() } : {})
     };
   }
 
   function loadFoodCatalog() {
-    const rawBaseCatalog = Array.isArray(window.SLIME_FOOD_CATALOG) ? window.SLIME_FOOD_CATALOG : [];
-    const baseIds = new Set();
-    const baseCatalog = rawBaseCatalog
-      .map(normalizeEditorFood)
-      .filter(food => food && !baseIds.has(food.id) && baseIds.add(food.id));
-    try {
-      const savedCatalog = JSON.parse(localStorage.getItem(FOOD_EDITOR_STORAGE_KEY) || 'null');
-      if (!Array.isArray(savedCatalog) || !savedCatalog.length) return baseCatalog;
-      const ids = new Set();
-      const catalog = savedCatalog
-        .map(normalizeEditorFood)
-        .filter(food => food && !ids.has(food.id) && ids.add(food.id));
-      if (!catalog.length) return baseCatalog;
-      // Встроенный каталог определяет актуальную редкость, баланс и графику.
-      // От старого редактора сохраняем только ручное позиционирование картинки,
-      // чтобы локальные данные не могли спрятать новые или изменённые карты.
-      const savedById = new Map(catalog.map(food => [food.id, food]));
-      const mergedBase = baseCatalog.map(baseFood => {
-        const savedFood = savedById.get(baseFood.id);
-        if (!savedFood) return baseFood;
-        return {
-          ...baseFood,
-          ...(['artX', 'artY', 'artScale'].reduce((transform, key) => {
-            if (Object.hasOwn(savedFood, key)) transform[key] = savedFood[key];
-            return transform;
-          }, {}))
-        };
-      });
-      return mergedBase;
-    } catch (_) {
-      return baseCatalog;
-    }
+    const ids = new Set();
+    return (Array.isArray(window.SLIME_FOOD_CATALOG) ? window.SLIME_FOOD_CATALOG : [])
+      .map(normalizeFood)
+      .filter(food => food && !ids.has(food.id) && ids.add(food.id));
   }
 
   window.SlimeGameAssets = Object.freeze({
@@ -292,12 +232,12 @@
     VFX_SPRITES: vfxSprites,
     versionedAsset,
     ensureWorldSprites,
-    editorSprite,
+    projectSprite,
     foodImageSource,
     foodArtMarkup,
     centerFoodThumbnail,
     uiIconMarkup,
-    normalizeEditorFood,
+    normalizeFood,
     loadFoodCatalog
   });
 })();

@@ -1,0 +1,16 @@
+Tool mode: built-in image edit from the supplied slime reference.
+
+Eye sockets:
+Extract only the two exact dark-green eye contours and white sclera from the supplied
+slime. Remove pupils and every other element. Preserve the original square-canvas position,
+shape, scale, spacing, and color. Use genuine transparent alpha elsewhere.
+
+Pupils:
+Extract only the two exact green pupils/irises with both original white highlights.
+Preserve the original square-canvas position, shape, scale, spacing, colors, and highlights.
+Use genuine transparent alpha elsewhere.
+
+Cheeks:
+Extract only the two exact pink cheek shapes. Preserve their original square-canvas
+position, shape, scale, spacing, soft shading, and colors. Use genuine transparent alpha
+elsewhere.

@@ -299,7 +299,6 @@ body[data-screen="drop"] .world-summary .currency-values>small{
 .stomach-quick-slot.filled.rare{border-color:#1688b3;background:#c9f2ff;box-shadow:0 1px 0 #12688a,0 0 0 1px rgba(75,202,240,.22)}
 .stomach-quick-slot.filled.epic{border-color:#7130a4;background:#ead6fb;box-shadow:0 1px 0 #57247d,0 0 4px rgba(158,77,216,.3)}
 .stomach-quick-slot.filled.special{border-color:#5d2ca6;background:linear-gradient(135deg,#fff0a5,#ffb9dc 34%,#aeeeff 67%,#d6c2ff);box-shadow:0 2px 0 #4a2189,0 0 7px rgba(255,187,55,.48)}
-.stomach-quick-slot.filled.secret{border-color:#ff3158;background:#300711;box-shadow:0 0 5px rgba(255,37,77,.58)}
 .stomach-quick-slot.selected{transform:translateY(1px) scale(1.08);outline:2px solid #fff;box-shadow:0 0 0 3px #6550a2}
 .slot-effect-star{
   position:absolute;z-index:8;left:50%;top:-9px;width:16px;height:16px;display:grid;place-items:center;
@@ -391,10 +390,6 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
 #homeScreen .stat-rail .stat-icon{margin-inline:auto;transform:none}
 
 /* Meal praise owns an independent top layer and can travel over stomach slots. */
-#homeScreen .slime-stage>.rarity-bursts{
-  position:absolute;z-index:90;left:50%;top:82px;width:0;height:0;pointer-events:none;
-}
-#homeScreen .slime-stage>.rarity-bursts .rarity-burst{z-index:91}
 #homeScreen .food-choices{z-index:24;margin-inline:29px}
 
 @media(max-width:430px), (min-width:700px){
@@ -516,7 +511,7 @@ body[data-screen="home"] #homeScreen>.slime-stage{border-radius:0}
 #homeScreen .conveyor.is-running .machine-belt{animation:beltMove .22s linear infinite;will-change:background-position}
 #homeScreen .conveyor.is-running .machine-mouth:before{animation:tunnelDepthTravel .27s linear infinite}
 #homeScreen .conveyor.is-running .machine-mouth{filter:brightness(1.12)}
-#homeScreen .conveyor.is-running .food-card{pointer-events:none}
+#homeScreen .conveyor.is-running .conveyor-food-pick{pointer-events:none}
 
 @media(max-width:430px), (min-width:700px){
   #homeScreen .conveyor-machine{--machine-tunnel-w:32px;--machine-mouth-w:21px;--machine-side-space:25px;--machine-bolt-side:2px;height:222px}
@@ -769,20 +764,20 @@ body[data-world] #homeScreen>.bottom-actions button:active{
 }
 
 /* V35: one jelly-button system across the whole game. */
-button:not(.food-card):not(.stomach-quick-slot):not(.fall-stick){
+button:not(.conveyor-food-pick):not(.stomach-quick-slot):not(.fall-stick){
   transform-origin:50% 55%;
   transition:transform .11s cubic-bezier(.2,.8,.25,1),filter .14s ease,box-shadow .14s ease,background .16s ease;
   -webkit-tap-highlight-color:transparent;
 }
-button:not(.food-card):not(.stomach-quick-slot):not(.fall-stick):active:not(:disabled){
+button:not(.conveyor-food-pick):not(.stomach-quick-slot):not(.fall-stick):active:not(:disabled){
   transform:translateY(1px) scale(.985)!important;
   filter:brightness(.98) saturate(1.07);
 }
-button:not(.food-card):not(.stomach-quick-slot):not(.fall-stick):focus-visible{
+button:not(.conveyor-food-pick):not(.stomach-quick-slot):not(.fall-stick):focus-visible{
   outline:3px solid rgba(255,255,255,.96);outline-offset:2px;
 }
 @media(hover:hover){
-  button:not(.food-card):not(.stomach-quick-slot):not(.fall-stick):hover:not(:disabled){filter:brightness(1.025) saturate(1.04)}
+  button:not(.conveyor-food-pick):not(.stomach-quick-slot):not(.fall-stick):hover:not(:disabled){filter:brightness(1.025) saturate(1.04)}
 }
 
 /* World-coloured action buttons. */
@@ -1333,7 +1328,7 @@ body[data-screen="drop"] .app{height:100dvh;min-height:100dvh;overflow:hidden}
   #dropScreen .combo-impact.combo-tier-7 .combo-line b strong{font-size:35px}
 }
 
-/* V44: five multiplier-driven combo stages (visual rarity names stay hidden). */
+/* Five multiplier-driven combo stages. */
 #dropScreen .combo-impact.combo-stage-1{--combo-color:#d7e1ec;--combo-deep:#617086;--combo-glow:#b9d4ec}
 #dropScreen .combo-impact.combo-stage-1 .combo-rating{font-size:8.6px;color:#f7fbff}
 #dropScreen .combo-impact.combo-stage-1 .combo-line{background:linear-gradient(145deg,#d7e1ec,#718096);border-color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 0 6px rgba(143,174,204,.42)}
@@ -1454,11 +1449,11 @@ body[data-world] #dropScreen .barrier-control .ability-btn:before{
 }
 
 /* Food cards, stomach slots and steering sticks keep their specialised interaction. */
-.food-card,.stomach-quick-slot{transition:filter .12s ease,transform .12s cubic-bezier(.2,.8,.25,1)}
-.food-card:active:not(.locked){filter:brightness(.98) saturate(1.05)}
+.conveyor-food-pick,.stomach-quick-slot{transition:filter .12s ease,transform .12s cubic-bezier(.2,.8,.25,1)}
+.conveyor-food-pick:active:not(.locked){filter:brightness(.98) saturate(1.05)}
 .stomach-quick-slot.filled:active{filter:brightness(.98) saturate(1.06)}
 
-button:not(.food-card):not(.stomach-quick-slot):not(.fall-stick):active:not(:disabled){
+button:not(.conveyor-food-pick):not(.stomach-quick-slot):not(.fall-stick):active:not(:disabled){
   box-shadow:inset 0 2px 3px rgba(47,57,76,.12),inset 0 -1px 2px rgba(255,255,255,.42)!important;
 }
 body[data-world] .ad-modal .ad-btn{
@@ -2151,9 +2146,6 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
   #homeScreen>.play-setup-card .endless-stat-card>img{width:32px;height:32px;padding:2px;border-radius:9px}
 }
 
-/* === V67: три базовые характеристики и желудок слайма ===
-   Левый блок теперь отвечает только за съеденную еду, правый — только за
-   понятные числа забега. Это сохраняет центр сцены свободным для слайма. */
 #homeScreen>.slime-stage{
   min-height:218px;
   padding:8px;
@@ -2204,7 +2196,6 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 #homeScreen .stomach-quick-slot.filled.rare{border-color:#087faa;background:linear-gradient(145deg,#ebfcff,#8de6ff);box-shadow:inset 0 0 0 2px rgba(255,255,255,.78),0 2px 0 #045575,0 0 7px rgba(22,183,230,.46)}
 #homeScreen .stomach-quick-slot.filled.epic{border-color:#7420b4;background:linear-gradient(145deg,#fcf0ff,#d799fb);box-shadow:inset 0 0 0 2px rgba(255,255,255,.72),0 2px 0 #4d0e7f,0 0 7px rgba(144,46,219,.43)}
 #homeScreen .stomach-quick-slot.filled.special{border-color:#bf7a00;background:linear-gradient(145deg,#fff8be,#ffc15c 48%,#f175bd);box-shadow:inset 0 0 0 2px rgba(255,255,255,.8),0 2px 0 #855200,0 0 8px rgba(255,170,22,.55)}
-#homeScreen .stomach-quick-slot.filled.secret{border-color:#fc3a58;background:linear-gradient(145deg,#5b142b,#14050b);box-shadow:inset 0 0 0 2px rgba(255,155,170,.32),0 2px 0 #4a1020,0 0 8px rgba(255,42,76,.7)}
 #homeScreen .stomach-quick-slot.selected{transform:translateY(-1px) scale(1.045);outline:2px solid #fff;box-shadow:0 0 0 3px #536ec5,0 3px 7px rgba(46,63,101,.28)}
 
 #homeScreen .slime-hero-layout .stat-rail-right{min-width:0;width:84px;align-self:center;transform:translateY(-4px)}
@@ -2233,25 +2224,7 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 #homeScreen .stat-rail .damage{background:linear-gradient(145deg,#fff9ed,#ffd2c2);border-color:#c85742}
 #homeScreen .stat-rail .shield{background:linear-gradient(145deg,#fff,#c7ebff);border-color:#277ab4}
 
-/* Значения из съеденной карты мягко долетают до своей характеристики. */
-.stat-change-fly{position:fixed;z-index:1200;min-width:30px;padding:4px 7px;border:2px solid #126a3a;border-radius:999px;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.58);transition:left .43s cubic-bezier(.18,.8,.2,1),top .43s cubic-bezier(.18,.8,.2,1),transform .43s cubic-bezier(.18,.8,.2,1),opacity .12s ease;background:linear-gradient(180deg,#efffe9,#6ee79a);box-shadow:0 3px 0 rgba(9,91,48,.65),0 0 0 3px rgba(255,255,255,.7);color:#07532d;font-size:12px;line-height:1;font-weight:1000;text-align:center;text-shadow:0 1px rgba(255,255,255,.7)}
-.stat-change-fly.is-flying{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.stat-change-fly.loss{border-color:#96293b;background:linear-gradient(180deg,#ffe4e6,#ff7887);box-shadow:0 3px 0 rgba(112,25,39,.65),0 0 0 3px rgba(255,255,255,.7);color:#801d31}
-#homeScreen .stat-rail .stat-pill.stat-change-pop{position:relative;animation:statChangeBubble .7s cubic-bezier(.18,.8,.24,1) both}
-#homeScreen .stat-rail .stat-pill.stat-change-pop:after{content:attr(data-stat-change);position:absolute;z-index:6;left:50%;top:-9px;min-width:28px;padding:3px 5px;border:2px solid #0f7440;border-radius:999px;background:linear-gradient(180deg,#efffe9,#62dd8e);box-shadow:0 2px 0 #0a5a31;color:#07532d;font-size:9px;line-height:1;font-weight:1000;text-align:center;transform:translateX(-50%);text-shadow:0 1px rgba(255,255,255,.76);animation:statChangeBubbleLabel .7s ease-out both;pointer-events:none}
-#homeScreen .stat-rail .stat-pill.stat-change-loss:after{border-color:#96293b;background:linear-gradient(180deg,#ffe6e8,#ff7887);box-shadow:0 2px 0 #7e1d2d;color:#7d1d30}
-@keyframes statChangeBubble{0%{transform:scale(1)}32%{transform:scale(1.1)}62%{transform:scale(.97)}100%{transform:scale(1)}}
-@keyframes statChangeBubbleLabel{0%{opacity:0;transform:translate(-50%,6px) scale(.7)}28%{opacity:1;transform:translate(-50%,-2px) scale(1.08)}100%{opacity:0;transform:translate(-50%,-14px) scale(.94)}}
 #homeScreen .stat-rail .health .stat-icon{background:#22a966}.stat-rail .damage .stat-icon{background:#e14d42}.stat-rail .shield .stat-icon{background:#258ac5}
-
-#homeScreen .stomach-card-viewer{
-  position:absolute;z-index:110;left:116px;right:84px;top:2px;bottom:2px;display:grid;place-items:center;pointer-events:none;
-}
-#homeScreen .stomach-card-viewer.hidden{display:none}
-#homeScreen .stomach-card-viewer-card{position:relative;width:134px;zoom:1.14;pointer-events:auto;filter:drop-shadow(0 8px 9px rgba(26,39,59,.36));animation:stomachCardOpen .18s cubic-bezier(.2,.82,.25,1.15) both}
-#homeScreen .stomach-card-viewer-card>.food-card{width:134px;min-width:134px;max-width:134px;pointer-events:none}
-#homeScreen .stomach-card-close{position:absolute;z-index:2;right:-10px;top:-10px;width:25px;height:25px;padding:0;border:2px solid #3d4e69;border-radius:50%;background:#fff;color:#3d4e69;font-size:18px;line-height:19px;font-weight:1000;box-shadow:0 2px 0 rgba(41,53,75,.26);pointer-events:auto}
-@keyframes stomachCardOpen{from{opacity:0;transform:translateY(8px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}
 
 @media(max-width:370px){
   #homeScreen>.slime-stage{min-height:203px}
@@ -2265,16 +2238,11 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
   #homeScreen .stat-rail .stat-icon,#homeScreen .stat-rail .stat-icon img{width:22px;height:22px}
   #homeScreen .stat-rail .stat-values>b{font-size:12px}
   #homeScreen .stat-rail .stat-values em{top:12px;min-width:25px;padding:2px 3px;font-size:7px}
-  #homeScreen .stomach-card-viewer{left:104px;right:78px;top:1px;bottom:1px}
-  #homeScreen .stomach-card-viewer-card,#homeScreen .stomach-card-viewer-card>.food-card{width:104px;min-width:104px;max-width:104px}
 }
 
 @media(min-width:371px) and (max-width:430px){
-  #homeScreen .stomach-card-viewer-card,#homeScreen .stomach-card-viewer-card>.food-card{width:112px;min-width:112px;max-width:112px}
-  #homeScreen .stomach-card-viewer-card{zoom:1.16}
 }
 
-/* Финальный этап конвейера: после полной сборки еды приезжает карточка запуска. */
 #homeScreen .food-choices>.conveyor-start-card{
   position:relative;isolation:isolate;grid-column:1 / -1;align-self:end;justify-self:center;
   width:242px;height:223px;min-width:242px;min-height:223px;margin:0;padding:9px 10px 10px;
@@ -2368,7 +2336,6 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
   #homeScreen .conveyor.launch-ready .conveyor-start-card,.launch-card-hero>img,.launch-card-sparkles>i{animation:none!important}
 }
 
-/* Единственный старт теперь приезжает по ленте; нижняя консоль целиком отдана выбору. */
 #homeScreen>.play-setup-card{
   grid-template-columns:172px minmax(0,1fr);grid-template-rows:70px 35px 58px auto;
 }
@@ -2472,7 +2439,6 @@ body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-
 
 #homeScreen .slime-hero-layout{grid-template-columns:116px minmax(124px,1fr) 116px;gap:5px}
 #homeScreen .slime-hero-layout .stat-rail-right{width:116px}
-#homeScreen .stomach-card-viewer{left:116px;right:116px}
 
 @media(max-width:430px), (min-width:700px){
   #homeScreen .food-choices>.conveyor-start-card{width:100%;min-width:0;max-width:none;height:187px;min-height:187px;padding:9px;border-radius:18px}
@@ -2483,7 +2449,6 @@ body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-
   #homeScreen .slime-hero-layout{grid-template-columns:104px minmax(132px,1fr) 104px;gap:4px}
   #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--quick-food-size:45px;width:104px;height:116px;gap:6px}
   #homeScreen .slime-hero-layout .stat-rail-right{width:104px;transform:translateY(-4px)}
-  #homeScreen .stomach-card-viewer{left:104px;right:104px}
 }
 @media(max-width:370px){
   #homeScreen .food-choices>.conveyor-start-card{height:173px;min-height:173px}
@@ -2493,10 +2458,8 @@ body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-
   #homeScreen .stomach-quick-slots{--quick-slot-size:45px;--quick-food-size:42px;width:96px;height:108px;gap:6px}
   #homeScreen .stomach-rail{height:148px}
   #homeScreen .slime-hero-layout .stat-rail-right{width:96px;transform:translateY(-4px)}
-  #homeScreen .stomach-card-viewer{left:96px;right:96px}
 }
 
-/* === V85: читаемая панель характеристик в симметричной сцене === */
 #homeScreen .slime-hero-layout .stat-rail-right{
   display:grid;
   align-content:center;
@@ -2680,105 +2643,6 @@ body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-
   #homeScreen .stat-rail-right .stat-values em{top:18px;min-width:28px;padding:2px 4px;font-size:7.5px}
 }
 
-/* === V86: секретная карта меняет атмосферу всей комнаты при поедании === */
-#homeScreen .slime-stage.secret-meal-active:before{
-  content:"";
-  position:absolute;
-  z-index:2;
-  inset:0;
-  border-radius:inherit;
-  pointer-events:none;
-  background:
-    radial-gradient(ellipse at 50% 54%,rgba(255,111,137,.2) 0 15%,rgba(126,11,54,.18) 38%,transparent 68%),
-    radial-gradient(ellipse at 50% 54%,transparent 42%,rgba(46,1,24,.34) 100%);
-  box-shadow:inset 0 0 0 2px rgba(255,74,108,.36),inset 0 0 34px rgba(79,3,36,.28);
-  opacity:0;
-  animation:secretMealRoomShift 2.15s ease-in-out both;
-}
-#homeScreen .slime-stage.secret-meal-active .slime-playground{
-  animation:secretMealPlaygroundShift 2.15s ease-in-out both;
-}
-#homeScreen .slime-stage.secret-meal-active .menu-slime-canvas{
-  animation:secretMealSlimeAura 2.15s ease-in-out both;
-}
-#homeScreen .slime-stage.secret-meal-impact .slime-playground{
-  animation:secretMealPlaygroundShift 2.15s ease-in-out both,secretMealImpact .7s cubic-bezier(.16,.82,.2,1) both;
-}
-@keyframes secretMealRoomShift{
-  0%{opacity:0;filter:saturate(1)}
-  18%{opacity:.68}
-  62%{opacity:.86;filter:saturate(1.2)}
-  100%{opacity:0;filter:saturate(1)}
-}
-@keyframes secretMealPlaygroundShift{
-  0%,100%{border-color:var(--room-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 0 -12px 20px rgba(55,64,78,.045)}
-  28%,68%{border-color:#bd244f;box-shadow:inset 0 0 28px rgba(112,5,48,.2),0 0 0 3px rgba(255,75,109,.14),0 0 18px rgba(129,10,54,.24)}
-}
-@keyframes secretMealSlimeAura{
-  0%,100%{filter:none}
-  27%{filter:drop-shadow(0 0 5px rgba(255,77,111,.66))}
-  58%{filter:drop-shadow(0 0 11px rgba(255,38,82,.88)) drop-shadow(0 5px 9px rgba(82,2,39,.35))}
-  82%{filter:drop-shadow(0 0 5px rgba(255,91,119,.55))}
-}
-@keyframes secretMealImpact{
-  0%{transform:scale(1)}
-  36%{transform:scale(1.018)}
-  72%{transform:scale(.995)}
-  100%{transform:scale(1)}
-}
-
-/* V87: секретная еда на короткое время меняет весь интерфейс, а не только комнату. */
-body.secret-meal-ui-active #app:after{
-  content:"";position:fixed;z-index:1100;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse at 50% 37%,rgba(255,91,123,.16),transparent 42%),
-    radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(77,4,38,.18) 78%,rgba(36,1,20,.3) 100%);
-  box-shadow:inset 0 0 0 2px rgba(255,74,108,.22),inset 0 0 45px rgba(69,2,35,.18);
-  opacity:0;animation:secretMealInterfaceVeil 2.75s ease-in-out both;
-}
-body.secret-meal-ui-active #homeScreen:after{
-  content:"";position:fixed;z-index:1099;left:50%;top:0;bottom:0;width:min(100vw,520px);pointer-events:none;
-  background:
-    radial-gradient(ellipse 3px 5px at 10% 27%,#3d071d 0 64%,transparent 76%),
-    radial-gradient(ellipse 11px 7px at 10% 27%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%),
-    radial-gradient(ellipse 4px 6px at 89% 35%,#3d071d 0 64%,transparent 76%),
-    radial-gradient(ellipse 13px 8px at 89% 35%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%),
-    radial-gradient(ellipse 3px 5px at 14% 74%,#3d071d 0 64%,transparent 76%),
-    radial-gradient(ellipse 10px 7px at 14% 74%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%),
-    radial-gradient(ellipse 4px 6px at 86% 81%,#3d071d 0 64%,transparent 76%),
-    radial-gradient(ellipse 12px 8px at 86% 81%,#fff4ef 0 52%,#dc3d61 56% 72%,transparent 78%);
-  opacity:0;filter:drop-shadow(0 0 5px rgba(255,44,83,.72));transform:translateX(-50%);animation:secretMealInterfaceEyes 2.75s ease-in-out both;
-}
-body.secret-meal-ui-active #homeScreen .stomach-rail:before{
-  content:"";position:absolute;z-index:-1;inset:-4px -3px;border:2px solid rgba(255,69,105,.58);border-radius:22px;
-  background:rgba(92,7,42,.06);box-shadow:0 0 13px rgba(255,43,82,.28),inset 0 0 14px rgba(255,67,104,.09);
-  opacity:0;animation:secretStomachWake 2.75s ease-in-out both;
-}
-body.secret-meal-ui-active #homeScreen .stomach-rail-title{
-  position:relative;color:#8b183c;text-shadow:0 0 5px rgba(255,78,111,.34);animation:secretStomachTitleWake 2.75s ease-in-out both;
-}
-body.secret-meal-ui-active #homeScreen .stomach-rail-title:after{
-  content:"";position:absolute;left:calc(100% + 5px);top:50%;width:11px;height:7px;border:1.5px solid #8d183b;border-radius:50%;
-  background:radial-gradient(ellipse,#4d0b25 0 23%,#fff3ef 27% 54%,#ef5572 58% 100%);box-shadow:0 0 5px rgba(255,48,86,.56);
-  opacity:0;transform:translateY(-50%) scaleY(.08);animation:secretStomachEye 2.75s ease-in-out both;
-}
-#homeScreen .stomach-quick-slot.filled.secret .food-mini-model{
-  transform-origin:50% 66%;animation:secretStomachFoodIdle 3.6s ease-in-out infinite;
-}
-body.secret-meal-ui-impact #homeScreen .slime-stage,
-body.secret-meal-ui-impact #homeScreen .conveyor,
-body.secret-meal-ui-impact .topbar{animation:secretMealPanelImpact .82s cubic-bezier(.18,.8,.2,1) both}
-/* Глаза больше не разбросаны по интерфейсу: весь живой взгляд рисуется
-   только внутри сцены со слаймом. */
-body.secret-meal-ui-active #homeScreen:after,
-body.secret-meal-ui-active #homeScreen .stomach-rail-title:after{display:none!important}
-@keyframes secretMealInterfaceVeil{0%,100%{opacity:0}22%{opacity:.56}52%{opacity:.82}78%{opacity:.48}}
-@keyframes secretMealInterfaceEyes{0%,12%,100%{opacity:0;transform:translate(-50%,2px)}28%,43%{opacity:.82;transform:translate(-50%,0)}48%{opacity:.18;transform:translate(-50%,0)}54%,78%{opacity:.72;transform:translate(-50%,-1px)}86%{opacity:.38}}
-@keyframes secretStomachWake{0%,100%{opacity:0;transform:scale(.96)}22%,76%{opacity:1;transform:scale(1)}48%{opacity:.72;transform:scale(1.025)}}
-@keyframes secretStomachTitleWake{0%,100%{transform:translateY(0)}28%{transform:translateY(-2px)}54%{transform:translateY(1px)}78%{transform:translateY(-1px)}}
-@keyframes secretStomachEye{0%,14%,100%{opacity:0;transform:translateY(-50%) scaleY(.08)}27%,62%{opacity:1;transform:translateY(-50%) scaleY(1)}68%{opacity:1;transform:translateY(-50%) scaleY(.1)}75%,88%{opacity:1;transform:translateY(-50%) scaleY(1)}}
-@keyframes secretStomachFoodIdle{0%,100%{filter:brightness(1);transform:translateY(0) rotate(-.5deg) scale(1)}46%{filter:brightness(1.07) saturate(1.06);transform:translateY(-1px) rotate(.7deg) scale(1.025)}58%{transform:translateY(0) rotate(.2deg) scale(.995,1.015)}}
-@keyframes secretMealPanelImpact{0%,100%{filter:none}38%{filter:saturate(1.12) brightness(1.025)}68%{filter:saturate(1.04)}}
 
 /* === V89: one stable phone-shaped interface on every device ===
    The page never scrolls during preparation or a run. Short viewports get a
@@ -2806,8 +2670,6 @@ body[data-screen="drop"] #dropScreen .shaft{
 html.mobile-lite .admin-tools-overlay,
 html.mobile-lite .run-menu-overlay,
 html.mobile-lite .game-complete-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-html.mobile-lite body.secret-meal-ui-active #homeScreen .menu-slime-canvas{filter:none!important}
-html.mobile-lite body.secret-meal-ui-active #app:after{box-shadow:inset 0 0 0 2px rgba(255,74,108,.22)}
 
 html.compact-viewport body[data-screen="home"] .topbar.world-summary{
   height:46px;min-height:46px;margin-top:2px;padding:3px 5px;
@@ -2831,7 +2693,6 @@ html.short-viewport #homeScreen .slime-playground{height:152px}
 html.short-viewport #homeScreen .stomach-rail{height:136px;gap:3px;padding-block:3px}
 html.short-viewport #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--quick-food-size:45px;height:112px;gap:6px}
 
-/* V68: компактный пищевой конвейер — еда на тарелках, отдельная боковая кнопка. */
 #homeScreen>.card.conveyor{
   padding:5px!important;background:#cbd3dc!important;
 }
@@ -2859,45 +2720,52 @@ html.short-viewport #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--qu
   display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;align-items:end;gap:4px!important;
   margin:0!important;padding:0 2px 5px!important;overflow:visible;clip-path:none!important;
 }
-#homeScreen .food-choices>.food-card.conveyor-food-pick,
-.food-card.drag-ghost.conveyor-food-pick{
+#homeScreen .food-choices>.conveyor-food-pick,
+.drag-ghost.conveyor-food-pick{
   position:relative!important;width:100%!important;min-width:0!important;max-width:none!important;height:94px!important;min-height:94px!important;max-height:94px!important;
   align-self:end;margin:0!important;padding:0!important;overflow:visible;border:0!important;border-radius:0!important;
   background:transparent!important;box-shadow:none!important;filter:none;text-align:center;
 }
-#homeScreen .food-card.conveyor-food-pick:not(.tunnel-enter):not(.leaving):not(.secret-card-awakening){animation:none!important}
-#homeScreen .food-card.conveyor-food-pick:before,#homeScreen .food-card.conveyor-food-pick:after{display:none!important}
-#homeScreen .food-card.conveyor-food-pick>.rarity,
-#homeScreen .food-card.conveyor-food-pick>.food-name,
-#homeScreen .food-card.conveyor-food-pick>.food-card-description,
-#homeScreen .food-card.conveyor-food-pick>.food-stat-grid,
-#homeScreen .food-card.conveyor-food-pick>.food-epic-motes,
-#homeScreen .food-card.conveyor-food-pick>.food-special-sparkles,
-#homeScreen .food-card.conveyor-food-pick>.food-special-neon,
-#homeScreen .food-card.conveyor-food-pick>.food-secret-neon{display:none!important}
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
-.food-card.drag-ghost.conveyor-food-pick>.conveyor-plate{
+#homeScreen .conveyor-food-pick:not(.tunnel-enter):not(.leaving){animation:none!important}
+#homeScreen .conveyor-food-pick.tunnel-enter{
+  animation:conveyorFoodEnter var(--conveyor-duration,520ms) cubic-bezier(.2,.72,.18,1) var(--conveyor-delay,0ms) both;
+  will-change:transform,opacity,filter;
+}
+#homeScreen .conveyor-food-pick.leaving{
+  animation:conveyorFoodLeave var(--conveyor-duration,470ms) cubic-bezier(.42,.04,.72,.38) var(--conveyor-delay,0ms) both;
+  pointer-events:none;will-change:transform,opacity,filter;
+}
+@keyframes conveyorFoodEnter{
+  0%{opacity:0;filter:brightness(.35);transform:translateX(calc(0% - var(--tunnel-in-distance,332%))) scale(.92,.97)}
+  14%{opacity:.45;transform:translateX(calc(0% - var(--tunnel-in-mouth,312%))) scale(.95,.985)}
+  72%{opacity:1;filter:brightness(1);transform:translateX(6px) translateY(-2px) scale(1.01,.99)}
+  88%{transform:translateX(-2px) translateY(1px)}
+  100%{opacity:1;filter:none;transform:none}
+}
+@keyframes conveyorFoodLeave{
+  0%{opacity:1;filter:none;transform:none}
+  68%{opacity:1;transform:translateX(var(--tunnel-out-cruise,240%)) scale(.994)}
+  90%{opacity:.65;filter:brightness(.45);transform:translateX(var(--tunnel-out-mouth,313%)) scale(.96,.985)}
+  100%{opacity:0;filter:brightness(.12);transform:translateX(var(--tunnel-out-distance,332%)) scale(.9,.96)}
+}
+#homeScreen .conveyor-food-pick:before,#homeScreen .conveyor-food-pick:after{display:none!important}
+#homeScreen .conveyor-food-pick>.conveyor-plate,
+.drag-ghost.conveyor-food-pick>.conveyor-plate{
   position:absolute;z-index:1;left:50%;bottom:2px;width:min(88%,78px);height:24px;display:block;
   border:2px solid #65717e;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#fff 0 48%,#dbe0e5 50% 70%,#a7b0ba 72% 100%);
   box-shadow:0 3px 0 rgba(12,19,27,.55),inset 0 2px 0 #fff;transform:translateX(-50%);pointer-events:none;
 }
-#homeScreen .food-card.conveyor-food-pick>.food-model-wrap,
-.food-card.drag-ghost.conveyor-food-pick>.food-model-wrap{
+#homeScreen .conveyor-food-pick>.food-model-wrap,
+.drag-ghost.conveyor-food-pick>.food-model-wrap{
   position:absolute!important;z-index:3!important;inset:0 0 16px!important;width:auto!important;height:auto!important;min-height:0!important;
   display:grid!important;place-items:end center!important;margin:0!important;padding:0 0 2px!important;overflow:visible!important;
   border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.food-model-wrap:before{display:none!important}
-#homeScreen .food-card.conveyor-food-pick .food-model,
-.food-card.drag-ghost.conveyor-food-pick .food-model{
+#homeScreen .conveyor-food-pick>.food-model-wrap:before{display:none!important}
+#homeScreen .conveyor-food-pick .food-model,
+.drag-ghost.conveyor-food-pick .food-model{
   position:relative!important;top:0!important;width:76px!important;height:76px!important;max-width:96%!important;max-height:76px!important;
   object-fit:contain;filter:drop-shadow(0 3px 1px rgba(0,0,0,.3))!important;
-}
-#homeScreen .food-card.conveyor-food-pick.secret-unknown>.secret-unknown-center{
-  position:absolute!important;z-index:4!important;left:50%!important;top:14px!important;width:60px!important;height:58px!important;
-  display:grid!important;place-items:center!important;border:2px solid #a92f54!important;border-radius:18px!important;
-  background:#651a38!important;box-shadow:inset 0 2px 0 rgba(255,158,180,.32),0 3px 1px rgba(0,0,0,.34)!important;
-  color:#ffd9e1!important;font-size:19px!important;letter-spacing:1px!important;transform:translateX(-50%)!important;
 }
 #homeScreen .machine-belt{
   left:17px;right:17px;bottom:5px;height:25px;border:2px solid #283442;border-radius:12px;
@@ -2951,7 +2819,6 @@ html.short-viewport #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--qu
   align-self:end!important;margin:0!important;border-radius:14px!important;
 }
 
-/* Три понятные желейные жизни вместо типографских символов. */
 .shaft-health{
   width:174px;height:55px;display:grid;grid-template-columns:minmax(0,1fr) 34px;grid-template-rows:13px 32px;
   align-items:center;gap:1px 4px;padding:4px 7px 5px;border-color:#8d2742;border-radius:15px;
@@ -2979,8 +2846,8 @@ html.short-viewport #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--qu
   #homeScreen .conveyor-machine,#homeScreen .conveyor-controls{height:134px}
   #homeScreen .conveyor-machine .food-choices{left:26px;right:26px;top:24px;bottom:19px;gap:2px!important}
   #homeScreen .machine-tunnel{width:27px}.conveyor-machine .machine-mouth{width:19px}
-  #homeScreen .food-choices>.food-card.conveyor-food-pick{height:88px!important;min-height:88px!important;max-height:88px!important}
-  #homeScreen .food-card.conveyor-food-pick .food-model{width:69px!important;height:69px!important;max-height:69px!important}
+  #homeScreen .food-choices>.conveyor-food-pick{height:88px!important;min-height:88px!important;max-height:88px!important}
+  #homeScreen .conveyor-food-pick .food-model{width:69px!important;height:69px!important;max-height:69px!important}
   #homeScreen .conveyor-controls .reroll-icon-well{width:64px;height:64px;flex-basis:64px}
   #homeScreen .conveyor-controls .reroll-icon{width:47px;height:47px}
   #homeScreen .food-choices>.conveyor-start-card{height:88px!important;min-height:88px!important;max-height:88px!important}
@@ -2991,8 +2858,8 @@ html.short-viewport #homeScreen .stomach-quick-slots{--quick-slot-size:49px;--qu
   #homeScreen .conveyor-choice-count{min-width:108px;height:20px;font-size:7.3px}
   #homeScreen .conveyor-machine .food-choices{left:24px;right:24px;top:22px;bottom:18px;gap:1px!important}
   #homeScreen .machine-tunnel{width:25px}.conveyor-machine .machine-mouth{width:18px}
-  #homeScreen .food-choices>.food-card.conveyor-food-pick{height:83px!important;min-height:83px!important;max-height:83px!important}
-  #homeScreen .food-card.conveyor-food-pick .food-model{width:62px!important;height:62px!important;max-height:62px!important}
+  #homeScreen .food-choices>.conveyor-food-pick{height:83px!important;min-height:83px!important;max-height:83px!important}
+  #homeScreen .conveyor-food-pick .food-model{width:62px!important;height:62px!important;max-height:62px!important}
   #homeScreen .conveyor-controls .reroll-icon-well{width:57px;height:57px;flex-basis:57px}
   #homeScreen .conveyor-controls .reroll-icon{width:43px;height:43px}
   #homeScreen .conveyor-controls .reroll-btn>em{min-height:27px;font-size:6px}
@@ -3017,9 +2884,6 @@ html.short-viewport #homeScreen>.play-setup-card .bottom-actions button{min-heig
   #dropScreen .run-menu-btn{top:max(6px,var(--safe-top));right:max(6px,var(--safe-right))}
 }
 
-/* === Единый портретный viewport ===
-   Телефон использует реальную область браузера. На десктопе тот же интерфейс
-   вписывается целиком в 9:16 и получает только внешний контур без выреза. */
 html,body{overflow:hidden;overscroll-behavior:none}
 .phone-viewport{
   position:relative;isolation:isolate;width:100%;height:var(--app-height,100dvh);margin:0 auto;overflow:hidden;
@@ -3040,15 +2904,10 @@ html,body{overflow:hidden;overscroll-behavior:none}
   .phone-viewport>.app{
     width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;margin:0!important;
   }
-  .phone-viewport>.overlay,
-  .phone-viewport>.secret-discovery-overlay,
-  .phone-viewport>.encyclopedia-card-viewer{position:absolute!important;inset:0!important}
+  .phone-viewport>.overlay{position:absolute!important;inset:0!important}
   .phone-viewport>.toast{position:absolute}
 }
 
-/* === V90: новый экран кормления и рецептов ===
-   Единственная внешняя граница на ПК — рамка phone-viewport. Внутренний
-   экран занимает её целиком и использует ту же раскладку на телефоне. */
 body[data-screen="home"] .phone-viewport>.app{
   display:grid!important;grid-template-rows:48px minmax(0,1fr);height:100%!important;min-height:0!important;max-height:100%!important;padding:0!important;
   background:#edf8f4;overflow:hidden!important;
@@ -3072,7 +2931,6 @@ body[data-screen="home"] #homeScreen.active{
 body.home-height-fitted #homeScreen.active{box-shadow:none!important}
 body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!important;min-height:0;overflow:hidden}
 
-/* Желудок, слайм и книга — одна понятная строка. */
 #homeScreen>.slime-stage{display:block!important;width:100%!important;max-width:100%!important;height:100%;padding:6px 7px!important;border-radius:16px;overflow:visible}
 #homeScreen .slime-hero-layout{
   width:100%;height:100%;min-height:0!important;padding:0!important;
@@ -3124,7 +2982,6 @@ body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!import
 #homeScreen .recipe-category-slot.family-bounce{border-color:#4c8d42;background:#87d66d}
 #homeScreen .recipe-category-slot.family-gold{border-color:#9d6c12;background:#ffd259;color:#664506}
 #homeScreen .recipe-category-slot.family-blast{border-color:#8b3c34;background:#ff775d}
-#homeScreen .recipe-category-slot.family-secret{border-color:#8d2142;background:#3f1024}
 #homeScreen .recipe-result-slot{
   position:relative;box-sizing:border-box;width:66px;height:66px;display:grid;grid-template-rows:48px 12px;place-items:center;padding:2px;
   overflow:hidden;border:2px dashed #8395a2;border-radius:14px;background:#eef4f2;color:#657787;
@@ -3140,7 +2997,6 @@ body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!import
 #homeScreen .recipe-result-slot.no-recipe{border-style:solid;border-color:#a07076;background:#fff1f2}
 @keyframes recipeCategoryPop{from{opacity:.35;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
 
-/* Конвейер занимает всю ширину; обновление теперь под лентой. */
 #homeScreen>.card.conveyor{height:100%;padding:4px!important}
 #homeScreen .conveyor-workbench{
   box-sizing:border-box;width:100%;height:100%;display:grid!important;grid-template-columns:minmax(0,1fr)!important;
@@ -3150,8 +3006,8 @@ body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!import
 #homeScreen .conveyor-machine .food-choices{left:31px;right:31px;top:26px;bottom:18px;gap:8px!important}
 #homeScreen .machine-tunnel{width:32px}
 #homeScreen .conveyor-machine .machine-mouth{width:22px}
-#homeScreen .food-choices>.food-card.conveyor-food-pick{height:96px!important;min-height:96px!important;max-height:96px!important;touch-action:none!important}
-#homeScreen .food-card.conveyor-food-pick .food-model{width:78px!important;height:78px!important;max-height:78px!important}
+#homeScreen .food-choices>.conveyor-food-pick{height:96px!important;min-height:96px!important;max-height:96px!important;touch-action:none!important}
+#homeScreen .conveyor-food-pick .food-model{width:78px!important;height:78px!important;max-height:78px!important}
 #homeScreen .conveyor-controls{
   box-sizing:border-box;width:100%;height:38px!important;min-height:38px!important;display:grid!important;place-items:center;padding:0!important;
   border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
@@ -3174,7 +3030,6 @@ body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!import
   background:#f9f5ff!important;color:#513568!important;font-size:6.2px!important;text-shadow:none!important;
 }
 
-/* Нижняя зона растягивается до нижнего края телефона, без пустого хвоста. */
 #homeScreen>.play-setup-card{
   box-sizing:border-box;width:100%;height:100%;min-height:0!important;margin:0!important;padding:6px 7px 7px!important;
   display:grid!important;grid-template-columns:120px minmax(0,1fr)!important;
@@ -3201,7 +3056,6 @@ body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!import
 #homeScreen .home-tool-dock .action-icon img[src*="accessories-cap"]{transform:scale(1.08)}
 #homeScreen .home-tool-dock b{font-size:8.5px!important;letter-spacing:.35px!important;color:#2e514d}
 
-/* Перетаскивание: лёгкий отдельный призрак без копии всей DOM-карты. */
 body[data-screen="home"],body[data-screen="home"] .phone-viewport{overscroll-behavior:none!important;overflow:hidden!important}
 #homeScreen .conveyor-food-pick{touch-action:none!important;-webkit-user-drag:none!important}
 body.food-dragging{touch-action:none!important;cursor:grabbing}
@@ -3230,7 +3084,7 @@ body.food-dragging{touch-action:none!important;cursor:grabbing}
   #homeScreen .recipe-result-plate{top:27px;width:42px;height:14px}
   #homeScreen .recipe-result-food{width:40px!important;height:40px!important}
   #homeScreen .conveyor-machine .food-choices{gap:3px!important}
-  #homeScreen .food-card.conveyor-food-pick .food-model{width:67px!important;height:67px!important;max-height:67px!important}
+  #homeScreen .conveyor-food-pick .food-model{width:67px!important;height:67px!important;max-height:67px!important}
   #homeScreen .conveyor-controls .reroll-btn,#homeScreen .conveyor-controls .reroll-btn.ad-mode{width:min(248px,88%)!important;grid-template-columns:31px minmax(0,1fr) 84px!important;gap:3px!important}
   #homeScreen .conveyor-controls .reroll-btn>em{width:84px!important;font-size:5.6px!important}
   #homeScreen>.play-setup-card{grid-template-columns:112px minmax(0,1fr)!important;padding-inline:5px!important;column-gap:4px!important}
@@ -3238,7 +3092,6 @@ body.food-dragging{touch-action:none!important;cursor:grabbing}
   #homeScreen .home-tool-dock b{font-size:7.4px!important}
 }
 
-/* Книга рецептов заменяет старую энциклопедию на главном экране. */
 .recipe-book-panel{display:grid;gap:12px}
 .recipe-book-families{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .recipe-book-family{min-width:0;height:42px;display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:6px;padding:5px 7px;border:2px solid #758696;border-radius:12px;background:#f7fbfa;box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(43,60,72,.13)}
@@ -3254,15 +3107,14 @@ body.food-dragging{touch-action:none!important;cursor:grabbing}
 .recipe-book-dish{width:60px;height:60px;display:grid;place-items:center;border:2px solid #9d7b32;border-radius:14px;background:#fff3c9;color:#9a7021;font-size:24px;font-weight:1000}.recipe-book-dish img{width:55px;height:55px;object-fit:contain}
 .recipe-book-entry>span:last-child{display:grid;gap:4px}.recipe-book-entry b{font-size:11px}.recipe-book-entry small{color:#6b7884;font-size:8px;font-weight:800}.recipe-book-entry.locked{filter:grayscale(.7);opacity:.58}
 
-/* === V92: цельный конвейер от тоннеля до тоннеля === */
 #homeScreen>.card.conveyor{padding:0!important;border-radius:14px!important;background:#7c8997!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 3px 0 rgba(38,49,62,.24)!important}
 #homeScreen .conveyor-workbench{width:100%;height:100%;padding:4px 0 5px!important;gap:5px!important;border:0!important;border-radius:12px!important;background:#8e9aa7!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.42),inset 0 -3px 0 rgba(37,48,60,.2)!important}
 #homeScreen .conveyor-machine{--machine-tunnel-w:38px;--machine-mouth-w:25px;width:100%;height:100%!important;margin:0!important;border-width:2px 0!important;border-radius:0!important;background:#111a24!important;box-shadow:inset 0 7px 15px rgba(0,0,0,.35),inset 0 -2px 0 rgba(157,178,194,.15)!important}
 #homeScreen .conveyor-machine .food-choices{left:38px!important;right:38px!important;top:24px!important;bottom:25px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;padding:0!important;align-items:end!important}
-#homeScreen .food-choices>.food-card.conveyor-food-pick{height:94px!important;min-height:94px!important;max-height:94px!important;align-self:end!important}
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,.food-drag-ghost.conveyor-food-pick>.conveyor-plate{left:50%!important;bottom:0!important;width:78px!important;height:22px!important;border:2px solid #66727e!important;background:radial-gradient(ellipse at 50% 34%,#fff 0 46%,#dfe5e9 48% 70%,#aab4bd 72% 100%)!important;box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff!important;transform:translateX(-50%)!important}
-#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{inset:0 0 7px!important;padding:0!important;place-items:end center!important}
-#homeScreen .food-card.conveyor-food-pick .food-model{width:72px!important;height:72px!important;max-width:92%!important;max-height:72px!important;transform:translateY(2px)!important;transform-origin:50% 100%!important}
+#homeScreen .food-choices>.conveyor-food-pick{height:94px!important;min-height:94px!important;max-height:94px!important;align-self:end!important}
+#homeScreen .conveyor-food-pick>.conveyor-plate,.food-drag-ghost.conveyor-food-pick>.conveyor-plate{left:50%!important;bottom:0!important;width:78px!important;height:22px!important;border:2px solid #66727e!important;background:radial-gradient(ellipse at 50% 34%,#fff 0 46%,#dfe5e9 48% 70%,#aab4bd 72% 100%)!important;box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff!important;transform:translateX(-50%)!important}
+#homeScreen .conveyor-food-pick>.food-model-wrap{inset:0 0 7px!important;padding:0!important;place-items:end center!important}
+#homeScreen .conveyor-food-pick .food-model{width:72px!important;height:72px!important;max-width:92%!important;max-height:72px!important;transform:translateY(2px)!important;transform-origin:50% 100%!important}
 #homeScreen .machine-belt{z-index:18;left:0!important;right:0!important;bottom:4px!important;width:auto!important;height:31px!important;border-width:2px 0!important;border-radius:0!important;background:repeating-linear-gradient(90deg,#414d5a 0 15px,#6f7d8b 15px 27px,#2e3945 27px 32px)!important;background-size:32px 100%!important;box-shadow:inset 0 4px 0 rgba(255,255,255,.16),inset 0 -5px 0 rgba(0,0,0,.3),0 -2px 0 #202b36!important}
 #homeScreen .machine-belt:before{top:7px!important;height:2px!important;box-shadow:0 11px 0 rgba(14,22,30,.38)!important}
 #homeScreen .machine-belt>i{top:50%!important;width:15px!important;height:15px!important;border:2px solid #26313d!important;background:#84919d!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.38),0 1px 0 rgba(0,0,0,.3)!important}
@@ -3272,9 +3124,8 @@ body.food-dragging{touch-action:none!important;cursor:grabbing}
 #homeScreen .machine-mouth{top:9px!important;bottom:7px!important;width:25px!important;border:3px solid #596675!important;background:#030609!important;box-shadow:inset 0 0 10px #000,0 0 0 1px rgba(255,255,255,.09)!important}
 #homeScreen .machine-tunnel-left .machine-mouth{right:0!important;border-right:0!important;border-radius:7px 0 0 7px!important}#homeScreen .machine-tunnel-right .machine-mouth{left:0!important;border-left:0!important;border-radius:0 7px 7px 0!important}
 #homeScreen .conveyor-choice-count{top:4px!important;z-index:60!important}#homeScreen .conveyor-controls{padding:1px 0 0!important}
-@media(max-width:370px){#homeScreen .conveyor-machine{--machine-tunnel-w:32px;--machine-mouth-w:21px}#homeScreen .conveyor-machine .food-choices{left:32px!important;right:32px!important;gap:2px!important;bottom:24px!important}#homeScreen .machine-tunnel{width:32px!important}.conveyor-machine .machine-mouth{width:21px!important}#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:68px!important;height:20px!important}#homeScreen .food-card.conveyor-food-pick .food-model{width:63px!important;height:63px!important;max-height:63px!important}}
+@media(max-width:370px){#homeScreen .conveyor-machine{--machine-tunnel-w:32px;--machine-mouth-w:21px}#homeScreen .conveyor-machine .food-choices{left:32px!important;right:32px!important;gap:2px!important;bottom:24px!important}#homeScreen .machine-tunnel{width:32px!important}.conveyor-machine .machine-mouth{width:21px!important}#homeScreen .conveyor-food-pick>.conveyor-plate{width:68px!important;height:20px!important}#homeScreen .conveyor-food-pick .food-model{width:63px!important;height:63px!important;max-height:63px!important}}
 
-/* === V91: симметричная верхняя сцена и более свободное управление === */
 body[data-screen="home"] #homeScreen.active{
   grid-template-rows:minmax(178px,26%) minmax(204px,30%) minmax(0,1fr)!important;
 }
@@ -3353,7 +3204,6 @@ body[data-screen="home"] #homeScreen.active{
   #homeScreen .home-tool-dock .action-icon,#homeScreen .home-tool-dock .action-icon img{width:30px!important;height:30px!important}
 }
 
-/* === V94: цельное полотно конвейера без декоративных шестерёнок === */
 #homeScreen .conveyor-machine .food-choices{
   bottom:13px!important;
 }
@@ -3390,14 +3240,14 @@ body[data-screen="home"] #homeScreen.active{
 #homeScreen .machine-belt>i:nth-child(6){left:95%!important}
 #homeScreen .conveyor.is-running .machine-belt{animation:none!important}
 #homeScreen .conveyor.is-running .machine-belt:after{animation:conveyorTrackTravel .28s linear infinite!important}
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
+#homeScreen .conveyor-food-pick>.conveyor-plate,
 .food-drag-ghost.conveyor-food-pick>.conveyor-plate{
   bottom:0!important;width:76px!important;height:21px!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{
+#homeScreen .conveyor-food-pick>.food-model-wrap{
   inset:0 0 2px!important;
 }
-#homeScreen .food-card.conveyor-food-pick .food-model{
+#homeScreen .conveyor-food-pick .food-model{
   transform:translateY(5px)!important;
 }
 @keyframes conveyorTrackTravel{to{transform:translate3d(32px,0,0)}}
@@ -3406,14 +3256,13 @@ body[data-screen="home"] #homeScreen.active{
   #homeScreen .conveyor-machine .food-choices{bottom:12px!important}
   #homeScreen .machine-belt{height:33px!important}
   #homeScreen .machine-belt>i{top:24px!important;width:10px!important;height:10px!important}
-  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:67px!important;height:19px!important}
+  #homeScreen .conveyor-food-pick>.conveyor-plate{width:67px!important;height:19px!important}
 }
 
 @media(prefers-reduced-motion:reduce){
   #homeScreen .machine-belt:after,#homeScreen .machine-belt>i{animation:none!important}
 }
 
-/* === V96: узкие теневые проёмы, лента проходит поверх и исчезает внутри === */
 #homeScreen .conveyor-machine{
   --machine-tunnel-w:32px;--machine-mouth-w:24px;
 }
@@ -3486,7 +3335,6 @@ body[data-screen="home"] #homeScreen.active{
   #homeScreen .machine-mouth{width:28px!important;top:9px!important}
 }
 
-/* === V97: полноширинный конвейер и встроенный боковой реролл === */
 #homeScreen>.card.conveyor{
   width:calc(100% + 10px)!important;margin-inline:-5px!important;
   border-left:0!important;border-right:0!important;border-radius:0!important;
@@ -3529,14 +3377,14 @@ body[data-screen="home"] #homeScreen.active{
   box-sizing:border-box!important;width:100%!important;min-height:27px!important;height:27px!important;padding:2px!important;
   font-size:5.8px!important;line-height:1.05!important;border-radius:6px!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
+#homeScreen .conveyor-food-pick>.conveyor-plate,
 .food-drag-ghost.conveyor-food-pick>.conveyor-plate{
   left:50%!important;bottom:0!important;transform:translateX(-50%)!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{
+#homeScreen .conveyor-food-pick>.food-model-wrap{
   inset:0 0 14px!important;place-items:end center!important;
 }
-#homeScreen .food-card.conveyor-food-pick .food-model{
+#homeScreen .conveyor-food-pick .food-model{
   left:0!important;transform:translateY(5px)!important;transform-origin:50% 100%!important;
 }
 #homeScreen .conveyor.launch-ready .conveyor-workbench{grid-template-columns:minmax(0,1fr)!important}
@@ -3552,7 +3400,6 @@ body[data-screen="home"] #homeScreen.active{
   #homeScreen .conveyor-machine .food-choices{left:33px!important;right:33px!important;gap:1px!important}
 }
 
-/* === V98: вертикальный рычаг реролла вместо круглой кнопки === */
 #homeScreen .conveyor-workbench{
   grid-template-columns:minmax(0,1fr) 72px!important;
 }
@@ -3626,7 +3473,6 @@ body[data-screen="home"] #homeScreen.active{
   #homeScreen .conveyor-controls .reroll-btn>em{width:50px!important;height:23px!important;min-height:23px!important;font-size:4.9px!important}
 }
 
-/* === V99: компактный полноширинный мультяшный конвейер === */
 body[data-screen="home"] #homeScreen.active{
   grid-template-rows:minmax(178px,26%) minmax(148px,21%) minmax(0,1fr)!important;
 }
@@ -3659,19 +3505,19 @@ body[data-screen="home"] #homeScreen.active{
   left:32px!important;right:32px!important;top:22px!important;bottom:10px!important;
   gap:7px!important;padding:0!important;
 }
-#homeScreen .food-choices>.food-card.conveyor-food-pick{
+#homeScreen .food-choices>.conveyor-food-pick{
   height:83px!important;min-height:83px!important;max-height:83px!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate,
+#homeScreen .conveyor-food-pick>.conveyor-plate,
 .food-drag-ghost.conveyor-food-pick>.conveyor-plate{
   bottom:0!important;width:72px!important;height:19px!important;
   border-color:#62717e!important;background:radial-gradient(ellipse at 50% 34%,#fff 0 48%,#e2e8eb 50% 70%,#a9b5be 72% 100%)!important;
   box-shadow:0 3px 0 rgba(7,13,19,.46),inset 0 2px 0 #fff!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{
+#homeScreen .conveyor-food-pick>.food-model-wrap{
   inset:0 0 12px!important;
 }
-#homeScreen .food-card.conveyor-food-pick .food-model{
+#homeScreen .conveyor-food-pick .food-model{
   width:66px!important;height:66px!important;max-height:66px!important;transform:translateY(5px)!important;
 }
 #homeScreen .machine-belt{
@@ -3692,12 +3538,11 @@ body[data-screen="home"] #homeScreen.active{
 @media(max-width:370px){
   body[data-screen="home"] #homeScreen.active{grid-template-rows:minmax(165px,25%) minmax(138px,21%) minmax(0,1fr)!important}
   #homeScreen .conveyor-machine .food-choices{left:30px!important;right:30px!important;top:21px!important;bottom:9px!important;gap:3px!important}
-  #homeScreen .food-choices>.food-card.conveyor-food-pick{height:77px!important;min-height:77px!important;max-height:77px!important}
-  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:65px!important;height:18px!important}
-  #homeScreen .food-card.conveyor-food-pick .food-model{width:60px!important;height:60px!important;max-height:60px!important}
+  #homeScreen .food-choices>.conveyor-food-pick{height:77px!important;min-height:77px!important;max-height:77px!important}
+  #homeScreen .conveyor-food-pick>.conveyor-plate{width:65px!important;height:18px!important}
+  #homeScreen .conveyor-food-pick .food-model{width:60px!important;height:60px!important;max-height:60px!important}
 }
 
-/* === V100: центральная панель реролла под конвейером === */
 #homeScreen>.card.conveyor{overflow:visible!important;z-index:20!important}
 #homeScreen .conveyor-workbench{position:relative!important;overflow:visible!important}
 #homeScreen .conveyor-controls{
@@ -3759,7 +3604,6 @@ body[data-screen="home"] #homeScreen.active{
   #homeScreen>.play-setup-card{padding-top:24px!important}
 }
 
-/* === V101: полноширинные секции до внутренних контуров экрана === */
 #homeScreen>.card.conveyor,
 #homeScreen>.play-setup-card{
   box-sizing:border-box!important;width:calc(100% + 10px)!important;
@@ -3779,7 +3623,6 @@ body[data-screen="home"] #homeScreen.active{
   #homeScreen>.play-setup-card{padding-left:8px!important;padding-right:8px!important}
 }
 
-/* === V102: заземлённый слайм и свободный выбор уровней === */
 body[data-screen="home"] #homeScreen.active{
   padding:5px 5px 0!important;
   grid-template-rows:minmax(182px,26%) minmax(148px,21%) minmax(0,1fr)!important;
@@ -3869,7 +3712,6 @@ html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs{height:44px!imp
   #homeScreen>.play-setup-card .level-btn{border-radius:12px!important}
 }
 
-/* === V103: желудок-пирамида и понятная цепочка рецепта === */
 #homeScreen .slime-hero-layout{
   position:relative!important;grid-template-columns:106px minmax(0,1fr) 100px!important;
   gap:8px!important;align-items:center!important;padding-top:0!important;
@@ -3965,7 +3807,6 @@ html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs{height:44px!imp
   #homeScreen .recipe-rail:before{left:-14px}
 }
 
-/* === V104: симметричная сцена без лишних внешних рамок === */
 #homeScreen .slime-hero-layout{
   grid-template-columns:100px minmax(0,1fr) 100px!important;
   gap:8px!important;align-items:center!important;
@@ -4005,7 +3846,6 @@ html.short-viewport #homeScreen>.play-setup-card .home-mode-tabs{height:44px!imp
   #homeScreen .recipe-rail:before{left:-10px!important}
 }
 
-/* === V105: уровни отдельным рядом, действия закреплены внизу === */
 #homeScreen>.play-setup-card{
   grid-template-columns:minmax(0,1fr)!important;
   grid-template-rows:56px 62px 36px 52px minmax(0,1fr) 68px!important;
@@ -4053,7 +3893,6 @@ html.short-viewport #homeScreen>.play-setup-card .level-btn{height:50px!importan
 html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{height:58px!important;min-height:58px!important;padding:4px!important}
 html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min-height:48px!important}
 
-/* === V125: финальная геометрия уровней, должна оставаться последней === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
   row-gap:3px!important;
@@ -4093,8 +3932,6 @@ html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picke
   grid-template-rows:16px 62px!important;gap:2px!important;transform:none!important;
 }
 
-/* === V127: оба режима живут в одной сетке === */
-/* Режим не должен менять высоту секции: меняется только её содержимое. */
 #homeScreen>.play-setup-card[data-mode="endless"]{
   grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
 }
@@ -4137,7 +3974,6 @@ html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:24
 html.short-viewport #homeScreen>.play-setup-card .endless-stat-card small{font-size:4.8px!important}
 html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:9px!important}
 
-/* Зелёная игровая зона начинается непосредственно над выбором мира. */
 #homeScreen>.play-setup-card{
   background:linear-gradient(180deg,
     transparent 0 calc(100% - 270px),
@@ -4151,7 +3987,6 @@ html.short-viewport #homeScreen>.play-setup-card{
     var(--route-bottom) 100%)!important;
 }
 
-/* === V123: убран реальный пустой участок между уровнями и шкалой === */
 #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
   position:relative!important;display:block!important;overflow:visible!important;
 }
@@ -4174,7 +4009,6 @@ html.short-viewport #homeScreen>.play-setup-card>#campaignModePanel>.level-picke
   transform:none!important;
 }
 
-/* === V124: высота строки равна реальному блоку уровней === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(5px,1fr) 54px 90px 48px 56px!important;
 }
@@ -4203,7 +4037,6 @@ html.short-viewport #homeScreen .home-tool-dock .action-icon img{width:32px!impo
   #homeScreen>.play-setup-card .level-btn>span{font-size:18px!important}
 }
 
-/* === V106: нижняя компактная группа с понятным выбором мира === */
 #homeScreen>.play-setup-card{
   grid-template-columns:minmax(0,1fr)!important;
   grid-template-rows:minmax(0,1fr) 54px 54px 34px 50px 64px!important;
@@ -4286,7 +4119,6 @@ html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min
   #homeScreen>.play-setup-card .level-buttons{gap:5px!important}
 }
 
-/* === V108: простой выбор мира, полноширинные уровни и поднятая глубина === */
 #homeScreen>.play-setup-card .home-world-picker{
   grid-template-columns:46px minmax(0,1fr) 27px!important;
   gap:8px!important;padding-left:9px!important;padding-right:9px!important;
@@ -4314,7 +4146,6 @@ html.short-viewport #homeScreen>.play-setup-card .home-world-picker{
   #homeScreen>.play-setup-card>.home-route-progress{top:-3px!important}
 }
 
-/* === V107: полноширинная карточка мира и ровная шкала уровней === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(0,1fr) 62px 54px 34px 50px 64px!important;
   row-gap:6px!important;padding-left:9px!important;padding-right:9px!important;
@@ -4401,7 +4232,6 @@ html.short-viewport #homeScreen>.play-setup-card .home-world-copy>b{font-size:8.
   #homeScreen>.play-setup-card .level-buttons{gap:5px!important}
 }
 
-/* === V109: единая нижняя панель и компактное управление конвейером === */
 #homeScreen>.play-setup-card{
   box-sizing:border-box!important;
   grid-template-columns:minmax(0,1fr)!important;
@@ -4554,7 +4384,6 @@ html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min
   #homeScreen .conveyor-controls .reroll-btn>em{width:58px!important;font-size:5.3px!important}
 }
 
-/* === V110: постоянные тарелки — с конвейера забирается только еда === */
 #homeScreen .conveyor-plates{
   position:absolute;z-index:19;left:32px;right:32px;top:22px;bottom:10px;
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:7px;
@@ -4570,11 +4399,10 @@ html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min
   content:"";position:absolute;left:14%;right:14%;top:24%;height:34%;
   border-radius:50%;border:1px solid rgba(145,160,170,.48);background:rgba(255,255,255,.3);
 }
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{display:none!important}
-#homeScreen .food-card.conveyor-food-pick.drag-source{opacity:1!important}
-#homeScreen .food-card.conveyor-food-pick.drag-source>.food-model-wrap,
-#homeScreen .food-card.conveyor-food-pick.food-picked>.food-model-wrap,
-#homeScreen .food-card.conveyor-food-pick.food-picked>.secret-unknown-center{opacity:0!important}
+#homeScreen .conveyor-food-pick>.conveyor-plate{display:none!important}
+#homeScreen .conveyor-food-pick.drag-source{opacity:1!important}
+#homeScreen .conveyor-food-pick.drag-source>.food-model-wrap,
+#homeScreen .conveyor-food-pick.food-picked>.food-model-wrap{opacity:0!important}
 .food-drag-ghost{height:82px!important;filter:drop-shadow(0 6px 4px rgba(16,28,38,.3))!important}
 .food-drag-plate{display:none!important}
 .food-drag-art{inset:0!important;place-items:center!important}
@@ -4585,7 +4413,6 @@ html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min
   #homeScreen .conveyor-plates>i{width:min(84%,68px);height:18px}
 }
 
-/* === V111: тарелки поверх ленты, еда поверх тарелок === */
 #homeScreen .conveyor-machine .conveyor-plates{
   z-index:25!important;display:grid!important;visibility:visible!important;opacity:1!important;
 }
@@ -4595,25 +4422,23 @@ html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min
 #homeScreen .conveyor-machine .food-choices{z-index:30!important}
 #homeScreen .conveyor.launch-ready .conveyor-plates{opacity:1!important}
 
-/* === V112: индивидуальная тарелка каждого продукта === */
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{
+#homeScreen .conveyor-food-pick>.conveyor-plate{
   display:block!important;visibility:visible!important;opacity:1!important;
   z-index:1!important;bottom:0!important;width:76px!important;height:20px!important;
   border:2px solid #61717d!important;border-radius:50%!important;
   background:radial-gradient(ellipse at 50% 31%,#fff 0 45%,#edf2f4 47% 61%,#c2ccd2 63% 76%,#8d9ba6 78% 100%)!important;
   box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 0 1px rgba(200,216,224,.24)!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate:after{
+#homeScreen .conveyor-food-pick>.conveyor-plate:after{
   content:"";position:absolute;left:14%;right:14%;top:24%;height:34%;
   border-radius:50%;border:1px solid rgba(145,160,170,.48);background:rgba(255,255,255,.3);
 }
-#homeScreen .food-card.conveyor-food-pick.drag-source>.conveyor-plate,
-#homeScreen .food-card.conveyor-food-pick.food-picked>.conveyor-plate{opacity:1!important}
+#homeScreen .conveyor-food-pick.drag-source>.conveyor-plate,
+#homeScreen .conveyor-food-pick.food-picked>.conveyor-plate{opacity:1!important}
 @media(max-width:370px){
-  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:68px!important;height:18px!important}
+  #homeScreen .conveyor-food-pick>.conveyor-plate{width:68px!important;height:18px!important}
 }
 
-/* === V113: компактная строка мира и режимов, стабильное переключение === */
 #homeScreen>.play-setup-card{
   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
   grid-template-rows:minmax(18px,1fr) 54px 58px 36px minmax(64px,1fr)!important;
@@ -4759,7 +4584,6 @@ html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:
   #homeScreen>.play-setup-card .home-mode-tab>span>b{font-size:5.8px!important}
 }
 
-/* === V114: читаемый мир, сетка рекордов 2×2 и чистый нижний ряд === */
 #homeScreen>.play-setup-card .home-world-copy>small{
   font-size:6.6px!important;line-height:1!important;letter-spacing:.75px!important;
 }
@@ -4852,7 +4676,6 @@ html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min
   #homeScreen>.play-setup-card .endless-stat-card b{font-size:9.5px!important}
 }
 
-/* === V115: квадратные уровни и ровная шкала глубины === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(8px,1fr) 54px 104px 38px minmax(58px,1fr)!important;
 }
@@ -4908,7 +4731,6 @@ html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-pro
   #homeScreen>.play-setup-card .level-btn{border-radius:11px!important}
 }
 
-/* === V116: крупнее уровни, контрастнее глубина, полная статистика === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(5px,1fr) 54px 118px 44px minmax(58px,1fr)!important;
 }
@@ -4996,7 +4818,6 @@ html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:
   #homeScreen>.play-setup-card .endless-stat-card b{font-size:10px!important}
 }
 
-/* === V117: удаление старой второй колонки панели уровней === */
 #homeScreen>.play-setup-card>#campaignModePanel:not(.hidden){
   grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;
   align-items:end!important;justify-items:stretch!important;gap:0!important;
@@ -5035,7 +4856,6 @@ html.short-viewport #homeScreen>.play-setup-card>.home-route-progress{
 html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-copy{height:14px!important;min-height:14px!important}
 html.short-viewport #homeScreen>.play-setup-card>.home-route-progress .world-progress-track{height:18px!important;min-height:18px!important}
 
-/* Низкий экран сохраняет ту же геометрию, а не возвращает старые размеры. */
 html.short-viewport #homeScreen>.play-setup-card{
   grid-template-rows:minmax(0,1fr) 48px 112px 46px minmax(52px,1fr)!important;
 }
@@ -5069,7 +4889,6 @@ html.short-viewport #homeScreen>.play-setup-card .endless-stat-card>img{width:36
 html.short-viewport #homeScreen>.play-setup-card .endless-stat-card small{font-size:6.2px!important;line-height:1.05!important}
 html.short-viewport #homeScreen>.play-setup-card .endless-stat-card b{font-size:12px!important;line-height:1!important}
 
-/* === V118: компактные квадратные уровни и цельный фон секции === */
 #homeScreen>.play-setup-card{
   background:linear-gradient(180deg,var(--route-top),var(--route-bottom))!important;
   box-shadow:inset 0 3px 0 rgba(255,255,255,.16),inset 0 -3px 0 rgba(12,77,58,.22)!important;
@@ -5115,7 +4934,6 @@ html.short-viewport #homeScreen>.play-setup-card .level-btn.active>span{font-siz
   #homeScreen>.play-setup-card>#campaignModePanel>.level-picker:before{font-size:7px!important}
 }
 
-/* === V119: чуть крупнее конвейер и новый горизонтальный запуск === */
 body[data-screen="home"] #homeScreen.active{
   grid-template-rows:minmax(188px,27%) minmax(156px,22%) minmax(0,1fr)!important;
   gap:5px!important;
@@ -5124,14 +4942,14 @@ body[data-screen="home"] #homeScreen.active{
 #homeScreen .conveyor-machine .food-choices{
   left:32px!important;right:32px!important;top:23px!important;bottom:10px!important;gap:7px!important;
 }
-#homeScreen .food-choices>.food-card.conveyor-food-pick{
+#homeScreen .food-choices>.conveyor-food-pick{
   height:91px!important;min-height:91px!important;max-height:91px!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.conveyor-plate{
+#homeScreen .conveyor-food-pick>.conveyor-plate{
   width:82px!important;height:22px!important;bottom:0!important;
 }
-#homeScreen .food-card.conveyor-food-pick>.food-model-wrap{inset:0 0 14px!important}
-#homeScreen .food-card.conveyor-food-pick .food-model{
+#homeScreen .conveyor-food-pick>.food-model-wrap{inset:0 0 14px!important}
+#homeScreen .conveyor-food-pick .food-model{
   width:74px!important;height:74px!important;max-height:74px!important;transform:translateY(5px)!important;
 }
 
@@ -5204,9 +5022,9 @@ html.short-viewport body[data-screen="home"] #homeScreen.active{
   grid-template-rows:minmax(178px,26%) minmax(148px,22%) minmax(0,1fr)!important;
 }
 html.short-viewport #homeScreen>.card.conveyor{min-height:148px!important}
-html.short-viewport #homeScreen .food-choices>.food-card.conveyor-food-pick{height:85px!important;min-height:85px!important;max-height:85px!important}
-html.short-viewport #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:75px!important;height:20px!important}
-html.short-viewport #homeScreen .food-card.conveyor-food-pick .food-model{width:68px!important;height:68px!important;max-height:68px!important}
+html.short-viewport #homeScreen .food-choices>.conveyor-food-pick{height:85px!important;min-height:85px!important;max-height:85px!important}
+html.short-viewport #homeScreen .conveyor-food-pick>.conveyor-plate{width:75px!important;height:20px!important}
+html.short-viewport #homeScreen .conveyor-food-pick .food-model{width:68px!important;height:68px!important;max-height:68px!important}
 html.short-viewport #homeScreen .food-choices>.conveyor-start-card{height:100px!important;min-height:100px!important;max-height:100px!important}
 html.short-viewport #homeScreen .conveyor-start-card .launch-card-action{width:118px!important;height:61px!important;right:11px!important}
 html.short-viewport #homeScreen .conveyor-start-card .launch-card-action>b{font-size:19px!important}
@@ -5217,8 +5035,8 @@ html.short-viewport #homeScreen .conveyor-start-card .launch-card-stage{left:11p
   body[data-screen="home"] #homeScreen.active{grid-template-rows:minmax(176px,26%) minmax(146px,22%) minmax(0,1fr)!important}
   #homeScreen>.card.conveyor{min-height:146px!important}
   #homeScreen .conveyor-machine .food-choices{left:30px!important;right:30px!important;top:22px!important;bottom:9px!important;gap:3px!important}
-  #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{width:72px!important;height:19px!important}
-  #homeScreen .food-card.conveyor-food-pick .food-model{width:65px!important;height:65px!important;max-height:65px!important}
+  #homeScreen .conveyor-food-pick>.conveyor-plate{width:72px!important;height:19px!important}
+  #homeScreen .conveyor-food-pick .food-model{width:65px!important;height:65px!important;max-height:65px!important}
   #homeScreen .food-choices>.conveyor-start-card{height:96px!important;min-height:96px!important;max-height:96px!important}
   #homeScreen .conveyor-start-card .launch-card-world{max-width:50%!important;padding:5px 7px!important}
   #homeScreen .conveyor-start-card .launch-card-world>b{font-size:9px!important}
@@ -5228,7 +5046,6 @@ html.short-viewport #homeScreen .conveyor-start-card .launch-card-stage{left:11p
   #homeScreen .conveyor-start-card .launch-card-action>i{width:9px!important;height:9px!important}
 }
 
-/* === V120: нижняя группа плотнее по вертикали === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(5px,1fr) 54px 118px 48px 56px!important;
   row-gap:3px!important;
@@ -5247,7 +5064,6 @@ html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{
   height:50px!important;min-height:50px!important;align-self:stretch!important;
 }
 
-/* === V121: нижняя навигация собрана в один плотный блок === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(5px,1fr) 54px 116px 47px 54px!important;
   row-gap:2px!important;
@@ -5310,7 +5126,6 @@ html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{
 }
 html.short-viewport #homeScreen .home-tool-dock button{height:47px!important;min-height:47px!important}
 
-/* === V122: уровни ближе к неизменной шкале метров === */
 #homeScreen>.play-setup-card{
   grid-template-rows:minmax(5px,1fr) 54px 118px 48px 56px!important;
   row-gap:3px!important;
@@ -5369,7 +5184,6 @@ html.short-viewport #homeScreen>.play-setup-card>.home-tool-dock{
 }
 html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min-height:48px!important}
 
-/* === V126: итоговая геометрия — после всех прежних правил === */
 #homeScreen>.slime-stage{
   box-sizing:border-box!important;width:100%!important;max-width:100%!important;
   margin:0!important;padding-left:7px!important;padding-right:7px!important;
@@ -5382,7 +5196,6 @@ html.short-viewport #homeScreen .home-tool-dock button{height:48px!important;min
   pointer-events:none!important;
 }
 #homeScreen>.slime-stage>.slime-hero-layout{position:relative!important;z-index:1!important}
-body.secret-meal-ui-impact #homeScreen>.slime-stage:after{animation:secretMealPanelImpact .82s cubic-bezier(.18,.8,.2,1) both}
 #homeScreen>.play-setup-card .home-mode-tabs{
   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
   align-items:stretch!important;
