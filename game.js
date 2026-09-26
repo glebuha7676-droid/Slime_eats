@@ -9620,8 +9620,6 @@
   function finalizeWorldCompletion() {
     if (!run || run.ended) return;
     const world = run.world;
-    const level = clamp(Math.round(run.level || 1), 1, LEVEL_COUNT);
-    save.levelFailures[campaignAttemptKey(world.id, level)] = 0;
     save.worldBest[world.id] = Math.max(save.worldBest[world.id] || 0, world.targetDepth);
     save.unlockedLevels[world.id] = LEVEL_COUNT;
     save.worldTrophies[world.id] = Math.max(0, save.worldTrophies[world.id] || 0) + 1;
