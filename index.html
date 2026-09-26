@@ -20,15 +20,16 @@
   <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.png?v=1" />
   <link rel="stylesheet" href="styles.css?v=88" />
   <link rel="stylesheet" href="home-layout.css?v=181" />
-  <link rel="stylesheet" href="home-mode-fix.css?v=98" />
+  <link rel="stylesheet" href="home-mode-fix.css?v=109" />
   <link rel="stylesheet" href="home-visual-refresh.css?v=38" />
   <link rel="stylesheet" href="drop-visual-refresh.css?v=3" />
-  <link rel="stylesheet" href="lab-redesign.css?v=14" />
+  <link rel="stylesheet" href="lab-redesign.css?v=34" />
+  <link rel="stylesheet" href="world-picker-v2.css?v=21" />
 </head>
 <body>
   <div id="phoneViewport" class="phone-viewport">
   <div id="app" class="app">
-    <header class="topbar world-summary" aria-label="Мир, исследование и монеты">
+    <header class="topbar world-summary" aria-label="Мир, исследование и кубки">
       <div class="world-summary-head">
         <div class="world-identity">
           <span class="world-emblem" aria-hidden="true"><img id="worldIcon" src="assets/ui/world-icons/world-1.webp" alt=""></span>
@@ -47,9 +48,9 @@
           </span>
           <span class="research-wallet-track" aria-hidden="true"><i id="researchProgressBar"></i></span>
         </div>
-        <div class="currency coin-wallet" aria-label="Монеты">
-          <img class="currency-icon" src="assets/ui/coin.webp" alt="" aria-hidden="true">
-          <div class="currency-values"><b id="coinsLabel">0</b><small id="runCoinsGain" aria-label="Монеты за забег">+0</small></div>
+        <div class="currency coin-wallet trophy-wallet" aria-label="Кубки за пройденные миры">
+          <img class="currency-icon" src="assets/ui/world-picker-v2/trophy.png" alt="" aria-hidden="true">
+          <div class="currency-values"><b id="coinsLabel">0</b><small id="runCoinsGain" aria-label="Кубки за забег">+0</small></div>
         </div>
         <button class="header-rewards-btn" data-panel="rewards" type="button" aria-label="Открыть награды">
           <img src="assets/ui/gift.webp" alt="" aria-hidden="true">
@@ -116,6 +117,13 @@
         </div>
 
         <section id="playSetupCard" class="play-setup-card card" aria-label="Выбор мира, режима и запуск">
+          <div class="world-picker-v2" aria-label="Выбор мира">
+            <div id="worldCarousel" class="world-carousel" aria-label="Миры"></div>
+            <div id="worldCarouselDots" class="world-carousel-dots" aria-hidden="true"></div>
+            <div class="world-mode-row" aria-label="Режим игры"><button id="normalModeV2" class="world-mode-v2 selected" type="button" aria-pressed="true">Обычный</button><button id="abyssModeV2" class="world-mode-v2 abyss locked" type="button" disabled aria-label="Бездна закрыта"><img src="assets/ui/world-picker-v2/abyss-lock.png" alt="">Бездна</button></div>
+            <button id="worldStartBtn" class="world-start-v2 hungry" type="button" disabled><span id="worldStartText"></span></button>
+          </div>
+          <div class="world-picker-legacy" hidden>
           <div class="play-setup-toolbar">
             <div class="play-setup-control world-control">
               <div class="home-world-selector">
@@ -184,6 +192,7 @@
               <div id="worldProgressBar" class="progress-fill world-fill"></div>
               <i id="worldProgressMarker" class="world-record-marker" aria-hidden="true"></i>
             </div>
+          </div>
           </div>
 
         </section>
@@ -255,8 +264,8 @@
             <button id="adminNextWorldBtn" type="button" aria-label="Следующий мир">›</button>
           </div>
         </div>
-        <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать монеты и открыть игровой прогресс" title="Выдать монеты и открыть игровой прогресс">
-          <img src="assets/ui/coin.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Монеты и прогресс</small></span><i aria-hidden="true">+</i>
+        <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать кубки и открыть игровой прогресс" title="Выдать кубки и открыть игровой прогресс">
+          <img src="assets/ui/world-picker-v2/trophy.png" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Кубки и прогресс</small></span><i aria-hidden="true">+</i>
         </button>
         <button id="adminInfiniteFlasksBtn" class="admin-infinite-flasks" type="button" aria-pressed="false" aria-label="Включить бесконечные колбы исследования">
           <img src="assets/ui/research-flask.png?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
@@ -316,8 +325,8 @@
           <span id="resultResearchStream" class="result-research-stream" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
         </div>
         <div class="result-stat result-coins-stat">
-          <img src="assets/ui/coin.webp" alt="" aria-hidden="true">
-          <span><small>ЗАРАБОТАНО</small><b id="resultCoins">+0</b></span>
+          <img src="assets/ui/world-picker-v2/trophy.png" alt="" aria-hidden="true">
+          <span><small>КУБОК ЗА МИР</small><b id="resultCoins">+0</b></span>
         </div>
       </div>
 
@@ -345,7 +354,7 @@
         <span class="result-ad-play" aria-hidden="true">▶</span>
         <span>ПОЙМАТЬ МНОЖИТЕЛЬ</span>
       </button>
-      <button id="continueBtn" class="result-continue-btn" type="button">Продолжить без множителя</button>
+      <button id="continueBtn" class="result-continue-btn" type="button">Продолжить</button>
     </div>
   </div>
 
@@ -354,9 +363,9 @@
       <div class="game-complete-glow" aria-hidden="true"></div>
       <div class="game-complete-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="game-complete-portal" aria-hidden="true"><img src="assets/ui/portals/world-4.png" alt=""><span><img src="assets/ui/slime.webp" alt=""></span></div>
-      <small class="game-complete-kicker">ВСЕ 4 МИРА ПРОЙДЕНЫ</small>
+      <small class="game-complete-kicker">ВСЕ МИРЫ ОТКРЫТЫ</small>
       <h2 id="gameCompleteTitle">ВЫ ПРОШЛИ ИГРУ!</h2>
-      <p>Слайм добрался до последнего портала. Теперь открыт бесконечный мир.</p>
+      <p>Слайм добрался до последнего портала. Кубки за миры можно собирать и дальше.</p>
       <button id="playEndlessBtn" class="game-complete-action game-complete-endless" type="button"><span aria-hidden="true"><img src="assets/ui/endless-mode.png?v=2" alt=""></span><b>БЕСКОНЕЧНЫЙ МИР</b><small>Новый круг — сложнее предыдущего</small></button>
       <button id="gameCompleteHomeBtn" class="game-complete-action game-complete-home" type="button"><span aria-hidden="true">⌂</span><b>В МЕНЮ</b></button>
       <button class="game-complete-action game-complete-soon" type="button" disabled><span aria-hidden="true">✦</span><b>ПРОДОЛЖЕНИЕ</b><small>СКОРО</small></button>
@@ -376,16 +385,17 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </div>
   <script src="/sdk.js"></script>
-  <script src="food-catalog.js?v=23"></script>
-  <script src="world-catalog.js?v=23"></script>
+  <script src="food-catalog.js?v=26"></script>
+  <script src="world-catalog.js?v=24"></script>
   <script src="js/generation/section-catalog.js?v=13"></script>
-  <script src="js/config/gameplay-balance.js?v=2"></script>
-  <script src="js/config/game-config.js?v=73"></script>
+  <script src="js/generation/section-catalog-v4.js?v=2"></script>
+  <script src="js/config/gameplay-balance.js?v=3"></script>
+  <script src="js/config/game-config.js?v=77"></script>
   <script src="js/platform/yandex-platform.js?v=2"></script>
-  <script src="js/core/game-assets.js?v=31"></script>
+  <script src="js/core/game-assets.js?v=34"></script>
   <script src="js/core/audio.js?v=2"></script>
-  <script src="js/rendering/slime-avatar.js?v=35"></script>
+  <script src="js/rendering/slime-avatar.js?v=36"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=349"></script>
+  <script src="game.js?v=389"></script>
 </body>
 </html>

@@ -11,7 +11,7 @@
     FOOD_ART_OFFSETS,
     WORLD_SPRITE_NAMES
   } = config;
-  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'gigantism', 'wind', 'blast']);
+  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'blast']);
   const worldSprites = {};
   const projectSprites = {};
   const thumbnailFitCache = new Map();

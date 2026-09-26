@@ -8,8 +8,7 @@
     frost: 'assets/ui/slime/forms/slime-body-frost-v1.png?v=1',
     cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.png?v=1',
     electric: 'assets/ui/slime/forms/slime-body-electric-v1.png?v=1',
-    fire: 'assets/ui/slime/forms/slime-body-fire-v1.png?v=1',
-    wind: 'assets/ui/slime/forms/slime-body-wind-v1.png?v=1'
+    fire: 'assets/ui/slime/forms/slime-body-fire-v1.png?v=1'
   });
   const formBodyImages = Object.create(null);
   const formBodyReady = Object.create(null);

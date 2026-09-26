@@ -26,7 +26,7 @@
       cellSize: 72, hazardChance: .055
     },
     {
-      id: 2, name: 'Ледяная пещера', targetDepth: 550, reward: 700,
+      id: 2, name: 'Ледяная пещера', targetDepth: 500, reward: 700,
       active: false, status: 'paused',
       pathWidth: 3, minPathWidth: 2, turnRate: .18,
       hardCap: .15, reinforcedCap: .02, oreChance: .06, specialChance: .115,
@@ -35,7 +35,7 @@
       cellSize: 72, hazardChance: .075
     },
     {
-      id: 3, name: 'Конфетная фабрика', targetDepth: 600, reward: 1550,
+      id: 3, name: 'Конфетная фабрика', targetDepth: 500, reward: 1550,
       pathWidth: 2, minPathWidth: 2, turnRate: .28,
       hardCap: .27, reinforcedCap: .07, oreChance: .075, specialChance: .095,
       sky: '#8f4b82', earth: '#4a244d', deep: '#21142d', accent: '#f472b6', icon: '🍬',
@@ -43,7 +43,7 @@
       cellSize: 72
     },
     {
-      id: 4, name: 'Магмовое ядро', targetDepth: 650, reward: 3300,
+      id: 4, name: 'Магмовое ядро', targetDepth: 500, reward: 3300,
       pathWidth: 2, minPathWidth: 1, turnRate: .37,
       hardCap: .39, reinforcedCap: .15, oreChance: .09, specialChance: .082,
       sky: '#7d3426', earth: '#45221e', deep: '#1b1112', accent: '#fb7185', icon: '🌋',
@@ -78,23 +78,15 @@
     dense: { label: 'Плотный', shock: .82, drag: .95, coin: 1 },
     hard: { label: 'Твёрдый', shock: 1.05, drag: .91, coin: 1.45 },
     reinforced: { label: 'Усиленный', shock: 1.22, drag: .88, coin: 2.05 },
-    ore: { label: 'Руда', shock: .86, drag: .94, coin: 3.55 },
     special: { label: 'Особый', shock: .72, drag: .96, coin: 1.30 }
   };
 
   const WORLD_SPRITE_NAMES = {
-    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'dynamite', 'heal', 'portal'],
-    2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'cryo', 'snowflake', 'heal', 'portal'],
-    3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'jelly-bounce', 'heal', 'portal'],
-    4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'ore-coal', 'ore-iron', 'ore-gold', 'ore-diamond', 'geyser', 'meteor', 'heal', 'portal']
+    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'dynamite', 'heal', 'portal'],
+    2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'cryo', 'snowflake', 'heal', 'portal'],
+    3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'jelly-bounce', 'heal', 'portal'],
+    4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'geyser', 'meteor', 'heal', 'portal']
   };
-
-  const ORE_TYPES = [
-    { id: 'coal', label: 'УГОЛЬ', min: 0, reward: .72, hp: [10, 10] },
-    { id: 'iron', label: 'ЖЕЛЕЗО', min: .12, reward: 1.02, hp: [30, 30] },
-    { id: 'gold', label: 'ЗОЛОТО', min: .32, reward: 1.48, hp: [60, 60] },
-    { id: 'diamond', label: 'АЛМАЗ', min: .58, reward: 2.10, hp: [100, 100] }
-  ];
 
   const FOOD_ART_OFFSETS = {
     apple: [3.4, -5], blackHoleCandy: [5, -3.8], bun: [-5.6, -7.8], burger: [2.2, -.9], cheese: [0, -1.9],
@@ -109,24 +101,23 @@
 
   const SKINS = [
     { id: 'classic', name: 'Классический', className: 'skin-classic', icon: '🟢', condition: 'Доступен сразу', colors: ['#e9ff9c', '#67d348', '#2fa345'] },
-    { id: 'cat', name: 'Котик', className: 'skin-cat', icon: '🐱', world: 2, condition: 'Пройди Мир 1', colors: ['#ffe0e8', '#ff92ad', '#dc557b'] },
-    { id: 'water', name: 'Капля воды', className: 'skin-water', icon: '💧', world: 3, condition: 'Пройди Мир 2', colors: ['#e3fbff', '#50c9f2', '#1688c6'] },
-    { id: 'honey', name: 'Медовый', className: 'skin-honey', icon: '🍯', cost: 1500, condition: 'Купить за 1500 монет', colors: ['#fff0a6', '#f4a629', '#c96b15'] },
-    { id: 'dumpling', name: 'Дамплинг', className: 'skin-dumpling', icon: '🥟', world: 4, condition: 'Пройди Мир 3', colors: ['#fff9e8', '#ead9b7', '#ba8d62'] },
-    { id: 'ball', name: 'Футбольный мяч', className: 'skin-ball', icon: '⚽', cost: 1200, condition: 'Купить за 1200 монет', colors: ['#ffffff', '#edf2f5', '#b9c7d1'] }
+    { id: 'cat', name: 'Котик', className: 'skin-cat', icon: '🐱', world: 2, condition: 'Получи кубок в первом мире', colors: ['#ffe0e8', '#ff92ad', '#dc557b'] },
+    { id: 'water', name: 'Капля воды', className: 'skin-water', icon: '💧', world: 3, condition: 'Открой Мир 2', colors: ['#e3fbff', '#50c9f2', '#1688c6'] },
+    { id: 'honey', name: 'Медовый', className: 'skin-honey', icon: '🍯', cost: 15, condition: 'Купить за 15 колб исследования', colors: ['#fff0a6', '#f4a629', '#c96b15'] },
+    { id: 'dumpling', name: 'Дамплинг', className: 'skin-dumpling', icon: '🥟', world: 4, condition: 'Открой Мир 3', colors: ['#fff9e8', '#ead9b7', '#ba8d62'] },
+    { id: 'ball', name: 'Футбольный мяч', className: 'skin-ball', icon: '⚽', cost: 12, condition: 'Купить за 12 колб исследования', colors: ['#ffffff', '#edf2f5', '#b9c7d1'] }
   ];
 
   const UPGRADES = {
     stomachLevel: {
       name: 'Желудок', icon: 'stomach', max: 4,
       description: 'Увеличивает количество продуктов в одном забеге.',
-      costs: [0, 45, 180, 650]
+      costs: [0, 1, 2, 7]
     }
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 22,
-    coins: 20,
+    schemaVersion: 23,
     researchUnits: 0,
     researchProgress: 0,
     mutationProgress: 0,
@@ -134,6 +125,9 @@
     activeMutationPool: ['frost', 'fire', 'electric'],
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    worldTrophies: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    unlockedWorlds: [1],
+    worldLastRun: { 1: 0, 2: 0, 3: 0, 4: 0 },
     lastRunDepth: {},
     levelFailures: {},
     selectedLevels: { 1: 1, 2: 1, 3: 1, 4: 1 },
@@ -166,7 +160,7 @@
     VIEW_H: 840,
     LEVEL_COUNT: 5,
     LEVEL_DEPTH_RATIOS: [.36, .52, .68, .84, 1],
-    ASSET_REVISION: '20260921-1',
+    ASSET_REVISION: '20260924-cloning',
     FOOD_ASSET_ROOT: 'assets/ЕДА/Общий пул/',
     UI_ASSET_ROOT: 'assets/ui/',
     WORLD_LEVELS,
@@ -174,7 +168,6 @@
     PHYSICS,
     BLOCK_TIERS,
     WORLD_SPRITE_NAMES,
-    ORE_TYPES,
     FOOD_ART_OFFSETS,
     SKINS,
     UPGRADES,

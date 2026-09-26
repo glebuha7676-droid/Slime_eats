@@ -15,15 +15,18 @@
     ['antiGravityBun', 'Булочка невесомости', 'Общий пул/Очень воздушная булочка.webp', 'cosmos', 'cosmos'],
     ['cometCola', 'Кометная кола', 'Общий пул/Злая кола.webp', 'cosmos', 'cosmos'],
     ['pocketGalaxy', 'Карманная галактика', 'assets/ui/recipe-categories/emblem-v2-cosmos.png', 'cosmos', 'cosmos'],
-    ['giantLoaf', 'Буханка великана', 'Общий пул/Буханка.webp', 'gigantism', 'gigantism'],
-    ['bottomlessBreakfast', 'Бездонный завтрак', 'Общий пул/Королевский завтрак.webp', 'gigantism', 'gigantism'],
-    ['titanApple', 'Яблоко титана', 'Общий пул/Зачарованное яблоко.webp', 'gigantism', 'gigantism'],
+    ['nanoChip', 'Нано-чип', 'assets/ui/recipe-categories/emblem-v2-nano.png', 'nano', 'nano'],
+    ['nanoCore', 'Нано-ядро', 'assets/ui/recipe-categories/emblem-v2-nano.png', 'nano', 'nano'],
+    ['nanoModule', 'Нано-модуль', 'assets/ui/recipe-categories/emblem-v2-nano.png', 'nano', 'nano'],
+    ['telekinesisStone', 'Парящий камень', 'assets/ui/recipe-categories/emblem-v2-telekinesis.png', 'telekinesis', 'telekinesis'],
+    ['telekinesisShard', 'Осколок мысли', 'assets/ui/recipe-categories/emblem-v2-telekinesis.png', 'telekinesis', 'telekinesis'],
+    ['telekinesisCore', 'Ядро телекинеза', 'assets/ui/recipe-categories/emblem-v2-telekinesis.png', 'telekinesis', 'telekinesis'],
+    ['cloneDrop', 'Капля-копия', 'assets/ui/recipe-categories/emblem-v2-cloning.png', 'cloning', 'cloning'],
+    ['cloneJelly', 'Желе-двойник', 'assets/ui/recipe-categories/emblem-v2-cloning.png', 'cloning', 'cloning'],
+    ['cloneSeed', 'Семя клона', 'assets/ui/recipe-categories/emblem-v2-cloning.png', 'cloning', 'cloning'],
     ['fuseCoals', 'Фитильные угольки', 'Огненная/Съедобные угольки.webp', 'blast', 'explosion'],
     ['volcanicShake', 'Вулканический коктейль', 'Огненная/Вулканический напиток.webp', 'blast', 'explosion'],
-    ['chocolateBoom', 'Шоколадный бум', 'Сладости/Шоколадный бум.webp', 'blast', 'explosion'],
-    ['cloudCandy', 'Облачная вата', 'Общий пул/Сладкая вата.webp', 'wind', 'wind'],
-    ['whirlwindFries', 'Вихревой картофель', 'Общий пул/Картофель фри.webp', 'wind', 'wind'],
-    ['stormCappuccino', 'Штормовой капучино', 'Общий пул/Чашечка Капучино.webp', 'wind', 'wind']
+    ['chocolateBoom', 'Шоколадный бум', 'Сладости/Шоколадный бум.webp', 'blast', 'explosion']
   ];
 
   window.SLIME_FOOD_CATALOG = foods.map(([id, name, relativePath, recipeFamily, requiresMutation]) => ({

@@ -1,189 +1,240 @@
 (() => {
   'use strict';
-
   const catalog = window.SlimeSectionCatalog;
   const worldCatalog = window.SlimeWorldCatalog;
   if (!catalog || !worldCatalog) throw new Error('Generation catalogs are not loaded');
-
   const $ = selector => document.querySelector(selector);
-  const state = { worldId: 1, category: 'start', variant: 1, brush: 'w', painting: false, erase: false, template: null };
-  const els = {
-    worldTabs: $('#worldTabs'), categoryTabs: $('#categoryTabs'), variantTabs: $('#variantTabs'), grid: $('#sectionGrid'),
-    brushes: $('#brushPalette'), worldTitle: $('#worldTitle'), categoryHint: $('#categoryHint'), name: $('#sectionName'), purpose: $('#templatePurpose'),
-    stars: $('#difficultyButtons'), save: $('#saveBtn'), reset: $('#resetBtn'), mirror: $('#mirrorBtn'), toast: $('#toast'),
-    previewLevel: $('#previewLevel'), previewDifficulty: $('#previewDifficulty'), preview: $('#runPreview'), previewSummary: $('#previewSummary'), regenerate: $('#regenerateBtn')
+  const state = {
+    mode: 'normal', category: 'start', difficulty: 1, rows: 3,
+    brush: 'w', painting: false, dragging: false, erase: false, selectedId: '', draft: null
   };
+  const els = {
+    mode: $('#modeTabs'), categories: $('#categoryTabs'), stars: $('#difficultyButtons'), widths: $('#widthButtons'),
+    grid: $('#sectionGrid'), brushes: $('#brushPalette'), pool: $('#savedSections'), count: $('#poolCount'),
+    status: $('#editStatus'), toast: $('#toast'),
+    add: $('#addBtn'), fresh: $('#newBtn'), saveNew: $('#saveNewBtn'), update: $('#updateBtn'),
+    remove: $('#deleteBtn'), clear: $('#clearBtn'), mirror: $('#mirrorBtn')
+  };
+  const rootAsset = source => source ? `../../${source}` : '';
+  const world = worldCatalog.load().worlds.find(item => item.id === 1);
+  const findBlock = id => world?.blocks?.find(block => block.id === id);
 
-  function rootAsset(source) {
-    return source ? `../../${source}` : '';
+  function spriteFor(token) {
+    if ('123'.includes(token)) return rootAsset(`assets/collectibles/flasks/world-1-${{ 1: 'small', 2: 'medium', 3: 'large' }[token]}.png`);
+    if (token === 'z') return rootAsset('assets/Мир 1/Желе текстура v4.webp');
+    const blockId = { w: 'dense', n: 'hard', h: 'reinforced', x: 'hazard', '+': 'heal', p: 'bomb', q: 'bomb' }[token];
+    const block = findBlock(blockId);
+    return block?.sprite ? rootAsset(worldCatalog.assetSource(1, block.sprite)) : '';
   }
 
-  function blockSprite(token, worldId = state.worldId) {
-    const world = worldCatalog.load().worlds.find(item => item.id === Number(worldId));
-    const find = id => world?.blocks?.find(block => block.id === id);
-    const primary = { 1: 'bomb', 2: 'cryo', 3: 'jelly', 4: 'geyser' }[worldId];
-    const secondary = { 1: 'bomb', 2: 'snowflake', 3: 'jelly', 4: 'meteor' }[worldId];
-    const block = token === 'w' ? find('dense')
-      : token === 'n' ? find('hard')
-        : token === 'h' ? find('reinforced')
-          : token === 'x' ? find('hazard')
-            : token === '+' ? find('heal')
-              : token === 'p' ? find(primary)
-                : token === 'q' ? find(secondary)
-                  : null;
-    if ('cigd'.includes(token)) {
-      const ore = { c: 'coal', i: 'iron', g: 'gold', d: 'diamond' }[token];
-      return rootAsset(worldCatalog.assetSource(worldId, `ore-${ore}`));
-    }
-    if (token === 'z') {
-      if (worldId === 1) return rootAsset('assets/Мир 1/Желе текстура v4.webp');
-      if (worldId === 3) return '';
-      return rootAsset(worldCatalog.assetSource(worldId, secondary === 'meteor' ? 'meteor' : 'snowflake'));
-    }
-    return block?.sprite ? rootAsset(worldCatalog.assetSource(worldId, block.sprite)) : '';
+  function blankDraft() {
+    return catalog.normalize({ worldId: 1, category: state.category, mode: state.mode,
+      difficulty: state.difficulty, rowCount: state.rows, cells: Array(state.rows).fill('.'.repeat(6)) });
   }
 
-  function tokenMarkup(token, className = '') {
-    const source = blockSprite(token);
-    const brush = catalog.BRUSHES.find(item => item.id === token);
-    if (source) return `<img src="${source}" alt=""><b>${brush?.label || ''}</b>`;
-    if (token === 'z' && state.worldId === 3) return `<span>🍯</span><b>${brush?.label || ''}</b>`;
-    return `<span>${token === '.' ? '⌫' : '·'}</span><b>${brush?.label || ''}</b>`;
-  }
-
-  function loadCurrent() {
-    state.template = catalog.templatesFor(state.worldId, state.category).find(item => item.variant === state.variant);
+  function startBlank() {
+    state.selectedId = '';
+    state.painting = false;
+    state.dragging = false;
+    state.draft = blankDraft();
     render();
   }
 
-  function renderWorlds() {
-    els.worldTabs.innerHTML = Object.entries(catalog.WORLD_NAMES).map(([id, name]) => `<button class="${+id === state.worldId ? 'active' : ''}" data-world="${id}" type="button">Мир ${id} · ${name}</button>`).join('');
-  }
-
-  function renderCategories() {
-    els.categoryTabs.innerHTML = catalog.CATEGORIES.map(category => `<button class="${category.id === state.category ? 'active' : ''}" data-category="${category.id}" type="button">${category.label}</button>`).join('');
-    const category = catalog.CATEGORIES.find(item => item.id === state.category);
-    els.categoryHint.textContent = category?.hint || '';
-  }
-
-  function renderVariants() {
-    const templates = catalog.templatesFor(state.worldId, state.category);
-    els.variantTabs.innerHTML = templates.map(template => `<button class="${template.variant === state.variant ? 'active' : ''}" data-variant="${template.variant}" type="button">${template.variant}</button>`).join('');
-  }
-
-  function renderStars() {
-    els.stars.innerHTML = [1, 2, 3].map(value => `<button class="${state.template?.difficulty === value ? 'active' : ''}" data-star="${value}" type="button" aria-label="${value} звезды">${'★'.repeat(value)}</button>`).join('');
+  function tileMarkup(token) {
+    const source = spriteFor(token);
+    return source ? `<img src="${source}" alt="">` : '';
   }
 
   function renderGrid() {
-    const cells = state.template.cells.flatMap((row, rowIndex) => [...row].map((token, colIndex) => ({ token, rowIndex, colIndex })));
-    els.grid.innerHTML = cells.map(cell => {
-      const source = blockSprite(cell.token);
-      const classes = ['tile', cell.token === '.' ? 'empty' : '', cell.token === 'z' ? 'zone' : ''].filter(Boolean).join(' ');
-      return `<button class="${classes}" data-row="${cell.rowIndex}" data-col="${cell.colIndex}" data-token="${cell.token}" type="button" aria-label="Клетка ${cell.rowIndex + 1}, ${cell.colIndex + 1}">${source ? `<img src="${source}" alt="">` : cell.token === 'z' && state.worldId === 3 ? '<span>🍯</span>' : ''}</button>`;
-    }).join('');
+    els.grid.style.setProperty('--cols', String(state.draft.cols));
+    els.grid.innerHTML = state.draft.cells.flatMap((row, rowIndex) => [...row].map((token, colIndex) =>
+      `<button class="tile ${token === '.' ? 'empty' : ''} ${'123'.includes(token) ? 'flask-cell' : ''} ${token === 'z' ? 'zone' : ''}" data-row="${rowIndex}" data-col="${colIndex}" data-token="${token}" type="button" aria-label="Ряд ${rowIndex + 1}, клетка ${colIndex + 1}">${tileMarkup(token)}</button>`
+    )).join('');
   }
 
   function renderBrushes() {
-    els.brushes.innerHTML = catalog.BRUSHES.map(brush => `<button class="brush ${brush.id === state.brush ? 'active' : ''} ${brush.id === '.' ? 'empty' : ''}" data-brush="${brush.id}" type="button">${tokenMarkup(brush.id)}</button>`).join('');
+    els.brushes.innerHTML = catalog.BRUSHES.map(brush => {
+      const image = spriteFor(brush.id);
+      return `<button class="brush ${brush.id === state.brush ? 'active' : ''}" data-brush="${brush.id}" type="button">${image ? `<img src="${image}" alt="">` : '<span>⌫</span>'}<b>${brush.label}</b></button>`;
+    }).join('');
   }
 
-  function render() {
-    if (!state.template) return;
-    els.worldTitle.textContent = `${catalog.WORLD_NAMES[state.worldId]} · ${catalog.CATEGORIES.find(item => item.id === state.category)?.label}`;
-    els.name.value = state.template.name;
-    els.purpose.textContent = `${state.template.purpose} · С уровня ${state.template.minLevel}`;
-    renderWorlds(); renderCategories(); renderVariants(); renderStars(); renderGrid(); renderBrushes(); renderPreview();
+  function renderControls() {
+    els.mode.innerHTML = [['normal', 'Обычная'], ['easy', 'Облегчённая']].map(([id, label]) =>
+      `<button type="button" data-mode="${id}" class="${id === state.mode ? 'active' : ''}">${label}</button>`).join('');
+    els.categories.innerHTML = catalog.CATEGORIES.map(item =>
+      `<button type="button" data-category="${item.id}" class="${item.id === state.category ? 'active' : ''}">${item.label}</button>`).join('');
+    els.stars.innerHTML = [1, 2, 3].map(value =>
+      `<button type="button" data-star="${value}" class="${value === state.draft.difficulty ? 'active' : ''}" aria-label="${value} звезды">${'★'.repeat(value)}</button>`).join('');
+    els.widths.innerHTML = [3, 4, 5].map(value =>
+      `<button type="button" data-rows="${value}" class="${value === state.draft.rows ? 'active' : ''}">${value}</button>`).join('');
+    els.update.disabled = !state.selectedId;
+    els.remove.disabled = !state.selectedId;
+    els.status.textContent = state.selectedId ? 'Редактирование выбранной' : 'Новая секция';
   }
 
-  function paint(row, col, token = state.erase ? '.' : state.brush) {
-    const cells = [...state.template.cells];
-    const line = [...cells[row]];
-    line[col] = token;
-    cells[row] = line.join('');
-    state.template = { ...state.template, cells };
-    renderGrid();
+  function renderPool() {
+    const templates = catalog.templatesFor(1, state.category, state.mode);
+    els.count.textContent = String(templates.length);
+    els.pool.innerHTML = templates.length ? templates.map((template, index) =>
+      `<article class="pool-card ${template.id === state.selectedId ? 'active' : ''}">
+        <button type="button" data-template="${template.id}" class="pool-select" aria-label="Открыть секцию ${index + 1}">
+          <span class="pool-card-title"><strong>Секция ${index + 1}</strong><small>${'★'.repeat(template.difficulty)} · ${template.rows} ряда</small></span>
+          ${miniGrid(template)}
+          <span class="pool-edit-hint">Выбрать и редактировать</span>
+        </button>
+        <button type="button" data-delete="${template.id}" class="pool-delete" aria-label="Удалить секцию ${index + 1}" title="Удалить">×</button>
+      </article>`
+    ).join('') : '<p class="empty-pool">В этой категории пока нет секций. Нарисуй первую и добавь её в пул.</p>';
   }
 
-  function save() {
-    state.template = { ...state.template, name: els.name.value.trim() || state.template.name };
-    catalog.saveTemplate(state.template);
-    showToast('Секция сохранена и подключена к игре');
-    renderPreview();
-  }
-
-  function renderMiniGrid(template) {
-    return `<div class="mini-grid">${template.cells.flatMap(row => [...row]).map(token => {
-      const source = blockSprite(token, template.worldId);
-      return `<span class="mini-cell">${source ? `<img src="${source}" alt="">` : token === 'z' && template.worldId === 3 ? '🍯' : ''}</span>`;
+  function miniGrid(template) {
+    return `<div class="mini-grid" style="--cols:${template.cols}">${template.cells.flatMap(row => [...row]).map(token => {
+      const image = spriteFor(token);
+      return `<span class="mini-cell ${token === '.' ? 'empty' : ''}">${image ? `<img src="${image}" alt="">` : ''}</span>`;
     }).join('')}</div>`;
   }
 
-  function renderPreview() {
-    const level = Number(els.previewLevel.value || 1);
-    const difficultyMode = els.previewDifficulty.value || 'hard';
-    const depth = 100 + (state.worldId - 1) * 50 + (level - 1) * 100;
-    const rows = Math.max(8, Math.floor((depth * 10 + 180 - 72 - 190) / 72));
-    const plan = catalog.buildPlan(state.worldId, level, rows, Math.random, difficultyMode);
-    const sections = [];
-    for (const row of plan) {
-      if (!sections.some(item => item.index === row.sectionIndex)) sections.push({ index: row.sectionIndex, row });
-    }
-    els.preview.innerHTML = sections.map(({ row }) => {
-      const template = catalog.byId(row.templateId);
-      if (!template) return '';
-      const label = catalog.CATEGORIES.find(item => item.id === row.kind)?.label || row.kind;
-      return `<article class="preview-card ${row.kind}" title="${template.purpose || ''}"><b>${label}</b><em>${template.name}</em>${renderMiniGrid(template)}<small>${'★'.repeat(row.difficulty)} · ${row.length} ряда</small></article>`;
-    }).join('');
-    const counts = [1, 2, 3].map(star => `${star}★: ${sections.filter(item => item.row.difficulty === star).length}`).join(' · ');
-    els.previewSummary.textContent = `${plan[0]?.routeName || 'Маршрут'} · ${depth} м · ${rows} рядов · ${sections.length} секций · ${counts}`;
+  function render() {
+    renderControls(); renderGrid(); renderBrushes(); renderPool();
+  }
+
+  function paint(tile, initial = false) {
+    const row = Number(tile?.dataset.row);
+    const col = Number(tile?.dataset.col);
+    if (!Number.isInteger(row) || !Number.isInteger(col) || !state.draft.cells[row]) return;
+    const token = state.erase ? '.' : state.brush;
+    if (!initial && token !== '.' && state.draft.cells[row][col] !== '.') return;
+    if (state.draft.cells[row][col] === token) return;
+    const cells = state.draft.cells.slice();
+    cells[row] = `${cells[row].slice(0, col)}${token}${cells[row].slice(col + 1)}`;
+    state.draft = { ...state.draft, cells };
+    tile.dataset.token = token;
+    tile.className = `tile ${token === '.' ? 'empty' : ''} ${'123'.includes(token) ? 'flask-cell' : ''} ${token === 'z' ? 'zone' : ''}`;
+    tile.innerHTML = tileMarkup(token);
+    // Keep the painted grid in place during a drag; replacing it would end pointer tracking.
+  }
+
+  function resize(rows) {
+    state.rows = rows;
+    state.draft = catalog.normalize({ ...state.draft, rowCount: rows,
+      cells: Array.from({ length: rows }, (_, index) => state.draft.cells[index] || 'w'.repeat(6)) });
+    render();
   }
 
   let toastTimer = 0;
-  function showToast(message) {
+  function toast(message) {
     els.toast.textContent = message;
     els.toast.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1800);
   }
 
-  els.worldTabs.addEventListener('click', event => {
-    const button = event.target.closest('[data-world]'); if (!button) return;
-    state.worldId = Number(button.dataset.world); state.variant = 1; loadCurrent();
+  function saveNew() {
+    const saved = catalog.createTemplate(state.draft);
+    if (!saved) return toast('Не удалось добавить секцию');
+    toast('Секция добавлена в пул. Можно рисовать следующую.');
+    startBlank();
+  }
+
+  function selectTemplate(id) {
+    const template = catalog.byId(id);
+    if (!template) return;
+    state.selectedId = id;
+    state.draft = { ...template, cells: template.cells.slice() };
+    state.rows = template.rows;
+    state.difficulty = template.difficulty;
+    render();
+  }
+
+  els.mode.addEventListener('click', event => {
+    const button = event.target.closest('[data-mode]');
+    if (!button) return;
+    state.mode = button.dataset.mode;
+    startBlank();
   });
-  els.categoryTabs.addEventListener('click', event => {
-    const button = event.target.closest('[data-category]'); if (!button) return;
-    state.category = button.dataset.category; state.variant = 1; loadCurrent();
-  });
-  els.variantTabs.addEventListener('click', event => {
-    const button = event.target.closest('[data-variant]'); if (!button) return;
-    state.variant = Number(button.dataset.variant); loadCurrent();
+  els.categories.addEventListener('click', event => {
+    const button = event.target.closest('[data-category]');
+    if (!button) return;
+    state.category = button.dataset.category;
+    startBlank();
   });
   els.stars.addEventListener('click', event => {
-    const button = event.target.closest('[data-star]'); if (!button) return;
-    state.template = { ...state.template, difficulty: Number(button.dataset.star) }; renderStars(); renderPreview();
+    const button = event.target.closest('[data-star]');
+    if (!button) return;
+    state.difficulty = Number(button.dataset.star);
+    state.draft = { ...state.draft, difficulty: state.difficulty };
+    renderControls();
+  });
+  els.widths.addEventListener('click', event => {
+    const button = event.target.closest('[data-rows]');
+    if (button) resize(Number(button.dataset.rows));
   });
   els.brushes.addEventListener('click', event => {
-    const button = event.target.closest('[data-brush]'); if (!button) return;
-    state.brush = button.dataset.brush; renderBrushes();
+    const button = event.target.closest('[data-brush]');
+    if (!button) return;
+    state.painting = false;
+    state.brush = button.dataset.brush;
+    renderBrushes();
+  });
+  els.pool.addEventListener('click', event => {
+    const remove = event.target.closest('[data-delete]');
+    if (remove) {
+      catalog.deleteTemplate(remove.dataset.delete);
+      if (state.selectedId === remove.dataset.delete) startBlank();
+      else renderPool();
+      toast('Секция удалена из пула');
+      return;
+    }
+    const button = event.target.closest('[data-template]');
+    if (button) selectTemplate(button.dataset.template);
   });
   els.grid.addEventListener('pointerdown', event => {
-    const tile = event.target.closest('.tile'); if (!tile) return;
-    event.preventDefault(); state.painting = true; state.erase = event.button === 2; paint(Number(tile.dataset.row), Number(tile.dataset.col));
+    const tile = event.target.closest('.tile');
+    if (!tile) return;
+    event.preventDefault();
+    state.painting = true;
+    state.dragging = true;
+    state.erase = event.button === 2;
+    paint(tile, true);
   });
-  els.grid.addEventListener('pointerover', event => {
-    if (!state.painting) return; const tile = event.target.closest('.tile'); if (!tile) return;
-    paint(Number(tile.dataset.row), Number(tile.dataset.col));
+  window.addEventListener('pointermove', event => {
+    if (!state.painting) return;
+    const target = document.elementFromPoint(event.clientX, event.clientY);
+    if (!els.grid.contains(target)) { state.painting = false; state.erase = false; return; }
+    paint(target.closest('.tile'), state.dragging);
   });
-  window.addEventListener('pointerup', () => { state.painting = false; state.erase = false; });
+  els.grid.addEventListener('pointerleave', () => { state.painting = false; state.dragging = false; state.erase = false; });
+  window.addEventListener('pointerup', event => {
+    state.dragging = false;
+    if (event.pointerType !== 'mouse' || !els.grid.contains(event.target)) {
+      state.painting = false; state.erase = false;
+    }
+  });
   els.grid.addEventListener('contextmenu', event => event.preventDefault());
-  els.name.addEventListener('input', () => { state.template = { ...state.template, name: els.name.value }; });
-  els.save.addEventListener('click', save);
-  els.reset.addEventListener('click', () => { catalog.resetTemplate(state.template.id); loadCurrent(); showToast('Вариант возвращён'); });
-  els.mirror.addEventListener('click', () => { state.template = { ...state.template, cells: state.template.cells.map(row => [...row].reverse().join('')) }; renderGrid(); });
-  els.previewLevel.addEventListener('change', renderPreview);
-  els.previewDifficulty.addEventListener('change', renderPreview);
-  els.regenerate.addEventListener('click', renderPreview);
+  els.add.addEventListener('click', saveNew);
+  els.saveNew.addEventListener('click', saveNew);
+  els.fresh.addEventListener('click', startBlank);
+  els.update.addEventListener('click', () => {
+    if (!state.selectedId) return;
+    catalog.updateTemplate(state.draft);
+    toast('Изменения сохранены');
+    render();
+  });
+  els.remove.addEventListener('click', () => {
+    if (!state.selectedId) return;
+    catalog.deleteTemplate(state.selectedId);
+    toast('Секция удалена из пула');
+    startBlank();
+  });
+  els.clear.addEventListener('click', () => {
+    state.draft = { ...state.draft, cells: state.draft.cells.map(() => '.'.repeat(6)) };
+    renderGrid();
+  });
+  els.mirror.addEventListener('click', () => {
+    state.draft = { ...state.draft, cells: state.draft.cells.map(row => [...row].reverse().join('')) };
+    renderGrid();
+  });
 
-  loadCurrent();
+  startBlank();
 })();

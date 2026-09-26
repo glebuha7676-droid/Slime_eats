@@ -1,16 +1,11 @@
 (() => {
   'use strict';
-  const ORE_IDS = ['coal','iron','gold','diamond'];
   const WORLD1_ASSETS = {
     'dirt-grass': 'assets/Мир 1/Трава (непрочный блок).webp',
     'ground-weak': 'assets/Мир 1/непрочный блок.webp',
     'stone': 'assets/Мир 1/Обычный блок.webp',
     'stone-reinforced': 'assets/Мир 1/Прочный блок.webp',
     'stone-hazard': 'assets/Мир 1/Опасный блок.webp',
-    'ore-coal': 'assets/Мир 1/Уголь.webp',
-    'ore-iron': 'assets/Мир 1/Железо.webp',
-    'ore-gold': 'assets/Мир 1/Золото.webp',
-    'ore-diamond': 'assets/Мир 1/Алмазы.webp',
     'dynamite': 'assets/Мир 1/Динамит.webp',
     'spring': 'assets/Мир 1/Пружина.webp',
     'heal': 'assets/Мир 1/Аптечка.webp',
@@ -23,10 +18,6 @@
     'ice-reinforced': 'assets/Мир 2/Прочный блок.webp',
     'ice-shards': 'assets/Мир 2/Опасный блок.webp',
     'ice-spikes': 'assets/Мир 2/Опасный блок.webp',
-    'ore-coal': 'assets/Мир 2/Уголь.webp',
-    'ore-iron': 'assets/Мир 2/Железо.webp',
-    'ore-gold': 'assets/Мир 2/Золото.webp',
-    'ore-diamond': 'assets/Мир 2/Алмазы.webp',
     'cryo': 'assets/Мир 2/Крио блок.webp',
     'snowflake': 'assets/Мир 2/Заморозка.webp',
     'heal': 'assets/Мир 2/Аптечка.webp',
@@ -38,10 +29,6 @@
     'candy-normal': 'assets/Мир 3/обычный блок.webp',
     'candy-reinforced': 'assets/Мир 3/Прочный блок.webp',
     'candy-hazard': 'assets/Мир 3/опасный блок.webp',
-    'ore-coal': 'assets/Мир 3/Уголь.webp',
-    'ore-iron': 'assets/Мир 3/Карамель.webp',
-    'ore-gold': 'assets/Мир 3/Золото.webp',
-    'ore-diamond': 'assets/Мир 3/Алмазы.webp',
     'jelly-bounce': 'assets/Мир 3/Желейка.webp',
     'heal': 'assets/Мир 3/Хилка.webp',
     'portal': 'assets/ui/portals/world-3.png'
@@ -51,10 +38,6 @@
     'volcanic-earth': 'assets/Мир 4/Обычный блок.webp',
     'basalt': 'assets/Мир 4/Прочный блок.webp',
     'lava-hazard': 'assets/Мир 4/Опасный блок.webp',
-    'ore-coal': 'assets/Мир 4/Уголь.webp',
-    'ore-iron': 'assets/Мир 4/Железо.webp',
-    'ore-gold': 'assets/Мир 4/Золото.webp',
-    'ore-diamond': 'assets/Мир 4/Алмазы.webp',
     'geyser': 'assets/Мир 4/Гейзер-заметный.webp',
     'meteor': 'assets/Мир 4/Метеорит.webp',
     'heal': 'assets/Мир 4/Аптечка.webp',
@@ -68,14 +51,13 @@
     return `assets/world${worldId}/${sprite}.webp`;
   };
   const block = (id, label, type, sprite, extra = {}) => ({ id, label, type, sprite, hp: 1, x: 0, y: 0, scale: 1, ...extra });
-  const level = (depth, enabled) => ({ depth, enabled, weights: { soft: 0, dense: 48, hard: 42, reinforced: 4, ore: 8, hazard: 5, bomb: 4, spring: 3, heal: 3, cryo: 3, snowflake: 3, jelly: 6, geyser: 3, meteor: 3 } });
+  const level = (depth, enabled) => ({ depth, enabled, weights: { soft: 0, dense: 48, hard: 42, reinforced: 4, hazard: 5, bomb: 4, spring: 3, heal: 3, cryo: 3, snowflake: 3, jelly: 6, geyser: 3, meteor: 3 } });
   const blocksFor = id => {
     const ice = id === 2, candy = id === 3, volcano = id === 4;
     if (volcano) return [
       block('dense', 'Вулканический пепел · непрочный', 'dense', 'ash'),
       block('hard', 'Вулканическая земля · обычная', 'hard', 'volcanic-earth'),
       block('reinforced', 'Базальт · прочный', 'reinforced', 'basalt'),
-      block('ore', 'Руда в базальте', 'ore', 'ore-diamond', { oreVariant: 'random', oreEnabled: [...ORE_IDS], oreTextures: Object.fromEntries(ORE_IDS.map(oreId => [oreId, { image:'', x:0, y:0, scale:1 }])) }),
       block('hazard', 'Лава · опасный блок', 'hazard', 'lava-hazard', { hp: 1.2 }),
       block('geyser', 'Вулканический гейзер', 'geyser', 'geyser', { hp: 1 }),
       block('meteor', 'Метеоритный блок', 'meteor', 'meteor', { hp: 1 }),
@@ -86,7 +68,6 @@
       block('dense', ice ? 'Непрочный лёд' : candy ? 'Непрочная карамель' : 'Земля · непрочная', 'dense', ice ? 'snow-packed' : candy ? 'cookie-packed' : 'ground-weak'),
       block('hard', ice ? 'Обычный лёд' : candy ? 'Обычная карамель' : 'Камень · обычный', 'hard', ice ? 'glacier' : candy ? 'candy-normal' : 'stone'),
       block('reinforced', ice ? 'Прочный лёд' : candy ? 'Прочная карамель' : 'Обсидиан · прочный', 'reinforced', ice ? 'ice-reinforced' : candy ? 'candy-reinforced' : 'stone-reinforced'),
-      block('ore', 'Рудный блок', 'ore', 'ore-diamond', { oreVariant: 'random', oreEnabled: [...ORE_IDS], oreTextures: Object.fromEntries(ORE_IDS.map(id => [id, { image:'', x:0, y:0, scale:1 }])) }),
       block('hazard', ice ? 'Ледяные шипы' : candy ? 'Кислая карамель' : 'Опасный камень', 'hazard', ice ? 'ice-spikes' : candy ? 'candy-hazard' : 'stone-hazard', { hp: 1.2 }),
       ...(candy ? [
         block('jelly', 'Пружинящая желейка', 'jelly', 'jelly-bounce', { hp: 1 })
@@ -101,26 +82,26 @@
   };
   const enabledForLevel = (worldId, index) => {
     if (worldId === 2) {
-      const enabled = ['dense', 'ore', 'hazard', 'cryo', 'snowflake', 'heal'];
+      const enabled = ['dense', 'hazard', 'cryo', 'snowflake', 'heal'];
       if (index >= 1) enabled.push('hard');
       if (index >= 2) enabled.push('reinforced');
       return enabled;
     }
     if (worldId === 3) {
-      const enabled = ['soft','dense','ore','hazard','jelly','heal'];
+      const enabled = ['soft','dense','hazard','jelly','heal'];
       if (index >= 1) enabled.push('hard');
       if (index >= 2) enabled.push('reinforced');
       return enabled;
     }
     if (worldId === 4) {
-      const enabled = ['dense','hard','ore','hazard','geyser','meteor','heal'];
+      const enabled = ['dense','hard','hazard','geyser','meteor','heal'];
       if (index >= 1) enabled.push('reinforced');
       return enabled;
     }
-    if (index === 0) return ['soft','dense','ore','hazard'];
-    if (index === 1) return ['soft','dense','ore','hazard','bomb'];
-    if (index === 2) return ['soft','dense','hard','ore','hazard','bomb','heal'];
-    return ['soft','dense','hard','reinforced','ore','bomb','heal','hazard'];
+    if (index === 0) return ['soft','dense','hazard'];
+    if (index === 1) return ['soft','dense','hazard','bomb'];
+    if (index === 2) return ['soft','dense','hard','hazard','bomb','heal'];
+    return ['soft','dense','hard','reinforced','bomb','heal','hazard'];
   };
   const world = (id, name, accent, top, bottom, depths) => ({ id, name, accent, background: { top, bottom, image: '', x: 0, y: 0, scale: 1 }, levels: depths.map((depth, index) => level(depth, enabledForLevel(id, index))), blocks: blocksFor(id) });
   const builtInDefaults = () => ({ version: 12, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[100,200,300,400,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[150,250,350,450,550]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,600]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,550,650])] });

@@ -18,13 +18,14 @@
     WORLD_LEVELS,
     PHYSICS: BALANCE,
     BLOCK_TIERS,
-    ORE_TYPES,
     SKINS,
     UPGRADES: UPGRADE_DATA
   } = CONFIG;
   const WORLDS = structuredClone(CONFIG.WORLDS);
   const ACTIVE_WORLDS = WORLDS.filter(world => world.active !== false);
   const ACTIVE_WORLD_IDS = Object.freeze(ACTIVE_WORLDS.map(world => world.id));
+  const FLASK_VALUES = Object.freeze({ 1: 1, 2: 3, 3: 5 });
+  const flaskSprites = new Map();
   const defaultSave = structuredClone(CONFIG.DEFAULT_SAVE);
   const {
     FOODS,
@@ -58,10 +59,9 @@
     electric: 3000,
     fire: 5000,
     cosmos: 3000,
-    gigantism: 3000,
-    wind: 3000,
     gold: 3000,
     explosion: 3000,
+    cloning: 1700,
     mass: 4000,
     mobility: 5000
   });
@@ -112,6 +112,8 @@
     endlessModeHint: $('#endlessModeHint'), campaignModePanel: $('#campaignModePanel'), endlessModePanel: $('#endlessModePanel'),
     endlessBestScore: $('#endlessBestScore'), endlessBestDepth: $('#endlessBestDepth'), endlessBestLaps: $('#endlessBestLaps'),
     endlessRuns: $('#endlessRuns'), startDropBtn: $('#startDropBtn'), startEndlessBtn: $('#startEndlessBtn'),
+    worldCarousel: $('#worldCarousel'), worldCarouselDots: $('#worldCarouselDots'), worldStartBtn: $('#worldStartBtn'),
+    worldStartText: $('#worldStartText'), normalModeV2: $('#normalModeV2'), abyssModeV2: $('#abyssModeV2'),
     depthLabel: $('#depthLabel'), runHeartHud: $('.shaft-health'), runHearts: $$('.run-heart'), runHeartCount: $('#runHeartCount'),
     runResearchHud: $('#runResearchHud'), runResearchScore: $('#runResearchScore'), runResearchGain: $('#runResearchGain'),
     routeProgress: $('#routeProgress'), routeBestMarker: $('#routeBestMarker'), routeBestLabel: $('#routeBestLabel'),
@@ -163,41 +165,44 @@
   ]);
   const MUTATION_DISCOVERIES = Object.freeze([
     { id: 'explosion', name: 'ВЗРЫВ', image: 'assets/ui/recipe-categories/emblem-v2-explosion.png' },
-    { id: 'wind', name: 'ВЕТЕР', image: 'assets/ui/recipe-categories/emblem-v2-wind.png' },
     { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/emblem-v2-cosmos.png' },
-    { id: 'gigantism', name: 'ГИГАНТИЗМ', image: 'assets/ui/recipe-categories/emblem-v2-gigantism.png' }
+    { id: 'nano', name: 'НАНО', image: 'assets/ui/recipe-categories/emblem-v2-nano.png' },
+    { id: 'telekinesis', name: 'ТЕЛЕКИНЕЗ', image: 'assets/ui/recipe-categories/emblem-v2-telekinesis.png' },
+    { id: 'cloning', name: 'КЛОНИРОВАНИЕ', image: 'assets/ui/recipe-categories/emblem-v2-cloning.png' }
   ]);
   const MUTATION_DETAILS = Object.freeze({
-    fire: { stage1: 'Поджигает повреждённые блоки и наносит им дополнительный урон.', stage2: 'Огонь распространяется сильнее и помогает быстрее прожигать путь.' },
-    electric: { stage1: 'Накапливает электрический заряд во время столкновений.', stage2: 'Разряд становится мощнее и цепляет больше целей.' },
-    frost: { stage1: 'Смягчает опасные столкновения и охлаждает препятствия.', stage2: 'Мороз крепнет и даёт слайму более надёжную защиту.' },
-    explosion: { stage1: 'Разрушенные блоки заряжают локальный взрыв.', stage2: 'Взрыв срабатывает чаще и задевает больше соседних блоков.' },
-    wind: { stage1: 'Ускоряет отскок и делает движение слайма отзывчивее.', stage2: 'Открывает воздушный рывок, пробивающий несколько блоков.' },
-    cosmos: { stage1: 'Меняет направление притяжения и помогает управлять падением.', stage2: 'Заряжает кометный вход и позволяет пробивать препятствия.' },
-    gigantism: { stage1: 'Увеличивает силу удара по обычным блокам.', stage2: 'Лишний урон переносится на соседнее препятствие.' }
+    fire: { stage1: 'Поджигает повреждённые блоки.', stage2: 'Огонь быстрее прожигает путь.' },
+    electric: { stage1: 'Слайм копит заряд при ударах.', stage2: 'Разряд бьёт больше блоков.' },
+    frost: { stage1: 'Мороз смягчает удары и охлаждает блоки.', stage2: 'Защита от ударов становится крепче.' },
+    explosion: { stage1: 'Разбитые блоки заряжают взрыв.', stage2: 'Взрыв задевает соседние блоки.' },
+    cosmos: { stage1: 'Меняет притяжение и направление падения.', stage2: 'Кометный рывок пробивает блоки.' },
+    nano: { stage1: 'Защитный дрон стреляет по блокам.', stage2: 'Появляется второй дрон.' },
+    telekinesis: { stage1: 'Поднимает и ломает блоки силой мысли.', stage2: 'Бросает блоки вниз, задевая соседние.' },
+    cloning: { stage1: 'При ударе появляется мини-клон и бьёт блоки.', stage2: 'При ударе вылетают два мини-клона.' }
   });
   const MUTATION_SYNTH_COLORS = Object.freeze({
     fire: { filter: 'hue-rotate(214deg) saturate(1.55) brightness(1.08)', glow: '#ff6b32' },
     electric: { filter: 'hue-rotate(292deg) saturate(1.35) brightness(1.14)', glow: '#ffe43d' },
     frost: { filter: 'hue-rotate(42deg) saturate(1.12) brightness(1.16)', glow: '#6eeaff' },
     explosion: { filter: 'hue-rotate(218deg) saturate(1.75) brightness(1.03)', glow: '#ff4d35' },
-    wind: { filter: 'hue-rotate(7deg) saturate(.82) brightness(1.15)', glow: '#72efc4' },
     cosmos: { filter: 'hue-rotate(105deg) saturate(1.72) brightness(.92)', glow: '#bd62ff' },
-    gigantism: { filter: 'hue-rotate(340deg) saturate(1.24) brightness(1.08)', glow: '#9ceb4c' }
+    nano: { filter: 'hue-rotate(22deg) saturate(1.08) brightness(1.12)', glow: '#5be9e3' },
+    telekinesis: { filter: 'hue-rotate(28deg) saturate(1.15) brightness(1.12)', glow: '#6cf2d8' },
+    cloning: { filter: 'hue-rotate(0deg) saturate(1.25) brightness(1.1)', glow: '#81ec75' }
   });
   const TRAILS = Object.freeze([
     { id: 'none', name: 'Без следа', cost: 0 },
-    { id: 'redJelly', name: 'Красное желе', cost: 250, asset: 'assets/ui/trails/trail-red.png', colors: ['rgba(255,54,69,0)', 'rgba(255,76,88,.48)', 'rgba(239,42,57,.94)'], glow: '#ff5964' },
-    { id: 'pinkJelly', name: 'Розовое желе', cost: 300, asset: 'assets/ui/trails/trail-pink.png', colors: ['rgba(255,78,178,0)', 'rgba(255,108,194,.5)', 'rgba(247,54,159,.95)'], glow: '#ff78c6' },
-    { id: 'blueJelly', name: 'Синее желе', cost: 300, asset: 'assets/ui/trails/trail-blue.png', colors: ['rgba(42,145,255,0)', 'rgba(61,177,255,.5)', 'rgba(22,135,240,.95)'], glow: '#51c7ff' },
-    { id: 'yellowJelly', name: 'Жёлтое желе', cost: 300, asset: 'assets/ui/trails/trail-yellow.png', colors: ['rgba(255,211,34,0)', 'rgba(255,225,60,.52)', 'rgba(255,193,18,.96)'], glow: '#ffe45c' },
-    { id: 'greenJelly', name: 'Зелёное желе', cost: 300, asset: 'assets/ui/trails/trail-green.png', colors: ['rgba(48,225,93,0)', 'rgba(64,238,116,.5)', 'rgba(24,192,76,.95)'], glow: '#58ef8d' },
-    { id: 'orangeJelly', name: 'Оранжевое желе', cost: 300, asset: 'assets/ui/trails/trail-orange.png', colors: ['rgba(255,126,34,0)', 'rgba(255,150,47,.5)', 'rgba(244,91,18,.96)'], glow: '#ff9a45' },
-    { id: 'purpleJelly', name: 'Фиолетовое желе', cost: 300, asset: 'assets/ui/trails/trail-purple.png', colors: ['rgba(142,67,255,0)', 'rgba(166,90,255,.5)', 'rgba(119,43,230,.95)'], glow: '#b47cff' },
-    { id: 'starJelly', name: 'Звёздное желе', cost: 750, asset: 'assets/ui/trails/trail-star.png', effect: 'stars', colors: ['rgba(21,13,74,0)', 'rgba(58,31,141,.66)', 'rgba(17,25,88,.98)'], glow: '#6652d8', life: 1.12 },
-    { id: 'goldJelly', name: 'Золотой блеск', cost: 900, asset: 'assets/ui/trails/trail-gold.png', effect: 'gold', colors: ['rgba(255,171,8,0)', 'rgba(255,218,49,.54)', 'rgba(255,164,6,.96)'], glow: '#ffe56b', life: 1.15 },
-    { id: 'rainbowJelly', name: 'Радужное желе', cost: 1100, asset: 'assets/ui/trails/trail-rainbow.png', effect: 'rainbow', life: 1.14 },
-    { id: 'bubbleJelly', name: 'Мыльные пузыри', cost: 850, asset: 'assets/ui/trails/trail-bubbles.png', effect: 'bubbles', glow: '#b9efff', life: 1.2 }
+    { id: 'redJelly', name: 'Красное желе', cost: 3, asset: 'assets/ui/trails/trail-red.png', colors: ['rgba(255,54,69,0)', 'rgba(255,76,88,.48)', 'rgba(239,42,57,.94)'], glow: '#ff5964' },
+    { id: 'pinkJelly', name: 'Розовое желе', cost: 3, asset: 'assets/ui/trails/trail-pink.png', colors: ['rgba(255,78,178,0)', 'rgba(255,108,194,.5)', 'rgba(247,54,159,.95)'], glow: '#ff78c6' },
+    { id: 'blueJelly', name: 'Синее желе', cost: 3, asset: 'assets/ui/trails/trail-blue.png', colors: ['rgba(42,145,255,0)', 'rgba(61,177,255,.5)', 'rgba(22,135,240,.95)'], glow: '#51c7ff' },
+    { id: 'yellowJelly', name: 'Жёлтое желе', cost: 3, asset: 'assets/ui/trails/trail-yellow.png', colors: ['rgba(255,211,34,0)', 'rgba(255,225,60,.52)', 'rgba(255,193,18,.96)'], glow: '#ffe45c' },
+    { id: 'greenJelly', name: 'Зелёное желе', cost: 3, asset: 'assets/ui/trails/trail-green.png', colors: ['rgba(48,225,93,0)', 'rgba(64,238,116,.5)', 'rgba(24,192,76,.95)'], glow: '#58ef8d' },
+    { id: 'orangeJelly', name: 'Оранжевое желе', cost: 3, asset: 'assets/ui/trails/trail-orange.png', colors: ['rgba(255,126,34,0)', 'rgba(255,150,47,.5)', 'rgba(244,91,18,.96)'], glow: '#ff9a45' },
+    { id: 'purpleJelly', name: 'Фиолетовое желе', cost: 3, asset: 'assets/ui/trails/trail-purple.png', colors: ['rgba(142,67,255,0)', 'rgba(166,90,255,.5)', 'rgba(119,43,230,.95)'], glow: '#b47cff' },
+    { id: 'starJelly', name: 'Звёздное желе', cost: 8, asset: 'assets/ui/trails/trail-star.png', effect: 'stars', colors: ['rgba(21,13,74,0)', 'rgba(58,31,141,.66)', 'rgba(17,25,88,.98)'], glow: '#6652d8', life: 1.12 },
+    { id: 'goldJelly', name: 'Золотой блеск', cost: 9, asset: 'assets/ui/trails/trail-gold.png', effect: 'gold', colors: ['rgba(255,171,8,0)', 'rgba(255,218,49,.54)', 'rgba(255,164,6,.96)'], glow: '#ffe56b', life: 1.15 },
+    { id: 'rainbowJelly', name: 'Радужное желе', cost: 11, asset: 'assets/ui/trails/trail-rainbow.png', effect: 'rainbow', life: 1.14 },
+    { id: 'bubbleJelly', name: 'Мыльные пузыри', cost: 9, asset: 'assets/ui/trails/trail-bubbles.png', effect: 'bubbles', glow: '#b9efff', life: 1.2 }
   ]);
   let slimePointer = null;
   let menuSlimeAnimationId = 0;
@@ -209,8 +214,9 @@
     frost: 0, frostFrom: 0, frostTarget: 0, frostStartedAt: 0,
     electric: 0, electricFrom: 0, electricTarget: 0, electricStartedAt: 0,
     cosmos: 0, cosmosFrom: 0, cosmosTarget: 0, cosmosStartedAt: 0,
-    gigantism: 0, gigantismFrom: 0, gigantismTarget: 0, gigantismStartedAt: 0,
-    wind: 0, windFrom: 0, windTarget: 0, windStartedAt: 0,
+    nano: 0, nanoFrom: 0, nanoTarget: 0, nanoStartedAt: 0,
+    telekinesis: 0, telekinesisFrom: 0, telekinesisTarget: 0, telekinesisStartedAt: 0,
+    cloning: 0, cloningFrom: 0, cloningTarget: 0, cloningStartedAt: 0,
     explosion: 0, explosionFrom: 0, explosionTarget: 0, explosionStartedAt: 0,
     mass: 0, massFrom: 0, massTarget: 0, massStartedAt: 0
   };
@@ -311,7 +317,7 @@
     for (const obsoleteKey of ['conveyorLevel', 'rerollLevel', 'discoveredFoods', 'revealedSecretFoods', 'pendingEpicBoost', 'foodPity']) {
       delete merged[obsoleteKey];
     }
-    merged.coins = Math.max(0, Number.isFinite(+merged.coins) ? +merged.coins : defaultSave.coins);
+    delete merged.coins;
     merged.researchUnits = Math.max(0, Math.floor(Number.isFinite(+merged.researchUnits) ? +merged.researchUnits : 0));
     merged.researchProgress = clamp(Math.floor(Number.isFinite(+merged.researchProgress) ? +merged.researchProgress : 0), 0, 99);
     merged.unlockedMutations = Array.isArray(value.unlockedMutations)
@@ -324,8 +330,7 @@
       if (merged.activeMutationPool.length >= 3) break;
       if (!merged.activeMutationPool.includes(starter.id)) merged.activeMutationPool.push(starter.id);
     }
-    const mutationCost = MUTATION_STEPS * (merged.unlockedMutations.length + 1);
-    merged.mutationProgress = clamp(Math.floor(Number.isFinite(+merged.mutationProgress) ? +merged.mutationProgress : 0), 0, mutationCost);
+    merged.mutationProgress = clamp(Math.floor(Number.isFinite(+merged.mutationProgress) ? +merged.mutationProgress : 0), 0, MUTATION_STEPS);
     const requestedWorld = Math.round(+merged.world || 1);
     merged.world = ACTIVE_WORLD_IDS.includes(requestedWorld) ? requestedWorld : requestedWorld === 2 ? 3 : ACTIVE_WORLD_IDS[0];
     merged.stomachLevel = clamp(sourceStomachLevel, 1, UPGRADE_DATA.stomachLevel.max);
@@ -342,6 +347,17 @@
     merged.totalRuns = Math.max(0, Math.round(+merged.totalRuns || 0));
     merged.worldBest = { ...defaultSave.worldBest };
     for (const world of WORLDS) merged.worldBest[world.id] = clamp(+(value.worldBest?.[world.id] || 0), 0, world.targetDepth);
+    merged.worldTrophies = { ...defaultSave.worldTrophies };
+    merged.worldLastRun = { ...defaultSave.worldLastRun };
+    for (const world of WORLDS) {
+      merged.worldTrophies[world.id] = Math.max(0, Math.floor(+(value.worldTrophies?.[world.id] || 0)));
+      merged.worldLastRun[world.id] = clamp(+(value.worldLastRun?.[world.id] || 0), 0, world.targetDepth);
+    }
+    const legacyWorldIndex = value.worldTrophies ? 0 : Math.max(0, ACTIVE_WORLD_IDS.indexOf(merged.world));
+    const legacyUnlockedWorlds = ACTIVE_WORLDS.filter((world, index) => index <= legacyWorldIndex ||
+      (index > 0 && +(value.worldBest?.[ACTIVE_WORLDS[index - 1].id] || 0) >= ACTIVE_WORLDS[index - 1].targetDepth)).map(world => world.id);
+    merged.unlockedWorlds = [...new Set([ACTIVE_WORLD_IDS[0], ...(Array.isArray(value.unlockedWorlds) ? value.unlockedWorlds : legacyUnlockedWorlds)])]
+      .filter(id => ACTIVE_WORLD_IDS.includes(Number(id))).map(Number);
     const finalWorld = ACTIVE_WORLDS[ACTIVE_WORLDS.length - 1];
     merged.gameCompleted = Boolean(value.gameCompleted || (finalWorld && merged.worldBest[finalWorld.id] >= levelTargetDepth(finalWorld, LEVEL_COUNT)));
     merged.lastRunDepth = {};
@@ -402,7 +418,7 @@
 
   function restoreSession(raw) {
     if (!raw || raw.worldId !== save.world || !Array.isArray(raw.foods) || !Array.isArray(raw.offer)) return false;
-    const foodById = id => FOODS.find(food => food.id === id && foodAvailableInWorld(food));
+    const foodById = id => FOODS.find(food => food.id === id);
     const foods = raw.foods.map(foodById).filter(Boolean).slice(0, STOMACH_CAPACITY);
     const offer = raw.offer.slice(0, 3).map(id => id ? foodById(id) || null : null);
     if (stomachIsFull(foods)) offer.length = 0;
@@ -471,7 +487,7 @@
     return cloudSaveInFlight;
   }
 
-  function persist({ captureDraft = true, cloud = true } = {}) {
+  function persist({ captureDraft = true, cloud = true, refreshUI = true } = {}) {
     if (captureDraft && session && !run) save.activeDraft = serializeSession();
     saveUpdatedAt = Date.now();
     saveRevision += 1;
@@ -725,13 +741,10 @@
   }
 
   function levelTargetDepth(world, level) {
-    const worldIndex = Math.max(0, ACTIVE_WORLD_IDS.indexOf(Math.round(world?.id || ACTIVE_WORLD_IDS[0])));
-    const levelIndex = clamp(Math.round(level || 1) - 1, 0, LEVEL_COUNT - 1);
-    return 100 + worldIndex * 50 + levelIndex * 100;
+    return world?.targetDepth || 500;
   }
   function selectedLevelForWorld(worldId = save.world) {
-    const unlocked = clamp(Math.round(save.unlockedLevels?.[worldId] || 1), 1, LEVEL_COUNT);
-    return clamp(Math.round(save.selectedLevels?.[worldId] || 1), 1, unlocked);
+    return LEVEL_COUNT;
   }
   function levelReward(world, level) {
     return Math.max(10, Math.round(world.reward * (.15 + level * .17)));
@@ -750,10 +763,13 @@
     const index = ACTIVE_WORLD_IDS.indexOf(Number(worldId));
     if (index < 0) return false;
     if (index === 0) return true;
-    const world = ACTIVE_WORLDS[index];
-    if ((save.worldBest?.[world.id] || 0) > 0 || save.world === world.id) return true;
+    if (save.unlockedWorlds?.includes(Number(worldId))) return true;
     const previous = ACTIVE_WORLDS[index - 1];
-    return Boolean(previous && (save.worldBest?.[previous.id] || 0) >= levelTargetDepth(previous, LEVEL_COUNT));
+    return Boolean(previous && (save.worldTrophies?.[previous.id] || 0) >= 10);
+  }
+  let carouselWorldId = null;
+  function carouselWorld() {
+    return ACTIVE_WORLDS.find(world => world.id === carouselWorldId) || currentWorld();
   }
   function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 
@@ -792,9 +808,239 @@
     }
   }
 
+  function renderWorldCarousel() {
+    if (!els.worldCarousel) return;
+    const world = carouselWorld();
+    const index = ACTIVE_WORLD_IDS.indexOf(world.id);
+    const iconPath = item => versionedAsset(`assets/ui/world-icons/world-${item.id}${item.id === 3 || item.id === 4 ? '-v2' : ''}.webp`);
+    const card = (item, position) => {
+      if (!item) {
+        const spacer = document.createElement('span');
+        spacer.className = 'world-carousel-space';
+        spacer.setAttribute('aria-hidden', 'true');
+        return spacer;
+      }
+      const locked = !worldIsUnlocked(item.id);
+      const itemIndex = ACTIVE_WORLD_IDS.indexOf(item.id);
+      const precedingWorld = ACTIVE_WORLDS[itemIndex - 1];
+      const completed = Math.min(10, save.worldTrophies?.[precedingWorld?.id] || 0);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `world-carousel-card ${position}${locked ? ' locked' : ''}`;
+      button.dataset.world = String(item.id);
+      button.setAttribute('aria-label', locked
+        ? `Мир ${worldDisplayNumber(item.id)} закрыт. Кубков ${completed} из 10`
+        : position === 'current' ? `Текущий мир: ${item.name}` : `Выбрать ${item.name}`);
+      const titleDetail = locked
+        ? `<span class="world-card-requirement"><img src="assets/ui/world-picker-v2/trophy.png" alt="">${completed}/10</span>`
+        : position === 'current' ? '<b></b>' : '';
+      button.innerHTML = `<span class="world-carousel-art"><img class="world-card-image" src="${iconPath(item)}" alt=""><span class="world-card-title"><small>МИР ${worldDisplayNumber(item.id)}</small>${titleDetail}</span>${locked ? '<img class="world-card-lock" src="assets/ui/world-picker-v2/abyss-lock.png" alt="">' : ''}</span>`;
+      if (position === 'current' && !locked) button.querySelector('.world-card-title b').textContent = item.name;
+      return button;
+    };
+    els.worldCarousel.replaceChildren(card(ACTIVE_WORLDS[index - 1], 'previous'), card(world, 'current'), card(ACTIVE_WORLDS[index + 1], 'next'));
+    els.worldCarouselDots.replaceChildren(...ACTIVE_WORLDS.map((item, dotIndex) => {
+      const dot = document.createElement('span');
+      dot.className = `world-carousel-dot${dotIndex === index ? ' active' : ''}${worldIsUnlocked(item.id) ? '' : ' locked'}`;
+      dot.setAttribute('aria-hidden', 'true');
+      return dot;
+    }));
+  }
+
+  const worldImagePixels = new Map();
+  function worldImageHit(img, clientX, clientY) {
+    if (!img) return false;
+    const requirement = img.closest('.world-carousel-card')?.querySelector('.world-card-requirement');
+    if (requirement) {
+      const badge = requirement.getBoundingClientRect();
+      if (clientX >= badge.left - 4 && clientX <= badge.right + 4 && clientY >= badge.top - 4 && clientY <= badge.bottom + 4) return true;
+    }
+    const rect = img.getBoundingClientRect();
+    if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return false;
+    const ellipseHit = () => {
+      const dx = (clientX - rect.left) / rect.width - .5;
+      const dy = (clientY - rect.top) / rect.height - .5;
+      return dx * dx + dy * dy <= .25;
+    };
+    if (!img.complete || !img.naturalWidth || !img.naturalHeight) {
+      return ellipseHit();
+    }
+    const source = img.currentSrc || img.src;
+    let pixels = worldImagePixels.get(source);
+    if (!pixels) {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      try {
+        context.drawImage(img, 0, 0);
+        pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+      } catch {
+        return ellipseHit();
+      }
+      worldImagePixels.set(source, pixels);
+    }
+    const x = clamp(Math.floor((clientX - rect.left) / rect.width * pixels.width), 0, pixels.width - 1);
+    const y = clamp(Math.floor((clientY - rect.top) / rect.height * pixels.height), 0, pixels.height - 1);
+    if (pixels.data[(y * pixels.width + x) * 4 + 3] >= 24) return true;
+    const radius = Math.ceil(Math.min(pixels.width, pixels.height) * .085);
+    for (let dy = -radius; dy <= radius; dy += 3) {
+      for (let dx = -radius; dx <= radius; dx += 3) {
+        if (dx * dx + dy * dy > radius * radius) continue;
+        const px = x + dx;
+        const py = y + dy;
+        if (px < 0 || py < 0 || px >= pixels.width || py >= pixels.height) continue;
+        if (pixels.data[(py * pixels.width + px) * 4 + 3] >= 24) return true;
+      }
+    }
+    return false;
+  }
+
+  function animateCarouselSelection(worldId) {
+    const carousel = els.worldCarousel;
+    if (!carousel || Number(worldId) === carouselWorld().id) return;
+    const previous = new Map([...carousel.querySelectorAll('.world-carousel-card[data-world]')].map(button => {
+      const art = button.querySelector('.world-carousel-art');
+      return [button.dataset.world, {
+        art,
+        bounds: art.getBoundingClientRect(),
+        glow: getComputedStyle(button).getPropertyValue('--world-glow'),
+        frame: {
+          width: parseFloat(getComputedStyle(button).getPropertyValue('--frame-width')),
+          height: parseFloat(getComputedStyle(button).getPropertyValue('--frame-height')),
+          top: parseFloat(getComputedStyle(button).getPropertyValue('--frame-art-top')),
+          borderColor: getComputedStyle(button, '::before').borderTopColor,
+          background: getComputedStyle(button, '::before').backgroundImage,
+          borderRadius: getComputedStyle(button, '::before').borderRadius,
+          boxShadow: getComputedStyle(button, '::before').boxShadow
+        },
+        titleBottom: getComputedStyle(art.querySelector('.world-card-title')).bottom,
+        imageFilter: getComputedStyle(art.querySelector('.world-card-image')).filter,
+        wasCurrent: button.classList.contains('current')
+      }];
+    }));
+    const previousWorldId = carouselWorld().id;
+    selectHomeWorld(worldId);
+    if (carouselWorld().id === previousWorldId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const frame = carousel.getBoundingClientRect();
+    const overlay = document.createElement('div');
+    overlay.className = 'world-carousel-motion';
+    const animations = [];
+    for (const button of carousel.querySelectorAll('.world-carousel-card[data-world]')) {
+      const from = previous.get(button.dataset.world);
+      if (!from) continue;
+      const to = button.querySelector('.world-carousel-art').getBoundingClientRect();
+      const ghost = from.art.cloneNode(true);
+      const isArriving = button.classList.contains('current');
+      const oldTitle = ghost.querySelector('.world-card-title');
+      oldTitle.style.bottom = from.titleBottom;
+      const targetTitle = button.querySelector('.world-card-title').cloneNode(true);
+      targetTitle.style.bottom = getComputedStyle(button.querySelector('.world-card-title')).bottom;
+      targetTitle.style.opacity = '0';
+      ghost.appendChild(targetTitle);
+      const targetImageFilter = getComputedStyle(button.querySelector('.world-card-image')).filter;
+      const baseImage = ghost.querySelector('.world-card-image');
+      baseImage.style.filter = from.imageFilter;
+      const targetImage = baseImage.cloneNode(true);
+      targetImage.classList.add('world-motion-image-target');
+      targetImage.style.filter = targetImageFilter;
+      targetImage.style.opacity = '0';
+      baseImage.after(targetImage);
+      const glow = document.createElement('span');
+      glow.className = 'world-motion-glow';
+      ghost.prepend(glow);
+      const motionFrame = document.createElement('span');
+      motionFrame.className = 'world-motion-frame';
+      motionFrame.style.width = `${from.frame.width}px`;
+      motionFrame.style.height = `${from.frame.height}px`;
+      motionFrame.style.top = `${from.frame.top}px`;
+      motionFrame.style.borderColor = from.frame.borderColor;
+      motionFrame.style.backgroundImage = from.frame.background;
+      motionFrame.style.borderRadius = from.frame.borderRadius;
+      motionFrame.style.boxShadow = from.frame.boxShadow;
+      glow.after(motionFrame);
+      const targetMotionFrame = motionFrame.cloneNode();
+      targetMotionFrame.style.opacity = '0';
+      ghost.style.setProperty('--world-glow', from.glow);
+      ghost.style.position = 'absolute';
+      ghost.style.transform = 'none';
+      ghost.style.minWidth = '0';
+      ghost.style.minHeight = '0';
+      ghost.style.left = `${from.bounds.left - frame.left}px`;
+      ghost.style.top = `${from.bounds.top - frame.top}px`;
+      ghost.style.width = `${from.bounds.width}px`;
+      ghost.style.height = `${from.bounds.height}px`;
+      ghost.style.zIndex = from.wasCurrent ? '1' : '2';
+      overlay.appendChild(ghost);
+      const targetStyle = getComputedStyle(button);
+      const targetFrameStyle = getComputedStyle(button, '::before');
+      targetMotionFrame.style.borderColor = targetFrameStyle.borderTopColor;
+      targetMotionFrame.style.backgroundImage = targetFrameStyle.backgroundImage;
+      targetMotionFrame.style.borderRadius = targetFrameStyle.borderRadius;
+      targetMotionFrame.style.boxShadow = targetFrameStyle.boxShadow;
+      motionFrame.after(targetMotionFrame);
+      animations.push({ ghost, glow, motionFrame, targetMotionFrame, baseImage, targetImage, oldTitle, targetTitle, from, to, isArriving,
+        targetFrame: {
+          width: parseFloat(targetStyle.getPropertyValue('--frame-width')),
+          height: parseFloat(targetStyle.getPropertyValue('--frame-height')),
+          top: parseFloat(targetStyle.getPropertyValue('--frame-art-top')),
+          borderColor: targetFrameStyle.borderTopColor
+        },
+        targetGlow: button.classList.contains('locked') ? .58 : 1 });
+    }
+    if (!animations.length) return;
+    const transitionMs = 520;
+    carousel.classList.add('is-transitioning');
+    carousel.appendChild(overlay);
+    for (const { ghost, glow, motionFrame, targetMotionFrame, baseImage, targetImage, oldTitle, targetTitle, from, to, isArriving, targetFrame, targetGlow } of animations) {
+      ghost.animate([
+        { left: `${from.bounds.left - frame.left}px`, top: `${from.bounds.top - frame.top}px`, width: `${from.bounds.width}px`, height: `${from.bounds.height}px` },
+        { left: `${to.left - frame.left}px`, top: `${to.top - frame.top}px`, width: `${to.width}px`, height: `${to.height}px` }
+      ], { duration: transitionMs, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
+      targetImage.animate([
+        { opacity: 0, offset: 0 }, { opacity: .08, offset: .2 }, { opacity: 1, offset: 1 }
+      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
+      baseImage.animate([
+        { opacity: 1, offset: 0 }, { opacity: .92, offset: .2 }, { opacity: 0, offset: 1 }
+      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
+      motionFrame.animate([
+        { width: `${from.frame.width}px`, height: `${from.frame.height}px`, top: `${from.frame.top}px`, opacity: 1 },
+        { width: `${targetFrame.width}px`, height: `${targetFrame.height}px`, top: `${targetFrame.top}px`, opacity: 0 }
+      ], { duration: transitionMs, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
+      targetMotionFrame.animate([
+        { width: `${from.frame.width}px`, height: `${from.frame.height}px`, top: `${from.frame.top}px`, opacity: 0 },
+        { width: `${targetFrame.width}px`, height: `${targetFrame.height}px`, top: `${targetFrame.top}px`, opacity: 1 }
+      ], { duration: transitionMs, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
+      glow.animate(isArriving ? [
+        { opacity: 0, offset: 0 }, { opacity: .08, offset: .25 },
+        { opacity: targetGlow * .48, offset: .7 }, { opacity: targetGlow, offset: 1 }
+      ] : [
+        { opacity: from.wasCurrent ? 1 : 0, offset: 0 },
+        { opacity: from.wasCurrent ? .55 : 0, offset: .3 },
+        { opacity: 0, offset: .78 }, { opacity: 0, offset: 1 }
+      ], { duration: transitionMs, easing: 'linear', fill: 'forwards' });
+      oldTitle.animate([
+        { opacity: 1, transform: 'translateX(-50%) scale(1)', offset: 0 },
+        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: .42 },
+        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: 1 }
+      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
+      targetTitle.animate([
+        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: 0 },
+        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: .32 },
+        { opacity: 1, transform: 'translateX(-50%) scale(1)', offset: 1 }
+      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
+    }
+    setTimeout(() => {
+      overlay.remove();
+      carousel.classList.remove('is-transitioning');
+    }, transitionMs + 15);
+  }
+
   function renderHomePlaySetup() {
     if (!els.playSetupCard) return;
     const world = currentWorld();
+    renderWorldCarousel();
     if (els.homeWorldPickerIcon) els.homeWorldPickerIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
     if (els.homeWorldPickerEyebrow) els.homeWorldPickerEyebrow.textContent = `МИР ${worldDisplayNumber(world.id)}`;
     if (els.homeWorldPickerName) els.homeWorldPickerName.textContent = world.name;
@@ -863,9 +1109,9 @@
       els.homeWorldMenu.replaceChildren(options);
     }
 
-    const endlessUnlocked = Boolean(save.gameCompleted);
-    const activeMode = save.homeMode === 'endless' && endlessUnlocked ? 'endless' : 'campaign';
-    if (!endlessUnlocked && save.homeMode === 'endless') save.homeMode = 'campaign';
+    const endlessUnlocked = false;
+    const activeMode = 'campaign';
+    save.homeMode = 'campaign';
     els.playSetupCard.dataset.mode = activeMode;
     els.campaignModeBtn?.classList.toggle('active', activeMode === 'campaign');
     els.endlessModeBtn?.classList.toggle('active', activeMode === 'endless');
@@ -924,23 +1170,30 @@
   function selectHomeWorld(worldId) {
     const nextWorldId = Number(worldId);
     if (!worldIsUnlocked(nextWorldId)) {
-      renderHomePlaySetup();
-      showToast('Сначала пройди предыдущий мир');
+      carouselWorldId = nextWorldId;
+      renderWorldCarousel();
+      syncWorldStartButton(stomachIsFull());
+      sound('tap');
       return;
     }
-    if (nextWorldId === save.world) return;
+    if (nextWorldId === save.world) {
+      carouselWorldId = nextWorldId;
+      renderWorldCarousel();
+      syncWorldStartButton(stomachIsFull());
+      return;
+    }
     if (session?.rerollPending || adInFlight) {
-      renderHomePlaySetup();
       showToast('Дождись окончания обновления');
       return;
     }
     save.world = nextWorldId;
-    save.activeDraft = null;
-    session = null;
+    carouselWorldId = nextWorldId;
     sound('tap');
     feedback(8);
-    newDraft();
-    showToast(`Мир ${worldDisplayNumber(nextWorldId)} · ${currentWorld().name}`);
+    ensureWorldSprites(nextWorldId);
+    renderWorldCarousel();
+    syncWorldStartButton(stomachIsFull());
+    persist({ refreshUI: false });
   }
 
   function selectLevel(level) {
@@ -961,8 +1214,9 @@
   }
 
   function updatePersistentUI() {
-    els.coinsLabel.textContent = formatCompactNumber(save.coins);
-    els.coinsLabel.title = `${Math.floor(save.coins).toLocaleString('ru-RU')} монет`;
+    const trophies = Object.values(save.worldTrophies || {}).reduce((sum, count) => sum + Math.max(0, count || 0), 0);
+    els.coinsLabel.textContent = formatCompactNumber(trophies);
+    els.coinsLabel.title = `${trophies.toLocaleString('ru-RU')} кубков за пройденные миры`;
     if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
     if (els.researchProgressBar) els.researchProgressBar.style.width = `${save.researchProgress}%`;
     const researchWallet = els.researchUnitsLabel?.closest('.research-wallet');
@@ -976,7 +1230,7 @@
     const worldProgress = clamp(best / targetDepth * 100, 0, 100);
     const levelCompleted = best >= targetDepth;
     updateWorldHeader();
-    if (els.worldProgressPrefix) els.worldProgressPrefix.textContent = levelCompleted ? 'УРОВЕНЬ ПРОЙДЕН' : 'ВЫ ПРОШЛИ';
+    if (els.worldProgressPrefix) els.worldProgressPrefix.textContent = levelCompleted ? 'МИР ПРОЙДЕН' : 'ВЫ ПРОШЛИ';
     els.worldProgressText.textContent = `${best} м`;
     els.worldProgressBar.style.width = `${worldProgress}%`;
     if (els.worldProgressMarker) els.worldProgressMarker.style.left = `${worldProgress}%`;
@@ -998,7 +1252,7 @@
     els.worldLabel.textContent = world.name;
     if (els.worldEyebrow) {
       els.worldEyebrow.textContent = isDrop
-        ? (run?.endless ? `МИР ${worldDisplayNumber(world.id)} · БЕСКОНЕЧНЫЙ РЕЖИМ` : `МИР ${worldDisplayNumber(world.id)} · УРОВЕНЬ ${level}`)
+        ? (run?.endless ? `МИР ${worldDisplayNumber(world.id)} · БЕСКОНЕЧНЫЙ РЕЖИМ` : `МИР ${worldDisplayNumber(world.id)}`)
         : `МИР ${worldDisplayNumber(world.id)}`;
     }
     if (els.worldIcon) els.worldIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
@@ -1213,8 +1467,10 @@
 
   function switchWorldFromAdmin(direction) {
     if (session?.rerollPending || adInFlight) return showToast('Дождись окончания обновления');
-    const nextIndex = (save.world - 1 + direction + WORLDS.length) % WORLDS.length;
-    save.world = WORLDS[nextIndex].id;
+    const currentIndex = Math.max(0, ACTIVE_WORLD_IDS.indexOf(save.world));
+    const nextIndex = (currentIndex + direction + ACTIVE_WORLDS.length) % ACTIVE_WORLDS.length;
+    save.world = ACTIVE_WORLDS[nextIndex].id;
+    carouselWorldId = save.world;
     save.activeDraft = null;
     session = null;
     sound('tap');
@@ -1223,7 +1479,7 @@
   }
 
   function resetProgressFromAdmin() {
-    if (!window.confirm('Сбросить весь прогресс, улучшения, исследование, монеты и текущий набор еды?')) return;
+    if (!window.confirm('Сбросить весь прогресс, улучшения, исследование, кубки и текущий набор еды?')) return;
     const storage = saveStorage || browserStorage();
     try {
       storage?.removeItem(SAVE_KEY);
@@ -1233,6 +1489,7 @@
       console.warn('Save reset cleanup failed:', error);
     }
     save = structuredClone(defaultSave);
+    carouselWorldId = null;
     adminInfiniteResearch = false;
     saveUpdatedAt = Date.now();
     saveRevision += 1;
@@ -1245,19 +1502,21 @@
   }
 
   function unlockEverythingFromAdmin() {
-    const coinGrant = 9999999;
-    save.coins = Math.max(save.coins, coinGrant);
     save.researchUnits = Math.max(save.researchUnits, 9999);
     save.researchProgress = 0;
     save.world = 1;
+    carouselWorldId = save.world;
     save.stomachLevel = 4;
     save.unlockedSkins = SKINS.map(skin => skin.id);
     save.unlockedTrails = TRAILS.map(trail => trail.id);
     save.gameCompleted = true;
+    save.unlockedWorlds = [...ACTIVE_WORLD_IDS];
     for (const world of WORLDS) {
       save.unlockedLevels[world.id] = LEVEL_COUNT;
       save.selectedLevels[world.id] = 1;
       save.worldBest[world.id] = world.targetDepth;
+      save.worldTrophies[world.id] = 10;
+      save.worldLastRun[world.id] = world.targetDepth;
       for (let level = 1; level <= LEVEL_COUNT; level += 1) {
         save.lastRunDepth[`${world.id}:${level}`] = levelTargetDepth(world, level);
       }
@@ -1268,7 +1527,7 @@
     sound('coin');
     feedback([20, 35, 20]);
     newDraft();
-    showToast('Всё, кроме карточек, открыто · монеты и исследование выданы');
+    showToast('Все миры открыты · кубки и исследование выданы');
   }
 
   function syncAdminInfiniteFlasksUI() {
@@ -1347,6 +1606,15 @@
     persist();
   }
 
+  const MUTATION_GRAVITY_ARROW_SVG = '<svg viewBox="0 0 14 20" aria-hidden="true"><path d="M5 1H9V10H13L7 19 1 10H5Z"></path></svg>';
+  const MUTATION_REVEAL_BACKGROUNDS = Object.freeze({
+    explosion: 'assets/ui/mutation-reveal/explosion-v1.png',
+    cosmos: 'assets/ui/mutation-reveal/cosmos-v1.png',
+    nano: 'assets/ui/mutation-reveal/nano-v2.png',
+    telekinesis: 'assets/ui/mutation-reveal/telekinesis-v1.png',
+    cloning: 'assets/ui/mutation-reveal/cloning-v1.png'
+  });
+
   function mutationElementFxMarkup(family, extraClass = '') {
     const sourceFamily = String(family || '').toLowerCase();
     const normalizedFamily = sourceFamily === 'damage' ? 'fire' : sourceFamily === 'frost' ? 'ice' : sourceFamily;
@@ -1365,10 +1633,40 @@
     if (normalizedFamily === 'blast' || normalizedFamily === 'explosion') {
       return `<span class="mutation-element-fx mutation-blast-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
     }
-    if (normalizedFamily === 'wind') {
-      return `<span class="mutation-element-fx mutation-wind-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
-    }
     return '';
+  }
+
+  function conveyorMutationFxMarkup(food, family) {
+    if (family === 'cosmos') {
+      return `<span class="mutation-element-fx food-mutation-fx food-cosmos-gravity-fx" aria-hidden="true"><span class="mutation-gravity-particles">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span></span>`;
+    }
+    if (family === 'nano') {
+      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.png')}" alt="">`;
+      return `<span class="mutation-element-fx food-mutation-fx food-nano-drones-fx" aria-hidden="true">${drone}${drone}</span>`;
+    }
+    if (family === 'telekinesis') {
+      return '<span class="mutation-element-fx food-mutation-fx food-telekinesis-fx" aria-hidden="true"></span>';
+    }
+    if (family === 'cloning') {
+      const echo = `<img src="${versionedAsset(food.image)}" alt="">`;
+      return `<span class="mutation-element-fx food-mutation-fx food-cloning-fx" aria-hidden="true">${echo}${echo}</span>`;
+    }
+    return mutationElementFxMarkup(family, 'food-mutation-fx');
+  }
+
+  function mutationRevealFxMarkup(mutation) {
+    if (mutation.id === 'cosmos') {
+      return `<span class="mutation-gravity-particles" aria-hidden="true">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span>`;
+    }
+    if (mutation.id === 'nano') {
+      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.png')}" alt="">`;
+      return `<span class="mutation-nano-drones" aria-hidden="true">${drone}${drone}<i class="nano-prize-shot"></i><i class="nano-prize-shot"></i></span>`;
+    }
+    if (mutation.id === 'cloning') {
+      const echo = `<img src="${versionedAsset(mutation.image)}" alt="">`;
+      return `<span class="mutation-clone-echoes" aria-hidden="true">${echo}${echo}</span>`;
+    }
+    return mutationElementFxMarkup(mutation.id, 'mutation-prize-fx');
   }
 
   function calculateStatsForFoods() {
@@ -1432,8 +1730,9 @@
     fire: { glyph: '▲', label: 'ОГОНЬ' },
     ice: { glyph: '◆', label: 'ЛЁД' }, electric: { glyph: 'ϟ', label: 'ТОК' },
     cosmos: { glyph: '✦', label: 'КОСМОС' },
-    gigantism: { glyph: '●', label: 'ГИГАНТИЗМ' },
-    wind: { glyph: '≈', label: 'ВЕТЕР' },
+    nano: { glyph: '◉', label: 'НАНО' },
+    telekinesis: { glyph: '◇', label: 'ТЕЛЕКИНЕЗ' },
+    cloning: { glyph: '◉', label: 'КЛОНИРОВАНИЕ' },
     blast: { glyph: '✦', label: 'ВЗРЫВ' },
     mixed: { glyph: '•', label: 'ЕДА' }
   };
@@ -1443,8 +1742,9 @@
     ice: 'assets/ui/recipe-categories/emblem-v2-frost.png',
     electric: 'assets/ui/recipe-categories/emblem-v2-electric.png',
     cosmos: 'assets/ui/recipe-categories/emblem-v2-cosmos.png',
-    gigantism: 'assets/ui/recipe-categories/emblem-v2-gigantism.png',
-    wind: 'assets/ui/recipe-categories/emblem-v2-wind.png',
+    nano: 'assets/ui/recipe-categories/emblem-v2-nano.png',
+    telekinesis: 'assets/ui/recipe-categories/emblem-v2-telekinesis.png',
+    cloning: 'assets/ui/recipe-categories/emblem-v2-cloning.png',
     blast: 'assets/ui/recipe-categories/emblem-v2-explosion.png'
   });
 
@@ -1510,7 +1810,7 @@
   function renderConveyorStartCard({ entering = false } = {}) {
     const world = currentWorld();
     const endless = save.homeMode === 'endless';
-    const stageLabel = endless ? 'БЕСКОНЕЧНЫЙ РЕЖИМ' : `УРОВЕНЬ ${selectedLevelForWorld(world.id)}`;
+    const stageLabel = endless ? 'БЕСКОНЕЧНЫЙ РЕЖИМ' : `МИР ${worldDisplayNumber(world.id)}`;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `conveyor-start-card${entering ? ' launch-card-enter' : ''}`;
@@ -1600,6 +1900,17 @@
     scheduleHomeFit();
   }
 
+  function syncWorldStartButton(full) {
+    if (!els.worldStartBtn) return;
+    const locked = !worldIsUnlocked(carouselWorld().id);
+    const ready = full && !locked;
+    els.worldStartBtn.disabled = !ready;
+    els.worldStartBtn.classList.toggle('hungry', !ready);
+    els.worldStartBtn.classList.toggle('ready', ready);
+    els.worldStartBtn.setAttribute('aria-label', locked ? 'Мир закрыт. Для открытия нужно 10 кубков' : ready ? 'В шахту, начать забег' : 'Слайм голоден. Сначала выберите еду');
+    if (els.worldStartText) els.worldStartText.textContent = ready ? 'В ШАХТУ!' : locked ? '' : 'ПОКОРМИ СЛАЙМА';
+  }
+
   function renderDraft({ offerMotion = 'static', showLaunchCard = true } = {}) {
     recalcStats();
     updatePersistentUI();
@@ -1624,6 +1935,7 @@
       els.startEndlessBtn.disabled = !full || !save.gameCompleted;
       els.startEndlessBtn.classList.toggle('stomach-locked', !full);
     }
+    syncWorldStartButton(full);
     els.conveyor.classList.remove('launch-ready');
     els.rerollBtn.disabled = session.rerollPending || session.offerTransition || adInFlight;
 
@@ -1645,7 +1957,7 @@
       }
       const button = document.createElement('button');
       const recipeFamily = foodRecipeFamily(food);
-      const foodMutationFx = mutationElementFxMarkup(recipeFamily, 'food-mutation-fx');
+      const foodMutationFx = conveyorMutationFxMarkup(food, recipeFamily);
       const tunnelInDistance = 112 + index * 110;
       const tunnelOutDistance = 112 + (session.offer.length - 1 - index) * 110;
       const cardLocked = !canAddToStomach(food);
@@ -1969,11 +2281,18 @@
       'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
       'lastTrailSampleAt', 'lastUiUpdateAt', 'gravitySwitchFlashUntil',
       'hurtSlowUntil', 'lastHeartLossAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt',
-      'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil',
-      'gigantismStartedAt', 'gigantismDeflateStartedAt', 'gigantismDeflateUntil',
-      'windDashUntil', 'windDashCooldownUntil', 'windBounceFlashUntil'
+      'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil'
     ];
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
+    if (run.nanoNextShotAt) run.nanoNextShotAt = run.nanoNextShotAt.map(value => value > 0 ? value + delta : value);
+    if (run.nanoShots) for (const shot of run.nanoShots) shot.startedAt += delta;
+    if (run.telekinesisNextAt > 0) run.telekinesisNextAt += delta;
+    if (run.telekinesisCycle) run.telekinesisCycle.startedAt += delta;
+    if (run.telekinesisMarks) for (const mark of run.telekinesisMarks) mark.startedAt += delta;
+    if (run.telekinesisBursts) for (const burst of run.telekinesisBursts) burst.startedAt += delta;
+    if (run.cloneUltimate) run.cloneUltimate.startedAt += delta;
+    if (run.lastCloneBounceAt > 0) run.lastCloneBounceAt += delta;
+    if (run.miniSlimes) for (const mini of run.miniSlimes) mini.bornAt += delta;
     if (run.geyserCapture) {
       for (const key of ['startedAt', 'readyAt', 'autoLaunchAt']) if (run.geyserCapture[key] > 0) run.geyserCapture[key] += delta;
     }
@@ -2057,7 +2376,6 @@
   function restartCurrentRun() {
     if (!run || run.ended) return;
     const endless = run.endless;
-    if (!endless) registerCampaignFailure(run.worldId, run.level);
     cancelAnimationFrame(run.animationId);
     hideRunMenu();
     run = null;
@@ -2069,24 +2387,6 @@
     if (!run || run.ended) return;
     hideRunMenu();
     finishRunEarly();
-  }
-
-  function campaignAttemptKey(worldId, level) {
-    return `${worldId}:${level}`;
-  }
-
-  function registerCampaignFailure(worldId, level) {
-    const key = campaignAttemptKey(worldId, level);
-    save.levelFailures[key] = clamp(Math.round(+(save.levelFailures?.[key] || 0)) + 1, 0, 99);
-  }
-
-  function campaignGenerationDifficulty(world, level) {
-    const targetDepth = levelTargetDepth(world, level);
-    if ((save.worldBest?.[world.id] || 0) >= targetDepth) return 'mixed';
-    const failures = Math.max(0, Math.round(+(save.levelFailures?.[campaignAttemptKey(world.id, level)] || 0)));
-    if (failures < 2) return 'hard';
-    if (failures < 4) return 'normal';
-    return 'easy';
   }
 
   function startDrop(options = {}) {
@@ -2116,7 +2416,7 @@
       reward: levelReward(baseWorld, level),
       endlessScale: 1
     };
-    const generationDifficulty = endless ? 'mixed' : campaignGenerationDifficulty(world, level);
+    const generationDifficulty = 'normal';
     const finishY = world.targetDepth * 10 + 180;
     const preferredCellSize = world.cellSize || BALANCE.gridCell;
     const columns = Math.max(2, Math.round(VIEW_W / preferredCellSize));
@@ -2125,7 +2425,7 @@
     const cellSize = VIEW_W / columns;
     const gridOffsetX = 0;
     const categoryVisuals = menuCategoryLevels();
-    const elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'gigantism', 'wind', 'explosion'].find(key => categoryVisuals[key] >= 3) || '';
+    const elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'explosion', 'cloning'].find(key => categoryVisuals[key] >= 3) || '';
     const slimeRadius = massRadiusForLevel(categoryVisuals.mass, cellSize);
     const startLane = fromPortal
       ? Math.floor(columns / 2)
@@ -2155,7 +2455,7 @@
       launchEntryStartedAt: fromPortal ? launchEntryStartedAt : 0,
       launchEntryUntil: fromPortal ? launchEntryStartedAt + 1200 : 0,
       portalY: finishY + cellSize * .35,
-      blocks: [], honeyZones: [], jellyZones: [], freezeZones: [], particles: [], trails: [], specialEffects: [],
+      blocks: [], flasks: [], honeyZones: [], jellyZones: [], freezeZones: [], particles: [], trails: [], specialEffects: [],
       meteorShowers: [],
       slime: {
         x: startX,
@@ -2166,6 +2466,17 @@
         wobble: 0
       },
       categoryVisuals,
+      nanoNextShotAt: [launchEntryStartedAt + 2000, launchEntryStartedAt + 2500],
+      nanoShots: [],
+      telekinesisNextAt: launchEntryStartedAt + 1500,
+      telekinesisMarks: [],
+      telekinesisCycle: null,
+      telekinesisBursts: [],
+      telekinesisThrowIndex: 0,
+      miniSlimes: [],
+      lastCloneBounceAt: 0,
+      cloneSide: 1,
+      cloneUltimate: null,
       elementalAbilityType,
       elementalAbilityCharges: elementalAbilityType ? 1 : 0,
       elementalAbilityActive: '',
@@ -2192,13 +2503,6 @@
       cosmosCometStartedAt: 0,
       cosmosCometIgnitedAt: 0,
       cosmosCometFadeUntil: 0,
-      gigantismStartedAt: 0,
-      gigantismDeflateStartedAt: 0,
-      gigantismDeflateUntil: 0,
-      windDashBlocksLeft: 0,
-      windDashUntil: 0,
-      windDashCooldownUntil: 0,
-      windBounceFlashUntil: 0,
       steer: {
         keyLeft: false, keyRight: false, keyUp: false, keyDown: false,
         touchX: 0, touchY: 0, touchDown: 0, pointerId: null,
@@ -2225,6 +2529,8 @@
       inJellyZoneId: '',
       jellyEnteredAt: 0,
       lastJellyBubbleAt: 0,
+      jellySubmergedZoneId: '',
+      jellyExitTriggeredId: '',
       inFreezeZoneId: '',
       freezeZoneEnteredAt: 0,
       freezeZoneTriggeredId: '',
@@ -2283,6 +2589,7 @@
     };
     run.blocks = generateBlockField(run);
     indexRunBlocks();
+    run.flasks = generateFlasks(run);
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
     run.freezeZones = generateFreezeZones(run);
@@ -2316,7 +2623,7 @@
     if (category === 'weak') return { tier:'dense', special:null, zone };
     if (category === 'normal') return { tier:'hard', special:null, zone };
     if (category === 'strong') return { tier:'reinforced', special:null, zone };
-    if (category === 'ore') return { tier:'ore', special:null, zone };
+    if (category === 'ore') return { tier:'dense', special:null, zone };
     const rawWorldSpecialIds = window.SlimeBalance?.specialIdsForWorld?.(world.id)
       || (world.id === 2
         ? ['heal', 'cryo']
@@ -2349,10 +2656,7 @@
     if (token === 'x') return unlocks?.hazards && levelAllows(world, level, 'hazard')
       ? { tier: 'dense', special: null, hazard: true, path: false }
       : { ...weak, path: false };
-    if ('cigd'.includes(token)) {
-      const oreByToken = { c: 'coal', i: 'iron', g: 'gold', d: 'diamond' };
-      return { tier: 'ore', special: null, hazard: false, path: true, oreId: oreByToken[token] };
-    }
+    if ('123cigd'.includes(token)) return { ...weak, dead: true, flaskTier: Number(({ c: 1, i: 2, g: 3, d: 3 })[token] || token) };
     if (token === '+') return unlocks?.medkit && levelAllows(world, level, 'heal')
       ? { tier: 'special', special: 'gel', hazard: false, path: true }
       : weak;
@@ -2437,24 +2741,16 @@
           ? authored.hazard
           : !special
             && !inPath
-            && tier !== 'ore'
             && levelAllows(world, runState.level, 'hazard')
             && Math.random() < lerp(.035, .075, progress);
         const hazardVariant = null;
         const finalTier = special ? 'special' : tier;
         const customVisuals = contentWorld(world.id)?.blocks?.filter(item => item.type === 'custom' && item.spawnType === finalTier && levelAllows(world, runState.level, item.id)) || [];
         const customVisual = customVisuals.length ? customVisuals[Math.floor(Math.random() * customVisuals.length)] : null;
-        const oreType = authored?.oreId
-          ? ORE_TYPES.find(ore => ore.id === authored.oreId) || chooseOreType(progress, world, balanced.zone)
-          : finalTier === 'ore' ? chooseOreType(progress, world, balanced.zone) : null;
         let maxHp = blockHpForTier(finalTier, world, progress, row, col, inPath);
         if (special === 'coin') maxHp *= .66;
         if (special === 'spring') maxHp = 1;
         if (special === 'boss') maxHp = 3;
-        if (oreType) {
-          const oreHits = { coal: 1, iron: 2, gold: 2, diamond: 3 };
-          maxHp = oreHits[oreType.id] || 2;
-        }
         if (hazard) maxHp = 1;
         if (special === 'bomb' || special === 'gel' || special === 'cryo' || special === 'jelly' || special === 'geyser' || special === 'meteor') maxHp = 1;
         if (special === 'spring') maxHp = 1;
@@ -2464,15 +2760,12 @@
         rowBlocks.push({
           id: id++, row, col, x: gridOffsetX + col * cell, y, w: cell, h: cell,
           hp: maxHp, maxHp, material, special, tier: finalTier, dead: Boolean(authored?.dead),
-          path: authored?.path ?? inPath, segment: meta.kind, hazard, unbreakable: hazard || special === 'jelly', hazardVariant, oreType, frozen: false, visualId: customVisual?.id || '',
+          path: authored?.path ?? inPath, segment: meta.kind, hazard, unbreakable: hazard || special === 'jelly', hazardVariant, frozen: false, visualId: customVisual?.id || '',
           environmentRemoved: authored?.environment || '',
-          researchValue: special || hazard ? 0 : researchValueForTier(finalTier, oreType),
-          researchAwarded: false,
+          flaskTier: authored?.flaskTier || 0,
           // Grass belongs only to the surface layer of World 1.
           topGrass: world.id === 1 && row === 0 && !special && finalTier === 'soft',
-          coins: oreType
-            ? Math.max(0, Math.round(GAME_BALANCE?.ores?.[oreType.id]?.coins ?? (10 + maxHp * .45) * oreType.reward))
-            : 0
+          coins: 0
         });
       }
 
@@ -2487,7 +2780,7 @@
           block.hazard = false;
           block.unbreakable = false;
           block.hazardVariant = null;
-          block.oreType = null;
+          block.flaskTier = 0;
           block.visualId = '';
           block.environmentRemoved = '';
           block.path = true;
@@ -2497,12 +2790,89 @@
           if (world.id === 4) block.material = 'ash';
           block.maxHp = block.hp = blockHpForTier(block.tier, world, progress, row, block.col, true);
           block.coins = 0;
-          block.researchValue = 1;
         }
       }
       blocks.push(...rowBlocks);
     }
     return blocks;
+  }
+
+  function generateFlasks(runState) {
+    const blocks = runState.blocks || [];
+    if (!blocks.some(block => block.flaskTier) && runState.worldId !== 1) {
+      // Later worlds use sparse temporary placements until their own sections are authored.
+      for (let row = 5, index = 0; row < Math.max(5, blocks.at(-1)?.row - 3); row += 8, index += 1) {
+        const choices = blocks.filter(block => block.row === row && block.path && !block.dead && !block.special && !block.hazard);
+        const block = choices[Math.floor(Math.random() * choices.length)];
+        if (!block) continue;
+        block.dead = true;
+        block.flaskTier = index % 5 === 4 ? 3 : index % 2 === 1 ? 2 : 1;
+      }
+    }
+    return blocks.filter(block => block.flaskTier).map(block => ({
+      id: `flask-${block.row}-${block.col}`,
+      worldId: runState.worldId,
+      tier: block.flaskTier,
+      value: FLASK_VALUES[block.flaskTier],
+      x: block.x + block.w / 2,
+      y: block.y + block.h / 2,
+      collected: false,
+      phase: block.row * .73 + block.col * 1.17
+    }));
+  }
+
+  function flaskSprite(worldId, tier) {
+    const artWorld = worldId === 3 || worldId === 4 ? worldId : 1;
+    const size = { 1: 'small', 2: 'medium', 3: 'large' }[tier] || 'small';
+    const key = `${artWorld}-${size}`;
+    if (!flaskSprites.has(key)) {
+      const image = new Image();
+      image.src = versionedAsset(`assets/collectibles/flasks/world-${key}.png`);
+      flaskSprites.set(key, image);
+    }
+    return flaskSprites.get(key);
+  }
+
+  function flaskFloatY(flask, timestamp) {
+    return flask.y + Math.sin(timestamp / 490 + flask.phase) * 3.2;
+  }
+
+  function updateFlasks(timestamp) {
+    if (!run?.flasks?.length) return;
+    for (const flask of run.flasks) {
+      if (flask.collected) continue;
+      const y = flaskFloatY(flask, timestamp);
+      if (Math.hypot(run.slime.x - flask.x, run.slime.y - y) > run.slime.radius + 14) continue;
+      flask.collected = true;
+      awardFlaskData(flask.value);
+      impact(`КОЛБА +${flask.value}`);
+      sound('coin');
+      feedback(4);
+      const color = flask.worldId === 3 ? '#ff8dd0' : flask.worldId === 4 ? '#ffb04d' : '#7df4f0';
+      for (let index = 0; index < 8; index += 1) {
+        const life = rand(.35, .65);
+        run.particles.push({ kind: 'special', shape: 'orb', x: flask.x, y,
+          vx: rand(-85, 85), vy: rand(-125, -35), gravity: 100,
+          life, maxLife: life, size: rand(2.5, 5.5), color });
+      }
+    }
+  }
+
+  function drawFlasks(timestamp) {
+    if (!run?.flasks?.length) return;
+    for (const flask of run.flasks) {
+      if (flask.collected) continue;
+      const y = flaskFloatY(flask, timestamp) - run.cameraY;
+      if (y < -50 || y > VIEW_H + 50) continue;
+      const sprite = flaskSprite(flask.worldId, flask.tier);
+      if (!sprite.complete || !sprite.naturalWidth) continue;
+      const size = Math.min(run.cellSize * (.68 + flask.tier * .045), 63);
+      ctx.save();
+      ctx.shadowColor = flask.worldId === 3 ? '#ff66b9' : flask.worldId === 4 ? '#ff873c' : '#58eaf2';
+      ctx.shadowBlur = 11;
+      ctx.drawImage(sprite, flask.x - size / 2, y - size / 2, size, size);
+      ctx.restore();
+    }
   }
 
   function generateHoneyZones(runState) {
@@ -2760,14 +3130,6 @@
     return Math.max(0, Math.round(GAME_BALANCE?.rewards?.[id] ?? fallback));
   }
 
-  function researchValueForTier(tier, oreType = null) {
-    if (oreType) return ({ coal: 2, iron: 4, gold: 6, diamond: 10 })[oreType.id] || 2;
-    if (tier === 'reinforced') return 3;
-    if (tier === 'hard') return 2;
-    if (tier === 'soft' || tier === 'dense') return 1;
-    return 0;
-  }
-
   function chooseMaterial(world, progress, special, tier = 'dense') {
     if (special) return special;
     if (tier === 'ore') return 'ore';
@@ -2779,11 +3141,6 @@
     if (progress < .28) return world.materials[0];
     if (progress < .68) return Math.random() < .72 ? world.materials[1] : world.materials[0];
     return Math.random() < .72 ? world.materials[2] : world.materials[1];
-  }
-
-  function chooseOreType(progress, world, zone) {
-    const id = weightedKey(zone?.ores, 'coal');
-    return ORE_TYPES.find(ore => ore.id === id) || ORE_TYPES[0];
   }
 
   function gameFrame(timestamp) {
@@ -2804,7 +3161,7 @@
     if (!run.lastTime) run.lastTime = timestamp;
     const dt = Math.min(.034, (timestamp - run.lastTime) / 1000);
     run.lastTime = timestamp;
-    const simulationScale = timestamp < (run.hurtSlowUntil || 0) ? .58 : 1;
+    const simulationScale = (timestamp < (run.hurtSlowUntil || 0) ? .58 : 1) * cloningTimeScale(timestamp);
     const simulationDt = dt * simulationScale;
 
     const speed = Math.hypot(run.slime.vx, run.slime.vy);
@@ -2814,6 +3171,7 @@
     const substeps = clamp(Math.ceil(speed * simulationDt / safeTravel), 1, 12);
     for (let i = 0; i < substeps; i += 1) updatePhysics(simulationDt / substeps, timestamp);
     updateElementalEffects(timestamp);
+    updateMiniSlimes(simulationDt, timestamp);
     updateMeteorShowers(timestamp);
     updateSlimeTrail(simulationDt, timestamp);
     updateParticles(simulationDt);
@@ -2907,26 +3265,49 @@
   }
 
   function jellyZoneForSlime(slime) {
-    return run?.jellyZones?.find(zone => circleRectCollision(slime, zone)) || null;
+    return run?.jellyZones?.find(zone => (zone.cells?.length ? zone.cells : [zone])
+      .some(cell => circleRectCollision(slime, cell))) || null;
   }
 
-  function jellyDiveInput() {
-    if (!run?.steer) return 0;
-    return clamp(Math.max(Number(run.steer.keyDown), run.steer.touchDown || 0), 0, 1);
+  function jellyContainsCenter(slime, zone) {
+    return (zone.cells?.length ? zone.cells : [zone]).some(cell =>
+      slime.x >= cell.x && slime.x <= cell.x + cell.w
+      && slime.y >= cell.y && slime.y <= cell.y + cell.h);
   }
 
-  function updateJellyState(slime, timestamp) {
+  function updateJellyState(slime, timestamp, previousX, previousY) {
     const zone = jellyZoneForSlime(slime);
     const previousId = run.inJellyZoneId || '';
     run.inJellyZoneId = zone?.id || '';
-    if (!zone) return;
+    if (!zone) {
+      run.jellySubmergedZoneId = '';
+      run.jellyExitTriggeredId = '';
+      return;
+    }
     if (zone.id !== previousId) {
       run.jellyEnteredAt = timestamp;
-      slime.vx *= .72;
-      slime.vy *= .48;
+      run.jellySubmergedZoneId = '';
+      run.jellyExitTriggeredId = '';
+      slime.vx *= .45;
+      slime.vy = clamp(slime.vy * .24, -55, 78);
       run.emotion = 'surprised';
       run.emotionUntil = timestamp + 420;
       feedback(4);
+    }
+    const centerInside = jellyContainsCenter(slime, zone);
+    const wasInside = jellyContainsCenter({ x: previousX, y: previousY }, zone);
+    if (centerInside) run.jellySubmergedZoneId = zone.id;
+    else if (wasInside && run.jellySubmergedZoneId === zone.id && run.jellyExitTriggeredId !== zone.id) {
+      // The center crossing the edge means half the slime has left the jelly.
+      const dx = slime.x - previousX;
+      const dy = slime.y - previousY;
+      const distance = Math.hypot(dx, dy) || 1;
+      const nx = dx / distance;
+      const ny = dy / distance;
+      slime.vx += nx * 80;
+      slime.vy += ny * (ny > .6 ? 58 : 90);
+      run.jellyExitTriggeredId = zone.id;
+      run.jellySubmergedZoneId = '';
     }
     if (timestamp - (run.lastJellyBubbleAt || 0) < 105) return;
     run.lastJellyBubbleAt = timestamp;
@@ -2981,10 +3362,9 @@
       updateGeyserCapture(dt, timestamp);
       return;
     }
-    const drillActive = speedDrillActive(timestamp) || windTornadoActive(timestamp);
+    const drillActive = speedDrillActive(timestamp);
     const frozen = !drillActive && isSlimeFrozen(timestamp);
     updateSpeedPassive(dt, timestamp);
-    updateWindDash(timestamp);
     const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
     const honeyAtStart = honeyZoneForSlime(s);
     const honeyDrag = Boolean(honeyAtStart);
@@ -3004,7 +3384,16 @@
     const speedPressure = elementalLevel('mobility') >= 1 ? run.speedPressure || 0 : 0;
     const terminalSpeed = baseTerminalSpeed * (1 + speedPressure * .5);
     if (drillActive) applySpeedDrillSteering(s, dt);
-    else {
+    else if (jellyDrag && !frozen) {
+      const steering = fallSteeringVector();
+      const jellyAge = Math.max(0, timestamp - (run.jellyEnteredAt || timestamp));
+      const targetVx = steering.x * 125;
+      const targetVy = steering.y < -.12 ? steering.y * 125
+        : steering.y > .12 ? steering.y * 135
+          : jellyAge < 220 ? 34 : 62;
+      s.vx = lerp(s.vx, targetVx, 1 - Math.exp(-6 * dt));
+      s.vy = lerp(s.vy, targetVy, 1 - Math.exp(-5.5 * dt));
+    } else {
       s.vy = clamp(s.vy + worldGravity * gravityDirection * dt, -terminalSpeed, terminalSpeed);
       applyFallSteering(s, dt, timestamp);
     }
@@ -3014,22 +3403,12 @@
     } else if (!drillActive && freezeWaterDrag && !frozen) {
       s.vx *= Math.pow(.48, dt);
       s.vy = lerp(s.vy, 86, clamp(dt * 3.8, 0, 1));
-    } else if (!drillActive && jellyDrag && !frozen) {
-      const jellyAge = Math.max(0, timestamp - (run.jellyEnteredAt || timestamp));
-      const dive = jellyDiveInput();
-      const targetVy = dive > .08
-        ? lerp(-42, 158, dive)
-        : jellyAge < 170
-          ? Math.min(52, Math.max(18, s.vy * .55))
-          : -158;
-      s.vx *= Math.pow(.56, dt);
-      s.vy = lerp(s.vy, targetVy, clamp(dt * (dive > .08 ? 4.25 : 4.9), 0, 1));
     }
     s.x += s.vx * dt;
     s.y += s.vy * dt;
     updateCosmosCometEntry(previousY, timestamp);
     updateHoneyState(s, timestamp);
-    updateJellyState(s, timestamp);
+    updateJellyState(s, timestamp, previousX, previousY);
     updateFreezeZoneState(s, timestamp);
     s.wobble += dt * (4 + Math.abs(s.vy) / 180);
 
@@ -3090,6 +3469,8 @@
       if (bounced) break;
     }
 
+    updateFlasks(timestamp);
+
     applyPortalAttraction(dt);
     const portal = getPortalGeometry();
     if (slimeTouchesPortal(s, portal) || s.y - s.radius > portal.bottom + 70) {
@@ -3112,14 +3493,12 @@
     const healthScale = 1;
     const massRadius = massRadiusForLevel(elementalLevel('mass'), run.cellSize);
     const normalRadius = massRadius * healthScale;
-    const targetRadius = gigantismRadiusAt(timestamp, normalRadius);
-    const changingGigantism = gigantismActive(timestamp) || timestamp < (run.gigantismDeflateUntil || 0);
-    s.radius = lerp(s.radius, targetRadius, clamp(dt * (changingGigantism ? 19 : 5.5), 0, 1));
+    s.radius = lerp(s.radius, normalRadius, clamp(dt * 5.5, 0, 1));
     if (run.healthFlashTime > 0) run.healthFlashTime = Math.max(0, run.healthFlashTime - dt);
 
     const speedNow = Math.hypot(s.vx, s.vy);
     if (s.vy * gravityDirection < 185) resetMassPierce();
-    if (speedNow < 34 && s.y > 180) run.lowMotionTime += dt;
+    if (!run.inJellyZoneId && speedNow < 34 && s.y > 180) run.lowMotionTime += dt;
     else run.lowMotionTime = 0;
     if (run.lowMotionTime > 1.0) {
       s.vy += 145 * gravityDirection;
@@ -3260,7 +3639,7 @@
     const steering = fallSteeringVector();
     const inputLength = Math.hypot(steering.x, steering.y);
     const currentSpeed = Math.max(1, Math.hypot(slime.vx, slime.vy));
-    const driveSpeed = windTornadoActive() ? 455 : 500;
+    const driveSpeed = 500;
     let directionX = slime.vx / currentSpeed;
     let directionY = slime.vy / currentSpeed;
     if (inputLength > .08) {
@@ -3307,32 +3686,6 @@
         feedback(7);
       }
     }
-  }
-
-  function updateWindDash(timestamp = performance.now()) {
-    if (!run) return;
-    if (run.windDashBlocksLeft > 0 && timestamp >= run.windDashUntil) {
-      run.windDashBlocksLeft = 0;
-      run.windDashUntil = 0;
-    }
-  }
-
-  function windDashActive(timestamp = performance.now()) {
-    return Boolean(run && elementalLevel('wind') >= 2 && run.windDashBlocksLeft > 0 && timestamp < run.windDashUntil);
-  }
-
-  function windDashPiercesBlock(block, timestamp = performance.now()) {
-    return Boolean(windDashActive(timestamp) && block && !block.unbreakable && !block.hazard);
-  }
-
-  function consumeWindDashBlock(timestamp = performance.now()) {
-    if (!windDashActive(timestamp)) return 0;
-    run.windDashBlocksLeft = Math.max(0, run.windDashBlocksLeft - 1);
-    if (run.windDashBlocksLeft <= 0) {
-      run.windDashUntil = 0;
-      run.windDashCooldownUntil = timestamp + 520;
-    }
-    return run.windDashBlocksLeft;
   }
 
   function speedBurstPiercesBlock(block, isFalling, timestamp = performance.now()) {
@@ -3655,36 +4008,6 @@
       }
     }
 
-    const windLevel = elementalLevel('wind');
-    if (windLevel >= 1 && !windTornadoActive(timestamp)) {
-      const beforeWind = Math.max(1, Math.hypot(slime.vx, slime.vy));
-      const windBoost = 1.13 + regularCurve * .09;
-      const boostedSpeed = Math.min(425, beforeWind * windBoost + 18);
-      slime.vx = slime.vx / beforeWind * boostedSpeed;
-      slime.vy = slime.vy / beforeWind * boostedSpeed;
-      run.windBounceFlashUntil = timestamp + 360;
-      pushElementalEffect('windBounce', slime.x, slime.y, { life: .42, maxLife: .42 });
-
-      if (windLevel >= 2
-        && boostedSpeed >= 285
-        && !windDashActive(timestamp)
-        && timestamp >= (run.windDashCooldownUntil || 0)) {
-        run.windDashBlocksLeft = 3;
-        run.windDashUntil = timestamp + 1450;
-        run.windDashCooldownUntil = timestamp + 2050;
-        const dashScale = 390 / Math.max(1, boostedSpeed);
-        if (boostedSpeed < 390) {
-          slime.vx *= dashScale;
-          slime.vy *= dashScale;
-        }
-        run.shake = Math.max(run.shake, 4.5);
-        pushElementalEffect('windDash', slime.x, slime.y, { life: .62, maxLife: .62 });
-        impact('ВОЗДУШНЫЙ РЫВОК · 3 БЛОКА');
-        sound('epic');
-        feedback([7, 11, 7]);
-      }
-    }
-
     const lockReduction = mobilityLevel >= 2 ? 10 : mobilityLevel >= 1 ? 5 : 0;
     const restoreReduction = mobilityLevel >= 2 ? 24 : mobilityLevel >= 1 ? 12 : 0;
     run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + (hazard ? 70 : 20);
@@ -3789,33 +4112,6 @@
     return Boolean(run?.elementalAbilityActive === 'mobility' && timestamp < run.elementalAbilityUntil);
   }
 
-  function windTornadoActive(timestamp = performance.now()) {
-    return Boolean(run?.elementalAbilityActive === 'wind' && timestamp < run.elementalAbilityUntil);
-  }
-
-  function gigantismActive(timestamp = performance.now()) {
-    return Boolean(run?.elementalAbilityActive === 'gigantism' && timestamp < run.elementalAbilityUntil);
-  }
-
-  function gigantismRadiusAt(timestamp, normalRadius) {
-    if (!run || elementalLevel('gigantism') < 3) return normalRadius;
-    const giantRadius = run.cellSize * 2;
-    if (gigantismActive(timestamp)) {
-      const progress = clamp((timestamp - (run.gigantismStartedAt || timestamp)) / 245, 0, 1);
-      const offset = progress - 1;
-      const inflated = 1 + 2.72 * offset * offset * offset + 1.72 * offset * offset;
-      return lerp(normalRadius, giantRadius, inflated);
-    }
-    if (timestamp < (run.gigantismDeflateUntil || 0)) {
-      const duration = Math.max(1, run.gigantismDeflateUntil - run.gigantismDeflateStartedAt);
-      const progress = clamp((timestamp - run.gigantismDeflateStartedAt) / duration, 0, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const wobble = Math.sin(progress * Math.PI * 5) * (1 - progress) * normalRadius * .16;
-      return Math.max(normalRadius, lerp(giantRadius, normalRadius, eased) + wobble);
-    }
-    return normalRadius;
-  }
-
   function massRadiusForLevel(level, cellSize = BALANCE.gridCell) {
     if (level >= 2) return cellSize * .88;
     if (level >= 1) return cellSize * .66;
@@ -3872,29 +4168,291 @@
     });
   }
 
-  function transferGigantismOverflow(source, amount, timestamp = performance.now()) {
-    if (!source || amount <= 0 || elementalLevel('gigantism') < 2) return false;
-    const candidates = nearbyGridBlocks(source, block => elementalDamageable(block)
-      && !block.hazard
-      && !block.special
-      && block.tier !== 'ore')
-      .sort((a, b) => {
-        const score = block => (block.row > source.row ? 100 : block.row === source.row ? 35 : 0)
-          - Math.abs(block.col - source.col) * 18
-          + block.row;
-        return score(b) - score(a);
-      });
-    const target = candidates[0];
-    if (!target) return false;
-    const from = blockCenter(source);
-    const to = blockCenter(target);
-    pushElementalEffect('gigantismOverflow', from.x, from.y, { toX: to.x, toY: to.y, amount });
-    damageBlockByElement(target, amount, 'gigantismOverflow', timestamp);
-    return true;
-  }
-
   function elementalDamageable(block) {
     return Boolean(block && !block.dead && !block.unbreakable && !block.hazard);
+  }
+
+  const NANO_DRONE_SPRITE = 'assets/ui/nano-drone-v1.png';
+  const NANO_SHOT_SPRITE = 'assets/ui/nano-blaster-shot-v1.png';
+  const NANO_SHOT_INTERVAL_MS = 2000;
+
+  function nanoDronePosition(index, timestamp) {
+    const slime = run.slime;
+    const side = elementalLevel('nano') >= 2 && index === 0 ? -1 : 1;
+    const desiredX = slime.x + side * (slime.radius + 19);
+    const x = clamp(desiredX, 17, VIEW_W - 17);
+    const edgeLift = Math.abs(desiredX - x) > 4 ? slime.radius * .52 : 0;
+    return {
+      x,
+      y: slime.y - slime.radius * .38 - edgeLift + Math.sin(timestamp / 330 + index * 2.2) * 3
+    };
+  }
+
+  function updateNanoDrones(timestamp) {
+    if (!run || run.ended) return;
+    run.nanoShots = (run.nanoShots || []).filter(shot => timestamp - shot.startedAt < 380);
+    const droneCount = Math.min(2, elementalLevel('nano'));
+    for (let index = 0; index < droneCount; index += 1) {
+      if (timestamp < run.nanoNextShotAt[index]) continue;
+      run.nanoNextShotAt[index] = timestamp + NANO_SHOT_INTERVAL_MS;
+      const origin = nanoDronePosition(index, timestamp);
+      const target = run.blocks
+        .filter(block => elementalDamageable(block) && !block.special
+          && block.y + block.h / 2 > origin.y + 8
+          && block.y - origin.y < run.cellSize * 3.5
+          && Math.abs(block.x + block.w / 2 - origin.x) < run.cellSize * 1.2)
+        .sort((a, b) => {
+          const score = block => (block.y - origin.y) + Math.abs(block.x + block.w / 2 - origin.x) * .7;
+          return score(a) - score(b);
+        })[0];
+      if (!target) continue;
+      const center = blockCenter(target);
+      run.nanoShots.push({ fromX: origin.x, fromY: origin.y + 11, toX: center.x, toY: center.y, startedAt: timestamp });
+      damageBlockByElement(target, 1, 'nano', timestamp);
+    }
+  }
+
+  const TELEKINESIS_INTERVAL_MS = 1500;
+  const TELEKINESIS_THROW_INTERVAL_MS = 2700;
+  const TELEKINESIS_PULL_START_MS = 180;
+  const TELEKINESIS_RECOIL_START_MS = 720;
+  const TELEKINESIS_THROW_START_MS = 930;
+  const TELEKINESIS_IMPACT_MS = 1450;
+  const TELEKINESIS_THROW_OFFSETS = [0, -.82, .88, -.42, .5];
+
+  function telekinesisCandidates() {
+    const minY = run.slime.y + run.slime.radius * .75;
+    const maxY = run.cameraY + VIEW_H - 18;
+    return run.blocks.filter(block => {
+      if (!elementalDamageable(block) || block.special) return false;
+      const centerY = block.y + block.h / 2;
+      return centerY > minY && centerY < maxY && block.x + block.w > 0 && block.x < VIEW_W;
+    });
+  }
+
+  function startTelekinesisCycle(timestamp, level) {
+    const candidates = telekinesisCandidates();
+    const selected = [];
+    for (let index = 0; index < 2 && candidates.length; index += 1) {
+      selected.push(candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0]);
+    }
+    run.telekinesisNextAt = timestamp + (level >= 2 ? TELEKINESIS_THROW_INTERVAL_MS : TELEKINESIS_INTERVAL_MS);
+    if (!selected.length) return;
+    run.telekinesisMarks = selected.map(block => ({
+      x: block.x, y: block.y, w: block.w, h: block.h, startedAt: timestamp,
+      duration: level >= 2 ? 260 : 420
+    }));
+    if (level < 2) {
+      for (const block of selected) damageBlockByElement(block, 1, 'telekinesisMark', timestamp);
+      return;
+    }
+    run.telekinesisCycle = {
+      startedAt: timestamp,
+      projectiles: selected.map((block, index) => ({
+        block,
+        visual: { ...block },
+        source: blockCenter(block),
+        side: block.x + block.w / 2 < run.slime.x ? -1 : 1,
+        delay: index * 160,
+        detached: false,
+        launched: false,
+        impacted: false,
+        target: null,
+        launchFrom: null
+      }))
+    };
+  }
+
+  function launchTelekinesisProjectile(projectile, timestamp) {
+    const slime = run.slime;
+    const offset = TELEKINESIS_THROW_OFFSETS[run.telekinesisThrowIndex % TELEKINESIS_THROW_OFFSETS.length];
+    run.telekinesisThrowIndex += 1;
+    const desiredX = clamp(slime.x + offset * run.cellSize, run.cellSize / 2, VIEW_W - run.cellSize / 2);
+    const impactBlock = run.blocks
+      .filter(block => elementalDamageable(block) && !block.special
+        && block.y + block.h / 2 > slime.y + slime.radius
+        && block.y + block.h / 2 < run.cameraY + VIEW_H - 10)
+      .sort((a, b) => {
+        const score = block => Math.abs(block.x + block.w / 2 - desiredX) * 1.3
+          + Math.abs(block.y + block.h / 2 - (slime.y + run.cellSize * 2.5)) * .5;
+        return score(a) - score(b);
+      })[0];
+    projectile.target = impactBlock
+      ? { ...blockCenter(impactBlock), row: impactBlock.row, col: impactBlock.col }
+      : { x: desiredX, y: Math.min(run.cameraY + VIEW_H - 20, slime.y + run.cellSize * 2.6), row: null, col: null };
+    projectile.launchFrom = {
+      x: slime.x + projectile.side * (slime.radius + 22),
+      y: slime.y - slime.radius * .2 - 12
+    };
+    projectile.launched = true;
+  }
+
+  function impactTelekinesisProjectile(projectile, timestamp) {
+    const target = projectile.target;
+    if (!target) return;
+    run.telekinesisBursts.push({ x: target.x, y: target.y, startedAt: timestamp });
+    if (target.row != null && target.col != null) {
+      const affected = run.blocks.filter(block => elementalDamageable(block) && !block.special
+        && Math.abs(block.row - target.row) + Math.abs(block.col - target.col) <= 1);
+      for (const block of affected) damageBlockByElement(block, 1, 'telekinesisBlast', timestamp);
+    }
+    run.shake = Math.max(run.shake, 2.3);
+  }
+
+  function updateTelekinesis(timestamp) {
+    if (!run || run.ended) return;
+    run.telekinesisMarks = run.telekinesisMarks.filter(mark => timestamp - mark.startedAt < mark.duration);
+    run.telekinesisBursts = run.telekinesisBursts.filter(burst => timestamp - burst.startedAt < 330);
+    const level = elementalLevel('telekinesis');
+    if (!level || run.portalEntry) return;
+    const cycle = run.telekinesisCycle;
+    if (cycle) {
+      for (const projectile of cycle.projectiles) {
+        const elapsed = timestamp - cycle.startedAt - projectile.delay;
+        if (elapsed >= TELEKINESIS_PULL_START_MS && !projectile.detached) {
+          if (!projectile.block.dead) {
+            damageBlockByElement(projectile.block, 1, 'telekinesisLift', timestamp);
+            if (!projectile.block.dead) destroyBlock(projectile.block, 'telekinesisLift', timestamp);
+          }
+          projectile.detached = true;
+        }
+        if (elapsed >= TELEKINESIS_THROW_START_MS && !projectile.launched) launchTelekinesisProjectile(projectile, timestamp);
+        if (elapsed >= TELEKINESIS_IMPACT_MS && !projectile.impacted) {
+          impactTelekinesisProjectile(projectile, timestamp);
+          projectile.impacted = true;
+        }
+      }
+      if (cycle.projectiles.every(projectile => projectile.impacted)) run.telekinesisCycle = null;
+      return;
+    }
+    if (timestamp >= run.telekinesisNextAt) startTelekinesisCycle(timestamp, level);
+  }
+
+  const MAX_MINI_SLIMES = 20;
+  const CLONE_ULTIMATE_BURST_MS = 540;
+
+  function cloningTimeScale(timestamp) {
+    if (!run?.cloneUltimate) return 1;
+    const age = timestamp - run.cloneUltimate.startedAt;
+    if (age < 420) return lerp(1, .24, clamp(age / 420, 0, 1));
+    if (age < CLONE_ULTIMATE_BURST_MS) return .24;
+    return lerp(.24, 1, clamp((age - CLONE_ULTIMATE_BURST_MS) / 280, 0, 1));
+  }
+
+  function cloneSplash(x, y, count = 7, force = 1) {
+    const amount = Math.max(2, Math.round(count * effectDensity()));
+    for (let index = 0; index < amount; index += 1) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = rand(45, 155) * force;
+      const life = rand(.3, .58);
+      run.particles.push({
+        kind: 'special', shape: 'orb', x, y,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 30,
+        gravity: 185, life, maxLife: life, size: rand(2.3, 4.5),
+        color: index % 3 === 0 ? '#d8ffb1' : index % 2 ? '#4be878' : '#89f59b'
+      });
+    }
+  }
+
+  function spawnMiniSlime(angle, speed, bounces, sourceBlockId, timestamp) {
+    if (run.miniSlimes.length >= MAX_MINI_SLIMES) run.miniSlimes.shift();
+    const slime = run.slime;
+    const radius = Math.max(10, run.cellSize * .185);
+    run.miniSlimes.push({
+      x: slime.x + Math.cos(angle) * (slime.radius * .72),
+      y: slime.y + Math.sin(angle) * (slime.radius * .72),
+      vx: Math.cos(angle) * speed + slime.vx * .08,
+      vy: Math.sin(angle) * speed + slime.vy * .06,
+      radius, bouncesLeft: bounces, sourceBlockId,
+      ignoreSourceUntil: timestamp + 170, ignoreBlockId: '', ignoreBlockUntil: 0,
+      bornAt: timestamp, life: bounces === 2 ? 3.5 : 2.7, dead: false
+    });
+  }
+
+  function spawnImpactClones(block, collision, timestamp) {
+    const level = elementalLevel('cloning');
+    if (!level || run.portalEntry || run.ended || timestamp - run.lastCloneBounceAt < 100
+      || (run.elementalAbilityActive === 'cloning' && timestamp < run.elementalAbilityUntil)) return;
+    run.lastCloneBounceAt = timestamp;
+    const sides = level >= 2 ? [-1, 1] : [Math.abs(collision.nx) > .3 ? Math.sign(collision.nx) : run.cloneSide];
+    run.cloneSide *= -1;
+    for (const side of sides) {
+      const angle = side < 0 ? Math.PI + rand(-.24, .24) : rand(-.24, .24);
+      spawnMiniSlime(angle, rand(225, 275), 1, block.id, timestamp);
+    }
+    cloneSplash(run.slime.x, run.slime.y, level >= 2 ? 11 : 7);
+  }
+
+  function updateCloningUltimate(timestamp) {
+    const ultimate = run.cloneUltimate;
+    if (!ultimate) return;
+    const age = timestamp - ultimate.startedAt;
+    if (!ultimate.fired && age >= CLONE_ULTIMATE_BURST_MS) {
+      ultimate.fired = true;
+      if (run.miniSlimes.length > 5) run.miniSlimes.splice(0, run.miniSlimes.length - 5);
+      for (let index = 0; index < 15; index += 1) {
+        const angle = -Math.PI / 2 + index * Math.PI * 2 / 15 + rand(-.055, .055);
+        spawnMiniSlime(angle, rand(235, 285), 2, ultimate.sourceBlockId, timestamp);
+      }
+      cloneSplash(run.slime.x, run.slime.y, 32, 1.55);
+      run.shake = Math.max(run.shake, 5);
+      feedback([8, 17, 8]);
+    }
+    if (age > 1250) run.cloneUltimate = null;
+  }
+
+  function miniCloneCollision(mini, timestamp) {
+    const origin = run.blockRowOrigin || 190;
+    const firstRow = Math.floor((mini.y - mini.radius - 3 - origin) / run.cellSize) - 1;
+    const lastRow = Math.floor((mini.y + mini.radius + 3 - origin) / run.cellSize) + 1;
+    for (let row = firstRow; row <= lastRow; row += 1) {
+      for (const block of run.blocksByRow.get(row) || []) {
+        if (block.dead || block.x >= mini.x + mini.radius || block.x + block.w <= mini.x - mini.radius) continue;
+        if (block.id === mini.sourceBlockId && timestamp < mini.ignoreSourceUntil) continue;
+        if (block.id === mini.ignoreBlockId && timestamp < mini.ignoreBlockUntil) continue;
+        const collision = circleRectCollision(mini, block);
+        if (collision) return { block, collision };
+      }
+    }
+    return null;
+  }
+
+  function updateMiniSlimes(dt, timestamp) {
+    if (!run?.miniSlimes?.length) return;
+    for (const mini of run.miniSlimes) {
+      if (mini.dead) continue;
+      mini.life -= dt;
+      if (mini.life <= 0) { mini.dead = true; continue; }
+      mini.vy += 165 * dt;
+      const steps = Math.min(4, Math.max(1, Math.ceil(Math.hypot(mini.vx, mini.vy) * dt / (mini.radius * .8))));
+      const stepDt = dt / steps;
+      for (let step = 0; step < steps && !mini.dead; step += 1) {
+        mini.x += mini.vx * stepDt;
+        mini.y += mini.vy * stepDt;
+        if (mini.x < -mini.radius || mini.x > VIEW_W + mini.radius
+          || mini.y < run.cameraY - 50 || mini.y > run.cameraY + VIEW_H + 70) {
+          mini.dead = true;
+          break;
+        }
+        const hit = miniCloneCollision(mini, timestamp);
+        if (!hit) continue;
+        const { block, collision } = hit;
+        cloneSplash(mini.x, mini.y, 5, .6);
+        if (block.hazard || block.unbreakable) { mini.dead = true; break; }
+        damageBlockByElement(block, 1, 'cloning', timestamp);
+        if (mini.bouncesLeft <= 0) { mini.dead = true; break; }
+        mini.bouncesLeft -= 1;
+        mini.x += collision.nx * (collision.penetration + 4);
+        mini.y += collision.ny * (collision.penetration + 4);
+        const inward = mini.vx * collision.nx + mini.vy * collision.ny;
+        mini.vx = (mini.vx - 2 * inward * collision.nx) * .88;
+        mini.vy = (mini.vy - 2 * inward * collision.ny) * .88 - 20;
+        mini.ignoreBlockId = block.id;
+        mini.ignoreBlockUntil = timestamp + 145;
+        break;
+      }
+    }
+    run.miniSlimes = run.miniSlimes.filter(mini => !mini.dead);
   }
 
   function frostFreezable(block) {
@@ -4246,6 +4804,9 @@
     if (!run || run.ended) return;
 
     updateBlackHoleSuction(timestamp);
+    updateNanoDrones(timestamp);
+    updateTelekinesis(timestamp);
+    updateCloningUltimate(timestamp);
 
     for (const block of run.blocks) {
       if (block.dead || !block.fireDamageAt || timestamp < block.fireDamageAt) continue;
@@ -4259,15 +4820,6 @@
       run.elementalAbilityActive = '';
       run.elementalAbilityNextTickAt = 0;
       if (active === 'mass') resetMassPierce();
-      if (active === 'gigantism') {
-        run.gigantismDeflateStartedAt = timestamp;
-        run.gigantismDeflateUntil = timestamp + 620;
-        run.emotion = 'surprised';
-        run.emotionUntil = timestamp + 620;
-        pushElementalEffect('gigantismDeflate', run.slime.x, run.slime.y, { life: .72, maxLife: .72 });
-        impact('ПШ-Ш-Ш… ОБРАТНО!');
-        feedback([5, 8, 4]);
-      }
       return;
     }
     if (timestamp < run.elementalAbilityNextTickAt) return;
@@ -4305,11 +4857,6 @@
     } else if (active === 'mobility') {
       run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, run.elementalAbilityUntil);
       run.elementalAbilityNextTickAt = timestamp + 90;
-    } else if (active === 'wind') {
-      run.elementalAbilityNextTickAt = timestamp + 70;
-    } else if (active === 'gigantism') {
-      run.slime.vy = Math.max(170, run.slime.vy);
-      run.elementalAbilityNextTickAt = timestamp + 70;
     } else {
       run.elementalAbilityNextTickAt = timestamp + 180;
     }
@@ -4317,7 +4864,8 @@
 
   function resolveBlockHit(block, collision, timestamp = performance.now()) {
     const s = run.slime;
-    const drillActive = speedDrillActive(timestamp) || windTornadoActive(timestamp);
+    const drillActive = speedDrillActive(timestamp);
+    if (!block.dead) spawnImpactClones(block, collision, timestamp);
 
     const fireLevel = elementalLevel('fire');
     const electricLevel = elementalLevel('electric');
@@ -4340,10 +4888,7 @@
     const tierData = BLOCK_TIERS[block.tier] || BLOCK_TIERS.dense;
     const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
     const unbreakable = Boolean(block.unbreakable);
-    const gigantismLevel = elementalLevel('gigantism');
-    const gigantismPowered = gigantismActive(timestamp);
-    let damage = gigantismLevel >= 1 && !block.special && block.tier !== 'ore' ? 2 : 1;
-    if (gigantismPowered) damage = Math.max(damage, 3);
+    let damage = 1;
     prepareMassPierce(impactSpeed, isFalling);
     const frostLevel = elementalLevel('frost');
     if (frostLevel >= 1 && frostFreezable(block) && !block.elementalSnow && !block.elementalSnowflake && block.hp > 1) {
@@ -4376,12 +4921,9 @@
     if (massPiercing) damage = hpBefore;
     const speedBurstPiercing = speedBurstPiercesBlock(block, isFalling, timestamp);
     if (speedBurstPiercing) damage = hpBefore;
-    const windDashPiercing = windDashPiercesBlock(block, timestamp);
-    if (windDashPiercing) damage = hpBefore;
     const drillPiercing = drillActive && !unbreakable;
     if (drillPiercing) damage = hpBefore;
-    const gigantismOverflow = gigantismLevel >= 2 ? Math.max(0, damage - hpBefore) : 0;
-    const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || massPiercing || speedBurstPiercing || windDashPiercing || drillPiercing || damage >= hpBefore);
+    const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || massPiercing || speedBurstPiercing || drillPiercing || damage >= hpBefore);
     let healthLoss = 0;
     if (frozenSlime || breaksOnTouch) healthLoss = 0;
     if (healthLoss > 0 && timestamp < run.damageInvulnerableUntil) healthLoss = 0;
@@ -4418,12 +4960,10 @@
       }
       else resetCombo();
       destroyBlock(block, 'impact', timestamp);
-      if (gigantismOverflow > 0) transferGigantismOverflow(block, gigantismOverflow, timestamp);
       if (cosmosBoosted) consumeCosmosBoostBlock(timestamp);
       if (geyserPiercing) run.geyserBreaksLeft = Math.max(0, run.geyserBreaksLeft - 1);
       const speedBurstBlocksLeft = speedBurstPiercing ? consumeSpeedBurstBlock(timestamp) : -1;
-      const windDashBlocksLeft = windDashPiercing ? consumeWindDashBlock(timestamp) : -1;
-      if (!drillPiercing && !speedBurstPiercing && !windDashPiercing && !cosmosBoosted) {
+      if (!drillPiercing && !speedBurstPiercing && !cosmosBoosted) {
         const drag = block.tier === 'soft' ? BALANCE.weakBreakDrag : BALANCE.denseBreakDrag;
         const travelDirection = Math.sign(s.vy) || gravityDirection;
         s.vy = massPiercing
@@ -4433,17 +4973,11 @@
       } else if (cosmosBoosted && run.cosmosBoostBlocksLeft > 0) {
         s.vy = Math.max(440, Math.abs(s.vy));
         s.vx *= .96;
-      } else if (windDashPiercing && windDashBlocksLeft > 0) {
-        const speed = Math.max(1, Math.hypot(s.vx, s.vy));
-        const keptSpeed = Math.max(390, speed);
-        s.vx = s.vx / speed * keptSpeed;
-        s.vy = s.vy / speed * keptSpeed;
       }
       let keep = block.tier === 'soft' ? BALANCE.flightKeepSoft : block.tier === 'dense' || block.tier === 'special' || block.tier === 'ore' ? BALANCE.flightKeepDense : BALANCE.flightKeepHard;
       run.flightDistance *= keep;
 
       if (speedBurstPiercing) impact(speedBurstBlocksLeft > 0 ? `БУР-РЫВОК · ЕЩЁ ${speedBurstBlocksLeft}` : 'БУР-РЫВОК');
-      else if (windDashPiercing) impact(windDashBlocksLeft > 0 ? `ВОЗДУШНЫЙ РЫВОК · ЕЩЁ ${windDashBlocksLeft}` : 'ВОЗДУШНЫЙ РЫВОК');
       else if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
       else if (!block.special && run.comboCount < 2) impact('ПРОБОЙ · БЕЗ УРОНА');
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
@@ -4486,10 +5020,10 @@
     if (!block || block.dead || block.pandoraOpened) return false;
     block.pandoraOpened = true;
     block.dead = true;
-    const choices = ['meteor', 'bomb', 'heal', 'coins', 'shield']
+    const choices = ['meteor', 'bomb', 'heal', 'shield']
       .filter(type => type !== 'heal' || run.health < run.maxHealth)
       .filter(type => type !== 'shield' || run.barrier < Math.max(20, run.shield));
-    const effect = choices[Math.floor(Math.random() * choices.length)] || 'coins';
+    const effect = choices[Math.floor(Math.random() * choices.length)] || 'meteor';
     const x = block.x + block.w / 2;
     const y = block.y + block.h / 2;
     spawnSpecialBurst('pandora', x, y);
@@ -4507,17 +5041,6 @@
       run.barrier = Math.max(run.barrier, Math.max(25, run.shield));
       run.barrierFlashUntil = timestamp + 900;
       spawnSpecialBurst('shieldBurst', run.slime.x, run.slime.y);
-    } else {
-      const jackpot = 35 + (run.level || 1) * 10;
-      run.coins += jackpot;
-      for (let index = 0; index < 12; index += 1) {
-        run.particles.push({
-          kind: 'special', shape: 'orb', x, y,
-          vx: rand(-155, 155), vy: rand(-220, -85), gravity: 260,
-          life: rand(.55, .92), maxLife: .92, size: rand(3, 6),
-          color: index % 2 ? '#ffe36d' : '#fff8ca'
-        });
-      }
     }
     run.emotion = 'surprised';
     run.emotionUntil = timestamp + 520;
@@ -4625,15 +5148,9 @@
     block.dead = true;
     run.blocksDestroyed += 1;
     registerBrokenBlock(block);
-    const reward = block.coins * run.comboMultiplier * run.coinMultiplier * (wasGolden ? 2 : 1);
-    run.coins += reward;
-    createDebris(block, block.special === 'geyser' ? 0 : block.special === 'bomb' ? 8 : 9, true);
+    if (cause !== 'telekinesisLift') createDebris(block, block.special === 'geyser' ? 0 : block.special === 'bomb' ? 8 : 9, true);
 
-    if (block.tier === 'ore' || block.frozenOre) {
-      const ore = block.oreType || ORE_TYPES[0];
-      const oreReward = Math.round(reward);
-      impact(`${ore.label} +${oreReward}`);
-    } else if (block.special === 'coin') {
+    if (block.special === 'coin') {
       impact('БЛОК РАЗРУШЕН');
     } else if (block.special === 'gel') {
       spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
@@ -4674,7 +5191,6 @@
   }
 
   function registerBrokenBlock(block) {
-    awardResearchData(block);
     if (!run?.effects?.breakHealEveryFive) return;
     run.blocksBrokenForHeal += 1;
     if (run.blocksBrokenForHeal % 5 !== 0) return;
@@ -4682,10 +5198,9 @@
     healRun(5, '5-Й СЛОМАННЫЙ БЛОК');
   }
 
-  function awardResearchData(block) {
-    if (!run || !block || block.researchAwarded) return 0;
-    block.researchAwarded = true;
-    const amount = Math.max(0, Math.round(block.researchValue || 0));
+  function awardFlaskData(value) {
+    if (!run) return 0;
+    const amount = Math.max(0, Math.round(value || 0));
     if (!amount) return 0;
     run.researchData += amount;
     if (els.runResearchScore) els.runResearchScore.textContent = run.researchData.toLocaleString('ru-RU');
@@ -5106,31 +5621,6 @@
       pullBlocksIntoBlackHole(timestamp);
       run.shake = Math.max(run.shake, 5);
       impact('ЧЁРНАЯ ДЫРА · 3с');
-    } else if (type === 'gigantism') {
-      run.gigantismStartedAt = timestamp;
-      run.gigantismDeflateStartedAt = 0;
-      run.gigantismDeflateUntil = 0;
-      run.slime.vx *= .72;
-      run.slime.vy = Math.max(235, run.slime.vy);
-      run.shake = Math.max(run.shake, 8);
-      run.emotion = 'surprised';
-      run.emotionUntil = timestamp + 360;
-      pushElementalEffect('gigantismPulse', run.slime.x, run.slime.y, { life: .68, maxLife: .68 });
-      impact('ГИГАНТИЗМ · 3с');
-    } else if (type === 'wind') {
-      run.windDashBlocksLeft = 0;
-      run.windDashUntil = 0;
-      run.freezeUntil = Math.min(run.freezeUntil || timestamp, timestamp);
-      const steering = fallSteeringVector();
-      const inputLength = Math.hypot(steering.x, steering.y);
-      const currentSpeed = Math.max(1, Math.hypot(run.slime.vx, run.slime.vy));
-      const directionX = inputLength > .08 ? steering.x / inputLength : run.slime.vx / currentSpeed;
-      const directionY = inputLength > .08 ? steering.y / inputLength : run.slime.vy / currentSpeed;
-      run.slime.vx = directionX * 455;
-      run.slime.vy = directionY * 455;
-      run.shake = Math.max(run.shake, 6);
-      pushElementalEffect('windTornadoStart', run.slime.x, run.slime.y, { life: .72, maxLife: .72 });
-      impact('УПРАВЛЯЕМОЕ ТОРНАДО · 3с');
     } else if (type === 'gold') {
       run.goldRushUntil = run.elementalAbilityUntil;
       pushElementalEffect('coinArc', run.slime.x, run.slime.y, { toX: run.slime.x, toY: run.slime.y + run.cellSize * 1.8 });
@@ -5138,6 +5628,12 @@
     } else if (type === 'explosion') {
       pushElementalEffect('categoryBlast', run.slime.x, run.slime.y, { damage: 2 });
       impact('ЦЕПНАЯ РЕАКЦИЯ · 3с');
+    } else if (type === 'cloning') {
+      run.cloneUltimate = { startedAt: timestamp, fired: false, sourceBlockId: '' };
+      run.emotion = 'power';
+      run.emotionUntil = timestamp + CLONE_ULTIMATE_BURST_MS;
+      run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+      impact('КЛОНИРОВАНИЕ · ЗАЛП');
     } else if (type === 'mass') {
       resetMassPierce();
       run.massPierceTriggered = true;
@@ -5232,8 +5728,6 @@
         electric: 'ЧИСТАЯ ЭНЕРГИЯ',
         fire: 'ЖИВОЕ ПЛАМЯ',
         cosmos: 'ЧЁРНАЯ ДЫРА',
-        gigantism: 'ГИГАНТИЗМ',
-        wind: 'ТОРНАДО',
         gold: 'ЗОЛОТАЯ ЛИХОРАДКА',
         explosion: 'ЦЕПНАЯ РЕАКЦИЯ',
         mass: 'ТЯЖЁЛЫЙ РЫВОК',
@@ -5244,8 +5738,6 @@
         electric: 'emblem-v2-electric.png',
         fire: 'emblem-v2-fire.png',
         cosmos: 'emblem-v2-cosmos.png',
-        gigantism: 'emblem-v2-gigantism.png',
-        wind: 'emblem-v2-wind.png',
         gold: 'gold-aligned.png',
         explosion: 'emblem-v2-explosion.png',
         mass: 'weight-aligned.png',
@@ -5310,9 +5802,11 @@
 
     // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions(visibleBlocks);
+    drawFlasks(timestamp);
     drawGeyserCapture(timestamp);
     drawMeteorShowers(timestamp);
     drawSpecialEffects(false);
+    drawTelekinesis(timestamp);
 
     for (const p of run.particles) {
       const sy = p.y - run.cameraY;
@@ -5375,7 +5869,10 @@
     ctx.globalAlpha = 1;
 
     drawSelectedTrail(timestamp);
+    drawCloningCharge(timestamp);
     drawSlime(timestamp);
+    drawMiniSlimes(timestamp);
+    drawNanoDrones(timestamp);
     drawHoneyZones(timestamp, true);
     drawJellyZones(timestamp, true);
     drawFreezeZones(timestamp, true);
@@ -7529,14 +8026,15 @@
   }
 
   function menuCategoryLevels() {
-    const levels = { fire: 0, frost: 0, electric: 0, cosmos: 0, gigantism: 0, wind: 0, explosion: 0, mass: 0 };
+    const levels = { fire: 0, frost: 0, electric: 0, cosmos: 0, nano: 0, telekinesis: 0, cloning: 0, explosion: 0, mass: 0 };
     const familyToCategory = {
       fire: 'fire', damage: 'fire',
       frost: 'frost', ice: 'frost',
       electric: 'electric', electricity: 'electric',
       cosmos: 'cosmos', space: 'cosmos', gravity: 'cosmos',
-      gigantism: 'gigantism', giant: 'gigantism',
-      wind: 'wind', tornado: 'wind',
+      nano: 'nano',
+      telekinesis: 'telekinesis',
+      cloning: 'cloning',
       blast: 'explosion', explosion: 'explosion'
     };
     for (const food of session?.foods || []) {
@@ -7551,7 +8049,7 @@
   function syncMenuCategoryVisuals({ instant = false } = {}) {
     const levels = menuCategoryLevels();
     const now = performance.now();
-    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'gigantism', 'wind', 'explosion', 'mass']) {
+    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'explosion', 'mass']) {
       menuCategoryVisual[`${key}From`] = instant ? levels[key] : menuCategoryVisual[key];
       menuCategoryVisual[`${key}Target`] = levels[key];
       menuCategoryVisual[`${key}StartedAt`] = now;
@@ -7560,16 +8058,16 @@
   }
 
   function updateMenuCategoryVisuals(timestamp) {
-    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'gigantism', 'wind', 'explosion', 'mass']) {
+    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'explosion', 'mass']) {
       const from = menuCategoryVisual[`${key}From`];
       const target = menuCategoryVisual[`${key}Target`];
       if (menuReducedMotion || Math.abs(target - from) < .001) {
         menuCategoryVisual[key] = target;
         continue;
       }
-      const duration = key === 'mass' || key === 'gigantism' ? 620 : key === 'frost' ? 600 : key === 'electric' ? 520 : 540;
+      const duration = key === 'mass' ? 620 : key === 'frost' ? 600 : key === 'electric' ? 520 : 540;
       const progress = clamp((timestamp - menuCategoryVisual[`${key}StartedAt`]) / duration, 0, 1);
-      const eased = key === 'mass' || key === 'gigantism'
+      const eased = key === 'mass'
         ? 1 + 1.25 * Math.pow(progress - 1, 3) + .25 * Math.pow(progress - 1, 2)
         : 1 - Math.pow(1 - progress, 3);
       menuCategoryVisual[key] = from + (target - from) * eased;
@@ -7964,8 +8462,7 @@
     frost: '#48cfff',
     cosmos: '#b45cff',
     electric: '#ffd83d',
-    fire: '#ff7426',
-    wind: '#42d9bd'
+    fire: '#ff7426'
   });
 
   function drawUltraFormAccents(target, x, y, radius, form, amount, timestamp) {
@@ -8004,18 +8501,6 @@
         target.lineWidth = Math.max(1.2, radius * .014);
         target.beginPath(); target.moveTo(px - size, py); target.lineTo(px + size, py); target.moveTo(px, py - size); target.lineTo(px, py + size); target.stroke();
       }
-    } else if (form === 'wind') {
-      target.strokeStyle = '#dffff8';
-      target.lineWidth = Math.max(1.4, radius * .018);
-      for (let index = 0; index < 3; index += 1) {
-        const offset = ((phase * .34 + index * .36) % 1) * radius * .7;
-        const py = y - radius * .38 + index * radius * .39;
-        target.globalAlpha = amount * (.32 + index * .12);
-        target.beginPath();
-        target.moveTo(x - radius * 1.12 + offset, py);
-        target.bezierCurveTo(x - radius * .72 + offset, py - radius * .1, x - radius * .48 + offset, py + radius * .1, x - radius * .15 + offset, py);
-        target.stroke();
-      }
     }
     target.restore();
   }
@@ -8029,7 +8514,6 @@
       frost: frostLevel,
       electric: electricLevel,
       cosmos: clamp(Number(levels?.cosmos) || 0, 0, 3),
-      wind: clamp(Number(levels?.wind) || 0, 0, 3),
       explosion: clamp(Number(levels?.explosion) || 0, 0, 3)
     };
     const hybridForm = Object.keys(formLevels).find(form => formLevels[form] > 1) || '';
@@ -8128,7 +8612,7 @@
     const blinkPhase = timestamp % 4700;
     const selected = skinById(save.selectedSkin);
     const baseRadius = 70;
-    const radius = baseRadius * (1 + categoryVisual.mass * .1 + categoryVisual.gigantism * .035);
+    const radius = baseRadius * (1 + categoryVisual.mass * .1);
     const restingBottom = 157;
     const slimeY = restingBottom - radius * .98;
     drawElementalSlimeAvatar(menuSlimeCtx, {
@@ -8141,6 +8625,12 @@
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
       timestamp
     }, categoryVisual, timestamp);
+    const nanoCount = Math.min(2, Math.round(categoryVisual.nano));
+    for (let index = 0; index < nanoCount; index += 1) {
+      const side = nanoCount === 1 ? 1 : index === 0 ? -1 : 1;
+      drawNanoDroneSprite(menuSlimeCtx, 90 + side * 68,
+        slimeY - 17 + Math.sin(timestamp / 340 + index * 2.2) * 3, 46);
+    }
   }
 
   function menuSlimeFrame(timestamp) {
@@ -8423,55 +8913,6 @@
     ctx.restore();
   }
 
-  function drawWindMotionVisual(timestamp, x, y, radius, speed, front = false) {
-    const level = elementalLevel('wind');
-    if (level < 1 || run.portalEntry || windTornadoActive(timestamp)) return;
-    const flash = timestamp < (run.windBounceFlashUntil || 0)
-      ? clamp((run.windBounceFlashUntil - timestamp) / 360, 0, 1)
-      : 0;
-    const dash = windDashActive(timestamp);
-    const strength = Math.max(flash * .72, clamp((speed - 155) / 245, 0, 1), dash ? 1 : 0);
-    if (strength < .04) return;
-    const velocity = Math.max(1, Math.hypot(run.slime.vx, run.slime.vy));
-    const dx = run.slime.vx / velocity;
-    const dy = run.slime.vy / velocity;
-    const tx = -dy;
-    const ty = dx;
-    const tail = radius * (.55 + strength * (dash ? 2.3 : 1.25));
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.lineCap = 'round';
-    if (!front) {
-      for (let streak = 0; streak < (dash ? 9 : 5); streak += 1) {
-        const side = streak - (dash ? 4 : 2);
-        const spread = side * radius * .19;
-        const wobble = Math.sin(timestamp / 75 + streak * 1.7) * radius * .08;
-        const startX = x + tx * spread - dx * radius * .35;
-        const startY = y + ty * spread - dy * radius * .35;
-        ctx.globalAlpha = strength * (.26 + (streak % 3) * .1);
-        ctx.strokeStyle = streak % 3 ? '#75eafa' : '#eaffff';
-        ctx.lineWidth = dash ? 3.2 : 2;
-        ctx.shadowColor = '#2bcbe6';
-        ctx.shadowBlur = dash ? 11 : 6;
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.quadraticCurveTo(startX - dx * tail * .5 + tx * wobble, startY - dy * tail * .5 + ty * wobble, startX - dx * tail, startY - dy * tail);
-        ctx.stroke();
-      }
-    } else {
-      ctx.globalAlpha = strength * (dash ? .72 : .38);
-      ctx.strokeStyle = dash ? '#eaffff' : '#8eeefa';
-      ctx.lineWidth = dash ? 4.2 : 2.4;
-      ctx.shadowColor = '#22cde9';
-      ctx.shadowBlur = dash ? 14 : 7;
-      const angle = Math.atan2(dy, dx);
-      ctx.beginPath();
-      ctx.arc(x, y, radius * (1.04 + strength * .08), angle - Math.PI * .62, angle + Math.PI * .62);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
   function cosmosCometVisualStrength(timestamp) {
     if (!run || elementalLevel('cosmos') < 2 || run.portalEntry) return 0;
     if (cosmosBoostActive()) return 1;
@@ -8574,6 +9015,237 @@
     ctx.restore();
   }
 
+  function drawTelekinesis(timestamp) {
+    if (!run.telekinesisMarks.length && !run.telekinesisCycle && !run.telekinesisBursts.length) return;
+    ctx.save();
+    for (const mark of run.telekinesisMarks) {
+      const progress = clamp((timestamp - mark.startedAt) / mark.duration, 0, 1);
+      const sy = mark.y - run.cameraY;
+      ctx.globalAlpha = (1 - progress) * .88;
+      ctx.shadowColor = '#72f5db';
+      ctx.shadowBlur = 10;
+      ctx.strokeStyle = '#b4ffec';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(mark.x + 4, sy + 4, mark.w - 8, mark.h - 8);
+      ctx.fillStyle = 'rgba(51,225,181,.16)';
+      ctx.fillRect(mark.x + 4, sy + 4, mark.w - 8, mark.h - 8);
+    }
+    ctx.shadowBlur = 0;
+    const cycle = run.telekinesisCycle;
+    if (cycle) for (const projectile of cycle.projectiles) {
+      const elapsed = timestamp - cycle.startedAt - projectile.delay;
+      if (elapsed < 0 || projectile.impacted) continue;
+      const source = projectile.source;
+      let x = source.x;
+      let y = source.y;
+      let scale = 1;
+      let rotation = 0;
+      if (elapsed >= TELEKINESIS_PULL_START_MS) {
+        const catchX = run.slime.x + projectile.side * (run.slime.radius + 12);
+        const catchY = run.slime.y - run.slime.radius * .2;
+        if (elapsed < TELEKINESIS_RECOIL_START_MS) {
+          const t = clamp((elapsed - TELEKINESIS_PULL_START_MS) / (TELEKINESIS_RECOIL_START_MS - TELEKINESIS_PULL_START_MS), 0, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          x = lerp(source.x, catchX, eased);
+          y = lerp(source.y, catchY, eased) - Math.sin(t * Math.PI) * 9;
+          scale = lerp(1, .31, eased);
+          rotation = t * projectile.side * .32;
+        } else if (elapsed < TELEKINESIS_THROW_START_MS) {
+          const t = (elapsed - TELEKINESIS_RECOIL_START_MS) / (TELEKINESIS_THROW_START_MS - TELEKINESIS_RECOIL_START_MS);
+          x = catchX + projectile.side * t * 10;
+          y = catchY - t * 12;
+          scale = .31 - t * .035;
+          rotation = projectile.side * (.32 + t * .12);
+        } else if (projectile.target && projectile.launchFrom) {
+          const t = clamp((elapsed - TELEKINESIS_THROW_START_MS) / (TELEKINESIS_IMPACT_MS - TELEKINESIS_THROW_START_MS), 0, 1);
+          const eased = t * t;
+          x = lerp(projectile.launchFrom.x, projectile.target.x, eased) + Math.sin(t * Math.PI) * projectile.side * 8;
+          y = lerp(projectile.launchFrom.y, projectile.target.y, eased) - Math.sin(t * Math.PI) * 10;
+          scale = lerp(.275, .42, t);
+          rotation = projectile.side * (.44 + t * 1.1);
+        }
+      }
+      if (elapsed < TELEKINESIS_PULL_START_MS && !projectile.block.dead) continue;
+      const screenY = y - run.cameraY;
+      const orbStrength = clamp((elapsed - TELEKINESIS_PULL_START_MS) / 420, 0, 1);
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.shadowColor = '#54edca';
+      ctx.shadowBlur = elapsed >= TELEKINESIS_RECOIL_START_MS ? 16 : 9;
+      ctx.fillStyle = elapsed >= TELEKINESIS_RECOIL_START_MS ? 'rgba(25,105,93,.44)' : 'rgba(45,215,184,.22)';
+      ctx.beginPath(); ctx.arc(x, screenY, Math.max(11, projectile.visual.w * scale * .61), 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.translate(x, screenY);
+      ctx.rotate(rotation);
+      ctx.scale(scale, scale);
+      ctx.translate(-source.x, -(source.y - run.cameraY));
+      ctx.globalAlpha = 1 - orbStrength * .9;
+      drawBlock(projectile.visual, projectile.visual.y - run.cameraY, timestamp);
+      ctx.restore();
+      if (orbStrength > 0) {
+        const orbRadius = Math.max(6, projectile.visual.w * scale * .54);
+        ctx.save();
+        ctx.globalAlpha = orbStrength * .92;
+        ctx.shadowColor = '#67efd4';
+        ctx.shadowBlur = 6 + orbStrength * 7;
+        const orbColor = ctx.createRadialGradient(x - orbRadius * .3, screenY - orbRadius * .35, 1, x, screenY, orbRadius);
+        orbColor.addColorStop(0, '#83ffe1');
+        orbColor.addColorStop(.38, '#184d52');
+        orbColor.addColorStop(1, '#102536');
+        ctx.fillStyle = orbColor;
+        ctx.strokeStyle = '#8dffe0';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(x, screenY, orbRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+    }
+    for (const burst of run.telekinesisBursts) {
+      const t = clamp((timestamp - burst.startedAt) / 330, 0, 1);
+      const sy = burst.y - run.cameraY;
+      const radius = run.cellSize * (0.38 + t * 1.1);
+      ctx.globalAlpha = (1 - t) * .8;
+      ctx.strokeStyle = '#80f5d8';
+      ctx.lineWidth = 4 - t * 2.5;
+      ctx.shadowColor = '#4de6c6';
+      ctx.shadowBlur = 11;
+      ctx.beginPath(); ctx.arc(burst.x, sy, radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = (1 - t) * .13;
+      ctx.fillStyle = '#55e9c7';
+      const cell = run.cellSize;
+      for (const [col, row] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        ctx.fillRect(burst.x + (col - .5) * cell, sy + (row - .5) * cell, cell, cell);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawNanoDroneSprite(target, x, y, size, alpha = 1) {
+    const sprite = projectSprite(NANO_DRONE_SPRITE);
+    target.save();
+    target.globalAlpha = alpha;
+    if (sprite?.complete && sprite.naturalWidth) {
+      target.drawImage(sprite, x - size / 2, y - size / 2, size, size);
+    } else {
+      target.fillStyle = '#c8faff';
+      target.strokeStyle = '#154953';
+      target.lineWidth = 2;
+      target.beginPath(); target.arc(x, y, size * .31, 0, Math.PI * 2); target.fill(); target.stroke();
+      target.fillStyle = '#34dae8';
+      target.beginPath(); target.arc(x, y, size * .12, 0, Math.PI * 2); target.fill();
+    }
+    target.restore();
+  }
+
+  function drawNanoDrones(timestamp) {
+    const count = Math.min(2, elementalLevel('nano'));
+    if (!count) return;
+    const shotSprite = projectSprite(NANO_SHOT_SPRITE);
+    ctx.save();
+    for (const shot of run.nanoShots || []) {
+      const progress = clamp((timestamp - shot.startedAt) / 340, 0, 1);
+      const x = shot.fromX + (shot.toX - shot.fromX) * progress;
+      const y = shot.fromY + (shot.toY - shot.fromY) * progress - run.cameraY;
+      const angle = Math.atan2(shot.toY - shot.fromY, shot.toX - shot.fromX);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.globalAlpha = progress < .82 ? 1 : 1 - (progress - .82) / .18;
+      ctx.shadowColor = '#68f6ff';
+      ctx.shadowBlur = 8;
+      if (shotSprite?.complete && shotSprite.naturalWidth) {
+        ctx.drawImage(shotSprite, -18, -8, 36, 16);
+      } else {
+        const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 18);
+        glow.addColorStop(0, '#efffff');
+        glow.addColorStop(.45, '#64f5ff');
+        glow.addColorStop(1, 'rgba(39,205,231,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.ellipse(0, 0, 18, 8, 0, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+      if (progress > .78) {
+        ctx.globalAlpha = (1 - progress) * 3.2;
+        ctx.strokeStyle = '#65eaf2';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(shot.toX, shot.toY - run.cameraY, 4 + (progress - .78) * 25, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    ctx.restore();
+    for (let index = 0; index < count; index += 1) {
+      const position = nanoDronePosition(index, timestamp);
+      drawNanoDroneSprite(ctx, position.x, position.y - run.cameraY, 46,
+        run.portalEntry ? clamp(1 - (timestamp - run.portalEntry.startedAt) / run.portalEntry.duration, 0, 1) : 1);
+    }
+  }
+
+  let miniSlimeSprite = null;
+
+  function getMiniSlimeSprite() {
+    if (miniSlimeSprite) return miniSlimeSprite;
+    const canvas = document.createElement('canvas');
+    canvas.width = 96;
+    canvas.height = 96;
+    const spriteCtx = canvas.getContext('2d');
+    if (!spriteCtx) return null;
+    drawSlimeAvatar(spriteCtx, {
+      x: 48, y: 48, radius: 35, skin: 'classic', colors: SKINS[0].colors,
+      emotion: 'joy', timestamp: performance.now()
+    });
+    miniSlimeSprite = canvas;
+    return canvas;
+  }
+
+  function drawCloningCharge(timestamp) {
+    const ultimate = run.cloneUltimate;
+    if (!ultimate) return;
+    const age = timestamp - ultimate.startedAt;
+    const slime = run.slime;
+    const sy = slime.y - run.cameraY;
+    ctx.save();
+    if (age < CLONE_ULTIMATE_BURST_MS) {
+      const t = clamp(age / CLONE_ULTIMATE_BURST_MS, 0, 1);
+      const radius = slime.radius * (1.25 + t * .55);
+      const glow = ctx.createRadialGradient(slime.x, sy, slime.radius * .4, slime.x, sy, radius);
+      glow.addColorStop(0, `rgba(202,255,162,${.08 + t * .15})`);
+      glow.addColorStop(.65, `rgba(87,236,112,${.13 + t * .2})`);
+      glow.addColorStop(1, 'rgba(69,216,102,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(slime.x, sy, radius, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = `rgba(173,255,182,${.25 + t * .4})`;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.arc(slime.x, sy, slime.radius * (1.12 + t * .28), 0, Math.PI * 2); ctx.stroke();
+    } else {
+      const t = clamp((age - CLONE_ULTIMATE_BURST_MS) / 390, 0, 1);
+      ctx.globalAlpha = (1 - t) * .72;
+      ctx.strokeStyle = '#adffac';
+      ctx.lineWidth = 4 - t * 2;
+      ctx.beginPath(); ctx.arc(slime.x, sy, slime.radius * (.8 + t * 2.2), 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawMiniSlimes(timestamp) {
+    if (!run.miniSlimes?.length) return;
+    const sprite = getMiniSlimeSprite();
+    for (const mini of run.miniSlimes) {
+      const sy = mini.y - run.cameraY;
+      if (sy < -40 || sy > VIEW_H + 40) continue;
+      const pop = clamp((timestamp - mini.bornAt) / 140, 0, 1);
+      const size = mini.radius * 2.7 * (.35 + .65 * (1 - Math.pow(1 - pop, 3)));
+      ctx.save();
+      ctx.translate(mini.x, sy);
+      ctx.rotate(clamp(mini.vx / 1300, -.3, .3));
+      ctx.shadowColor = '#75f795';
+      ctx.shadowBlur = 5;
+      if (sprite) ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+      else {
+        ctx.fillStyle = '#72ec75';
+        ctx.beginPath(); ctx.arc(0, 0, mini.radius, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
   function drawSlime(timestamp) {
     const s = run.slime;
     const screenY = s.y - run.cameraY;
@@ -8601,18 +9273,11 @@
     const bounceSquash = clamp(Math.sin(s.wobble) * .025 + Math.abs(s.vx) / 1700, 0, .12);
     const scaleX = frozen ? 1 : 1 - stretch * .42 + bounceSquash;
     const scaleY = frozen ? 1 : 1 + stretch - bounceSquash * .55;
-    const gigantismInflateProgress = gigantismActive(timestamp)
-      ? clamp((timestamp - (run.gigantismStartedAt || timestamp)) / 245, 0, 1)
-      : 1;
-    const gigantismInflateSquash = gigantismInflateProgress < 1
-      ? Math.sin(gigantismInflateProgress * Math.PI) * .13
-      : 0;
-    const gigantismDeflateProgress = timestamp < (run.gigantismDeflateUntil || 0)
-      ? clamp((timestamp - run.gigantismDeflateStartedAt) / Math.max(1, run.gigantismDeflateUntil - run.gigantismDeflateStartedAt), 0, 1)
-      : 1;
-    const gigantismDeflateWobble = gigantismDeflateProgress < 1
-      ? Math.sin(gigantismDeflateProgress * Math.PI * 5) * (1 - gigantismDeflateProgress) * .12
-      : 0;
+    const cloneChargeAge = run.cloneUltimate ? timestamp - run.cloneUltimate.startedAt : 0;
+    const cloneCharge = run.cloneUltimate && !run.cloneUltimate.fired
+      ? clamp(cloneChargeAge / CLONE_ULTIMATE_BURST_MS, 0, 1) : 0;
+    const cloneRelease = run.cloneUltimate?.fired
+      ? 1 - clamp((cloneChargeAge - CLONE_ULTIMATE_BURST_MS) / 240, 0, 1) : 0;
     const radius = s.radius;
     const emotion = frozen
       ? run.frozenEmotion
@@ -8721,9 +9386,9 @@
         : hurtActive && hurtPulse > .32
           ? ['#fff1f0', '#ff7377', '#cf3347']
           : selected.colors,
-      scaleX: scaleX * (1 + gigantismInflateSquash + gigantismDeflateWobble) * portalScale * launchScale,
-      scaleY: scaleY * (1 - gigantismInflateSquash * .45 - gigantismDeflateWobble * .6) * portalScale * launchScale,
-      rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.8 + gigantismDeflateWobble * .22,
+      scaleX: scaleX * (1 - cloneCharge * .16 + cloneRelease * .19) * portalScale * launchScale,
+      scaleY: scaleY * (1 + cloneCharge * .13 - cloneRelease * .12) * portalScale * launchScale,
+      rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.8,
       alpha: (run.portalEntry ? Math.pow(1 - vanishProgress, .72) : 1) * launchAlpha,
       timestamp
     };
@@ -8748,11 +9413,9 @@
         : 0,
       electricFlash: electricAbilityActive ? clamp(1 - electricAbilityElapsed / 280, 0, 1) : 0
     };
-    if (!frozen) drawWindMotionVisual(timestamp, s.x, screenY, fireRadius, speed, false);
     if (!frozen) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, false);
     drawElementalSlimeAvatar(ctx, avatarOptions, elementalVisuals, timestamp);
     if (!frozen) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, true);
-    if (!frozen) drawWindMotionVisual(timestamp, s.x, screenY, fireRadius, speed, true);
     drawActiveElementalAbility(timestamp, s.x, screenY, fireRadius);
     if (!run.portalEntry && timestamp < (run.gravitySwitchFlashUntil || 0)) {
       const progress = clamp((run.gravitySwitchFlashUntil - timestamp) / 620, 0, 1);
@@ -8911,12 +9574,15 @@
     run.portalTransitioning = false;
     run.blocks = generateBlockField(run);
     indexRunBlocks();
+    run.flasks = generateFlasks(run);
     run.honeyZones = generateHoneyZones(run);
     run.jellyZones = generateJellyZones(run);
     run.freezeZones = generateFreezeZones(run);
     run.inJellyZoneId = '';
     run.jellyEnteredAt = 0;
     run.lastJellyBubbleAt = 0;
+    run.jellySubmergedZoneId = '';
+    run.jellyExitTriggeredId = '';
     run.inFreezeZoneId = '';
     run.freezeZoneEnteredAt = 0;
     run.freezeZoneTriggeredId = '';
@@ -8942,7 +9608,7 @@
     resetCombo();
     updateRunUI();
     sound('coin');
-    showToast(`КРУГ ${completedLap} · +${formatCompactNumber(lapReward)} МОНЕТ`);
+    showToast(`КРУГ ${completedLap}`);
     run.animationId = requestAnimationFrame(gameFrame);
   }
 
@@ -8952,26 +9618,20 @@
     const level = clamp(Math.round(run.level || 1), 1, LEVEL_COUNT);
     save.levelFailures[campaignAttemptKey(world.id, level)] = 0;
     save.worldBest[world.id] = Math.max(save.worldBest[world.id] || 0, world.targetDepth);
-    if (level < LEVEL_COUNT) {
-      save.unlockedLevels[world.id] = Math.max(save.unlockedLevels[world.id] || 1, level + 1);
-      save.selectedLevels[world.id] = level + 1;
-    } else {
-      save.unlockedLevels[world.id] = LEVEL_COUNT;
-      const unlockedSkin = { 1: 'cat', 3: 'dumpling' }[world.id];
-      if (unlockedSkin && !save.unlockedSkins.includes(unlockedSkin)) save.unlockedSkins.push(unlockedSkin);
-      const activeIndex = ACTIVE_WORLD_IDS.indexOf(world.id);
-      const nextWorldId = ACTIVE_WORLD_IDS[activeIndex + 1];
-      if (nextWorldId) {
-        save.world = nextWorldId;
-        save.selectedLevels[nextWorldId] = 1;
-      }
-    }
-    run.isFinalCompletion = world.id === ACTIVE_WORLD_IDS[ACTIVE_WORLD_IDS.length - 1] && level === LEVEL_COUNT;
+    save.unlockedLevels[world.id] = LEVEL_COUNT;
+    save.worldTrophies[world.id] = Math.max(0, save.worldTrophies[world.id] || 0) + 1;
+    const activeIndex = ACTIVE_WORLD_IDS.indexOf(world.id);
+    const nextWorldId = ACTIVE_WORLD_IDS[activeIndex + 1];
+    const unlockedNextWorld = Boolean(nextWorldId && save.worldTrophies[world.id] >= 10 && !save.unlockedWorlds.includes(nextWorldId));
+    if (unlockedNextWorld) save.unlockedWorlds.push(nextWorldId);
+    const unlockedSkin = { 1: 'cat', 3: 'dumpling' }[world.id];
+    if (unlockedSkin && !save.unlockedSkins.includes(unlockedSkin)) save.unlockedSkins.push(unlockedSkin);
+    run.isFinalCompletion = world.id === ACTIVE_WORLD_IDS[ACTIVE_WORLD_IDS.length - 1];
     if (run.isFinalCompletion) save.gameCompleted = true;
     sound('win');
-    endRun(true, level < LEVEL_COUNT
-      ? `Уровень ${level} пройден! Открыт уровень ${level + 1}.`
-      : `Все уровни мира «${world.name}» пройдены!`);
+    endRun(true, unlockedNextWorld
+      ? `Мир «${world.name}» пройден! Получен кубок. Следующий мир открыт!`
+      : `Мир «${world.name}» пройден! Получен кубок.`);
   }
 
   function finishWorld() {
@@ -8985,7 +9645,7 @@
 
   function finishRunEarly() {
     if (!run || run.ended) return;
-    endRun(false, 'Уровень завершён вручную. Полученная награда сохранена.');
+    endRun(false, 'Забег завершён вручную. Полученная награда сохранена.');
   }
 
   function formatResultMultiplier(value) {
@@ -9166,9 +9826,8 @@
 
     modal?.classList.remove('result-reveal-pending');
     modal?.classList.add('result-reveal-ready');
-    els.resultMultiplierBtn.disabled = false;
+    els.resultMultiplierBtn.disabled = true;
     els.continueBtn.disabled = false;
-    startResultMeter(true);
   }
 
   function calculateEndlessScore(currentRun) {
@@ -9196,9 +9855,9 @@
       save.endlessBestDepth[run.worldId] = Math.max(save.endlessBestDepth[run.worldId] || 0, Math.max(0, Math.floor(run.maxDepth)));
       save.endlessRuns[run.worldId] = Math.max(0, Math.floor(save.endlessRuns[run.worldId] || 0)) + 1;
     } else {
-      if (!completed) registerCampaignFailure(run.worldId, run.level);
       save.worldBest[run.worldId] = Math.max(save.worldBest[run.worldId] || 0, Math.min(run.maxDepth, run.world.targetDepth));
       save.lastRunDepth[`${run.worldId}:${run.level}`] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
+      save.worldLastRun[run.worldId] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
     }
     const baseCoins = Math.max(0, Math.floor(run.coins));
     const researchData = Math.max(0, Math.floor(run.researchData || 0));
@@ -9209,9 +9868,8 @@
     save.researchProgress = researchTotal % 100;
     run.researchUnitsAfter = save.researchUnits;
     run.researchProgressAfter = save.researchProgress;
-    save.coins += baseCoins;
-    run.awardedCoins = baseCoins;
-    run.finalCoins = baseCoins;
+    run.awardedCoins = 0;
+    run.finalCoins = 0;
     run.rewardClaimed = false;
     run.rewardPending = false;
     run.rewardMultiplier = 1;
@@ -9228,7 +9886,7 @@
     els.resultBadge.textContent = run.endless
       ? '∞ БЕСКОНЕЧНЫЙ ЗАБЕГ'
       : completed
-      ? (run.level >= LEVEL_COUNT ? 'МИР ПРОЙДЕН' : `УРОВЕНЬ ${run.level} ПРОЙДЕН`)
+      ? 'МИР ПРОЙДЕН'
       : 'ЗАБЕГ ОКОНЧЕН';
     els.resultTitle.textContent = run.endless ? 'Бесконечный забег' : 'Результат забега';
     els.resultText.textContent = reason;
@@ -9241,14 +9899,14 @@
     els.resultMultiplierBtn.disabled = true;
     els.resultMultiplierBtn.innerHTML = '<span class="result-ad-play" aria-hidden="true">▶</span><span>УМНОЖИТЬ НАГРАДУ</span>';
     els.continueBtn.disabled = true;
-    els.continueBtn.textContent = 'Продолжить без множителя';
+    els.continueBtn.textContent = 'Продолжить';
     els.resultOverlay.classList.remove('hidden', 'is-arriving');
     syncInteractionLayers();
     const revealToken = ++resultRevealToken;
     requestAnimationFrame(() => {
       els.resultOverlay.classList.add('is-arriving');
       els.resultOverlay.querySelector('.modal')?.focus();
-      revealResultSummary(researchData, baseCoins, revealToken);
+      revealResultSummary(researchData, completed && !run.endless ? 1 : 0, revealToken);
     });
     if (!completed) sound('fail');
   }
@@ -9275,7 +9933,6 @@
       }
       run.rewardClaimed = true;
       run.finalCoins = totalCoins;
-      save.coins = Math.max(0, save.coins + totalCoins - run.awardedCoins);
       persist();
       animateResultCoins(run.awardedCoins, totalCoins);
       els.resultOverlay.querySelector('.result-modal')?.classList.add('reward-claimed');
@@ -9349,8 +10006,8 @@
     if (session?.foods?.length) return showToast('Прокачивайся до начала кормления');
     if (level >= data.max) return;
     const cost = upgradeCost(key);
-    if (save.coins < cost) return showToast('Не хватает монет');
-    save.coins -= cost;
+    if (save.researchUnits < cost) return showToast('Не хватает колб исследования');
+    save.researchUnits -= cost;
     save[key] += 1;
     sound('coin');
     renderDraft();
@@ -9482,9 +10139,10 @@
       if (mutation.future) return `<button class="mutation-collection-slot future locked" type="button" disabled aria-label="Неизвестная будущая мутация"><i>?</i><b>???</b></button>`;
       const available = availableIds.has(mutation.id);
       const equipped = activePool.includes(mutation.id);
-      const replaceTarget = laboratoryReplaceMode && equipped && mutation.id !== selectedMutation.id;
-      return `<button class="mutation-collection-slot ${available ? 'unlocked' : 'locked'} ${selectedMutation.id === mutation.id ? 'selected' : ''} ${equipped ? 'equipped' : ''} ${replaceTarget ? 'replace-target' : ''}${mutation.name.length > 9 ? ' long-name' : ''}" type="button" ${available ? `data-lab-mutation="${mutation.id}"` : 'disabled'} aria-label="${available ? mutation.name : 'Неизвестная мутация'}">
-        ${available ? `<img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b>${equipped ? '<em>АКТИВНА</em>' : ''}` : '<i>?</i><b>???</b>'}
+      const replaceTarget = laboratoryReplaceMode && equipped;
+      const canSelect = available && (!laboratoryReplaceMode || replaceTarget);
+      return `<button class="mutation-collection-slot ${available ? 'unlocked' : 'locked'} ${selectedMutation.id === mutation.id ? 'selected' : ''} ${equipped ? 'equipped' : ''} ${replaceTarget ? 'replace-target' : ''}${mutation.name.length > 9 ? ' long-name' : ''}" type="button" ${canSelect ? `data-lab-mutation="${mutation.id}"` : 'disabled'} aria-label="${available ? `${mutation.name}${equipped ? '. Активная мутация' : ''}` : 'Неизвестная мутация'}">
+        ${available ? `<img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b>${equipped ? '<span class="mutation-equipped-mark" aria-hidden="true">✓</span>' : ''}` : '<i>?</i><b>???</b>'}
       </button>`;
     }).join('');
 
@@ -9503,6 +10161,13 @@
 
     const stageOneIcons = `<img src="${versionedAsset(selectedMutation.image)}" alt="">`;
     const stageTwoIcons = `${stageOneIcons}${stageOneIcons}`;
+    const selectedEmblemFx = selectedMutation.id === 'cosmos'
+      ? `<span class="mutation-gravity-particles" aria-hidden="true">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span>`
+      : selectedMutation.id === 'nano'
+        ? `<span class="mutation-nano-drones" aria-hidden="true"><img src="${versionedAsset(NANO_DRONE_SPRITE)}" alt=""><img src="${versionedAsset(NANO_DRONE_SPRITE)}" alt=""></span>`
+        : selectedMutation.id === 'cloning'
+          ? `<span class="mutation-clone-echoes" aria-hidden="true"><img src="${versionedAsset(selectedMutation.image)}" alt=""><img src="${versionedAsset(selectedMutation.image)}" alt=""></span>`
+          : mutationElementFxMarkup(selectedMutation.id, 'mutation-info-fx');
     const machineHint = allUnlocked
       ? 'ВСЕ МУТАЦИИ ОТКРЫТЫ'
       : readyToReveal
@@ -9541,18 +10206,17 @@
         </section>
 
         <section class="mutation-info-pane mutation-family-${selectedMutation.id}" aria-label="Информация о мутации ${selectedMutation.name}">
-          <span class="mutation-info-emblem">${mutationElementFxMarkup(selectedMutation.id, 'mutation-info-fx')}<img src="${versionedAsset(selectedMutation.image)}" alt=""></span>
+          <span class="mutation-info-emblem"><span class="mutation-emblem-halo" aria-hidden="true"></span>${selectedEmblemFx}<img src="${versionedAsset(selectedMutation.image)}" alt=""></span>
           <h3>${selectedMutation.name}</h3>
           <div class="mutation-stage-list">
-            <article><span class="mutation-stage-number">1</span><span class="mutation-stage-icons">${stageOneIcons}</span><p>${selectedDetails.stage1}</p></article>
-            <article><span class="mutation-stage-number">2</span><span class="mutation-stage-icons">${stageTwoIcons}</span><p>${selectedDetails.stage2}</p></article>
+            <article aria-label="Один значок мутации"><span class="mutation-stage-icons">${stageOneIcons}</span><p>${selectedDetails.stage1}</p></article>
+            <article aria-label="Два значка мутации"><span class="mutation-stage-icons">${stageTwoIcons}</span><p>${selectedDetails.stage2}</p></article>
           </div>
-          <button id="mutationChooseBtn" class="mutation-choose-btn" type="button" ${selectedIsActive ? 'disabled' : ''}>${selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</button>
-          <p id="mutationReplaceHint" class="mutation-replace-hint ${laboratoryReplaceMode ? 'visible' : ''}">${laboratoryReplaceMode ? 'Нажми на мигающую активную мутацию снизу, чтобы заменить её.' : 'Выбранные мутации появляются в воронках конвейера.'}</p>
+          <button id="mutationChooseBtn" class="mutation-choose-btn ${laboratoryReplaceMode ? 'is-cancel' : ''}" type="button" aria-pressed="${laboratoryReplaceMode}" ${selectedIsActive ? 'disabled' : ''}><span>${selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</span></button>
         </section>
       </div>
       <div class="mutation-collection-head"><b>МУТАЦИИ</b><span>${visibleUnlockedCount}/${collectionCapacity}</span></div>
-      <div id="mutationCollection" class="mutation-collection mutation-collection-v2">${collection}</div>
+      <div id="mutationCollection" class="mutation-collection mutation-collection-v2 ${laboratoryReplaceMode ? 'is-replacing' : ''}">${collection}</div>
     </div>`;
 
     const capsuleButton = $('#mutationCapsuleBtn');
@@ -9857,7 +10521,7 @@
       return;
     }
     pendingMutationReveal = mutation;
-    const synthColors = MUTATION_SYNTH_COLORS[mutation.id] || MUTATION_SYNTH_COLORS.gigantism;
+    const synthColors = MUTATION_SYNTH_COLORS[mutation.id] || MUTATION_SYNTH_COLORS.nano;
     button.style.removeProperty('--mutation-liquid-filter');
     button.style.setProperty('--mutation-result-glow', synthColors.glow);
     button.classList.add('has-result-color');
@@ -9931,7 +10595,8 @@
     prize.id = 'mutationPrize';
     prize.className = `mutation-prize mutation-family-${mutation.id}`;
     prize.type = 'button';
-    prize.innerHTML = `<small>НОВАЯ МУТАЦИЯ</small><span class="mutation-prize-emblem">${mutationElementFxMarkup(mutation.id, 'mutation-prize-fx')}<img src="${versionedAsset(mutation.image)}" alt=""></span><b>${mutation.name}</b><span>НАЖМИ, ЧТОБЫ ЗАБРАТЬ</span>`;
+    prize.style.setProperty('--prize-art', `url("${versionedAsset(MUTATION_REVEAL_BACKGROUNDS[mutation.id])}")`);
+    prize.innerHTML = `<small>НОВАЯ МУТАЦИЯ</small><span class="mutation-prize-emblem"><span class="mutation-emblem-halo" aria-hidden="true"></span>${mutationRevealFxMarkup(mutation)}<img src="${versionedAsset(mutation.image)}" alt=""></span><b>${mutation.name}</b><span class="mutation-prize-cta">НАЖМИ, ЧТОБЫ ЗАБРАТЬ</span>`;
     prize.setAttribute('aria-label', `Новая мутация: ${mutation.name}. Нажми, чтобы добавить в коллекцию`);
     const modal = els.panelOverlay.querySelector('.panel-modal');
     modal?.appendChild(prize);
@@ -9942,7 +10607,7 @@
   async function collectSynthesizedMutation(token, mutation, prize) {
     if (!mutation || !prize || prize.classList.contains('is-collecting')) return;
     const target = $(`[data-mutation-slot="${mutation.id}"]`);
-    const prizeImage = prize.querySelector('img');
+    const prizeImage = prize.querySelector('.mutation-prize-emblem > img');
     let prizeFlyer = null;
     if (target && prizeImage) {
       const sourceRect = prizeImage.getBoundingClientRect();
@@ -9995,7 +10660,7 @@
           return `<div class="upgrade-card">
             <div class="upgrade-icon">${uiIconMarkup(data.icon, 'panel-ui-icon')}</div>
             <div><h4>${data.name} · ур. ${level}/${data.max}</h4><p>${data.description}</p></div>
-            <button class="buy-btn ${maxed ? 'owned' : ''}" data-upgrade="${key}">${maxed ? 'МАКС' : `● ${formatCompactNumber(cost)}`}</button>
+            <button class="buy-btn ${maxed ? 'owned' : ''}" data-upgrade="${key}">${maxed ? 'МАКС' : `⚗ ${formatCompactNumber(cost)}`}</button>
           </div>`;
         }).join('')}
       </div>`;
@@ -10041,7 +10706,7 @@
         if (unlockedByWorld && !save.unlockedSkins.includes(skin.id)) save.unlockedSkins.push(skin.id);
         const unlocked = save.unlockedSkins.includes(skin.id);
         const selected = save.selectedSkin === skin.id;
-        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/coin.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
+        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
         const reward = skin.world ? `<span class="shop-reward ${unlocked ? 'collected' : ''}"><b>${unlocked ? 'ПОЛУЧЕН' : 'НАГРАДА'}</b><i>МИР ${Math.max(1, skin.world - 1)}</i></span>` : '';
         const label = selected ? 'ВЫБРАН' : unlocked ? 'ВЫБРАТЬ' : skin.cost ? 'КУПИТЬ' : 'ЗАКРЫТ';
         return `<div class="skin-card ${selected ? 'selected' : ''}">
@@ -10108,7 +10773,7 @@
       ${TRAILS.map(trail => {
         const unlocked = save.unlockedTrails.includes(trail.id);
         const selected = save.selectedTrail === trail.id;
-        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/coin.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(trail.cost)}</b></span>` : '';
+        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt="" aria-hidden="true"><b>${formatCompactNumber(trail.cost)}</b></span>` : '';
         const previewAsset = trail.id === 'none' ? 'assets/ui/trail-none.png' : trail.asset;
         return `<div class="trail-card ${selected ? 'selected' : ''}">
           <div class="trail-preview"><img src="${versionedAsset(previewAsset)}" alt="" aria-hidden="true" loading="eager" decoding="async"></div>
@@ -10124,8 +10789,8 @@
     const trail = TRAILS.find(item => item.id === id) || TRAILS[0];
     const unlocked = save.unlockedTrails.includes(trail.id);
     if (!unlocked && trail.cost) {
-      if (save.coins < trail.cost) return showToast('Не хватает монет');
-      save.coins -= trail.cost;
+      if (save.researchUnits < trail.cost) return showToast('Не хватает колб исследования');
+      save.researchUnits -= trail.cost;
       save.unlockedTrails.push(trail.id);
       sound('coin');
     } else sound('tap');
@@ -10139,8 +10804,8 @@
     const skin = skinById(id);
     const unlocked = save.unlockedSkins.includes(id);
     if (!unlocked && skin.cost) {
-      if (save.coins < skin.cost) return showToast('Не хватает монет');
-      save.coins -= skin.cost;
+      if (save.researchUnits < skin.cost) return showToast('Не хватает колб исследования');
+      save.researchUnits -= skin.cost;
       save.unlockedSkins.push(id);
     } else if (!unlocked) return showToast(skin.condition);
     save.selectedSkin = id;
@@ -10167,7 +10832,7 @@
         <h3>Награда дня</h3>
         <div class="reward-card">
           <div class="reward-icon">${uiIconMarkup('gift', 'panel-ui-icon')}</div>
-          <div><h4>День ${Math.min(save.dailyStreak + 1, 7)}</h4><p>${dailyAvailable ? 'Забери монеты за вход' : 'Награда уже получена'}</p></div>
+          <div><h4>День ${Math.min(save.dailyStreak + 1, 7)}</h4><p>${dailyAvailable ? 'Забери колбы за вход' : 'Награда уже получена'}</p></div>
           <button id="dailyClaimBtn" class="buy-btn ${dailyAvailable ? '' : 'owned'}" ${dailyAvailable ? '' : 'disabled'}>${dailyAvailable ? 'ЗАБРАТЬ' : '✓'}</button>
         </div>
       </div>
@@ -10175,7 +10840,7 @@
         <h3>Колесо фортуны</h3>
         <div id="wheel" class="wheel" aria-label="Колесо наград"></div>
         <div class="reward-buttons"><button id="wheelSpinBtn" class="${freeWheel ? 'primary' : 'ad-btn'}" ${save.pendingWheel || (!freeWheel && save.wheelAdSpins >= 2) ? 'disabled' : ''}>${save.pendingWheel ? 'Выбираем награду…' : wheelButton}</button></div>
-        <p class="panel-note">Награды: монеты, колбы исследования и бонус здоровья на следующий забег.</p>
+        <p class="panel-note">Награды: колбы исследования и бонус здоровья на следующий забег.</p>
       </div>`;
     $('#dailyClaimBtn').addEventListener('click', claimDaily);
     $('#wheelSpinBtn').addEventListener('click', spinWheel);
@@ -10210,20 +10875,21 @@
     const today = todayKey();
     if (save.lastDailyDate === today) return;
     save.dailyStreak = save.lastDailyDate === yesterdayKey() ? Math.min(7, save.dailyStreak + 1) : 1;
-    const rewards = [55, 80, 110, 145, 190, 250, 400];
-    const reward = rewards[save.dailyStreak - 1] || 55;
-    save.coins += reward;
+    const rewards = [1, 1, 2, 2, 3, 4, 5];
+    const reward = rewards[save.dailyStreak - 1] || 1;
+    save.researchUnits += reward;
     save.lastDailyDate = today;
     persist();
+    if (refreshUI) updatePersistentUI();
     sound('coin');
-    showToast(`Ежедневная награда: +${reward} монет`);
+    showToast(`Ежедневная награда: +${reward} колб`);
     renderRewardsPanel();
   }
 
   const WHEEL_REWARDS = [
-    { weight: 30, text: '+80 монет', apply: () => { save.coins += 80; } },
-    { weight: 22, text: '+150 монет', apply: () => { save.coins += 150; } },
-    { weight: 8, text: '+350 монет', apply: () => { save.coins += 350; } },
+    { weight: 30, text: '+1 колба исследования', apply: () => { save.researchUnits += 1; } },
+    { weight: 22, text: '+2 колбы исследования', apply: () => { save.researchUnits += 2; } },
+    { weight: 8, text: '+4 колбы исследования', apply: () => { save.researchUnits += 4; } },
     { weight: 15, text: '+1 колба исследования', apply: () => { save.researchUnits += 1; } },
     { weight: 13, text: '+20% здоровья в следующем забеге', apply: () => { save.pendingHealthBoost += 20; } },
     { weight: 12, text: '+2 колбы исследования', apply: () => { save.researchUnits += 2; } }
@@ -10245,6 +10911,7 @@
     if (!reward) return persist();
     reward.apply();
     persist();
+    updatePersistentUI();
     sound('epic');
     if (announce) showToast(reward.text);
   }
@@ -10335,6 +11002,7 @@
     stopMutationFeedHold();
     mutationAnimationToken += 1;
     mutationAnimating = false;
+    laboratoryReplaceMode = false;
     els.panelOverlay.classList.add('hidden');
     syncInteractionLayers();
     if (lastFocusedElement?.focus) lastFocusedElement.focus();
@@ -10345,7 +11013,7 @@
     const maxDistance = 32;
     let dx = event.clientX - run.steer.originX;
     let dy = event.clientY - run.steer.originY;
-    const freeDirection = run.effects.gravitySwitch || speedDrillActive();
+    const freeDirection = run.effects.gravitySwitch || speedDrillActive() || Boolean(jellyZoneForSlime(run.slime));
     if (freeDirection) {
       const distance = Math.hypot(dx, dy);
       if (distance > maxDistance) {
@@ -10358,9 +11026,8 @@
     }
     run.steer.touchX = clamp(dx / maxDistance, -1, 1);
     const vertical = clamp(dy / maxDistance, -1, 1);
-    const mobilityDive = elementalLevel('mobility') >= 1;
-    run.steer.touchDown = mobilityDive ? clamp(vertical, 0, 1) : 0;
-    run.steer.touchY = speedDrillActive() ? vertical : 0;
+    run.steer.touchDown = elementalLevel('mobility') >= 1 ? clamp(vertical, 0, 1) : 0;
+    run.steer.touchY = speedDrillActive() || jellyZoneForSlime(run.slime) ? vertical : 0;
     if (run.effects.gravitySwitch) {
       if (Math.abs(vertical) < .18) run.steer.gravityGestureLocked = false;
       else if (Math.abs(vertical) >= .42 && !run.steer.gravityGestureLocked) {
@@ -10369,7 +11036,7 @@
       }
     }
     els.touchJoystick?.style.setProperty('--stick-x', `${round1(dx)}px`);
-    els.touchJoystick?.style.setProperty('--stick-y', `${round1(freeDirection || mobilityDive ? dy : 0)}px`);
+    els.touchJoystick?.style.setProperty('--stick-y', `${round1(dy)}px`);
   }
 
   function beginTouchJoystick(event) {
@@ -10425,7 +11092,7 @@
       if (pressed) setGravityDirection(code === 'ArrowUp' || code === 'KeyW' ? -1 : 1);
       return true;
     }
-    if (pressed && !speedDrillActive() && (code === 'ArrowUp' || code === 'KeyW')) return false;
+    if (pressed && !speedDrillActive() && !jellyZoneForSlime(run.slime) && (code === 'ArrowUp' || code === 'KeyW')) return false;
     const key = {
       ArrowLeft: 'keyLeft', KeyA: 'keyLeft',
       ArrowRight: 'keyRight', KeyD: 'keyRight',
@@ -10450,6 +11117,19 @@
   function bindEvents() {
     bindMenuSlimeInteractions();
     els.rerollBtn.addEventListener('click', activateConveyorControl);
+    els.homeScreen?.addEventListener('click', event => {
+      if (els.worldCarousel?.classList.contains('is-transitioning')) return;
+      const button = event.detail
+        ? [...els.worldCarousel.querySelectorAll('.world-carousel-card:not(.current)[data-world]')]
+          .find(card => worldImageHit(card.querySelector('.world-card-image'), event.clientX, event.clientY))
+        : event.target.closest?.('.world-carousel-card:not(.current)[data-world]');
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      animateCarouselSelection(button.dataset.world);
+    }, true);
+    els.worldStartBtn?.addEventListener('click', () => { void beginRoomLaunch(); });
+    els.normalModeV2?.addEventListener('click', () => showToast('Обычный режим'));
     els.levelButtons?.addEventListener('click', event => {
       const button = event.target.closest('.level-btn');
       if (!button) return;
@@ -10619,7 +11299,6 @@
         storage?.removeItem(SAVE_BACKUP_KEY);
         location.reload();
       },
-      addCoins: (amount = 1000) => { save.coins += amount; persist(); },
       addResearch: (amount = 100) => { save.researchUnits += Math.max(0, Math.floor(amount)); persist(); updatePersistentUI(); },
       maxStomach: () => { save.stomachLevel = 4; persist(); newDraft(); },
       setNextBonuses: ({ health = 0, rerolls = 0 } = {}) => {
@@ -10666,11 +11345,11 @@
       }, { snow: 0, snowflakes: 0, burning: 0, electrified: 0 }) : null,
       elementalLevels: (levels = {}) => {
         if (!run || run.ended) return null;
-        for (const key of ['fire', 'frost', 'electric', 'cosmos', 'gigantism', 'wind', 'explosion']) {
+        for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'explosion']) {
           if (Object.hasOwn(levels, key)) run.categoryVisuals[key] = clamp(Math.round(levels[key]), 0, 3);
         }
         run.effects.gravitySwitch = elementalLevel('cosmos') >= 1 || session.effects.gravitySwitch;
-        run.elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'gigantism', 'wind', 'explosion'].find(key => run.categoryVisuals[key] >= 3) || '';
+        run.elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'explosion', 'cloning'].find(key => run.categoryVisuals[key] >= 3) || '';
         run.elementalAbilityCharges = run.elementalAbilityType ? 1 : 0;
         run.elementalAbilityActive = '';
         run.elementalAbilityUntil = 0;
@@ -10680,10 +11359,6 @@
         run.speedBurstReady = false;
         run.speedBurstBlocksLeft = 0;
         run.speedBurstUntil = 0;
-        run.windDashBlocksLeft = 0;
-        run.windDashUntil = 0;
-        run.windDashCooldownUntil = 0;
-        run.windBounceFlashUntil = 0;
         resetMassPierce();
         updateRunUI();
         return { ...run.categoryVisuals, ability: run.elementalAbilityType };
@@ -10692,8 +11367,8 @@
         levels: {
           fire: elementalLevel('fire'), frost: elementalLevel('frost'), electric: elementalLevel('electric'),
           gold: elementalLevel('gold'), explosion: elementalLevel('explosion'), mass: elementalLevel('mass'),
-          mobility: elementalLevel('mobility'), cosmos: elementalLevel('cosmos'), gigantism: elementalLevel('gigantism'),
-          wind: elementalLevel('wind')
+          mobility: elementalLevel('mobility'), cosmos: elementalLevel('cosmos'), nano: elementalLevel('nano'),
+          telekinesis: elementalLevel('telekinesis'), cloning: elementalLevel('cloning')
         },
         ability: run.elementalAbilityType,
         charges: run.elementalAbilityCharges,

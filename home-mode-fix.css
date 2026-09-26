@@ -1570,11 +1570,14 @@ body[data-screen="home"] .research-wallet-track{
 #homeScreen .family-cosmos,.recipe-book-family.family-cosmos{
   --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-cosmos.png");
 }
-#homeScreen .family-gigantism,.recipe-book-family.family-gigantism{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-gigantism.png");
+#homeScreen .family-nano,.recipe-book-family.family-nano{
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-nano.png");
 }
-#homeScreen .family-wind,.recipe-book-family.family-wind{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-wind.png");
+#homeScreen .family-telekinesis,.recipe-book-family.family-telekinesis{
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-telekinesis.png");
+}
+#homeScreen .family-cloning,.recipe-book-family.family-cloning{
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-cloning.png");
 }
 
 #homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge.family-cosmos{
@@ -1614,8 +1617,14 @@ body[data-screen="home"] .research-wallet-track{
 #homeScreen .food-card.conveyor-food-pick.mutation-family-explosion>.conveyor-plate{
   box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(255,157,62,.82),0 0 14px rgba(236,58,37,.32)!important;
 }
-#homeScreen .food-card.conveyor-food-pick.mutation-family-wind>.conveyor-plate{
+#homeScreen .food-card.conveyor-food-pick.mutation-family-nano>.conveyor-plate{
   box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(187,250,255,.84),0 0 14px rgba(73,194,218,.28)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-telekinesis>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(113,247,214,.78),0 0 14px rgba(44,185,160,.3)!important;
+}
+#homeScreen .food-card.conveyor-food-pick.mutation-family-cloning>.conveyor-plate{
+  box-shadow:0 3px 0 rgba(7,13,19,.48),inset 0 2px 0 #fff,0 0 7px rgba(151,248,139,.82),0 0 14px rgba(76,201,102,.32)!important;
 }
 html.short-viewport #homeScreen .food-card.conveyor-food-pick>.conveyor-plate{
   width:83px!important;height:22px!important;
@@ -2442,9 +2451,10 @@ html.short-viewport #homeScreen .food-card.conveyor-food-pick .food-model{
 #homeScreen .recipe-category-slots.family-ice{--ultra-glow:#68ddff}
 #homeScreen .recipe-category-slots.family-electric{--ultra-glow:#ffe052}
 #homeScreen .recipe-category-slots.family-blast{--ultra-glow:#ff6951}
-#homeScreen .recipe-category-slots.family-wind{--ultra-glow:#65dca0}
+#homeScreen .recipe-category-slots.family-nano{--ultra-glow:#5de7e9}
+#homeScreen .recipe-category-slots.family-telekinesis{--ultra-glow:#6cf2d8}
+#homeScreen .recipe-category-slots.family-cloning{--ultra-glow:#81ec75}
 #homeScreen .recipe-category-slots.family-cosmos{--ultra-glow:#a276ff}
-#homeScreen .recipe-category-slots.family-gigantism{--ultra-glow:#9de24c}
 #homeScreen .recipe-category-ultra-flash{
   position:absolute;left:50%;top:50%;z-index:4;width:22px;height:22px;border-radius:50%;pointer-events:none;
   transform:translate(-50%,-50%) scale(.2);opacity:0;background:#fff;
@@ -2512,7 +2522,7 @@ html.short-viewport #homeScreen .food-card.conveyor-food-pick .food-model{
 .food-synthesizer header small{font-size:7px;font-weight:1000;letter-spacing:1px}.food-synthesizer header h3{margin:1px 0 2px;font-size:15px;letter-spacing:.5px}.food-synthesizer header p{margin:0;font-size:8px;font-weight:800}
 .lab-pipe-rack{position:relative;z-index:3;height:175px;display:grid;grid-template-columns:repeat(3,1fr);align-items:start;gap:8px;margin-top:7px;padding:0 8px}
 .lab-feed-pipe{--lab-glow:#72e9a1;position:relative;height:172px;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
-.lab-feed-pipe.mutation-fire{--lab-glow:#ff7b36}.lab-feed-pipe.mutation-frost{--lab-glow:#54dfff}.lab-feed-pipe.mutation-electric{--lab-glow:#ffd83f}.lab-feed-pipe.mutation-cosmos{--lab-glow:#9a63ff}.lab-feed-pipe.mutation-wind{--lab-glow:#5bd59b}.lab-feed-pipe.mutation-explosion{--lab-glow:#ff684f}.lab-feed-pipe.mutation-gigantism{--lab-glow:#91d941}
+.lab-feed-pipe.mutation-fire{--lab-glow:#ff7b36}.lab-feed-pipe.mutation-frost{--lab-glow:#54dfff}.lab-feed-pipe.mutation-electric{--lab-glow:#ffd83f}.lab-feed-pipe.mutation-cosmos{--lab-glow:#9a63ff}.lab-feed-pipe.mutation-nano{--lab-glow:#5de7e9}.lab-feed-pipe.mutation-telekinesis{--lab-glow:#6cf2d8}.lab-feed-pipe.mutation-cloning{--lab-glow:#81ec75}.lab-feed-pipe.mutation-explosion{--lab-glow:#ff684f}
 .lab-pipe-neck{position:absolute;z-index:1;left:50%;top:-2px;width:38px;height:52px;border:3px solid #304f5e;border-radius:0 0 8px 8px;background:linear-gradient(90deg,#55717c,#c0d0d1 45%,#6b8992);transform:translateX(-50%);box-shadow:inset 4px 0 rgba(255,255,255,.2)}
 .lab-pipe-body{position:absolute;z-index:2;left:50%;top:37px;width:88px;height:91px;border:3px solid #294c5a;border-radius:18px 18px 28px 28px;background:linear-gradient(135deg,#71909a,#c7d6d5 45%,#5e7c87);transform:translateX(-50%);box-shadow:inset 0 3px rgba(255,255,255,.38),inset 0 -8px rgba(22,55,65,.18),0 3px rgba(27,49,60,.22)}
 .lab-pipe-emblem{position:absolute;left:50%;top:9px;width:64px;height:64px;display:grid;place-items:center;border:4px solid #345765;border-radius:50%;background:radial-gradient(circle at 37% 28%,#fff,#c7e2dc 48%,#77969b);transform:translateX(-50%);box-shadow:inset 0 2px #fff,0 2px rgba(27,52,61,.24)}
@@ -2533,3 +2543,72 @@ html.short-viewport #homeScreen .food-card.conveyor-food-pick .food-model{
   .lab-pipe-rack{padding-inline:2px;gap:3px}.lab-pipe-body{width:78px}.lab-pipe-mouth{width:73px}
   .lab-mutation-pool{gap:4px}.lab-pool-mutation{height:62px;grid-template-rows:42px 11px}.lab-pool-mutation img{width:42px;height:42px}.lab-pool-mutation b{font-size:5.8px}
 }
+
+/* Mutation visuals shared with the laboratory, scaled for conveyor food. */
+#homeScreen .food-card.conveyor-food-pick.mutation-family-electric>.conveyor-plate{box-shadow:0 3px 0 rgba(7,13,19,.5),inset 0 2px 0 #fff!important}
+#homeScreen .food-mutation-fx.mutation-electric-fx:before{left:11%;right:11%;top:13%;bottom:15%;height:auto;border-radius:50%;background:radial-gradient(circle,rgba(255,246,143,.56),rgba(255,216,62,.26) 45%,transparent 73%);animation:mutationElectricGlow 1.22s steps(2,end) infinite}
+#homeScreen .food-mutation-fx.mutation-electric-fx:after{left:22%;right:22%;top:24%;bottom:24%;height:auto;border-radius:50%;background:radial-gradient(circle,rgba(255,229,91,.23),transparent 70%)}
+#homeScreen .food-cosmos-gravity-fx .mutation-gravity-particles{inset:2px 11px 5px}
+#homeScreen .food-cosmos-gravity-fx .mutation-gravity-particles svg{width:10px;height:14px;animation-name:foodGravityParticleFall}
+@keyframes foodGravityParticleFall{0%{opacity:0;transform:translateY(-4px) scale(.7)}11%{opacity:.94}82%{opacity:.72}100%{opacity:0;transform:translateY(70px) scale(.95)}}
+#homeScreen .food-nano-drones-fx>img{position:absolute;z-index:3;top:28px;width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 0 5px #5ff9f0);animation:labNanoDroneHover 2.7s ease-in-out infinite}
+#homeScreen .food-nano-drones-fx>img:first-child{left:0}
+#homeScreen .food-nano-drones-fx>img:last-child{right:0;animation-delay:-1.3s}
+#homeScreen .food-telekinesis-fx{z-index:4}
+#homeScreen .food-telekinesis-fx:before{content:"";position:absolute;left:15%;right:15%;bottom:2px;height:14px;border-radius:50%;background:radial-gradient(ellipse,#c566ff,#8c2ce4 45%,transparent 82%);box-shadow:0 0 10px rgba(180,74,255,.76);animation:labTelekinesisBase 2.25s ease-in-out infinite}
+#homeScreen .food-telekinesis-fx:after{content:"";position:absolute;left:20%;right:20%;bottom:5px;height:8px;border:1px solid rgba(184,93,255,.95);border-radius:50%;box-shadow:0 0 10px #a639f0;animation:labTelekinesisBase 2.25s ease-in-out infinite}
+#homeScreen .conveyor-food-pick.food-ready.mutation-family-telekinesis>.food-model-wrap{animation:labTelekinesisFloat 2.25s ease-in-out infinite}
+#homeScreen .food-cloning-fx>img{position:absolute;top:22px;width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 5px #87ef74)}
+#homeScreen .food-cloning-fx>img:first-child{left:33%;animation:labCloneEchoLeft 2.2s ease-out infinite -.7s}
+#homeScreen .food-cloning-fx>img:last-child{right:33%;animation:labCloneEchoRight 2.2s ease-out infinite -1s}
+@media(prefers-reduced-motion:reduce){
+  #homeScreen .food-cosmos-gravity-fx svg,#homeScreen .food-nano-drones-fx>img,#homeScreen .food-telekinesis-fx:before,#homeScreen .food-telekinesis-fx:after,#homeScreen .food-cloning-fx>img,#homeScreen .conveyor-food-pick.food-ready.mutation-family-telekinesis>.food-model-wrap{animation:none!important}
+}
+
+/* Mutation discovery: individual illustrated scenes with the same emblem language as the lab. */
+.mutation-prize{
+  --prize-glow:#8cf3e8;isolation:isolate;overflow:hidden;
+  grid-template-rows:auto 222px auto auto;gap:13px;align-content:center;
+  padding:28px 14px;border:2px solid color-mix(in srgb,var(--prize-glow),#123746 52%);
+  background-image:linear-gradient(180deg,rgba(2,14,28,.34),transparent 24%,transparent 67%,rgba(2,13,24,.62)),var(--prize-art);
+  background-position:center;background-size:cover;background-color:#081c28;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.12),inset 0 0 48px rgba(1,9,20,.52),0 0 22px color-mix(in srgb,var(--prize-glow),transparent 54%);
+}
+.mutation-prize.mutation-family-explosion{--prize-glow:#ff8a4f}
+.mutation-prize.mutation-family-cosmos{--prize-glow:#bd7cff}
+.mutation-prize.mutation-family-nano{--prize-glow:#58f6ed}
+.mutation-prize.mutation-family-telekinesis{--prize-glow:#b881ff}
+.mutation-prize.mutation-family-cloning{--prize-glow:#89fa72}
+.mutation-prize small,.mutation-prize>b,.mutation-prize-cta{position:relative;z-index:5;color:#fff;text-align:center}
+.mutation-prize small{font-size:13px;letter-spacing:2px;text-shadow:0 2px 4px #000,0 0 12px var(--prize-glow)}
+.mutation-prize>b{max-width:100%;font-size:clamp(22px,6vw,28px);line-height:1.08;letter-spacing:.7px;text-shadow:0 3px 5px #000,0 0 14px var(--prize-glow)}
+.mutation-prize .mutation-prize-cta{width:min(100%,235px);padding:10px 12px;border:1px solid color-mix(in srgb,var(--prize-glow),white 24%);border-radius:12px;background:rgba(3,22,35,.82);box-shadow:inset 0 1px rgba(255,255,255,.25),0 0 13px color-mix(in srgb,var(--prize-glow),transparent 62%);font-size:11px;letter-spacing:.5px;text-shadow:0 1px 3px #000}
+.mutation-prize-emblem{width:222px;height:222px;isolation:isolate;overflow:visible}
+.mutation-prize-emblem:before{content:"";position:absolute;z-index:0;inset:-17px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--prize-glow),white 14%) 0%,color-mix(in srgb,var(--prize-glow),transparent 48%) 34%,transparent 70%);filter:blur(15px);animation:prizeNeonPulse 2.2s ease-in-out infinite alternate;pointer-events:none}
+.mutation-prize-emblem .mutation-emblem-halo{z-index:0;inset:9px;background:radial-gradient(circle,var(--prize-glow),transparent 68%);opacity:.75;filter:blur(14px)}
+.mutation-prize-emblem>img{position:relative;z-index:3;width:176px;height:176px;filter:drop-shadow(0 0 10px var(--prize-glow)) drop-shadow(0 7px 6px #03141e)}
+.mutation-prize-emblem .mutation-prize-fx{z-index:1;width:230px;height:230px}
+.mutation-prize.mutation-family-cosmos .mutation-gravity-particles{inset:1px -6px}
+.mutation-prize.mutation-family-cosmos .mutation-gravity-particles svg{width:13px;height:19px;animation-name:prizeGravityFall}
+.mutation-prize.mutation-family-nano .mutation-nano-drones{z-index:4}
+.mutation-prize.mutation-family-nano .mutation-nano-drones img{top:76px;width:56px;height:56px;filter:drop-shadow(0 0 8px #5ff9f0)}
+.mutation-prize.mutation-family-nano .mutation-nano-drones img:first-child{left:-29px;animation:labNanoDroneHover 2.7s ease-in-out infinite}
+.mutation-prize.mutation-family-nano .mutation-nano-drones img:nth-child(2){right:-29px;animation:labNanoDroneHover 2.7s ease-in-out infinite -1.3s}
+.mutation-prize .nano-prize-shot{position:absolute;top:96px;width:48px;height:23px;background:url("assets/ui/nano-blaster-shot-v1.png?v=1") center/contain no-repeat;filter:drop-shadow(0 0 8px #66faff);opacity:0}
+.mutation-prize .nano-prize-shot:nth-of-type(1){left:-12px;transform:scaleX(-1);animation:prizeNanoShotLeft 2.7s linear infinite .3s}
+.mutation-prize .nano-prize-shot:nth-of-type(2){right:-12px;animation:prizeNanoShotRight 2.7s linear infinite 1.65s}
+.mutation-prize.mutation-family-telekinesis .mutation-prize-emblem>img{animation:labTelekinesisFloat 2.25s ease-in-out infinite}
+.mutation-prize.mutation-family-telekinesis .mutation-prize-emblem:after{content:"";position:absolute;z-index:4;left:26%;right:26%;bottom:13px;height:17px;border-radius:50%;background:radial-gradient(ellipse,#db8bff 0%,#963de9 47%,transparent 80%);box-shadow:0 0 16px #bd67ff;animation:labTelekinesisBase 2.25s ease-in-out infinite;pointer-events:none}
+.mutation-prize.mutation-family-cloning .mutation-clone-echoes{z-index:1}
+.mutation-prize.mutation-family-cloning .mutation-clone-echoes img{top:77px;width:65px;height:65px;filter:drop-shadow(0 0 9px #81fa76)}
+.mutation-prize.mutation-family-cloning .mutation-clone-echoes img:first-child{left:-2px}
+.mutation-prize.mutation-family-cloning .mutation-clone-echoes img:last-child{right:-2px}
+.mutation-prize.mutation-family-cloning .mutation-prize-emblem>img{animation:labCloneOrigin 2.2s ease-in-out infinite}
+.mutation-prize.mutation-family-explosion .mutation-prize-emblem>img{animation:mutationPrizeAppear .72s cubic-bezier(.16,.8,.2,1.2) both}
+.mutation-prize.is-collecting{background-image:none;box-shadow:none}
+.mutation-prize.is-collecting .mutation-prize-emblem>img{opacity:0!important;animation:none!important}
+@keyframes prizeNeonPulse{to{opacity:.72;transform:scale(1.13)}}
+@keyframes prizeGravityFall{0%{opacity:0;transform:translateY(-8px) scale(.7)}12%{opacity:.95}80%{opacity:.72}100%{opacity:0;transform:translateY(135px) scale(.92)}}
+@keyframes prizeNanoShotLeft{0%,8%{opacity:0;transform:scaleX(-1) translateX(0) scale(.85)}12%{opacity:1}28%{opacity:1}40%,100%{opacity:0;transform:scaleX(-1) translateX(55px) scale(1)}}
+@keyframes prizeNanoShotRight{0%,8%{opacity:0;transform:translateX(0) scale(.85)}12%{opacity:1}28%{opacity:1}40%,100%{opacity:0;transform:translateX(55px) scale(1)}}
+@media(prefers-reduced-motion:reduce){.mutation-prize-emblem:before,.mutation-prize-emblem .mutation-emblem-halo,.mutation-prize-emblem .mutation-gravity-particles svg,.mutation-prize .mutation-nano-drones img,.mutation-prize .nano-prize-shot,.mutation-prize.mutation-family-telekinesis .mutation-prize-emblem>img,.mutation-prize.mutation-family-telekinesis .mutation-prize-emblem:after,.mutation-prize.mutation-family-cloning .mutation-clone-echoes img,.mutation-prize.mutation-family-cloning .mutation-prize-emblem>img{animation:none!important}}

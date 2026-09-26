@@ -2,24 +2,20 @@
   'use strict';
 
   const ZONE_IDS = ['start', 'middle', 'end'];
-  const BLOCK_IDS = ['weak', 'normal', 'strong', 'ore', 'secondary'];
-  const ORE_IDS = ['coal', 'iron', 'gold', 'diamond'];
+  const BLOCK_IDS = ['weak', 'normal', 'strong', 'secondary'];
   const SPECIAL_IDS = ['heal', 'bomb', 'spring', 'cryo', 'snowflake', 'appleMint', 'appleRed', 'geyser', 'meteor'];
   const clamp = (value, min, max, fallback) => Number.isFinite(+value) ? Math.max(min, Math.min(max, +value)) : fallback;
   const copy = value => JSON.parse(JSON.stringify(value));
 
   const zoneDefaults = {
     start: {
-      blocks: { weak:45, normal:30, strong:10, ore:10, secondary:5 },
-      ores: { coal:70, iron:30, gold:0, diamond:0 },
+      blocks: { weak:50, normal:35, strong:10, secondary:5 },
     },
     middle: {
-      blocks: { weak:30, normal:40, strong:15, ore:10, secondary:5 },
-      ores: { coal:10, iron:50, gold:40, diamond:0 },
+      blocks: { weak:35, normal:45, strong:15, secondary:5 },
     },
     end: {
-      blocks: { weak:20, normal:35, strong:25, ore:15, secondary:5 },
-      ores: { coal:0, iron:20, gold:50, diamond:30 },
+      blocks: { weak:25, normal:40, strong:30, secondary:5 },
     }
   };
   const specialIdsForWorld = worldId => +worldId === 2
@@ -48,12 +44,6 @@
       weak: 4,
       normal: 10,
       strong: 22
-    },
-    ores: {
-      coal: { hp:15, coins:12 },
-      iron: { hp:20, coins:18 },
-      gold: { hp:30, coins:28 },
-      diamond: { hp:40, coins:42 }
     },
     special: {
       bomb: { radius:125, damage:45 },
@@ -84,12 +74,6 @@
     });
     Object.keys(base.rewards).forEach(id => {
       base.rewards[id] = Math.round(clamp(value.rewards?.[id], 0, 10000, base.rewards[id]));
-    });
-    ORE_IDS.forEach(id => {
-      base.ores[id] = {
-        hp: Math.round(clamp(value.ores?.[id]?.hp, 1, 500, base.ores[id].hp)),
-        coins: Math.round(clamp(value.ores?.[id]?.coins, 0, 10000, base.ores[id].coins))
-      };
     });
     base.special.bomb.radius = Math.round(clamp(value.special?.bomb?.radius, 30, 400, base.special.bomb.radius));
     base.special.bomb.damage = Math.round(clamp(value.special?.bomb?.damage, 1, 500, base.special.bomb.damage));
@@ -154,7 +138,6 @@
           }
           level.zones[zoneId] = {
             blocks: normalizeDistribution(saved?.blocks, BLOCK_IDS, fallback.blocks),
-            ores: normalizeDistribution(saved?.ores, ORE_IDS, fallback.ores),
             secondary: normalizeDistribution(savedSecondary, SPECIAL_IDS, fallback.secondary)
           };
         });
@@ -167,11 +150,11 @@
   const sum = distribution => Object.values(distribution || {}).reduce((total, value) => total + (+value || 0), 0);
   const isValid = value => value.worlds.every(world => world.levels.every(level => ZONE_IDS.every(zoneId => {
     const zone = level.zones[zoneId];
-    return Math.abs(sum(zone.blocks) - 100) < .001 && Math.abs(sum(zone.ores) - 100) < .001 && Math.abs(sum(zone.secondary) - 100) < .001;
+    return Math.abs(sum(zone.blocks) - 100) < .001 && Math.abs(sum(zone.secondary) - 100) < .001;
   })));
   const zoneIdForProgress = progress => progress < 1 / 3 ? 'start' : progress < 2 / 3 ? 'middle' : 'end';
   const getLevel = (value, worldId, level) => value.worlds.find(world => +world.id === +worldId)?.levels?.[Math.max(0, Math.min(4, Math.round(level) - 1))];
   const getZone = (value, worldId, level, progress) => getLevel(value, worldId, level)?.zones?.[zoneIdForProgress(progress)] || zoneDefaultsFor(worldId, 'start');
 
-  window.SlimeBalance = { ZONE_IDS, BLOCK_IDS, ORE_IDS, SPECIAL_IDS, specialIdsForWorld, defaults, normalize, load, sum, isValid, zoneIdForProgress, getLevel, getZone };
+  window.SlimeBalance = { ZONE_IDS, BLOCK_IDS, SPECIAL_IDS, specialIdsForWorld, defaults, normalize, load, sum, isValid, zoneIdForProgress, getLevel, getZone };
 })();
