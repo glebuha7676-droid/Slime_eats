@@ -13,7 +13,7 @@ html.short-viewport body #homeScreen>.play-setup-card{
 html body #homeScreen>.play-setup-card::before{
   content:""!important;display:block!important;position:absolute;z-index:0;inset:0;pointer-events:none;
   background-color:#15595b;
-  background-image:radial-gradient(ellipse at 50% 43%,transparent 48%,rgba(3,30,35,.14) 75%,rgba(2,25,31,.37) 100%),url("assets/ui/world-picker-v2/rock-backdrop-layout-v5.png");
+  background-image:radial-gradient(ellipse at 50% 43%,transparent 48%,rgba(3,30,35,.14) 75%,rgba(2,25,31,.37) 100%),url("assets/ui/world-picker-v2/rock-backdrop-layout-v5.webp");
   background-position:center,center bottom;background-size:100% 100%,cover;background-repeat:no-repeat;
 }
 #homeScreen>.play-setup-card>.world-picker-legacy{display:none!important}
@@ -82,8 +82,8 @@ html body #homeScreen>.play-setup-card::before{
 .world-mode-v2.abyss img{width:25px;height:25px;object-fit:contain}
 .world-start-v2{position:relative;display:flex;align-items:center;justify-content:center;justify-self:center;width:292px;height:88px;border:0;padding:0;background:center/100% 100% no-repeat;cursor:pointer;color:#75420b;font-family:ui-rounded,"Arial Rounded MT Bold","Nunito",system-ui,sans-serif;font-size:28px;font-weight:1000;letter-spacing:.015em;text-shadow:0 1px #fff2aa,0 2px 1px #c8842f}
 .world-start-v2>span{position:relative;z-index:1;top:-3px;display:block;margin-left:54px;white-space:nowrap}
-.world-start-v2.ready{background-image:url("assets/ui/world-picker-v2/start-ready-gold-v3.png");filter:drop-shadow(0 2px 5px rgba(255,190,38,.3));animation:world-start-bob 3s ease-in-out infinite}
-.world-start-v2.hungry{background-image:url("assets/ui/world-picker-v2/start-inactive-gray-v2.png");color:#f0f5f7;text-shadow:0 2px 2px #23323d;cursor:not-allowed;font-size:17px;opacity:1!important;filter:none!important;transform:translateY(3px)}
+.world-start-v2.ready{background-image:url("assets/ui/world-picker-v2/start-ready-gold-v3.webp");filter:drop-shadow(0 2px 5px rgba(255,190,38,.3));animation:world-start-bob 3s ease-in-out infinite}
+.world-start-v2.hungry{background-image:url("assets/ui/world-picker-v2/start-inactive-gray-v2.webp");color:#f0f5f7;text-shadow:0 2px 2px #23323d;cursor:not-allowed;font-size:17px;opacity:1!important;filter:none!important;transform:translateY(3px)}
 .world-start-v2.hungry>span{margin-left:0}
 .world-start-v2.ready:active{animation:none;transform:translateY(2px) scale(.98)}
 @keyframes world-start-bob{0%,8%,18%,100%{transform:translateY(0)}13%{transform:translateY(-3px)}}

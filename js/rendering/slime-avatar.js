@@ -4,11 +4,11 @@
   const defaultColors = window.SlimeGameConfig?.SKINS?.[0]?.colors || ['#e9ff9c', '#67d348', '#2fa345'];
   const referenceBodyImage = new Image();
   const formBodySources = Object.freeze({
-    explosion: 'assets/ui/slime/forms/slime-body-explosion-v1.png?v=1',
-    frost: 'assets/ui/slime/forms/slime-body-frost-v1.png?v=1',
-    cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.png?v=1',
-    electric: 'assets/ui/slime/forms/slime-body-electric-v1.png?v=1',
-    fire: 'assets/ui/slime/forms/slime-body-fire-v1.png?v=1'
+    explosion: 'assets/ui/slime/forms/slime-body-explosion-v1.webp?v=1',
+    frost: 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1',
+    cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.webp?v=1',
+    electric: 'assets/ui/slime/forms/slime-body-electric-v1.webp?v=1',
+    fire: 'assets/ui/slime/forms/slime-body-fire-v1.webp?v=1'
   });
   const formBodyImages = Object.create(null);
   const formBodyReady = Object.create(null);
@@ -40,12 +40,12 @@
   referenceCheeksImage.onload = () => { referenceCheeksReady = true; };
   referenceEyeExpressionsImage.onload = () => { referenceEyeExpressionsReady = true; };
   referenceMouthExpressionsImage.onload = () => { referenceMouthExpressionsReady = true; };
-  referenceBodyImage.src = 'assets/ui/slime/slime-body-reference-v1.png?v=2';
-  referenceEyeSocketsImage.src = 'assets/ui/slime/slime-eye-sockets-reference-v1.png?v=1';
-  referencePupilsImage.src = 'assets/ui/slime/slime-pupils-reference-v1.png?v=1';
-  referenceCheeksImage.src = 'assets/ui/slime/slime-cheeks-reference-v1.png?v=1';
-  referenceEyeExpressionsImage.src = 'assets/ui/slime/slime-eye-expressions-v1.png?v=1';
-  referenceMouthExpressionsImage.src = 'assets/ui/slime/slime-mouth-expressions-v1.png?v=1';
+  referenceBodyImage.src = 'assets/ui/slime/slime-body-reference-v1.webp?v=2';
+  referenceEyeSocketsImage.src = 'assets/ui/slime/slime-eye-sockets-reference-v1.webp?v=1';
+  referencePupilsImage.src = 'assets/ui/slime/slime-pupils-reference-v1.webp?v=1';
+  referenceCheeksImage.src = 'assets/ui/slime/slime-cheeks-reference-v1.webp?v=1';
+  referenceEyeExpressionsImage.src = 'assets/ui/slime/slime-eye-expressions-v1.webp?v=1';
+  referenceMouthExpressionsImage.src = 'assets/ui/slime/slime-mouth-expressions-v1.webp?v=1';
 
   Object.entries(formBodySources).forEach(([form, source]) => {
     const image = new Image();

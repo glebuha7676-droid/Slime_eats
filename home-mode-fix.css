@@ -272,14 +272,14 @@ body[data-screen="drop"] .research-wallet{display:none}
 #homeScreen .food-category-badge.family-blast{--food-family-fill:#ff775d!important;--food-family-line:#8b3c34!important}
 #homeScreen .food-category-badge.family-secret{--food-family-fill:#3f1024!important;--food-family-line:#8d2142!important}
 
-#homeScreen .family-fire,#homeScreen .family-damage,.recipe-book-family.family-fire,.recipe-book-family.family-damage{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-fire.png")}
-#homeScreen .family-ice,.recipe-book-family.family-ice{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-frost.png")}
-#homeScreen .family-electric,.recipe-book-family.family-electric{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-electric.png")}
-#homeScreen .family-gold,.recipe-book-family.family-gold{--recipe-category-icon:url("assets/ui/recipe-categories/gold-aligned.png")}
-#homeScreen .family-bounce,.recipe-book-family.family-bounce{--recipe-category-icon:url("assets/ui/recipe-categories/mobility-aligned.png")}
-#homeScreen .family-mass,#homeScreen .family-health,.recipe-book-family.family-mass,.recipe-book-family.family-health{--recipe-category-icon:url("assets/ui/recipe-categories/weight-aligned.png")}
-#homeScreen .family-protection,#homeScreen .family-shield,.recipe-book-family.family-protection,.recipe-book-family.family-shield{--recipe-category-icon:url("assets/ui/recipe-categories/protection-aligned.png")}
-#homeScreen .family-blast,.recipe-book-family.family-blast{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-explosion.png")}
+#homeScreen .family-fire,#homeScreen .family-damage,.recipe-book-family.family-fire,.recipe-book-family.family-damage{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-fire.webp")}
+#homeScreen .family-ice,.recipe-book-family.family-ice{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-frost.webp")}
+#homeScreen .family-electric,.recipe-book-family.family-electric{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-electric.webp")}
+#homeScreen .family-gold,.recipe-book-family.family-gold{--recipe-category-icon:url("assets/ui/recipe-categories/gold-aligned.webp")}
+#homeScreen .family-bounce,.recipe-book-family.family-bounce{--recipe-category-icon:url("assets/ui/recipe-categories/mobility-aligned.webp")}
+#homeScreen .family-mass,#homeScreen .family-health,.recipe-book-family.family-mass,.recipe-book-family.family-health{--recipe-category-icon:url("assets/ui/recipe-categories/weight-aligned.webp")}
+#homeScreen .family-protection,#homeScreen .family-shield,.recipe-book-family.family-protection,.recipe-book-family.family-shield{--recipe-category-icon:url("assets/ui/recipe-categories/protection-aligned.webp")}
+#homeScreen .family-blast,.recipe-book-family.family-blast{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-explosion.webp")}
 
 #homeScreen .food-category-badge:not(.family-secret),
 #homeScreen .recipe-category-slot.filled:not(.family-secret){
@@ -378,11 +378,11 @@ body[data-screen="drop"] .research-wallet{display:none}
 #homeScreen .conveyor-controls .reroll-icon{
   position:absolute!important;left:50%!important;top:50%!important;
   display:block!important;width:72px!important;height:72px!important;max-width:none!important;margin:0!important;
-  object-fit:contain!important;content:url("assets/ui/reroll-button-v2.png?v=1")!important;
+  object-fit:contain!important;content:url("assets/ui/reroll-button-v2.webp?v=1")!important;
   transform:translate(-50%,-50%)!important;filter:none!important;
 }
 #homeScreen .conveyor-controls .reroll-btn.confirm-mode .reroll-icon{
-  content:url("assets/ui/ready-button-v2.png?v=1")!important;
+  content:url("assets/ui/ready-button-v2.webp?v=1")!important;
   animation:none!important;
 }
 #homeScreen .conveyor-controls .reroll-btn.confirm-mode:not(:disabled){
@@ -1568,16 +1568,16 @@ body[data-screen="home"] .research-wallet-track{
   color:#fff!important;
 }
 #homeScreen .family-cosmos,.recipe-book-family.family-cosmos{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-cosmos.png");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-cosmos.webp");
 }
 #homeScreen .family-nano,.recipe-book-family.family-nano{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-nano.png");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-nano.webp");
 }
 #homeScreen .family-telekinesis,.recipe-book-family.family-telekinesis{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-telekinesis.png");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-telekinesis.webp");
 }
 #homeScreen .family-cloning,.recipe-book-family.family-cloning{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-cloning.png");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-cloning.webp");
 }
 
 #homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge.family-cosmos{
@@ -2594,7 +2594,7 @@ html.short-viewport #homeScreen .food-card.conveyor-food-pick .food-model{
 .mutation-prize.mutation-family-nano .mutation-nano-drones img{top:76px;width:56px;height:56px;filter:drop-shadow(0 0 8px #5ff9f0)}
 .mutation-prize.mutation-family-nano .mutation-nano-drones img:first-child{left:-29px;animation:labNanoDroneHover 2.7s ease-in-out infinite}
 .mutation-prize.mutation-family-nano .mutation-nano-drones img:nth-child(2){right:-29px;animation:labNanoDroneHover 2.7s ease-in-out infinite -1.3s}
-.mutation-prize .nano-prize-shot{position:absolute;top:96px;width:48px;height:23px;background:url("assets/ui/nano-blaster-shot-v1.png?v=1") center/contain no-repeat;filter:drop-shadow(0 0 8px #66faff);opacity:0}
+.mutation-prize .nano-prize-shot{position:absolute;top:96px;width:48px;height:23px;background:url("assets/ui/nano-blaster-shot-v1.webp?v=1") center/contain no-repeat;filter:drop-shadow(0 0 8px #66faff);opacity:0}
 .mutation-prize .nano-prize-shot:nth-of-type(1){left:-12px;transform:scaleX(-1);animation:prizeNanoShotLeft 2.7s linear infinite .3s}
 .mutation-prize .nano-prize-shot:nth-of-type(2){right:-12px;animation:prizeNanoShotRight 2.7s linear infinite 1.65s}
 .mutation-prize.mutation-family-telekinesis .mutation-prize-emblem>img{animation:labTelekinesisFloat 2.25s ease-in-out infinite}

@@ -9,7 +9,7 @@
     'dynamite': 'assets/Мир 1/Динамит.webp',
     'spring': 'assets/Мир 1/Пружина.webp',
     'heal': 'assets/Мир 1/Аптечка.webp',
-    'portal': 'assets/ui/portals/world-1.png'
+    'portal': 'assets/ui/portals/world-1.webp'
   };
   const WORLD2_ASSETS = {
     'ice-light': 'assets/Мир 2/Непрочный блок.webp',
@@ -21,7 +21,7 @@
     'cryo': 'assets/Мир 2/Крио блок.webp',
     'snowflake': 'assets/Мир 2/Заморозка.webp',
     'heal': 'assets/Мир 2/Аптечка.webp',
-    'portal': 'assets/ui/portals/world-2.png'
+    'portal': 'assets/ui/portals/world-2.webp'
   };
   const WORLD3_ASSETS = {
     'candy-light': 'assets/Мир 3/Непрочный блок.webp',
@@ -31,7 +31,7 @@
     'candy-hazard': 'assets/Мир 3/опасный блок.webp',
     'jelly-bounce': 'assets/Мир 3/Желейка.webp',
     'heal': 'assets/Мир 3/Хилка.webp',
-    'portal': 'assets/ui/portals/world-3.png'
+    'portal': 'assets/ui/portals/world-3.webp'
   };
   const WORLD4_ASSETS = {
     'ash': 'assets/Мир 4/Непрочный блок.webp',
@@ -41,7 +41,7 @@
     'geyser': 'assets/Мир 4/Гейзер-заметный.webp',
     'meteor': 'assets/Мир 4/Метеорит.webp',
     'heal': 'assets/Мир 4/Аптечка.webp',
-    'portal': 'assets/ui/portals/world-4.png'
+    'portal': 'assets/ui/portals/world-4.webp'
   };
   const assetSource = (worldId, sprite) => {
     if (+worldId === 1 && WORLD1_ASSETS[sprite]) return WORLD1_ASSETS[sprite];

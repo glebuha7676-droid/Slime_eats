@@ -14,7 +14,7 @@ html body #homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-socket{an
   32%{filter:brightness(1.65) drop-shadow(0 0 7px var(--pipe-accent));transform:translateX(-50%)}
   62%{filter:brightness(1.18) drop-shadow(0 0 3px var(--pipe-accent));transform:translateX(-50%)}
 }
-html body[data-screen="home"] #app{background:#bddfd2 url("assets/ui/home-laboratory-v2.png") center top / 100% 330px no-repeat!important}
+html body[data-screen="home"] #app{background:#bddfd2 url("assets/ui/home-laboratory-v2.webp") center top / 100% 330px no-repeat!important}
 html body[data-screen="home"] .topbar.world-summary{background:transparent!important;border:0!important;box-shadow:none!important}
 html body[data-screen="home"] .topbar.world-summary:before,
 html body[data-screen="home"] .topbar.world-summary:after{display:none!important}
@@ -43,7 +43,7 @@ html body #homeScreen>#slimeStage,
 html body #homeScreen .slime-hero-layout,
 html body #homeScreen .slime-center-stage,
 html body #homeScreen .slime-playground{overflow:visible!important}
-html body #homeScreen .lab-portal-frame{position:absolute;z-index:4;isolation:isolate;pointer-events:none;box-sizing:border-box;left:50%;top:-24px;width:220px;height:184px;transform:translateX(-50%);border:0;border-radius:0;background:url("assets/ui/lab-portal-frame-v3.png?v=1") center/contain no-repeat;box-shadow:none;opacity:.58;filter:saturate(.46) brightness(.78) contrast(.94) drop-shadow(0 5px 4px rgba(18,55,53,.32));transition:opacity .34s ease,filter .34s ease}
+html body #homeScreen .lab-portal-frame{position:absolute;z-index:4;isolation:isolate;pointer-events:none;box-sizing:border-box;left:50%;top:-24px;width:220px;height:184px;transform:translateX(-50%);border:0;border-radius:0;background:url("assets/ui/lab-portal-frame-v3.webp?v=1") center/contain no-repeat;box-shadow:none;opacity:.58;filter:saturate(.46) brightness(.78) contrast(.94) drop-shadow(0 5px 4px rgba(18,55,53,.32));transition:opacity .34s ease,filter .34s ease}
 html body #homeScreen .lab-portal-frame:after{content:""!important;display:block!important;position:absolute;z-index:-1;left:50%;bottom:7px;width:168px;height:18px;transform:translateX(-50%);border:0!important;border-radius:50%;background:rgba(19,57,53,.34)!important;box-shadow:none!important;filter:blur(5px)}
 html body #homeScreen .slime-stage.portal-ready .lab-portal-frame,
 html body #homeScreen .slime-stage.launch-charging .lab-portal-frame,
@@ -69,7 +69,7 @@ html body #homeScreen .conveyor-machine .food-choices{z-index:20!important;overf
 html body #homeScreen .conveyor-dispensers{z-index:10!important}
 html body #homeScreen .machine-tunnel{top:49px!important;bottom:12px!important;height:auto!important;z-index:2!important;width:32px!important;background:linear-gradient(90deg,#24434b,#10262d)!important;border:3px solid #688b87!important;border-radius:13px 13px 4px 4px!important;box-shadow:inset 0 3px 9px #0008,0 0 0 2px #365851!important}
 html body #homeScreen .machine-mouth{top:4px!important;bottom:4px!important;height:auto!important}
-html body #homeScreen .machine-wall-decor{position:absolute!important;z-index:41!important;top:-1px!important;bottom:-1px!important;width:44px!important;pointer-events:none!important;background:url("assets/ui/conveyor-tunnel-wall-decor-v2.png?v=1") center/100% 100% no-repeat!important}
+html body #homeScreen .machine-wall-decor{position:absolute!important;z-index:41!important;top:-1px!important;bottom:-1px!important;width:44px!important;pointer-events:none!important;background:url("assets/ui/conveyor-tunnel-wall-decor-v2.webp?v=1") center/100% 100% no-repeat!important}
 html body #homeScreen .machine-wall-decor-left{left:-1px!important;transform:scaleX(-1)!important}
 html body #homeScreen .machine-wall-decor-right{right:-1px!important}
 html body #homeScreen .food-mutation-fx{bottom:4px!important}
@@ -367,11 +367,11 @@ html body #homeScreen .machine-belt>i:nth-child(6){display:none!important}
 }
 #homeScreen>#slimeStage .stage-foliage-left{
   left:-66px;
-  background-image:url("assets/ui/conveyor-foliage-left-v4.png?v=1");
+  background-image:url("assets/ui/conveyor-foliage-left-v4.webp?v=1");
 }
 #homeScreen>#slimeStage .stage-foliage-right{
   right:-66px;
-  background-image:url("assets/ui/conveyor-foliage-right-v4.png?v=1");
+  background-image:url("assets/ui/conveyor-foliage-right-v4.webp?v=1");
 }
 @media(max-width:370px){
   #homeScreen>#slimeStage .stage-foliage{bottom:-64px;width:142px;height:129px}

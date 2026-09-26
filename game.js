@@ -30,11 +30,11 @@
   const {
     FOODS,
     WORLD_SPRITES,
-    WORLD_BACKGROUNDS,
     CRACK_STAGE_SPRITES,
     VFX_SPRITES,
     versionedAsset,
     ensureWorldSprites,
+    ensureWorldBackground,
     projectSprite,
     foodArtMarkup,
     centerFoodThumbnail,
@@ -159,16 +159,16 @@
   const RESULT_SWEEP_MS = 900;
   const MUTATION_STEPS = 10;
   const STARTER_MUTATIONS = Object.freeze([
-    { id: 'fire', name: 'ОГОНЬ', image: 'assets/ui/recipe-categories/emblem-v2-fire.png' },
-    { id: 'electric', name: 'ЭЛЕКТРИЧЕСТВО', image: 'assets/ui/recipe-categories/emblem-v2-electric.png' },
-    { id: 'frost', name: 'МОРОЗ', image: 'assets/ui/recipe-categories/emblem-v2-frost.png' }
+    { id: 'fire', name: 'ОГОНЬ', image: 'assets/ui/recipe-categories/emblem-v2-fire.webp' },
+    { id: 'electric', name: 'ЭЛЕКТРИЧЕСТВО', image: 'assets/ui/recipe-categories/emblem-v2-electric.webp' },
+    { id: 'frost', name: 'МОРОЗ', image: 'assets/ui/recipe-categories/emblem-v2-frost.webp' }
   ]);
   const MUTATION_DISCOVERIES = Object.freeze([
-    { id: 'explosion', name: 'ВЗРЫВ', image: 'assets/ui/recipe-categories/emblem-v2-explosion.png' },
-    { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/emblem-v2-cosmos.png' },
-    { id: 'nano', name: 'НАНО', image: 'assets/ui/recipe-categories/emblem-v2-nano.png' },
-    { id: 'telekinesis', name: 'ТЕЛЕКИНЕЗ', image: 'assets/ui/recipe-categories/emblem-v2-telekinesis.png' },
-    { id: 'cloning', name: 'КЛОНИРОВАНИЕ', image: 'assets/ui/recipe-categories/emblem-v2-cloning.png' }
+    { id: 'explosion', name: 'ВЗРЫВ', image: 'assets/ui/recipe-categories/emblem-v2-explosion.webp' },
+    { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/emblem-v2-cosmos.webp' },
+    { id: 'nano', name: 'НАНО', image: 'assets/ui/recipe-categories/emblem-v2-nano.webp' },
+    { id: 'telekinesis', name: 'ТЕЛЕКИНЕЗ', image: 'assets/ui/recipe-categories/emblem-v2-telekinesis.webp' },
+    { id: 'cloning', name: 'КЛОНИРОВАНИЕ', image: 'assets/ui/recipe-categories/emblem-v2-cloning.webp' }
   ]);
   const MUTATION_DETAILS = Object.freeze({
     fire: { stage1: 'Поджигает повреждённые блоки.', stage2: 'Огонь быстрее прожигает путь.' },
@@ -192,17 +192,17 @@
   });
   const TRAILS = Object.freeze([
     { id: 'none', name: 'Без следа', cost: 0 },
-    { id: 'redJelly', name: 'Красное желе', cost: 3, asset: 'assets/ui/trails/trail-red.png', colors: ['rgba(255,54,69,0)', 'rgba(255,76,88,.48)', 'rgba(239,42,57,.94)'], glow: '#ff5964' },
-    { id: 'pinkJelly', name: 'Розовое желе', cost: 3, asset: 'assets/ui/trails/trail-pink.png', colors: ['rgba(255,78,178,0)', 'rgba(255,108,194,.5)', 'rgba(247,54,159,.95)'], glow: '#ff78c6' },
-    { id: 'blueJelly', name: 'Синее желе', cost: 3, asset: 'assets/ui/trails/trail-blue.png', colors: ['rgba(42,145,255,0)', 'rgba(61,177,255,.5)', 'rgba(22,135,240,.95)'], glow: '#51c7ff' },
-    { id: 'yellowJelly', name: 'Жёлтое желе', cost: 3, asset: 'assets/ui/trails/trail-yellow.png', colors: ['rgba(255,211,34,0)', 'rgba(255,225,60,.52)', 'rgba(255,193,18,.96)'], glow: '#ffe45c' },
-    { id: 'greenJelly', name: 'Зелёное желе', cost: 3, asset: 'assets/ui/trails/trail-green.png', colors: ['rgba(48,225,93,0)', 'rgba(64,238,116,.5)', 'rgba(24,192,76,.95)'], glow: '#58ef8d' },
-    { id: 'orangeJelly', name: 'Оранжевое желе', cost: 3, asset: 'assets/ui/trails/trail-orange.png', colors: ['rgba(255,126,34,0)', 'rgba(255,150,47,.5)', 'rgba(244,91,18,.96)'], glow: '#ff9a45' },
-    { id: 'purpleJelly', name: 'Фиолетовое желе', cost: 3, asset: 'assets/ui/trails/trail-purple.png', colors: ['rgba(142,67,255,0)', 'rgba(166,90,255,.5)', 'rgba(119,43,230,.95)'], glow: '#b47cff' },
-    { id: 'starJelly', name: 'Звёздное желе', cost: 8, asset: 'assets/ui/trails/trail-star.png', effect: 'stars', colors: ['rgba(21,13,74,0)', 'rgba(58,31,141,.66)', 'rgba(17,25,88,.98)'], glow: '#6652d8', life: 1.12 },
-    { id: 'goldJelly', name: 'Золотой блеск', cost: 9, asset: 'assets/ui/trails/trail-gold.png', effect: 'gold', colors: ['rgba(255,171,8,0)', 'rgba(255,218,49,.54)', 'rgba(255,164,6,.96)'], glow: '#ffe56b', life: 1.15 },
-    { id: 'rainbowJelly', name: 'Радужное желе', cost: 11, asset: 'assets/ui/trails/trail-rainbow.png', effect: 'rainbow', life: 1.14 },
-    { id: 'bubbleJelly', name: 'Мыльные пузыри', cost: 9, asset: 'assets/ui/trails/trail-bubbles.png', effect: 'bubbles', glow: '#b9efff', life: 1.2 }
+    { id: 'redJelly', name: 'Красное желе', cost: 3, asset: 'assets/ui/trails/trail-red.webp', colors: ['rgba(255,54,69,0)', 'rgba(255,76,88,.48)', 'rgba(239,42,57,.94)'], glow: '#ff5964' },
+    { id: 'pinkJelly', name: 'Розовое желе', cost: 3, asset: 'assets/ui/trails/trail-pink.webp', colors: ['rgba(255,78,178,0)', 'rgba(255,108,194,.5)', 'rgba(247,54,159,.95)'], glow: '#ff78c6' },
+    { id: 'blueJelly', name: 'Синее желе', cost: 3, asset: 'assets/ui/trails/trail-blue.webp', colors: ['rgba(42,145,255,0)', 'rgba(61,177,255,.5)', 'rgba(22,135,240,.95)'], glow: '#51c7ff' },
+    { id: 'yellowJelly', name: 'Жёлтое желе', cost: 3, asset: 'assets/ui/trails/trail-yellow.webp', colors: ['rgba(255,211,34,0)', 'rgba(255,225,60,.52)', 'rgba(255,193,18,.96)'], glow: '#ffe45c' },
+    { id: 'greenJelly', name: 'Зелёное желе', cost: 3, asset: 'assets/ui/trails/trail-green.webp', colors: ['rgba(48,225,93,0)', 'rgba(64,238,116,.5)', 'rgba(24,192,76,.95)'], glow: '#58ef8d' },
+    { id: 'orangeJelly', name: 'Оранжевое желе', cost: 3, asset: 'assets/ui/trails/trail-orange.webp', colors: ['rgba(255,126,34,0)', 'rgba(255,150,47,.5)', 'rgba(244,91,18,.96)'], glow: '#ff9a45' },
+    { id: 'purpleJelly', name: 'Фиолетовое желе', cost: 3, asset: 'assets/ui/trails/trail-purple.webp', colors: ['rgba(142,67,255,0)', 'rgba(166,90,255,.5)', 'rgba(119,43,230,.95)'], glow: '#b47cff' },
+    { id: 'starJelly', name: 'Звёздное желе', cost: 8, asset: 'assets/ui/trails/trail-star.webp', effect: 'stars', colors: ['rgba(21,13,74,0)', 'rgba(58,31,141,.66)', 'rgba(17,25,88,.98)'], glow: '#6652d8', life: 1.12 },
+    { id: 'goldJelly', name: 'Золотой блеск', cost: 9, asset: 'assets/ui/trails/trail-gold.webp', effect: 'gold', colors: ['rgba(255,171,8,0)', 'rgba(255,218,49,.54)', 'rgba(255,164,6,.96)'], glow: '#ffe56b', life: 1.15 },
+    { id: 'rainbowJelly', name: 'Радужное желе', cost: 11, asset: 'assets/ui/trails/trail-rainbow.webp', effect: 'rainbow', life: 1.14 },
+    { id: 'bubbleJelly', name: 'Мыльные пузыри', cost: 9, asset: 'assets/ui/trails/trail-bubbles.webp', effect: 'bubbles', glow: '#b9efff', life: 1.2 }
   ]);
   let slimePointer = null;
   let menuSlimeAnimationId = 0;
@@ -803,7 +803,7 @@
         ? `Уровень ${level} закрыт. Пройдите предыдущий уровень`
         : `Выбрать уровень ${level}`);
       button.setAttribute('aria-pressed', String(level === selected));
-      button.innerHTML = `<span>${level}</span>${completed && !locked ? '<i aria-hidden="true">✓</i>' : ''}${locked ? `<img src="${versionedAsset('assets/ui/level-lock.png')}" alt="" aria-hidden="true">` : ''}`;
+      button.innerHTML = `<span>${level}</span>${completed && !locked ? '<i aria-hidden="true">✓</i>' : ''}${locked ? `<img src="${versionedAsset('assets/ui/level-lock.webp')}" alt="" aria-hidden="true">` : ''}`;
       els.levelButtons.appendChild(button);
     }
   }
@@ -832,9 +832,9 @@
         ? `Мир ${worldDisplayNumber(item.id)} закрыт. Кубков ${completed} из 10`
         : position === 'current' ? `Текущий мир: ${item.name}` : `Выбрать ${item.name}`);
       const titleDetail = locked
-        ? `<span class="world-card-requirement"><img src="assets/ui/world-picker-v2/trophy.png" alt="">${completed}/10</span>`
+        ? `<span class="world-card-requirement"><img src="assets/ui/world-picker-v2/trophy.webp" alt="">${completed}/10</span>`
         : position === 'current' ? '<b></b>' : '';
-      button.innerHTML = `<span class="world-carousel-art"><img class="world-card-image" src="${iconPath(item)}" alt=""><span class="world-card-title"><small>МИР ${worldDisplayNumber(item.id)}</small>${titleDetail}</span>${locked ? '<img class="world-card-lock" src="assets/ui/world-picker-v2/abyss-lock.png" alt="">' : ''}</span>`;
+      button.innerHTML = `<span class="world-carousel-art"><img class="world-card-image" src="${iconPath(item)}" alt=""><span class="world-card-title"><small>МИР ${worldDisplayNumber(item.id)}</small>${titleDetail}</span>${locked ? '<img class="world-card-lock" src="assets/ui/world-picker-v2/abyss-lock.webp" alt="">' : ''}</span>`;
       if (position === 'current' && !locked) button.querySelector('.world-card-title b').textContent = item.name;
       return button;
     };
@@ -1099,7 +1099,7 @@
         } else if (!unlocked) {
           const lock = document.createElement('img');
           lock.className = 'home-world-option-lock';
-          lock.src = versionedAsset('assets/ui/level-lock.png');
+          lock.src = versionedAsset('assets/ui/level-lock.webp');
           lock.alt = '';
           state.appendChild(lock);
         }
@@ -1608,11 +1608,11 @@
 
   const MUTATION_GRAVITY_ARROW_SVG = '<svg viewBox="0 0 14 20" aria-hidden="true"><path d="M5 1H9V10H13L7 19 1 10H5Z"></path></svg>';
   const MUTATION_REVEAL_BACKGROUNDS = Object.freeze({
-    explosion: 'assets/ui/mutation-reveal/explosion-v1.png',
-    cosmos: 'assets/ui/mutation-reveal/cosmos-v1.png',
-    nano: 'assets/ui/mutation-reveal/nano-v2.png',
-    telekinesis: 'assets/ui/mutation-reveal/telekinesis-v1.png',
-    cloning: 'assets/ui/mutation-reveal/cloning-v1.png'
+    explosion: 'assets/ui/mutation-reveal/explosion-v1.webp',
+    cosmos: 'assets/ui/mutation-reveal/cosmos-v1.webp',
+    nano: 'assets/ui/mutation-reveal/nano-v2.webp',
+    telekinesis: 'assets/ui/mutation-reveal/telekinesis-v1.webp',
+    cloning: 'assets/ui/mutation-reveal/cloning-v1.webp'
   });
 
   function mutationElementFxMarkup(family, extraClass = '') {
@@ -1641,7 +1641,7 @@
       return `<span class="mutation-element-fx food-mutation-fx food-cosmos-gravity-fx" aria-hidden="true"><span class="mutation-gravity-particles">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span></span>`;
     }
     if (family === 'nano') {
-      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.png')}" alt="">`;
+      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.webp')}" alt="">`;
       return `<span class="mutation-element-fx food-mutation-fx food-nano-drones-fx" aria-hidden="true">${drone}${drone}</span>`;
     }
     if (family === 'telekinesis') {
@@ -1659,7 +1659,7 @@
       return `<span class="mutation-gravity-particles" aria-hidden="true">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span>`;
     }
     if (mutation.id === 'nano') {
-      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.png')}" alt="">`;
+      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.webp')}" alt="">`;
       return `<span class="mutation-nano-drones" aria-hidden="true">${drone}${drone}<i class="nano-prize-shot"></i><i class="nano-prize-shot"></i></span>`;
     }
     if (mutation.id === 'cloning') {
@@ -1738,14 +1738,14 @@
   };
 
   const RECIPE_FAMILY_ICONS = Object.freeze({
-    fire: 'assets/ui/recipe-categories/emblem-v2-fire.png',
-    ice: 'assets/ui/recipe-categories/emblem-v2-frost.png',
-    electric: 'assets/ui/recipe-categories/emblem-v2-electric.png',
-    cosmos: 'assets/ui/recipe-categories/emblem-v2-cosmos.png',
-    nano: 'assets/ui/recipe-categories/emblem-v2-nano.png',
-    telekinesis: 'assets/ui/recipe-categories/emblem-v2-telekinesis.png',
-    cloning: 'assets/ui/recipe-categories/emblem-v2-cloning.png',
-    blast: 'assets/ui/recipe-categories/emblem-v2-explosion.png'
+    fire: 'assets/ui/recipe-categories/emblem-v2-fire.webp',
+    ice: 'assets/ui/recipe-categories/emblem-v2-frost.webp',
+    electric: 'assets/ui/recipe-categories/emblem-v2-electric.webp',
+    cosmos: 'assets/ui/recipe-categories/emblem-v2-cosmos.webp',
+    nano: 'assets/ui/recipe-categories/emblem-v2-nano.webp',
+    telekinesis: 'assets/ui/recipe-categories/emblem-v2-telekinesis.webp',
+    cloning: 'assets/ui/recipe-categories/emblem-v2-cloning.webp',
+    blast: 'assets/ui/recipe-categories/emblem-v2-explosion.webp'
   });
 
   function foodRecipeFamily(food) {
@@ -2827,7 +2827,7 @@
     const key = `${artWorld}-${size}`;
     if (!flaskSprites.has(key)) {
       const image = new Image();
-      image.src = versionedAsset(`assets/collectibles/flasks/world-${key}.png`);
+      image.src = versionedAsset(`assets/collectibles/flasks/world-${key}.webp`);
       flaskSprites.set(key, image);
     }
     return flaskSprites.get(key);
@@ -4172,8 +4172,8 @@
     return Boolean(block && !block.dead && !block.unbreakable && !block.hazard);
   }
 
-  const NANO_DRONE_SPRITE = 'assets/ui/nano-drone-v1.png';
-  const NANO_SHOT_SPRITE = 'assets/ui/nano-blaster-shot-v1.png';
+  const NANO_DRONE_SPRITE = 'assets/ui/nano-drone-v1.webp';
+  const NANO_SHOT_SPRITE = 'assets/ui/nano-blaster-shot-v1.webp';
   const NANO_SHOT_INTERVAL_MS = 2000;
 
   function nanoDronePosition(index, timestamp) {
@@ -5734,14 +5734,14 @@
         mobility: 'СКОРОСТНОЙ БУР'
       };
       const icons = {
-        frost: 'emblem-v2-frost.png',
-        electric: 'emblem-v2-electric.png',
-        fire: 'emblem-v2-fire.png',
-        cosmos: 'emblem-v2-cosmos.png',
-        gold: 'gold-aligned.png',
-        explosion: 'emblem-v2-explosion.png',
-        mass: 'weight-aligned.png',
-        mobility: 'mobility-aligned.png'
+        frost: 'emblem-v2-frost.webp',
+        electric: 'emblem-v2-electric.webp',
+        fire: 'emblem-v2-fire.webp',
+        cosmos: 'emblem-v2-cosmos.webp',
+        gold: 'gold-aligned.webp',
+        explosion: 'emblem-v2-explosion.webp',
+        mass: 'weight-aligned.webp',
+        mobility: 'mobility-aligned.webp'
       };
       const duration = ELEMENTAL_ABILITY_DURATION_MS[type] || 1;
       const remaining = Math.max(0, run.elementalAbilityUntil - now);
@@ -5792,12 +5792,17 @@
     drawFinishPortal(world, timestamp);
 
     const visibleBlocks = [];
-    for (const block of run.blocks) {
-      if (block.dead) continue;
-      const sy = block.y - run.cameraY;
-      if (sy < -60 || sy > VIEW_H + 60) continue;
-      if (!block.blackHoleSuctionStartedAt) visibleBlocks.push(block);
-      drawSuctionAwareBlock(block, sy, timestamp);
+    const rowOrigin = run.blockRowOrigin || 285;
+    const firstVisibleRow = Math.max(0, Math.floor((run.cameraY - 60 - rowOrigin) / run.cellSize));
+    const lastVisibleRow = Math.ceil((run.cameraY + VIEW_H + 60 - rowOrigin) / run.cellSize);
+    for (let row = firstVisibleRow; row <= lastVisibleRow; row += 1) {
+      for (const block of run.blocksByRow?.get(row) || []) {
+        if (block.dead) continue;
+        const sy = block.y - run.cameraY;
+        if (sy < -60 || sy > VIEW_H + 60) continue;
+        if (!block.blackHoleSuctionStartedAt) visibleBlocks.push(block);
+        drawSuctionAwareBlock(block, sy, timestamp);
+      }
     }
 
     // A thin shared grid keeps every tile aligned without blending their art.
@@ -6772,7 +6777,7 @@
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius * .9, 0, Math.PI * 2);
     ctx.clip();
-    const worldArtwork = WORLD_BACKGROUNDS[world.id];
+    const worldArtwork = ensureWorldBackground(world.id);
     if (worldArtwork?.complete && worldArtwork.naturalWidth) {
       const sourceSize = Math.min(worldArtwork.naturalWidth, worldArtwork.naturalHeight);
       const focus = ({ 1: .1, 2: .15, 3: .18, 4: .14 })[world.id] || .12;
@@ -6855,7 +6860,7 @@
   }
 
   function drawBackground(world, timestamp) {
-    const builtInArtwork = WORLD_BACKGROUNDS[world.id];
+    const builtInArtwork = ensureWorldBackground(world.id);
     if (builtInArtwork?.complete && builtInArtwork.naturalWidth) {
       const tileWidth = VIEW_W;
       const tileHeight = builtInArtwork.naturalHeight * tileWidth / builtInArtwork.naturalWidth;
@@ -10133,7 +10138,7 @@
     const visibleUnlockedCount = STARTER_MUTATIONS.length + unlocked.size;
     const futureMutations = Array.from({ length: Math.max(0, collectionCapacity - allMutations().length) }, (_, index) => ({ id: `future-${index + 1}`, future: true }));
 
-    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
 
     const collection = [...allMutations(), ...futureMutations].map(mutation => {
       if (mutation.future) return `<button class="mutation-collection-slot future locked" type="button" disabled aria-label="Неизвестная будущая мутация"><i>?</i><b>???</b></button>`;
@@ -10182,7 +10187,7 @@
           <header class="mutation-pane-title"><h3>СИНТЕЗАТОР</h3></header>
           <button id="mutationCapsuleBtn" class="mutation-capsule mutation-capsule-v2 ${allUnlocked ? 'is-complete' : ''} ${readyToReveal ? 'is-ready-to-synthesize' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все мутации открыты' : readyToReveal ? 'Реактор заполнен' : `Добавить одну колбу. Осталось ${remaining}`}">
             <span class="mutation-machine-visual" aria-hidden="true">
-              <img class="mutation-machine-art" src="${versionedAsset('assets/ui/lab-synth-machine-v1.png')}" alt="">
+              <img class="mutation-machine-art" src="${versionedAsset('assets/ui/lab-synth-machine-v1.webp')}" alt="">
               <span class="mutation-glass">
                 <span id="mutationLiquid" class="mutation-liquid-chamber" style="--liquid-fill:${liquidFillPercent}%"><span class="mutation-liquid-sprite"></span><span class="mutation-liquid-bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
                 <span class="mutation-reactor-energy">${reactorEnergyArcs}</span>
@@ -10200,7 +10205,7 @@
             <span class="mutation-synth-progress-fill" style="width:${fillPercent}%"></span>
           </div>
           <div class="mutation-synth-controls">
-            <span class="mutation-synth-balance"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><span><small>ОСТАЛОСЬ</small><b id="mutationRemaining">${allUnlocked ? 0 : remaining}</b></span></span>
+            <span class="mutation-synth-balance"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><span><small>ОСТАЛОСЬ</small><b id="mutationRemaining">${allUnlocked ? 0 : remaining}</b></span></span>
             <button id="mutationSynthesizeBtn" class="mutation-synthesize-btn ${readyToReveal ? 'ready' : ''}" type="button" ${readyToReveal ? '' : 'disabled'}><span>СИНТЕЗ</span></button>
           </div>
         </section>
@@ -10265,7 +10270,7 @@
     mutationAnimating = false;
     $('#mutationPrize')?.remove();
     const researchBalance = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
-    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
     if (activeLaboratoryTab === 'conveyor') {
       renderLaboratoryConveyorPanel();
       return;
@@ -10303,7 +10308,7 @@
       <button id="mutationCapsuleBtn" class="mutation-capsule ${allUnlocked ? 'is-complete' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все тестовые мутации открыты' : readyToReveal ? 'Открывается новая мутация' : `Добавить одну колбу. Осталось ${remaining}`}">
         <span class="mutation-side-feed" aria-hidden="true">
           <span id="mutationInlet" class="mutation-inlet"><i></i></span>
-          <span class="mutation-feed-count"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt=""><b id="mutationRemaining">${allUnlocked || readyToReveal ? '✓' : remaining}</b></span>
+          <span class="mutation-feed-count"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationRemaining">${allUnlocked || readyToReveal ? '✓' : remaining}</b></span>
         </span>
         <span class="mutation-dispenser">
           <span class="mutation-dispenser-mouth">
@@ -10439,7 +10444,7 @@
 
     const flyingFlask = document.createElement('img');
     flyingFlask.className = 'mutation-invest-flask';
-    flyingFlask.src = versionedAsset('assets/ui/research-flask.png');
+    flyingFlask.src = versionedAsset('assets/ui/research-flask.webp');
     flyingFlask.alt = '';
     const flightLayer = els.panelOverlay.querySelector('.panel-modal') || button;
     const sourceRect = els.panelTitle.querySelector('.mutation-panel-balance')?.getBoundingClientRect();
@@ -10671,7 +10676,7 @@
     return `<div class="shop-tabs" role="tablist" aria-label="Разделы магазина">
       <span class="shop-tab-slider ${activeShopTab === 'trails' ? 'to-trails' : ''}" aria-hidden="true"></span>
       <button class="shop-tab ${activeShopTab === 'skins' ? 'active' : ''}" data-shop-tab="skins" role="tab" aria-selected="${activeShopTab === 'skins'}"><img src="${versionedAsset('assets/ui/slime.webp')}" alt="" aria-hidden="true"> ОБЛИКИ</button>
-      <button class="shop-tab ${activeShopTab === 'trails' ? 'active' : ''}" data-shop-tab="trails" role="tab" aria-selected="${activeShopTab === 'trails'}"><img src="${versionedAsset('assets/ui/trail-tab.png')}" alt="" aria-hidden="true"> СЛЕДЫ</button>
+      <button class="shop-tab ${activeShopTab === 'trails' ? 'active' : ''}" data-shop-tab="trails" role="tab" aria-selected="${activeShopTab === 'trails'}"><img src="${versionedAsset('assets/ui/trail-tab.webp')}" alt="" aria-hidden="true"> СЛЕДЫ</button>
     </div>`;
   }
 
@@ -10706,7 +10711,7 @@
         if (unlockedByWorld && !save.unlockedSkins.includes(skin.id)) save.unlockedSkins.push(skin.id);
         const unlocked = save.unlockedSkins.includes(skin.id);
         const selected = save.selectedSkin === skin.id;
-        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
+        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
         const reward = skin.world ? `<span class="shop-reward ${unlocked ? 'collected' : ''}"><b>${unlocked ? 'ПОЛУЧЕН' : 'НАГРАДА'}</b><i>МИР ${Math.max(1, skin.world - 1)}</i></span>` : '';
         const label = selected ? 'ВЫБРАН' : unlocked ? 'ВЫБРАТЬ' : skin.cost ? 'КУПИТЬ' : 'ЗАКРЫТ';
         return `<div class="skin-card ${selected ? 'selected' : ''}">
@@ -10773,8 +10778,8 @@
       ${TRAILS.map(trail => {
         const unlocked = save.unlockedTrails.includes(trail.id);
         const selected = save.selectedTrail === trail.id;
-        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.png')}" alt="" aria-hidden="true"><b>${formatCompactNumber(trail.cost)}</b></span>` : '';
-        const previewAsset = trail.id === 'none' ? 'assets/ui/trail-none.png' : trail.asset;
+        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(trail.cost)}</b></span>` : '';
+        const previewAsset = trail.id === 'none' ? 'assets/ui/trail-none.webp' : trail.asset;
         return `<div class="trail-card ${selected ? 'selected' : ''}">
           <div class="trail-preview"><img src="${versionedAsset(previewAsset)}" alt="" aria-hidden="true" loading="eager" decoding="async"></div>
           <div class="shop-item-copy"><h4>${trail.name}</h4>${price}</div>

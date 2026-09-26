@@ -16,17 +16,20 @@
   const projectSprites = {};
   const thumbnailFitCache = new Map();
 
-  const worldBackgrounds = Object.freeze(Object.fromEntries([
-    [1, 'world-1-depths'],
-    [2, 'world-2-ice'],
-    [3, 'world-3-factory'],
-    [4, 'world-4-magma']
-  ].map(([worldId, name]) => {
-    const image = new Image();
-    image.decoding = 'async';
-    image.src = versionedAsset(`assets/backgrounds/${name}.webp`);
-    return [worldId, image];
-  })));
+  const worldBackgroundNames = Object.freeze({
+    1: 'world-1-depths', 2: 'world-2-ice', 3: 'world-3-factory', 4: 'world-4-magma'
+  });
+  const worldBackgrounds = {};
+
+  function ensureWorldBackground(worldId) {
+    if (!worldBackgrounds[worldId] && worldBackgroundNames[worldId]) {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = versionedAsset(`assets/backgrounds/${worldBackgroundNames[worldId]}.webp`);
+      worldBackgrounds[worldId] = image;
+    }
+    return worldBackgrounds[worldId] || null;
+  }
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -42,9 +45,8 @@
     if (worldSprites[worldId] || !WORLD_SPRITE_NAMES[worldId]) return worldSprites[worldId] || null;
     worldSprites[worldId] = Object.fromEntries(WORLD_SPRITE_NAMES[worldId].map(name => {
       const image = new Image();
-      const extension = worldId === 3 ? 'png' : 'webp';
       const catalogSource = window.SlimeWorldCatalog?.assetSource?.(worldId, name);
-      image.src = versionedAsset(catalogSource || `assets/world${worldId}/${name}.${extension}`);
+      image.src = versionedAsset(catalogSource || `assets/world${worldId}/${name}.webp`);
       return [name, image];
     }));
     return worldSprites[worldId];
@@ -54,14 +56,14 @@
     return [null, 25, 50, 75].map(damage => {
       if (!damage) return null;
       const image = new Image();
-      image.src = versionedAsset(`assets/cracks/universal/damage-${damage}.png`);
+      image.src = versionedAsset(`assets/cracks/universal/damage-${damage}.webp`);
       return image;
     });
   }
 
   const crackStageSprites = Object.freeze(loadCrackStages());
 
-  const vfxSprites = Object.fromEntries([
+  const vfxNames = new Set([
     'heal-cross',
     'spring-gust',
     'cryo-1',
@@ -89,21 +91,28 @@
     'combo-stage-3',
     'combo-stage-4',
     'combo-stage-5'
-  ].map(name => {
-    const image = new Image();
-    const geyserFrame = name.match(/^geyser-compact-(\d)$/)?.[1];
-    const comboStage = name.match(/^combo-stage-(\d)$/)?.[1];
-    image.src = versionedAsset(geyserFrame
-      ? `assets/vfx/geyser-compact/frame-${geyserFrame}.png`
-      : comboStage
-        ? `assets/ui/combo/stage-${comboStage}.png`
-        : name === 'pandora-box'
-          ? 'assets/vfx/pandora-box.webp'
-          : name === 'jelly-zone-texture'
-            ? 'assets/Мир 1/Желе текстура v4.webp'
-          : `assets/vfx/${name}.png`);
-    return [name, image];
-  }));
+  ]);
+  const vfxSprites = new Proxy({}, {
+    get(sprites, name) {
+      if (typeof name !== 'string' || !vfxNames.has(name)) return sprites[name];
+      if (!sprites[name]) {
+        const image = new Image();
+        const geyserFrame = name.match(/^geyser-compact-(\d)$/)?.[1];
+        const comboStage = name.match(/^combo-stage-(\d)$/)?.[1];
+        image.src = versionedAsset(geyserFrame
+          ? `assets/vfx/geyser-compact/frame-${geyserFrame}.webp`
+          : comboStage
+            ? `assets/ui/combo/stage-${comboStage}.webp`
+            : name === 'pandora-box'
+              ? 'assets/vfx/pandora-box.webp'
+            : name === 'jelly-zone-texture'
+              ? 'assets/Мир 1/Желе текстура v4.webp'
+            : `assets/vfx/${name}.webp`);
+        sprites[name] = image;
+      }
+      return sprites[name];
+    }
+  });
 
   function projectSprite(source) {
     if (!source) return null;
@@ -228,6 +237,7 @@
     FOODS: loadFoodCatalog(),
     WORLD_SPRITES: worldSprites,
     WORLD_BACKGROUNDS: worldBackgrounds,
+    ensureWorldBackground,
     CRACK_STAGE_SPRITES: crackStageSprites,
     VFX_SPRITES: vfxSprites,
     versionedAsset,

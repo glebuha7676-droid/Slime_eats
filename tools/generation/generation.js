@@ -20,7 +20,7 @@
   const findBlock = id => world?.blocks?.find(block => block.id === id);
 
   function spriteFor(token) {
-    if ('123'.includes(token)) return rootAsset(`assets/collectibles/flasks/world-1-${{ 1: 'small', 2: 'medium', 3: 'large' }[token]}.png`);
+    if ('123'.includes(token)) return rootAsset(`assets/collectibles/flasks/world-1-${{ 1: 'small', 2: 'medium', 3: 'large' }[token]}.webp`);
     if (token === 'z') return rootAsset('assets/Мир 1/Желе текстура v4.webp');
     const blockId = { w: 'dense', n: 'hard', h: 'reinforced', x: 'hazard', '+': 'heal', p: 'bomb', q: 'bomb' }[token];
     const block = findBlock(blockId);

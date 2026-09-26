@@ -12,19 +12,19 @@
   </style>
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-body-reference-v1.png?v=2" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-sockets-reference-v1.png?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-pupils-reference-v1.png?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-cheeks-reference-v1.png?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-expressions-v1.png?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.png?v=1" />
-  <link rel="stylesheet" href="styles.css?v=88" />
-  <link rel="stylesheet" href="home-layout.css?v=181" />
-  <link rel="stylesheet" href="home-mode-fix.css?v=109" />
-  <link rel="stylesheet" href="home-visual-refresh.css?v=38" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-body-reference-v1.webp?v=2" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-sockets-reference-v1.webp?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-pupils-reference-v1.webp?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-cheeks-reference-v1.webp?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-expressions-v1.webp?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.webp?v=1" />
+  <link rel="stylesheet" href="styles.css?v=89" />
+  <link rel="stylesheet" href="home-layout.css?v=182" />
+  <link rel="stylesheet" href="home-mode-fix.css?v=110" />
+  <link rel="stylesheet" href="home-visual-refresh.css?v=39" />
   <link rel="stylesheet" href="drop-visual-refresh.css?v=3" />
-  <link rel="stylesheet" href="lab-redesign.css?v=34" />
-  <link rel="stylesheet" href="world-picker-v2.css?v=21" />
+  <link rel="stylesheet" href="lab-redesign.css?v=35" />
+  <link rel="stylesheet" href="world-picker-v2.css?v=22" />
 </head>
 <body>
   <div id="phoneViewport" class="phone-viewport">
@@ -43,13 +43,13 @@
         </button>
         <div class="research-wallet" aria-label="Исследование: 0 единиц, заполнение 0 из 100">
           <span class="research-wallet-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask.png?v=1" alt="">
+            <img src="assets/ui/research-flask.webp?v=1" alt="">
             <b id="researchUnitsLabel">0</b>
           </span>
           <span class="research-wallet-track" aria-hidden="true"><i id="researchProgressBar"></i></span>
         </div>
         <div class="currency coin-wallet trophy-wallet" aria-label="Кубки за пройденные миры">
-          <img class="currency-icon" src="assets/ui/world-picker-v2/trophy.png" alt="" aria-hidden="true">
+          <img class="currency-icon" src="assets/ui/world-picker-v2/trophy.webp" alt="" aria-hidden="true">
           <div class="currency-values"><b id="coinsLabel">0</b><small id="runCoinsGain" aria-label="Кубки за забег">+0</small></div>
         </div>
         <button class="header-rewards-btn" data-panel="rewards" type="button" aria-label="Открыть награды">
@@ -64,11 +64,11 @@
           <div class="slime-hero-layout">
             <div class="recipe-rail" aria-label="Лаборатория и аксессуары">
               <button class="recipe-book-button mutation-lab-button" data-panel="recipes" type="button" aria-label="Открыть лабораторию">
-                <img src="assets/ui/laboratory-icon-v1.png?v=1" alt="" aria-hidden="true">
+                <img src="assets/ui/laboratory-icon-v1.webp?v=1" alt="" aria-hidden="true">
                 <span>ЛАБОРАТОРИЯ</span>
               </button>
               <button class="recipe-accessories-button" data-panel="shop" type="button" aria-label="Открыть аксессуары">
-                <img src="assets/ui/accessories-cap.png?v=2" alt="" aria-hidden="true">
+                <img src="assets/ui/accessories-cap.webp?v=2" alt="" aria-hidden="true">
                 <span>АКСЕССУАРЫ</span>
               </button>
             </div>
@@ -120,7 +120,7 @@
           <div class="world-picker-v2" aria-label="Выбор мира">
             <div id="worldCarousel" class="world-carousel" aria-label="Миры"></div>
             <div id="worldCarouselDots" class="world-carousel-dots" aria-hidden="true"></div>
-            <div class="world-mode-row" aria-label="Режим игры"><button id="normalModeV2" class="world-mode-v2 selected" type="button" aria-pressed="true">Обычный</button><button id="abyssModeV2" class="world-mode-v2 abyss locked" type="button" disabled aria-label="Бездна закрыта"><img src="assets/ui/world-picker-v2/abyss-lock.png" alt="">Бездна</button></div>
+            <div class="world-mode-row" aria-label="Режим игры"><button id="normalModeV2" class="world-mode-v2 selected" type="button" aria-pressed="true">Обычный</button><button id="abyssModeV2" class="world-mode-v2 abyss locked" type="button" disabled aria-label="Бездна закрыта"><img src="assets/ui/world-picker-v2/abyss-lock.webp" alt="">Бездна</button></div>
             <button id="worldStartBtn" class="world-start-v2 hungry" type="button" disabled><span id="worldStartText"></span></button>
           </div>
           <div class="world-picker-legacy" hidden>
@@ -133,7 +133,7 @@
                     <small id="homeWorldPickerEyebrow">МИР 1</small>
                     <b id="homeWorldPickerName">Зелёная долина</b>
                   </span>
-                  <span class="home-world-chevron" aria-hidden="true"><img src="assets/ui/world-picker-chevron.png?v=1" alt=""></span>
+                  <span class="home-world-chevron" aria-hidden="true"><img src="assets/ui/world-picker-chevron.webp?v=1" alt=""></span>
                 </button>
                 <div id="homeWorldMenu" class="home-world-menu" role="listbox" aria-label="Миры" hidden></div>
                 <select id="homeWorldSelect" class="home-world-native-select" tabindex="-1" aria-hidden="true" hidden></select>
@@ -150,9 +150,9 @@
                   <span><b>УРОВНИ</b><small>ВЫБОР ЭТАПА</small></span>
                 </button>
                 <button id="endlessModeBtn" class="home-mode-tab" type="button" role="tab" aria-selected="false" aria-controls="endlessModePanel">
-                  <i class="home-mode-icon home-mode-endless-icon" aria-hidden="true"><img src="assets/ui/endless-mode.png?v=2" alt=""></i>
+                  <i class="home-mode-icon home-mode-endless-icon" aria-hidden="true"><img src="assets/ui/endless-mode.webp?v=2" alt=""></i>
                   <span><b>БЕСКОНЕЧНЫЙ</b><small id="endlessModeHint">ПОСЛЕ ФИНАЛА</small></span>
-                  <img class="home-mode-lock" src="assets/ui/level-lock.png" alt="" aria-hidden="true">
+                  <img class="home-mode-lock" src="assets/ui/level-lock.webp" alt="" aria-hidden="true">
                 </button>
               </div>
             </div>
@@ -166,17 +166,17 @@
 
           <div id="endlessModePanel" class="home-mode-panel endless-mode-panel hidden" role="tabpanel" aria-labelledby="endlessModeBtn">
             <div class="endless-mode-records" aria-label="Рекорды бесконечного режима">
-              <span class="endless-stat-card"><img src="assets/ui/endless-score.png?v=1" alt="" aria-hidden="true"><span><small>ЛУЧШИЙ СЧЁТ</small><b id="endlessBestScore">0</b></span></span>
-              <span class="endless-stat-card"><img src="assets/ui/endless-depth.png?v=1" alt="" aria-hidden="true"><span><small>МАКС. ГЛУБИНА</small><b id="endlessBestDepth">0 М</b></span></span>
-              <span class="endless-stat-card"><img src="assets/ui/endless-laps.png?v=1" alt="" aria-hidden="true"><span><small>ПРОЙДЕНО КРУГОВ</small><b id="endlessBestLaps">0</b></span></span>
-              <span class="endless-stat-card"><img src="assets/ui/endless-runs.png?v=1" alt="" aria-hidden="true"><span><small>БЕСКОНЕЧНЫХ ЗАБЕГОВ</small><b id="endlessRuns">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-score.webp?v=1" alt="" aria-hidden="true"><span><small>ЛУЧШИЙ СЧЁТ</small><b id="endlessBestScore">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-depth.webp?v=1" alt="" aria-hidden="true"><span><small>МАКС. ГЛУБИНА</small><b id="endlessBestDepth">0 М</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-laps.webp?v=1" alt="" aria-hidden="true"><span><small>ПРОЙДЕНО КРУГОВ</small><b id="endlessBestLaps">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-runs.webp?v=1" alt="" aria-hidden="true"><span><small>БЕСКОНЕЧНЫХ ЗАБЕГОВ</small><b id="endlessRuns">0</b></span></span>
             </div>
           </div>
 
           <div class="home-reroll-row" aria-label="Управление конвейером">
             <div class="conveyor-controls">
               <button id="rerollBtn" class="reroll-btn" type="button">
-                <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll-button-v2.png?v=1" alt="" aria-hidden="true"></span>
+                <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll-button-v2.webp?v=1" alt="" aria-hidden="true"></span>
                 <span class="reroll-copy"><b id="rerollTitle">РЕРОЛЛ</b></span>
                 <em id="rerollText">БЕСПЛАТНО ∞</em>
               </button>
@@ -206,9 +206,9 @@
             <div class="shaft-health" aria-label="У слайма три сердца">
               <span class="shaft-health-title" aria-hidden="true">ЖИЗНИ</span>
               <div class="run-hearts" role="img" aria-label="3 из 3 сердец">
-                <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
-                <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
-                <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.png?v=1" alt=""></span>
+                <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=1" alt=""></span>
+                <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=1" alt=""></span>
+                <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=1" alt=""></span>
               </div>
               <span class="shaft-health-count"><b id="runHeartCount">3</b>/3</span>
             </div>
@@ -226,11 +226,11 @@
               </div>
             </div>
             <div id="runResearchHud" class="run-research-hud" aria-label="Данные исследования за забег: 0">
-              <img src="assets/ui/research-flask.png?v=1" alt="" aria-hidden="true">
+              <img src="assets/ui/research-flask.webp?v=1" alt="" aria-hidden="true">
               <span><small>ИССЛЕДОВАНИЕ</small><b id="runResearchScore">0</b></span>
               <i id="runResearchGain" aria-hidden="true">+1</i>
             </div>
-            <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/pause-button-v2.png?v=1" alt="" aria-hidden="true"><span>ПАУЗА</span></button>
+            <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/pause-button-v2.webp?v=1" alt="" aria-hidden="true"><span>ПАУЗА</span></button>
           </div>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div class="barrier-control" aria-label="Щит с зарядами">
@@ -265,10 +265,10 @@
           </div>
         </div>
         <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать кубки и открыть игровой прогресс" title="Выдать кубки и открыть игровой прогресс">
-          <img src="assets/ui/world-picker-v2/trophy.png" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Кубки и прогресс</small></span><i aria-hidden="true">+</i>
+          <img src="assets/ui/world-picker-v2/trophy.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Кубки и прогресс</small></span><i aria-hidden="true">+</i>
         </button>
         <button id="adminInfiniteFlasksBtn" class="admin-infinite-flasks" type="button" aria-pressed="false" aria-label="Включить бесконечные колбы исследования">
-          <img src="assets/ui/research-flask.png?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
+          <img src="assets/ui/research-flask.webp?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
         </button>
         <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
         <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
@@ -314,7 +314,7 @@
       <div class="result-summary" aria-label="Результат забега">
         <div class="result-stat result-research-stat">
           <span id="resultResearchFlask" class="result-research-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask.png?v=1" alt="">
+            <img src="assets/ui/research-flask.webp?v=1" alt="">
             <b id="resultResearchUnits">0</b>
           </span>
           <span class="result-research-copy">
@@ -325,7 +325,7 @@
           <span id="resultResearchStream" class="result-research-stream" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
         </div>
         <div class="result-stat result-coins-stat">
-          <img src="assets/ui/world-picker-v2/trophy.png" alt="" aria-hidden="true">
+          <img src="assets/ui/world-picker-v2/trophy.webp" alt="" aria-hidden="true">
           <span><small>КУБОК ЗА МИР</small><b id="resultCoins">+0</b></span>
         </div>
       </div>
@@ -362,11 +362,11 @@
     <div class="modal game-complete-modal" tabindex="-1">
       <div class="game-complete-glow" aria-hidden="true"></div>
       <div class="game-complete-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="game-complete-portal" aria-hidden="true"><img src="assets/ui/portals/world-4.png" alt=""><span><img src="assets/ui/slime.webp" alt=""></span></div>
+      <div class="game-complete-portal" aria-hidden="true"><img src="assets/ui/portals/world-4.webp" alt=""><span><img src="assets/ui/slime.webp" alt=""></span></div>
       <small class="game-complete-kicker">ВСЕ МИРЫ ОТКРЫТЫ</small>
       <h2 id="gameCompleteTitle">ВЫ ПРОШЛИ ИГРУ!</h2>
       <p>Слайм добрался до последнего портала. Кубки за миры можно собирать и дальше.</p>
-      <button id="playEndlessBtn" class="game-complete-action game-complete-endless" type="button"><span aria-hidden="true"><img src="assets/ui/endless-mode.png?v=2" alt=""></span><b>БЕСКОНЕЧНЫЙ МИР</b><small>Новый круг — сложнее предыдущего</small></button>
+      <button id="playEndlessBtn" class="game-complete-action game-complete-endless" type="button"><span aria-hidden="true"><img src="assets/ui/endless-mode.webp?v=2" alt=""></span><b>БЕСКОНЕЧНЫЙ МИР</b><small>Новый круг — сложнее предыдущего</small></button>
       <button id="gameCompleteHomeBtn" class="game-complete-action game-complete-home" type="button"><span aria-hidden="true">⌂</span><b>В МЕНЮ</b></button>
       <button class="game-complete-action game-complete-soon" type="button" disabled><span aria-hidden="true">✦</span><b>ПРОДОЛЖЕНИЕ</b><small>СКОРО</small></button>
     </div>
@@ -384,18 +384,22 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </div>
-  <script src="/sdk.js"></script>
-  <script src="food-catalog.js?v=26"></script>
-  <script src="world-catalog.js?v=24"></script>
+  <script>
+    if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith('.github.io')) {
+      document.write('<script src="/sdk.js"><\/script>');
+    }
+  </script>
+  <script src="food-catalog.js?v=27"></script>
+  <script src="world-catalog.js?v=25"></script>
   <script src="js/generation/section-catalog.js?v=13"></script>
   <script src="js/generation/section-catalog-v4.js?v=2"></script>
   <script src="js/config/gameplay-balance.js?v=3"></script>
   <script src="js/config/game-config.js?v=77"></script>
   <script src="js/platform/yandex-platform.js?v=2"></script>
-  <script src="js/core/game-assets.js?v=34"></script>
+  <script src="js/core/game-assets.js?v=35"></script>
   <script src="js/core/audio.js?v=2"></script>
-  <script src="js/rendering/slime-avatar.js?v=36"></script>
+  <script src="js/rendering/slime-avatar.js?v=37"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=389"></script>
+  <script src="game.js?v=390"></script>
 </body>
 </html>
