@@ -5,7 +5,7 @@
   if (!catalog || !worldCatalog) throw new Error('Generation catalogs are not loaded');
   const $ = selector => document.querySelector(selector);
   const state = {
-    mode: 'normal', category: 'start', difficulty: 1, rows: 3,
+    worldId: 1, mode: 'normal', category: 'start', difficulty: 1, rows: 3,
     brush: 'w', painting: false, dragging: false, erase: false, selectedId: '', draft: null
   };
   const els = {
@@ -16,19 +16,20 @@
     remove: $('#deleteBtn'), clear: $('#clearBtn'), mirror: $('#mirrorBtn')
   };
   const rootAsset = source => source ? `../../${source}` : '';
-  const world = worldCatalog.load().worlds.find(item => item.id === 1);
-  const findBlock = id => world?.blocks?.find(block => block.id === id);
+  const worlds = worldCatalog.load().worlds;
+  const world = () => worlds.find(item => item.id === state.worldId);
+  const findBlock = id => world()?.blocks?.find(block => block.id === id);
 
   function spriteFor(token) {
-    if ('123'.includes(token)) return rootAsset(`assets/collectibles/flasks/world-1-${{ 1: 'small', 2: 'medium', 3: 'large' }[token]}.webp`);
+    if ('123'.includes(token)) return rootAsset(`assets/collectibles/flasks/world-${state.worldId === 2 ? '2-large' : `${state.worldId}-${{ 1: 'small', 2: 'medium', 3: 'large' }[token]}`}.webp`);
     if (token === 'z') return rootAsset('assets/Мир 1/Желе текстура v4.webp');
     const blockId = { w: 'dense', n: 'hard', h: 'reinforced', x: 'hazard', '+': 'heal', p: 'bomb', q: 'bomb' }[token];
     const block = findBlock(blockId);
-    return block?.sprite ? rootAsset(worldCatalog.assetSource(1, block.sprite)) : '';
+    return block?.sprite ? rootAsset(worldCatalog.assetSource(state.worldId, block.sprite)) : '';
   }
 
   function blankDraft() {
-    return catalog.normalize({ worldId: 1, category: state.category, mode: state.mode,
+    return catalog.normalize({ worldId: state.worldId, category: state.category, mode: state.mode,
       difficulty: state.difficulty, rowCount: state.rows, cells: Array(state.rows).fill('.'.repeat(6)) });
   }
 
@@ -64,9 +65,8 @@
       `<button type="button" data-mode="${id}" class="${id === state.mode ? 'active' : ''}">${label}</button>`).join('');
     els.categories.innerHTML = catalog.CATEGORIES.map(item =>
       `<button type="button" data-category="${item.id}" class="${item.id === state.category ? 'active' : ''}">${item.label}</button>`).join('');
-    els.stars.innerHTML = [1, 2, 3].map(value =>
-      `<button type="button" data-star="${value}" class="${value === state.draft.difficulty ? 'active' : ''}" aria-label="${value} звезды">${'★'.repeat(value)}</button>`).join('');
-    els.widths.innerHTML = [3, 4, 5].map(value =>
+    els.stars.innerHTML = '';
+    els.widths.innerHTML = [3, 4, 7].map(value =>
       `<button type="button" data-rows="${value}" class="${value === state.draft.rows ? 'active' : ''}">${value}</button>`).join('');
     els.update.disabled = !state.selectedId;
     els.remove.disabled = !state.selectedId;
@@ -74,12 +74,12 @@
   }
 
   function renderPool() {
-    const templates = catalog.templatesFor(1, state.category, state.mode);
+    const templates = catalog.templatesFor(state.worldId, state.category, state.mode);
     els.count.textContent = String(templates.length);
     els.pool.innerHTML = templates.length ? templates.map((template, index) =>
       `<article class="pool-card ${template.id === state.selectedId ? 'active' : ''}">
         <button type="button" data-template="${template.id}" class="pool-select" aria-label="Открыть секцию ${index + 1}">
-          <span class="pool-card-title"><strong>Секция ${index + 1}</strong><small>${'★'.repeat(template.difficulty)} · ${template.rows} ряда</small></span>
+          <span class="pool-card-title"><strong>Секция ${index + 1}</strong><small>${template.rows} ряда</small></span>
           ${miniGrid(template)}
           <span class="pool-edit-hint">Выбрать и редактировать</span>
         </button>
@@ -151,6 +151,10 @@
     const button = event.target.closest('[data-mode]');
     if (!button) return;
     state.mode = button.dataset.mode;
+    startBlank();
+  });
+  $('#generationWorld').addEventListener('change', event => {
+    state.worldId = Number(event.target.value);
     startBlank();
   });
   els.categories.addEventListener('click', event => {

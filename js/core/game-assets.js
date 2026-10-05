@@ -11,7 +11,7 @@
     FOOD_ART_OFFSETS,
     WORLD_SPRITE_NAMES
   } = config;
-  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'blast']);
+  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch', 'blast']);
   const worldSprites = {};
   const projectSprites = {};
   const thumbnailFitCache = new Map();
@@ -51,17 +51,6 @@
     }));
     return worldSprites[worldId];
   }
-
-  function loadCrackStages() {
-    return [null, 25, 50, 75].map(damage => {
-      if (!damage) return null;
-      const image = new Image();
-      image.src = versionedAsset(`assets/cracks/universal/damage-${damage}.webp`);
-      return image;
-    });
-  }
-
-  const crackStageSprites = Object.freeze(loadCrackStages());
 
   const vfxNames = new Set([
     'heal-cross',
@@ -222,6 +211,7 @@
       name,
       recipeFamily,
       image,
+      ...(Number.isInteger(value.stage) && value.stage >= 1 && value.stage <= 3 ? { stage: value.stage } : {}),
       ...(value.requiresMutation ? { requiresMutation: String(value.requiresMutation).trim() } : {})
     };
   }
@@ -238,7 +228,6 @@
     WORLD_SPRITES: worldSprites,
     WORLD_BACKGROUNDS: worldBackgrounds,
     ensureWorldBackground,
-    CRACK_STAGE_SPRITES: crackStageSprites,
     VFX_SPRITES: vfxSprites,
     versionedAsset,
     ensureWorldSprites,

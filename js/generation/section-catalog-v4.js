@@ -4,15 +4,16 @@
   const legacy = window.SlimeSectionCatalog;
   if (!legacy) throw new Error('Section seed catalog is missing');
   const STORAGE_KEY = 'slime_generation_sections_v4';
-  const WORLD_NAMES = Object.freeze({ 1: 'Зелёные глубины' });
+  const WORLD_NAMES = Object.freeze({ 1: 'Зелёные глубины', 2: 'Ледяная пещера', 3: 'Конфетная фабрика', 4: 'Магмовое ядро' });
   const CATEGORIES = Object.freeze([
     { id: 'start', label: 'Старт' },
-    { id: 'safe', label: 'Передышка' },
-    { id: 'neutral', label: 'Обычная' },
-    { id: 'danger', label: 'Опасная' },
-    { id: 'fork', label: 'Развилка' },
-    { id: 'reward', label: 'Колбы' },
-    { id: 'final', label: 'Финиш' }
+    { id: 'end', label: 'Конец' },
+    { id: 'danger1', label: 'Опасный участок I' },
+    { id: 'danger2', label: 'Опасный участок II' },
+    { id: 'special', label: 'Особый участок' },
+    { id: 'reward', label: 'Наградной участок' },
+    { id: 'heal', label: 'Участок хила' },
+    { id: 'neutral', label: 'Нейтральный участок' }
   ]);
   const BRUSHES = Object.freeze([
     { id: '.', label: 'Пусто' },
@@ -31,6 +32,7 @@
   const validTokens = new Set(BRUSHES.map(brush => brush.id));
   const clamp = (number, min, max) => Math.max(min, Math.min(max, number));
   const oldOreToken = { c: '1', i: '2', g: '3', d: '3' };
+  const remapCategory = value => ({ safe: 'heal', danger: 'danger1', fork: 'neutral', final: 'end' })[value] || value;
 
   function normalizeRow(value, oldWidth = 6) {
     const input = [...String(value || '')].map(token => oldOreToken[token] || token);
@@ -44,12 +46,13 @@
   function normalize(value) {
     const oldWidth = clamp(Math.round(Number(value?.cols) || 6), 3, 6);
     const source = Array.isArray(value?.cells) ? value.cells : [];
-    const requestedRows = clamp(Math.round(Number(value?.rowCount) || source.length || 3), 3, 5);
+    const rawRows = Math.round(Number(value?.rowCount) || source.length || 3);
+    const requestedRows = [3, 4, 7].includes(rawRows) ? rawRows : rawRows > 4 ? 7 : 3;
     const cells = source.slice(0, requestedRows).map(row => normalizeRow(row, oldWidth));
     while (cells.length < requestedRows) cells.push('w'.repeat(6));
     return {
-      id: String(value?.id || ''), worldId: 1,
-      category: CATEGORIES.some(item => item.id === value?.category) ? value.category : 'neutral',
+      id: String(value?.id || ''), worldId: Math.max(1, Math.min(4, Number(value?.worldId) || 1)),
+      category: CATEGORIES.some(item => item.id === remapCategory(value?.category)) ? remapCategory(value?.category) : 'neutral',
       mode: value?.mode === 'easy' ? 'easy' : 'normal',
       difficulty: clamp(Math.round(Number(value?.difficulty) || 1), 1, 3),
       cols: 6, rows: cells.length, cells
@@ -58,11 +61,32 @@
 
   // Keep the existing section layouts as editable seeds. The old ore cells
   // become empty collectible cells; authored v3 changes are carried forward.
-  const defaults = legacy.all().map(template => normalize({ ...template, cols: 6 }));
+  const legacyDefaults = legacy.all().map(template => normalize({ ...template, cols: 6,
+    category: template.category === 'danger' && template.difficulty >= 2 ? 'danger2' :
+      template.category === 'boss' || template.category === 'bomb' ? 'special' : template.category,
+    rowCount: template.rows > 4 ? 7 : template.rows }));
+  const defaults = legacyDefaults.slice();
+  // Every category has a starter in each legal size; these can be edited or deleted.
+  for (const worldId of [1, 2, 3, 4]) for (const mode of ['normal', 'easy']) for (const category of CATEGORIES.map(item => item.id)) {
+    for (const rows of [3, 4, 7]) {
+      if (defaults.some(item => item.worldId === worldId && item.mode === mode && item.category === category && item.rows === rows)) continue;
+      const nearest = legacyDefaults.find(item => item.mode === mode && item.category === category)
+        || legacyDefaults.find(item => item.category === category);
+      const source = nearest?.cells || ['nwwwwn', 'n....n', 'nwwwwn'];
+      const cells = Array.from({ length: rows }, (_, index) => source[index % source.length]);
+      if (category === 'reward') cells[Math.floor(rows / 2)] = 'n.11.n';
+      if (category === 'heal') cells[Math.floor(rows / 2)] = 'n..+.n';
+      defaults.push(normalize({ id: `starter-${worldId}-${mode}-${category}-${rows}`, worldId, mode, category, rowCount: rows, cells }));
+    }
+  }
 
   function readStore() {
     try {
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      const fromEditor = location.pathname.replace(/\\/g, '/').includes('/tools/generation/');
+      const local = localStorage.getItem(STORAGE_KEY);
+      const generated = window.SlimeGeneratedData?.sections;
+      const hasGeneratedEdits = generated && ['changed', 'created', 'deleted'].some(key => generated[key]?.length);
+      const raw = fromEditor && local ? JSON.parse(local) : hasGeneratedEdits ? generated : JSON.parse(local || '{}');
       return {
         changed: Array.isArray(raw.changed) ? raw.changed : [],
         created: Array.isArray(raw.created) ? raw.created : [],
@@ -117,6 +141,8 @@
   }
 
   function buildPlan(worldId, _level, rowCount, random = Math.random, difficultyMode = 'normal') {
+    if (window.SlimeMinePlans)
+      return window.SlimeMinePlans.buildRows(worldId, difficultyMode, all(), random);
     if (Number(worldId) !== 1) return legacy.buildPlan(worldId, 5, rowCount, random, 'normal');
     const rows = Math.max(3, Math.round(Number(rowCount) || 3));
     const mode = difficultyMode === 'easy' ? 'easy' : 'normal';

@@ -1,0 +1,26 @@
+[hidden]{display:none!important}
+.generation-sync-status{margin-left:auto;padding:5px 8px;border-radius:7px;background:#d9f7e8;color:#236248;font-size:10px;font-weight:900;max-width:260px}.generation-sync-status.error{background:#fff0d9;color:#9b4c27}
+.generation-world-label{display:grid;gap:2px;margin-left:auto;color:#d8f8ed;font-size:10px;font-weight:900}.generation-world-label select{max-width:190px;padding:5px;border:2px solid #6dc0ad;border-radius:8px;background:#e7fff5;color:#245d57;font-size:11px;font-weight:900}
+.generator-tabs{display:flex;gap:7px;width:min(1160px,calc(100% - 20px));margin:9px auto 0}
+.generator-tabs button{padding:9px 18px;border:2px solid #8cbab7;border-radius:12px;background:#f1f9f5;color:#305d5c;font-weight:900;cursor:pointer}
+.generator-tabs button.active{background:#137c88;border-color:#075f6a;color:white}
+.mine-editor{width:min(1160px,calc(100% - 20px));margin:10px auto 24px;display:grid;gap:10px}
+.mine-toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:9px;padding:13px}
+.mine-toolbar>div{margin-right:auto}.mine-toolbar small{font-size:10px;font-weight:900;color:#487675}.mine-toolbar h2{font-size:21px;margin:2px 0}
+.mine-toolbar label{display:grid;gap:3px;font-size:10px;font-weight:900;color:#436864}
+.mine-toolbar select,.mine-toolbar input{min-width:125px;max-width:200px;padding:8px;border:2px solid #9ebdb9;border-radius:9px;background:white;color:#244848;font-weight:800}
+.mine-toolbar button{padding:9px;border:2px solid #67a7a0;border-radius:10px;background:#e8f9f3;color:#23615e;font-weight:900;cursor:pointer}
+#mineSave,#mineSaveAs{background:#238b77;color:white}
+.mine-toolbar button:disabled{opacity:.45}
+.mine-layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:10px;align-items:start}
+.mine-inventory{position:sticky;top:8px;padding:12px}.mine-inventory h3{margin:0 0 6px}.mine-inventory p{font-size:11px;line-height:1.35;color:#52716f}
+#minePalette{display:grid;gap:6px}.mine-palette-item{display:grid;gap:2px;text-align:left;padding:9px;border:2px solid #afc8c2;border-radius:10px;background:#f3faf6;color:#254b48;cursor:grab}
+.mine-palette-item b{font-size:12px}.mine-palette-item small{font-size:10px;color:#597a73}.mine-palette-item small.warning{color:#a95026}.mine-palette-item.picked{border-color:#168e9e;background:#d8f7f8}
+.mine-track{padding:12px}.mine-totals{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;padding:12px;border:2px solid #6ca69d;border-radius:12px;background:#d9f7e9;color:#22534d;font-size:13px}
+.mine-totals span{color:#a25424;font-weight:900}
+#mineBands{display:grid;gap:6px;margin-top:9px}.mine-band{display:grid;grid-template-columns:88px minmax(0,1fr);gap:7px;align-items:stretch;padding:6px;border:1px solid #bdd3cc;border-radius:10px;background:#f3faf5}
+.mine-meter{display:grid;align-content:center;gap:3px;text-align:center;color:#315b55}.mine-meter b{font-size:12px}.mine-meter small{font-size:10px}
+.mine-band-body{display:grid;gap:5px}.mine-shapes{display:flex;gap:4px}.mine-shapes button{padding:3px 8px;border:1px solid #a0c6be;border-radius:6px;background:#f9fffc;color:#3b6964;font-size:10px;font-weight:900;cursor:pointer}.mine-shapes button.active{background:#238c80;color:white}
+.mine-slots{display:flex;gap:6px}.mine-slot{position:relative;flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:47px;padding:7px 10px;border:2px dashed #9bbab4;border-radius:9px;background:white;color:#59756f;text-align:left;cursor:pointer}.mine-slot.filled{border-style:solid;border-color:#59aa93;background:#e6f9ee;color:#205f50}.mine-slot.invalid{border-color:#d87348;background:#fff1e8}.mine-slot span{font-size:10px;white-space:nowrap}.mine-slot b{font-size:12px}.mine-slot strong{color:#ba4b24;font-size:20px}
+.mine-slot small{font-size:10px;font-weight:900;white-space:nowrap;color:#4e7d6b}
+@media(max-width:700px){.mine-layout{grid-template-columns:1fr}.mine-inventory{position:static}#minePalette{grid-template-columns:repeat(2,minmax(0,1fr))}.mine-band{grid-template-columns:75px minmax(0,1fr)}.mine-slot{padding:5px}.mine-slot b{font-size:10px}}

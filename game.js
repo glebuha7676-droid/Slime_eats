@@ -30,7 +30,6 @@
   const {
     FOODS,
     WORLD_SPRITES,
-    CRACK_STAGE_SPRITES,
     VFX_SPRITES,
     versionedAsset,
     ensureWorldSprites,
@@ -48,6 +47,15 @@
   const STOMACH_CAPACITY = 3;
   const FREEZE_ZONE_CHARGE_MS = 1000;
   const FREEZE_ZONE_DURATION_MS = 3000;
+  const PHANTOM_COOLDOWN_MS = 10000;
+  const PHANTOM_WARNING_MS = 1300;
+  const PHANTOM_ENTER_MS = 380;
+  const PHANTOM_DURATION_MS = 4000;
+  const PHANTOM_BURST_MS = 650;
+  const GLITCH_INFECTION_INTERVAL_MS = 11500;
+  const GLITCH_NEUTRALIZE_INTERVAL_MS = 17500;
+  const GLITCH_TITLE_MS = 1500;
+  const GLITCH_CLONE_MS = 6000;
   const UNLIMITED_FREE_REROLLS = true;
   const SPEED_PRESSURE_RAMP_MS = 1000;
   const SPEED_BURST_CHARGE_MS = 5000;
@@ -55,16 +63,36 @@
   const COSMOS_ASCENT_ARM_DISTANCE = 1.15;
   const COSMOS_ENTRY_FALL_DISTANCE = .9;
   const ELEMENTAL_ABILITY_DURATION_MS = Object.freeze({
-    frost: 3000,
-    electric: 3000,
-    fire: 5000,
-    cosmos: 3000,
+    frost: 6000,
+    electric: 4600,
+    fire: 2000,
+    cosmos: 5500,
+    nano: 10000,
+    telekinesis: 2500,
+    phantom: 3000,
     gold: 3000,
     explosion: 3000,
-    cloning: 1700,
+    cloning: 5800,
+    glitch: 1800,
     mass: 4000,
     mobility: 5000
   });
+  const ULTIMATE_INTRO_MS = 820;
+  const PHOENIX_FIRE_ROWS = 14; // Seven mine rows are 50 m.
+  const COSMOS_ULTIMATE_CHARGE_MS = 920;
+  const COSMOS_ULTIMATE_RAMP_MS = 270;
+  const COSMOS_ULTIMATE_FADE_START_MS = 4000;
+  const ELECTRIC_STORM_STRIKES = 5;
+  const ELECTRIC_STORM_BRANCH_LENGTH = 4;
+  const ELECTRIC_STORM_EXIT_MS = 720;
+  const phoenixUltimateSprite = new Image();
+  phoenixUltimateSprite.src = versionedAsset('assets/vfx/fire-phoenix-ultimate-v1.png');
+  const electricStormCloudSprite = new Image();
+  electricStormCloudSprite.src = versionedAsset('assets/vfx/electric-storm-cloud-v2.png');
+  const technoMechSprite = new Image();
+  technoMechSprite.src = versionedAsset('assets/vfx/techno-mech-suit-v2.webp');
+  const frostStormFlakeSprite = new Image();
+  frostStormFlakeSprite.src = versionedAsset('assets/vfx/frost-storm-flake-v1.png');
 
   const WORLD_CONTENT = window.SlimeWorldCatalog?.load?.() || { worlds: [] };
   let GAME_BALANCE = window.SlimeBalance?.load?.() || window.SlimeBalance?.defaults?.() || null;
@@ -89,20 +117,29 @@
     phoneViewport: $('#phoneViewport'),
     app: $('#app'),
     coinsLabel: $('#coinsLabel'), runCoinsGain: $('#runCoinsGain'),
-    researchUnitsLabel: $('#researchUnitsLabel'), researchProgressBar: $('#researchProgressBar'),
+    researchUnitsLabel: $('#researchUnitsLabel'),
     worldLabel: $('#worldLabel'), worldIcon: $('#worldIcon'),
     worldEyebrow: $('#worldEyebrow'), levelPassedBadge: $('#levelPassedBadge'), worldProgressPrefix: $('#worldProgressPrefix'), worldProgressText: $('#worldProgressText'),
     worldProgressBar: $('#worldProgressBar'), worldProgressMarker: $('#worldProgressMarker'), worldHint: $('#worldHint'),
     homeScreen: $('#homeScreen'), dropScreen: $('#dropScreen'), slimeStage: $('#slimeStage'), slime: $('#slime'),
+    quickMutationPicker: $('#quickMutationPicker'),
+    formIndexBtn: $('#formIndexBtn'), formIndexBadge: $('#formIndexBadge'), wardrobeBtn: $('#wardrobeBtn'), mutationLabBadge: $('#mutationLabBadge'),
+    tutorialLayer: $('#tutorialLayer'), tutorialFocus: $('#tutorialFocus'), tutorialPointer: $('#tutorialPointer'), tutorialCaption: $('#tutorialCaption'),
+    tutorialGift: $('#tutorialGift'), tutorialGiftClaimBtn: $('#tutorialGiftClaimBtn'),
+    tutorialControls: $('#tutorialControls'), tutorialControlsText: $('#tutorialControlsText'), tutorialControlsCloseBtn: $('#tutorialControlsCloseBtn'),
+    tutorialUpgradeSummary: $('#tutorialUpgradeSummary'), tutorialUpgradeSummaryCloseBtn: $('#tutorialUpgradeSummaryCloseBtn'),
+    tutorialAdminBtn: $('#tutorialAdminBtn'), tutorialPauseBtn: $('#tutorialPauseBtn'), tutorialSkipBtn: $('#tutorialSkipBtn'), tutorialRunSkipBtn: $('#tutorialRunSkipBtn'),
     menuSlimeCanvas: $('#menuSlimeCanvas'), menuSlimeMouth: $('#menuSlimeMouth'),
     foodInside: $('#foodInside'), levelButtons: $('#levelButtons'), levelDepthLabel: $('#levelDepthLabel'),
     healthCompare: $('#healthCompare'), damageCompare: $('#damageCompare'), shieldCompare: $('#shieldCompare'),
     startDropLabel: $('#startDropLabel'), adminMenuBtn: $('#adminMenuBtn'), adminToolsOverlay: $('#adminToolsOverlay'),
     closeAdminToolsBtn: $('#closeAdminToolsBtn'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
-    adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'), adminResetProgressBtn: $('#adminResetProgressBtn'),
+    adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'), adminUnlockMutationsBtn: $('#adminUnlockMutationsBtn'),
+    adminUnlockMutationsIcon: $('#adminUnlockMutationsIcon'), adminResetProgressBtn: $('#adminResetProgressBtn'),
     adminInfiniteFlasksBtn: $('#adminInfiniteFlasksBtn'), adminInfiniteFlasksState: $('#adminInfiniteFlasksState'),
-    conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), conveyorDispensers: $('#conveyorDispensers'), conveyorChoiceCount: $('#conveyorChoiceCount'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
+    adminInfiniteUltimateBtn: $('#adminInfiniteUltimateBtn'), adminInfiniteUltimateState: $('#adminInfiniteUltimateState'),
+    conveyor: $('#conveyor'), foodChoices: $('#foodChoices'), conveyorDispensers: $('#conveyorDispensers'), conveyorChoiceCount: $('#conveyorChoiceCount'), conveyorEatenCount: $('#conveyorEatenCount'), conveyorCapacityCount: $('#conveyorCapacityCount'), rerollBtn: $('#rerollBtn'), rerollTitle: $('#rerollTitle'), rerollText: $('#rerollText'),
     stomachQuickSlots: $('#stomachQuickSlots'),
     recipeCategorySlots: $('#recipeCategorySlots'), slimeFeedCount: $('#slimeFeedCount'),
     playSetupCard: $('#playSetupCard'), homeWorldPicker: $('#homeWorldPicker'), homeWorldMenu: $('#homeWorldMenu'),
@@ -113,12 +150,17 @@
     endlessBestScore: $('#endlessBestScore'), endlessBestDepth: $('#endlessBestDepth'), endlessBestLaps: $('#endlessBestLaps'),
     endlessRuns: $('#endlessRuns'), startDropBtn: $('#startDropBtn'), startEndlessBtn: $('#startEndlessBtn'),
     worldCarousel: $('#worldCarousel'), worldCarouselDots: $('#worldCarouselDots'), worldStartBtn: $('#worldStartBtn'),
-    worldStartText: $('#worldStartText'), normalModeV2: $('#normalModeV2'), abyssModeV2: $('#abyssModeV2'),
+    worldTerminalPreview: $('#worldTerminalPreview'), worldTerminalNumber: $('#worldTerminalNumber'), worldTerminalName: $('#worldTerminalName'),
+    worldTerminalLock: $('#worldTerminalLock'), worldTerminalTrophies: $('#worldTerminalTrophies'), worldTerminalStats: $('#worldTerminalStats'),
+    worldPrevBtn: $('#worldPrevBtn'), worldNextBtn: $('#worldNextBtn'),
+    terminalBestScore: $('#terminalBestScore'), terminalBestDepth: $('#terminalBestDepth'), terminalBestLaps: $('#terminalBestLaps'), terminalRuns: $('#terminalRuns'),
+    worldStartText: $('#worldStartText'), abyssModeV2: $('#abyssModeV2'), terminalEndlessLabel: $('#terminalEndlessLabel'),
     depthLabel: $('#depthLabel'), runHeartHud: $('.shaft-health'), runHearts: $$('.run-heart'), runHeartCount: $('#runHeartCount'),
     runResearchHud: $('#runResearchHud'), runResearchScore: $('#runResearchScore'), runResearchGain: $('#runResearchGain'),
     routeProgress: $('#routeProgress'), routeBestMarker: $('#routeBestMarker'), routeBestLabel: $('#routeBestLabel'),
     routeSlimeMarker: $('#routeSlimeMarker'), routeTargetLabel: $('#routeTargetLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'),
+    glitchUltimateOverlay: $('#glitchUltimateOverlay'), glitchChoiceAnnouncement: $('#glitchChoiceAnnouncement'),
     touchJoystick: $('#touchJoystick'),
     abilityBtn: $('#abilityBtn'), abilityPercent: $('#abilityPercent'), abilityText: $('#abilityText'), endRunBtn: $('#endRunBtn'),
     runMenuOverlay: $('#runMenuOverlay'), resumeRunBtn: $('#resumeRunBtn'), restartRunBtn: $('#restartRunBtn'),
@@ -127,7 +169,7 @@
     resultOverlay: $('#resultOverlay'), resultBadge: $('#resultBadge'), resultTitle: $('#resultTitle'), resultText: $('#resultText'),
     resultWorldIcon: $('#resultWorldIcon'), resultWorldName: $('#resultWorldName'), resultCoins: $('#resultCoins'),
     resultResearchFlask: $('#resultResearchFlask'), resultResearchUnits: $('#resultResearchUnits'),
-    resultResearchData: $('#resultResearchData'), resultResearchProgress: $('#resultResearchProgress'), resultResearchStream: $('#resultResearchStream'),
+    resultResearchData: $('#resultResearchData'), resultResearchStream: $('#resultResearchStream'),
     resultMultiplierLabel: $('#resultMultiplierLabel'), resultMultiplierTrack: $('#resultMultiplierTrack'),
     resultMultiplierNeedle: $('#resultMultiplierNeedle'), resultMultiplierHint: $('#resultMultiplierHint'),
     resultMultiplierBtn: $('#resultMultiplierBtn'), continueBtn: $('#continueBtn'),
@@ -150,36 +192,78 @@
   let resultResearchAnimationId = 0;
   let runResearchPulseTimer = 0;
   let resultRevealToken = 0;
+  let homeRewardFlight = null;
   let autoResumeRunAfterVisibility = false;
   let activeLaboratoryTab = 'mutations';
   let selectedConveyorSlot = 0;
+  let quickMutationPickerTimer = null;
   let selectedLaboratoryMutationId = 'fire';
   let laboratoryReplaceMode = false;
   const RESULT_MULTIPLIERS = [.5, 1, 1.5, 2, 1.5, 1, .5];
   const RESULT_SWEEP_MS = 900;
-  const MUTATION_STEPS = 10;
+  const MUTATION_STEPS = 100;
+  const MUTATION_UPGRADE_COSTS = Object.freeze({ 1: 50, 2: 100 });
+  const TUTORIAL_STEPS = new Set([
+    'home-mutations', 'gift-delay', 'gift', 'gift-credit', 'reactor', 'synthesize',
+    'wait-synthesis', 'core', 'prize', 'fire-slot', 'choose', 'close-lab',
+    'feed', 'feed-count', 'play', 'run-wait', 'controls', 'post-run',
+    'second-gift', 'second-gift-credit', 'upgrade-home-mutations', 'upgrade-fire',
+    'upgrade-close-lab', 'upgrade-summary', 'done'
+  ]);
+  const ULTIMATE_BLOCKS_REQUIRED = 65;
+  const ULTIMATE_POST_USE_CHARGE = Math.round(ULTIMATE_BLOCKS_REQUIRED * .15);
+  const ULTIMATE_BREAK_CAUSES = new Set([
+    'cosmos', 'electricStorm', 'fireUltimate', 'sporeUltimate',
+    'telekinesisPress', 'mech', 'glitchClone', 'glitchDelete'
+  ]);
   const STARTER_MUTATIONS = Object.freeze([
     { id: 'fire', name: 'ОГОНЬ', image: 'assets/ui/recipe-categories/emblem-v2-fire.webp' },
     { id: 'electric', name: 'ЭЛЕКТРИЧЕСТВО', image: 'assets/ui/recipe-categories/emblem-v2-electric.webp' },
     { id: 'frost', name: 'МОРОЗ', image: 'assets/ui/recipe-categories/emblem-v2-frost.webp' }
   ]);
   const MUTATION_DISCOVERIES = Object.freeze([
-    { id: 'explosion', name: 'ВЗРЫВ', image: 'assets/ui/recipe-categories/emblem-v2-explosion.webp' },
-    { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/emblem-v2-cosmos.webp' },
-    { id: 'nano', name: 'НАНО', image: 'assets/ui/recipe-categories/emblem-v2-nano.webp' },
-    { id: 'telekinesis', name: 'ТЕЛЕКИНЕЗ', image: 'assets/ui/recipe-categories/emblem-v2-telekinesis.webp' },
-    { id: 'cloning', name: 'КЛОНИРОВАНИЕ', image: 'assets/ui/recipe-categories/emblem-v2-cloning.webp' }
+    { id: 'cosmos', name: 'КОСМОС', image: 'assets/ui/recipe-categories/emblem-v4-cosmos.webp' },
+    { id: 'nano', name: 'ТЕХНО', image: 'assets/ui/recipe-categories/emblem-v4-techno.webp' },
+    { id: 'telekinesis', name: 'ПСИОНИКА', image: 'assets/ui/recipe-categories/emblem-v4-psionics.webp' },
+    { id: 'cloning', name: 'СПОРЫ', image: 'assets/ui/recipe-categories/emblem-v3-spores.webp' },
+    { id: 'phantom', name: 'ФАНТОМ', image: 'assets/ui/recipe-categories/emblem-v5-phantom.png' },
+    { id: 'glitch', name: 'ГЛИТЧ', image: 'assets/ui/recipe-categories/emblem-v4-glitch.webp' }
   ]);
   const MUTATION_DETAILS = Object.freeze({
-    fire: { stage1: 'Поджигает повреждённые блоки.', stage2: 'Огонь быстрее прожигает путь.' },
-    electric: { stage1: 'Слайм копит заряд при ударах.', stage2: 'Разряд бьёт больше блоков.' },
-    frost: { stage1: 'Мороз смягчает удары и охлаждает блоки.', stage2: 'Защита от ударов становится крепче.' },
-    explosion: { stage1: 'Разбитые блоки заряжают взрыв.', stage2: 'Взрыв задевает соседние блоки.' },
-    cosmos: { stage1: 'Меняет притяжение и направление падения.', stage2: 'Кометный рывок пробивает блоки.' },
-    nano: { stage1: 'Защитный дрон стреляет по блокам.', stage2: 'Появляется второй дрон.' },
-    telekinesis: { stage1: 'Поднимает и ломает блоки силой мысли.', stage2: 'Бросает блоки вниз, задевая соседние.' },
-    cloning: { stage1: 'При ударе появляется мини-клон и бьёт блоки.', stage2: 'При ударе вылетают два мини-клона.' }
+    fire: { stage1: 'Поджигает блоки.', stage2: 'Огонь прыгает на соседние блоки.' },
+    electric: { stage1: 'Копит заряд от ударов.', stage2: 'Разряд бьёт больше блоков.' },
+    frost: { stage1: 'Охлаждает блоки и смягчает удары.', stage2: 'Ледяной щит становится крепче.' },
+    explosion: { stage1: 'Копит силу взрыва.', stage2: 'Взрыв бьёт соседние блоки.' },
+    cosmos: { stage1: 'Меняет направление падения.', stage2: 'Комета пробивает блоки.' },
+    nano: { stage1: 'Дрон стреляет по блокам.', stage2: 'Мини-мины взрывают блоки.' },
+    telekinesis: { stage1: 'Бросает блок вниз.', stage2: 'Бросает сразу два блока.' },
+    cloning: { stage1: 'Спора взрывает блок.', stage2: 'Из взрыва летят грибочки.' },
+    phantom: { stage1: 'Становится призраком.', stage2: 'Помечает блоки для удара.' },
+    glitch: { stage1: 'Заражает блоки.', stage2: 'Опасный блок даёт награду.' }
   });
+  const MUTATION_REVEAL_DESCRIPTIONS = Object.freeze({
+    fire: 'Поджигает блоки и распространяет огонь.',
+    electric: 'Копит заряд и поражает блоки разрядом.',
+    frost: 'Охлаждает блоки и смягчает удары.',
+    explosion: 'Накапливает энергию для мощного взрыва.',
+    cosmos: 'Управляет притяжением и пробивает блоки рывком.',
+    nano: 'Дрон обстреливает блоки, а глаз направляет мини-мину.',
+    telekinesis: 'Двигает и разбивает блоки силой мысли.',
+    cloning: 'Выращивает взрывные споры на блоках; из них вылетают грибочки.',
+    phantom: 'Проходит сквозь блоки и поражает их при появлении.',
+    glitch: 'Заражает блоки и передаёт урон между ними.'
+  });
+  const FORM_INDEX = Object.freeze([
+    { id: 'fire', name: 'Феникс', mutation: 'ОГОНЬ', ultra: ['Полёт феникса', 'Феникс поджигает все блоки в рядах на 100 м ниже точки активации.'], art: 'effects-lab/assets/fire-ultra-phoenix-body-v4.png', color: '#ff8741' },
+    { id: 'frost', name: 'Ледяная форма', mutation: 'МОРОЗ', ultra: ['Снегопад', 'Шесть секунд снежинки падают сверху и превращают блоки ниже слайма в снег.'], art: 'effects-lab/assets/frost-ultra-body-v1.webp', color: '#83eaff' },
+    { id: 'electric', name: 'Грозовая форма', mutation: 'ЭЛЕКТРО', ultra: ['Грозовой шквал', 'Пять ударов молнии ниже слайма; каждый расходится четырьмя цепями.'], art: 'effects-lab/assets/electric-ultra-body-v7.png', color: '#ffe46a' },
+    { id: 'cosmos', name: 'Космическая форма', mutation: 'КОСМОС', ultra: ['Кометный прорыв', 'Управляемый реактивный полёт пробивает блоки на пути; с четвёртой секунды постепенно затухает.'], art: 'effects-lab/assets/cosmos-ultra-body-v2.png', color: '#b998ff' },
+    { id: 'nano', name: 'Техноформа', mutation: 'ТЕХНО', ultra: ['Меха-слайм', 'Десять секунд полёта: двигатели поднимают мех, а две пушки бьют по прочным блокам. Костюм наносит 2 урона при ударе.'], art: 'assets/vfx/techno-mech-suit-v2.webp', color: '#ff8088' },
+    { id: 'telekinesis', name: 'Псионическая форма', mutation: 'ПСИОНИКА', ultra: ['Псионический пресс', 'Сжимает 80 метров шахты силой мысли. При столкновении стен блоки исчезают во вспышке.'], art: 'effects-lab/assets/psionics-ultra-body-v1.png', color: '#dbadff' },
+    { id: 'cloning', name: 'Грибница', mutation: 'СПОРЫ', ultra: ['Споровый посев', 'Выпускает восемь спор в разные места ниже слайма. Созревшие споры взрываются по очереди.'], art: 'effects-lab/assets/spores-ultra-body-v5.png', color: '#b8f879' },
+    { id: 'phantom', name: 'Призрачная форма', mutation: 'ФАНТОМ', ultra: ['Призрачный прорыв', 'На 3 секунды защищает слайма и ломает ближайшие блоки.'], art: 'effects-lab/assets/phantom-ultra-body-v6.png', color: '#dbeaff' },
+    { id: 'glitch', name: 'Аркадная форма', mutation: 'ГЛИТЧ', ultra: ['Выбор сбоя', 'Выбирает копирование, удаление, заражение или изменение блоков.'], art: 'effects-lab/assets/glitch-ultra-body-v3.png', color: '#ff80e8' }
+  ]);
   const MUTATION_SYNTH_COLORS = Object.freeze({
     fire: { filter: 'hue-rotate(214deg) saturate(1.55) brightness(1.08)', glow: '#ff6b32' },
     electric: { filter: 'hue-rotate(292deg) saturate(1.35) brightness(1.14)', glow: '#ffe43d' },
@@ -188,7 +272,9 @@
     cosmos: { filter: 'hue-rotate(105deg) saturate(1.72) brightness(.92)', glow: '#bd62ff' },
     nano: { filter: 'hue-rotate(22deg) saturate(1.08) brightness(1.12)', glow: '#5be9e3' },
     telekinesis: { filter: 'hue-rotate(28deg) saturate(1.15) brightness(1.12)', glow: '#6cf2d8' },
-    cloning: { filter: 'hue-rotate(0deg) saturate(1.25) brightness(1.1)', glow: '#81ec75' }
+    cloning: { filter: 'hue-rotate(0deg) saturate(1.25) brightness(1.1)', glow: '#81ec75' },
+    phantom: { filter: 'grayscale(1) brightness(1.2)', glow: '#e2e7f4' },
+    glitch: { filter: 'hue-rotate(105deg) saturate(1.7)', glow: '#51f7ed' }
   });
   const TRAILS = Object.freeze([
     { id: 'none', name: 'Без следа', cost: 0 },
@@ -217,6 +303,8 @@
     nano: 0, nanoFrom: 0, nanoTarget: 0, nanoStartedAt: 0,
     telekinesis: 0, telekinesisFrom: 0, telekinesisTarget: 0, telekinesisStartedAt: 0,
     cloning: 0, cloningFrom: 0, cloningTarget: 0, cloningStartedAt: 0,
+    phantom: 0, phantomFrom: 0, phantomTarget: 0, phantomStartedAt: 0,
+    glitch: 0, glitchFrom: 0, glitchTarget: 0, glitchStartedAt: 0,
     explosion: 0, explosionFrom: 0, explosionTarget: 0, explosionStartedAt: 0,
     mass: 0, massFrom: 0, massTarget: 0, massStartedAt: 0
   };
@@ -232,11 +320,17 @@
   let saveRevision = 0;
   let mutationAnimationToken = 0;
   let mutationAnimating = false;
+  let mutationUpgrading = false;
   let pendingMutationReveal = null;
   let mutationFeedHoldTimer = 0;
   let mutationFeedHoldStartedAt = 0;
   let mutationFeedHoldActive = false;
   let adminInfiniteResearch = false;
+  let adminInfiniteUltimate = false;
+  let tutorialGiftTimer = 0;
+  let tutorialCountTimer = 0;
+  let tutorialRunTimer = 0;
+  let tutorialPointerFlight = null;
   let save = loadSave();
   const { sound, stopAllSounds } = window.SlimeAudio.createAudioSystem({
     isEnabled: () => save.sound
@@ -293,7 +387,7 @@
     const worldBest = Object.values(value.worldBest || {}).reduce((sum, depth) => sum + Math.max(0, +depth || 0), 0);
     const unlocks = Object.values(value.unlockedLevels || {}).reduce((sum, level) => sum + Math.max(0, +level || 0), 0);
     return worldBest * 100000 + unlocks * 10000 + Math.max(0, +value.totalRuns || 0) * 100
-      + Math.min(99, Math.floor(+value.researchUnits || 0)) + Math.min(.99, Math.max(0, +value.researchProgress || 0) / 100);
+      + Math.min(99, Math.floor(+value.researchUnits || 0) + Math.max(0, Math.floor(+value.researchProgress || 0)));
   }
 
   function chooseNewestSave(candidates) {
@@ -319,18 +413,46 @@
     }
     delete merged.coins;
     merged.researchUnits = Math.max(0, Math.floor(Number.isFinite(+merged.researchUnits) ? +merged.researchUnits : 0));
-    merged.researchProgress = clamp(Math.floor(Number.isFinite(+merged.researchProgress) ? +merged.researchProgress : 0), 0, 99);
+    // Preserve the partially filled legacy flask when moving to direct counts.
+    merged.researchUnits += clamp(Math.floor(Number.isFinite(+merged.researchProgress) ? +merged.researchProgress : 0), 0, 99);
+    merged.researchProgress = 0;
+    const legacySave = (+value.schemaVersion || 0) < 24;
+    const knownMutationIds = new Set(allMutations().map(mutation => mutation.id));
     merged.unlockedMutations = Array.isArray(value.unlockedMutations)
-      ? [...new Set(value.unlockedMutations.filter(id => MUTATION_DISCOVERIES.some(mutation => mutation.id === id)))]
+      ? [...new Set(value.unlockedMutations.filter(id => knownMutationIds.has(id)))]
       : [];
-    const availableMutationIds = new Set([...STARTER_MUTATIONS.map(item => item.id), ...merged.unlockedMutations]);
+    merged.legacyStarterAccess = legacySave || value.legacyStarterAccess === true;
+    if (merged.legacyStarterAccess) {
+      merged.unlockedMutations = [...new Set([...STARTER_MUTATIONS.map(mutation => mutation.id), ...merged.unlockedMutations])];
+    }
+    merged.mutationLevels = {};
+    for (const id of merged.unlockedMutations) {
+      const previousLevel = Number(value.mutationLevels?.[id]);
+      merged.mutationLevels[id] = Number.isFinite(previousLevel)
+        ? clamp(Math.floor(previousLevel), 1, 3)
+        : 1;
+    }
+    merged.tutorialStep = legacySave ? 'done' : (TUTORIAL_STEPS.has(value.tutorialStep) ? value.tutorialStep : 'home-mutations');
+    merged.tutorialGiftClaimed = legacySave || value.tutorialGiftClaimed === true;
+    merged.tutorialSecondGiftClaimed = legacySave || value.tutorialSecondGiftClaimed === true;
+    const validFormIds = new Set(FORM_INDEX.map(form => form.id));
+    merged.discoveredForms = Array.isArray(value.discoveredForms)
+      ? [...new Set(value.discoveredForms.filter(id => validFormIds.has(id)))]
+      : [];
+    merged.unseenForms = Array.isArray(value.unseenForms)
+      ? [...new Set(value.unseenForms.filter(id => merged.discoveredForms.includes(id)))]
+      : [];
+    const availableMutationIds = new Set(merged.unlockedMutations);
     const requestedMutationPool = Array.isArray(value.activeMutationPool) ? value.activeMutationPool : defaultSave.activeMutationPool;
     merged.activeMutationPool = [...new Set(requestedMutationPool.filter(id => availableMutationIds.has(id)))].slice(0, 3);
-    for (const starter of STARTER_MUTATIONS) {
+    if (merged.legacyStarterAccess) for (const starter of STARTER_MUTATIONS) {
       if (merged.activeMutationPool.length >= 3) break;
       if (!merged.activeMutationPool.includes(starter.id)) merged.activeMutationPool.push(starter.id);
     }
-    merged.mutationProgress = clamp(Math.floor(Number.isFinite(+merged.mutationProgress) ? +merged.mutationProgress : 0), 0, MUTATION_STEPS);
+    merged.mutationProgress = clamp(Math.floor(Number.isFinite(+merged.mutationProgress) ? +merged.mutationProgress : 0), 0, MUTATION_STEPS * MUTATION_DISCOVERIES.length);
+    merged.mutationInvestTapCount = merged.mutationProgress > 0
+      ? clamp(Math.floor(Number(value.mutationInvestTapCount) || 0), 0, 1000)
+      : 0;
     const requestedWorld = Math.round(+merged.world || 1);
     merged.world = ACTIVE_WORLD_IDS.includes(requestedWorld) ? requestedWorld : requestedWorld === 2 ? 3 : ACTIVE_WORLD_IDS[0];
     merged.stomachLevel = clamp(sourceStomachLevel, 1, UPGRADE_DATA.stomachLevel.max);
@@ -419,10 +541,13 @@
   function restoreSession(raw) {
     if (!raw || raw.worldId !== save.world || !Array.isArray(raw.foods) || !Array.isArray(raw.offer)) return false;
     const foodById = id => FOODS.find(food => food.id === id);
-    const foods = raw.foods.map(foodById).filter(Boolean).slice(0, STOMACH_CAPACITY);
+    const foods = [];
+    for (const id of raw.foods) {
+      const food = foodById(id);
+      if (canAddToStomach(food, foods)) foods.push(food);
+    }
     const offer = raw.offer.slice(0, 3).map(id => id ? foodById(id) || null : null);
-    if (stomachIsFull(foods)) offer.length = 0;
-    else while (offer.length < 3) offer.push(null);
+    while (offer.length < 3) offer.push(null);
     if (!offer.some(Boolean) && !foods.length) return false;
     session = {
       foods, offer,
@@ -430,11 +555,28 @@
       freeRerolls: 1,
       adRerolls: 0,
       healthBoost: clamp(+(raw.healthBoost ?? raw.massBoost) || 0, 0, 100),
-      stats: {}, effects: {}, combo: null,
+      stats: {}, effects: {},
       rerollPending: false,
       offerTransition: false
     };
-    if (session.offer.filter(Boolean).length < 3 && !stomachIsFull(foods)) generateOffer();
+    const used = foods.map(food => food.id);
+    const activeFamilies = activeMutationFamilies();
+    session.offer = Array.from({ length: 3 }, (_, index) => {
+      const family = activeFamilies[index];
+      if (!family) return null;
+      const stage = foods.filter(food => foodRecipeFamily(food) === family).length + 1;
+      if (stage > 3) return null;
+      const current = offer[index];
+      const valid = current && foodRecipeFamily(current) === family && current.stage === stage
+        && foodAvailableInWorld(current) && !used.includes(current.id);
+      const food = valid ? current : randomFood(used, family, stage);
+      if (food) used.push(food.id);
+      return food;
+    });
+    if (!foods.length && !session.offer.some(Boolean)) {
+      session = null;
+      return false;
+    }
     return true;
   }
 
@@ -493,7 +635,303 @@
     saveRevision += 1;
     writeLocalSave(createSaveEnvelope());
     if (cloud) scheduleCloudSave();
-    updatePersistentUI();
+    if (refreshUI) updatePersistentUI();
+  }
+
+  function tutorialActive() {
+    return save.tutorialStep !== 'done';
+  }
+
+  function tutorialTarget() {
+    switch (save.tutorialStep) {
+      case 'home-mutations': return ['.mutation-lab-button', 'Нажми на мутации'];
+      case 'reactor': return ['#mutationCapsuleBtn', 'Добавь 10 колб в синтезатор'];
+      case 'synthesize': return ['#mutationSynthesizeBtn', 'Начни синтез'];
+      case 'core': return ['#mutationMystery', 'Нажми на готовую эмблему'];
+      case 'prize': return ['#mutationPrize .mutation-prize-cta', 'Забери Огонь'];
+      case 'fire-slot': return ['[data-lab-mutation="fire"]', 'Выбери Огонь'];
+      case 'choose': return ['#mutationChooseBtn', 'Поставь Огонь в синтезатор'];
+      case 'close-lab': return ['#closePanelBtn', 'Вернись к слайму'];
+      case 'feed': return ['.conveyor-food-pick:not(.locked)', 'Перетащи одну еду к слайму'];
+      case 'feed-count': return ['#conveyorChoiceCount', 'Первая еда съедена!'];
+      case 'play': return ['#worldStartBtn', 'Нажми «Играть»'];
+      case 'upgrade-home-mutations': return ['.mutation-lab-button', 'Открой мутации'];
+      case 'upgrade-fire': return ['#mutationUpgradeBtn', 'Улучши Огонь до II'];
+      case 'upgrade-close-lab': return ['#closePanelBtn', 'Вернись к слайму'];
+      default: return null;
+    }
+  }
+
+  function renderTutorial() {
+    if (!els.tutorialLayer) return;
+    const active = tutorialActive();
+    const adminOpen = !els.adminToolsOverlay?.classList.contains('hidden');
+    const runMenuOpen = !els.runMenuOverlay?.classList.contains('hidden');
+    const suspended = adminOpen || runMenuOpen;
+    if (els.tutorialSkipBtn) els.tutorialSkipBtn.hidden = !active;
+    if (els.tutorialRunSkipBtn) els.tutorialRunSkipBtn.hidden = !active;
+    if (els.tutorialAdminBtn) els.tutorialAdminBtn.hidden = !active || suspended || document.body.dataset.screen === 'drop';
+    if (els.tutorialAdminBtn && !els.tutorialAdminBtn.hidden && els.adminMenuBtn) {
+      const gear = els.adminMenuBtn.getBoundingClientRect();
+      els.tutorialAdminBtn.style.cssText = `left:${gear.left}px;top:${gear.top}px;right:auto;width:${gear.width}px;height:${gear.height}px`;
+    }
+    if (els.tutorialPauseBtn) els.tutorialPauseBtn.hidden = !active || suspended || save.tutorialStep !== 'controls';
+    if (els.tutorialPauseBtn && !els.tutorialPauseBtn.hidden && els.endRunBtn) {
+      const pause = els.endRunBtn.getBoundingClientRect();
+      els.tutorialPauseBtn.style.cssText = `left:${pause.left}px;top:${pause.top}px;width:${pause.width}px;height:${pause.height}px`;
+    }
+    if (els.tutorialGift) {
+      els.tutorialGift.hidden = !active || suspended || !['gift', 'second-gift'].includes(save.tutorialStep);
+      if (!els.tutorialGift.hidden) {
+        const amount = save.tutorialStep === 'second-gift' ? 50 : 10;
+        els.tutorialGift.setAttribute('aria-label', `Подарок: ${amount} колб`);
+        const label = els.tutorialGift.querySelector('.tutorial-gift-amount');
+        if (label) label.textContent = `${amount} КОЛБ`;
+      }
+    }
+    if (els.tutorialControls) els.tutorialControls.hidden = !active || suspended || save.tutorialStep !== 'controls';
+    if (els.tutorialUpgradeSummary) els.tutorialUpgradeSummary.hidden = !active || suspended || save.tutorialStep !== 'upgrade-summary';
+    const instruction = active && !suspended ? tutorialTarget() : null;
+    const target = instruction ? document.querySelector(instruction[0]) : null;
+    if (!target || !target.getClientRects().length) {
+      els.tutorialLayer.hidden = true;
+      tutorialPointerFlight?.cancel();
+      tutorialPointerFlight = null;
+      return;
+    }
+    const bounds = target.getBoundingClientRect();
+    if (bounds.height < innerHeight - 24 && (bounds.top < 0 || bounds.bottom > innerHeight)) {
+      target.scrollIntoView({ block: 'center' });
+      requestAnimationFrame(renderTutorial);
+      return;
+    }
+    els.tutorialLayer.hidden = false;
+    const left = Math.max(0, bounds.left - 5);
+    const top = Math.max(0, bounds.top - 5);
+    const right = Math.min(innerWidth, bounds.right + 5);
+    const bottom = Math.min(innerHeight, bounds.bottom + 5);
+    els.tutorialFocus.style.cssText = `left:${left}px;top:${top}px;width:${right - left}px;height:${bottom - top}px`;
+    els.tutorialCaption.textContent = instruction[1];
+    const captionAbove = bottom > innerHeight - 90;
+    els.tutorialCaption.style.left = `${Math.max(8, Math.min(innerWidth - 268, bounds.left + bounds.width / 2 - 120))}px`;
+    els.tutorialCaption.style.top = `${captionAbove ? Math.max(8, top - 43) : Math.min(innerHeight - 37, bottom + 10)}px`;
+    tutorialPointerFlight?.cancel();
+    tutorialPointerFlight = null;
+    els.tutorialLayer.classList.toggle('is-dragging', save.tutorialStep === 'feed');
+    const pointerTipX = 6;
+    const pointerTipY = 11;
+    const pointerX = bounds.left + bounds.width / 2 - pointerTipX;
+    const pointerY = bounds.top + bounds.height / 2 - pointerTipY;
+    els.tutorialPointer.style.left = `${pointerX}px`;
+    els.tutorialPointer.style.top = `${pointerY}px`;
+    if (save.tutorialStep === 'feed' && els.slime?.getClientRects().length && !menuReducedMotion) {
+      const slimeRect = els.slime.getBoundingClientRect();
+      const dx = slimeRect.left + slimeRect.width / 2 - (pointerX + pointerTipX);
+      const dy = slimeRect.top + slimeRect.height / 2 - (pointerY + pointerTipY);
+      tutorialPointerFlight = els.tutorialPointer.animate([
+        { transform: 'translate(0,0) scale(.88)' },
+        { transform: 'translate(0,0) scale(1)', offset: .22 },
+        { transform: `translate(${dx}px,${dy}px) scale(.88)`, offset: .7 },
+        { transform: 'translate(0,0) scale(.88)' }
+      ], { duration: 1900, iterations: Infinity, easing: 'ease-in-out' });
+    }
+  }
+
+  function queueTutorialRender() {
+    if (tutorialActive()) requestAnimationFrame(renderTutorial);
+  }
+
+  function setTutorialStep(step) {
+    if (!TUTORIAL_STEPS.has(step) || save.tutorialStep === step) return;
+    save.tutorialStep = step;
+    persist({ refreshUI: false });
+    queueTutorialRender();
+  }
+
+  function tutorialInputAllowed(target) {
+    if (!tutorialActive()) return true;
+    if (!(target instanceof Element)) return false;
+    if (target.closest('#tutorialAdminBtn,#tutorialPauseBtn,#adminMenuBtn,#endRunBtn')) return true;
+    if (!els.adminToolsOverlay?.classList.contains('hidden')) return Boolean(target.closest('#tutorialSkipBtn,#closeAdminToolsBtn'));
+    if (!els.runMenuOverlay?.classList.contains('hidden')) return Boolean(target.closest('#tutorialRunSkipBtn,#resumeRunBtn'));
+    if (run?.ended && target.closest('#resultOverlay,#gameCompleteOverlay')) return true;
+    const step = save.tutorialStep;
+    if (step === 'gift' || step === 'second-gift') return Boolean(target.closest('#tutorialGiftClaimBtn'));
+    if (step === 'controls') return Boolean(target.closest('#tutorialControlsCloseBtn:not([hidden])'));
+    if (step === 'upgrade-summary') return Boolean(target.closest('#tutorialUpgradeSummaryCloseBtn'));
+    if (step === 'run-wait') return Boolean(target.closest('#shaft') && !target.closest('#abilityBtn'));
+    if (step === 'post-run') return document.body.dataset.screen === 'drop';
+    const instruction = tutorialTarget();
+    const allowedSelector = step === 'core' ? '#mutationMystery'
+      : step === 'prize' ? '#mutationPrize'
+      : step === 'feed' ? '.conveyor-food-pick:not(.locked),#slime'
+      : instruction?.[0];
+    return Boolean(allowedSelector && target.closest(allowedSelector));
+  }
+
+  function blockTutorialInput(event) {
+    if (!tutorialActive() || tutorialInputAllowed(event.target)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  function blockTutorialKey(event) {
+    if (!tutorialActive()) return;
+    if (save.tutorialStep === 'post-run' && document.body.dataset.screen === 'drop') return;
+    if (save.tutorialStep === 'run-wait' && ['ArrowLeft', 'ArrowRight', 'ArrowDown', 'KeyA', 'KeyD', 'KeyS'].includes(event.code)) return;
+    if (event.key === 'Tab') return;
+    if (event.key === 'Escape') {
+      if (!els.adminToolsOverlay?.classList.contains('hidden') || !els.runMenuOverlay?.classList.contains('hidden')) return;
+    } else if (['Enter', ' ', 'Spacebar'].includes(event.key) && tutorialInputAllowed(document.activeElement)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  function claimTutorialGift() {
+    const secondGift = save.tutorialStep === 'second-gift';
+    if (!secondGift && save.tutorialStep !== 'gift') return;
+    const source = els.tutorialGift?.querySelector('img')?.getBoundingClientRect();
+    const target = $('#mutationPanelBalance')?.getBoundingClientRect() || els.researchUnitsLabel?.getBoundingClientRect();
+    const before = save.researchUnits;
+    const amount = secondGift ? 50 : 10;
+    const creditStep = secondGift ? 'second-gift-credit' : 'gift-credit';
+    save.researchUnits += amount;
+    if (secondGift) save.tutorialSecondGiftClaimed = true;
+    else save.tutorialGiftClaimed = true;
+    setTutorialStep(creditStep);
+    for (let index = 0; index < 5; index += 1) {
+      const flask = document.createElement('img');
+      flask.className = 'tutorial-flask-flight';
+      flask.src = versionedAsset('assets/ui/research-flask.webp');
+      flask.alt = '';
+      flask.style.left = `${source?.left || innerWidth / 2}px`;
+      flask.style.top = `${source?.top || innerHeight / 2}px`;
+      document.body.appendChild(flask);
+      const dx = (target?.left || innerWidth / 2) - (source?.left || innerWidth / 2);
+      const dy = (target?.top || 20) - (source?.top || innerHeight / 2);
+      const duration = menuReducedMotion ? 70 : 480;
+      const flight = flask.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 0 },
+        { transform: 'translate(0,0) scale(1.1)', opacity: 1, offset: .2 },
+        { transform: `translate(${dx}px,${dy}px) scale(.35)`, opacity: 1 }
+      ], { duration, delay: index * (menuReducedMotion ? 15 : 110), easing: 'ease-in', fill: 'forwards' });
+      flight.finished.catch(() => {}).finally(() => {
+        flask.remove();
+        if (save.tutorialStep !== creditStep) return;
+        const shown = before + (index + 1) * (amount / 5);
+        if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = String(shown);
+        const panelBalance = $('#mutationPanelBalance');
+        if (panelBalance) panelBalance.textContent = String(shown);
+        for (const counter of [els.researchUnitsLabel, panelBalance]) {
+          if (!counter) continue;
+          counter.classList.remove('tutorial-credit-pop');
+          void counter.offsetWidth;
+          counter.classList.add('tutorial-credit-pop');
+        }
+        if (index === 4 && save.tutorialStep === creditStep) {
+          if (!secondGift) renderRecipesPanel();
+          updatePersistentUI();
+          setTutorialStep(secondGift ? 'upgrade-home-mutations' : 'reactor');
+        }
+      });
+    }
+  }
+
+  function skipTutorial() {
+    if (!tutorialActive()) return;
+    clearTimeout(tutorialGiftTimer);
+    clearTimeout(tutorialCountTimer);
+    clearTimeout(tutorialRunTimer);
+    tutorialPointerFlight?.cancel();
+    stopMutationFeedHold();
+    mutationAnimationToken += 1;
+    mutationAnimating = false;
+    pendingMutationReveal = null;
+    save.unlockedMutations = [...new Set([...(save.unlockedMutations || []), 'fire'])];
+    save.mutationLevels = { ...(save.mutationLevels || {}), fire: 2 };
+    save.activeMutationPool = ['fire'];
+    save.mutationProgress = 0;
+    save.mutationInvestTapCount = 0;
+    save.tutorialGiftClaimed = true;
+    save.tutorialSecondGiftClaimed = true;
+    save.tutorialStep = 'done';
+    if (save.researchUnits <= 10) save.researchUnits = 0;
+    persist();
+    renderTutorial();
+    if (!els.adminToolsOverlay.classList.contains('hidden')) closeAdminTools();
+    if (!els.panelOverlay.classList.contains('hidden')) closePanel();
+    if (run && !run.ended && document.body.dataset.screen === 'drop') {
+      if (!els.runMenuOverlay.classList.contains('hidden')) hideRunMenu();
+      if (run.paused) resumeRun();
+    } else newDraft();
+    showToast('Обучение пропущено · Огонь II открыт');
+  }
+
+  function showTutorialControls() {
+    if (save.tutorialStep !== 'run-wait' || !run || run.ended) return;
+    if (run.paused) {
+      tutorialRunTimer = setTimeout(showTutorialControls, 400);
+      return;
+    }
+    run.tutorialSlowUntil = performance.now() + 480;
+    tutorialRunTimer = setTimeout(() => {
+      if (save.tutorialStep !== 'run-wait' || !run || run.ended) return;
+      if (!pauseRun({ allowPortal: true })) {
+        tutorialRunTimer = setTimeout(showTutorialControls, 400);
+        return;
+      }
+      els.tutorialControlsText.innerHTML = isMobileDevice()
+        ? '<span class="tutorial-control-keys"><kbd>←</kbd><kbd>●</kbd><kbd>→</kbd><kbd>↓</kbd></span><span>Веди стик влево и вправо. Потяни вниз, чтобы падать быстрее.</span>'
+        : '<span class="tutorial-control-keys"><kbd>A</kbd><kbd>D</kbd><kbd>←</kbd><kbd>→</kbd></span><span>Двигайся влево и вправо. <kbd>S</kbd> или <kbd>↓</kbd> — быстрее вниз.</span>';
+      els.tutorialControlsCloseBtn.hidden = true;
+      setTutorialStep('controls');
+      tutorialRunTimer = setTimeout(() => { els.tutorialControlsCloseBtn.hidden = false; }, 2000);
+    }, 480);
+  }
+
+  function finishTutorial() {
+    if (save.tutorialStep !== 'controls' || els.tutorialControlsCloseBtn.hidden) return;
+    setTutorialStep('post-run');
+    renderTutorial();
+    resumeRun();
+  }
+
+  function finishUpgradeTutorial() {
+    if (save.tutorialStep !== 'upgrade-summary') return;
+    setTutorialStep('done');
+    renderTutorial();
+  }
+
+  function restoreTutorial() {
+    if (!tutorialActive()) return;
+    const step = save.tutorialStep;
+    if (step === 'post-run' && !run) setTutorialStep('second-gift');
+    if (step === 'run-wait' || step === 'controls' || step === 'feed-count' || (step === 'feed' && stomachCanLaunch())) {
+      setTutorialStep(stomachCanLaunch() ? 'play' : 'feed');
+      return;
+    }
+    if (step === 'second-gift-credit') {
+      setTutorialStep('upgrade-home-mutations');
+    } else if (step === 'gift-credit') {
+      setTutorialStep('reactor');
+    } else if (['wait-synthesis', 'core', 'prize'].includes(step)) {
+      setTutorialStep('synthesize');
+    } else if (step === 'second-gift' && save.tutorialSecondGiftClaimed) {
+      setTutorialStep('upgrade-home-mutations');
+    } else if (step === 'gift' && save.tutorialGiftClaimed) {
+      setTutorialStep('reactor');
+    }
+    if (['home-mutations', 'feed', 'play', 'post-run', 'upgrade-home-mutations', 'second-gift', 'upgrade-summary'].includes(save.tutorialStep)) {
+      queueTutorialRender();
+      return;
+    }
+    renderPanel('recipes');
+    if (save.tutorialStep === 'gift-delay') {
+      clearTimeout(tutorialGiftTimer);
+      tutorialGiftTimer = setTimeout(() => {
+        if (save.tutorialStep === 'gift-delay') setTutorialStep('gift');
+      }, 550);
+    }
   }
 
   async function initializeReliableSaves() {
@@ -713,11 +1151,20 @@
   function rand(min, max) { return min + Math.random() * (max - min); }
   function round1(value) { return Math.round(value * 10) / 10; }
   function stomachFoodCount(foods = session?.foods || []) { return foods.length; }
+  function stomachCanLaunch(foods = session?.foods || []) { return stomachFoodCount(foods) > 0; }
   function canAddToStomach(food, foods = session?.foods || []) {
-    return Boolean(food) && stomachFoodCount(foods) < STOMACH_CAPACITY;
+    if (!food || stomachFoodCount(foods) >= STOMACH_CAPACITY) return false;
+    const family = foodRecipeFamily(food);
+    const mutationId = (save.activeMutationPool || []).find(id => mutationFoodFamily(id) === family);
+    if (!mutationId) return false;
+    const eatenOfFamily = foods.filter(item => foodRecipeFamily(item) === family).length;
+    return eatenOfFamily < mutationLevel(mutationId) && (!food.stage || food.stage === eatenOfFamily + 1);
   }
   function stomachIsFull(foods = session?.foods || []) {
     return stomachFoodCount(foods) >= STOMACH_CAPACITY;
+  }
+  function conveyorCanStart() {
+    return stomachCanLaunch() && (stomachIsFull() || !session?.offer?.some(food => canAddToStomach(food)));
   }
   function levelConfig(world, level) {
     const entries = WORLD_LEVELS[world.id];
@@ -757,6 +1204,10 @@
   function worldDisplayNumber(worldId) {
     const index = ACTIVE_WORLD_IDS.indexOf(Number(worldId));
     return index >= 0 ? index + 1 : 0;
+  }
+  function worldIconSource(worldId) {
+    const suffix = Number(worldId) === 3 || Number(worldId) === 4 ? '-v2' : '';
+    return versionedAsset(`assets/ui/world-icons/world-${worldId}${suffix}.webp`);
   }
   function currentWorld() { return WORLDS.find(world => world.id === Number(save.world)) || ACTIVE_WORLDS[0]; }
   function worldIsUnlocked(worldId) {
@@ -812,237 +1263,69 @@
     if (!els.worldCarousel) return;
     const world = carouselWorld();
     const index = ACTIVE_WORLD_IDS.indexOf(world.id);
-    const iconPath = item => versionedAsset(`assets/ui/world-icons/world-${item.id}${item.id === 3 || item.id === 4 ? '-v2' : ''}.webp`);
-    const card = (item, position) => {
-      if (!item) {
-        const spacer = document.createElement('span');
-        spacer.className = 'world-carousel-space';
-        spacer.setAttribute('aria-hidden', 'true');
-        return spacer;
-      }
-      const locked = !worldIsUnlocked(item.id);
-      const itemIndex = ACTIVE_WORLD_IDS.indexOf(item.id);
-      const precedingWorld = ACTIVE_WORLDS[itemIndex - 1];
-      const completed = Math.min(10, save.worldTrophies?.[precedingWorld?.id] || 0);
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = `world-carousel-card ${position}${locked ? ' locked' : ''}`;
-      button.dataset.world = String(item.id);
-      button.setAttribute('aria-label', locked
-        ? `Мир ${worldDisplayNumber(item.id)} закрыт. Кубков ${completed} из 10`
-        : position === 'current' ? `Текущий мир: ${item.name}` : `Выбрать ${item.name}`);
-      const titleDetail = locked
-        ? `<span class="world-card-requirement"><img src="assets/ui/world-picker-v2/trophy.webp" alt="">${completed}/10</span>`
-        : position === 'current' ? '<b></b>' : '';
-      button.innerHTML = `<span class="world-carousel-art"><img class="world-card-image" src="${iconPath(item)}" alt=""><span class="world-card-title"><small>МИР ${worldDisplayNumber(item.id)}</small>${titleDetail}</span>${locked ? '<img class="world-card-lock" src="assets/ui/world-picker-v2/abyss-lock.webp" alt="">' : ''}</span>`;
-      if (position === 'current' && !locked) button.querySelector('.world-card-title b').textContent = item.name;
-      return button;
+    const locked = !worldIsUnlocked(world.id);
+    const previousWorld = ACTIVE_WORLDS[index - 1];
+    const trophies = Math.min(10, save.worldTrophies?.[previousWorld?.id] || 0);
+    const previews = {
+      1: 'assets/ui/world-terminal/mine-green-depths-v4.webp',
+      3: 'assets/ui/world-terminal/mine-candy.webp',
+      4: 'assets/ui/world-terminal/mine-magma.webp'
     };
-    els.worldCarousel.replaceChildren(card(ACTIVE_WORLDS[index - 1], 'previous'), card(world, 'current'), card(ACTIVE_WORLDS[index + 1], 'next'));
-    els.worldCarouselDots.replaceChildren(...ACTIVE_WORLDS.map((item, dotIndex) => {
-      const dot = document.createElement('span');
-      dot.className = `world-carousel-dot${dotIndex === index ? ' active' : ''}${worldIsUnlocked(item.id) ? '' : ' locked'}`;
-      dot.setAttribute('aria-hidden', 'true');
-      return dot;
-    }));
+    const preview = previews[world.id] || previews[1];
+    if (els.worldTerminalPreview && els.worldTerminalPreview.getAttribute('src') !== preview) els.worldTerminalPreview.src = preview;
+    if (els.worldTerminalNumber) els.worldTerminalNumber.textContent = `ШАХТА ${worldDisplayNumber(world.id)}`;
+    if (els.worldTerminalName) els.worldTerminalName.textContent = world.name.toLocaleUpperCase('ru-RU');
+    if (els.worldTerminalTrophies) els.worldTerminalTrophies.textContent = `${trophies}/10`;
+    if (els.worldTerminalLock) els.worldTerminalLock.hidden = !locked;
+    els.worldCarousel.classList.toggle('locked', locked);
+    els.worldCarousel.setAttribute('aria-label', locked
+      ? `Шахта ${worldDisplayNumber(world.id)}, ${world.name}. Закрыта, кубков ${trophies} из 10`
+      : `Шахта ${worldDisplayNumber(world.id)}, ${world.name}`);
+    if (els.worldPrevBtn) els.worldPrevBtn.disabled = index <= 0;
+    if (els.worldNextBtn) els.worldNextBtn.disabled = index >= ACTIVE_WORLDS.length - 1;
+    if (els.worldCarouselDots.children.length !== ACTIVE_WORLDS.length) {
+      els.worldCarouselDots.replaceChildren(...ACTIVE_WORLDS.map(() => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'world-carousel-dot';
+        return dot;
+      }));
+    }
+    [...els.worldCarouselDots.children].forEach((dot, dotIndex) => {
+      dot.className = `world-carousel-dot${dotIndex === index ? ' active' : ''}${worldIsUnlocked(ACTIVE_WORLDS[dotIndex].id) ? '' : ' locked'}`;
+      dot.dataset.world = String(ACTIVE_WORLDS[dotIndex].id);
+      dot.setAttribute('aria-label', `Шахта ${worldDisplayNumber(ACTIVE_WORLDS[dotIndex].id)}${worldIsUnlocked(ACTIVE_WORLDS[dotIndex].id) ? '' : ', закрыта'}`);
+      dot.setAttribute('aria-current', dotIndex === index ? 'page' : 'false');
+    });
   }
 
-  const worldImagePixels = new Map();
-  function worldImageHit(img, clientX, clientY) {
-    if (!img) return false;
-    const requirement = img.closest('.world-carousel-card')?.querySelector('.world-card-requirement');
-    if (requirement) {
-      const badge = requirement.getBoundingClientRect();
-      if (clientX >= badge.left - 4 && clientX <= badge.right + 4 && clientY >= badge.top - 4 && clientY <= badge.bottom + 4) return true;
-    }
-    const rect = img.getBoundingClientRect();
-    if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return false;
-    const ellipseHit = () => {
-      const dx = (clientX - rect.left) / rect.width - .5;
-      const dy = (clientY - rect.top) / rect.height - .5;
-      return dx * dx + dy * dy <= .25;
-    };
-    if (!img.complete || !img.naturalWidth || !img.naturalHeight) {
-      return ellipseHit();
-    }
-    const source = img.currentSrc || img.src;
-    let pixels = worldImagePixels.get(source);
-    if (!pixels) {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const context = canvas.getContext('2d', { willReadFrequently: true });
-      try {
-        context.drawImage(img, 0, 0);
-        pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-      } catch {
-        return ellipseHit();
-      }
-      worldImagePixels.set(source, pixels);
-    }
-    const x = clamp(Math.floor((clientX - rect.left) / rect.width * pixels.width), 0, pixels.width - 1);
-    const y = clamp(Math.floor((clientY - rect.top) / rect.height * pixels.height), 0, pixels.height - 1);
-    if (pixels.data[(y * pixels.width + x) * 4 + 3] >= 24) return true;
-    const radius = Math.ceil(Math.min(pixels.width, pixels.height) * .085);
-    for (let dy = -radius; dy <= radius; dy += 3) {
-      for (let dx = -radius; dx <= radius; dx += 3) {
-        if (dx * dx + dy * dy > radius * radius) continue;
-        const px = x + dx;
-        const py = y + dy;
-        if (px < 0 || py < 0 || px >= pixels.width || py >= pixels.height) continue;
-        if (pixels.data[(py * pixels.width + px) * 4 + 3] >= 24) return true;
-      }
-    }
-    return false;
-  }
-
+  let carouselTransitionTimer = 0;
+  let carouselPendingWorldId = 0;
   function animateCarouselSelection(worldId) {
     const carousel = els.worldCarousel;
-    if (!carousel || Number(worldId) === carouselWorld().id) return;
-    const previous = new Map([...carousel.querySelectorAll('.world-carousel-card[data-world]')].map(button => {
-      const art = button.querySelector('.world-carousel-art');
-      return [button.dataset.world, {
-        art,
-        bounds: art.getBoundingClientRect(),
-        glow: getComputedStyle(button).getPropertyValue('--world-glow'),
-        frame: {
-          width: parseFloat(getComputedStyle(button).getPropertyValue('--frame-width')),
-          height: parseFloat(getComputedStyle(button).getPropertyValue('--frame-height')),
-          top: parseFloat(getComputedStyle(button).getPropertyValue('--frame-art-top')),
-          borderColor: getComputedStyle(button, '::before').borderTopColor,
-          background: getComputedStyle(button, '::before').backgroundImage,
-          borderRadius: getComputedStyle(button, '::before').borderRadius,
-          boxShadow: getComputedStyle(button, '::before').boxShadow
-        },
-        titleBottom: getComputedStyle(art.querySelector('.world-card-title')).bottom,
-        imageFilter: getComputedStyle(art.querySelector('.world-card-image')).filter,
-        wasCurrent: button.classList.contains('current')
-      }];
-    }));
-    const previousWorldId = carouselWorld().id;
-    selectHomeWorld(worldId);
-    if (carouselWorld().id === previousWorldId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    const frame = carousel.getBoundingClientRect();
-    const overlay = document.createElement('div');
-    overlay.className = 'world-carousel-motion';
-    const animations = [];
-    for (const button of carousel.querySelectorAll('.world-carousel-card[data-world]')) {
-      const from = previous.get(button.dataset.world);
-      if (!from) continue;
-      const to = button.querySelector('.world-carousel-art').getBoundingClientRect();
-      const ghost = from.art.cloneNode(true);
-      const isArriving = button.classList.contains('current');
-      const oldTitle = ghost.querySelector('.world-card-title');
-      oldTitle.style.bottom = from.titleBottom;
-      const targetTitle = button.querySelector('.world-card-title').cloneNode(true);
-      targetTitle.style.bottom = getComputedStyle(button.querySelector('.world-card-title')).bottom;
-      targetTitle.style.opacity = '0';
-      ghost.appendChild(targetTitle);
-      const targetImageFilter = getComputedStyle(button.querySelector('.world-card-image')).filter;
-      const baseImage = ghost.querySelector('.world-card-image');
-      baseImage.style.filter = from.imageFilter;
-      const targetImage = baseImage.cloneNode(true);
-      targetImage.classList.add('world-motion-image-target');
-      targetImage.style.filter = targetImageFilter;
-      targetImage.style.opacity = '0';
-      baseImage.after(targetImage);
-      const glow = document.createElement('span');
-      glow.className = 'world-motion-glow';
-      ghost.prepend(glow);
-      const motionFrame = document.createElement('span');
-      motionFrame.className = 'world-motion-frame';
-      motionFrame.style.width = `${from.frame.width}px`;
-      motionFrame.style.height = `${from.frame.height}px`;
-      motionFrame.style.top = `${from.frame.top}px`;
-      motionFrame.style.borderColor = from.frame.borderColor;
-      motionFrame.style.backgroundImage = from.frame.background;
-      motionFrame.style.borderRadius = from.frame.borderRadius;
-      motionFrame.style.boxShadow = from.frame.boxShadow;
-      glow.after(motionFrame);
-      const targetMotionFrame = motionFrame.cloneNode();
-      targetMotionFrame.style.opacity = '0';
-      ghost.style.setProperty('--world-glow', from.glow);
-      ghost.style.position = 'absolute';
-      ghost.style.transform = 'none';
-      ghost.style.minWidth = '0';
-      ghost.style.minHeight = '0';
-      ghost.style.left = `${from.bounds.left - frame.left}px`;
-      ghost.style.top = `${from.bounds.top - frame.top}px`;
-      ghost.style.width = `${from.bounds.width}px`;
-      ghost.style.height = `${from.bounds.height}px`;
-      ghost.style.zIndex = from.wasCurrent ? '1' : '2';
-      overlay.appendChild(ghost);
-      const targetStyle = getComputedStyle(button);
-      const targetFrameStyle = getComputedStyle(button, '::before');
-      targetMotionFrame.style.borderColor = targetFrameStyle.borderTopColor;
-      targetMotionFrame.style.backgroundImage = targetFrameStyle.backgroundImage;
-      targetMotionFrame.style.borderRadius = targetFrameStyle.borderRadius;
-      targetMotionFrame.style.boxShadow = targetFrameStyle.boxShadow;
-      motionFrame.after(targetMotionFrame);
-      animations.push({ ghost, glow, motionFrame, targetMotionFrame, baseImage, targetImage, oldTitle, targetTitle, from, to, isArriving,
-        targetFrame: {
-          width: parseFloat(targetStyle.getPropertyValue('--frame-width')),
-          height: parseFloat(targetStyle.getPropertyValue('--frame-height')),
-          top: parseFloat(targetStyle.getPropertyValue('--frame-art-top')),
-          borderColor: targetFrameStyle.borderTopColor
-        },
-        targetGlow: button.classList.contains('locked') ? .58 : 1 });
+    if (!carousel || Number(worldId) === (carouselPendingWorldId || carouselWorld().id) || !ACTIVE_WORLD_IDS.includes(Number(worldId))) return;
+    if (worldIsUnlocked(worldId) && (session?.rerollPending || adInFlight)) {
+      showToast('Дождись окончания обновления');
+      return;
     }
-    if (!animations.length) return;
-    const transitionMs = 520;
-    carousel.classList.add('is-transitioning');
-    carousel.appendChild(overlay);
-    for (const { ghost, glow, motionFrame, targetMotionFrame, baseImage, targetImage, oldTitle, targetTitle, from, to, isArriving, targetFrame, targetGlow } of animations) {
-      ghost.animate([
-        { left: `${from.bounds.left - frame.left}px`, top: `${from.bounds.top - frame.top}px`, width: `${from.bounds.width}px`, height: `${from.bounds.height}px` },
-        { left: `${to.left - frame.left}px`, top: `${to.top - frame.top}px`, width: `${to.width}px`, height: `${to.height}px` }
-      ], { duration: transitionMs, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
-      targetImage.animate([
-        { opacity: 0, offset: 0 }, { opacity: .08, offset: .2 }, { opacity: 1, offset: 1 }
-      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
-      baseImage.animate([
-        { opacity: 1, offset: 0 }, { opacity: .92, offset: .2 }, { opacity: 0, offset: 1 }
-      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
-      motionFrame.animate([
-        { width: `${from.frame.width}px`, height: `${from.frame.height}px`, top: `${from.frame.top}px`, opacity: 1 },
-        { width: `${targetFrame.width}px`, height: `${targetFrame.height}px`, top: `${targetFrame.top}px`, opacity: 0 }
-      ], { duration: transitionMs, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
-      targetMotionFrame.animate([
-        { width: `${from.frame.width}px`, height: `${from.frame.height}px`, top: `${from.frame.top}px`, opacity: 0 },
-        { width: `${targetFrame.width}px`, height: `${targetFrame.height}px`, top: `${targetFrame.top}px`, opacity: 1 }
-      ], { duration: transitionMs, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
-      glow.animate(isArriving ? [
-        { opacity: 0, offset: 0 }, { opacity: .08, offset: .25 },
-        { opacity: targetGlow * .48, offset: .7 }, { opacity: targetGlow, offset: 1 }
-      ] : [
-        { opacity: from.wasCurrent ? 1 : 0, offset: 0 },
-        { opacity: from.wasCurrent ? .55 : 0, offset: .3 },
-        { opacity: 0, offset: .78 }, { opacity: 0, offset: 1 }
-      ], { duration: transitionMs, easing: 'linear', fill: 'forwards' });
-      oldTitle.animate([
-        { opacity: 1, transform: 'translateX(-50%) scale(1)', offset: 0 },
-        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: .42 },
-        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: 1 }
-      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
-      targetTitle.animate([
-        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: 0 },
-        { opacity: 0, transform: 'translateX(-50%) scale(.94)', offset: .32 },
-        { opacity: 1, transform: 'translateX(-50%) scale(1)', offset: 1 }
-      ], { duration: transitionMs, easing: 'ease-in-out', fill: 'forwards' });
-    }
-    setTimeout(() => {
-      overlay.remove();
-      carousel.classList.remove('is-transitioning');
-    }, transitionMs + 15);
+    carouselPendingWorldId = Number(worldId);
+    if (carousel.classList.contains('is-channel-out')) return;
+    carousel.classList.add('is-channel-out');
+    clearTimeout(carouselTransitionTimer);
+    carouselTransitionTimer = setTimeout(() => {
+      const nextWorldId = carouselPendingWorldId;
+      carouselPendingWorldId = 0;
+      selectHomeWorld(nextWorldId);
+      carousel.classList.remove('is-channel-out');
+    }, 140);
   }
 
   function renderHomePlaySetup() {
     if (!els.playSetupCard) return;
     const world = currentWorld();
     renderWorldCarousel();
-    if (els.homeWorldPickerIcon) els.homeWorldPickerIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
-    if (els.homeWorldPickerEyebrow) els.homeWorldPickerEyebrow.textContent = `МИР ${worldDisplayNumber(world.id)}`;
+    if (els.homeWorldPickerIcon) els.homeWorldPickerIcon.src = worldIconSource(world.id);
+    if (els.homeWorldPickerEyebrow) els.homeWorldPickerEyebrow.textContent = `ШАХТА ${worldDisplayNumber(world.id)}`;
     if (els.homeWorldPickerName) els.homeWorldPickerName.textContent = world.name;
     if (els.homeWorldBest) els.homeWorldBest.textContent = `${Math.floor(save.worldBest?.[world.id] || 0).toLocaleString('ru-RU')} М`;
     if (els.homeWorldSelect) {
@@ -1070,12 +1353,12 @@
         button.disabled = !unlocked;
         button.setAttribute('role', 'option');
         button.setAttribute('aria-selected', String(selected));
-        button.setAttribute('aria-label', unlocked ? `Мир ${displayNumber}. ${item.name}` : `Мир ${displayNumber} закрыт`);
+        button.setAttribute('aria-label', unlocked ? `Шахта ${displayNumber}. ${item.name}` : `Шахта ${displayNumber} закрыта`);
 
         const emblem = document.createElement('span');
         emblem.className = 'home-world-option-icon';
         const image = document.createElement('img');
-        image.src = versionedAsset(`assets/ui/world-icons/world-${item.id}.webp`);
+        image.src = worldIconSource(item.id);
         image.alt = '';
         image.setAttribute('aria-hidden', 'true');
         emblem.appendChild(image);
@@ -1083,7 +1366,7 @@
         const copy = document.createElement('span');
         copy.className = 'home-world-option-copy';
         const eyebrow = document.createElement('small');
-        eyebrow.textContent = `МИР ${displayNumber}`;
+        eyebrow.textContent = `ШАХТА ${displayNumber}`;
         const name = document.createElement('b');
         name.textContent = item.name;
         copy.append(eyebrow, name);
@@ -1109,10 +1392,20 @@
       els.homeWorldMenu.replaceChildren(options);
     }
 
-    const endlessUnlocked = false;
-    const activeMode = 'campaign';
-    save.homeMode = 'campaign';
+    const endlessUnlocked = Boolean(save.gameCompleted);
+    const activeMode = endlessUnlocked && save.homeMode === 'endless' ? 'endless' : 'campaign';
+    if (!endlessUnlocked) save.homeMode = 'campaign';
     els.playSetupCard.dataset.mode = activeMode;
+    els.playSetupCard.querySelector('.world-terminal-shell')?.classList.toggle('endless-active', activeMode === 'endless');
+    if (els.abyssModeV2) {
+      els.abyssModeV2.classList.toggle('selected', activeMode === 'endless');
+      els.abyssModeV2.classList.toggle('locked', !endlessUnlocked);
+      els.abyssModeV2.setAttribute('aria-pressed', String(activeMode === 'endless'));
+      els.abyssModeV2.setAttribute('aria-label', endlessUnlocked ? 'Бесконечный режим' : 'Бесконечный режим откроется после прохождения игры');
+      els.abyssModeV2.title = endlessUnlocked ? 'Бесконечный режим' : 'Откроется после прохождения игры';
+    }
+    if (els.terminalEndlessLabel) els.terminalEndlessLabel.textContent = endlessUnlocked ? 'БЕСКОНЕЧНО' : 'ПОСЛЕ ФИНАЛА';
+    if (els.worldTerminalStats) els.worldTerminalStats.hidden = activeMode !== 'endless';
     els.campaignModeBtn?.classList.toggle('active', activeMode === 'campaign');
     els.endlessModeBtn?.classList.toggle('active', activeMode === 'endless');
     els.campaignModeBtn?.setAttribute('aria-selected', String(activeMode === 'campaign'));
@@ -1137,6 +1430,10 @@
     if (els.endlessBestDepth) els.endlessBestDepth.textContent = `${Math.floor(endlessDepth).toLocaleString('ru-RU')} М`;
     if (els.endlessBestLaps) els.endlessBestLaps.textContent = formatCompactNumber(endlessLaps);
     if (els.endlessRuns) els.endlessRuns.textContent = formatCompactNumber(endlessRunCount);
+    if (els.terminalBestScore) els.terminalBestScore.textContent = formatCompactNumber(endlessScore);
+    if (els.terminalBestDepth) els.terminalBestDepth.textContent = `${Math.floor(endlessDepth).toLocaleString('ru-RU')} М`;
+    if (els.terminalBestLaps) els.terminalBestLaps.textContent = formatCompactNumber(endlessLaps);
+    if (els.terminalRuns) els.terminalRuns.textContent = formatCompactNumber(endlessRunCount);
   }
 
   function selectHomeMode(mode) {
@@ -1151,7 +1448,6 @@
     sound('tap');
     feedback(6);
     renderHomePlaySetup();
-    refreshConveyorStartCard();
     persist();
   }
 
@@ -1172,14 +1468,14 @@
     if (!worldIsUnlocked(nextWorldId)) {
       carouselWorldId = nextWorldId;
       renderWorldCarousel();
-      syncWorldStartButton(stomachIsFull());
+      syncWorldStartButton(stomachCanLaunch());
       sound('tap');
       return;
     }
     if (nextWorldId === save.world) {
       carouselWorldId = nextWorldId;
       renderWorldCarousel();
-      syncWorldStartButton(stomachIsFull());
+      syncWorldStartButton(stomachCanLaunch());
       return;
     }
     if (session?.rerollPending || adInFlight) {
@@ -1190,9 +1486,9 @@
     carouselWorldId = nextWorldId;
     sound('tap');
     feedback(8);
-    ensureWorldSprites(nextWorldId);
     renderWorldCarousel();
-    syncWorldStartButton(stomachIsFull());
+    updateSelectedWorldSummary();
+    syncWorldStartButton(stomachCanLaunch());
     persist({ refreshUI: false });
   }
 
@@ -1210,35 +1506,174 @@
     feedback(5);
     persist();
     updatePersistentUI();
-    refreshConveyorStartCard();
   }
 
-  function updatePersistentUI() {
-    const trophies = Object.values(save.worldTrophies || {}).reduce((sum, count) => sum + Math.max(0, count || 0), 0);
-    els.coinsLabel.textContent = formatCompactNumber(trophies);
-    els.coinsLabel.title = `${trophies.toLocaleString('ru-RU')} кубков за пройденные миры`;
-    if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
-    if (els.researchProgressBar) els.researchProgressBar.style.width = `${save.researchProgress}%`;
-    const researchWallet = els.researchUnitsLabel?.closest('.research-wallet');
-    researchWallet?.setAttribute('aria-label', adminInfiniteResearch ? 'Исследование: бесконечные колбы' : `Исследование: ${save.researchUnits} единиц, заполнение ${save.researchProgress} из 100`);
+  function updateSelectedWorldSummary() {
     const world = currentWorld();
     document.body.dataset.world = String(world.id);
-    ensureWorldSprites(world.id);
     const level = selectedLevelForWorld(world.id);
     const targetDepth = levelTargetDepth(world, level);
     const best = Math.min(targetDepth, Math.floor(save.worldBest[world.id] || 0));
     const worldProgress = clamp(best / targetDepth * 100, 0, 100);
     const levelCompleted = best >= targetDepth;
     updateWorldHeader();
-    if (els.worldProgressPrefix) els.worldProgressPrefix.textContent = levelCompleted ? 'МИР ПРОЙДЕН' : 'ВЫ ПРОШЛИ';
+    if (els.worldProgressPrefix) els.worldProgressPrefix.textContent = levelCompleted ? 'ШАХТА ПРОЙДЕНА' : 'ВЫ ПРОШЛИ';
     els.worldProgressText.textContent = `${best} м`;
     els.worldProgressBar.style.width = `${worldProgress}%`;
     if (els.worldProgressMarker) els.worldProgressMarker.style.left = `${worldProgress}%`;
     els.worldProgressBar.parentElement.setAttribute('aria-valuenow', String(Math.round(worldProgress)));
     els.worldHint.textContent = `${targetDepth} М`;
-    if (els.adminWorldValue) els.adminWorldValue.textContent = worldDisplayNumber(world.id) ? `МИР ${worldDisplayNumber(world.id)}` : 'МИР 2 · ПАУЗА';
-    renderHomePlaySetup();
+    if (els.adminWorldValue) els.adminWorldValue.textContent = worldDisplayNumber(world.id) ? `ШАХТА ${worldDisplayNumber(world.id)}` : 'ШАХТА 2 · ПАУЗА';
     renderLevelPicker();
+  }
+
+  function totalTrophies() {
+    return Object.values(save.worldTrophies || {}).reduce((sum, count) => sum + Math.max(0, count || 0), 0);
+  }
+
+  function renderWalletBalances() {
+    const trophies = homeRewardFlight
+      ? homeRewardFlight.trophyStart + homeRewardFlight.trophyShown
+      : totalTrophies();
+    const researchUnits = homeRewardFlight
+      ? homeRewardFlight.flaskStart + homeRewardFlight.flaskShown
+      : save.researchUnits;
+    els.coinsLabel.textContent = formatCompactNumber(trophies);
+    els.coinsLabel.title = `${trophies.toLocaleString('ru-RU')} кубков за пройденные миры`;
+    const exactResearchCount = Boolean(homeRewardFlight) && researchUnits < 10_000_000 && !adminInfiniteResearch;
+    if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = adminInfiniteResearch ? '∞'
+      : exactResearchCount ? String(researchUnits) : formatCompactNumber(researchUnits);
+    const researchWallet = els.researchUnitsLabel?.closest('.research-wallet');
+    researchWallet?.classList.toggle('is-receiving', exactResearchCount);
+    if (researchWallet) researchWallet.dataset.rewardDigits = exactResearchCount ? String(researchUnits).length : '';
+    researchWallet?.setAttribute('aria-label', adminInfiniteResearch ? 'Исследование: бесконечные колбы' : `Колбы исследования: ${researchUnits}`);
+    els.coinsLabel.closest('.trophy-wallet')?.setAttribute('aria-label', `Кубки за пройденные шахты: ${trophies}`);
+  }
+
+  function settleHomeRewardFlight() {
+    const flight = homeRewardFlight;
+    if (!flight) return;
+    clearTimeout(flight.timeout);
+    flight.animations.forEach(animation => animation.cancel());
+    document.getElementById('homeRewardFlightLayer')?.replaceChildren();
+    homeRewardFlight = null;
+    renderWalletBalances();
+  }
+
+  function prepareHomeRewardFlight(completedRun) {
+    settleHomeRewardFlight();
+    if (!completedRun) return;
+    const flaskGain = adminInfiniteResearch ? 0 : Math.max(0,
+      (completedRun.researchUnitsAfter || 0) - (completedRun.researchUnitsBefore || 0));
+    const trophyGain = completedRun.completed && !completedRun.endless ? 1 : 0;
+    if (!flaskGain && !trophyGain) return;
+    homeRewardFlight = {
+      flaskStart: Math.max(0, save.researchUnits - flaskGain),
+      flaskGain, flaskShown: 0,
+      trophyStart: Math.max(0, totalTrophies() - trophyGain),
+      trophyGain, trophyShown: 0,
+      animations: [], timeout: 0, started: false
+    };
+  }
+
+  function playHomeRewardFlight() {
+    const flight = homeRewardFlight;
+    if (!flight || flight.started) return;
+    flight.started = true;
+    const layer = document.getElementById('homeRewardFlightLayer');
+    const viewport = document.getElementById('phoneViewport');
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!layer || !viewport || reduceMotion || document.hidden || !Element.prototype.animate || document.body.dataset.screen !== 'home') {
+      settleHomeRewardFlight();
+      return;
+    }
+
+    const viewportRect = viewport.getBoundingClientRect();
+    const originX = viewportRect.width * .5;
+    const originY = viewportRect.height * .7;
+    const particles = [];
+    const addFlight = (kind, amount, targetIcon, targetWallet) => {
+      if (!amount || !targetIcon || !targetWallet) return;
+      const count = kind === 'trophy' ? 1 : Math.min(9, amount);
+      const targetRect = targetIcon.getBoundingClientRect();
+      const targetX = targetRect.left + targetRect.width / 2 - viewportRect.left;
+      const targetY = targetRect.top + targetRect.height / 2 - viewportRect.top;
+      for (let index = 0; index < count; index += 1) {
+        const piece = Math.floor(amount / count) + (index < amount % count ? 1 : 0);
+        const startX = originX + rand(-42, 42);
+        const startY = originY + rand(-14, 16);
+        const scatterX = startX + rand(-88, 88);
+        const scatterY = startY - rand(42, 96);
+        const image = document.createElement('img');
+        image.className = `home-reward-particle home-reward-${kind}`;
+        image.src = kind === 'trophy' ? 'assets/ui/world-picker-v2/trophy.webp' : 'assets/ui/research-flask.webp?v=1';
+        image.alt = '';
+        image.style.left = `${startX}px`;
+        image.style.top = `${startY}px`;
+        layer.appendChild(image);
+        const at = (x, y, scale) => `translate3d(-50%,-50%,0) translate3d(${x - startX}px,${y - startY}px,0) scale(${scale})`;
+        const middleX = scatterX + (targetX - scatterX) * .46;
+        const middleY = scatterY + (targetY - scatterY) * .38 - 38;
+        const animation = image.animate([
+          { offset: 0, opacity: 0, transform: at(startX, startY, .45) },
+          { offset: .12, opacity: 1, transform: at(startX, startY - 15, 1) },
+          { offset: .28, opacity: 1, transform: at(scatterX, scatterY, 1.08) },
+          { offset: .63, opacity: 1, transform: at(middleX, middleY, .84) },
+          { offset: 1, opacity: 0, transform: at(targetX, targetY, .42) }
+        ], { duration: kind === 'trophy' ? 1120 : 880, delay: kind === 'trophy' ? 310 : index * 78,
+          easing: 'cubic-bezier(.22,.62,.25,1)', fill: 'forwards' });
+        flight.animations.push(animation);
+        particles.push(animation.finished.then(() => {
+          if (homeRewardFlight !== flight) return;
+          image.remove();
+          if (kind === 'trophy') flight.trophyShown += piece;
+          else flight.flaskShown += piece;
+          renderWalletBalances();
+          targetWallet.animate([
+            { scale: '1', filter: 'brightness(1)' },
+            { scale: '1.16', filter: 'brightness(1.25)', offset: .42 },
+            { scale: '1', filter: 'brightness(1)' }
+          ], { duration: 290, easing: 'ease-out' });
+          if (kind === 'trophy' || index % 3 === 0 || index === count - 1) sound('coin');
+          if (kind === 'trophy' || index === count - 1) feedback(5);
+        }).catch(() => {}));
+      }
+    };
+
+    addFlight('flask', flight.flaskGain,
+      document.querySelector('.research-wallet-flask>img'),
+      document.querySelector('.research-wallet'));
+    addFlight('trophy', flight.trophyGain,
+      document.querySelector('.trophy-wallet .currency-icon'),
+      document.querySelector('.trophy-wallet'));
+    if (!particles.length) return settleHomeRewardFlight();
+    flight.timeout = setTimeout(() => { if (homeRewardFlight === flight) settleHomeRewardFlight(); }, 2400);
+    Promise.all(particles).then(() => {
+      if (homeRewardFlight !== flight) return;
+      clearTimeout(flight.timeout);
+      flight.timeout = setTimeout(() => { if (homeRewardFlight === flight) settleHomeRewardFlight(); }, 360);
+    });
+  }
+
+  function updatePersistentUI() {
+    renderWalletBalances();
+    const hasFirstForm = Boolean(save.discoveredForms?.length);
+    for (const button of [els.formIndexBtn, els.wardrobeBtn]) {
+      if (!button) continue;
+      const locked = button === els.wardrobeBtn || !hasFirstForm;
+      button.disabled = locked;
+      button.classList.toggle('form-locked', locked);
+      button.title = button === els.wardrobeBtn ? 'Гардероб пока недоступен' : locked ? 'Откроется после первой формы' : '';
+    }
+    els.wardrobeBtn?.setAttribute('aria-label', 'Гардероб пока недоступен');
+    if (els.mutationLabBadge) {
+      const hasUndiscoveredMutation = !save.unlockedMutations?.includes('fire') || !allSynthesesUnlocked();
+      const canSynthesize = hasUndiscoveredMutation && (adminInfiniteResearch || save.researchUnits + save.mutationProgress >= currentMutationCost());
+      els.mutationLabBadge.hidden = !canSynthesize;
+      els.mutationLabBadge.closest('button')?.setAttribute('aria-label', canSynthesize ? 'Открыть мутации. Доступен синтез' : 'Открыть мутации');
+    }
+    updateSelectedWorldSummary();
+    renderHomePlaySetup();
     applySkin();
   }
 
@@ -1252,10 +1687,10 @@
     els.worldLabel.textContent = world.name;
     if (els.worldEyebrow) {
       els.worldEyebrow.textContent = isDrop
-        ? (run?.endless ? `МИР ${worldDisplayNumber(world.id)} · БЕСКОНЕЧНЫЙ РЕЖИМ` : `МИР ${worldDisplayNumber(world.id)}`)
-        : `МИР ${worldDisplayNumber(world.id)}`;
+        ? (run?.endless ? `ШАХТА ${worldDisplayNumber(world.id)} · БЕСКОНЕЧНЫЙ РЕЖИМ` : `ШАХТА ${worldDisplayNumber(world.id)}`)
+        : `ШАХТА ${worldDisplayNumber(world.id)}`;
     }
-    if (els.worldIcon) els.worldIcon.src = versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`);
+    if (els.worldIcon) els.worldIcon.src = worldIconSource(world.id);
     if (els.levelPassedBadge) els.levelPassedBadge.hidden = !(isDrop && !run?.endless && completedBefore);
   }
 
@@ -1405,6 +1840,7 @@
   }
 
   function showScreen(name) {
+    if (name !== 'home') settleHomeRewardFlight();
     document.body.dataset.screen = name;
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
@@ -1418,6 +1854,7 @@
     }
     syncInteractionLayers();
     scheduleHomeFit();
+    queueTutorialRender();
   }
 
   function newDraft() {
@@ -1434,26 +1871,15 @@
       healthBoost: bonusHealth,
       stats: { health: BASE_HEALTH, damage: BASE_DAMAGE, shield: BASE_SHIELD, shieldCharges: BASE_SHIELD_CHARGES, coinMultiplier: 1 },
       effects: {},
-      combo: null,
       rerollPending: false,
       offerTransition: false
     };
     syncMenuCategoryVisuals({ instant: true });
     generateOffer();
     showScreen('home');
-    els.conveyor.classList.add('is-running');
     renderDraft({ offerMotion: 'enter' });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setTimeout(async () => {
-      if (!session) return;
-      els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
-        card.classList.remove('tunnel-enter');
-        card.style.removeProperty('--conveyor-delay');
-        card.style.removeProperty('--conveyor-duration');
-      });
-      await playConveyorDispense(reducedMotion);
-      els.conveyor.classList.remove('is-running');
-    }, reducedMotion ? 30 : 850);
+    void settleConveyorArrival(reducedMotion);
     persist();
   }
 
@@ -1491,6 +1917,9 @@
     save = structuredClone(defaultSave);
     carouselWorldId = null;
     adminInfiniteResearch = false;
+    adminInfiniteUltimate = false;
+    syncAdminInfiniteFlasksUI();
+    syncAdminInfiniteUltimateUI();
     saveUpdatedAt = Date.now();
     saveRevision += 1;
     session = null;
@@ -1530,6 +1959,20 @@
     showToast('Все миры открыты · кубки и исследование выданы');
   }
 
+  function unlockMutationsFromAdmin() {
+    save.unlockedMutations = allMutations().map(mutation => mutation.id);
+    save.mutationLevels = Object.fromEntries(save.unlockedMutations.map(id => [id, 3]));
+    save.mutationProgress = 0;
+    save.mutationInvestTapCount = 0;
+    pendingMutationReveal = null;
+    persist();
+    updatePersistentUI();
+    closeAdminTools();
+    sound('coin');
+    feedback([8, 14, 8]);
+    showToast('Все мутации открыты');
+  }
+
   function syncAdminInfiniteFlasksUI() {
     els.adminInfiniteFlasksBtn?.classList.toggle('active', adminInfiniteResearch);
     els.adminInfiniteFlasksBtn?.setAttribute('aria-pressed', String(adminInfiniteResearch));
@@ -1546,6 +1989,22 @@
     showToast(adminInfiniteResearch ? 'Бесконечные колбы включены' : 'Бесконечные колбы выключены');
   }
 
+  function syncAdminInfiniteUltimateUI() {
+    els.adminInfiniteUltimateBtn?.classList.toggle('active', adminInfiniteUltimate);
+    els.adminInfiniteUltimateBtn?.setAttribute('aria-pressed', String(adminInfiniteUltimate));
+    els.adminInfiniteUltimateBtn?.setAttribute('aria-label', `${adminInfiniteUltimate ? 'Выключить' : 'Включить'} бесконечную суперспособность`);
+    if (els.adminInfiniteUltimateState) els.adminInfiniteUltimateState.textContent = adminInfiniteUltimate ? 'ВКЛЮЧЕНО' : 'ВЫКЛЮЧЕНО';
+  }
+
+  function toggleAdminInfiniteUltimate() {
+    adminInfiniteUltimate = !adminInfiniteUltimate;
+    syncAdminInfiniteUltimateUI();
+    if (run) updateRunUI();
+    sound('tap');
+    feedback(adminInfiniteUltimate ? [5, 9, 5] : 5);
+    showToast(adminInfiniteUltimate ? 'Бесконечная ульта включена' : 'Бесконечная ульта выключена');
+  }
+
   function foodAvailableInWorld(food) {
     if (!activeMutationFamilies().includes(foodRecipeFamily(food))) return false;
     if (food?.requiresMutation && !(save.unlockedMutations || []).includes(food.requiresMutation)) return false;
@@ -1556,8 +2015,28 @@
     return [...STARTER_MUTATIONS, ...MUTATION_DISCOVERIES];
   }
 
+  function availableSyntheses() {
+    return save.legacyStarterAccess
+      ? MUTATION_DISCOVERIES
+      : [...STARTER_MUTATIONS.filter(mutation => mutation.id !== 'fire'), ...MUTATION_DISCOVERIES];
+  }
+
+  function allSynthesesUnlocked() {
+    return availableSyntheses().every(mutation => save.unlockedMutations?.includes(mutation.id));
+  }
+
   function mutationById(id) {
     return allMutations().find(mutation => mutation.id === id) || null;
+  }
+
+  function mutationLevel(id) {
+    if (!save.unlockedMutations?.includes(id)) return 0;
+    return clamp(Math.floor(Number(save.mutationLevels?.[id]) || 1), 1, 3);
+  }
+
+  function mutationLevelForFamily(family) {
+    const id = (save.activeMutationPool || []).find(mutationId => mutationFoodFamily(mutationId) === family);
+    return id ? mutationLevel(id) : 0;
   }
 
   function mutationFoodFamily(id) {
@@ -1565,23 +2044,15 @@
   }
 
   function activeMutationFamilies() {
-    return (save.activeMutationPool || ['frost', 'fire', 'electric']).map(mutationFoodFamily);
+    return (save.activeMutationPool || []).map(mutationFoodFamily);
   }
 
-  function completionRecipeFamily() {
-    const counts = (session?.foods || []).reduce((result, food) => {
-      const family = foodRecipeFamily(food);
-      result[family] = (result[family] || 0) + 1;
-      return result;
-    }, {});
-    return Object.entries(counts).find(([, count]) => count === 2)?.[0] || '';
-  }
-
-  function randomFood(exclude = [], preferredFamily = '') {
-    let pool = FOODS.filter(food => foodAvailableInWorld(food)
+  function randomFood(exclude = [], preferredFamily = '', stage = 0) {
+    if (stage > 3 || (preferredFamily && stage > mutationLevelForFamily(preferredFamily))) return null;
+    const pool = FOODS.filter(food => foodAvailableInWorld(food)
       && (!preferredFamily || foodRecipeFamily(food) === preferredFamily)
+      && (!stage || food.stage === stage)
       && !exclude.includes(food.id));
-    if (!pool.length) pool = FOODS.filter(food => foodAvailableInWorld(food) && !exclude.includes(food.id));
     return pool[Math.floor(Math.random() * pool.length)] || null;
   }
 
@@ -1589,11 +2060,11 @@
     const offer = [null, null, null];
     const activeFamilies = activeMutationFamilies();
     const used = (session?.foods || []).map(food => food.id);
-    const completionFamily = completionRecipeFamily();
-
     for (let i = 0; i < 3; i += 1) {
       const family = activeFamilies[i];
-      const food = randomFood(used, family === completionFamily ? completionFamily : family);
+      if (!family) continue;
+      const stage = (session?.foods || []).filter(food => foodRecipeFamily(food) === family).length + 1;
+      const food = randomFood(used, family, stage);
       offer[i] = food;
       if (food) used.push(food.id);
     }
@@ -1606,14 +2077,25 @@
     persist();
   }
 
-  const MUTATION_GRAVITY_ARROW_SVG = '<svg viewBox="0 0 14 20" aria-hidden="true"><path d="M5 1H9V10H13L7 19 1 10H5Z"></path></svg>';
+  const NANO_DRONE_SPRITE = 'effects-lab/assets/techno-drone-red-v1.webp';
+  const NANO_MINI_DRONE_SPRITE = 'effects-lab/assets/techno-mini-drone-red-v2.png';
   const MUTATION_REVEAL_BACKGROUNDS = Object.freeze({
     explosion: 'assets/ui/mutation-reveal/explosion-v1.webp',
-    cosmos: 'assets/ui/mutation-reveal/cosmos-v1.webp',
-    nano: 'assets/ui/mutation-reveal/nano-v2.webp',
-    telekinesis: 'assets/ui/mutation-reveal/telekinesis-v1.webp',
-    cloning: 'assets/ui/mutation-reveal/cloning-v1.webp'
+    fire: 'assets/ui/mutation-reveal/fire-scene-v2.png',
+    electric: 'assets/ui/mutation-reveal/electric-scene-v2.png',
+    frost: 'assets/ui/mutation-reveal/frost-scene-v2.png',
+    cosmos: 'assets/ui/mutation-reveal/cosmos-scene-v2.png',
+    nano: 'assets/ui/mutation-reveal/nano-scene-v4.png',
+    telekinesis: 'assets/ui/mutation-reveal/telekinesis-scene-v2.png',
+    cloning: 'assets/ui/mutation-reveal/cloning-scene-v2.png',
+    phantom: 'assets/ui/mutation-reveal/phantom-scene-v2.png',
+    glitch: 'assets/ui/mutation-reveal/glitch-scene-v2.png'
   });
+
+  function technoMiniDronesMarkup(extraClass) {
+    const sprite = versionedAsset(NANO_MINI_DRONE_SPRITE);
+    return `<span class="mutation-element-fx mutation-techno-mini-fx ${extraClass}" aria-hidden="true"><img src="${sprite}" alt=""><img src="${sprite}" alt=""></span>`;
+  }
 
   function mutationElementFxMarkup(family, extraClass = '') {
     const sourceFamily = String(family || '').toLowerCase();
@@ -1628,45 +2110,41 @@
       return `<span class="mutation-element-fx mutation-electric-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
     }
     if (normalizedFamily === 'cosmos') {
-      return `<span class="mutation-element-fx mutation-cosmos-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+      return `<span class="mutation-element-fx mutation-cosmos-stage-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
+    if (normalizedFamily === 'nano') {
+      return technoMiniDronesMarkup(extraClass);
+    }
+    if (normalizedFamily === 'telekinesis') {
+      return `<span class="mutation-element-fx mutation-psionics-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
+    }
+    if (normalizedFamily === 'cloning') {
+      return `<span class="mutation-element-fx mutation-spores-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
     }
     if (normalizedFamily === 'blast' || normalizedFamily === 'explosion') {
       return `<span class="mutation-element-fx mutation-blast-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`;
     }
+    if (normalizedFamily === 'phantom') {
+      return `<span class="mutation-element-fx mutation-phantom-fx ${extraClass}" aria-hidden="true"></span>`;
+    }
+    if (normalizedFamily === 'glitch') {
+      return `<span class="mutation-element-fx mutation-glitch-fx ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>`;
+    }
     return '';
   }
 
-  function conveyorMutationFxMarkup(food, family) {
-    if (family === 'cosmos') {
-      return `<span class="mutation-element-fx food-mutation-fx food-cosmos-gravity-fx" aria-hidden="true"><span class="mutation-gravity-particles">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span></span>`;
-    }
-    if (family === 'nano') {
-      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.webp')}" alt="">`;
-      return `<span class="mutation-element-fx food-mutation-fx food-nano-drones-fx" aria-hidden="true">${drone}${drone}</span>`;
-    }
-    if (family === 'telekinesis') {
-      return '<span class="mutation-element-fx food-mutation-fx food-telekinesis-fx" aria-hidden="true"></span>';
-    }
-    if (family === 'cloning') {
-      const echo = `<img src="${versionedAsset(food.image)}" alt="">`;
-      return `<span class="mutation-element-fx food-mutation-fx food-cloning-fx" aria-hidden="true">${echo}${echo}</span>`;
-    }
+  function conveyorMutationFxMarkup(family) {
     return mutationElementFxMarkup(family, 'food-mutation-fx');
   }
 
   function mutationRevealFxMarkup(mutation) {
-    if (mutation.id === 'cosmos') {
-      return `<span class="mutation-gravity-particles" aria-hidden="true">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span>`;
-    }
-    if (mutation.id === 'nano') {
-      const drone = `<img src="${versionedAsset('assets/ui/nano-drone-v1.webp')}" alt="">`;
-      return `<span class="mutation-nano-drones" aria-hidden="true">${drone}${drone}<i class="nano-prize-shot"></i><i class="nano-prize-shot"></i></span>`;
-    }
-    if (mutation.id === 'cloning') {
-      const echo = `<img src="${versionedAsset(mutation.image)}" alt="">`;
-      return `<span class="mutation-clone-echoes" aria-hidden="true">${echo}${echo}</span>`;
-    }
     return mutationElementFxMarkup(mutation.id, 'mutation-prize-fx');
+  }
+
+  function mutationRevealBackgroundMarkup(mutation) {
+    if (mutation.id !== 'nano') return '';
+    const sprite = versionedAsset(NANO_MINI_DRONE_SPRITE);
+    return `<span class="mutation-prize-background-drones" aria-hidden="true"><img src="${sprite}" alt=""><img src="${sprite}" alt=""></span>`;
   }
 
   function calculateStatsForFoods() {
@@ -1682,14 +2160,13 @@
     stats.damage = clamp(Math.round(stats.damage), 1, 999);
     stats.shield = clamp(Math.round(stats.shield), 0, 999);
     stats.shieldCharges = clamp(Math.round(stats.shieldCharges), 1, 9);
-    return { stats, effects: {}, combo: null };
+    return { stats, effects: {} };
   }
 
   function recalcStats() {
     const result = calculateStatsForFoods(session.foods);
     session.stats = result.stats;
     session.effects = result.effects;
-    session.combo = result.combo;
   }
 
   function createStomachSlot(food, index, { locked = false } = {}) {
@@ -1730,9 +2207,11 @@
     fire: { glyph: '▲', label: 'ОГОНЬ' },
     ice: { glyph: '◆', label: 'ЛЁД' }, electric: { glyph: 'ϟ', label: 'ТОК' },
     cosmos: { glyph: '✦', label: 'КОСМОС' },
-    nano: { glyph: '◉', label: 'НАНО' },
-    telekinesis: { glyph: '◇', label: 'ТЕЛЕКИНЕЗ' },
-    cloning: { glyph: '◉', label: 'КЛОНИРОВАНИЕ' },
+    nano: { glyph: '◉', label: 'ТЕХНО' },
+    telekinesis: { glyph: '◇', label: 'ПСИОНИКА' },
+    cloning: { glyph: '◉', label: 'СПОРЫ' },
+    phantom: { glyph: '◌', label: 'ФАНТОМ' },
+    glitch: { glyph: '▣', label: 'ГЛИТЧ' },
     blast: { glyph: '✦', label: 'ВЗРЫВ' },
     mixed: { glyph: '•', label: 'ЕДА' }
   };
@@ -1741,10 +2220,12 @@
     fire: 'assets/ui/recipe-categories/emblem-v2-fire.webp',
     ice: 'assets/ui/recipe-categories/emblem-v2-frost.webp',
     electric: 'assets/ui/recipe-categories/emblem-v2-electric.webp',
-    cosmos: 'assets/ui/recipe-categories/emblem-v2-cosmos.webp',
-    nano: 'assets/ui/recipe-categories/emblem-v2-nano.webp',
-    telekinesis: 'assets/ui/recipe-categories/emblem-v2-telekinesis.webp',
-    cloning: 'assets/ui/recipe-categories/emblem-v2-cloning.webp',
+    cosmos: 'assets/ui/recipe-categories/emblem-v4-cosmos.webp',
+    nano: 'assets/ui/recipe-categories/emblem-v4-techno.webp',
+    telekinesis: 'assets/ui/recipe-categories/emblem-v4-psionics.webp',
+    cloning: 'assets/ui/recipe-categories/emblem-v3-spores.webp',
+    phantom: 'assets/ui/recipe-categories/emblem-v5-phantom.png',
+    glitch: 'assets/ui/recipe-categories/emblem-v4-glitch.webp',
     blast: 'assets/ui/recipe-categories/emblem-v2-explosion.webp'
   });
 
@@ -1810,7 +2291,7 @@
   function renderConveyorStartCard({ entering = false } = {}) {
     const world = currentWorld();
     const endless = save.homeMode === 'endless';
-    const stageLabel = endless ? 'БЕСКОНЕЧНЫЙ РЕЖИМ' : `МИР ${worldDisplayNumber(world.id)}`;
+    const stageLabel = endless ? 'БЕСКОНЕЧНЫЙ РЕЖИМ' : `ШАХТА ${worldDisplayNumber(world.id)}`;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `conveyor-start-card${entering ? ' launch-card-enter' : ''}`;
@@ -1818,38 +2299,133 @@
     button.innerHTML = `
       <span class="launch-card-booms" aria-hidden="true"><i></i><i></i><i></i></span>
       <span class="launch-card-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <span class="launch-card-world"><small>МИР ${worldDisplayNumber(world.id)}</small><b>${world.name}</b></span>
+      <span class="launch-card-world"><small>ШАХТА ${worldDisplayNumber(world.id)}</small><b>${world.name}</b></span>
       <span class="launch-card-stage">${stageLabel}</span>
       <span class="launch-card-action"><i aria-hidden="true"></i><b>СТАРТ</b><i aria-hidden="true"></i></span>`;
     button.addEventListener('click', () => { void beginRoomLaunch({ endless: save.homeMode === 'endless' }); });
     els.foodChoices.appendChild(button);
   }
 
-  function refreshConveyorStartCard() {
-    if (!stomachIsFull()) return;
-    els.foodChoices?.replaceChildren();
+  function quickMutationChoices(pool = save.activeMutationPool || []) {
+    const unlocked = new Set(save.unlockedMutations || []);
+    return allMutations().filter(mutation => unlocked.has(mutation.id) && !pool.includes(mutation.id));
   }
 
   function renderConveyorDispensers() {
     if (!els.conveyorDispensers) return;
-    const foods = stomachIsFull()
-      ? activeMutationFamilies().slice(0, 3).map((recipeFamily, index) => ({ id: `active-${index}-${recipeFamily}`, recipeFamily }))
-      : (session?.offer || []);
-    const offerKey = foods.map(food => food?.id || '-').join('|');
-    els.conveyorDispensers.classList.toggle('hidden', !foods.length);
+    const pool = save.activeMutationPool || [];
+    const full = stomachIsFull();
+    const hasReserve = quickMutationChoices(pool).length > 0;
+    const canSwap = !full && hasReserve;
+    const offerKey = `${pool.join('|')}|${full}|${hasReserve}`;
+    els.conveyorDispensers.classList.toggle('hidden', !pool.length);
     if (els.conveyorDispensers.dataset.offerKey === offerKey) return;
     els.conveyorDispensers.dataset.offerKey = offerKey;
-    els.conveyorDispensers.innerHTML = foods.map((food, index) => {
-      if (!food) return '<span class="conveyor-dispenser empty" aria-hidden="true"></span>';
-      const family = foodRecipeFamily(food);
+    els.conveyorDispensers.innerHTML = pool.map((id, index) => {
+      const mutation = mutationById(id);
+      const family = mutationFoodFamily(id);
       const icon = RECIPE_FAMILY_ICONS[family];
       return `<span class="conveyor-dispenser family-${family}" data-dispenser-index="${index}">
-        <i class="conveyor-pipe-feed"></i>
-        <span class="conveyor-pipe-socket">${icon ? `<img src="${versionedAsset(icon)}" alt="">` : ''}</span>
-        <i class="conveyor-pipe-nozzle"><b></b></i>
-        <i class="conveyor-pipe-pulse"></i>
+        <button class="conveyor-pipe-socket" data-quick-mutation-slot="${index}" type="button" ${canSwap ? '' : 'disabled'} aria-label="${full ? 'Смена мутаций недоступна: слайм сыт' : !hasReserve ? 'Нет мутаций в запасе' : `Сменить мутацию синтезатора ${index + 1}: ${mutation?.name || 'пусто'}`}" aria-controls="quickMutationPicker" aria-expanded="false">${icon ? `<img src="${versionedAsset(icon)}" alt="">` : ''}</button>
+        <span class="synthesis-emitter-glow"></span>
+        <span class="synthesis-beam"></span>
       </span>`;
     }).join('');
+    els.conveyorDispensers.querySelectorAll('[data-quick-mutation-slot]').forEach(button => {
+      button.addEventListener('click', () => openQuickMutationPicker(Number(button.dataset.quickMutationSlot)));
+    });
+  }
+
+  function closeQuickMutationPicker() {
+    clearTimeout(quickMutationPickerTimer);
+    quickMutationPickerTimer = null;
+    document.removeEventListener('click', onQuickMutationPickerOutsideClick, true);
+    document.removeEventListener('keydown', onQuickMutationPickerKeydown);
+    if (els.quickMutationPicker) els.quickMutationPicker.hidden = true;
+    els.conveyorDispensers?.querySelectorAll('[data-quick-mutation-slot]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+  }
+
+  function onQuickMutationPickerOutsideClick(event) {
+    if (!els.quickMutationPicker?.contains(event.target) || !event.target.closest('[data-quick-mutation]')) {
+      closeQuickMutationPicker();
+      event.stopPropagation();
+    }
+  }
+
+  function onQuickMutationPickerKeydown(event) {
+    if (event.key === 'Escape') closeQuickMutationPicker();
+  }
+
+  function scheduleQuickMutationPickerClose() {
+    clearTimeout(quickMutationPickerTimer);
+    quickMutationPickerTimer = setTimeout(closeQuickMutationPicker, 4000);
+  }
+
+  function openQuickMutationPicker(slot) {
+    if (!els.quickMutationPicker || document.body.dataset.screen !== 'home' || stomachIsFull() || session?.offerTransition) return;
+    const choices = quickMutationChoices();
+    if (!choices.length) return;
+    closeQuickMutationPicker();
+    selectedConveyorSlot = clamp(slot, 0, 2);
+    sound('tap');
+    feedback(3);
+    els.quickMutationPicker.innerHTML = `<div class="quick-mutation-head">ЗАМЕНИТЬ НА:</div>
+      <div class="quick-mutation-list">${choices.map(mutation => `<button class="quick-mutation-option" data-quick-mutation="${mutation.id}" type="button" aria-label="Заменить на ${mutation.name}" title="${mutation.name}"><img src="${versionedAsset(mutation.image)}" alt=""></button>`).join('')}</div>`;
+    els.quickMutationPicker.style.removeProperty('top');
+    const summary = els.recipeCategorySlots?.closest('.slime-mutation-summary');
+    if (summary?.getClientRects().length && els.slimeFeedCount?.getClientRects().length && els.slimeStage) {
+      const stageBounds = els.slimeStage.getBoundingClientRect();
+      const scaleY = stageBounds.height / els.slimeStage.offsetHeight || 1;
+      const summaryTop = summary.getBoundingClientRect().top;
+      const countBottom = els.slimeFeedCount.getBoundingClientRect().bottom;
+      els.quickMutationPicker.style.top = `${Math.round(((summaryTop + countBottom) / 2 - stageBounds.top) / scaleY)}px`;
+    }
+    els.quickMutationPicker.hidden = false;
+    els.conveyorDispensers?.querySelectorAll('[data-quick-mutation-slot]').forEach(button => button.setAttribute('aria-expanded', String(Number(button.dataset.quickMutationSlot) === selectedConveyorSlot)));
+    els.quickMutationPicker.querySelectorAll('[data-quick-mutation]').forEach(button => {
+      button.addEventListener('click', () => { void selectQuickMutation(selectedConveyorSlot, button.dataset.quickMutation); });
+    });
+    document.addEventListener('click', onQuickMutationPickerOutsideClick, true);
+    document.addEventListener('keydown', onQuickMutationPickerKeydown);
+    scheduleQuickMutationPickerClose();
+  }
+
+  async function selectQuickMutation(slot, id) {
+    const unlocked = new Set(save.unlockedMutations || []);
+    if (!unlocked.has(id) || stomachIsFull() || session?.offerTransition) return;
+    const pool = [...(save.activeMutationPool || [])];
+    if (pool.includes(id)) return;
+    closeQuickMutationPicker();
+    const changedSlots = [slot];
+    pool[slot] = id;
+    save.activeMutationPool = pool;
+    sound('tap');
+    feedback(6);
+    if (!session) {
+      renderConveyorDispensers();
+      persist();
+      return;
+    }
+    session.offerTransition = true;
+    const used = [...session.foods, ...session.offer.filter((food, index) => food && !changedSlots.includes(index))].map(food => food.id);
+    changedSlots.forEach(index => {
+      const family = mutationFoodFamily(pool[index]);
+      const stage = session.foods.filter(food => foodRecipeFamily(food) === family).length + 1;
+      session.offer[index] = randomFood(used, family, stage);
+      if (session.offer[index]) used.push(session.offer[index].id);
+    });
+    session.offersSeen += 1;
+    renderDraft();
+    changedSlots.forEach(index => {
+      const emblem = els.conveyorDispensers?.querySelector(`[data-dispenser-index="${index}"] .conveyor-pipe-socket`);
+      emblem?.classList.add('quick-swapped');
+      emblem?.addEventListener('animationend', () => emblem.classList.remove('quick-swapped'), { once: true });
+      els.foodChoices.querySelector(`[data-offer-index="${index}"]`)?.classList.add('awaiting-dispense');
+    });
+    persist();
+    await playConveyorDispense(menuReducedMotion);
+    session.offerTransition = false;
+    releaseConveyorControl();
   }
 
   async function playConveyorDispense(reducedMotion = false) {
@@ -1858,22 +2434,22 @@
     const dispensers = [...(els.conveyorDispensers?.querySelectorAll('.conveyor-dispenser') || [])];
     els.conveyor.classList.add('is-dispensing');
     cards.forEach((card, index) => {
-      const delayMs = reducedMotion ? 0 : index * 65;
+      const delayMs = reducedMotion ? 0 : index * 70;
       card.style.setProperty('--dispense-delay', `${delayMs}ms`);
       card.classList.remove('awaiting-dispense');
-      card.classList.add('food-dropping');
+      card.classList.add('food-synthesizing');
       setTimeout(() => {
         if (card.isConnected) card.classList.add('food-ready');
-      }, reducedMotion ? 0 : delayMs + 520);
-      const dispenser = dispensers[index];
+      }, reducedMotion ? 0 : delayMs + 1060);
+      const dispenser = dispensers[Number(card.dataset.offerIndex || 0)];
       if (dispenser) {
         dispenser.style.setProperty('--dispense-delay', `${delayMs}ms`);
         dispenser.classList.add('is-dispensing');
       }
     });
-    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 980));
+    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 1100 + Math.max(0, cards.length - 1) * 70));
     cards.forEach(card => {
-      card.classList.remove('food-dropping');
+      card.classList.remove('food-synthesizing');
       card.style.removeProperty('--dispense-delay');
     });
     dispensers.forEach(dispenser => {
@@ -1884,42 +2460,40 @@
   }
 
   async function settleConveyorArrival(reducedMotion = false) {
-    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 850));
-    els.foodChoices.querySelectorAll('.tunnel-enter').forEach(card => {
-      card.classList.remove('tunnel-enter');
-      card.style.removeProperty('--conveyor-delay');
-      card.style.removeProperty('--conveyor-duration');
-    });
+    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 20 : 90));
     await playConveyorDispense(reducedMotion);
   }
 
   function releaseConveyorControl() {
-    const full = stomachIsFull();
+    const readyToStart = conveyorCanStart();
     const rerollBlocked = session.rerollPending || session.offerTransition || adInFlight;
-    els.rerollBtn.disabled = rerollBlocked || (!UNLIMITED_FREE_REROLLS && !full && session.freeRerolls <= 0 && session.adRerolls > 0);
+    els.rerollBtn.disabled = rerollBlocked || (!UNLIMITED_FREE_REROLLS && !readyToStart && session.freeRerolls <= 0 && session.adRerolls > 0);
     scheduleHomeFit();
   }
 
-  function syncWorldStartButton(full) {
+  function syncWorldStartButton(canLaunch) {
     if (!els.worldStartBtn) return;
     const locked = !worldIsUnlocked(carouselWorld().id);
-    const ready = full && !locked;
+    const ready = canLaunch && !locked;
     els.worldStartBtn.disabled = !ready;
     els.worldStartBtn.classList.toggle('hungry', !ready);
     els.worldStartBtn.classList.toggle('ready', ready);
-    els.worldStartBtn.setAttribute('aria-label', locked ? 'Мир закрыт. Для открытия нужно 10 кубков' : ready ? 'В шахту, начать забег' : 'Слайм голоден. Сначала выберите еду');
-    if (els.worldStartText) els.worldStartText.textContent = ready ? 'В ШАХТУ!' : locked ? '' : 'ПОКОРМИ СЛАЙМА';
+    els.worldStartBtn.setAttribute('aria-label', locked ? 'Шахта закрыта. Для открытия нужно 10 кубков' : ready ? 'Отправиться в шахту' : 'Сначала покормите слайма');
+    if (els.worldStartText) els.worldStartText.textContent = 'ИГРАТЬ';
   }
 
   function renderDraft({ offerMotion = 'static', showLaunchCard = true } = {}) {
     recalcStats();
     updatePersistentUI();
     const full = stomachIsFull();
-    els.slimeStage?.classList.toggle('portal-ready', full);
+    const canLaunch = stomachCanLaunch();
+    els.slimeStage?.classList.toggle('portal-ready', canLaunch);
     if (els.conveyorChoiceCount) {
-      els.conveyorChoiceCount.textContent = full
-        ? 'ВЫБОР ГОТОВ'
-        : `ВЫБЕРИ ЕДУ ${stomachFoodCount()}/${STOMACH_CAPACITY}`;
+      const eatenCount = stomachFoodCount();
+      els.conveyorEatenCount.textContent = String(eatenCount);
+      els.conveyorCapacityCount.textContent = String(STOMACH_CAPACITY);
+      els.conveyorChoiceCount.setAttribute('aria-label', `Съедено ${eatenCount} из ${STOMACH_CAPACITY}`);
+      els.conveyorChoiceCount.classList.toggle('is-full', full);
     }
 
     const mealInProgress = ['eat', 'chewing', 'savoring'].some(name => els.slime.classList.contains(name));
@@ -1927,15 +2501,15 @@
     }
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
     if (els.startDropBtn) {
-      els.startDropBtn.disabled = !full;
-      els.startDropBtn.classList.toggle('stomach-locked', !full);
-      els.startDropBtn.setAttribute('aria-label', full ? 'Начать падение' : `Сначала заполни желудок: ${stomachFoodCount()} из ${STOMACH_CAPACITY}`);
+      els.startDropBtn.disabled = !canLaunch;
+      els.startDropBtn.classList.toggle('stomach-locked', !canLaunch);
+      els.startDropBtn.setAttribute('aria-label', canLaunch ? 'Начать падение' : 'Сначала дай слайму одну еду');
     }
     if (els.startEndlessBtn) {
-      els.startEndlessBtn.disabled = !full || !save.gameCompleted;
-      els.startEndlessBtn.classList.toggle('stomach-locked', !full);
+      els.startEndlessBtn.disabled = !canLaunch || !save.gameCompleted;
+      els.startEndlessBtn.classList.toggle('stomach-locked', !canLaunch);
     }
-    syncWorldStartButton(full);
+    syncWorldStartButton(canLaunch);
     els.conveyor.classList.remove('launch-ready');
     els.rerollBtn.disabled = session.rerollPending || session.offerTransition || adInFlight;
 
@@ -1957,35 +2531,24 @@
       }
       const button = document.createElement('button');
       const recipeFamily = foodRecipeFamily(food);
-      const foodMutationFx = conveyorMutationFxMarkup(food, recipeFamily);
-      const tunnelInDistance = 112 + index * 110;
-      const tunnelOutDistance = 112 + (session.offer.length - 1 - index) * 110;
+      const foodMutationFx = conveyorMutationFxMarkup(recipeFamily);
       const cardLocked = !canAddToStomach(food);
-      button.className = `conveyor-food-pick mutation-family-${recipeFamily} ${offerMotion === 'enter' ? 'tunnel-enter awaiting-dispense' : 'food-ready'} ${cardLocked ? 'locked' : ''}`;
-      if (offerMotion === 'enter') {
-        const arrivalSequence = Math.max(0, session.offer.length - 1 - index);
-        button.style.setProperty('--conveyor-delay', `${arrivalSequence * 140}ms`);
-        button.style.setProperty('--conveyor-duration', '520ms');
-      }
-      button.style.setProperty('--tunnel-in-distance', `${tunnelInDistance}%`);
-      button.style.setProperty('--tunnel-in-mouth', `${Math.round(tunnelInDistance * .94)}%`);
-      button.style.setProperty('--tunnel-out-cruise', `${Math.round(tunnelOutDistance * .72)}%`);
-      button.style.setProperty('--tunnel-out-mouth', `${Math.round(tunnelOutDistance * .94)}%`);
-      button.style.setProperty('--tunnel-out-distance', `${tunnelOutDistance}%`);
+      button.className = `conveyor-food-pick mutation-family-${recipeFamily} ${offerMotion === 'enter' ? 'awaiting-dispense' : 'food-ready'} ${cardLocked ? 'locked' : ''}`;
       button.dataset.foodId = food.id;
       button.dataset.offerIndex = String(index);
-      button.innerHTML = `<span class="conveyor-plate" aria-hidden="true"></span>${foodMutationFx}<span class="food-model-wrap">${foodArtMarkup(food)}</span>`;
+      button.innerHTML = `<span class="conveyor-plate" aria-hidden="true"></span><span class="synthesis-floor-light" aria-hidden="true"></span><span class="synthesis-birth-blob" aria-hidden="true"></span><span class="synthesis-food-visual">${foodMutationFx}<span class="food-model-wrap">${foodArtMarkup(food)}</span></span>`;
       button.type = 'button';
-      button.setAttribute('aria-label', `${food.name}. Перетащи к слайму`);
+      button.setAttribute('aria-label', `${food.name}. Нажми или перетащи к слайму`);
       button.addEventListener('pointerdown', event => beginFoodDrag(event, food, index, button));
       els.foodChoices.appendChild(button);
     });
     const rerollBlocked = session.rerollPending || session.offerTransition || adInFlight;
-    els.rerollBtn.classList.toggle('confirm-mode', full);
-    els.rerollBtn.setAttribute('aria-label', full ? 'Выбор готов. Начать падение' : 'Обновить еду на конвейере');
-    if (full) {
+    const readyToStart = conveyorCanStart();
+    els.rerollBtn.classList.toggle('confirm-mode', readyToStart);
+    els.rerollBtn.setAttribute('aria-label', readyToStart ? 'Выбор готов. Начать падение' : 'Обновить еду на конвейере');
+    if (readyToStart) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ВЫБОР ГОТОВ';
-      if (els.rerollText) els.rerollText.textContent = 'ЖЕЛУДОК ЗАПОЛНЕН';
+      if (els.rerollText) els.rerollText.textContent = `${stomachFoodCount()} ИЗ ${STOMACH_CAPACITY} СЪЕДЕНО`;
       els.rerollBtn.classList.remove('ad-mode');
     } else if (UNLIMITED_FREE_REROLLS) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'РЕРОЛЛ';
@@ -2004,9 +2567,10 @@
       if (els.rerollText) els.rerollText.textContent = 'НОВАЯ ТРОЙКА ПОСЛЕ ВЫБОРА';
       els.rerollBtn.classList.remove('ad-mode');
     }
-    els.rerollBtn.disabled = rerollBlocked || (!UNLIMITED_FREE_REROLLS && !full && session.freeRerolls <= 0 && session.adRerolls > 0);
+    els.rerollBtn.disabled = rerollBlocked || (!UNLIMITED_FREE_REROLLS && !readyToStart && session.freeRerolls <= 0 && session.adRerolls > 0);
 
     scheduleHomeFit();
+    queueTutorialRender();
   }
 
   function beginFoodDrag(event, food, offerIndex, source) {
@@ -2061,7 +2625,7 @@
       document.body.classList.remove('food-dragging');
       els.slime.classList.remove('drop-ready', 'expect-food', 'tracking-food');
       const cancelled = upEvent.type === 'pointercancel';
-      const accepted = !cancelled && moved && pointInsideElement(upEvent.clientX, upEvent.clientY, els.slime);
+      const accepted = !cancelled && (!moved || pointInsideElement(upEvent.clientX, upEvent.clientY, els.slime));
       if (ghost) {
         if (accepted) {
           const rect = els.menuSlimeMouth?.getBoundingClientRect() || els.slime.getBoundingClientRect();
@@ -2093,7 +2657,7 @@
         if (mouthRect) setMenuGazePoint(mouthRect.left + mouthRect.width / 2, mouthRect.top + mouthRect.height / 2);
         resetMenuGaze(300);
         source.classList.add('food-picked');
-        chooseFood(offerIndex);
+        chooseFood(offerIndex, moved ? null : source);
       } else resetMenuGaze();
     };
 
@@ -2112,9 +2676,9 @@
     const food = session.offer[offerIndex];
     if (!food) return;
     if (!canAddToStomach(food)) return;
+    closeQuickMutationPicker();
     clearMenuSlimeInteraction();
     animateFoodToMouth(food, source);
-    const previousCombo = session.combo?.name || '';
     session.foods.push(food);
     session.offer[offerIndex] = null;
     const mealReaction = { catchMs: 300, chewMs: 680, chewTime: '.17s', chews: 4, happyMs: 560 };
@@ -2141,7 +2705,15 @@
           els.slime.classList.add('pleased');
           recalcStats();
           syncMenuCategoryVisuals();
+          discoverCurrentForm();
           sound('happy');
+          if (save.tutorialStep === 'feed') {
+            setTutorialStep('feed-count');
+            clearTimeout(tutorialCountTimer);
+            tutorialCountTimer = setTimeout(() => {
+              if (save.tutorialStep === 'feed-count') setTutorialStep(stomachCanLaunch() ? 'play' : 'feed');
+            }, 1100);
+          } else queueTutorialRender();
           menuEmotionTimer = setTimeout(() => {
             clearMenuMealReaction();
           }, mealReaction.happyMs);
@@ -2154,41 +2726,38 @@
     }, mealReaction.catchMs);
     persist();
     feedback(8);
-    if (session.combo && session.combo.name !== previousCombo) showToast(`${session.combo.icon} Комбо: ${session.combo.name} — ${session.combo.text}`);
     void advanceConveyorAfterChoice(offerIndex, source);
   }
 
   async function advanceConveyorAfterChoice(chosenIndex, source) {
     if (!session || session.offerTransition) return;
     session.offerTransition = true;
-    els.conveyor.classList.add('is-running', 'is-selecting');
-    const cards = [...els.foodChoices.querySelectorAll('.conveyor-food-pick')];
-    cards.forEach(card => {
-      const index = Number(card.dataset.offerIndex || 0);
-      const sequence = Math.max(0, session.offer.length - 1 - index);
-      card.style.setProperty('--conveyor-delay', `${sequence * 70}ms`);
-      card.style.setProperty('--conveyor-duration', index === chosenIndex ? '410ms' : '470ms');
-      card.classList.add('leaving');
-    });
+    els.conveyor.classList.add('is-selecting');
+    const chosenDispenser = els.conveyorDispensers?.querySelector(`[data-dispenser-index="${chosenIndex}"]`);
+    chosenDispenser?.classList.add('is-recharging');
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 620));
-    if (stomachIsFull()) {
-      session.offer = [];
-      session.offerTransition = false;
-      els.conveyor.classList.remove('is-running', 'is-selecting');
-      renderDraft({ showLaunchCard: false });
-      persist();
+    await new Promise(resolve => setTimeout(resolve, reducedMotion ? 30 : 850));
+    const family = activeMutationFamilies()[chosenIndex];
+    const stage = session.foods.filter(food => foodRecipeFamily(food) === family).length + 1;
+    const used = [...session.foods, ...session.offer.filter(Boolean)].map(food => food.id);
+    session.offer[chosenIndex] = randomFood(used, family, stage);
+    session.freeRerolls = 1;
+    session.adRerolls = 0;
+    if (session.offer[chosenIndex]) session.offersSeen += 1;
+    renderDraft();
+    if (session.offer[chosenIndex]) {
+      els.foodChoices.querySelector(`[data-offer-index="${chosenIndex}"]`)?.classList.add('awaiting-dispense');
+    }
+    persist();
+    if (session.offer[chosenIndex]) await playConveyorDispense(reducedMotion);
+    session.offerTransition = false;
+    els.conveyor.classList.remove('is-selecting');
+    chosenDispenser?.classList.remove('is-recharging');
+    releaseConveyorControl();
+    if (conveyorCanStart()) {
       sound('happy');
       feedback([8, 18, 8]);
-      return;
     }
-    generateOffer();
-    renderDraft({ offerMotion: 'enter' });
-    persist();
-    await settleConveyorArrival(reducedMotion);
-    session.offerTransition = false;
-    els.conveyor.classList.remove('is-running', 'is-selecting');
-    releaseConveyorControl();
   }
 
 
@@ -2230,7 +2799,7 @@
   }
 
   function activateConveyorControl() {
-    if (stomachIsFull()) {
+    if (conveyorCanStart()) {
       void beginRoomLaunch({ endless: save.homeMode === 'endless' });
       return;
     }
@@ -2246,12 +2815,13 @@
   async function beginRoomLaunch(options = {}) {
     if (menuLaunchInProgress) return;
     const endless = options?.endless === true;
-    if (!stomachIsFull() || menuSlimeIsBusy() || (endless && !save.gameCompleted)) {
+    if (!stomachCanLaunch() || menuSlimeIsBusy() || (endless && !save.gameCompleted)) {
       startDrop({ endless });
       return;
     }
 
     menuLaunchInProgress = true;
+    ensureWorldSprites(currentWorld().id);
     clearMenuSlimeInteraction();
     els.rerollBtn.disabled = true;
     document.body.classList.add('room-launch-active');
@@ -2278,21 +2848,75 @@
     if (!run || delta <= 0) return;
     const timestampKeys = [
       'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'freezeUntil',
-      'lastFrozenImpactAt', 'emotionUntil', 'comboGraceUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
+      'lastFrozenImpactAt', 'emotionUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
       'lastTrailSampleAt', 'lastUiUpdateAt', 'gravitySwitchFlashUntil',
       'hurtSlowUntil', 'lastHeartLossAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt',
-      'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil'
+      'mechExitZoneGraceUntil',
+      'tutorialSlowUntil',
+      'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil',
+      'cosmosCometStartedAt', 'cosmosCometIgnitedAt', 'cosmosCometFadeUntil'
     ];
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
+    if (run.ultimateIntro) run.ultimateIntro.startedAt += delta;
+    if (run.phoenixUltimate) run.phoenixUltimate.startedAt += delta;
+    if (run.cosmosUltimate) {
+      for (const key of ['startedAt', 'chargeUntil', 'fadeStartedAt', 'launchUntil', 'fadeUntil', 'lastSampleAt', 'ignitedAt']) {
+        if (run.cosmosUltimate[key] > 0) run.cosmosUltimate[key] += delta;
+      }
+      for (const sample of run.cosmosUltimate.trail) sample.at += delta;
+    }
+    for (const wave of run.phoenixWaves || []) wave.startedAt += delta;
+    if (run.electricStorm) {
+      run.electricStorm.startedAt += delta;
+      run.electricStorm.nextStrikeAt += delta;
+      if (run.electricStorm.flashUntil > 0) run.electricStorm.flashUntil += delta;
+      if (run.electricStorm.endedAt > 0) run.electricStorm.endedAt += delta;
+    }
+    for (const bolt of run.electricStormBolts || []) { bolt.startedAt += delta; bolt.until += delta; }
+    for (const hit of run.electricStormHits || []) hit.at += delta;
+    for (const key of ['phantomNextAt', 'phantomEnteredAt', 'phantomEnterUntil', 'phantomUntil', 'glitchNextInfectionAt', 'glitchNextNeutralizeAt']) if (run[key] > 0) run[key] += delta;
+    if (run.glitchClone) for (const key of ['startedAt', 'until', 'lastHitAt', 'lastUpdateAt']) if (run.glitchClone[key] > 0) run.glitchClone[key] += delta;
+    if (run.glitchShock) run.glitchShock.startedAt += delta;
+    if (run.glitchDeleteQueue) for (const item of run.glitchDeleteQueue) item.at += delta;
+    if (run.glitchSpreadQueue) for (const item of run.glitchSpreadQueue) item.at += delta;
+    if (run.glitchChange) run.glitchChange.at += delta;
+    for (const block of run.blocks || []) for (const key of ['glitchDeleteAt', 'glitchRewriteUntil', 'glitchTransformUntil', 'glitchFlashUntil', 'glitchDisperseUntil']) {
+      if (block[key] > 0) block[key] += delta;
+    }
+    for (const flask of run.flasks || []) if (flask.collectAfter > 0) flask.collectAfter += delta;
     if (run.nanoNextShotAt) run.nanoNextShotAt = run.nanoNextShotAt.map(value => value > 0 ? value + delta : value);
     if (run.nanoShots) for (const shot of run.nanoShots) shot.startedAt += delta;
+    if (run.nanoNextMineAt > 0) run.nanoNextMineAt += delta;
+    if (run.nanoEyeOpenedAt > 0) run.nanoEyeOpenedAt += delta;
+    if (run.nanoMine) { run.nanoMine.markedAt += delta; run.nanoMine.launchedAt += delta; }
+    if (run.mechSuit) for (const key of ['startedAt', 'landAt', 'expireAt', 'nextShotAt', 'lastShotAt']) if (run.mechSuit[key] > 0) run.mechSuit[key] += delta;
+    if (run.mechExplosion) run.mechExplosion.startedAt += delta;
     if (run.telekinesisNextAt > 0) run.telekinesisNextAt += delta;
     if (run.telekinesisCycle) run.telekinesisCycle.startedAt += delta;
+    if (run.telekinesisPress) run.telekinesisPress.startedAt += delta;
     if (run.telekinesisMarks) for (const mark of run.telekinesisMarks) mark.startedAt += delta;
     if (run.telekinesisBursts) for (const burst of run.telekinesisBursts) burst.startedAt += delta;
+    if (run.phantomBursts) for (const burst of run.phantomBursts) burst.startedAt += delta;
     if (run.cloneUltimate) run.cloneUltimate.startedAt += delta;
-    if (run.lastCloneBounceAt > 0) run.lastCloneBounceAt += delta;
-    if (run.miniSlimes) for (const mini of run.miniSlimes) mini.bornAt += delta;
+    if (run.nextSporeAt > 0) run.nextSporeAt += delta;
+    for (const projectile of run.sporeProjectiles || []) { projectile.launchedAt += delta; projectile.landsAt += delta; }
+    for (const pod of run.sporePods || []) {
+      pod.plantedAt += delta;
+      pod.expiresAt += delta;
+      if (pod.autoDetonateAt > 0) pod.autoDetonateAt += delta;
+    }
+    if (run.frostStorm) {
+      run.frostStorm.startedAt += delta;
+      run.frostStorm.endAt += delta;
+      run.frostStorm.nextFlakeAt += delta;
+      for (const flake of run.frostStorm.flakes) flake.startedAt += delta;
+    }
+    for (const burst of run.sporeBursts || []) burst.startedAt += delta;
+    if (run.miniSlimes) for (const mini of run.miniSlimes) {
+      for (const key of ['bornAt', 'lastSporeAt', 'ignoreSourceUntil', 'ignoreBlockUntil']) {
+        if (mini[key] > 0) mini[key] += delta;
+      }
+    }
     if (run.geyserCapture) {
       for (const key of ['startedAt', 'readyAt', 'autoLaunchAt']) if (run.geyserCapture[key] > 0) run.geyserCapture[key] += delta;
     }
@@ -2304,7 +2928,7 @@
       }
     }
     for (const block of run.blocks || []) {
-      for (const key of ['fireIgnitedAt', 'fireDamageAt', 'fireFlashUntil', 'electricFlashStartedAt', 'electricFlashUntil', 'frostFlashUntil', 'frostTransformStartedAt', 'frostReservedUntil', 'goldFlashUntil', 'snowballGhostUntil', 'blackHoleSuctionStartedAt']) {
+      for (const key of ['fireIgnitedAt', 'fireDamageAt', 'fireFlashUntil', 'electricFlashStartedAt', 'electricFlashUntil', 'frostFlashUntil', 'frostTransformStartedAt', 'frostReservedUntil', 'goldFlashUntil', 'snowballGhostUntil']) {
         if (block[key] > 0) block[key] += delta;
       }
     }
@@ -2346,22 +2970,26 @@
     els.runMenuOverlay?.classList.add('hidden');
     els.endRunBtn?.setAttribute('aria-expanded', 'false');
     syncInteractionLayers();
+    queueTutorialRender();
   }
 
   function openRunMenu() {
-    if (!pauseRun()) return;
+    if (save.tutorialStep !== 'controls' || !run?.paused) {
+      if (!pauseRun()) return;
+    }
     stopAllSounds();
     updateRunSoundControl();
     els.runMenuOverlay.classList.remove('hidden');
     els.endRunBtn.setAttribute('aria-expanded', 'true');
     syncInteractionLayers();
+    queueTutorialRender();
     requestAnimationFrame(() => els.runMenuOverlay.querySelector('.run-menu-modal')?.focus());
   }
 
   function continueRunFromMenu() {
     hideRunMenu();
     sound('tap');
-    resumeRun();
+    if (save.tutorialStep !== 'controls') resumeRun();
   }
 
   function toggleRunSound() {
@@ -2393,9 +3021,8 @@
     const endless = options?.endless === true;
     const fromPortal = options?.fromPortal === true;
     GAME_BALANCE = window.SlimeBalance?.load?.() || GAME_BALANCE;
-    if (!stomachIsFull()) {
-      const remaining = Math.max(0, STOMACH_CAPACITY - stomachFoodCount());
-      showToast(`Сначала выбери ещё ${remaining} ${remaining === 1 ? 'продукт' : 'продукта'}`);
+    if (!stomachCanLaunch()) {
+      showToast('Сначала дай слайму одну еду');
       feedback([10, 18, 10]);
       return;
     }
@@ -2409,6 +3036,7 @@
       feedback([10, 25, 12]);
     }
     const baseWorld = currentWorld();
+    ensureWorldSprites(baseWorld.id);
     const level = endless ? LEVEL_COUNT : selectedLevelForWorld(baseWorld.id);
     const world = {
       ...baseWorld,
@@ -2416,16 +3044,18 @@
       reward: levelReward(baseWorld, level),
       endlessScale: 1
     };
-    const generationDifficulty = 'normal';
-    const finishY = world.targetDepth * 10 + 180;
+    const failureKey = `${world.id}:${level}`;
+    const generationDifficulty = !endless && window.SlimeMinePlans?.modeForFailures(save.levelFailures?.[failureKey] || 0) === 'easy' ? 'easy' : 'normal';
     const preferredCellSize = world.cellSize || BALANCE.gridCell;
     const columns = Math.max(2, Math.round(VIEW_W / preferredCellSize));
     // Fill the shaft exactly. Six old 72px tiles occupied only 432px of the
     // 440px canvas and left a visible four-pixel seam on both sides.
     const cellSize = VIEW_W / columns;
+    const rowCount = world.id === 1 ? 70 : 140;
+    const finishY = 285 + rowCount * cellSize + cellSize * 1.5;
     const gridOffsetX = 0;
     const categoryVisuals = menuCategoryLevels();
-    const elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'explosion', 'cloning'].find(key => categoryVisuals[key] >= 3) || '';
+    const elementalAbilityType = FORM_INDEX.map(form => form.id).find(key => categoryVisuals[key] >= 3) || '';
     const slimeRadius = massRadiusForLevel(categoryVisuals.mass, cellSize);
     const startLane = fromPortal
       ? Math.floor(columns / 2)
@@ -2434,6 +3064,7 @@
         : Math.floor(columns / 2) - (Math.random() < .5 ? 1 : 0);
     const startX = gridOffsetX + startLane * cellSize + cellSize / 2;
     const launchEntryStartedAt = performance.now();
+    hideGlitchChoice();
     if (fromPortal) {
       document.body.classList.add('portal-arrival');
       setTimeout(() => document.body.classList.remove('portal-arrival'), 1200);
@@ -2444,6 +3075,7 @@
       world,
       previousBest: endless ? 0 : Math.min(world.targetDepth, Math.max(0, Math.floor(save.lastRunDepth?.[`${world.id}:${level}`] || 0))),
       finishY,
+      rowCount,
       cellSize,
       columns,
       gridOffsetX,
@@ -2466,23 +3098,58 @@
         wobble: 0
       },
       categoryVisuals,
-      nanoNextShotAt: [launchEntryStartedAt + 2000, launchEntryStartedAt + 2500],
+      nanoNextShotAt: [launchEntryStartedAt + 2000],
       nanoShots: [],
+      nanoNextMineAt: launchEntryStartedAt + 5000,
+      nanoEyeOpenedAt: 0,
+      nanoMine: null,
+      mechSuit: null,
+      mechExplosion: null,
+      mechExitZoneGraceUntil: 0,
       telekinesisNextAt: launchEntryStartedAt + 1500,
       telekinesisMarks: [],
       telekinesisCycle: null,
       telekinesisBursts: [],
       telekinesisThrowIndex: 0,
+      telekinesisUltimatePending: false,
+      telekinesisPress: null,
+      phantomNextAt: launchEntryStartedAt + PHANTOM_COOLDOWN_MS,
+      phantomWarned: false,
+      phantomEnteredAt: 0,
+      phantomEnterUntil: 0,
+      phantomUntil: 0,
+      phantomMarkedBlocks: new Set(),
+      phantomBursts: [],
+      glitchNextInfectionAt: launchEntryStartedAt + 4500,
+      glitchNextNeutralizeAt: launchEntryStartedAt + 8500,
+      glitchInfectedBlocks: new Set(),
+      glitchShock: null,
+      glitchChoice: null,
+      glitchClone: null,
+      glitchDeleteQueue: [],
+      glitchSpreadQueue: [],
+      glitchChange: null,
       miniSlimes: [],
-      lastCloneBounceAt: 0,
-      cloneSide: 1,
+      sporeProjectiles: [],
+      sporePods: [],
+      sporeBursts: [],
+      nextSporeAt: 0,
       cloneUltimate: null,
       elementalAbilityType,
-      elementalAbilityCharges: elementalAbilityType ? 1 : 0,
+      elementalAbilityCharges: 0,
+      ultimateCharge: 0,
+      ultimateRechargePending: '',
       elementalAbilityActive: '',
       elementalAbilityUntil: 0,
       elementalAbilityNextTickAt: 0,
       elementalAuraId: 0,
+      ultimateIntro: null,
+      phoenixUltimate: null,
+      phoenixWaves: [],
+      electricStorm: null,
+      electricStormBolts: [],
+      electricStormHits: [],
+      frostStorm: null,
       goldRushUntil: 0,
       blastCounter: 0,
       categoryBlastDepth: 0,
@@ -2503,9 +3170,10 @@
       cosmosCometStartedAt: 0,
       cosmosCometIgnitedAt: 0,
       cosmosCometFadeUntil: 0,
+      cosmosUltimate: null,
       steer: {
         keyLeft: false, keyRight: false, keyUp: false, keyDown: false,
-        touchX: 0, touchY: 0, touchDown: 0, pointerId: null,
+        touchX: 0, touchY: 0, touchRawY: 0, touchDown: 0, pointerId: null,
         originX: 0, originY: 0, gravityGestureLocked: false
       },
       gravityDirection: 1,
@@ -2550,14 +3218,10 @@
       coinMultiplier: session.stats.coinMultiplier,
       effects: { ...session.effects, gravitySwitch: session.effects.gravitySwitch || categoryVisuals.cosmos >= 1 },
       blocksBrokenForHeal: 0,
-      shieldCharges: session.stats.shieldCharges,
-      maxShieldCharges: session.stats.shieldCharges,
+      shieldCharges: 0,
+      maxShieldCharges: 1,
       coins: 0,
       researchData: 0,
-      comboCount: 0,
-      comboMultiplier: 1,
-      comboRows: new Set(),
-      comboGraceUntil: 0,
       depth: 0,
       maxDepth: 0,
       flightDistance: 0,
@@ -2599,6 +3263,11 @@
     updateRunUI();
     yandexPlatform?.gameplay.start();
     run.animationId = requestAnimationFrame(gameFrame);
+    if (save.tutorialStep === 'play') {
+      setTutorialStep('run-wait');
+      clearTimeout(tutorialRunTimer);
+      tutorialRunTimer = setTimeout(showTutorialControls, 3000);
+    }
   }
 
   function prepareCanvas() {
@@ -2688,7 +3357,7 @@
     const columns = runState.columns || Math.floor(VIEW_W / cell);
     const gridOffsetX = runState.gridOffsetX || 0;
     const startY = 285;
-    const rows = Math.max(8, Math.floor((finishY - cell - startY) / cell));
+    const rows = runState.rowCount || 140;
     const unlocks = levelFeatures(world, runState.level);
     const plan = createSectionPlan(world, rows, runState.level, runState.generationDifficulty);
     let id = 0;
@@ -2822,7 +3491,7 @@
   }
 
   function flaskSprite(worldId, tier) {
-    const artWorld = worldId === 3 || worldId === 4 ? worldId : 1;
+    const artWorld = worldId === 2 && tier === 3 ? 2 : worldId === 3 || worldId === 4 ? worldId : 1;
     const size = { 1: 'small', 2: 'medium', 3: 'large' }[tier] || 'small';
     const key = `${artWorld}-${size}`;
     if (!flaskSprites.has(key)) {
@@ -2841,11 +3510,12 @@
     if (!run?.flasks?.length) return;
     for (const flask of run.flasks) {
       if (flask.collected) continue;
+      if (flask.collectAfter && timestamp < flask.collectAfter) continue;
       const y = flaskFloatY(flask, timestamp);
       if (Math.hypot(run.slime.x - flask.x, run.slime.y - y) > run.slime.radius + 14) continue;
       flask.collected = true;
       awardFlaskData(flask.value);
-      impact(`КОЛБА +${flask.value}`);
+      impact(`${flask.glitch ? 'ГЛИТЧ-КОЛБА' : 'КОЛБА'} +${flask.value}`);
       sound('coin');
       feedback(4);
       const color = flask.worldId === 3 ? '#ff8dd0' : flask.worldId === 4 ? '#ffb04d' : '#7df4f0';
@@ -2871,6 +3541,20 @@
       ctx.shadowColor = flask.worldId === 3 ? '#ff66b9' : flask.worldId === 4 ? '#ff873c' : '#58eaf2';
       ctx.shadowBlur = 11;
       ctx.drawImage(sprite, flask.x - size / 2, y - size / 2, size, size);
+      if (flask.glitch) {
+        const shift = Math.floor(timestamp / 105 + flask.phase) % 3 - 1;
+        ctx.globalAlpha = .36;
+        ctx.filter = 'hue-rotate(115deg) saturate(2)';
+        ctx.drawImage(sprite, flask.x - size / 2 + shift * 3, y - size / 2, size, size);
+        ctx.filter = 'none';
+        ctx.globalAlpha = .86;
+        ctx.fillStyle = '#ff54df';
+        ctx.fillRect(flask.x - size * .31 - shift, y + size * .12, size * .2, 3);
+        ctx.fillStyle = '#9bff55';
+        ctx.fillRect(flask.x + size * .16 + shift, y - size * .1, size * .16, 3);
+        ctx.fillStyle = '#5af9ff';
+        ctx.fillRect(flask.x - size * .2 + shift, y - size * .27, 4, 4);
+      }
       ctx.restore();
     }
   }
@@ -3068,7 +3752,6 @@
 
   function createSectionPlan(world, rows, level, difficultyMode = 'mixed') {
     const catalog = window.SlimeSectionCatalog;
-    if (world.id !== 1) return createLegacySectionPlan(world, rows, level);
     if (!catalog) return Array.from({ length: rows }, (_, row) => ({
       kind: row < 3 ? 'start' : row >= rows - 2 ? 'final' : 'neutral',
       sectionIndex: row < 3 ? 0 : 1,
@@ -3158,10 +3841,41 @@
         run.lastFrameGateAt = timestamp - (frameElapsed % frameInterval);
       } else run.lastFrameGateAt = timestamp;
     }
+    if (run.ultimateIntro) {
+      const intro = run.ultimateIntro;
+      if (timestamp - intro.startedAt < ULTIMATE_INTRO_MS) {
+        renderCanvas(intro.startedAt);
+        drawUltimateIntro(timestamp);
+        run.animationId = requestAnimationFrame(gameFrame);
+        return;
+      }
+      run.ultimateIntro = null;
+      shiftRunClock(timestamp - intro.startedAt);
+      run.lastTime = timestamp;
+      completeUltimateIntro(intro, timestamp);
+    }
+    if (run.glitchChoice) {
+      const choice = run.glitchChoice;
+      if (choice.phase === 'choosing') {
+        run.animationId = 0;
+        return;
+      }
+      if (timestamp - choice.selectedAt < GLITCH_TITLE_MS) {
+        run.animationId = requestAnimationFrame(gameFrame);
+        return;
+      }
+      run.glitchChoice = null;
+      hideGlitchChoice();
+      shiftRunClock(timestamp - choice.startedAt);
+      run.lastTime = timestamp;
+      executeGlitchBug(choice.kind, timestamp);
+    }
     if (!run.lastTime) run.lastTime = timestamp;
     const dt = Math.min(.034, (timestamp - run.lastTime) / 1000);
     run.lastTime = timestamp;
-    const simulationScale = (timestamp < (run.hurtSlowUntil || 0) ? .58 : 1) * cloningTimeScale(timestamp);
+    const pressSlow = run.telekinesisPress && timestamp - run.telekinesisPress.startedAt < TELEKINESIS_PRESS_COLLIDE_MS ? .24 : 1;
+    const simulationScale = (timestamp < (run.hurtSlowUntil || 0) ? .58 : 1)
+      * (timestamp < (run.tutorialSlowUntil || 0) ? .2 : 1) * cloningTimeScale(timestamp) * pressSlow;
     const simulationDt = dt * simulationScale;
 
     const speed = Math.hypot(run.slime.vx, run.slime.vy);
@@ -3169,8 +3883,9 @@
     // to skip a block between two collision checks.
     const safeTravel = Math.max(5, Math.min(run.slime.radius * .24, run.cellSize * .14));
     const substeps = clamp(Math.ceil(speed * simulationDt / safeTravel), 1, 12);
-    for (let i = 0; i < substeps; i += 1) updatePhysics(simulationDt / substeps, timestamp);
+    if (simulationDt > 0) for (let i = 0; i < substeps; i += 1) updatePhysics(simulationDt / substeps, timestamp);
     updateElementalEffects(timestamp);
+    updateGlitchEffects(timestamp);
     updateMiniSlimes(simulationDt, timestamp);
     updateMeteorShowers(timestamp);
     updateSlimeTrail(simulationDt, timestamp);
@@ -3242,6 +3957,7 @@
   }
 
   function updateHoneyState(slime, timestamp) {
+    if (mechSlowZoneImmune(timestamp)) { run.inHoneyZoneId = ''; return; }
     const zone = honeyZoneForSlime(slime);
     const previousId = run.inHoneyZoneId || '';
     run.inHoneyZoneId = zone?.id || '';
@@ -3276,6 +3992,11 @@
   }
 
   function updateJellyState(slime, timestamp, previousX, previousY) {
+    if (mechSlowZoneImmune(timestamp)) {
+      run.inJellyZoneId = '';
+      run.jellySubmergedZoneId = '';
+      return;
+    }
     const zone = jellyZoneForSlime(slime);
     const previousId = run.inJellyZoneId || '';
     run.inJellyZoneId = zone?.id || '';
@@ -3327,6 +4048,12 @@
   }
 
   function updateFreezeZoneState(slime, timestamp) {
+    if (mechSlowZoneImmune(timestamp)) {
+      run.inFreezeZoneId = '';
+      run.freezeZoneEnteredAt = 0;
+      run.freezeZoneTriggeredId = '';
+      return;
+    }
     const zone = freezeZoneForSlime(slime);
     const previousId = run.inFreezeZoneId || '';
     run.inFreezeZoneId = zone?.id || '';
@@ -3352,6 +4079,411 @@
     activateFreezeZone(timestamp);
   }
 
+  function phantomActive(timestamp = performance.now()) {
+    return elementalLevel('phantom') >= 1 && run.phantomEnterUntil <= timestamp && run.phantomUntil > timestamp;
+  }
+
+  function phantomCanMark(block) {
+    return Boolean(block && !block.dead && !block.special && !block.hazard && !block.unbreakable);
+  }
+
+  function markPhantomBlocks(timestamp) {
+    if (elementalLevel('phantom') < 2) return;
+    const slime = run.slime;
+    for (const block of blocksNearY(slime.y, slime.radius)) {
+      if (!phantomCanMark(block) || block.phantomMarked) continue;
+      if (!circleRectCollision(slime, block, slime.radius * .88)) continue;
+      block.phantomMarked = true;
+      block.phantomMarkedAt = timestamp;
+      run.phantomMarkedBlocks.add(block);
+    }
+  }
+
+  function movePhantomOutOfDanger(timestamp) {
+    const slime = run.slime;
+    const forbidden = (x, y) => blocksNearY(y, slime.radius + run.cellSize)
+      .some(block => !block.dead && (block.special || block.hazard || block.unbreakable)
+        && circleRectCollision({ x, y, radius: slime.radius * .82 }, block, slime.radius * .82));
+    if (!forbidden(slime.x, slime.y)) return;
+    const cell = run.cellSize;
+    const baseCol = Math.floor((slime.x - run.gridOffsetX) / cell);
+    const baseRow = Math.floor((slime.y - run.blockRowOrigin) / cell);
+    for (const rowOffset of [0, 1, -1, 2, -2, 3, -3]) {
+      for (const colOffset of [0, -1, 1, -2, 2]) {
+        const col = baseCol + colOffset;
+        if (col < 0 || col >= run.columns) continue;
+        const x = run.gridOffsetX + (col + .5) * cell;
+        const y = run.blockRowOrigin + (baseRow + rowOffset + .5) * cell;
+        if (y < slime.radius || y > run.portalY - cell || forbidden(x, y)) continue;
+        slime.x = x;
+        slime.y = y;
+        slime.vx *= .35;
+        slime.vy = Math.min(slime.vy, 75);
+        run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, timestamp + 450);
+        return;
+      }
+    }
+    run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, timestamp + 700);
+  }
+
+  function materializePhantom(timestamp) {
+    run.phantomUntil = 0;
+    run.phantomEnterUntil = 0;
+    if (!speedDrillActive(timestamp) && !jellyZoneForSlime(run.slime)) run.steer.touchY = 0;
+    const slime = run.slime;
+    const row = Math.floor((slime.y - run.blockRowOrigin) / run.cellSize);
+    const col = Math.floor((slime.x - run.gridOffsetX) / run.cellSize);
+    for (const block of run.phantomMarkedBlocks) {
+      block.phantomMarked = false;
+      if (phantomCanMark(block)) damageBlockByElement(block, 1, 'phantom', timestamp);
+    }
+    run.phantomMarkedBlocks.clear();
+    for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+      const nearby = run.blocksByRow?.get(row + rowOffset);
+      if (!nearby) continue;
+      for (const block of nearby) {
+        if (!phantomCanMark(block) || Math.abs(block.col - col) > 1) continue;
+        if (rowOffset === 0 && block.col === col) destroyBlock(block, 'phantom', timestamp);
+        else damageBlockByElement(block, 1, 'phantom', timestamp);
+      }
+    }
+    movePhantomOutOfDanger(timestamp);
+    run.phantomBursts.push({ x: slime.x, y: slime.y, startedAt: timestamp });
+    run.shake = Math.max(run.shake, 4);
+    run.emotion = 'power';
+    run.emotionUntil = timestamp + 360;
+    sound('epic');
+    feedback([8, 12, 8]);
+  }
+
+  function updatePhantomCycle(timestamp) {
+    if (elementalLevel('phantom') < 1) return false;
+    if (run.phantomUntil > 0) {
+      if (timestamp < run.phantomUntil) return timestamp >= run.phantomEnterUntil;
+      materializePhantom(timestamp);
+      return false;
+    }
+    if (timestamp < run.phantomNextAt) {
+      if (!run.phantomWarned && run.phantomNextAt - timestamp <= PHANTOM_WARNING_MS) {
+        run.phantomWarned = true;
+        sound('tap');
+        feedback(3);
+      }
+      return false;
+    }
+    run.phantomWarned = false;
+    run.phantomEnteredAt = timestamp;
+    run.phantomEnterUntil = timestamp + PHANTOM_ENTER_MS;
+    run.phantomUntil = run.phantomEnterUntil + PHANTOM_DURATION_MS;
+    run.phantomNextAt = timestamp + PHANTOM_COOLDOWN_MS;
+    run.steer.touchY = run.steer.touchRawY || 0;
+    run.wallPushSide = 0;
+    run.bounceControlLockUntil = 0;
+    run.bounceControlRestoreUntil = 0;
+    run.slime.vy = clamp(run.slime.vy, -120, 135);
+    run.emotion = 'surprised';
+    run.emotionUntil = timestamp + 420;
+    sound('tap');
+    return false;
+  }
+
+  const GLITCH_BUGS = Object.freeze([
+    { id: 'copy', name: 'КОПИРОВАНИЕ' },
+    { id: 'delete', name: 'УДАЛЕНИЕ' },
+    { id: 'infect', name: 'ЗАРАЖЕНИЕ' },
+    { id: 'change', name: 'ИЗМЕНЕНИЕ' }
+  ]);
+
+  function glitchEligibleBlock(block) {
+    return Boolean(block && !block.dead && !block.special && !block.hazard && !block.unbreakable);
+  }
+
+  function glitchFutureBlocks(predicate, rows = 8) {
+    const firstUnseenRow = Math.ceil((run.cameraY + VIEW_H - run.blockRowOrigin) / run.cellSize) + 1;
+    return run.blocks.filter(block => block.row >= firstUnseenRow && block.row < firstUnseenRow + rows && predicate(block));
+  }
+
+  function infectGlitchGroup(blocks, timestamp) {
+    const chosen = blocks.filter(block => glitchEligibleBlock(block) && !block.glitchInfected);
+    if (!chosen.length) return 0;
+    for (const block of chosen) {
+      block.glitchInfected = true;
+      block.glitchInfectedAt = timestamp;
+      block.glitchFlashUntil = timestamp + 620;
+      run.glitchInfectedBlocks.add(block);
+    }
+    return chosen.length;
+  }
+
+  function infectGlitchAhead(timestamp, count = 3 + Math.floor(Math.random() * 3)) {
+    const choices = glitchFutureBlocks(block => glitchEligibleBlock(block) && !block.glitchInfected, 7)
+      .sort(() => Math.random() - .5);
+    return infectGlitchGroup(choices.slice(0, count), timestamp);
+  }
+
+  function shareGlitchHit(block, amount, timestamp, effect = '') {
+    if (!block?.glitchInfected || (amount <= 0 && !effect)) return;
+    const infectedBlocks = [...run.glitchInfectedBlocks];
+    const linkedBlocks = infectedBlocks.filter(glitchEligibleBlock);
+    // Clear the whole network before applying an echo; chained abilities cannot retrigger it.
+    run.glitchInfectedBlocks.clear();
+    for (const linked of infectedBlocks) {
+      linked.glitchInfected = false;
+      linked.glitchDisperseUntil = timestamp + 420;
+      linked.glitchFlashUntil = timestamp + 450;
+    }
+    run.glitchShock = { source: block, targets: linkedBlocks, startedAt: timestamp };
+    for (const linked of linkedBlocks) {
+      if (linked === block) continue;
+      if (effect === 'gold') goldifyBlock(linked, timestamp);
+      else if (effect === 'snow') turnBlockToSnow(linked, timestamp);
+      else if (effect === 'snowflake') turnBlockToSnowflake(linked, timestamp);
+      else if (effect === 'fire') igniteBlock(linked, timestamp);
+      else damageBlockByElement(linked, amount, 'glitchEcho', timestamp);
+    }
+  }
+
+  function neutralizeGlitchHazard(timestamp) {
+    const choices = glitchFutureBlocks(block => !block.dead && block.hazard && !block.glitchNeutralized, 10)
+      .sort((a, b) => a.row - b.row);
+    const target = choices[Math.floor(Math.random() * Math.min(5, choices.length))];
+    if (!target) return false;
+    target.glitchNeutralized = true;
+    target.glitchInfectedAt = timestamp;
+    return true;
+  }
+
+  function transformGlitchHazard(block, collision, timestamp) {
+    const s = run.slime;
+    s.x += collision.nx * (collision.penetration + 7);
+    s.y += collision.ny * (collision.penetration + 7);
+    applyBlockBounce(s, collision, { hazard: false, timestamp });
+    block.glitchNeutralized = false;
+    block.hazard = false;
+    block.unbreakable = false;
+    block.hazardVariant = null;
+    block.visualId = '';
+    block.glitchTransformUntil = timestamp + 900;
+    if (Math.random() < .2) {
+      block.dead = true;
+      run.flasks.push({
+        id: `glitch-flask-${block.id}-${timestamp}`,
+        worldId: run.worldId, tier: 3, value: 15, glitch: true,
+        x: block.x + block.w / 2, y: block.y + block.h / 2,
+        phase: block.id * .37, collected: false, collectAfter: timestamp + 450
+      });
+      impact('ГЛИТЧ-КОЛБА · +15');
+    } else {
+      const rewards = ['gel', 'spring', 'cryo', 'meteor', 'geyser'];
+      block.special = rewards[Math.floor(Math.random() * rewards.length)];
+      block.tier = 'special';
+      block.material = block.special;
+      block.maxHp = block.hp = 1;
+      impact('ОПАСНОСТЬ ИСПРАВЛЕНА');
+    }
+    run.shake = Math.max(run.shake, 4);
+    sound('epic');
+    feedback([7, 11, 7]);
+    return true;
+  }
+
+  function hideGlitchChoice() {
+    els.glitchUltimateOverlay?.classList.add('hidden');
+    els.glitchUltimateOverlay?.classList.remove('is-announcing');
+    if (els.glitchChoiceAnnouncement) els.glitchChoiceAnnouncement.replaceChildren();
+  }
+
+  function startGlitchChoice(timestamp) {
+    run.glitchChoice = { phase: 'choosing', startedAt: timestamp, kind: '', selectedAt: 0 };
+    els.glitchUltimateOverlay.classList.remove('is-announcing', 'hidden');
+    els.glitchChoiceAnnouncement.replaceChildren();
+    renderCanvas(timestamp);
+    els.glitchUltimateOverlay.querySelector('.glitch-choice-option')?.focus({ preventScroll: true });
+  }
+
+  function selectGlitchBug(kind) {
+    const choice = run?.glitchChoice;
+    const bug = GLITCH_BUGS.find(item => item.id === kind);
+    if (!choice || choice.phase !== 'choosing' || !bug) return false;
+    choice.phase = 'announcing';
+    choice.kind = bug.id;
+    choice.selectedAt = performance.now();
+    const title = els.glitchChoiceAnnouncement;
+    title.replaceChildren();
+    title.setAttribute('aria-label', bug.name);
+    title.dataset.bug = bug.id;
+    [...bug.name].forEach((letter, index) => {
+      const piece = document.createElement('span');
+      piece.textContent = letter === ' ' ? '\u00a0' : letter;
+      piece.setAttribute('aria-hidden', 'true');
+      piece.style.setProperty('--letter-index', index);
+      title.appendChild(piece);
+    });
+    els.glitchUltimateOverlay.classList.add('is-announcing');
+    sound('epic');
+    feedback([9, 18, 9]);
+    run.animationId = requestAnimationFrame(gameFrame);
+    return true;
+  }
+
+  function rewriteGlitchSection(timestamp) {
+    const rewrite = run.glitchChange;
+    if (!rewrite) return;
+    run.glitchChange = null;
+    const { startRow } = rewrite;
+    const endRow = startRow + 10;
+    const cells = run.blocks.filter(block => block.row >= startRow && block.row < endRow);
+    if (!cells.length) return;
+    const topY = run.blockRowOrigin + startRow * run.cellSize;
+    const bottomY = run.blockRowOrigin + endRow * run.cellSize;
+    run.flasks = run.flasks.filter(flask => flask.y < topY || flask.y >= bottomY);
+    const changedCells = new Set(cells);
+    run.sporePods = (run.sporePods || []).filter(pod => !changedCells.has(pod.block));
+    const middleCol = Math.floor(run.columns / 2);
+    const bonusFlaskCells = new Set([
+      `${startRow + 2}:${Math.max(1, middleCol - 1)}`,
+      `${startRow + 4}:${middleCol}`,
+      `${startRow + 6}:${Math.min(run.columns - 2, middleCol + 1)}`,
+      `${startRow + 8}:${middleCol}`
+    ]);
+    for (const block of cells) {
+      run.glitchInfectedBlocks.delete(block);
+      block.glitchInfected = false;
+      block.glitchNeutralized = false;
+      block.hazard = false;
+      block.unbreakable = false;
+      block.hazardVariant = null;
+      block.special = null;
+      block.visualId = '';
+      block.flaskTier = 0;
+      block.topGrass = false;
+      block.frozen = false;
+      block.frozenOre = false;
+      block.elementalSnow = false;
+      block.elementalSnowflake = false;
+      block.elementalGolden = false;
+      block.fireDamageAt = 0;
+      block.fireUltimateAuraId = 0;
+      block.sporePod = null;
+      block.glitchRewriteUntil = timestamp + 950;
+      const bonusFlask = bonusFlaskCells.has(`${block.row}:${block.col}`);
+      const smallFlask = !bonusFlask && block.col > 0 && block.col < run.columns - 1
+        && Math.random() < .08;
+      if (bonusFlask || smallFlask) {
+        block.dead = true;
+        const value = bonusFlask ? 2 : 1;
+        run.flasks.push({ id: `rewrite-flask-${block.id}-${timestamp}`, worldId: run.worldId,
+          tier: 1, value, x: block.x + block.w / 2, y: block.y + block.h / 2,
+          phase: (block.row * run.columns + block.col) * .41, collected: false, glitch: true });
+      } else {
+        block.dead = false;
+        block.tier = 'soft';
+        block.material = chooseMaterial(run.world, .15, null, block.tier);
+        block.maxHp = block.hp = 1;
+        block.path = true;
+      }
+    }
+    impact('ПЛАСТ ПЕРЕПИСАН');
+    run.shake = Math.max(run.shake, 5);
+  }
+
+  function executeGlitchBug(kind, timestamp) {
+    if (kind === 'copy') {
+      const side = run.slime.x < VIEW_W / 2 ? 1 : -1;
+      run.glitchClone = { x: clamp(run.slime.x + side * (run.slime.radius * 2 + 5), run.slime.radius, VIEW_W - run.slime.radius),
+        y: run.slime.y, vx: run.slime.vx, vy: run.slime.vy, radius: run.slime.radius,
+        wobble: run.slime.wobble, side, startedAt: timestamp, until: timestamp + GLITCH_CLONE_MS,
+        lastHitAt: 0, lastUpdateAt: timestamp, hitCooldowns: new Map() };
+    } else if (kind === 'delete') {
+      const centerRow = Math.floor((run.slime.y - run.blockRowOrigin) / run.cellSize);
+      const targets = run.blocks.filter(block => glitchEligibleBlock(block)
+        && block.row >= centerRow + 1 && block.row <= centerRow + 7)
+        .sort(() => Math.random() - .5).slice(0, 18);
+      targets.forEach((block, index) => {
+        block.glitchDeleteAt = timestamp + 180 + index * 72;
+        run.glitchDeleteQueue.push({ block, at: block.glitchDeleteAt });
+      });
+    } else if (kind === 'infect') {
+      const centerRow = Math.floor((run.slime.y - run.blockRowOrigin) / run.cellSize);
+      const targets = run.blocks.filter(block => glitchEligibleBlock(block) && !block.glitchInfected
+        && block.row >= centerRow && block.row <= centerRow + 8)
+        .sort(() => Math.random() - .5).slice(0, 16);
+      for (let index = 0; index < targets.length; index += 4) {
+        run.glitchSpreadQueue.push({ blocks: targets.slice(index, index + 4), at: timestamp + index * 48 });
+      }
+    } else if (kind === 'change') {
+      const lastRow = Math.max(0, run.blocks.at(-1)?.row || 0);
+      const startRow = Math.max(2, Math.min(lastRow - 9,
+        Math.floor((run.slime.y - run.blockRowOrigin) / run.cellSize) + 4));
+      if (startRow > 1 && lastRow - startRow >= 9) {
+        run.glitchChange = { startRow, at: timestamp + 350 };
+        for (const block of run.blocksByRow?.get(startRow) || []) block.glitchRewriteUntil = timestamp + 1250;
+      }
+    }
+  }
+
+  function updateGlitchClone(timestamp) {
+    const clone = run.glitchClone;
+    if (!clone) return;
+    if (timestamp >= clone.until) { run.glitchClone = null; return; }
+    const dt = clamp((timestamp - clone.lastUpdateAt) / 1000, 0, .045);
+    clone.lastUpdateAt = timestamp;
+    if (!dt) return;
+    const steering = fallSteeringVector();
+    const gravity = (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1);
+    const mobilityLevel = elementalLevel('mobility');
+    const targetVx = steering.x * ([200, 228, 248, 248][mobilityLevel] || 200);
+    const reversing = Math.abs(steering.x) > .01 && Math.abs(clone.vx) > 10 && Math.sign(clone.vx) !== Math.sign(steering.x);
+    clone.vx = lerp(clone.vx, targetVx, 1 - Math.exp(-(reversing ? 11 : steering.x ? 5.4 : 7.2) * dt));
+    clone.vy = clamp(clone.vy + gravity * dt + steering.down * (mobilityLevel ? 300 : 235) * dt,
+      -normalFallSpeedLimit(), normalFallSpeedLimit());
+    clone.x = clamp(clone.x + clone.vx * dt, clone.radius, VIEW_W - clone.radius);
+    clone.y += clone.vy * dt;
+    clone.wobble += dt * (4 + Math.abs(clone.vy) / 180);
+    if (clone.x <= clone.radius || clone.x >= VIEW_W - clone.radius) clone.vx *= -.25;
+    for (const block of blocksNearY(clone.y, clone.radius)) {
+      if (block.dead || !circleRectCollision(clone, block, clone.radius)) continue;
+      const collision = circleRectCollision(clone, block, clone.radius);
+      if (!collision || timestamp - (clone.hitCooldowns.get(block.id) || 0) < 115) continue;
+      clone.hitCooldowns.set(block.id, timestamp);
+      clone.x += collision.nx * (collision.penetration + 1);
+      clone.y += collision.ny * (collision.penetration + 1);
+      applyBlockBounce(clone, collision, { hazard: block.hazard || block.unbreakable, timestamp, isolated: true });
+      if (!glitchEligibleBlock(block)) continue;
+      if (!block.glitchInfected) {
+        const neighbors = blocksNearY(block.y, run.cellSize)
+          .filter(item => glitchEligibleBlock(item) && !item.glitchInfected
+            && Math.abs(item.row - block.row) <= 1 && Math.abs(item.col - block.col) <= 1);
+        infectGlitchGroup([block, ...neighbors.slice(0, 2)], timestamp);
+      }
+      damageBlockByElement(block, 1, 'glitchClone', timestamp);
+      break;
+    }
+  }
+
+  function updateGlitchEffects(timestamp) {
+    if (!run || run.ended || run.portalEntry) return;
+    const level = elementalLevel('glitch');
+    if (level >= 1 && timestamp >= run.glitchNextInfectionAt) {
+      const infected = infectGlitchAhead(timestamp);
+      run.glitchNextInfectionAt = timestamp + (infected ? GLITCH_INFECTION_INTERVAL_MS : 1800);
+    }
+    if (level >= 2 && timestamp >= run.glitchNextNeutralizeAt) {
+      const neutralized = neutralizeGlitchHazard(timestamp);
+      run.glitchNextNeutralizeAt = timestamp + (neutralized ? GLITCH_NEUTRALIZE_INTERVAL_MS : 1800);
+    }
+    for (const item of run.glitchSpreadQueue) {
+      if (timestamp >= item.at) infectGlitchGroup(item.blocks, timestamp);
+    }
+    run.glitchSpreadQueue = run.glitchSpreadQueue.filter(item => timestamp < item.at);
+    for (const item of run.glitchDeleteQueue) {
+      if (timestamp >= item.at && glitchEligibleBlock(item.block)) destroyBlock(item.block, 'glitchDelete', timestamp);
+    }
+    run.glitchDeleteQueue = run.glitchDeleteQueue.filter(item => timestamp < item.at);
+    if (run.glitchChange && timestamp >= run.glitchChange.at) rewriteGlitchSection(timestamp);
+    updateGlitchClone(timestamp);
+  }
+
   function updatePhysics(dt, timestamp) {
     const s = run.slime;
     if (run.portalEntry) {
@@ -3362,28 +4494,53 @@
       updateGeyserCapture(dt, timestamp);
       return;
     }
-    const drillActive = speedDrillActive(timestamp);
-    const frozen = !drillActive && isSlimeFrozen(timestamp);
+    if (run.mechSuit?.phase === 'descending') {
+      s.vx = 0;
+      s.vy = 0;
+      if (timestamp < run.mechSuit.landAt) return;
+      run.mechSuit.phase = 'active';
+      s.radius = run.cellSize * MECH_HIT_RADIUS_CELLS;
+      const mechWallRadius = run.cellSize * MECH_VISUAL_CELLS * .49;
+      s.x = clamp(s.x, mechWallRadius, VIEW_W - mechWallRadius);
+      s.y = Math.max(s.y, run.cellSize * MECH_VISUAL_CELLS * .49 + 4);
+      run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, timestamp + 400);
+      run.shake = Math.max(run.shake, 5);
+      sound('epic');
+      feedback([12, 18, 10]);
+    }
+    if (updateCosmosUltimateMotion(dt, timestamp)) return;
+    const ghost = updatePhantomCycle(timestamp);
+    const drillActive = !ghost && !mechSuitActive() && speedDrillActive(timestamp);
+    const frozen = !ghost && !drillActive && !mechSuitActive() && isSlimeFrozen(timestamp);
     updateSpeedPassive(dt, timestamp);
     const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
-    const honeyAtStart = honeyZoneForSlime(s);
+    const honeyAtStart = mechSlowZoneImmune(timestamp) ? null : honeyZoneForSlime(s);
     const honeyDrag = Boolean(honeyAtStart);
-    const jellyAtStart = jellyZoneForSlime(s);
+    const jellyAtStart = mechSlowZoneImmune(timestamp) ? null : jellyZoneForSlime(s);
     const jellyDrag = Boolean(jellyAtStart);
-    const freezeWaterAtStart = freezeZoneForSlime(s);
+    const freezeWaterAtStart = mechSlowZoneImmune(timestamp) ? null : freezeZoneForSlime(s);
     const freezeWaterDrag = Boolean(freezeWaterAtStart);
-    const worldGravity = drillActive ? 0 : (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (frozen ? 1.48 : freezeWaterDrag ? .28 : honeyDrag ? .24 : jellyDrag ? .08 : 1);
+    const worldGravity = drillActive ? 0 : (BALANCE.gravityBase + run.worldId * BALANCE.gravityPerWorld) * (mechSuitActive() ? 1 : frozen ? 1.48 : freezeWaterDrag ? .28 : honeyDrag ? .24 : jellyDrag ? .08 : 1);
     const previousX = s.x;
     const previousY = s.y;
     const launchArrivalActive = run.launchEntryUntil && timestamp < run.launchEntryUntil;
 
-    const baseTerminalSpeed = frozen
-      ? normalFallSpeedLimit() * 1.18
-      : freezeWaterDrag ? 118 : honeyDrag ? 132 : jellyDrag ? 165
-        : normalFallSpeedLimit();
+    const baseTerminalSpeed = mechSuitActive() ? normalFallSpeedLimit()
+      : frozen ? normalFallSpeedLimit() * 1.18
+        : freezeWaterDrag ? 118 : honeyDrag ? 132 : jellyDrag ? 165
+          : normalFallSpeedLimit();
     const speedPressure = elementalLevel('mobility') >= 1 ? run.speedPressure || 0 : 0;
-    const terminalSpeed = baseTerminalSpeed * (1 + speedPressure * .5);
-    if (drillActive) applySpeedDrillSteering(s, dt);
+      const terminalSpeed = baseTerminalSpeed * (1 + speedPressure * .5) * (mechSuitActive() ? .9 : 1);
+    if (ghost) {
+      const steering = fallSteeringVector();
+      s.vx = lerp(s.vx, steering.x * 145, 1 - Math.exp(-5.2 * dt));
+      s.vy = clamp(s.vy + (worldGravity * .16 + steering.y * 360) * dt, -155, 205);
+      if (Math.abs(steering.y) < .08) s.vy = lerp(s.vy, 42, 1 - Math.exp(-.35 * dt));
+    } else if (drillActive) applySpeedDrillSteering(s, dt);
+    else if (mechSuitActive()) {
+      s.vy = clamp(s.vy + worldGravity * dt, -80, terminalSpeed);
+      applyMechSteering(s, dt, timestamp, terminalSpeed);
+    }
     else if (jellyDrag && !frozen) {
       const steering = fallSteeringVector();
       const jellyAge = Math.max(0, timestamp - (run.jellyEnteredAt || timestamp));
@@ -3397,33 +4554,38 @@
       s.vy = clamp(s.vy + worldGravity * gravityDirection * dt, -terminalSpeed, terminalSpeed);
       applyFallSteering(s, dt, timestamp);
     }
-    if (!drillActive && honeyDrag && !frozen) {
+    if (!mechSuitActive() && !ghost && !drillActive && honeyDrag && !frozen) {
       s.vx *= Math.pow(.32, dt);
       s.vy *= Math.pow(.085, dt);
-    } else if (!drillActive && freezeWaterDrag && !frozen) {
+    } else if (!mechSuitActive() && !ghost && !drillActive && freezeWaterDrag && !frozen) {
       s.vx *= Math.pow(.48, dt);
       s.vy = lerp(s.vy, 86, clamp(dt * 3.8, 0, 1));
     }
     s.x += s.vx * dt;
     s.y += s.vy * dt;
-    updateCosmosCometEntry(previousY, timestamp);
-    updateHoneyState(s, timestamp);
-    updateJellyState(s, timestamp, previousX, previousY);
-    updateFreezeZoneState(s, timestamp);
+    if (!ghost) {
+      updateCosmosCometEntry(previousY, timestamp);
+      updateHoneyState(s, timestamp);
+      updateJellyState(s, timestamp, previousX, previousY);
+      updateFreezeZoneState(s, timestamp);
+    }
     s.wobble += dt * (4 + Math.abs(s.vy) / 180);
 
-    if (s.x - s.radius < 0) {
-      s.x = s.radius;
-      if (drillActive) s.vx = Math.max(0, s.vx);
+    const wallRadius = mechSuitActive() ? run.cellSize * MECH_VISUAL_CELLS * .49 : s.radius;
+    if (s.x - wallRadius < 0) {
+      s.x = wallRadius;
+      if (mechSuitActive()) s.vx = 0;
+      else if (drillActive) s.vx = Math.max(0, s.vx);
       else {
         s.vx = clamp(Math.abs(s.vx) * .18, 30, 42);
         run.wallPushSide = -1;
         run.wallReleaseX = s.x + 10;
       }
     }
-    if (s.x + s.radius > VIEW_W) {
-      s.x = VIEW_W - s.radius;
-      if (drillActive) s.vx = Math.min(0, s.vx);
+    if (s.x + wallRadius > VIEW_W) {
+      s.x = VIEW_W - wallRadius;
+      if (mechSuitActive()) s.vx = 0;
+      else if (drillActive) s.vx = Math.min(0, s.vx);
       else {
         s.vx = -clamp(Math.abs(s.vx) * .18, 30, 42);
         run.wallPushSide = 1;
@@ -3439,34 +4601,61 @@
       s.vy = Math.max(78, Math.abs(s.vy) * .58);
       run.gravitySwitchFlashUntil = timestamp + 520;
     }
+    if (ghost && s.y - s.radius < 4) {
+      s.y = s.radius + 4;
+      s.vy = Math.max(0, s.vy);
+    }
+    if (mechSuitActive() && s.y - wallRadius < 4) {
+      s.y = wallRadius + 4;
+      s.vy = Math.max(0, s.vy);
+    }
 
     const moved = Math.hypot(s.x - previousX, s.y - previousY);
     run.flightDistance += moved;
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
-    run.depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.floor((s.y - 80) / 10));
+    run.depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.min(run.world.targetDepth,
+      Math.floor((s.y - 285) / (run.rowCount * run.cellSize) * run.world.targetDepth)));
     run.maxDepth = Math.max(run.maxDepth, run.depth);
 
-    const collisions = blocksNearY(s.y, s.radius)
-      .filter(block => !block.dead && !block.blackHoleSuctionStartedAt && timestamp >= (block.snowballGhostUntil || 0) && block.y + block.h > s.y - s.radius - 3 && block.y < s.y + s.radius + 3)
-      // Hazards use a slightly forgiving hit radius: near-misses should look
-      // and feel like near-misses, especially under a thumb on mobile.
-      .map(block => ({ block, collision: circleRectCollision(s, block, block.hazard ? s.radius * .76 : s.radius) }))
-      .filter(item => item.collision)
-      .sort((a, b) => b.collision.penetration - a.collision.penetration);
+    if (ghost) {
+      markPhantomBlocks(timestamp);
+    } else {
+      const mechHull = mechSuitActive() ? mechCollisionHull(s) : null;
+      const collisionReach = mechHull ? run.cellSize * MECH_VISUAL_CELLS * .5 : s.radius;
+      const collisions = blocksNearY(s.y, collisionReach)
+        .filter(block => !block.dead && timestamp >= (block.snowballGhostUntil || 0)
+          && block.y + block.h > s.y - collisionReach - 3 && block.y < s.y + collisionReach + 3
+          && block.x + block.w > s.x - collisionReach - 3 && block.x < s.x + collisionReach + 3)
+        // Hazards use a slightly forgiving hit radius: near-misses should look
+        // and feel like near-misses, especially under a thumb on mobile.
+        .map(block => {
+          const firstWorldHazard = block.hazard && run.worldId === 1;
+          const inset = firstWorldHazard ? block.w * .08 : 0;
+          const hitbox = firstWorldHazard
+            ? { x: block.x + inset, y: block.y + inset, w: block.w - inset * 2, h: block.h - inset * 2 }
+            : block;
+          return { block, collision: mechHull
+            ? mechRectCollision(mechHull, hitbox)
+            : circleRectCollision(s, hitbox, block.hazard ? s.radius * .76 : s.radius) };
+        })
+        .filter(item => item.collision)
+        .sort((a, b) => b.collision.penetration - a.collision.penetration);
 
-    for (const item of collisions) {
-      const { block, collision } = item;
-      const normalSpeed = s.vx * collision.nx + s.vy * collision.ny;
-      const movingOutOfBlock = normalSpeed >= -1;
-      const cooldown = run.hitCooldowns.get(block.id) || 0;
-      if (timestamp - cooldown < 72 || (timestamp < run.bounceGraceUntil && movingOutOfBlock) || (timestamp < run.geyserLaunchGraceUntil && movingOutOfBlock)) {
-        stabilizeSlimeContact(s, collision);
-        continue;
+      for (const item of collisions) {
+        const { block, collision } = item;
+        if (block.dead) continue;
+        const normalSpeed = s.vx * collision.nx + s.vy * collision.ny;
+        const movingOutOfBlock = normalSpeed >= -1;
+        const cooldown = run.hitCooldowns.get(block.id) || 0;
+        if (timestamp - cooldown < 72 || (timestamp < run.bounceGraceUntil && movingOutOfBlock) || (timestamp < run.geyserLaunchGraceUntil && movingOutOfBlock)) {
+          stabilizeSlimeContact(s, collision);
+          continue;
+        }
+        run.hitCooldowns.set(block.id, timestamp);
+        const bounced = resolveBlockHit(block, collision, timestamp);
+        if (run.ended) return;
+        if (bounced) break;
       }
-      run.hitCooldowns.set(block.id, timestamp);
-      const bounced = resolveBlockHit(block, collision, timestamp);
-      if (run.ended) return;
-      if (bounced) break;
     }
 
     updateFlasks(timestamp);
@@ -3492,7 +4681,7 @@
     run.visualHealth = run.health;
     const healthScale = 1;
     const massRadius = massRadiusForLevel(elementalLevel('mass'), run.cellSize);
-    const normalRadius = massRadius * healthScale;
+    const normalRadius = mechSuitActive() ? run.cellSize * MECH_HIT_RADIUS_CELLS : massRadius * healthScale;
     s.radius = lerp(s.radius, normalRadius, clamp(dt * 5.5, 0, 1));
     if (run.healthFlashTime > 0) run.healthFlashTime = Math.max(0, run.healthFlashTime - dt);
 
@@ -3720,6 +4909,92 @@
     return Boolean(run && elementalLevel('cosmos') >= 2 && run.cosmosBoostBlocksLeft > 0);
   }
 
+  function cosmosUltimatePower(ultimate, timestamp) {
+    if (!ultimate || timestamp >= ultimate.fadeUntil) return 0;
+    if (timestamp <= ultimate.fadeStartedAt) return 1;
+    const fade = clamp((timestamp - ultimate.fadeStartedAt) / (ultimate.fadeUntil - ultimate.fadeStartedAt), 0, 1);
+    return 1 - fade * fade * (3 - 2 * fade);
+  }
+
+  function breakCosmosUltimatePath(fromX, fromY, timestamp) {
+    const slime = run.slime;
+    const cell = run.cellSize;
+    const firstRow = Math.max(0, Math.floor((Math.min(fromY, slime.y) - slime.radius - run.blockRowOrigin) / cell));
+    const lastRow = Math.floor((Math.max(fromY, slime.y) + slime.radius - run.blockRowOrigin) / cell);
+    const firstCol = Math.max(0, Math.min(Math.floor(fromX / cell), Math.floor(slime.x / cell)) - 1);
+    const lastCol = Math.min(run.columns - 1, Math.max(Math.floor(fromX / cell), Math.floor(slime.x / cell)) + 1);
+    for (let row = firstRow; row <= lastRow; row += 1) {
+      let shattered = 0;
+      for (const block of run.blocksByRow?.get(row) || []) {
+        if (block.dead || block.col < firstCol || block.col > lastCol) continue;
+        if (block.y > Math.max(fromY, slime.y) + slime.radius || block.y + block.h < Math.min(fromY, slime.y) - slime.radius) continue;
+        if (block.hazard) resolveHazardHit(block, null, timestamp);
+        else if (block.unbreakable) { block.hp = 0; destroyBlock(block, 'cosmos', timestamp); }
+        else damageBlockByElement(block, Math.max(1, block.hp), 'cosmos', timestamp);
+        shattered += 1;
+        if (run.ended) return;
+      }
+      if (shattered) run.shake = Math.max(run.shake, 4.5);
+    }
+  }
+
+  function updateCosmosUltimateMotion(dt, timestamp) {
+    const ultimate = run?.cosmosUltimate;
+    if (!ultimate || timestamp >= ultimate.fadeUntil) return false;
+    const slime = run.slime;
+    const previousX = slime.x;
+    const previousY = slime.y;
+    const steering = fallSteeringVector();
+    const power = cosmosUltimatePower(ultimate, timestamp);
+    run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, ultimate.fadeUntil);
+    run.shake = Math.max(0, run.shake - dt * 20);
+    slime.vx = lerp(slime.vx, steering.x * 255, 1 - Math.exp(-10 * dt));
+    slime.x = clamp(slime.x + slime.vx * dt, slime.radius, VIEW_W - slime.radius);
+    if (slime.x === slime.radius || slime.x === VIEW_W - slime.radius) slime.vx = 0;
+    if (timestamp < ultimate.chargeUntil) {
+      slime.vy = 0;
+      if (Math.abs(slime.x - previousX) > .5) breakCosmosUltimatePath(previousX, previousY, timestamp);
+      run.shake = Math.max(run.shake, 1.8 + Math.sin(timestamp / 32) * .35);
+    } else {
+      if (!ultimate.ignitedAt) {
+        ultimate.ignitedAt = timestamp;
+        run.cosmosCometIgnitedAt = timestamp;
+        pushElementalEffect('cosmosBoost', slime.x, slime.y, { life: .9, maxLife: .9, ignition: true });
+        impact('КОМЕТА · ПРОРЫВ');
+        sound('epic');
+        feedback([12, 20, 12]);
+      }
+      const ignition = clamp((timestamp - ultimate.chargeUntil) / COSMOS_ULTIMATE_RAMP_MS, 0, 1);
+      const easedIgnition = ignition * ignition * (3 - 2 * ignition);
+      const cruiseSpeed = Math.max(normalFallSpeedLimit() * 1.85, run.cellSize * 9);
+      slime.vy = lerp(normalFallSpeedLimit() * .9, cruiseSpeed, easedIgnition * power);
+      slime.y += slime.vy * dt;
+      breakCosmosUltimatePath(previousX, previousY, timestamp);
+      run.shake = Math.max(run.shake, 1.8 + power * .8);
+      if (timestamp - ultimate.lastSampleAt >= 34) {
+        ultimate.trail.push({ x: slime.x, y: slime.y, at: timestamp });
+        ultimate.lastSampleAt = timestamp;
+      }
+      ultimate.trail = ultimate.trail.filter(sample => timestamp - sample.at < 650).slice(-20);
+    }
+    slime.wobble += dt * (8 + Math.abs(slime.vy) / 100);
+    run.flightDistance += Math.hypot(slime.x - previousX, slime.y - previousY);
+    run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
+    run.depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.min(run.world.targetDepth,
+      Math.floor((slime.y - 285) / (run.rowCount * run.cellSize) * run.world.targetDepth)));
+    run.maxDepth = Math.max(run.maxDepth, run.depth);
+    updateFlasks(timestamp);
+    const portal = getPortalGeometry();
+    if (slimeTouchesPortal(slime, portal) || slime.y - slime.radius > portal.bottom + 70) {
+      beginPortalEntry(timestamp, portal);
+      return true;
+    }
+    const targetCamera = clamp(slime.y - 158, 0, run.portalY - VIEW_H + 105);
+    run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * 10, 0, 1));
+    run.visualHealth = run.health;
+    return true;
+  }
+
   function consumeCosmosBoostBlock(timestamp = performance.now()) {
     if (!cosmosBoostActive()) return 0;
     run.cosmosBoostBlocksLeft = Math.max(0, run.cosmosBoostBlocksLeft - 1);
@@ -3751,7 +5026,7 @@
   }
 
   function updateCosmosCometEntry(previousY, timestamp = performance.now()) {
-    if (!run || elementalLevel('cosmos') < 2) return;
+    if (!run || run.cosmosUltimate || elementalLevel('cosmos') < 2) return;
     const s = run.slime;
     const gravityDirection = run.effects.gravitySwitch ? Math.sign(run.gravityDirection || 1) : 1;
 
@@ -3788,6 +5063,7 @@
 
   function setGravityDirection(direction, timestamp = performance.now()) {
     if (!run?.effects?.gravitySwitch || run.ended || run.paused || run.portalEntry) return false;
+    if (run.cosmosUltimate && timestamp < run.cosmosUltimate.launchUntil) return false;
     const nextDirection = direction < 0 ? -1 : 1;
     if (run.gravityDirection === nextDirection) return true;
     run.gravityDirection = nextDirection;
@@ -3852,7 +5128,8 @@
     // its trajectory; holding it can never flatten an impact into a block.
     if (steering.down > .01 && effectiveAuthority > 0) {
       const pressure = mobilityLevel >= 1 ? run.speedPressure || 0 : 0;
-      const diveAcceleration = mobilityLevel >= 1 ? 300 + pressure * 420 : 235;
+      const softResistance = timestamp < (run.softBreakResistanceUntil || 0) ? .55 : 1;
+      const diveAcceleration = (mobilityLevel >= 1 ? 300 + pressure * 420 : 235) * softResistance;
       const baseTerminalSpeed = normalFallSpeedLimit();
       const maxDiveSpeed = baseTerminalSpeed * (1 + pressure * .5);
       slime.vy = Math.min(maxDiveSpeed, slime.vy + diveAcceleration * steering.down * effectiveAuthority * dt);
@@ -3889,6 +5166,8 @@
 
   function beginPortalEntry(timestamp, portal = getPortalGeometry()) {
     if (run.portalEntry || run.ended) return;
+    hideGlitchChoice();
+    run.glitchChoice = null;
     const targetX = portal.type === 'circle' ? portal.x : portal.centerX;
     const targetY = portal.type === 'circle' ? portal.y : portal.centerY;
     run.portalEntry = {
@@ -3957,6 +5236,59 @@
     return { nx, ny, penetration: collisionRadius - distance + insideDepth };
   }
 
+  // Outline sampled from the opaque edge of techno-mech-suit-v2.webp (512 × 476).
+  // A small convex polygon follows the wide guns and tapered lower thrusters.
+  const MECH_HULL_PROFILE = [
+    [.5, .015], [.62, .07], [.76, .19], [.90, .31], [.975, .42],
+    [.985, .70], [.97, .735], [.72, .855], [.5, .875],
+    [.28, .855], [.03, .735], [.015, .70], [.025, .42],
+    [.10, .31], [.24, .19], [.38, .07]
+  ];
+
+  function mechCollisionHull(slime) {
+    const size = run.cellSize * MECH_VISUAL_CELLS;
+    return MECH_HULL_PROFILE.map(([u, v]) => ({
+      x: slime.x + (u - .5) * size,
+      y: slime.y + (v - .5) * size
+    }));
+  }
+
+  function mechRectCollision(hull, rect) {
+    const centerX = rect.x + rect.w * .5;
+    const centerY = rect.y + rect.h * .5;
+    let best = Infinity;
+    let bestX = 0;
+    let bestY = 0;
+    for (let index = -2; index < hull.length; index += 1) {
+      let axisX = index === -2 ? 1 : index === -1 ? 0 : hull[(index + 1) % hull.length].y - hull[index].y;
+      let axisY = index === -2 ? 0 : index === -1 ? 1 : hull[index].x - hull[(index + 1) % hull.length].x;
+      const length = Math.hypot(axisX, axisY);
+      if (length < .0001) continue;
+      axisX /= length;
+      axisY /= length;
+      let min = Infinity;
+      let max = -Infinity;
+      for (const point of hull) {
+        const value = point.x * axisX + point.y * axisY;
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+      }
+      const rectProjection = centerX * axisX + centerY * axisY;
+      const rectRadius = Math.abs(axisX) * rect.w * .5 + Math.abs(axisY) * rect.h * .5;
+      const pushPositive = rectProjection + rectRadius - min;
+      const pushNegative = max - (rectProjection - rectRadius);
+      if (pushPositive <= 0 || pushNegative <= 0) return null;
+      const penetration = Math.min(pushPositive, pushNegative);
+      if (penetration < best) {
+        best = penetration;
+        const direction = pushPositive < pushNegative ? 1 : -1;
+        bestX = axisX * direction;
+        bestY = axisY * direction;
+      }
+    }
+    return Number.isFinite(best) ? { nx: bestX, ny: bestY, penetration: best } : null;
+  }
+
   function stabilizeSlimeContact(slime, collision, padding = 1.25) {
     const correction = Math.max(0, collision.penetration) + padding;
     slime.x += collision.nx * correction;
@@ -3968,7 +5300,7 @@
     }
   }
 
-  function applyBlockBounce(slime, collision, { hazard, timestamp }) {
+  function applyBlockBounce(slime, collision, { hazard, timestamp, isolated = false, steeringEnabled = true }) {
     const nx = collision.nx;
     const ny = collision.ny;
     const incomingNormal = slime.vx * nx + slime.vy * ny;
@@ -3981,7 +5313,7 @@
       ? lerp(195, 285, hazardCurve)
       : lerp(BALANCE.bounceMin, BALANCE.bounceMax, regularCurve);
     const mobilityLevel = elementalLevel('mobility');
-    const pressure = mobilityLevel >= 1 ? run.speedPressure || 0 : 0;
+    const pressure = steeringEnabled && mobilityLevel >= 1 ? run.speedPressure || 0 : 0;
     const downwardBounceScale = ny < -.45 ? 1 - pressure * .25 : 1;
     const normalSpeed = baseNormalSpeed * downwardBounceScale;
     const tangentKeep = hazard ? .32 : .50;
@@ -3998,7 +5330,7 @@
     slime.vx = nx * normalSpeed + tangentX;
     slime.vy = ny * normalSpeed + tangentY;
 
-    const steering = fallSteeringVector();
+    const steering = steeringEnabled ? fallSteeringVector() : { x: 0 };
     if (Math.abs(steering.x) > .01) {
       if (Math.abs(nx) < .34) {
         const steeringAssist = (hazard ? 86 : lerp(54, 86, regularCurve)) * (1 + mobilityLevel * .2);
@@ -4010,9 +5342,11 @@
 
     const lockReduction = mobilityLevel >= 2 ? 10 : mobilityLevel >= 1 ? 5 : 0;
     const restoreReduction = mobilityLevel >= 2 ? 24 : mobilityLevel >= 1 ? 12 : 0;
-    run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + (hazard ? 70 : 20);
-    run.bounceControlLockUntil = timestamp + Math.max(24, 36 - lockReduction);
-    run.bounceControlRestoreUntil = timestamp + Math.max(88, 120 - restoreReduction);
+    if (!isolated) {
+      run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + (hazard ? 70 : 20);
+      run.bounceControlLockUntil = timestamp + Math.max(24, 36 - lockReduction);
+      run.bounceControlRestoreUntil = timestamp + Math.max(88, 120 - restoreReduction);
+    }
   }
 
   function activateJellyBounce(block, collision, timestamp) {
@@ -4062,18 +5396,55 @@
 
   function resolveHazardHit(block, collision, timestamp) {
     const slime = run.slime;
+    const mech = mechSuitActive() ? run.mechSuit : null;
     const centerX = block.x + block.w / 2;
     const centerY = block.y + block.h / 2;
     block.dead = true;
     block.hp = 0;
     run.blocksDestroyed += 1;
-    createDebris(block, 16, true);
-    spawnSpecialBurst('bomb', centerX, centerY);
-    run.shake = Math.max(run.shake, 8.5);
+    if (mech) {
+      for (let index = 0; index < 6; index += 1) {
+        const angle = index * Math.PI / 3 + rand(-.18, .18);
+        const speed = rand(75, 150);
+        run.particles.push({ x: centerX, y: centerY,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 35,
+          life: .25, maxLife: .25, size: rand(1.5, 3.2),
+          color: index % 2 ? '#ffd898' : '#ff5b52' });
+      }
+      trimParticles(180);
+      run.shake = Math.max(run.shake, 3.5);
+    } else {
+      createDebris(block, 16, true);
+      spawnSpecialBurst('bomb', centerX, centerY);
+      run.shake = Math.max(run.shake, 8.5);
+    }
+
+    if (mech) {
+      absorbMechImpact(slime, collision, timestamp);
+      sound('hit');
+      feedback(5);
+      return true;
+    }
 
     if (timestamp < run.damageInvulnerableUntil) {
       sound('break');
       return false;
+    }
+
+    if (run.barrier > 0) {
+      run.barrier = 0;
+      run.barrierFlashUntil = timestamp + 380;
+      run.damageInvulnerableUntil = timestamp + 700;
+      run.flightDistance = 0;
+      slime.x += collision.nx * (collision.penetration + 7);
+      slime.y += collision.ny * (collision.penetration + 7);
+      applyBlockBounce(slime, collision, { hazard: true, timestamp });
+      if (run.ultimateRechargePending === 'shield') finishUltimateRecharge();
+      impact('ЩИТ РАЗБИТ');
+      sound('hitHard');
+      feedback([12, 20, 9]);
+      updateRunUI();
+      return true;
     }
 
     const healthBefore = run.health;
@@ -4172,43 +5543,196 @@
     return Boolean(block && !block.dead && !block.unbreakable && !block.hazard);
   }
 
-  const NANO_DRONE_SPRITE = 'assets/ui/nano-drone-v1.webp';
-  const NANO_SHOT_SPRITE = 'assets/ui/nano-blaster-shot-v1.webp';
   const NANO_SHOT_INTERVAL_MS = 2000;
+  const NANO_MINE_INTERVAL_MS = 5000;
+  const MECH_LAND_MS = 1100;
+  const MECH_ACTIVE_MS = 10000;
+  const MECH_SHOT_INTERVAL_MS = 650;
+  const MECH_SHOT_TRAVEL_MS = 90;
+  const MECH_EXPLOSION_MS = 650;
+  const MECH_VISUAL_CELLS = 2.65;
+  const MECH_HIT_RADIUS_CELLS = 1.06;
+  // Seven rows are 50 m in the authored mine; the drone reaches about 40 m.
+  const NANO_RANGE_ROWS = 7 * 40 / 50;
+
+  function mechSuitActive() {
+    return Boolean(run?.mechSuit?.phase === 'active');
+  }
+
+  function mechSlowZoneImmune(timestamp = performance.now()) {
+    return mechSuitActive() || Boolean(run && timestamp < (run.mechExitZoneGraceUntil || 0));
+  }
+
+  function mechMuzzlePosition(side) {
+    const size = run.cellSize * MECH_VISUAL_CELLS;
+    return {
+      x: run.slime.x + side * size * .43,
+      y: run.slime.y + size * .22
+    };
+  }
+
+  function applyMechSteering(slime, dt, timestamp, terminalSpeed) {
+    if (!run?.steer || run.portalEntry) return;
+    const steering = fallSteeringVector();
+    const locked = timestamp < (run.bounceControlLockUntil || 0);
+    const inputX = locked ? 0 : steering.x;
+    const targetVx = inputX * 165;
+    const reversing = Math.abs(inputX) > .05 && Math.sign(slime.vx) !== Math.sign(inputX);
+    const acceleration = Math.abs(inputX) < .05 ? 260 : reversing ? 330 : 310;
+    slime.vx += clamp(targetVx - slime.vx, -acceleration * dt, acceleration * dt);
+    if (steering.y < -.1) {
+      // Full thrust first arrests the fall, then slowly lifts the chassis.
+      slime.vy = Math.max(-170, slime.vy + steering.y * 700 * dt);
+    } else if (steering.y > .1) {
+      slime.vy = Math.min(terminalSpeed, slime.vy + steering.y * 220 * dt);
+    } else if (Math.abs(inputX) > .1) {
+      // Side thrusters offset a little gravity without holding the mech aloft.
+      slime.vy -= Math.abs(inputX) * 80 * dt;
+    }
+  }
+
+  function absorbMechImpact(slime, collision, timestamp) {
+    slime.x += collision.nx * (collision.penetration + 2);
+    slime.y += collision.ny * (collision.penetration + 2);
+    const inwardSpeed = slime.vx * collision.nx + slime.vy * collision.ny;
+    if (inwardSpeed < 0) {
+      // Almost all impact energy is absorbed by the heavy chassis.
+      slime.vx -= inwardSpeed * collision.nx * 1.06;
+      slime.vy -= inwardSpeed * collision.ny * 1.06;
+    }
+    slime.vx *= .68;
+    slime.vy *= .86;
+    run.bounceControlLockUntil = Math.max(run.bounceControlLockUntil || 0, timestamp + 85);
+  }
+
+  function finishMechSuit(timestamp) {
+    if (!run?.mechSuit) return;
+    run.mechExplosion = { x: run.slime.x, y: run.slime.y, startedAt: timestamp, expired: true };
+    run.mechSuit = null;
+    run.elementalAbilityActive = '';
+    run.elementalAbilityUntil = 0;
+    run.elementalAbilityNextTickAt = 0;
+    finishUltimateRecharge();
+    run.nanoShots = [];
+    run.nanoMine = null;
+    run.nanoNextShotAt = [timestamp + NANO_SHOT_INTERVAL_MS];
+    run.nanoNextMineAt = timestamp + NANO_MINE_INTERVAL_MS;
+    run.slime.radius = massRadiusForLevel(elementalLevel('mass'), run.cellSize);
+    run.slime.vx *= .65;
+    run.slime.vy = clamp(Math.max(120, run.slime.vy), 120, 200);
+    run.bounceControlLockUntil = 0;
+    run.hurtSlowUntil = 0;
+    run.freezeUntil = 0;
+    run.mechExitZoneGraceUntil = timestamp + 900;
+    run.damageInvulnerableUntil = timestamp + 700;
+    run.shake = Math.max(run.shake, 4);
+    run.emotion = 'surprised';
+    run.emotionUntil = timestamp + 450;
+    sound('tap');
+    feedback([8, 12, 8]);
+    updateRunUI();
+  }
+
+  function nanoRunEyeOpenness(timestamp) {
+    const age = timestamp - (run?.nanoEyeOpenedAt || 0);
+    if (age < 0 || age >= 720) return 0;
+    const opening = clamp(age / 155, 0, 1);
+    const closing = clamp((720 - age) / 190, 0, 1);
+    const value = Math.min(opening, closing);
+    return value * value * (3 - 2 * value);
+  }
 
   function nanoDronePosition(index, timestamp) {
     const slime = run.slime;
-    const side = elementalLevel('nano') >= 2 && index === 0 ? -1 : 1;
+    const side = -1;
     const desiredX = slime.x + side * (slime.radius + 19);
     const x = clamp(desiredX, 17, VIEW_W - 17);
     const edgeLift = Math.abs(desiredX - x) > 4 ? slime.radius * .52 : 0;
     return {
       x,
-      y: slime.y - slime.radius * .38 - edgeLift + Math.sin(timestamp / 330 + index * 2.2) * 3
+      y: slime.y - slime.radius * .72 - edgeLift + Math.sin(timestamp / 410 + index * 2.2) * 3
     };
   }
 
   function updateNanoDrones(timestamp) {
     if (!run || run.ended) return;
-    run.nanoShots = (run.nanoShots || []).filter(shot => timestamp - shot.startedAt < 380);
-    const droneCount = Math.min(2, elementalLevel('nano'));
-    for (let index = 0; index < droneCount; index += 1) {
-      if (timestamp < run.nanoNextShotAt[index]) continue;
-      run.nanoNextShotAt[index] = timestamp + NANO_SHOT_INTERVAL_MS;
-      const origin = nanoDronePosition(index, timestamp);
-      const target = run.blocks
+    const level = elementalLevel('nano');
+    if (!level) return;
+    for (const shot of run.nanoShots || []) {
+      const travelMs = shot.mech ? MECH_SHOT_TRAVEL_MS : 135;
+      if (!shot.hit && timestamp - shot.startedAt >= travelMs) {
+        shot.hit = true;
+        damageBlockByElement(shot.target, shot.mech ? 2 : 1, 'nano', timestamp);
+      }
+    }
+    run.nanoShots = (run.nanoShots || []).filter(shot => timestamp - shot.startedAt < (shot.mech ? 245 : 270));
+    if (run.mechSuit) {
+      const mech = run.mechSuit;
+      if (mech.phase !== 'active' || timestamp < mech.nextShotAt) return;
+      mech.nextShotAt = timestamp + MECH_SHOT_INTERVAL_MS;
+      const slime = run.slime;
+      const cell = run.cellSize;
+      const candidates = blocksNearY(slime.y + cell * NANO_RANGE_ROWS * .5, cell * NANO_RANGE_ROWS * .55)
         .filter(block => elementalDamageable(block) && !block.special
-          && block.y + block.h / 2 > origin.y + 8
-          && block.y - origin.y < run.cellSize * 3.5
-          && Math.abs(block.x + block.w / 2 - origin.x) < run.cellSize * 1.2)
-        .sort((a, b) => {
-          const score = block => (block.y - origin.y) + Math.abs(block.x + block.w / 2 - origin.x) * .7;
-          return score(a) - score(b);
-        })[0];
-      if (!target) continue;
+          && blockCenter(block).y > slime.y + cell * .6
+          && blockCenter(block).y - slime.y <= cell * NANO_RANGE_ROWS
+          && Math.abs(blockCenter(block).x - slime.x) <= cell * 2.6);
+      const selected = new Set();
+      for (const side of [-1, 1]) {
+        const muzzle = mechMuzzlePosition(side);
+        const pool = candidates.filter(block => !selected.has(block)
+          && blockCenter(block).y > muzzle.y + cell * .22);
+        const sidePool = pool.filter(block => side * (blockCenter(block).x - slime.x) > -cell * .4);
+        const choices = sidePool.length ? sidePool : pool;
+        const durable = choices.filter(block => block.hp >= 2 || block.tier === 'hard' || block.tier === 'reinforced');
+        const prioritized = durable.length && Math.random() < .82 ? durable : choices;
+        const target = prioritized[Math.floor(Math.random() * prioritized.length)] || null;
+        if (!target) continue;
+        selected.add(target);
+        const center = blockCenter(target);
+        run.nanoShots.push({ fromX: muzzle.x, fromY: muzzle.y, toX: center.x, toY: center.y,
+          target, startedAt: timestamp, hit: false, mech: true });
+      }
+      if (selected.size) mech.lastShotAt = timestamp;
+      return;
+    }
+    const origin = nanoDronePosition(0, timestamp);
+    const inRange = block => elementalDamageable(block) && !block.special
+      && blockCenter(block).y > run.slime.y + 8
+      && blockCenter(block).y - run.slime.y <= run.cellSize * NANO_RANGE_ROWS
+      && Math.abs(blockCenter(block).x - run.slime.x) <= run.cellSize * 2.2;
+    if (timestamp >= run.nanoNextShotAt[0]) {
+      run.nanoNextShotAt[0] = timestamp + NANO_SHOT_INTERVAL_MS;
+      const target = run.blocks.filter(inRange).sort((a, b) => {
+        const score = block => blockCenter(block).y - origin.y + Math.abs(blockCenter(block).x - origin.x) * .65;
+        return score(a) - score(b);
+      })[0];
+      if (target) {
+        const center = blockCenter(target);
+        run.nanoShots.push({ fromX: origin.x, fromY: origin.y + 11, toX: center.x, toY: center.y,
+          target, startedAt: timestamp, hit: false });
+      }
+    }
+    if (level < 2) return;
+    if (run.nanoMine && timestamp >= run.nanoMine.launchedAt + 320) {
+      const mine = run.nanoMine;
+      const center = { x: mine.toX, y: mine.toY };
+      const hitBlocks = [mine.target, ...nearbyGridBlocks(mine.target, elementalDamageable)
+        .filter(block => block.row === mine.target.row || block.col === mine.target.col)];
+      for (const block of hitBlocks) damageBlockByElement(block, 1, 'nanoMine', timestamp);
+      spawnSpecialBurst('bomb', center.x, center.y, 0, -1, .48);
+      run.nanoMine = null;
+    }
+    if (!run.nanoMine && timestamp >= run.nanoNextMineAt) {
+      const candidates = run.blocks.filter(inRange).sort((a, b) => blockCenter(b).y - blockCenter(a).y);
+      const target = candidates[Math.min(candidates.length - 1, Math.floor(Math.random() * Math.min(3, candidates.length)))];
+      if (!target) { run.nanoNextMineAt = timestamp + 800; return; }
       const center = blockCenter(target);
-      run.nanoShots.push({ fromX: origin.x, fromY: origin.y + 11, toX: center.x, toY: center.y, startedAt: timestamp });
-      damageBlockByElement(target, 1, 'nano', timestamp);
+      run.nanoEyeOpenedAt = timestamp;
+      run.nanoNextMineAt = timestamp + NANO_MINE_INTERVAL_MS;
+      run.nanoMine = { target, fromX: run.slime.x + run.slime.radius * .30,
+        fromY: run.slime.y, toX: center.x, toY: center.y,
+        markedAt: timestamp, launchedAt: timestamp + 420 };
     }
   }
 
@@ -4219,6 +5743,67 @@
   const TELEKINESIS_THROW_START_MS = 930;
   const TELEKINESIS_IMPACT_MS = 1450;
   const TELEKINESIS_THROW_OFFSETS = [0, -.82, .88, -.42, .5];
+  const TELEKINESIS_ULTIMATE_COUNT = 10;
+  const TELEKINESIS_ULTIMATE_ORBIT_MS = 1450;
+  const TELEKINESIS_ULTIMATE_STAGGER_MS = 185;
+  const TELEKINESIS_PRESS_DISTANCE_CELLS = 7 * 80 / 50; // Seven mine rows are 50 m.
+  const TELEKINESIS_PRESS_WINDUP_MS = 320;
+  const TELEKINESIS_PRESS_COLLIDE_MS = 1280;
+  const TELEKINESIS_PRESS_FADE_MS = 1050;
+
+  function telekinesisPressProgress(press, timestamp) {
+    const t = clamp((timestamp - press.startedAt - TELEKINESIS_PRESS_WINDUP_MS)
+      / (TELEKINESIS_PRESS_COLLIDE_MS - TELEKINESIS_PRESS_WINDUP_MS), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+
+  function startTelekinesisPress(timestamp, originY) {
+    const firstRow = Math.max(0, Math.floor((originY + run.slime.radius - run.blockRowOrigin) / run.cellSize) + 1);
+    const topY = run.blockRowOrigin + firstRow * run.cellSize;
+    const bottomY = Math.min(topY + TELEKINESIS_PRESS_DISTANCE_CELLS * run.cellSize, run.portalY - run.cellSize * .5);
+    const lastRow = Math.floor((bottomY - run.blockRowOrigin) / run.cellSize - .5);
+    const targets = [];
+    for (let row = firstRow; row <= lastRow; row += 1) {
+      for (const block of run.blocksByRow?.get(row) || []) {
+        if (!block.dead && !block.unbreakable) targets.push(block);
+      }
+    }
+    run.telekinesisPress = {
+      startedAt: timestamp, firstRow, lastRow, targets, targetSet: new Set(targets), collided: false,
+      topY, bottomY,
+      originX: run.slime.x, originY
+    };
+    run.telekinesisNextAt = timestamp + ELEMENTAL_ABILITY_DURATION_MS.telekinesis + 400;
+    run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil || 0, timestamp + TELEKINESIS_PRESS_COLLIDE_MS + 200);
+    run.emotion = 'power';
+    run.emotionUntil = timestamp + TELEKINESIS_PRESS_COLLIDE_MS;
+    run.shake = Math.max(run.shake, 4);
+  }
+
+  function updateTelekinesisPress(timestamp) {
+    const press = run?.telekinesisPress;
+    if (!press) return;
+    const elapsed = timestamp - press.startedAt;
+    if (elapsed < TELEKINESIS_PRESS_COLLIDE_MS) {
+      // The slime strains and hovers while moving an entire mine segment.
+      run.slime.vx *= .88;
+      run.slime.vy *= .82;
+      run.slime.y += (press.originY - run.slime.y) * .08;
+      run.shake = Math.max(run.shake, 3.5 + telekinesisPressProgress(press, timestamp) * 2.3);
+      return;
+    }
+    if (!press.collided) {
+      press.collided = true;
+      for (const block of press.targets) {
+        if (!block.dead) destroyBlock(block, 'telekinesisPress', timestamp);
+      }
+      run.shake = Math.max(run.shake, 12.5);
+      sound('epic');
+      feedback([24, 34, 22]);
+      impact('ПСИОНИЧЕСКИЙ ПРЕСС · 80 М');
+    }
+    if (elapsed > TELEKINESIS_PRESS_COLLIDE_MS + TELEKINESIS_PRESS_FADE_MS) run.telekinesisPress = null;
+  }
 
   function telekinesisCandidates() {
     const minY = run.slime.y + run.slime.radius * .75;
@@ -4230,30 +5815,49 @@
     });
   }
 
-  function startTelekinesisCycle(timestamp, level) {
+  function telekinesisOrbitPosition(projectile, elapsed) {
+    const angle = elapsed * .0023 + projectile.index * Math.PI * 2 / TELEKINESIS_ULTIMATE_COUNT;
+    const radius = run.slime.radius * 1.5 + run.cellSize * .5;
+    return {
+      x: clamp(run.slime.x + Math.cos(angle) * radius, 18, VIEW_W - 18),
+      y: run.slime.y - run.slime.radius * 1.8 - 20 + Math.sin(angle) * radius * .32
+    };
+  }
+
+  function startTelekinesisCycle(timestamp, level, ultimate = false) {
     const candidates = telekinesisCandidates();
     const selected = [];
-    for (let index = 0; index < 2 && candidates.length; index += 1) {
-      selected.push(candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0]);
+    const count = ultimate ? TELEKINESIS_ULTIMATE_COUNT : level >= 2 ? 2 : 1;
+    if (level >= 2 && !ultimate) {
+      const left = candidates.filter(block => blockCenter(block).x < run.slime.x);
+      const right = candidates.filter(block => blockCenter(block).x >= run.slime.x);
+      if (left.length && right.length) {
+        selected.push(left[Math.floor(Math.random() * left.length)], right[Math.floor(Math.random() * right.length)]);
+      }
     }
-    run.telekinesisNextAt = timestamp + (level >= 2 ? TELEKINESIS_THROW_INTERVAL_MS : TELEKINESIS_INTERVAL_MS);
-    if (!selected.length) return;
+    while (selected.length < count && candidates.length) {
+      const index = Math.floor(Math.random() * candidates.length);
+      const block = candidates.splice(index, 1)[0];
+      if (!selected.includes(block)) selected.push(block);
+    }
+    run.telekinesisNextAt = timestamp + (ultimate ? 6000 : level >= 2 ? TELEKINESIS_THROW_INTERVAL_MS : TELEKINESIS_INTERVAL_MS);
+    if (!selected.length) return false;
     run.telekinesisMarks = selected.map(block => ({
       x: block.x, y: block.y, w: block.w, h: block.h, startedAt: timestamp,
-      duration: level >= 2 ? 260 : 420
+      duration: ultimate ? 580 : 420
     }));
-    if (level < 2) {
-      for (const block of selected) damageBlockByElement(block, 1, 'telekinesisMark', timestamp);
-      return;
-    }
     run.telekinesisCycle = {
       startedAt: timestamp,
+      mode: ultimate ? 'ultimate' : level >= 2 ? 'cross' : 'single',
       projectiles: selected.map((block, index) => ({
         block,
         visual: { ...block },
         source: blockCenter(block),
-        side: block.x + block.w / 2 < run.slime.x ? -1 : 1,
-        delay: index * 160,
+        side: blockCenter(block).x < run.slime.x ? -1 : 1,
+        index,
+        delay: ultimate ? index * 42 : index * 90,
+        throwAt: ultimate ? TELEKINESIS_ULTIMATE_ORBIT_MS + index * TELEKINESIS_ULTIMATE_STAGGER_MS : TELEKINESIS_THROW_START_MS + index * 90,
+        impactAt: ultimate ? TELEKINESIS_ULTIMATE_ORBIT_MS + index * TELEKINESIS_ULTIMATE_STAGGER_MS + 470 : TELEKINESIS_IMPACT_MS + index * 90,
         detached: false,
         launched: false,
         impacted: false,
@@ -4261,29 +5865,35 @@
         launchFrom: null
       }))
     };
+    if (ultimate) run.elementalAbilityUntil = Math.max(run.elementalAbilityUntil, timestamp + 4550);
+    return true;
   }
 
-  function launchTelekinesisProjectile(projectile, timestamp) {
+  function launchTelekinesisProjectile(projectile, cycle, timestamp) {
     const slime = run.slime;
     const offset = TELEKINESIS_THROW_OFFSETS[run.telekinesisThrowIndex % TELEKINESIS_THROW_OFFSETS.length];
     run.telekinesisThrowIndex += 1;
-    const desiredX = clamp(slime.x + offset * run.cellSize, run.cellSize / 2, VIEW_W - run.cellSize / 2);
-    const impactBlock = run.blocks
-      .filter(block => elementalDamageable(block) && !block.special
-        && block.y + block.h / 2 > slime.y + slime.radius
-        && block.y + block.h / 2 < run.cameraY + VIEW_H - 10)
-      .sort((a, b) => {
-        const score = block => Math.abs(block.x + block.w / 2 - desiredX) * 1.3
-          + Math.abs(block.y + block.h / 2 - (slime.y + run.cellSize * 2.5)) * .5;
-        return score(a) - score(b);
-      })[0];
+    const desiredX = cycle.mode === 'cross'
+      ? projectile.side < 0 ? VIEW_W * .78 : VIEW_W * .22
+      : cycle.mode === 'ultimate' ? run.cellSize * (.5 + (projectile.index * 3) % Math.max(1, Math.floor(VIEW_W / run.cellSize)))
+        : slime.x + offset * run.cellSize;
+    const aimedX = clamp(desiredX, run.cellSize / 2, VIEW_W - run.cellSize / 2);
+    let impactBlock = null;
+    let bestScore = Infinity;
+    for (const block of run.blocks) {
+      if (!elementalDamageable(block) || block.special) continue;
+      const center = blockCenter(block);
+      if (center.y <= slime.y + slime.radius || center.y >= run.cameraY + VIEW_H - 10) continue;
+      const score = Math.abs(center.x - aimedX) * 1.3
+        + Math.abs(center.y - (slime.y + run.cellSize * 2.5)) * .5;
+      if (score < bestScore) { bestScore = score; impactBlock = block; }
+    }
     projectile.target = impactBlock
       ? { ...blockCenter(impactBlock), row: impactBlock.row, col: impactBlock.col }
-      : { x: desiredX, y: Math.min(run.cameraY + VIEW_H - 20, slime.y + run.cellSize * 2.6), row: null, col: null };
-    projectile.launchFrom = {
-      x: slime.x + projectile.side * (slime.radius + 22),
-      y: slime.y - slime.radius * .2 - 12
-    };
+      : { x: aimedX, y: Math.min(run.cameraY + VIEW_H - 20, slime.y + run.cellSize * 2.6), row: null, col: null };
+    projectile.launchFrom = cycle.mode === 'ultimate'
+      ? telekinesisOrbitPosition(projectile, timestamp - cycle.startedAt)
+      : { x: slime.x + projectile.side * (slime.radius + 12), y: slime.y - slime.radius * .2 };
     projectile.launched = true;
   }
 
@@ -4292,9 +5902,14 @@
     if (!target) return;
     run.telekinesisBursts.push({ x: target.x, y: target.y, startedAt: timestamp });
     if (target.row != null && target.col != null) {
-      const affected = run.blocks.filter(block => elementalDamageable(block) && !block.special
-        && Math.abs(block.row - target.row) + Math.abs(block.col - target.col) <= 1);
-      for (const block of affected) damageBlockByElement(block, 1, 'telekinesisBlast', timestamp);
+      for (let row = target.row - 1; row <= target.row + 1; row += 1) {
+        for (const block of run.blocksByRow?.get(row) || run.blocks) {
+          if (elementalDamageable(block) && !block.special
+            && Math.abs(block.row - target.row) + Math.abs(block.col - target.col) <= 1) {
+            damageBlockByElement(block, 1, 'telekinesisBlast', timestamp);
+          }
+        }
+      }
     }
     run.shake = Math.max(run.shake, 2.3);
   }
@@ -4308,16 +5923,15 @@
     const cycle = run.telekinesisCycle;
     if (cycle) {
       for (const projectile of cycle.projectiles) {
-        const elapsed = timestamp - cycle.startedAt - projectile.delay;
-        if (elapsed >= TELEKINESIS_PULL_START_MS && !projectile.detached) {
+        const elapsed = timestamp - cycle.startedAt;
+        if (elapsed >= TELEKINESIS_PULL_START_MS + projectile.delay && !projectile.detached) {
           if (!projectile.block.dead) {
-            damageBlockByElement(projectile.block, 1, 'telekinesisLift', timestamp);
-            if (!projectile.block.dead) destroyBlock(projectile.block, 'telekinesisLift', timestamp);
+            destroyBlock(projectile.block, 'telekinesisLift', timestamp);
           }
           projectile.detached = true;
         }
-        if (elapsed >= TELEKINESIS_THROW_START_MS && !projectile.launched) launchTelekinesisProjectile(projectile, timestamp);
-        if (elapsed >= TELEKINESIS_IMPACT_MS && !projectile.impacted) {
+        if (elapsed >= projectile.throwAt && !projectile.launched) launchTelekinesisProjectile(projectile, cycle, timestamp);
+        if (elapsed >= projectile.impactAt && !projectile.impacted) {
           impactTelekinesisProjectile(projectile, timestamp);
           projectile.impacted = true;
         }
@@ -4325,10 +5939,23 @@
       if (cycle.projectiles.every(projectile => projectile.impacted)) run.telekinesisCycle = null;
       return;
     }
+    if (run.telekinesisPress) return;
+    if (run.telekinesisUltimatePending) {
+      if (run.elementalAbilityActive !== 'telekinesis' || timestamp >= run.elementalAbilityUntil) {
+        run.telekinesisUltimatePending = false;
+        return;
+      }
+      if (startTelekinesisCycle(timestamp, level, true)) run.telekinesisUltimatePending = false;
+      return;
+    }
+    if (run.elementalAbilityActive === 'telekinesis' && timestamp < run.elementalAbilityUntil) return;
     if (timestamp >= run.telekinesisNextAt) startTelekinesisCycle(timestamp, level);
   }
 
-  const MAX_MINI_SLIMES = 20;
+  const MAX_MINI_SLIMES = 12;
+  const MAX_SPORE_PODS = 10;
+  const MAX_SPORE_PROJECTILES = 10;
+  const SPORE_GROW_MS = 1000;
   const CLONE_ULTIMATE_BURST_MS = 540;
 
   function cloningTimeScale(timestamp) {
@@ -4339,48 +5966,142 @@
     return lerp(.24, 1, clamp((age - CLONE_ULTIMATE_BURST_MS) / 280, 0, 1));
   }
 
-  function cloneSplash(x, y, count = 7, force = 1) {
-    const amount = Math.max(2, Math.round(count * effectDensity()));
+  function sporeBurst(x, y, count = 7, force = 1) {
+    const amount = Math.max(1, Math.round(count * .78 * effectDensity()));
     for (let index = 0; index < amount; index += 1) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = rand(45, 155) * force;
-      const life = rand(.3, .58);
+      const angle = count >= 30
+        ? index * Math.PI * 2 / amount + rand(-.08, .08)
+        : Math.random() * Math.PI * 2;
+      const speed = rand(55, 145) * force;
+      const life = rand(.58, .94);
       run.particles.push({
-        kind: 'special', shape: 'orb', x, y,
-        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 30,
-        gravity: 185, life, maxLife: life, size: rand(2.3, 4.5),
-        color: index % 3 === 0 ? '#d8ffb1' : index % 2 ? '#4be878' : '#89f59b'
+        kind: 'special', shape: 'spore', x, y,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        gravity: -12, life, maxLife: life, size: rand(2.6, 4.6),
+        wanderPhase: rand(0, Math.PI * 2), wanderRate: rand(5, 8),
+        wanderAmplitude: rand(25, 45),
+        color: index % 3 === 0 ? '#f6ffd0' : index % 2 ? '#b6ff64' : '#65e885'
       });
     }
+    trimParticles(250);
   }
 
-  function spawnMiniSlime(angle, speed, bounces, sourceBlockId, timestamp) {
+  function spawnMiniSlime(angle, speed, bounces, sourceBlockId, timestamp, origin = run.slime, ultimateSource = false) {
     if (run.miniSlimes.length >= MAX_MINI_SLIMES) run.miniSlimes.shift();
-    const slime = run.slime;
     const radius = Math.max(10, run.cellSize * .185);
     run.miniSlimes.push({
-      x: slime.x + Math.cos(angle) * (slime.radius * .72),
-      y: slime.y + Math.sin(angle) * (slime.radius * .72),
-      vx: Math.cos(angle) * speed + slime.vx * .08,
-      vy: Math.sin(angle) * speed + slime.vy * .06,
-      radius, bouncesLeft: bounces, sourceBlockId,
-      ignoreSourceUntil: timestamp + 170, ignoreBlockId: '', ignoreBlockUntil: 0,
-      bornAt: timestamp, life: bounces === 2 ? 3.5 : 2.7, dead: false
+      x: origin.x + Math.cos(angle) * radius * .6,
+      y: origin.y + Math.sin(angle) * radius * .6,
+      vx: Math.cos(angle) * speed + (origin.vx || 0) * .08,
+      vy: Math.sin(angle) * speed + (origin.vy || 0) * .06,
+      radius, bouncesLeft: bounces, sourceBlockId, ultimateSource,
+      ignoreSourceUntil: timestamp + 700, ignoreBlockId: '', ignoreBlockUntil: 0,
+      bornAt: timestamp, lastSporeAt: timestamp, life: bounces > 0 ? 4.6 : 2.7, dead: false
     });
   }
 
-  function spawnImpactClones(block, collision, timestamp) {
-    const level = elementalLevel('cloning');
-    if (!level || run.portalEntry || run.ended || timestamp - run.lastCloneBounceAt < 100
-      || (run.elementalAbilityActive === 'cloning' && timestamp < run.elementalAbilityUntil)) return;
-    run.lastCloneBounceAt = timestamp;
-    const sides = level >= 2 ? [-1, 1] : [Math.abs(collision.nx) > .3 ? Math.sign(collision.nx) : run.cloneSide];
-    run.cloneSide *= -1;
-    for (const side of sides) {
-      const angle = side < 0 ? Math.PI + rand(-.24, .24) : rand(-.24, .24);
-      spawnMiniSlime(angle, rand(225, 275), 1, block.id, timestamp);
+  function findSporeTarget(row, preferredCol = Math.floor(Math.random() * run.columns)) {
+    const options = [];
+    for (const rowOffset of [0, 1, -1]) {
+      for (const block of run.blocksByRow?.get(row + rowOffset) || []) {
+        if (!elementalDamageable(block) || block.sporePod
+          || run.sporeProjectiles.some(projectile => projectile.block === block)) continue;
+        options.push({ block, score: Math.abs(block.col - preferredCol) * 2 + Math.abs(rowOffset) * 3 + Math.random() });
+      }
     }
-    cloneSplash(run.slime.x, run.slime.y, level >= 2 ? 11 : 7);
+    options.sort((a, b) => a.score - b.score);
+    return options[0]?.block || null;
+  }
+
+  function launchSpore(block, timestamp, { x = run.slime.x, y = run.slime.y, delay = 0, automatic = false, order = 0 } = {}) {
+    if (!block || run.sporeProjectiles.length >= MAX_SPORE_PROJECTILES) return false;
+    const launchedAt = timestamp + delay;
+    run.sporeProjectiles.push({ block, x, y, launchedAt,
+      landsAt: launchedAt + clamp(Math.hypot(block.x + block.w / 2 - x, block.y - y) * 1.5 + 420, 940, 1520),
+      arcSide: order % 2 ? -1 : 1,
+      automatic, order });
+    return true;
+  }
+
+  function sporeFlightPoint(projectile, timestamp) {
+    const progress = clamp((timestamp - projectile.launchedAt) / (projectile.landsAt - projectile.launchedAt), 0, 1);
+    const t = progress * progress * (3 - 2 * progress);
+    const inverse = 1 - t;
+    const target = blockCenter(projectile.block);
+    const controlX = (projectile.x + target.x) * .5 + projectile.arcSide * run.cellSize * .88;
+    const controlY = projectile.y - run.cellSize * 1.35;
+    return {
+      x: inverse * inverse * projectile.x + 2 * inverse * t * controlX + t * t * target.x,
+      y: inverse * inverse * projectile.y + 2 * inverse * t * controlY + t * t * target.y,
+      progress
+    };
+  }
+
+  function detonateSporePod(pod, timestamp) {
+    if (!pod || pod.detonated) return;
+    pod.detonated = true;
+    if (pod.block.sporePod === pod) pod.block.sporePod = null;
+    const center = blockCenter(pod.block);
+    const cause = pod.automatic ? 'sporeUltimate' : 'sporeExplosion';
+    run.sporeBursts.push({ x: center.x, y: center.y, startedAt: timestamp });
+    sporeBurst(center.x, center.y, isLowPowerDevice() ? 8 : 13, 1.1);
+    run.shake = Math.max(run.shake, 2.5);
+    for (let row = pod.block.row - 1; row <= pod.block.row + 1; row += 1) {
+      for (const neighbor of run.blocksByRow?.get(row) || []) {
+        if (neighbor === pod.block || Math.abs(neighbor.col - pod.block.col) > 1 || !elementalDamageable(neighbor)) continue;
+        damageBlockByElement(neighbor, 1, cause, timestamp);
+      }
+    }
+    if (elementalDamageable(pod.block)) {
+      damageBlockByElement(pod.block, Math.max(1, pod.block.hp), cause, timestamp);
+    }
+    if (pod.spawnMinis) {
+      for (const angle of [Math.PI * .25, Math.PI * .5, Math.PI * .75]) {
+        spawnMiniSlime(angle + rand(-.12, .12), rand(170, 210), 2, pod.block.id, timestamp, center, pod.automatic);
+      }
+    }
+  }
+
+  function updateSpores(timestamp) {
+    const level = elementalLevel('cloning');
+    if (level) ensureSporeSprites();
+    if (level && !run.portalEntry && !run.ended && run.elementalAbilityActive !== 'cloning') {
+      if (!run.nextSporeAt) run.nextSporeAt = timestamp + 1900;
+      if (timestamp >= run.nextSporeAt) {
+        run.nextSporeAt = timestamp + rand(3500, 4600);
+        if (run.sporePods.length < MAX_SPORE_PODS && run.sporeProjectiles.length < MAX_SPORE_PROJECTILES - 8) {
+          const slimeRow = Math.floor((run.slime.y - run.blockRowOrigin) / run.cellSize);
+          const target = findSporeTarget(slimeRow + 7);
+          if (target) launchSpore(target, timestamp);
+        }
+      }
+    }
+    if (run.sporeProjectiles.length) run.sporeProjectiles = run.sporeProjectiles.filter(projectile => {
+      if (projectile.block.dead || timestamp > projectile.landsAt + 1000) return false;
+      if (timestamp < projectile.landsAt) return true;
+      if (projectile.block.sporePod) return false;
+      const pod = { block: projectile.block, plantedAt: timestamp, detonated: false,
+        spawnMinis: level >= 2, automatic: projectile.automatic,
+        autoDetonateAt: projectile.automatic ? timestamp + SPORE_GROW_MS + 350 + projectile.order * 75 : 0,
+        expiresAt: timestamp + 14000 };
+      projectile.block.sporePod = pod;
+      if (run.sporePods.length >= MAX_SPORE_PODS) {
+        const oldest = run.sporePods.shift();
+        if (oldest.block.sporePod === oldest) oldest.block.sporePod = null;
+      }
+      run.sporePods.push(pod);
+      return false;
+    });
+    for (const pod of run.sporePods) {
+      if (pod.detonated || pod.block.dead) continue;
+      if (pod.autoDetonateAt && timestamp >= pod.autoDetonateAt) detonateSporePod(pod, timestamp);
+      else if (timestamp >= pod.expiresAt) {
+        pod.detonated = true;
+        if (pod.block.sporePod === pod) pod.block.sporePod = null;
+      }
+    }
+    if (run.sporePods.length) run.sporePods = run.sporePods.filter(pod => !pod.detonated && !pod.block.dead);
+    if (run.sporeBursts.length) run.sporeBursts = run.sporeBursts.filter(burst => timestamp - burst.startedAt < 520);
   }
 
   function updateCloningUltimate(timestamp) {
@@ -4389,12 +6110,14 @@
     const age = timestamp - ultimate.startedAt;
     if (!ultimate.fired && age >= CLONE_ULTIMATE_BURST_MS) {
       ultimate.fired = true;
-      if (run.miniSlimes.length > 5) run.miniSlimes.splice(0, run.miniSlimes.length - 5);
-      for (let index = 0; index < 15; index += 1) {
-        const angle = -Math.PI / 2 + index * Math.PI * 2 / 15 + rand(-.055, .055);
-        spawnMiniSlime(angle, rand(235, 285), 2, ultimate.sourceBlockId, timestamp);
+      const slimeRow = Math.floor((ultimate.y - run.blockRowOrigin) / run.cellSize);
+      for (let index = 0; index < 8; index += 1) {
+        const target = findSporeTarget(slimeRow + 3 + index * 2,
+          (index * 3 + Math.floor(index / 2)) % run.columns);
+        if (target) launchSpore(target, timestamp, { x: ultimate.x, y: ultimate.y,
+          delay: index * 145, automatic: true, order: index });
       }
-      cloneSplash(run.slime.x, run.slime.y, 32, 1.55);
+      sporeBurst(ultimate.x, ultimate.y, 18, 1.4);
       run.shake = Math.max(run.shake, 5);
       feedback([8, 17, 8]);
     }
@@ -4429,27 +6152,39 @@
       for (let step = 0; step < steps && !mini.dead; step += 1) {
         mini.x += mini.vx * stepDt;
         mini.y += mini.vy * stepDt;
-        if (mini.x < -mini.radius || mini.x > VIEW_W + mini.radius
-          || mini.y < run.cameraY - 50 || mini.y > run.cameraY + VIEW_H + 70) {
+        if (mini.x < mini.radius) { mini.x = mini.radius; mini.vx = Math.max(95, Math.abs(mini.vx) * .8); }
+        if (mini.x > VIEW_W - mini.radius) { mini.x = VIEW_W - mini.radius; mini.vx = -Math.max(95, Math.abs(mini.vx) * .8); }
+        if (mini.y < run.cameraY - 50 || mini.y > run.cameraY + VIEW_H + 70) {
           mini.dead = true;
           break;
         }
         const hit = miniCloneCollision(mini, timestamp);
         if (!hit) continue;
         const { block, collision } = hit;
-        cloneSplash(mini.x, mini.y, 5, .6);
+        sporeBurst(mini.x, mini.y, 5, .6);
         if (block.hazard || block.unbreakable) { mini.dead = true; break; }
-        damageBlockByElement(block, 1, 'cloning', timestamp);
+        damageBlockByElement(block, 1, mini.ultimateSource ? 'sporeUltimate' : 'cloning', timestamp);
         if (mini.bouncesLeft <= 0) { mini.dead = true; break; }
         mini.bouncesLeft -= 1;
         mini.x += collision.nx * (collision.penetration + 4);
         mini.y += collision.ny * (collision.penetration + 4);
-        const inward = mini.vx * collision.nx + mini.vy * collision.ny;
-        mini.vx = (mini.vx - 2 * inward * collision.nx) * .88;
-        mini.vy = (mini.vy - 2 * inward * collision.ny) * .88 - 20;
+        applyBlockBounce(mini, collision, { hazard: false, timestamp, isolated: true, steeringEnabled: false });
         mini.ignoreBlockId = block.id;
         mini.ignoreBlockUntil = timestamp + 145;
         break;
+      }
+      if (!mini.dead && timestamp - mini.lastSporeAt >= 155) {
+        mini.lastSporeAt = timestamp;
+        const life = rand(.38, .62);
+        run.particles.push({
+          kind: 'special', shape: 'spore',
+          x: mini.x - mini.vx * .035, y: mini.y - mini.vy * .035,
+          vx: rand(-30, 30) - mini.vx * .13, vy: rand(-38, 12) - mini.vy * .13,
+          gravity: -10, life, maxLife: life, size: rand(2.1, 3.5),
+          wanderPhase: rand(0, Math.PI * 2), wanderRate: rand(5, 8),
+          wanderAmplitude: rand(18, 30),
+          color: Math.random() < .5 ? '#c6ff77' : '#efffc8'
+        });
       }
     }
     run.miniSlimes = run.miniSlimes.filter(mini => !mini.dead);
@@ -4475,6 +6210,7 @@
 
   function goldifyBlock(block, timestamp = performance.now()) {
     if (!goldEligible(block) || block.elementalGolden) return false;
+    shareGlitchHit(block, 0, timestamp, 'gold');
     block.elementalGolden = true;
     block.goldFlashUntil = timestamp + 700;
     block.maxHp = 1;
@@ -4522,8 +6258,7 @@
       : type === 'firePulse' ? .5
         : type === 'frostTouch' ? .38
           : type === 'snowShard' ? .72
-            : type === 'snowballArc' ? 1.02
-        : type === 'snowballKnockback' ? .62
+            : type === 'snowballKnockback' ? .62
           : type === 'coinArc' ? .72
             : type === 'categoryBlast' ? .48
               : .58;
@@ -4531,16 +6266,19 @@
     if (run.specialEffects.length > 36) run.specialEffects.shift();
   }
 
-  function markFrostTransformation(block, timestamp, kind) {
+  function markFrostTransformation(block, timestamp, kind, quiet = false) {
     block.frostTransformStartedAt = timestamp;
     block.frostTransformDuration = kind === 'snowflake' ? 620 : 470;
     block.frostReservedUntil = 0;
-    const center = blockCenter(block);
-    pushElementalEffect('frostTouch', center.x, center.y, { compact: kind !== 'snowflake' });
+    if (!quiet) {
+      const center = blockCenter(block);
+      pushElementalEffect('frostTouch', center.x, center.y, { compact: kind !== 'snowflake' });
+    }
   }
 
-  function turnBlockToSnow(block, timestamp = performance.now()) {
+  function turnBlockToSnow(block, timestamp = performance.now(), quiet = false) {
     if (!frostFreezable(block) || block.elementalSnow || block.elementalSnowflake) return false;
+    shareGlitchHit(block, 0, timestamp, 'snow');
     ensureWorldSprites(2);
     block.elementalSnow = true;
     block.elementalFrozen = false;
@@ -4548,13 +6286,14 @@
     block.maxHp = 1;
     block.hp = 1;
     block.frostFlashUntil = timestamp + 520;
-    markFrostTransformation(block, timestamp, 'snow');
+    markFrostTransformation(block, timestamp, 'snow', quiet);
     createDebris(block, 2, false);
     return true;
   }
 
   function turnBlockToSnowflake(block, timestamp = performance.now()) {
     if (!frostFreezable(block) || block.elementalSnowflake) return false;
+    shareGlitchHit(block, 0, timestamp, 'snowflake');
     ensureWorldSprites(2);
     block.elementalSnow = false;
     block.elementalSnowflake = true;
@@ -4636,35 +6375,66 @@
     return transformed;
   }
 
-  function seedFrostSnowflakes(timestamp = performance.now()) {
+  function startFrostStorm(timestamp) {
     ensureWorldSprites(2);
-    const source = {
-      row: Math.floor((run.slime.y - 285) / run.cellSize),
-      col: Math.floor((run.slime.x - run.gridLeft) / run.cellSize)
+    run.frostStorm = {
+      startedAt: timestamp,
+      endAt: timestamp + ELEMENTAL_ABILITY_DURATION_MS.frost,
+      nextFlakeAt: timestamp + 130,
+      lastTargetX: -VIEW_W,
+      flakes: []
     };
-    const targetCount = 7 + Math.floor(Math.random() * 4);
-    const viewportBottom = run.cameraY + VIEW_H;
-    const candidates = run.blocks
-      .filter(block => frostTargetAvailable(block, timestamp) && block.row >= source.row + 3)
-      .map(block => {
-        const center = blockCenter(block);
-        const visible = center.y <= viewportBottom + run.cellSize;
-        const depthBonus = clamp((block.row - source.row) / 16, 0, 1) * 1.4;
-        return { block, score: snowTargetScore(block, source, visible) + depthBonus + Math.random() };
-      })
-      .sort((a, b) => b.score - a.score)
-      .map(item => item.block);
-    const targets = chooseSpacedFrostTargets(candidates, targetCount, source);
-    const origin = { x: run.slime.x, y: run.slime.y };
-    targets.forEach((block, index) => {
-      const target = blockCenter(block);
-      const delay = .16 + index * .115;
-      reserveFrostProjectileTarget(block, timestamp, 1.02, delay);
-      pushElementalEffect('snowballArc', origin.x, origin.y, {
-        toX: target.x, toY: target.y, targetBlockId: block.id, transformKind: 'snowflake', delay
-      });
+  }
+
+  function launchFrostStormFlake(storm, timestamp) {
+    if (storm.flakes.length >= 12) return false;
+    const minY = Math.max(run.cameraY + 85, run.slime.y + run.cellSize * .45);
+    const maxY = run.cameraY + VIEW_H - 18;
+    if (minY >= maxY) return false;
+    const candidates = blocksNearY((minY + maxY) / 2, (maxY - minY) / 2)
+      .filter(block => frostTargetAvailable(block, timestamp)
+        && blockCenter(block).y >= minY && blockCenter(block).y <= maxY);
+    if (!candidates.length) return false;
+    let target = null;
+    let best = -Infinity;
+    for (const block of candidates) {
+      const center = blockCenter(block);
+      const spread = clamp(Math.abs(center.x - storm.lastTargetX) / (run.cellSize * 3), 0, 1);
+      const depth = clamp((center.y - run.slime.y) / (run.cellSize * 7), 0, 1);
+      const score = Math.random() * 2 + spread * 1.8 + depth * .7;
+      if (score > best) { best = score; target = block; }
+    }
+    const center = blockCenter(target);
+    const fromY = run.cameraY - rand(18, 42);
+    const duration = clamp((center.y - fromY) * 1.55, 620, 1160);
+    target.frostReservedUntil = timestamp + duration + 250;
+    storm.lastTargetX = center.x;
+    storm.flakes.push({
+      target, startedAt: timestamp, duration,
+      fromX: clamp(center.x + rand(-48, 48), 9, VIEW_W - 9), fromY,
+      toX: center.x, toY: center.y,
+      sway: rand(7, 21) * (Math.random() < .5 ? -1 : 1),
+      phase: rand(0, Math.PI * 2), size: rand(7, 10.5)
     });
-    return targets.length;
+    return true;
+  }
+
+  function updateFrostStorm(timestamp) {
+    const storm = run?.frostStorm;
+    if (!storm) return;
+    if (timestamp < storm.endAt - 650 && timestamp >= storm.nextFlakeAt) {
+      launchFrostStormFlake(storm, timestamp);
+      const progress = clamp((timestamp - storm.startedAt) / (storm.endAt - storm.startedAt), 0, 1);
+      const cadence = progress < .12 || progress > .82 ? rand(180, 250) : rand(120, 185);
+      storm.nextFlakeAt = timestamp + cadence;
+    }
+    storm.flakes = storm.flakes.filter(flake => {
+      if (timestamp - flake.startedAt < flake.duration) return true;
+      flake.target.frostReservedUntil = 0;
+      if (!flake.target.dead) turnBlockToSnow(flake.target, timestamp, true);
+      return false;
+    });
+    if (timestamp >= storm.endAt && !storm.flakes.length) run.frostStorm = null;
   }
 
   function igniteBlock(block, timestamp = performance.now(), auraId = 0) {
@@ -4672,10 +6442,29 @@
     if (auraId && block.lastFireAuraId === auraId) return false;
     if (auraId) block.lastFireAuraId = auraId;
     if (block.fireDamageAt > timestamp) return false;
+    shareGlitchHit(block, 0, timestamp, 'fire');
     block.fireIgnitedAt = timestamp;
     block.fireDamageAt = timestamp + 1000;
     block.fireFlashUntil = block.fireDamageAt + 360;
+    block.fireUltimateAuraId = auraId || 0;
     return true;
+  }
+
+  function updatePhoenixUltimate(timestamp) {
+    const phoenix = run.phoenixUltimate;
+    if (!phoenix) return;
+    const progress = clamp((timestamp - phoenix.startedAt) / phoenix.duration, 0, 1);
+    const headY = phoenix.originY - run.cellSize * 1.15
+      + progress * run.cellSize * (PHOENIX_FIRE_ROWS + 1.15);
+    const lastReachedRow = Math.min(phoenix.endRow,
+      Math.floor((headY - run.blockRowOrigin - run.cellSize * .5) / run.cellSize));
+    for (let row = phoenix.lastRow + 1; row <= lastReachedRow; row += 1) {
+      for (const block of run.blocksByRow?.get(row) || []) igniteBlock(block, timestamp, phoenix.auraId);
+      run.phoenixWaves.push({ y: run.blockRowOrigin + (row + .5) * run.cellSize, startedAt: timestamp });
+      phoenix.lastRow = row;
+    }
+    if (lastReachedRow >= phoenix.startRow) run.shake = Math.max(run.shake, 2.8);
+    if (progress >= 1) run.phoenixUltimate = null;
   }
 
   function spreadFireFrom(source, timestamp) {
@@ -4685,21 +6474,28 @@
       .sort(() => Math.random() - .5);
     const target = candidates[0];
     if (!target) return;
-    igniteBlock(target, timestamp);
+    igniteBlock(target, timestamp, source.fireUltimateAuraId || 0);
     const from = blockCenter(source);
     const to = blockCenter(target);
     pushElementalEffect('firePulse', to.x, to.y, { fromX: from.x, fromY: from.y });
   }
 
+  function spreadFireFromBrokenBlock(block, timestamp, cause = '') {
+    if (cause !== 'fire' && cause !== 'fireUltimate'
+      && !(block.fireDamageAt > timestamp || block.fireFlashUntil > timestamp)) return;
+    spreadFireFrom(block, timestamp);
+  }
+
   function damageBlockByElement(block, amount, cause, timestamp = performance.now()) {
     if (!elementalDamageable(block)) return false;
+    if (block.sporePod && cause !== 'sporeExplosion') detonateSporePod(block.sporePod, timestamp);
+    if (block.dead) return false;
     const damage = Math.max(0, amount);
+    if (cause !== 'glitchEcho') shareGlitchHit(block, damage, timestamp);
     block.hp = Math.max(0, block.hp - damage);
-    if (cause === 'electric') {
-      const blue = elementalLevel('electric') >= 3 || (run.elementalAbilityActive === 'electric' && timestamp < run.elementalAbilityUntil);
+    if (cause === 'electric' || cause === 'electricStorm') {
       block.electricFlashStartedAt = timestamp;
-      block.electricFlashUntil = timestamp + 430;
-      block.electricFlashColor = blue ? 'blue' : 'yellow';
+      block.electricFlashUntil = timestamp + 620;
     }
     if (block.hp > 0) {
       createDebris(block, 2, false);
@@ -4707,7 +6503,6 @@
     }
     block.hp = 0;
     destroyBlock(block, cause, timestamp);
-    if (cause === 'fire') spreadFireFrom(block, timestamp);
     return true;
   }
 
@@ -4741,18 +6536,122 @@
     const targets = electricChainTargets(first, count);
     if (!targets.length) return 0;
     const points = [origin, ...targets.map(blockCenter)];
-    const blue = elementalLevel('electric') >= 3 || (run.elementalAbilityActive === 'electric' && timestamp < run.elementalAbilityUntil);
     targets.forEach((block, index) => {
       damageBlockByElement(block, 1, 'electric', timestamp);
-      block.electricFlashStartedAt = timestamp + index * 54;
-      block.electricFlashUntil = block.electricFlashStartedAt + 430;
-      block.electricFlashColor = blue ? 'blue' : 'yellow';
+      block.electricFlashStartedAt = timestamp + index * 155;
+      block.electricFlashUntil = block.electricFlashStartedAt + 620;
     });
-    const life = .34 + targets.length * .075;
+    const life = .68 + targets.length * .155;
     pushElementalEffect('electricArc', origin.x, origin.y, {
-      points, colorMode: blue ? 'blue' : 'yellow', seed: Math.random() * 1000, life, maxLife: life
+      points, seed: Math.random() * 1000, life, maxLife: life
     });
     return targets.length;
+  }
+
+  function chooseElectricStormTarget(storm) {
+    const low = run.slime.y + run.cellSize * .85;
+    const high = Math.min(run.slime.y + run.cellSize * 6.2, run.cameraY + VIEW_H - 34);
+    const desiredY = run.slime.y + run.cellSize * (2.4 + storm.strikes % 3 * .65);
+    const desiredX = VIEW_W * [ .34, .68, .48, .72, .3 ][storm.strikes];
+    const available = run.blocks.filter(block => {
+      if (!elementalDamageable(block) || storm.usedTargets.has(block.id)) return false;
+      const y = block.y + block.h / 2;
+      return y >= low && y <= high;
+    });
+    const fallback = available.length ? available : run.blocks.filter(block =>
+      elementalDamageable(block) && !storm.usedTargets.has(block.id)
+      && block.y + block.h / 2 > low && block.y + block.h / 2 < low + run.cellSize * 10);
+    return fallback.map(block => {
+      const center = blockCenter(block);
+      const openSides = [[-1, 0], [1, 0], [0, -1], [0, 1]].filter(([dx, dy]) =>
+        run.blocksByRow?.get(block.row + dy)?.some(neighbor =>
+          neighbor.col === block.col + dx && elementalDamageable(neighbor))).length;
+      return { block, score: Math.abs(center.y - desiredY) * .8
+        + Math.abs(center.x - desiredX) * .55
+        + Math.abs(block.col - 2.5) * run.cellSize * .28
+        + (4 - openSides) * run.cellSize * 1.15 + rand(-16, 16) };
+    }).sort((a, b) => a.score - b.score)[0]?.block || null;
+  }
+
+  function spawnElectricIncineration(block) {
+    const center = blockCenter(block);
+    const particleCount = scaledEffectCount(20, 10);
+    for (let index = 0; index < particleCount; index += 1) {
+      const angle = index * Math.PI * 2 / particleCount + rand(-.18, .18);
+      const smoke = index % 3 === 0;
+      const life = smoke ? rand(.58, .9) : rand(.32, .57);
+      run.particles.push({
+        kind: 'special', shape: smoke ? 'smoke' : 'streak',
+        x: center.x + rand(-7, 7), y: center.y + rand(-7, 7),
+        vx: Math.cos(angle) * rand(45, 155),
+        vy: Math.sin(angle) * rand(45, 155) - (smoke ? 55 : 0),
+        life, maxLife: life, size: smoke ? rand(8, 15) : rand(3, 6),
+        color: smoke ? '#353c47' : index % 2 ? '#eaffff' : '#58dcff'
+      });
+    }
+    trimParticles(180);
+  }
+
+  function launchElectricStormStrike(storm, timestamp) {
+    const target = chooseElectricStormTarget(storm);
+    const targetPoint = target ? blockCenter(target) : {
+      x: VIEW_W * [ .34, .68, .48, .72, .3 ][storm.strikes],
+      y: Math.min(run.cameraY + VIEW_H - 35, run.slime.y + run.cellSize * 3)
+    };
+    if (target) storm.usedTargets.add(target.id);
+    const cloudX = clamp(targetPoint.x * .68 + VIEW_W * .16, VIEW_W * .17, VIEW_W * .83);
+    run.electricStormBolts.push({
+      from: { x: cloudX, y: 68 }, to: targetPoint, fromScreen: true,
+      startedAt: timestamp, until: timestamp + 520, seed: Math.random() * 10000,
+      trunk: true
+    });
+    storm.flashUntil = timestamp + 220;
+    run.shake = Math.max(run.shake, 8);
+    sound('hitHard');
+    feedback([13, 27, 13]);
+    if (!target) return;
+
+    // The struck block is incinerated as the four chains spread from its position.
+    target.electricFlashStartedAt = timestamp + 135;
+    target.electricFlashUntil = timestamp + 680;
+    run.electricStormHits.push({ block: target, at: timestamp + 155, incinerate: true });
+    const visited = new Set([target.id]);
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    for (const [dx, dy] of directions) {
+      let current = target;
+      for (let step = 0; step < ELECTRIC_STORM_BRANCH_LENGTH; step += 1) {
+        const candidates = nearbyGridBlocks(current, elementalDamageable)
+          .filter(block => !visited.has(block.id));
+        const forward = candidates.filter(block =>
+          (block.col - current.col) * dx + (block.row - current.row) * dy > 0);
+        const pool = forward.length ? forward : step ? candidates : [];
+        const next = pool.map(block => {
+          const column = block.col - current.col;
+          const row = block.row - current.row;
+          return { block, score: (column * dx + row * dy) * 22
+            - Math.abs(column * dy - row * dx) * 8 + rand(-10, 10) };
+        }).sort((a, b) => b.score - a.score)[0]?.block;
+        if (!next) break;
+        visited.add(next.id);
+        const startedAt = timestamp + 145 + step * 92;
+        run.electricStormBolts.push({
+          from: blockCenter(current), to: blockCenter(next),
+          startedAt, until: startedAt + 420, seed: Math.random() * 10000,
+          trunk: false
+        });
+        run.electricStormHits.push({ block: next, at: startedAt + 95 });
+        current = next;
+      }
+    }
+  }
+
+  function updateElectricStorm(timestamp) {
+    const storm = run.electricStorm;
+    if (!storm || storm.endedAt || storm.strikes >= ELECTRIC_STORM_STRIKES || timestamp < storm.nextStrikeAt) return;
+    launchElectricStormStrike(storm, timestamp);
+    storm.strikes += 1;
+    storm.nextStrikeAt = timestamp + 700;
+    run.elementalAbilityUntil = Math.max(run.elementalAbilityUntil, timestamp + 850);
   }
 
   function dischargeFromImpact(source, count, timestamp) {
@@ -4764,91 +6663,79 @@
     return first ? strikeElectricChain(first, count, blockCenter(source), timestamp) : 0;
   }
 
-  function startBlackHoleSuction(block, timestamp = performance.now()) {
-    if (!elementalDamageable(block) || block.blackHoleSuctionStartedAt) return false;
-    block.blackHoleSuctionStartedAt = timestamp;
-    block.blackHoleSuctionDuration = rand(420, 700);
-    block.blackHoleSuctionSpin = rand(-2.8, 2.8);
-    return true;
-  }
-
-  function updateBlackHoleSuction(timestamp = performance.now()) {
-    if (!run) return;
-    for (const block of run.blocks) {
-      if (block.dead || !block.blackHoleSuctionStartedAt) continue;
-      const progress = clamp((timestamp - block.blackHoleSuctionStartedAt) / Math.max(1, block.blackHoleSuctionDuration), 0, 1);
-      if (progress < 1) continue;
-      block.x = run.slime.x - block.w / 2;
-      block.y = run.slime.y - block.h / 2;
-      destroyBlock(block, 'cosmos', timestamp);
-    }
-  }
-
-  function pullBlocksIntoBlackHole(timestamp = performance.now()) {
-    const center = { x: run.slime.x, y: run.slime.y };
-    const radius = run.cellSize * 3.35;
-    const candidates = run.blocks
-      .filter(block => elementalDamageable(block) && !block.blackHoleSuctionStartedAt)
-      .map(block => ({ block, center: blockCenter(block) }))
-      .map(item => ({ ...item, distance: Math.hypot(item.center.x - center.x, item.center.y - center.y) }))
-      .filter(item => item.distance <= radius)
-      .sort((a, b) => a.distance - b.distance + rand(-9, 9));
-    let pulled = 0;
-    for (const item of candidates.slice(0, 4)) {
-      if (startBlackHoleSuction(item.block, timestamp + pulled * 28)) pulled += 1;
-    }
-    return pulled;
-  }
-
   function updateElementalEffects(timestamp = performance.now()) {
     if (!run || run.ended) return;
 
-    updateBlackHoleSuction(timestamp);
+    if (run.mechSuit?.phase === 'active' && timestamp >= run.mechSuit.expireAt) finishMechSuit(timestamp);
+    if (run.ultimateRechargePending === 'shield' && run.barrier <= 0 && !run.ultimateIntro) finishUltimateRecharge();
+
+    run.phoenixWaves = (run.phoenixWaves || []).filter(wave => timestamp - wave.startedAt < 490);
+    if (run.electricStorm?.endedAt && timestamp - run.electricStorm.endedAt >= ELECTRIC_STORM_EXIT_MS) {
+      run.electricStorm = null;
+    }
+    run.electricStormBolts = (run.electricStormBolts || []).filter(bolt => timestamp < bolt.until);
+    run.electricStormHits = (run.electricStormHits || []).filter(hit => {
+      if (timestamp < hit.at) return true;
+      if (hit.incinerate) {
+        if (elementalDamageable(hit.block)) {
+          spawnElectricIncineration(hit.block);
+          damageBlockByElement(hit.block, Math.max(1, hit.block.hp), 'electricStorm', timestamp);
+        }
+      } else damageBlockByElement(hit.block, 1, 'electricStorm', timestamp);
+      return false;
+    });
+
+    updateFrostStorm(timestamp);
     updateNanoDrones(timestamp);
+    updateTelekinesisPress(timestamp);
     updateTelekinesis(timestamp);
     updateCloningUltimate(timestamp);
+    updateSpores(timestamp);
 
     for (const block of run.blocks) {
       if (block.dead || !block.fireDamageAt || timestamp < block.fireDamageAt) continue;
       block.fireDamageAt = 0;
-      damageBlockByElement(block, 1, 'fire', timestamp);
+      damageBlockByElement(block, 1, block.fireUltimateAuraId ? 'fireUltimate' : 'fire', timestamp);
     }
 
     const active = run.elementalAbilityActive;
     if (!active) return;
+    if (active === 'fire') updatePhoenixUltimate(timestamp);
+    if (active === 'electric') updateElectricStorm(timestamp);
     if (timestamp >= run.elementalAbilityUntil) {
       run.elementalAbilityActive = '';
       run.elementalAbilityNextTickAt = 0;
+      finishUltimateRecharge();
+      if (active === 'cosmos') run.cosmosUltimate = null;
+      if (active === 'electric' && run.electricStorm && !run.electricStorm.endedAt) {
+        run.electricStorm.endedAt = timestamp;
+      }
       if (active === 'mass') resetMassPierce();
       return;
     }
+    if (active === 'nano') return; // The mech's two guns run through updateNanoDrones.
     if (timestamp < run.elementalAbilityNextTickAt) return;
 
     const center = { x: run.slime.x, y: run.slime.y };
     if (active === 'frost') {
-      run.elementalAbilityNextTickAt = timestamp + 240;
+      run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
     } else if (active === 'electric') {
-      const candidates = run.blocks
-        .filter(elementalDamageable)
-        .map(block => ({ block, distance: Math.hypot(blockCenter(block).x - center.x, blockCenter(block).y - center.y) }))
-        .filter(item => item.distance <= run.cellSize * 2.45)
-        .sort((a, b) => (b.block.row - a.block.row) * 26 + a.distance - b.distance + rand(-18, 18));
-      if (candidates[0]) strikeElectricChain(candidates[0].block, 1 + Math.floor(Math.random() * 4), center, timestamp);
-      run.elementalAbilityNextTickAt = timestamp + 155;
+      run.elementalAbilityNextTickAt = timestamp + 90;
     } else if (active === 'fire') {
-      for (const block of run.blocks) {
-        if (!elementalDamageable(block)) continue;
-        const target = blockCenter(block);
-        if (Math.hypot(target.x - center.x, target.y - center.y) <= run.cellSize * 1.55) {
-          igniteBlock(block, timestamp, run.elementalAuraId);
-        }
-      }
-      run.elementalAbilityNextTickAt = timestamp + 220;
+      run.elementalAbilityNextTickAt = timestamp + 75;
     } else if (active === 'cosmos') {
-      pullBlocksIntoBlackHole(timestamp);
-      run.slime.vx *= .985;
-      run.slime.vy *= .985;
-      run.elementalAbilityNextTickAt = timestamp + 120;
+      run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+    } else if (active === 'telekinesis') {
+      run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+    } else if (active === 'nano' || active === 'phantom') {
+      const targets = run.blocks.filter(elementalDamageable)
+        .map(block => ({ block, distance: Math.hypot(blockCenter(block).x - center.x, blockCenter(block).y - center.y) }))
+        .filter(item => item.distance < run.cellSize * (active === 'phantom' ? 1.45 : 2.25))
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, active === 'nano' ? 2 : 1);
+      targets.forEach(({ block }) => damageBlockByElement(block, 1, active, timestamp));
+      if (active === 'phantom') run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, timestamp + 260);
+      run.elementalAbilityNextTickAt = timestamp + (active === 'nano' ? 260 : 350);
     } else if (active === 'mass') {
       run.slime.vy = Math.max(390, run.slime.vy);
       run.slime.vx *= .92;
@@ -4865,7 +6752,9 @@
   function resolveBlockHit(block, collision, timestamp = performance.now()) {
     const s = run.slime;
     const drillActive = speedDrillActive(timestamp);
-    if (!block.dead) spawnImpactClones(block, collision, timestamp);
+    if (block.glitchNeutralized && block.hazard) return transformGlitchHazard(block, collision, timestamp);
+    if (block.sporePod) detonateSporePod(block.sporePod, timestamp);
+    if (block.dead) return false;
 
     const fireLevel = elementalLevel('fire');
     const electricLevel = elementalLevel('electric');
@@ -4875,6 +6764,29 @@
 
     if (block.hazard) {
       return resolveHazardHit(block, collision, timestamp);
+    }
+    if (mechSuitActive() && !block.special && !block.unbreakable) {
+      const middleCol = Math.floor((s.x - run.gridOffsetX) / run.cellSize);
+      const laneCenter = Math.abs(block.col - middleCol) <= 1 ? middleCol : block.col;
+      const targets = (run.blocksByRow?.get(block.row) || [])
+        .filter(target => elementalDamageable(target) && !target.special
+          && Math.abs(target.col - laneCenter) <= 1 && timestamp >= (target.mechHitUntil || 0));
+      for (const target of targets) {
+        target.mechHitUntil = timestamp + 160;
+        damageBlockByElement(target, 2, 'mech', timestamp);
+      }
+      run.shake = Math.max(run.shake, 2.4);
+      if (block.dead) {
+        const travelDirection = s.vy < 0 ? -1 : 1;
+        s.vy = travelDirection * Math.max(85, Math.abs(s.vy) * .82);
+        s.vx *= .83;
+        sound('break');
+        return false;
+      }
+      absorbMechImpact(s, collision, timestamp);
+      run.flightDistance = 0;
+      sound('hit');
+      return true;
     }
     if (block.special === 'pandora') {
       return activatePandoraBox(block, timestamp);
@@ -4923,6 +6835,7 @@
     if (speedBurstPiercing) damage = hpBefore;
     const drillPiercing = drillActive && !unbreakable;
     if (drillPiercing) damage = hpBefore;
+    shareGlitchHit(block, damage, timestamp);
     const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || massPiercing || speedBurstPiercing || drillPiercing || damage >= hpBefore);
     let healthLoss = 0;
     if (frozenSlime || breaksOnTouch) healthLoss = 0;
@@ -4948,27 +6861,18 @@
 
     if (destroysImmediately) {
       block.hp = 0;
-      const withinComboGrace = run.comboCount > 0 && timestamp <= run.comboGraceUntil;
-      const hasComboMomentum = isFalling && (Math.abs(s.vy) >= 110 || withinComboGrace);
-      let comboAdvanced = false;
-      let comboStepReached = false;
-      if (breaksOnTouch) preserveCombo(timestamp);
-      else if (hasComboMomentum) {
-        const comboResult = registerComboLayer(block.row, timestamp);
-        comboAdvanced = comboResult.registered;
-        comboStepReached = comboResult.multiplierChanged;
-      }
-      else resetCombo();
       destroyBlock(block, 'impact', timestamp);
       if (cosmosBoosted) consumeCosmosBoostBlock(timestamp);
       if (geyserPiercing) run.geyserBreaksLeft = Math.max(0, run.geyserBreaksLeft - 1);
       const speedBurstBlocksLeft = speedBurstPiercing ? consumeSpeedBurstBlock(timestamp) : -1;
       if (!drillPiercing && !speedBurstPiercing && !cosmosBoosted) {
         const drag = block.tier === 'soft' ? BALANCE.weakBreakDrag : BALANCE.denseBreakDrag;
-        const travelDirection = Math.sign(s.vy) || gravityDirection;
         s.vy = massPiercing
-          ? travelDirection * Math.max(310, Math.abs(s.vy) * .94)
-          : travelDirection * Math.max(110, Math.abs(s.vy) * drag * tierData.drag);
+          ? s.vy > 0 ? Math.max(310, s.vy * .94) : s.vy * .94
+          : s.vy * drag * tierData.drag;
+        if (block.tier === 'soft') {
+          run.softBreakResistanceUntil = Math.max(run.softBreakResistanceUntil || 0, timestamp + 150);
+        }
         s.vx *= .95;
       } else if (cosmosBoosted && run.cosmosBoostBlocksLeft > 0) {
         s.vy = Math.max(440, Math.abs(s.vy));
@@ -4978,8 +6882,7 @@
       run.flightDistance *= keep;
 
       if (speedBurstPiercing) impact(speedBurstBlocksLeft > 0 ? `БУР-РЫВОК · ЕЩЁ ${speedBurstBlocksLeft}` : 'БУР-РЫВОК');
-      else if (comboAdvanced && comboStepReached) comboImpact(run.comboMultiplier, run.comboCount);
-      else if (!block.special && run.comboCount < 2) impact('ПРОБОЙ · БЕЗ УРОНА');
+      else if (!block.special) impact('ПРОБОЙ');
       sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
       if (run.health <= 0) endRun(false, 'У слайма закончилось здоровье');
       return false;
@@ -5020,6 +6923,7 @@
     if (!block || block.dead || block.pandoraOpened) return false;
     block.pandoraOpened = true;
     block.dead = true;
+    spreadFireFromBrokenBlock(block, timestamp);
     const choices = ['meteor', 'bomb', 'heal', 'shield']
       .filter(type => type !== 'heal' || run.health < run.maxHealth)
       .filter(type => type !== 'shield' || run.barrier < Math.max(20, run.shield));
@@ -5108,47 +7012,66 @@
     return true;
   }
 
-  function registerComboLayer(row, timestamp = performance.now()) {
-    if (!run || run.ended) return { registered: false, multiplierChanged: false };
-    if (run.comboCount > 0 && timestamp > run.comboGraceUntil) resetCombo();
-    run.comboGraceUntil = timestamp + 1000;
-    if (run.comboRows.has(row)) return { registered: false, multiplierChanged: false };
-    run.comboRows.add(row);
-    run.comboCount += 1;
-    const previousMultiplier = run.comboMultiplier;
-    run.comboMultiplier = Math.min(15, Math.max(1, Math.floor(run.comboCount / 2)));
-    return {
-      registered: true,
-      multiplierChanged: run.comboCount === 2 || run.comboMultiplier > previousMultiplier
-    };
-  }
-
   function preserveCombo(timestamp = performance.now()) {
-    if (!run || run.ended || run.comboCount <= 0) return;
-    run.comboGraceUntil = timestamp + 1000;
+    // Combo progression was removed from the first-world rules.
   }
 
   function resetCombo() {
-    if (!run) return;
-    run.comboCount = 0;
-    run.comboMultiplier = 1;
-    run.comboRows.clear();
-    run.comboGraceUntil = 0;
+    // Kept as a harmless hook for collision and endless-lap resets.
+  }
+
+  function ultimateChargeBlocked(cause) {
+    return Boolean(run.ultimateIntro || run.elementalAbilityActive
+      || run.ultimateRechargePending === 'shield' || ULTIMATE_BREAK_CAUSES.has(cause));
+  }
+
+  function finishUltimateRecharge() {
+    if (!run?.ultimateRechargePending) return false;
+    run.ultimateRechargePending = '';
+    if (!run.elementalAbilityCharges && !run.shieldCharges) {
+      run.ultimateCharge = ULTIMATE_POST_USE_CHARGE;
+    }
+    return true;
   }
 
   function destroyBlock(block, cause = 'impact', timestamp = performance.now()) {
     if (!block || block.dead) return;
-    // Hazards are removed only by direct slime contact in resolveHazardHit.
-    // No mutation, chained attack or explosion may clear them remotely.
-    if (block.hazard) return false;
+    // The press is the sole remote attack allowed to crush a hazard.
+    if (block.hazard && cause !== 'telekinesisPress') return false;
     if (typeof cause !== 'string') cause = 'impact';
+    if (block.sporePod) {
+      if (cause === 'sporeExplosion') {
+        block.sporePod.detonated = true;
+        block.sporePod = null;
+      } else detonateSporePod(block.sporePod, timestamp);
+    }
+    if (block.dead) return false;
+    if (block.glitchInfected && cause !== 'glitchEcho' && cause !== 'telekinesisPress') {
+      shareGlitchHit(block, Math.max(1, block.hp || block.maxHp || 1), timestamp);
+      if (block.dead) return false;
+    }
     const wasGolden = blockIsGolden(block, timestamp);
     const wasSnow = Boolean(block.elementalSnow);
     const wasSnowflake = Boolean(block.elementalSnowflake);
     block.dead = true;
+    if (cause !== 'telekinesisPress') spreadFireFromBrokenBlock(block, timestamp, cause);
+    run.glitchInfectedBlocks?.delete(block);
+    block.glitchInfected = false;
     run.blocksDestroyed += 1;
+    if (!ultimateChargeBlocked(cause) && run.elementalAbilityCharges < 1 && run.shieldCharges < 1) {
+      run.ultimateCharge = Math.min(ULTIMATE_BLOCKS_REQUIRED, (run.ultimateCharge || 0) + 1);
+      if (run.ultimateCharge >= ULTIMATE_BLOCKS_REQUIRED) {
+        if (run.elementalAbilityType) run.elementalAbilityCharges = 1;
+        else run.shieldCharges = 1;
+        impact('УЛЬТА ГОТОВА');
+      }
+    }
+    if (cause === 'telekinesisPress') {
+      if (block.special === 'boss') impact('СТРАЖ НЕДР ПОБЕЖДЁН!');
+      return true;
+    }
     registerBrokenBlock(block);
-    if (cause !== 'telekinesisLift') createDebris(block, block.special === 'geyser' ? 0 : block.special === 'bomb' ? 8 : 9, true);
+    if (cause !== 'telekinesisLift' && cause !== 'electricStorm') createDebris(block, block.special === 'geyser' ? 0 : cause === 'mech' ? 5 : block.special === 'bomb' ? 8 : 9, true);
 
     if (block.special === 'coin') {
       impact('БЛОК РАЗРУШЕН');
@@ -5203,8 +7126,11 @@
     const amount = Math.max(0, Math.round(value || 0));
     if (!amount) return 0;
     run.researchData += amount;
+    save.researchUnits += amount;
+    persist();
+    updatePersistentUI();
     if (els.runResearchScore) els.runResearchScore.textContent = run.researchData.toLocaleString('ru-RU');
-    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Данные исследования за забег: ${run.researchData}`);
+    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Колбы за забег: ${run.researchData}`);
     if (els.runResearchGain) {
       els.runResearchGain.textContent = `+${amount}`;
       els.runResearchGain.classList.remove('is-visible');
@@ -5311,9 +7237,11 @@
 
   function destroyMeteorGrid(row, col) {
     let destroyed = 0;
+    const timestamp = performance.now();
     for (const block of run.blocks) {
       if (block.dead || block.unbreakable || block.hazard || Math.abs(block.row - row) > 1 || Math.abs(block.col - col) > 1) continue;
       block.dead = true;
+      spreadFireFromBrokenBlock(block, timestamp);
       run.blocksDestroyed += 1;
       registerBrokenBlock(block);
       run.coins += block.coins * .6 * run.coinMultiplier;
@@ -5380,6 +7308,7 @@
   function explodeAt(x, y, radius = 125, rewardScale = .6, damage = Infinity, collectChainBombs = false) {
     let destroyed = 0;
     const chainBombs = [];
+    const timestamp = performance.now();
     for (const block of run.blocks) {
       if (block.dead || block.unbreakable || block.hazard) continue;
       const dx = block.x + block.w / 2 - x;
@@ -5393,6 +7322,7 @@
           continue;
         }
         block.dead = true;
+        spreadFireFromBrokenBlock(block, timestamp);
         run.blocksDestroyed += 1;
         registerBrokenBlock(block);
         run.coins += block.coins * rewardScale * run.coinMultiplier;
@@ -5408,10 +7338,12 @@
   function explodeGridArea(source, radiusCells = 1, rewardScale = .6, collectChainBombs = false) {
     let destroyed = 0;
     const chainBombs = [];
+    const timestamp = performance.now();
     for (const block of run.blocks) {
       if (block.dead || block === source || block.unbreakable || block.hazard) continue;
       if (Math.abs(block.row - source.row) > radiusCells || Math.abs(block.col - source.col) > radiusCells) continue;
       block.dead = true;
+      spreadFireFromBrokenBlock(block, timestamp);
       run.blocksDestroyed += 1;
       registerBrokenBlock(block);
       run.coins += block.coins * rewardScale * run.coinMultiplier;
@@ -5500,6 +7432,13 @@
         p.vx = (p.x - previousX) / Math.max(.001, dt);
         p.vy = (p.y - previousY) / Math.max(.001, dt);
         p.size = Math.max(.8, p.size * Math.pow(.32, dt));
+      } else if (p.shape === 'spore') {
+        p.wanderPhase += p.wanderRate * dt;
+        const drag = Math.exp(-dt * 1.25);
+        p.vx *= drag;
+        p.vy = (p.vy + p.gravity * dt) * drag;
+        p.x += (p.vx + Math.sin(p.wanderPhase) * p.wanderAmplitude) * dt;
+        p.y += (p.vy + Math.cos(p.wanderPhase * .83) * p.wanderAmplitude * .36) * dt;
       } else {
         p.vy += (p.gravity ?? 470) * dt;
         p.x += p.vx * dt;
@@ -5514,7 +7453,7 @@
     run.particles = run.particles.filter(p => p.life > 0);
   }
 
-  function spawnSpecialBurst(type, x, y, nx = 0, ny = -1) {
+  function spawnSpecialBurst(type, x, y, nx = 0, ny = -1, scale = 1) {
     if (!run) return;
     const config = {
       spring: { colors: ['#efffff', '#62efff', '#1ec8ff', '#ffffff'], count: 11, life: .82 },
@@ -5531,9 +7470,9 @@
     }[type];
     if (!config) return;
     run.specialEffects.push({
-      type, x, y, nx, ny, life: config.life, maxLife: config.life
+      type, x, y, nx, ny, scale, life: config.life, maxLife: config.life
     });
-    const particleCount = scaledEffectCount(config.count, 4);
+    const particleCount = scaledEffectCount(Math.max(4, Math.round(config.count * scale)), 4);
     for (let i = 0; i < particleCount; i += 1) {
       const bombSmoke = type === 'bomb' && i >= Math.ceil(particleCount * .7);
       const angle = type === 'spring' || type === 'geyser'
@@ -5552,11 +7491,11 @@
               : rand(55, 145);
       run.particles.push({
         kind: 'special', x, y,
-        vx: bombSmoke ? rand(-52, 52) : Math.cos(angle) * speed,
-        vy: bombSmoke ? rand(-88, -34) : Math.sin(angle) * speed,
+        vx: (bombSmoke ? rand(-52, 52) : Math.cos(angle) * speed) * scale,
+        vy: (bombSmoke ? rand(-88, -34) : Math.sin(angle) * speed) * scale,
         gravity: bombSmoke ? -12 : type === 'bomb' ? 145 : type === 'heal' ? -42 : type === 'jelly' ? 26 : type === 'pandora' ? 40 : type === 'freeze' ? 12 : type === 'geyser' ? -10 : type === 'shieldBurst' ? 12 : 32,
         life: bombSmoke ? rand(.48, .7) : rand(config.life * .66, config.life), maxLife: config.life,
-        size: bombSmoke ? rand(7, 11) : rand(2.5, type === 'bomb' ? 6.2 : 6),
+        size: (bombSmoke ? rand(7, 11) : rand(2.5, type === 'bomb' ? 6.2 : 6)) * scale,
         color: bombSmoke ? ['#4f3b46', '#76505a', '#a8675b'][i % 3] : config.colors[i % config.colors.length],
         shape: bombSmoke
           ? 'smoke'
@@ -5595,32 +7534,77 @@
     run.specialEffects = run.specialEffects.filter(effect => effect.life > 0);
   }
 
+  function startUltimateIntro(type, timestamp) {
+    const canvasRect = els.canvas.getBoundingClientRect();
+    const buttonRect = els.abilityBtn.getBoundingClientRect();
+    const icon = new Image();
+    icon.src = els.abilityBtn.querySelector('.ability-icon-color')?.src || versionedAsset('assets/ui/ability-shield-v1.png');
+    run.ultimateIntro = {
+      type, startedAt: timestamp, icon,
+      originX: run.slime.x, originY: run.slime.y,
+      fromX: canvasRect.width ? clamp((buttonRect.left + buttonRect.width / 2 - canvasRect.left) * VIEW_W / canvasRect.width, 24, VIEW_W - 24) : VIEW_W * .78,
+      fromY: canvasRect.height ? clamp((buttonRect.top + buttonRect.height / 2 - canvasRect.top) * VIEW_H / canvasRect.height, 24, VIEW_H - 24) : VIEW_H * .78,
+      color: FORM_INDEX.find(form => form.id === type)?.color || '#82eaff'
+    };
+    sound('epic');
+    feedback([12, 20, 12]);
+    updateRunUI();
+  }
+
   function activateElementalAbility(timestamp = performance.now()) {
     const type = run?.elementalAbilityType;
-    if (!type || run.elementalAbilityCharges <= 0 || run.elementalAbilityActive) return false;
+    if (!type || run.ultimateIntro || !ELEMENTAL_ABILITY_DURATION_MS[type]) return false;
+    if (type === 'nano' && run.mechSuit) return false;
+    if (!adminInfiniteUltimate && (run.elementalAbilityCharges <= 0 || run.elementalAbilityActive)) return false;
+    if (!adminInfiniteUltimate) {
+      run.elementalAbilityCharges -= 1;
+      run.ultimateCharge = 0;
+    }
+    run.ultimateRechargePending = 'elemental';
+    startUltimateIntro(type, timestamp);
+    return true;
+  }
+
+  function commitElementalAbility(type, timestamp, originX, originY) {
     const duration = ELEMENTAL_ABILITY_DURATION_MS[type];
-    if (!duration) return false;
-    run.elementalAbilityCharges -= 1;
     run.elementalAbilityActive = type;
     run.elementalAbilityUntil = timestamp + duration;
     run.elementalAbilityNextTickAt = timestamp;
     run.elementalAuraId += 1;
 
     if (type === 'frost') {
-      const seeded = seedFrostSnowflakes(timestamp);
-      pushElementalEffect('frostPulse', run.slime.x, run.slime.y, { ultimate: true });
-      impact(`СНЕЖНЫЙ ЗАЛП · ${seeded}`);
+      startFrostStorm(timestamp);
+      impact('СНЕГОПАД · 6 СЕКУНД');
     } else if (type === 'electric') {
-      pushElementalEffect('electricArc', run.slime.x, run.slime.y, {
-        points: [{ x: run.slime.x, y: run.slime.y }], colorMode: 'blue', burst: true, seed: Math.random() * 1000
-      });
-      impact('ЧИСТАЯ ЭНЕРГИЯ · 3с');
+      run.electricStorm = {
+        startedAt: timestamp, nextStrikeAt: timestamp + 580,
+        strikes: 0, usedTargets: new Set(), flashUntil: 0, endedAt: 0
+      };
+      impact('ГРОЗОВОЙ ШКВАЛ · 5 УДАРОВ');
     } else if (type === 'fire') {
-      impact('ЖИВОЕ ПЛАМЯ · 5с');
+      const startRow = Math.max(0, Math.floor((originY - run.blockRowOrigin - run.cellSize * .5) / run.cellSize) + 1);
+      const endRow = Math.floor((originY + PHOENIX_FIRE_ROWS * run.cellSize - run.blockRowOrigin - run.cellSize * .5) / run.cellSize);
+      run.phoenixUltimate = {
+        startedAt: timestamp, duration, startRow, endRow, lastRow: startRow - 1,
+        originY, x: originX, auraId: run.elementalAuraId
+      };
+      impact('ФЕНИКС · 100 М');
     } else if (type === 'cosmos') {
-      pullBlocksIntoBlackHole(timestamp);
-      run.shake = Math.max(run.shake, 5);
-      impact('ЧЁРНАЯ ДЫРА · 3с');
+      const chargeUntil = timestamp + COSMOS_ULTIMATE_CHARGE_MS;
+      run.cosmosUltimate = {
+        startedAt: timestamp, chargeUntil,
+        fadeStartedAt: timestamp + COSMOS_ULTIMATE_FADE_START_MS,
+        launchUntil: run.elementalAbilityUntil, fadeUntil: run.elementalAbilityUntil,
+        lastSampleAt: timestamp, ignitedAt: 0, trail: []
+      };
+      run.gravityDirection = 1;
+      run.freezeUntil = 0;
+      run.cosmosBoostBlocksLeft = 0;
+      run.cosmosReverseReady = false;
+      run.cosmosCometCharge = 0;
+      run.cosmosCometFadeUntil = 0;
+      run.shake = Math.max(run.shake, 4);
+      impact('КОМЕТНЫЙ ПРОРЫВ');
     } else if (type === 'gold') {
       run.goldRushUntil = run.elementalAbilityUntil;
       pushElementalEffect('coinArc', run.slime.x, run.slime.y, { toX: run.slime.x, toY: run.slime.y + run.cellSize * 1.8 });
@@ -5629,11 +7613,43 @@
       pushElementalEffect('categoryBlast', run.slime.x, run.slime.y, { damage: 2 });
       impact('ЦЕПНАЯ РЕАКЦИЯ · 3с');
     } else if (type === 'cloning') {
-      run.cloneUltimate = { startedAt: timestamp, fired: false, sourceBlockId: '' };
+      run.cloneUltimate = { startedAt: timestamp, fired: false, x: originX, y: originY };
       run.emotion = 'power';
       run.emotionUntil = timestamp + CLONE_ULTIMATE_BURST_MS;
       run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
-      impact('КЛОНИРОВАНИЕ · ЗАЛП');
+      impact('СПОРЫ · ПОСЕВ');
+    } else if (type === 'glitch') {
+      run.emotion = 'surprised';
+      run.emotionUntil = timestamp + GLITCH_TITLE_MS;
+      startGlitchChoice(timestamp);
+      run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+    } else if (type === 'nano') {
+      const landAt = timestamp + MECH_LAND_MS;
+      const expireAt = landAt + MECH_ACTIVE_MS;
+      run.elementalAbilityUntil = expireAt;
+      run.mechSuit = {
+        phase: 'descending', startedAt: timestamp, landAt, expireAt,
+        nextShotAt: landAt + 280
+      };
+      run.mechExplosion = null;
+      run.nanoShots = [];
+      run.nanoMine = null;
+      run.freezeUntil = 0;
+      run.slime.vx = 0;
+      run.slime.vy = 0;
+      impact('МЕХА-СЛАЙМ · 10 СЕКУНД');
+    } else if (type === 'telekinesis') {
+      run.telekinesisUltimatePending = false;
+      run.telekinesisCycle = null;
+      run.telekinesisMarks = [];
+      run.telekinesisBursts = [];
+      startTelekinesisPress(timestamp, originY);
+      run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+      impact('ПСИОНИЧЕСКИЙ ПРЕСС');
+    } else if (type === 'phantom') {
+      run.phantomNextAt = timestamp;
+      run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, run.elementalAbilityUntil);
+      impact('ФАНТОМ · НЕУЯЗВИМОСТЬ');
     } else if (type === 'mass') {
       resetMassPierce();
       run.massPierceTriggered = true;
@@ -5658,26 +7674,33 @@
       run.slime.vy = directionY * 430;
       impact('СКОРОСТНОЙ БУР · 5с');
     }
-    sound('epic');
-    feedback([12, 20, 12]);
     updateRunUI();
     return true;
   }
 
   function activateAbility() {
-    if (!run || run.ended || run.paused) return;
-    if (run.elementalAbilityCharges > 0 || run.elementalAbilityActive) {
+    if (!run || run.ended || run.paused || run.ultimateIntro) return;
+    if (run.elementalAbilityType) {
       activateElementalAbility();
       return;
     }
-    if (run.shieldCharges <= 0 || run.barrier > 0) return;
-    run.shieldCharges -= 1;
-    run.barrier = Math.max(0, run.shield);
-    const timestamp = performance.now();
-    run.barrierFlashUntil = timestamp + 720;
-    sound('epic');
-    feedback([14, 22, 14]);
-    impact(`ЩИТ +${Math.round(run.barrier)}`);
+    if (!adminInfiniteUltimate && (run.shieldCharges <= 0 || run.barrier > 0)) return;
+    if (!adminInfiniteUltimate) {
+      run.shieldCharges -= 1;
+      run.ultimateCharge = 0;
+    }
+    run.ultimateRechargePending = 'shield';
+    startUltimateIntro('shield', performance.now());
+  }
+
+  function completeUltimateIntro(intro, timestamp) {
+    if (intro.type === 'shield') {
+      run.barrier = Math.max(0, run.shield);
+      run.barrierFlashUntil = timestamp + 720;
+      impact('ЩИТ · 1 УДАР');
+    } else {
+      commitElementalAbility(intro.type, timestamp, intro.originX, intro.originY);
+    }
     updateRunUI();
   }
 
@@ -5694,7 +7717,7 @@
     const showPreviousBest = !run.endless && previousBest > 0 && previousBest < targetDepth;
     els.depthLabel.textContent = `${currentDepth} М`;
     if (els.runResearchScore) els.runResearchScore.textContent = Math.max(0, Math.floor(run.researchData || 0)).toLocaleString('ru-RU');
-    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Данные исследования за забег: ${Math.max(0, Math.floor(run.researchData || 0))}`);
+    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Колбы за забег: ${Math.max(0, Math.floor(run.researchData || 0))}`);
     if (els.runCoinsGain) {
       const earnedCoins = Math.max(0, Math.floor(run.coins));
       els.runCoinsGain.textContent = `+${formatCompactNumber(earnedCoins)}`;
@@ -5706,8 +7729,12 @@
     els.routeBestLabel.textContent = showPreviousBest ? `ПРОШЛЫЙ ${previousBest} М` : '';
     els.routeBestMarker.style.left = `${bestPosition}%`;
     els.routeBestMarker.classList.toggle('hidden', !showPreviousBest);
+    const mechActive = Boolean(run.mechSuit);
     const currentHearts = clamp(Math.round(run.health), 0, 3);
     const now = performance.now();
+    els.runHeartHud?.classList.toggle('is-mech', mechActive);
+    const heartTitle = els.runHeartHud?.querySelector('.shaft-health-title');
+    if (heartTitle) heartTitle.textContent = 'ЖИЗНИ';
     els.runHearts.forEach((heart, index) => {
       heart.classList.toggle('is-empty', index >= currentHearts);
       heart.classList.toggle('is-lost', index === run.lastLostHeartIndex && now - run.lastHeartLossAt < 620);
@@ -5719,55 +7746,122 @@
     els.runHeartHud?.classList.toggle('is-hit', now - run.lastHeartLossAt < 420);
     els.runHeartHud?.querySelector('.run-hearts')?.setAttribute('aria-label', heartLabel);
     const elementalActive = run.elementalAbilityActive && now < run.elementalAbilityUntil;
-    const showElemental = Boolean(elementalActive || run.elementalAbilityCharges > 0);
-    const abilityIcon = els.abilityBtn.querySelector('img');
+    const showElemental = Boolean(run.elementalAbilityType);
+    const abilityIcons = els.abilityBtn.querySelectorAll('img');
     if (showElemental) {
       const type = run.elementalAbilityType;
+      els.abilityBtn.style.setProperty('--ultimate-accent', FORM_INDEX.find(form => form.id === type)?.color || '#52d9f2');
       const labels = {
-        frost: 'СНЕЖНЫЙ ЗАЛП',
-        electric: 'ЧИСТАЯ ЭНЕРГИЯ',
-        fire: 'ЖИВОЕ ПЛАМЯ',
-        cosmos: 'ЧЁРНАЯ ДЫРА',
+        frost: 'СНЕГОПАД',
+        electric: 'ГРОЗОВОЙ ШКВАЛ',
+        fire: 'ПОЛЁТ ФЕНИКСА',
+        cosmos: 'КОМЕТНЫЙ ПРОРЫВ',
+        nano: 'МЕХА-СЛАЙМ',
+        telekinesis: 'ПСИОНИЧЕСКИЙ ПРЕСС',
+        phantom: 'ПРИЗРАЧНЫЙ ПРОРЫВ',
+        cloning: 'СПОРОВЫЙ ПОСЕВ',
         gold: 'ЗОЛОТАЯ ЛИХОРАДКА',
         explosion: 'ЦЕПНАЯ РЕАКЦИЯ',
         mass: 'ТЯЖЁЛЫЙ РЫВОК',
-        mobility: 'СКОРОСТНОЙ БУР'
+        mobility: 'СКОРОСТНОЙ БУР',
+        glitch: 'ГЛИТЧ'
       };
       const icons = {
-        frost: 'emblem-v2-frost.webp',
-        electric: 'emblem-v2-electric.webp',
-        fire: 'emblem-v2-fire.webp',
-        cosmos: 'emblem-v2-cosmos.webp',
-        gold: 'gold-aligned.webp',
-        explosion: 'emblem-v2-explosion.webp',
-        mass: 'weight-aligned.webp',
-        mobility: 'mobility-aligned.webp'
+        frost: 'assets/ui/recipe-categories/emblem-v2-frost.webp',
+        electric: 'assets/ui/recipe-categories/emblem-v2-electric.webp',
+        fire: 'assets/ui/recipe-categories/emblem-v2-fire.webp',
+        cosmos: 'assets/ui/recipe-categories/emblem-v4-cosmos.webp',
+        nano: 'assets/ui/recipe-categories/emblem-v4-techno.webp',
+        telekinesis: 'assets/ui/recipe-categories/emblem-v4-psionics.webp',
+        phantom: 'assets/ui/recipe-categories/emblem-v5-phantom.png',
+        cloning: 'assets/ui/recipe-categories/emblem-v3-spores.webp',
+        gold: 'assets/ui/recipe-categories/gold-aligned.webp',
+        explosion: 'assets/ui/recipe-categories/emblem-v2-explosion.webp',
+        mass: 'assets/ui/recipe-categories/weight-aligned.webp',
+        mobility: 'assets/ui/recipe-categories/mobility-aligned.webp',
+        glitch: 'assets/ui/recipe-categories/emblem-v4-glitch.webp'
       };
-      const duration = ELEMENTAL_ABILITY_DURATION_MS[type] || 1;
       const remaining = Math.max(0, run.elementalAbilityUntil - now);
-      const ready = run.elementalAbilityCharges > 0 && !elementalActive && !run.ended && !run.paused;
-      if (abilityIcon) abilityIcon.src = `assets/ui/recipe-categories/${icons[type]}`;
-      els.abilityPercent.textContent = elementalActive ? `${Math.max(.1, remaining / 1000).toFixed(1)}с` : `${run.elementalAbilityCharges}`;
-      els.abilityBtn.style.setProperty('--ability', `${elementalActive ? remaining / duration * 100 : 100}%`);
+      const ready = (adminInfiniteUltimate || (run.elementalAbilityCharges > 0 && !elementalActive))
+        && !run.mechSuit && !run.ultimateIntro && !run.ended && !run.paused;
+      const chargePercent = adminInfiniteUltimate || run.elementalAbilityCharges > 0 ? 100 : Math.floor((run.ultimateCharge || 0) / ULTIMATE_BLOCKS_REQUIRED * 100);
+      abilityIcons.forEach(icon => { icon.src = versionedAsset(icons[type] || 'assets/ui/ability-shield-v1.png'); });
+      els.abilityPercent.textContent = `${chargePercent}%`;
+      els.abilityBtn.style.setProperty('--ability', `${chargePercent}%`);
       els.abilityBtn.disabled = !ready;
+      els.abilityBtn.classList.toggle('is-charged', chargePercent >= 100);
       els.abilityBtn.classList.toggle('is-ready', ready);
-      els.abilityBtn.classList.toggle('is-active', Boolean(elementalActive));
-      els.abilityBtn.setAttribute('aria-label', elementalActive ? `${labels[type]} действует` : `Активировать: ${labels[type]}`);
-      els.abilityText.textContent = elementalActive ? `${labels[type]} · ${(remaining / 1000).toFixed(1)}с` : `${labels[type]} · 1 ЗАРЯД`;
+      els.abilityBtn.classList.toggle('is-active', Boolean(elementalActive) && !adminInfiniteUltimate);
+      els.abilityBtn.setAttribute('aria-label', ready ? `Активировать: ${labels[type]}` : elementalActive ? `${labels[type]} действует` : `${labels[type]} заряжается: ${Math.floor(run.ultimateCharge || 0)} из ${ULTIMATE_BLOCKS_REQUIRED} блоков`);
+      els.abilityText.textContent = run.mechSuit ? run.mechSuit.phase === 'descending' ? 'МЕХ · СТЫКОВКА'
+        : `МЕХ · ${(Math.max(0, run.mechSuit.expireAt - now) / 1000).toFixed(1)}с`
+        : adminInfiniteUltimate ? `${labels[type]} · ∞ ГОТОВО`
+          : elementalActive ? `${labels[type]} · ${(remaining / 1000).toFixed(1)}с`
+            : ready ? `${labels[type]} · ГОТОВО` : `${labels[type]} · ${Math.floor(run.ultimateCharge || 0)}/${ULTIMATE_BLOCKS_REQUIRED}`;
       return;
     }
 
     const charges = clamp(Math.round(run.shieldCharges), 0, run.maxShieldCharges);
-    if (abilityIcon) abilityIcon.src = 'assets/ui/stat-defense.webp';
-    els.abilityPercent.textContent = `${charges}`;
-    els.abilityBtn.style.setProperty('--ability', `${charges / Math.max(1, run.maxShieldCharges) * 100}%`);
-    els.abilityBtn.disabled = charges <= 0 || run.barrier > 0 || run.ended || run.paused;
-    els.abilityBtn.classList.toggle('is-ready', charges > 0 && run.barrier <= 0 && !run.ended);
-    els.abilityBtn.classList.toggle('is-active', run.barrier > 0);
-    els.abilityBtn.setAttribute('aria-label', 'Активировать барьер');
-    els.abilityText.textContent = run.barrier > 0
-      ? `ЩИТ ${Math.ceil(run.barrier)}/${Math.ceil(run.shield)} · ${charges}/${run.maxShieldCharges}`
-      : `ЩИТ ${Math.ceil(run.shield)} · ${charges}/${run.maxShieldCharges}`;
+    const chargePercent = adminInfiniteUltimate || charges ? 100 : Math.floor((run.ultimateCharge || 0) / ULTIMATE_BLOCKS_REQUIRED * 100);
+    els.abilityBtn.style.setProperty('--ultimate-accent', '#52d9f2');
+    abilityIcons.forEach(icon => { icon.src = versionedAsset('assets/ui/ability-shield-v1.png'); });
+    els.abilityPercent.textContent = `${chargePercent}%`;
+    els.abilityBtn.style.setProperty('--ability', `${chargePercent}%`);
+    els.abilityBtn.disabled = (!adminInfiniteUltimate && (charges <= 0 || run.barrier > 0)) || run.ultimateIntro || run.ended || run.paused;
+    els.abilityBtn.classList.toggle('is-charged', chargePercent >= 100);
+    els.abilityBtn.classList.toggle('is-ready', !els.abilityBtn.disabled);
+    els.abilityBtn.classList.toggle('is-active', run.barrier > 0 && !adminInfiniteUltimate);
+    els.abilityBtn.setAttribute('aria-label', adminInfiniteUltimate || charges ? 'Активировать щит' : `Щит заряжается: ${Math.floor(run.ultimateCharge || 0)} из ${ULTIMATE_BLOCKS_REQUIRED} блоков`);
+    els.abilityText.textContent = adminInfiniteUltimate ? 'ЩИТ · ∞ ГОТОВО' : run.barrier > 0
+      ? 'ЩИТ · 1 УДАР'
+      : charges ? 'ЩИТ ГОТОВ' : `ЩИТ · ${Math.floor(run.ultimateCharge || 0)}/${ULTIMATE_BLOCKS_REQUIRED}`;
+  }
+
+  function drawFrostStormScene(timestamp) {
+    const storm = run.frostStorm;
+    if (!storm || !frostStormFlakeSprite.complete || !frostStormFlakeSprite.naturalWidth) return;
+    const age = timestamp - storm.startedAt;
+    const intensity = clamp(age / 450, 0, 1) * clamp((storm.endAt - timestamp) / 650, 0, 1);
+    if (intensity > 0) {
+      ctx.save();
+      ctx.globalAlpha = intensity * .16;
+      ctx.fillStyle = '#8acaff';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      // A handful of sideways gusts gives the storm a direction without a full-screen particle field.
+      ctx.lineWidth = 1.3;
+      for (let index = 0; index < 9; index += 1) {
+        const cycle = age / (760 + index * 43) + index * .17;
+        const progress = cycle - Math.floor(cycle);
+        const x = progress * (VIEW_W + 110) - 80;
+        const y = 35 + index * (VIEW_H - 70) / 9 + Math.sin(age / 440 + index * 2) * 11;
+        ctx.globalAlpha = intensity * (.17 + index % 3 * .07);
+        ctx.strokeStyle = index % 3 ? '#c9f3ff' : '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(x - 24, y + 5);
+        ctx.lineTo(x + 28, y - 6);
+        ctx.stroke();
+      }
+      for (let index = 0; index < 6; index += 1) {
+        const cycle = age / (2350 + index * 175) + index * .23;
+        const progress = cycle - Math.floor(cycle);
+        const x = (index * 91 + progress * 105 + age * .065) % (VIEW_W + 36) - 18;
+        const y = progress * (VIEW_H + 48) - 24;
+        const size = 9 + index % 3 * 2;
+        ctx.globalAlpha = intensity * (.24 + index % 3 * .07);
+        ctx.drawImage(frostStormFlakeSprite, x - size / 2, y - size / 2, size, size);
+      }
+      ctx.restore();
+    }
+    for (const flake of storm.flakes) {
+      const progress = clamp((timestamp - flake.startedAt) / flake.duration, 0, 1);
+      const fall = Math.pow(progress, 1.28);
+      const x = lerp(flake.fromX, flake.toX, progress)
+        + Math.sin(progress * 9 + flake.phase) * flake.sway * Math.sin(progress * Math.PI);
+      const y = lerp(flake.fromY, flake.toY, fall) - run.cameraY;
+      if (y < -35 || y > VIEW_H + 30) continue;
+      const size = flake.size * 2.7;
+      ctx.drawImage(frostStormFlakeSprite, x - size / 2, y - size / 2, size, size);
+    }
   }
 
   function renderCanvas(timestamp) {
@@ -5790,6 +7884,7 @@
     drawJellyZones(timestamp, false);
     drawFreezeZones(timestamp, false);
     drawFinishPortal(world, timestamp);
+    drawTelekinesisPressBackdrop(timestamp);
 
     const visibleBlocks = [];
     const rowOrigin = run.blockRowOrigin || 285;
@@ -5800,17 +7895,36 @@
         if (block.dead) continue;
         const sy = block.y - run.cameraY;
         if (sy < -60 || sy > VIEW_H + 60) continue;
-        if (!block.blackHoleSuctionStartedAt) visibleBlocks.push(block);
-        drawSuctionAwareBlock(block, sy, timestamp);
+        const press = run.telekinesisPress;
+        const movingWithPress = Boolean(press && !press.collided && press.targetSet.has(block));
+        if (movingWithPress) {
+          const squeeze = telekinesisPressProgress(press, timestamp);
+          const centerX = block.x + block.w / 2;
+          ctx.save();
+          ctx.translate((VIEW_W / 2 - centerX) * squeeze, 0);
+          ctx.globalAlpha = 1 - squeeze * .3;
+        } else visibleBlocks.push(block);
+        drawBlock(block, sy, timestamp);
+        if (block.phantomMarked) drawPhantomMarkedBlock(block, sy, timestamp);
+        if (block.glitchInfected || block.glitchDisperseUntil > timestamp || block.glitchNeutralized || block.glitchDeleteAt > timestamp
+          || block.glitchRewriteUntil > timestamp || block.glitchTransformUntil > timestamp) {
+          drawGlitchBlockOverlay(block, sy, timestamp);
+        }
+        if (movingWithPress) ctx.restore();
       }
     }
 
     // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions(visibleBlocks);
+    drawTelekinesisPressScene(timestamp);
+    drawSporeEffects(timestamp);
+    drawGlitchShock(timestamp);
     drawFlasks(timestamp);
     drawGeyserCapture(timestamp);
     drawMeteorShowers(timestamp);
     drawSpecialEffects(false);
+    drawFrostStormScene(timestamp);
+    drawPhantomBursts(timestamp);
     drawTelekinesis(timestamp);
 
     for (const p of run.particles) {
@@ -5839,6 +7953,13 @@
           ctx.moveTo(p.x, sy);
           ctx.lineTo(p.x - p.vx / speed * p.size * 2.8, sy - p.vy / speed * p.size * 2.8);
           ctx.stroke();
+        } else if (p.shape === 'spore') {
+          ctx.save();
+          ctx.globalAlpha *= .78;
+          ctx.translate(p.x, sy);
+          ctx.rotate(Math.atan2(p.vy, p.vx) + Math.PI / 2);
+          drawSporeShape(p.size, p.color);
+          ctx.restore();
         } else if (p.shape === 'leaf') {
           ctx.save();
           ctx.translate(p.x, sy);
@@ -5874,14 +7995,191 @@
     ctx.globalAlpha = 1;
 
     drawSelectedTrail(timestamp);
+    drawCosmosUltimateTrail(timestamp);
     drawCloningCharge(timestamp);
+    drawGlitchClone(timestamp);
     drawSlime(timestamp);
+    drawMechExplosion(timestamp);
     drawMiniSlimes(timestamp);
     drawNanoDrones(timestamp);
     drawHoneyZones(timestamp, true);
     drawJellyZones(timestamp, true);
     drawFreezeZones(timestamp, true);
     drawSpecialEffects(true);
+    drawPhoenixUltimate(timestamp);
+    drawElectricStormScene(timestamp);
+    ctx.restore();
+  }
+
+  function drawElectricStormBolt(bolt, timestamp) {
+    const elapsed = timestamp - bolt.startedAt;
+    if (elapsed < 0 || timestamp >= bolt.until) return;
+    const fromY = bolt.fromScreen ? bolt.from.y : bolt.from.y - run.cameraY;
+    const toY = bolt.to.y - run.cameraY;
+    const reveal = clamp(elapsed / (bolt.trunk ? 155 : 110), 0, 1);
+    const endX = lerp(bolt.from.x, bolt.to.x, reveal);
+    const endY = lerp(fromY, toY, reveal);
+    const dx = endX - bolt.from.x;
+    const dy = endY - fromY;
+    const distance = Math.max(1, Math.hypot(dx, dy));
+    const segments = Math.max(3, Math.ceil(distance / (bolt.trunk ? 24 : 18)));
+    const wobble = bolt.trunk ? 12 : 5.5;
+    const flicker = Math.floor(timestamp / 54);
+    const points = [];
+    for (let index = 0; index <= segments; index += 1) {
+      const fraction = index / segments;
+      const noise = Math.sin((bolt.seed + index * 47 + flicker * 19) * 12.9898) * 43758.5453;
+      const jitter = (noise - Math.floor(noise) - .5) * 2 * wobble * Math.sin(fraction * Math.PI);
+      points.push({
+        x: bolt.from.x + dx * fraction - dy / distance * jitter,
+        y: fromY + dy * fraction + dx / distance * jitter
+      });
+    }
+    const alpha = clamp(elapsed / 40, 0, 1) * clamp((bolt.until - timestamp) / 190, 0, 1);
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const [width, color, shadow] of [
+      [bolt.trunk ? 18 : 10, '#168dff', 24],
+      [bolt.trunk ? 8 : 4.5, '#3edbff', 13],
+      [bolt.trunk ? 3.2 : 2.1, '#fffdda', 6]
+    ]) {
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = isLowPowerDevice() ? shadow * .45 : shadow;
+      ctx.beginPath();
+      points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+      ctx.stroke();
+    }
+    if (bolt.trunk && elapsed > 90) {
+      const bloom = ctx.createRadialGradient(bolt.to.x, toY, 1, bolt.to.x, toY, 41);
+      bloom.addColorStop(0, 'rgba(255,255,235,.9)');
+      bloom.addColorStop(.24, 'rgba(98,232,255,.62)');
+      bloom.addColorStop(1, 'rgba(20,117,255,0)');
+      ctx.globalAlpha = alpha * .9;
+      ctx.fillStyle = bloom;
+      ctx.beginPath(); ctx.arc(bolt.to.x, toY, 41, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawElectricStormScene(timestamp) {
+    const storm = run.electricStorm;
+    if (storm) {
+      const gathering = clamp((timestamp - storm.startedAt) / 580, 0, 1);
+      const assemble = 1 - Math.pow(1 - gathering, 3);
+      const exit = storm.endedAt ? clamp((timestamp - storm.endedAt) / ELECTRIC_STORM_EXIT_MS, 0, 1) : 0;
+      const disperse = 1 - Math.pow(1 - exit, 2);
+      const cloudBlend = assemble * (1 - disperse);
+      ctx.save();
+      ctx.fillStyle = `rgba(3,8,34,${(.12 + assemble * .15) * (1 - exit)})`;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      const charging = !storm.endedAt && storm.strikes < ELECTRIC_STORM_STRIKES
+        ? clamp(1 - (storm.nextStrikeAt - timestamp) / 260, 0, 1) : 0;
+      const strikeFlash = clamp((storm.flashUntil - timestamp) / 220, 0, 1);
+      const cloudGlow = Math.max(charging * .86, strikeFlash);
+      if (cloudGlow > 0) {
+        const glowX = [...run.electricStormBolts].reverse().find(bolt => bolt.trunk && timestamp >= bolt.startedAt && timestamp < bolt.until)?.from.x || VIEW_W / 2;
+        const glowY = 62;
+        const glowRadius = Math.max(VIEW_W * .73, 260);
+        const chargeLight = ctx.createRadialGradient(glowX, glowY, 0, glowX, glowY, glowRadius);
+        chargeLight.addColorStop(0, `rgba(218,251,255,${cloudGlow * .3})`);
+        chargeLight.addColorStop(.23, `rgba(101,206,255,${cloudGlow * .19})`);
+        chargeLight.addColorStop(.58, `rgba(38,130,244,${cloudGlow * .07})`);
+        chargeLight.addColorStop(1, 'rgba(23,94,210,0)');
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = chargeLight;
+        ctx.beginPath(); ctx.arc(glowX, glowY, glowRadius, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      if (timestamp < storm.flashUntil) {
+        ctx.fillStyle = `rgba(167,227,255,${clamp((storm.flashUntil - timestamp) / 220, 0, 1) * .25})`;
+        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      }
+      if (electricStormCloudSprite.complete && electricStormCloudSprite.naturalWidth) {
+        const width = VIEW_W * .75;
+        const height = width * electricStormCloudSprite.naturalHeight / electricStormCloudSprite.naturalWidth;
+        const y = -height * .42 + assemble * 8 - disperse * 10 + Math.sin(timestamp / 380) * 3;
+        const leftX = lerp(-width * .53, VIEW_W * .29, cloudBlend) + Math.sin(timestamp / 510) * 3;
+        const rightX = lerp(VIEW_W + width * .53, VIEW_W * .71, cloudBlend) - Math.sin(timestamp / 470) * 3;
+        ctx.globalAlpha = .96 * (1 - exit);
+        ctx.shadowColor = cloudGlow ? '#8ddaff' : '#242a35';
+        ctx.shadowBlur = isLowPowerDevice() ? 0 : 4 + cloudGlow * 12;
+        ctx.drawImage(electricStormCloudSprite, leftX - width / 2, y, width, height);
+        ctx.translate(rightX, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(electricStormCloudSprite, -width / 2, y + 4, width, height);
+      }
+      ctx.restore();
+    }
+    for (const bolt of run.electricStormBolts || []) drawElectricStormBolt(bolt, timestamp);
+  }
+
+  function drawPhoenixUltimate(timestamp) {
+    for (const wave of run.phoenixWaves || []) {
+      const age = clamp((timestamp - wave.startedAt) / 490, 0, 1);
+      const y = wave.y - run.cameraY;
+      if (y < -45 || y > VIEW_H + 45) continue;
+      ctx.save();
+      ctx.globalAlpha = (1 - age) * .78;
+      ctx.globalCompositeOperation = 'screen';
+      const heat = ctx.createLinearGradient(0, y - 25, 0, y + 25);
+      heat.addColorStop(0, 'rgba(255,64,12,0)');
+      heat.addColorStop(.45, 'rgba(255,114,19,.32)');
+      heat.addColorStop(.5, 'rgba(255,245,147,.92)');
+      heat.addColorStop(.55, 'rgba(255,114,19,.32)');
+      heat.addColorStop(1, 'rgba(255,64,12,0)');
+      ctx.fillStyle = heat;
+      ctx.fillRect(0, y - 25, VIEW_W, 50);
+      ctx.restore();
+    }
+    const phoenix = run.phoenixUltimate;
+    if (!phoenix || !phoenixUltimateSprite.complete || !phoenixUltimateSprite.naturalWidth) return;
+    const progress = clamp((timestamp - phoenix.startedAt) / phoenix.duration, 0, 1);
+    const width = Math.min(VIEW_W * .98, Math.max(310, run.cellSize * 4.5));
+    const height = width * phoenixUltimateSprite.naturalHeight / phoenixUltimateSprite.naturalWidth;
+    const headY = phoenix.originY - run.cellSize * 1.15 + progress * run.cellSize * (PHOENIX_FIRE_ROWS + 1.15) - run.cameraY;
+    const x = VIEW_W / 2 + (phoenix.x - VIEW_W / 2) * .25;
+    if (headY < -height * .15 || headY > VIEW_H + height) return;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, progress * 9, (1 - progress) * 9);
+    ctx.shadowColor = '#ff781a';
+    ctx.shadowBlur = isLowPowerDevice() ? 8 : 18;
+    ctx.drawImage(phoenixUltimateSprite, x - width / 2, headY - height * .93, width, height);
+    ctx.restore();
+  }
+
+  function drawUltimateIntro(timestamp) {
+    const intro = run.ultimateIntro;
+    if (!intro) return;
+    const progress = clamp((timestamp - intro.startedAt) / ULTIMATE_INTRO_MS, 0, 1);
+    const arrival = 1 - Math.pow(1 - clamp(progress / .67, 0, 1), 3);
+    const exit = clamp((1 - progress) / .18, 0, 1);
+    const x = lerp(intro.fromX, VIEW_W / 2, arrival);
+    const y = lerp(intro.fromY, VIEW_H * .42, arrival);
+    const size = lerp(52, 124, arrival) * (progress > .82 ? .72 + exit * .28 : 1);
+    ctx.save();
+    ctx.fillStyle = `rgba(6,10,22,${.08 + Math.sin(progress * Math.PI) * .38})`;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.translate(x, y);
+    ctx.rotate(progress * Math.PI * 2.15);
+    ctx.globalAlpha = Math.min(1, progress * 8, exit);
+    ctx.shadowColor = intro.color;
+    ctx.shadowBlur = 22;
+    ctx.strokeStyle = intro.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * .56, 0, Math.PI * 2);
+    ctx.stroke();
+    if (intro.icon.complete && intro.icon.naturalWidth) {
+      ctx.drawImage(intro.icon, -size / 2, -size / 2, size, size);
+    } else {
+      ctx.fillStyle = intro.color;
+      ctx.beginPath(); ctx.arc(0, 0, size * .42, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -6263,141 +8561,46 @@
           ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
           ctx.stroke();
         }
-      } else if (effect.type === 'snowShard' || effect.type === 'snowballArc') {
+      } else if (effect.type === 'snowShard') {
         const toX = Number.isFinite(effect.toX) ? effect.toX : effect.x;
         const toY = Number.isFinite(effect.toY) ? effect.toY : effect.y;
         const flight = 1 - Math.pow(1 - progress, 1.48);
-        const arcHeight = effect.type === 'snowballArc' ? 58 : 34;
         const shardX = lerp(effect.x, toX, flight);
-        const shardY = lerp(effect.y, toY, flight) - run.cameraY - Math.sin(flight * Math.PI) * arcHeight;
-        const previousFlight = Math.max(0, flight - (effect.type === 'snowballArc' ? .085 : .065));
+        const shardY = lerp(effect.y, toY, flight) - run.cameraY - Math.sin(flight * Math.PI) * 34;
+        const previousFlight = Math.max(0, flight - .065);
         const trailX = lerp(effect.x, toX, previousFlight);
-        const trailY = lerp(effect.y, toY, previousFlight) - run.cameraY - Math.sin(previousFlight * Math.PI) * arcHeight;
-        const size = effect.type === 'snowballArc' ? 10.5 : 6.5;
+        const trailY = lerp(effect.y, toY, previousFlight) - run.cameraY - Math.sin(previousFlight * Math.PI) * 34;
+        const size = 6.5;
         ctx.globalAlpha = alpha * .68;
-        ctx.strokeStyle = effect.type === 'snowballArc' ? '#94eaff' : '#6fd7ff';
-        ctx.lineWidth = effect.type === 'snowballArc' ? 7 : 4;
+        ctx.strokeStyle = '#6fd7ff';
+        ctx.lineWidth = 4;
         ctx.lineCap = 'round';
         ctx.shadowColor = '#25baff';
         ctx.shadowBlur = 12;
         ctx.beginPath(); ctx.moveTo(trailX, trailY); ctx.lineTo(shardX, shardY); ctx.stroke();
         ctx.translate(shardX, shardY);
-        ctx.rotate(progress * Math.PI * (effect.type === 'snowballArc' ? 3 : 5));
+        ctx.rotate(progress * Math.PI * 5);
         ctx.globalAlpha = alpha;
-        if (effect.type === 'snowballArc') {
-          const snow = ctx.createRadialGradient(-size * .3, -size * .38, 1, 0, 0, size);
-          snow.addColorStop(0, '#ffffff');
-          snow.addColorStop(.48, '#d9f8ff');
-          snow.addColorStop(1, '#64c9ec');
-          ctx.fillStyle = snow;
-          ctx.strokeStyle = '#187eaf';
-          ctx.lineWidth = 2.3;
-          ctx.shadowColor = '#5ad6ff';
-          ctx.shadowBlur = 13;
-          ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = 'rgba(255,255,255,.92)';
-          ctx.beginPath(); ctx.arc(-size * .3, -size * .35, size * .24, 0, Math.PI * 2); ctx.fill();
-        } else {
-          ctx.fillStyle = '#ecfcff';
-          ctx.strokeStyle = '#147cae';
-          ctx.lineWidth = 2;
-          ctx.shadowColor = '#4bd1ff';
-          ctx.shadowBlur = 11;
-          ctx.beginPath();
-          ctx.moveTo(size * 1.25, 0);
-          ctx.lineTo(-size * .35, size * .72);
-          ctx.lineTo(-size, 0);
-          ctx.lineTo(-size * .25, -size * .68);
-          ctx.closePath(); ctx.fill(); ctx.stroke();
-        }
+        ctx.fillStyle = '#ecfcff';
+        ctx.strokeStyle = '#147cae';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#4bd1ff';
+        ctx.shadowBlur = 11;
+        ctx.beginPath();
+        ctx.moveTo(size * 1.25, 0);
+        ctx.lineTo(-size * .35, size * .72);
+        ctx.lineTo(-size, 0);
+        ctx.lineTo(-size * .25, -size * .68);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
       } else if (effect.type === 'electricArc') {
         const points = Array.isArray(effect.points) ? effect.points : [];
-        const blue = effect.colorMode === 'blue';
-        const outerColor = blue ? '#168dff' : '#ffb300';
-        const middleColor = blue ? '#5eeaff' : '#ffe13d';
-        const coreColor = blue ? '#efffff' : '#fffde1';
-        const arcAlpha = progress < .7 ? 1 : clamp((1 - progress) / .3, 0, 1);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        if (points.length > 1) {
-          const chainProgress = clamp(progress * 1.48, 0, 1) * (points.length - 1);
-          for (let index = 1; index < points.length; index += 1) {
-            const reveal = clamp(chainProgress - (index - 1), 0, 1);
-            if (reveal <= 0) continue;
-            const from = points[index - 1];
-            const to = points[index];
-            const endX = lerp(from.x, to.x, reveal);
-            const endY = lerp(from.y, to.y, reveal);
-            const dx = endX - from.x;
-            const dy = endY - from.y;
-            const length = Math.max(1, Math.hypot(dx, dy));
-            const normalX = -dy / length;
-            const normalY = dx / length;
-            const bolt = [];
-            const joints = Math.max(3, Math.ceil(length / 17));
-            for (let joint = 0; joint <= joints; joint += 1) {
-              const part = joint / joints;
-              const edgeFade = Math.sin(part * Math.PI);
-              const noise = Math.sin((effect.seed || 0) * 2.31 + index * 7.17 + joint * 11.83) * (blue ? 8 : 6) * edgeFade;
-              bolt.push({
-                x: lerp(from.x, endX, part) + normalX * noise,
-                y: lerp(from.y, endY, part) - run.cameraY + normalY * noise
-              });
-            }
-            const strokeBolt = (color, width, blur, opacity) => {
-              ctx.globalAlpha = arcAlpha * opacity;
-              ctx.strokeStyle = color;
-              ctx.lineWidth = width;
-              ctx.shadowColor = outerColor;
-              ctx.shadowBlur = blur;
-              ctx.beginPath();
-              bolt.forEach((point, pointIndex) => pointIndex ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
-              ctx.stroke();
-            };
-            strokeBolt(outerColor, blue ? 8 : 7, blue ? 18 : 15, .34);
-            strokeBolt(middleColor, blue ? 4.1 : 3.7, blue ? 12 : 9, .96);
-            strokeBolt(coreColor, 1.45, 3, 1);
-
-            if (reveal > .72) {
-              const hit = clamp((reveal - .72) / .28, 0, 1) * arcAlpha;
-              ctx.globalCompositeOperation = 'screen';
-              ctx.globalAlpha = hit * .8;
-              ctx.fillStyle = coreColor;
-              ctx.shadowColor = middleColor;
-              ctx.shadowBlur = 14;
-              ctx.beginPath(); ctx.arc(endX, endY - run.cameraY, 3.5 + hit * 4, 0, Math.PI * 2); ctx.fill();
-              ctx.globalCompositeOperation = 'source-over';
-            }
-          }
-        } else {
-          const burst = 1 - progress;
-          const glowRadius = 22 + progress * 78;
-          const glow = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, glowRadius);
-          glow.addColorStop(0, `rgba(237,255,255,${burst * .92})`);
-          glow.addColorStop(.25, `rgba(55,218,255,${burst * .58})`);
-          glow.addColorStop(1, 'rgba(20,116,255,0)');
-          ctx.globalCompositeOperation = 'screen';
-          ctx.fillStyle = glow;
-          ctx.beginPath(); ctx.arc(effect.x, y, glowRadius, 0, Math.PI * 2); ctx.fill();
-          ctx.globalCompositeOperation = 'source-over';
-          for (let boltIndex = 0; boltIndex < 10; boltIndex += 1) {
-            const angle = boltIndex * Math.PI * 2 / 10 + (effect.seed || 0);
-            const reach = 28 + progress * (52 + boltIndex % 3 * 10);
-            const tx = -Math.sin(angle), ty = Math.cos(angle);
-            const electricPoints = [
-              [effect.x + Math.cos(angle) * 13, y + Math.sin(angle) * 13],
-              [effect.x + Math.cos(angle) * reach * .48 + tx * (boltIndex % 2 ? 7 : -7), y + Math.sin(angle) * reach * .48 + ty * (boltIndex % 2 ? 7 : -7)],
-              [effect.x + Math.cos(angle) * reach, y + Math.sin(angle) * reach]
-            ];
-            ctx.globalAlpha = arcAlpha * (.68 + (boltIndex % 3) * .12);
-            ctx.strokeStyle = boltIndex % 2 ? middleColor : coreColor;
-            ctx.lineWidth = boltIndex % 2 ? 3.2 : 2.1;
-            ctx.shadowColor = outerColor;
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            electricPoints.forEach((point, pointIndex) => pointIndex ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
-            ctx.stroke();
-          }
+        const elapsed = (effect.maxLife - effect.life) * 1000;
+        for (let index = 1; index < points.length; index += 1) {
+          const from = points[index - 1];
+          const to = points[index];
+          window.BlockEffectDraft.drawElectricLink(ctx, from.x, from.y - run.cameraY,
+            to.x, to.y - run.cameraY, elapsed - index * 155 + 125,
+            Math.floor(effect.seed || 0) + index);
         }
       } else if (effect.type === 'frostPulse') {
         const ultimateScale = effect.ultimate ? 1.45 : 1;
@@ -6579,11 +8782,11 @@
       } else if (effect.type === 'bomb') {
         const frame = progress < .13 ? 1 : progress < .33 ? 2 : progress < .7 ? 3 : 4;
         const frameAlpha = frame === 4 ? alpha * .9 : Math.min(1, alpha * 1.16);
-        const frameSize = frame === 1 ? 176 : frame === 2 ? 194 : frame === 3 ? 220 : 204;
+        const frameSize = (frame === 1 ? 176 : frame === 2 ? 194 : frame === 3 ? 220 : 204) * (effect.scale || 1);
         if (!drawVfxSprite(`bomb-${frame}`, effect.x, y, frameSize, frameSize, frameAlpha, -.035 + progress * .07)) {
           ctx.globalAlpha = alpha * .8;
           ctx.fillStyle = frame < 3 ? '#ff5647' : '#ffad3d';
-          ctx.beginPath(); ctx.arc(effect.x, y, 25 + progress * 55, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(effect.x, y, (25 + progress * 55) * (effect.scale || 1), 0, Math.PI * 2); ctx.fill();
         }
       } else if (effect.type === 'heal') {
         const targetX = run.slime.x;
@@ -6906,7 +9109,8 @@
     }
     drawBackdropAtmosphere(world, timestamp);
 
-    const depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.floor((run.cameraY + 20) / 10));
+    const depth = (run.endlessDepthOffset || 0) + Math.max(0, Math.min(run.world.targetDepth,
+      Math.floor((run.cameraY + 20 - 285) / (run.rowCount * run.cellSize) * run.world.targetDepth)));
     ctx.fillStyle = 'rgba(11,10,18,.42)';
     roundedRect(ctx, 10, 10, 72, 25, 12);
     ctx.fill();
@@ -7331,32 +9535,169 @@
     ctx.restore();
   }
 
-  function drawSuctionAwareBlock(block, sy, timestamp) {
-    if (!block.blackHoleSuctionStartedAt) {
-      drawBlock(block, sy, timestamp);
+  function drawPhantomMarkedBlock(block, sy, timestamp) {
+    if (window.BlockEffectDraft?.drawPhantomBlock) {
+      prepareElementalBlockCanvas(block.w);
+      const dpr = ctx.canvas.width / VIEW_W;
+      elementalBlockSpriteCtx.drawImage(ctx.canvas,
+        block.x * dpr, sy * dpr, block.w * dpr, block.h * dpr,
+        0, 0, elementalBlockSprite.width, elementalBlockSprite.height);
+      window.BlockEffectDraft.drawPhantomBlock(ctx, elementalBlockSprite,
+        block.x, sy, block.w, timestamp, block.id);
       return;
     }
-    const progress = clamp((timestamp - block.blackHoleSuctionStartedAt) / Math.max(1, block.blackHoleSuctionDuration), 0, 1);
-    const eased = progress * progress * (3 - 2 * progress);
-    const sourceX = block.x + block.w / 2;
-    const sourceY = sy + block.h / 2;
-    const targetX = run.slime.x;
-    const targetY = run.slime.y - run.cameraY;
-    const dx = sourceX - targetX;
-    const dy = sourceY - targetY;
-    const angle = (block.blackHoleSuctionSpin || 0) * progress;
-    const shrink = 1 - eased;
-    const centerX = targetX + (dx * Math.cos(angle) - dy * Math.sin(angle)) * shrink;
-    const centerY = targetY + (dx * Math.sin(angle) + dy * Math.cos(angle)) * shrink;
-    const scale = .08 + Math.pow(shrink, 1.15) * .92;
+    const pulse = .66 + Math.sin(timestamp / 260 + block.row * .8 + block.col) * .16;
+    const inset = 2.5;
     ctx.save();
-    ctx.globalAlpha = clamp(1.12 - progress * .62, 0, 1);
-    ctx.translate(centerX, centerY);
-    ctx.rotate(angle + progress * .7);
-    ctx.scale(scale, scale);
-    ctx.translate(-sourceX, -sourceY);
-    drawBlock(block, sy, timestamp);
+    ctx.globalAlpha = pulse;
+    ctx.strokeStyle = '#e9efff';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#c8d5f4';
+    ctx.shadowBlur = isLowPowerDevice() ? 0 : 8;
+    ctx.strokeRect(block.x + inset, sy + inset, block.w - inset * 2, block.h - inset * 2);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(218,228,245,.14)';
+    ctx.fillRect(block.x + inset + 1, sy + inset + 1, block.w - inset * 2 - 2, block.h - inset * 2 - 2);
+    ctx.fillStyle = '#f6f9ff';
+    const shimmerX = block.x + block.w * (.23 + .5 * ((timestamp / 1600 + block.col * .31) % 1));
+    ctx.beginPath();
+    ctx.arc(shimmerX, sy + 5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
+  }
+
+  function drawGlitchBlockOverlay(block, sy, timestamp) {
+    const x = block.x;
+    const w = block.w;
+    const h = block.h;
+    const deleting = block.glitchDeleteAt > timestamp;
+    const neutralized = block.glitchNeutralized;
+    const flashing = block.glitchFlashUntil > timestamp;
+    const dispersing = !block.glitchInfected && block.glitchDisperseUntil > timestamp;
+    prepareElementalBlockCanvas(w);
+    const dpr = ctx.canvas.width / VIEW_W;
+    elementalBlockSpriteCtx.drawImage(ctx.canvas,
+      x * dpr, sy * dpr, w * dpr, h * dpr,
+      0, 0, elementalBlockSprite.width, elementalBlockSprite.height);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + 1, sy + 1, w - 2, h - 2);
+    ctx.clip();
+    ctx.globalAlpha = dispersing ? clamp((block.glitchDisperseUntil - timestamp) / 420, 0, 1) : 1;
+    window.BlockEffectDraft.drawGlitchBlock(ctx, elementalBlockSprite, x, sy, w, timestamp, block.id);
+    ctx.globalAlpha = 1;
+    if (flashing) {
+      ctx.fillStyle = 'rgba(224,255,255,.17)';
+      ctx.fillRect(x + 2, sy + 2, w - 4, h - 4);
+    }
+    if (deleting || neutralized) {
+      ctx.strokeStyle = deleting ? '#ff657c' : '#70ffe5';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 2, sy + 2, w - 4, h - 4);
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (deleting) {
+        ctx.font = `1000 ${Math.max(10, w * .18)}px system-ui`;
+        ctx.fillText('ERROR', x + w / 2, sy + h / 2);
+      } else {
+        ctx.font = `1000 ${Math.max(17, w * .34)}px system-ui`;
+        ctx.fillText('✓', x + w / 2, sy + h / 2);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawGlitchShock(timestamp) {
+    const shock = run.glitchShock;
+    if (!shock) return;
+    const progress = (timestamp - shock.startedAt) / 390;
+    if (progress >= 1) { run.glitchShock = null; return; }
+    const source = shock.source;
+    const fromX = source.x + source.w / 2;
+    const fromY = source.y + source.h / 2 - run.cameraY;
+    if (fromY < -40 || fromY > VIEW_H + 40) return;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - progress);
+    ctx.lineWidth = 2.5 + (1 - progress) * 2;
+    ctx.shadowColor = '#65fff6';
+    ctx.shadowBlur = isLowPowerDevice() ? 0 : 8;
+    for (const target of shock.targets) {
+      if (target === source) continue;
+      const toX = target.x + target.w / 2;
+      const toY = target.y + target.h / 2 - run.cameraY;
+      if (toY < -40 || toY > VIEW_H + 40) continue;
+      ctx.strokeStyle = (target.id || 0) % 2 ? '#5ffff2' : '#ff68ef';
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      for (let step = 1; step < 5; step += 1) {
+        const t = step / 5;
+        const jitter = ((Math.floor(timestamp / 45) * 13 + (target.id || 0) * 17 + step * 23) % 17 - 8) * 1.2;
+        ctx.lineTo(lerp(fromX, toX, t) + jitter, lerp(fromY, toY, t) - jitter);
+      }
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGlitchClone(timestamp) {
+    const clone = run.glitchClone;
+    if (!clone || timestamp >= clone.until) return;
+    const y = clone.y - run.cameraY;
+    if (y < -100 || y > VIEW_H + 100) return;
+    const selected = skinById(save.selectedSkin);
+    const fade = clamp((clone.until - timestamp) / 420, 0, 1);
+    const stretch = clamp(clone.vy / 900, -.22, .3);
+    drawElementalSlimeAvatar(ctx, {
+      x: clone.x, y, radius: clone.radius, skin: selected.id, colors: selected.colors,
+      emotion: 'focused', hideFace: true, scaleX: 1 - stretch * .42,
+      scaleY: 1 + stretch, rotation: clamp(clone.vx / 850, -.24, .24),
+      alpha: fade * .9, timestamp
+    }, run.categoryVisuals, timestamp);
+  }
+
+  let phantomSoulBurstSprite = null;
+  function ensurePhantomSoulBurstSprite() {
+    if (phantomSoulBurstSprite) return;
+    phantomSoulBurstSprite = new Image();
+    phantomSoulBurstSprite.src = versionedAsset('assets/vfx/phantom-soul-burst-v2.webp');
+  }
+
+  function drawPhantomBursts(timestamp) {
+    if (!run.phantomBursts?.length) return;
+    run.phantomBursts = run.phantomBursts.filter(burst => timestamp - burst.startedAt < PHANTOM_BURST_MS);
+    for (const burst of run.phantomBursts) {
+      const age = Math.max(0, timestamp - burst.startedAt);
+      const progress = clamp(age / PHANTOM_BURST_MS, 0, .999);
+      const radius = run.cellSize * (1 + progress * 1.65);
+      const screenY = burst.y - run.cameraY;
+      if (screenY < -radius || screenY > VIEW_H + radius) continue;
+      ctx.save();
+      ctx.translate(burst.x, screenY);
+      if (phantomSoulBurstSprite?.complete && phantomSoulBurstSprite.naturalWidth) {
+        const spread = 1 - Math.pow(1 - progress, 3);
+        const size = run.cellSize * (.9 + spread * 2.55);
+        ctx.globalAlpha = (1 - progress) * (1 - progress) * .92;
+        ctx.rotate(progress * .11);
+        ctx.drawImage(phantomSoulBurstSprite, -size / 2, -size / 2, size, size);
+        ctx.rotate(-progress * .11);
+      }
+      ctx.globalAlpha = (1 - progress) * (1 - progress) * .78;
+      for (let i = 0; i < 9; i += 1) {
+        const angle = i * Math.PI * 2 / 9 + (i % 2 ? .12 : -.1);
+        const distance = run.cellSize * (.28 + progress * (1.1 + (i % 3) * .2));
+        const dx = Math.cos(angle);
+        const dy = Math.sin(angle);
+        ctx.strokeStyle = i % 3 ? '#b9fff5' : '#f5ffff';
+        ctx.lineWidth = Math.max(.7, 2.6 * (1 - progress));
+        ctx.beginPath();
+        ctx.moveTo(dx * (distance - run.cellSize * .25), dy * (distance - run.cellSize * .25));
+        ctx.lineTo(dx * distance, dy * distance);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
   }
 
   function drawBlock(block, sy, timestamp) {
@@ -7432,7 +9773,7 @@
         ctx.stroke();
       }
 
-      if (!drawCrackStage(block, sy, hpRatio) && crackStageFor(hpRatio)) drawCracks(block, sy, hpRatio);
+      if (!drawCrackStage(block, sy, hpRatio, timestamp) && crackStageFor(hpRatio)) drawCracks(block, sy, hpRatio);
       if (tier === 'ore') {
         ctx.font = '900 8px system-ui';
         ctx.fillStyle = 'rgba(255,255,255,.92)';
@@ -7520,108 +9861,16 @@
     ctx.restore();
   }
 
-  function traceBurningTongue(target, centerX, baseY, width, height, lean = 0) {
-    target.beginPath();
-    target.moveTo(centerX - width * .5, baseY);
-    target.bezierCurveTo(
-      centerX - width * .48,
-      baseY - height * .28,
-      centerX - width * .18 + lean * .3,
-      baseY - height * .62,
-      centerX + lean,
-      baseY - height
-    );
-    target.bezierCurveTo(
-      centerX + width * .19 + lean * .25,
-      baseY - height * .66,
-      centerX + width * .5,
-      baseY - height * .32,
-      centerX + width * .5,
-      baseY
-    );
-    target.closePath();
-  }
-
-  function drawBurningBlockFlames(block, sy, timestamp, intensity) {
-    if (intensity < .01) return;
-    const x = block.x;
-    const w = block.w;
-    const h = block.h;
-    const flicker = .5 + Math.sin(timestamp / 68 + block.id * 1.73) * .5;
-    ctx.save();
-
-    const heat = ctx.createRadialGradient(x + w * .5, sy + h * .84, 2, x + w * .5, sy + h * .6, h * .72);
-    heat.addColorStop(0, `rgba(255,235,89,${intensity * (.24 + flicker * .08)})`);
-    heat.addColorStop(.42, `rgba(255,112,24,${intensity * .2})`);
-    heat.addColorStop(1, 'rgba(150,20,12,0)');
-    ctx.globalCompositeOperation = 'screen';
-    ctx.fillStyle = heat;
-    ctx.fillRect(x + 1, sy + 1, w - 2, h - 2);
-    ctx.globalCompositeOperation = 'source-over';
-
-    ctx.lineJoin = 'miter';
-    ctx.globalAlpha = intensity * .78;
-    ctx.strokeStyle = '#d93414';
-    ctx.lineWidth = 6.4;
-    ctx.shadowColor = '#ff4518';
-    ctx.shadowBlur = 11 + flicker * 5;
-    ctx.strokeRect(x + 3.5, sy + 3.5, w - 7, h - 7);
-    ctx.globalAlpha = intensity * (.82 + flicker * .14);
-    ctx.strokeStyle = '#ff8a18';
-    ctx.lineWidth = 3.5;
-    ctx.shadowBlur = 6;
-    ctx.strokeRect(x + 4.5, sy + 4.5, w - 9, h - 9);
-    ctx.globalAlpha = intensity * (.62 + flicker * .18);
-    ctx.strokeStyle = '#ffe66d';
-    ctx.lineWidth = 1.35;
-    ctx.shadowBlur = 3;
-    ctx.strokeRect(x + 5.4, sy + 5.4, w - 10.8, h - 10.8);
-
-    const tongueCount = 5;
-    for (let index = 0; index < tongueCount; index += 1) {
-      const phase = timestamp / (128 + index * 9) + block.id * .91 + index * 1.77;
-      const wave = Math.sin(phase);
-      const centerX = x + w * (.12 + index * .19) + wave * 1.8;
-      const baseY = sy + h - 3;
-      const width = w * (.16 + (index % 2) * .035);
-      const height = h * (.32 + (index % 3) * .09 + (.5 + wave * .5) * .12);
-      const lean = Math.sin(phase * .73 + index) * width * .24;
-
-      ctx.globalAlpha = intensity * (.84 + flicker * .13);
-      ctx.fillStyle = '#dc3513';
-      ctx.shadowColor = '#ff4518';
-      ctx.shadowBlur = 9;
-      traceBurningTongue(ctx, centerX, baseY, width, height, lean);
-      ctx.fill();
-
-      ctx.globalAlpha = intensity * (.9 + flicker * .08);
-      ctx.fillStyle = '#ff8617';
-      ctx.shadowColor = '#ff9f1c';
-      ctx.shadowBlur = 5;
-      traceBurningTongue(ctx, centerX, baseY - 1, width * .67, height * .76, lean * .65);
-      ctx.fill();
-
-      ctx.globalAlpha = intensity * (.72 + flicker * .2);
-      ctx.fillStyle = '#ffe86a';
-      ctx.shadowColor = '#ffd93d';
-      ctx.shadowBlur = 3;
-      traceBurningTongue(ctx, centerX, baseY - 1.5, width * .34, height * .48, lean * .32);
-      ctx.fill();
-    }
-
-    ctx.globalCompositeOperation = 'screen';
-    for (let ember = 0; ember < 4; ember += 1) {
-      const phase = (timestamp / (480 + ember * 47) + block.id * .17 + ember * .29) % 1;
-      const emberAlpha = Math.sin(phase * Math.PI) * intensity;
-      const px = x + w * (.18 + ember * .21) + Math.sin(block.id + ember * 3.1) * 3;
-      const py = sy + h * (.68 - phase * .58);
-      ctx.globalAlpha = emberAlpha * .8;
-      ctx.fillStyle = ember % 2 ? '#fff09a' : '#ff9d22';
-      ctx.shadowColor = '#ff5c18';
-      ctx.shadowBlur = 6;
-      ctx.beginPath(); ctx.arc(px, py, 1.1 + (ember % 2) * .55, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.restore();
+  const elementalBlockCanvas = document.createElement('canvas');
+  const elementalBlockCtx = elementalBlockCanvas.getContext('2d');
+  const elementalBlockSprite = document.createElement('canvas');
+  const elementalBlockSpriteCtx = elementalBlockSprite.getContext('2d');
+  function prepareElementalBlockCanvas(size) {
+    const pixels = Math.ceil(size);
+    if (elementalBlockCanvas.width !== pixels) elementalBlockCanvas.width = elementalBlockCanvas.height = pixels;
+    else elementalBlockCtx.clearRect(0, 0, pixels, pixels);
+    if (elementalBlockSprite.width !== pixels) elementalBlockSprite.width = elementalBlockSprite.height = pixels;
+    else elementalBlockSpriteCtx.clearRect(0, 0, pixels, pixels);
   }
 
   function drawBlockElementalOverlay(block, sy, timestamp) {
@@ -7672,40 +9921,19 @@
       const age = Math.max(0, timestamp - (block.fireIgnitedAt || timestamp - 180));
       const ignite = smoothFireVisual(age / 170);
       const release = smoothFireVisual(((block.fireFlashUntil || timestamp) - timestamp) / 330);
-      drawBurningBlockFlames(block, sy, timestamp, ignite * release);
+      prepareElementalBlockCanvas(w);
+      window.BlockEffectDraft.drawBurningBlock(elementalBlockCtx, 0, 0, w, timestamp, block.id);
+      ctx.globalAlpha = ignite * release;
+      ctx.drawImage(elementalBlockCanvas, 0, 0, w, w, x, sy, w, h);
+      ctx.globalAlpha = 1;
     }
 
     if (timestamp >= (block.electricFlashStartedAt || 0) && timestamp < (block.electricFlashUntil || 0)) {
-      const duration = Math.max(1, block.electricFlashUntil - (block.electricFlashStartedAt || timestamp));
-      const progress = clamp((timestamp - (block.electricFlashStartedAt || timestamp)) / duration, 0, 1);
-      const flash = Math.sin(progress * Math.PI);
-      const blue = block.electricFlashColor === 'blue';
-      const edge = blue ? '#75efff' : '#fff06a';
-      const core = blue ? '#e9ffff' : '#fffde0';
-      const glow = blue ? '#168eff' : '#ffc313';
-      ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = .16 + flash * .38;
-      ctx.fillStyle = blue ? '#39c8ff' : '#ffd42e';
-      ctx.fillRect(x + 1, sy + 1, w - 2, h - 2);
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = .48 + flash * .52;
-      ctx.strokeStyle = edge;
-      ctx.lineWidth = 2.4 + flash * 1.5;
-      ctx.shadowColor = glow;
-      ctx.shadowBlur = 9 + flash * 10;
-      ctx.strokeRect(x + 2.5, sy + 2.5, w - 5, h - 5);
-      ctx.strokeStyle = core;
-      ctx.lineWidth = 1.35;
-      ctx.shadowBlur = 5;
-      for (let spark = 0; spark < 3; spark += 1) {
-        const startX = x + w * (.18 + spark * .31);
-        const startY = sy + h * (.18 + ((block.id + spark) % 3) * .18);
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(startX + (spark % 2 ? -5 : 6), startY + 7);
-        ctx.lineTo(startX + (spark % 2 ? 3 : -2), startY + 13);
-        ctx.stroke();
-      }
+      prepareElementalBlockCanvas(w);
+      const dpr = ctx.canvas.width / VIEW_W;
+      elementalBlockSpriteCtx.drawImage(ctx.canvas, x * dpr, sy * dpr, w * dpr, h * dpr, 0, 0, w, w);
+      window.BlockEffectDraft.drawElectricShockBlock(ctx, elementalBlockSprite,
+        x, sy, w, timestamp - block.electricFlashStartedAt, block.id);
     }
     ctx.restore();
   }
@@ -7718,24 +9946,24 @@
     return 0;
   }
 
-  function drawCrackStage(block, sy, hpRatio) {
+  function drawCrackStage(block, sy, hpRatio, timestamp) {
     const stage = crackStageFor(hpRatio);
-    const sprite = CRACK_STAGE_SPRITES?.[stage];
-    if (!stage || !sprite?.complete || !sprite.naturalWidth) return false;
-    const gutter = .5;
-    const centerOffset = ({ 1: .066, 2: .087, 3: -.047 })[stage] * block.w;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(block.x + gutter, sy + gutter, block.w - gutter * 2, block.h - gutter * 2);
-    ctx.clip();
-    ctx.globalAlpha = .94;
-    ctx.drawImage(sprite, block.x + gutter + centerOffset, sy + gutter, block.w - gutter * 2, block.h - gutter * 2);
-    ctx.restore();
+    if (block.visualCrackStage !== stage) {
+      const previous = block.visualCrackStage;
+      block.visualCrackStage = stage;
+      block.visualCrackChangedAt = previous === undefined || previous > stage ? timestamp - 280 : timestamp;
+    }
+    if (!stage || !window.BlockEffectDraft?.drawCrackedBlock) return false;
+    const kind = block.frozen || run.worldId === 2 ? 1
+      : run.worldId === 4 || ['stone', 'metal', 'ash', 'basalt', 'volcanicEarth'].includes(block.material) ? 2 : 0;
+    window.BlockEffectDraft.drawCrackedBlock(ctx, block.x, sy, block.w, stage,
+      timestamp, block.visualCrackChangedAt, block.id, kind);
     return true;
   }
 
   function drawSpecialBlockAura(block, sy) {
     const auraKey = block.hazard ? 'hazard' : block.special;
+    if (block.hazard && run.worldId === 1) return;
     // Only universally important signals glow: green means healing, red means
     // danger. Other utility blocks rely on their artwork and own animations.
     if (auraKey !== 'gel' && auraKey !== 'hazard') return;
@@ -7800,6 +10028,7 @@
       ? clamp((timestamp - block.frostTransformStartedAt) / (block.frostTransformDuration || 470), 0, 1)
       : frostTransformed ? 1 : 0;
     const frostIsPrimary = frostTransformed && frostProgress >= .995;
+    const firstWorldSpikeEnemy = block.hazard && run.worldId === 1 && !frostTransformed;
     if (frostIsPrimary && block.elementalSnowflake) spriteName = 'snowflake';
     else if (frostIsPrimary && block.elementalSnow) spriteName = 'snow-packed';
     else if (block.hazard && run.worldId === 2) spriteName = block.hazardVariant === 'spikes' ? 'ice-spikes' : 'ice-shards';
@@ -7844,10 +10073,10 @@
       ? 'dense'
       : block.visualId || (block.special === 'gel' ? 'heal' : block.special || (block.hazard ? 'hazard' : block.tier));
     const edited = frostIsPrimary ? null : contentBlock(run.worldId, contentId);
-    if (edited?.type === 'custom' && edited.sprite) spriteName = edited.sprite;
+    if (!firstWorldSpikeEnemy && edited?.type === 'custom' && edited.sprite) spriteName = edited.sprite;
     const oreArtwork = !block.frozen && (block.tier === 'ore' || block.frozenOre) ? edited?.oreTextures?.[block.oreType?.id || 'coal'] : null;
     const artwork = oreArtwork?.image ? oreArtwork : edited;
-    const customSprite = artwork?.image ? projectSprite(artwork.image) : null;
+    const customSprite = firstWorldSpikeEnemy ? null : artwork?.image ? projectSprite(artwork.image) : null;
     const sprites = frostIsPrimary ? ensureWorldSprites(2) : WORLD_SPRITES[run.worldId];
     const pandoraSprite = block.special === 'pandora' ? VFX_SPRITES?.['pandora-box'] : null;
     const sprite = pandoraSprite?.complete && pandoraSprite.naturalWidth
@@ -7860,13 +10089,26 @@
     // Damage is communicated only by the crack overlay. The underlying artwork
     // remains fully opaque and keeps its original colour at every health value.
     ctx.globalAlpha = 1;
-    const scale = customSprite ? (artwork.scale || 1) : 1;
+    const scale = firstWorldSpikeEnemy ? .92 : customSprite ? (artwork.scale || 1) : 1;
     const width = Math.max(1, block.w * scale - gutter * 2);
     const height = Math.max(1, block.h * scale - gutter * 2);
     const offsetX = customSprite ? block.w * (artwork.x || 0) / 100 : 0;
     const offsetY = customSprite ? block.h * (artwork.y || 0) / 100 : 0;
     const drawX = block.x + (block.w - width) / 2 + offsetX;
     const drawY = sy + (block.h - height) / 2 + offsetY;
+    if (firstWorldSpikeEnemy) {
+      const hover = Math.sin(timestamp / 430 + block.id * .7) * 1.35;
+      ctx.save();
+      ctx.globalAlpha = .22;
+      ctx.fillStyle = '#101824';
+      ctx.beginPath();
+      ctx.ellipse(block.x + block.w / 2, sy + block.h - 3, block.w * .3, 2.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.drawImage(sprite, drawX, drawY - hover - 1.5, width, height);
+      ctx.restore();
+      return true;
+    }
     if (['bomb', 'spring', 'cryo', 'jelly', 'pandora', 'geyser', 'meteor'].includes(block.special)) {
       const time = performance.now();
       const phase = time / (block.special === 'bomb' ? 160 : block.special === 'spring' ? 260 : 300) + block.id;
@@ -7922,7 +10164,7 @@
     }
     ctx.globalAlpha = 1;
     drawSpecialBlockAura(block, sy);
-    drawCrackStage(block, sy, hpRatio);
+    drawCrackStage(block, sy, hpRatio, timestamp);
 
     return true;
   }
@@ -8031,7 +10273,7 @@
   }
 
   function menuCategoryLevels() {
-    const levels = { fire: 0, frost: 0, electric: 0, cosmos: 0, nano: 0, telekinesis: 0, cloning: 0, explosion: 0, mass: 0 };
+    const levels = { fire: 0, frost: 0, electric: 0, cosmos: 0, nano: 0, telekinesis: 0, cloning: 0, phantom: 0, glitch: 0, explosion: 0, mass: 0 };
     const familyToCategory = {
       fire: 'fire', damage: 'fire',
       frost: 'frost', ice: 'frost',
@@ -8040,6 +10282,8 @@
       nano: 'nano',
       telekinesis: 'telekinesis',
       cloning: 'cloning',
+      phantom: 'phantom',
+      glitch: 'glitch',
       blast: 'explosion', explosion: 'explosion'
     };
     for (const food of session?.foods || []) {
@@ -8054,7 +10298,7 @@
   function syncMenuCategoryVisuals({ instant = false } = {}) {
     const levels = menuCategoryLevels();
     const now = performance.now();
-    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'explosion', 'mass']) {
+    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch', 'explosion', 'mass']) {
       menuCategoryVisual[`${key}From`] = instant ? levels[key] : menuCategoryVisual[key];
       menuCategoryVisual[`${key}Target`] = levels[key];
       menuCategoryVisual[`${key}StartedAt`] = now;
@@ -8063,7 +10307,7 @@
   }
 
   function updateMenuCategoryVisuals(timestamp) {
-    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'explosion', 'mass']) {
+    for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch', 'explosion', 'mass']) {
       const from = menuCategoryVisual[`${key}From`];
       const target = menuCategoryVisual[`${key}Target`];
       if (menuReducedMotion || Math.abs(target - from) < .001) {
@@ -8514,11 +10758,76 @@
     const fireLevel = clamp(Number(levels?.fire) || 0, 0, 3);
     const frostLevel = clamp(Number(levels?.frost) || 0, 0, 3);
     const electricLevel = clamp(Number(levels?.electric) || 0, 0, 3);
+    const cosmosLevel = clamp(Number(levels?.cosmos) || 0, 0, 3);
+    const nanoLevel = clamp(Number(levels?.nano) || 0, 0, 3);
+    const psionicsLevel = clamp(Number(levels?.telekinesis) || 0, 0, 3);
+    const sporesLevel = clamp(Number(levels?.cloning) || 0, 0, 3);
+    const phantomLevel = clamp(Number(levels?.phantom) || 0, 0, 3);
+    const glitchLevel = clamp(Number(levels?.glitch) || 0, 0, 3);
+    if ((fireLevel || frostLevel || electricLevel || cosmosLevel || nanoLevel || psionicsLevel
+      || sporesLevel || phantomLevel || glitchLevel)
+      && !(levels?.explosion > 1) && window.MutationEffectDraft) {
+      const bodyVariant = frostLevel >= 3 ? 'frostUltra' : cosmosLevel >= 3 ? 'cosmosUltra'
+        : nanoLevel >= 3 ? 'technoUltra' : electricLevel >= 3 ? 'electricUltra'
+        : fireLevel >= 3 ? 'fireUltra' : psionicsLevel >= 3 ? 'psionicsUltra'
+        : phantomLevel >= 3 ? 'phantomUltra' : sporesLevel >= 3 ? 'sporesUltra'
+        : glitchLevel >= 3 ? 'glitchUltra'
+        : sporesLevel ? 'sporesStage1' : '';
+      const motion = psionicsLevel >= 2
+        ? window.MutationEffectDraft.psionicsMotion(timestamp, options.radius)
+        : { offset: 0, energy: 0 };
+      const draftState = {
+        x: options.x, y: options.y + motion.offset, baseY: options.y,
+        radius: options.radius, timestamp, psionicsEnergy: motion.energy,
+        phantomActive: Boolean(options.phantomActive),
+        // Gameplay draws the real drones separately so their position also drives shots.
+        levels: { fire: fireLevel, frost: frostLevel, electric: electricLevel, cosmos: cosmosLevel,
+          telekinesis: psionicsLevel, cloning: sporesLevel, phantom: phantomLevel, glitch: glitchLevel, nano: 0 }
+      };
+      window.MutationEffectDraft.drawBehind(target, draftState);
+      drawSlimeAvatar(target, {
+        ...options,
+        y: draftState.y,
+        bodyVariant,
+        fireEyes: bodyVariant === 'fireUltra',
+        electricEyes: bodyVariant === 'electricUltra',
+        frostEyes: bodyVariant === 'frostUltra',
+        cosmosEyes: bodyVariant === 'cosmosUltra',
+        glitchEyes: bodyVariant === 'glitchUltra',
+        glitchFaceLevel: glitchLevel,
+        psionicsEyes: psionicsLevel >= 2,
+        phantomEyes: phantomLevel >= 2,
+        sporesEyes: bodyVariant === 'sporesUltra',
+        nanoEyeOpenness: nanoLevel >= 2
+          ? (options.nanoEyeOpenness ?? (run && target === ctx
+            ? nanoRunEyeOpenness(timestamp) : window.MutationEffectDraft.nanoEyeOpenness(timestamp))) : null,
+        irisTint: bodyVariant === 'frostUltra' ? '#3a9fff' : bodyVariant === 'cosmosUltra' ? '#a576ff'
+          : bodyVariant === 'technoUltra' ? '#f04a55' : bodyVariant === 'electricUltra' ? '#ffd84e'
+          : bodyVariant === 'fireUltra' ? '#ff9a22' : bodyVariant === 'psionicsUltra' ? '#8d5cff'
+          : bodyVariant === 'sporesUltra' ? '#ce782f' : bodyVariant === 'glitchUltra' ? '#d8ff50' : '',
+        cheekFilter: frostLevel ? 'hue-rotate(195deg) saturate(.85) brightness(1.08) contrast(1.06)' : '',
+        mouthStyle: frostLevel && window.MutationEffectDraft.isFrostBreathing(timestamp) ? 'pursed' : '',
+        bodyFilter: !options.preservePhantomBody && phantomLevel >= 2 && phantomLevel < 3
+          ? 'grayscale(1) brightness(1.8) contrast(.85)' : '',
+        outlineColor: phantomLevel && !options.preservePhantomBody ? '#d8f7ff' : options.outlineColor,
+        frontLayer: frostLevel >= 2 && frostLevel < 3
+          ? (layerTarget, layerState) => {
+            if (typeof options.frontLayer === 'function') options.frontLayer(layerTarget, layerState);
+            window.MutationEffectDraft.drawInside(layerTarget, {
+              ...draftState, levels: { ...draftState.levels, frost: 2 }
+            });
+          }
+          : options.frontLayer
+      });
+      window.MutationEffectDraft.drawFront(target, draftState);
+      window.MutationEffectDraft.drawComposite(target, draftState);
+      return;
+    }
     const formLevels = {
       fire: fireLevel,
       frost: frostLevel,
       electric: electricLevel,
-      cosmos: clamp(Number(levels?.cosmos) || 0, 0, 3),
+      cosmos: cosmosLevel,
       explosion: clamp(Number(levels?.explosion) || 0, 0, 3)
     };
     const hybridForm = Object.keys(formLevels).find(form => formLevels[form] > 1) || '';
@@ -8540,7 +10849,7 @@
     else if (frostDominant > .001) dominantTint = `rgba(73,183,238,${(.58 * frostDominant).toFixed(3)})`;
     else if (electricCharged > .001) dominantTint = `rgba(255,209,12,${(.7 * electricCharged).toFixed(3)})`;
     const alpha = Number.isFinite(options.alpha) ? options.alpha : 1;
-    const eyesVisible = !options.blink && !['hurt', 'impact', 'power', 'petting', 'pleased', 'chewing', 'anticipating', 'savoring'].includes(options.emotion);
+    const eyesVisible = !options.hideFace && !options.blink && !['hurt', 'impact', 'power', 'petting', 'pleased', 'chewing', 'anticipating', 'savoring'].includes(options.emotion);
     const x = options.x;
     const y = options.y;
     const radius = options.radius;
@@ -8559,7 +10868,7 @@
         afterLayer: (layerTarget, state) => {
           if (typeof originalAfterLayer === 'function') originalAfterLayer(layerTarget, state);
           drawFrostRim(layerTarget, state.radius, frostDominant);
-          drawColdFace(layerTarget, state.radius, frostAmount, timestamp);
+          if (!options.hideFace) drawColdFace(layerTarget, state.radius, frostAmount, timestamp);
           drawSnowCap(layerTarget, state.radius, frostDominant, timestamp);
           drawLightningMark(layerTarget, state.radius, electricMarked);
           drawFireTip(layerTarget, 0, 0, state.radius, Math.min(fireLevel, 2), timestamp);
@@ -8601,14 +10910,14 @@
 
   function prepareMenuSlimeCanvas() {
     const dpr = Math.min(isMobileDevice() ? 1 : isLowPowerDevice() ? 1.2 : 1.5, window.devicePixelRatio || 1);
-    els.menuSlimeCanvas.width = Math.round(180 * dpr);
-    els.menuSlimeCanvas.height = Math.round(180 * dpr);
+    els.menuSlimeCanvas.width = Math.round(260 * dpr);
+    els.menuSlimeCanvas.height = Math.round(260 * dpr);
     menuSlimeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     menuSlimeCtx.imageSmoothingEnabled = true;
   }
 
   function drawMenuSlime(timestamp) {
-    menuSlimeCtx.clearRect(0, 0, 180, 180);
+    menuSlimeCtx.clearRect(0, 0, 260, 260);
     const categoryVisual = updateMenuCategoryVisuals(timestamp);
     const emotion = menuSlimeEmotion();
     const emotionTime = emotion === 'chewing' && menuChewStartedAt
@@ -8618,24 +10927,35 @@
     const selected = skinById(save.selectedSkin);
     const baseRadius = 70;
     const radius = baseRadius * (1 + categoryVisual.mass * .1);
-    const restingBottom = 157;
+    const restingBottom = 197;
     const slimeY = restingBottom - radius * .98;
-    drawElementalSlimeAvatar(menuSlimeCtx, {
-      x: 90, y: slimeY, radius, emotion,
+    const menuAvatarOptions = {
+      x: 130, y: slimeY, radius, emotion,
       skin: selected.id,
       colors: selected.colors,
       gazeX: menuGaze.x, gazeY: menuGaze.y,
       emotionTime,
       blink: emotion === 'focused' && blinkPhase > 4420 && blinkPhase < 4530,
       petPoint: els.slime.classList.contains('petting') ? menuPetPoint : null,
+      nanoEyeOpenness: categoryVisual.nano >= 2 ? 0 : null,
       timestamp
-    }, categoryVisual, timestamp);
-    const nanoCount = Math.min(2, Math.round(categoryVisual.nano));
+    };
+    drawElementalSlimeAvatar(menuSlimeCtx, menuAvatarOptions, categoryVisual, timestamp);
+    const nanoCount = Math.min(1, Math.round(categoryVisual.nano));
     for (let index = 0; index < nanoCount; index += 1) {
-      const side = nanoCount === 1 ? 1 : index === 0 ? -1 : 1;
-      drawNanoDroneSprite(menuSlimeCtx, 90 + side * 68,
-        slimeY - 17 + Math.sin(timestamp / 340 + index * 2.2) * 3, 46);
+      const side = nanoCount === 1 ? -1 : index === 0 ? -1 : 1;
+      drawNanoDroneSprite(menuSlimeCtx, 130 + side * 64,
+        slimeY - radius * .72 + Math.sin(timestamp / 410 + index * 2.2) * 3, radius * .70);
     }
+    // Fade particles at the expanded canvas edge so no effect ends on a hard square.
+    menuSlimeCtx.save();
+    menuSlimeCtx.globalCompositeOperation = 'destination-in';
+    const edgeFade = menuSlimeCtx.createRadialGradient(130, 130, 102, 130, 130, 128);
+    edgeFade.addColorStop(0, '#000');
+    edgeFade.addColorStop(1, 'transparent');
+    menuSlimeCtx.fillStyle = edgeFade;
+    menuSlimeCtx.fillRect(0, 0, 260, 260);
+    menuSlimeCtx.restore();
   }
 
   function menuSlimeFrame(timestamp) {
@@ -8660,22 +10980,47 @@
   function drawActiveElementalAbility(timestamp, x, y, radius) {
     const type = run.elementalAbilityActive;
     if (!type || timestamp >= run.elementalAbilityUntil) return;
+    if (type === 'frost' || type === 'fire' || type === 'electric' || type === 'nano') return; // Their effects are drawn over the shaft.
     const remaining = clamp((run.elementalAbilityUntil - timestamp) / (ELEMENTAL_ABILITY_DURATION_MS[type] || 1), 0, 1);
     ctx.save();
-    if (type === 'frost') {
-      ctx.strokeStyle = 'rgba(223,252,255,.86)';
-      ctx.lineWidth = 2.2;
-      ctx.shadowColor = '#65d5ff';
-      ctx.shadowBlur = 8;
-      for (let flake = 0; flake < 5; flake += 1) {
-        const angle = timestamp / 520 + flake * Math.PI * 2 / 5;
-        const orbit = radius * (1.18 + (flake % 2) * .18);
-        const px = x + Math.cos(angle) * orbit;
-        const py = y + Math.sin(angle) * orbit;
+    if (type === 'telekinesis') {
+      const press = run.telekinesisPress;
+      if (press) {
+        const age = timestamp - press.startedAt;
+        const rise = clamp(age / 260, 0, 1);
+        const fade = press.collided ? 1 - clamp((age - TELEKINESIS_PRESS_COLLIDE_MS) / 850, 0, 1) : 1;
+        const energy = rise * fade;
+        const crownY = y - radius * 1.8;
+        const pulse = 1 + Math.sin(timestamp / 55) * .12;
+        const glow = ctx.createRadialGradient(x, crownY, 2, x, crownY, radius * 2.2);
+        glow.addColorStop(0, `rgba(243,255,255,${energy * .9})`);
+        glow.addColorStop(.24, `rgba(105,211,255,${energy * .55})`);
+        glow.addColorStop(1, 'rgba(75,96,255,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(x, crownY, radius * 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = energy;
+        ctx.shadowColor = '#7dbfff';
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = '#e6ffff';
+        ctx.strokeStyle = '#699aff';
+        ctx.lineWidth = 3;
+        const height = radius * .65 * pulse;
         ctx.beginPath();
-        ctx.moveTo(px - 3, py); ctx.lineTo(px + 3, py);
-        ctx.moveTo(px, py - 3); ctx.lineTo(px, py + 3);
-        ctx.stroke();
+        ctx.moveTo(x, crownY - height);
+        ctx.lineTo(x + radius * .35, crownY);
+        ctx.lineTo(x, crownY + height);
+        ctx.lineTo(x - radius * .35, crownY);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#b5daff';
+        ctx.lineWidth = 2;
+        for (let arc = 0; arc < 3; arc += 1) {
+          const orbit = radius * (1 + arc * .28 + Math.sin(timestamp / 120 + arc) * .045);
+          ctx.beginPath();
+          ctx.ellipse(x, crownY, orbit, orbit * .34, Math.sin(timestamp / 260 + arc) * .25,
+            timestamp / (310 + arc * 70), timestamp / (310 + arc * 70) + Math.PI * 1.2);
+          ctx.stroke();
+        }
       }
     } else if (type === 'electric') {
       const elapsed = 1 - remaining;
@@ -8831,45 +11176,35 @@
       }
       ctx.globalCompositeOperation = 'source-over';
     } else if (type === 'cosmos') {
-      const elapsed = 1 - remaining;
-      const pulse = .5 + Math.sin(timestamp / 92) * .5;
-      const coreRadius = radius * (.72 + pulse * .06);
-      const fieldRadius = radius * (2.75 + pulse * .22);
-      const field = ctx.createRadialGradient(x, y, coreRadius * .4, x, y, fieldRadius);
-      field.addColorStop(0, 'rgba(3,2,14,.96)');
-      field.addColorStop(.2, `rgba(53,22,116,${.72 + pulse * .12})`);
-      field.addColorStop(.48, 'rgba(89,62,214,.25)');
-      field.addColorStop(1, 'rgba(33,20,112,0)');
-      ctx.fillStyle = field;
-      ctx.beginPath(); ctx.arc(x, y, fieldRadius, 0, Math.PI * 2); ctx.fill();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.lineCap = 'round';
-      for (let ring = 0; ring < 3; ring += 1) {
-        const ringRadius = radius * (1.02 + ring * .38 + pulse * .035);
-        const start = timestamp / (330 + ring * 95) * (ring % 2 ? -1 : 1) + ring * 1.7;
-        ctx.globalAlpha = (.42 - ring * .07) * Math.min(1, remaining * 4);
-        ctx.strokeStyle = ring === 1 ? '#78dfff' : ring === 2 ? '#a06cff' : '#f0eaff';
-        ctx.lineWidth = 3.5 - ring * .65;
-        ctx.shadowColor = ring === 1 ? '#2a9dff' : '#793fff';
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.ellipse(x, y, ringRadius * 1.28, ringRadius * .58, start * .08, start, start + Math.PI * (1.2 + ring * .16));
-        ctx.stroke();
+      const ultimate = run.cosmosUltimate;
+      if (ultimate) {
+        const charging = timestamp < ultimate.chargeUntil;
+        const power = charging ? clamp((timestamp - ultimate.startedAt) / COSMOS_ULTIMATE_CHARGE_MS, 0, 1)
+          : cosmosUltimatePower(ultimate, timestamp);
+        const pulse = .5 + Math.sin(timestamp / (charging ? 62 : 105)) * .5;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        for (let ring = 0; ring < 3; ring += 1) {
+          const orbit = radius * (charging ? 2.15 - power * .75 + ring * .16 : 1.15 + ring * .23 + pulse * .05);
+          ctx.globalAlpha = (.34 + power * .42) * (1 - ring * .2) * (charging ? 1 : power);
+          ctx.strokeStyle = ring === 1 ? '#74ecff' : ring === 2 ? '#a970ff' : '#fff5ff';
+          ctx.shadowColor = ring === 1 ? '#3ac7ff' : '#a743ff';
+          ctx.shadowBlur = 14 + power * 12;
+          ctx.lineWidth = (charging ? 2.5 : 4.5) + power * 1.7 - ring * .35;
+          ctx.beginPath();
+          ctx.ellipse(x, y, orbit * 1.12, orbit * .49, Math.sin(timestamp / 300 + ring) * .18,
+            timestamp / (420 + ring * 75), timestamp / (420 + ring * 75) + Math.PI * 1.45);
+          ctx.stroke();
+        }
+        if (charging) for (let mote = 0; mote < 12; mote += 1) {
+          const phase = (timestamp / (440 + mote * 17) + mote * .139) % 1;
+          const angle = mote * 2.399 + timestamp / 950;
+          const orbit = radius * lerp(2.6, .76, phase);
+          ctx.globalAlpha = phase * (.3 + power * .7);
+          ctx.fillStyle = mote % 3 ? '#dba8ff' : '#aaf7ff';
+          ctx.beginPath(); ctx.arc(x + Math.cos(angle) * orbit, y + Math.sin(angle) * orbit, 1.6 + power * 1.5, 0, Math.PI * 2); ctx.fill();
+        }
       }
-      for (let mote = 0; mote < 9; mote += 1) {
-        const phase = (timestamp / (520 + mote * 17) + mote * .137) % 1;
-        const angle = mote * 2.399 + phase * 3.2;
-        const orbit = lerp(fieldRadius, coreRadius * .8, phase);
-        ctx.globalAlpha = Math.sin(phase * Math.PI) * .8;
-        ctx.fillStyle = mote % 3 ? '#83ddff' : '#e6c8ff';
-        ctx.beginPath(); ctx.arc(x + Math.cos(angle) * orbit, y + Math.sin(angle) * orbit * .72, 1.5 + phase * 1.6, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = .82 + elapsed * .08;
-      ctx.fillStyle = '#05020f';
-      ctx.shadowColor = '#8a58ff';
-      ctx.shadowBlur = 15;
-      ctx.beginPath(); ctx.arc(x, y, coreRadius, 0, Math.PI * 2); ctx.fill();
     } else if (type === 'gold') {
       const pulse = .5 + Math.sin(timestamp / 90) * .5;
       ctx.globalAlpha = .8 + remaining * .2;
@@ -8918,8 +11253,63 @@
     ctx.restore();
   }
 
+  function drawCosmosUltimateTrail(timestamp) {
+    const ultimate = run?.cosmosUltimate;
+    if (!ultimate || timestamp < ultimate.chargeUntil || !ultimate.trail.length) return;
+    const fade = cosmosUltimatePower(ultimate, timestamp);
+    if (fade <= 0) return;
+    const points = ultimate.trail;
+    const headY = run.slime.y - run.cameraY;
+    const tailY = Math.max(-90, points[0].y - run.cameraY);
+    if (headY <= tailY + 2) return;
+    const x = run.slime.x;
+    const radius = run.slime.radius;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    const layers = [
+      { width: radius * 2.85, color: 'rgba(102,43,242,.22)', blur: 32 },
+      { width: radius * 1.42, color: 'rgba(210,90,255,.35)', blur: 18 },
+      { width: radius * .38, color: 'rgba(255,242,255,.68)', blur: 11 }
+    ];
+    for (const layer of layers) {
+      const gradient = ctx.createLinearGradient(x, tailY, x, headY);
+      gradient.addColorStop(0, 'rgba(96,56,240,0)');
+      gradient.addColorStop(.35, layer.color);
+      gradient.addColorStop(1, layer.color);
+      ctx.globalAlpha = fade;
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = layer.width;
+      ctx.shadowColor = layer.color;
+      ctx.shadowBlur = layer.blur;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y - run.cameraY);
+      for (const point of points) ctx.lineTo(point.x, point.y - run.cameraY);
+      ctx.lineTo(x, headY - radius * .2);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 13;
+    ctx.shadowColor = '#a675ff';
+    for (let mote = 0; mote < 13; mote += 1) {
+      const phase = (timestamp / (310 + mote * 17) + mote * .173) % 1;
+      const y = headY - phase * Math.min(360, headY - tailY);
+      const side = mote % 2 ? 1 : -1;
+      const mx = x + side * radius * (.75 + phase * (1.5 + mote % 3 * .24));
+      ctx.globalAlpha = fade * (1 - phase) * .82;
+      ctx.fillStyle = mote % 3 ? '#de9bff' : '#9df7ff';
+      ctx.beginPath(); ctx.arc(mx, y, 1.4 + (mote % 3) * .7, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function cosmosCometVisualStrength(timestamp) {
-    if (!run || elementalLevel('cosmos') < 2 || run.portalEntry) return 0;
+    if (!run || run.portalEntry) return 0;
+    const ultimate = run.cosmosUltimate;
+    if (ultimate && timestamp < ultimate.fadeUntil) {
+      if (timestamp < ultimate.chargeUntil) return .38 + .62 * clamp((timestamp - ultimate.startedAt) / COSMOS_ULTIMATE_CHARGE_MS, 0, 1);
+      return cosmosUltimatePower(ultimate, timestamp);
+    }
+    if (elementalLevel('cosmos') < 2) return 0;
     if (cosmosBoostActive()) return 1;
     if (timestamp < (run.cosmosCometFadeUntil || 0)) {
       return clamp((run.cosmosCometFadeUntil - timestamp) / 420, 0, 1);
@@ -8930,34 +11320,37 @@
   function drawCosmosCometVisual(timestamp, x, y, radius, front = false) {
     const strength = cosmosCometVisualStrength(timestamp);
     if (strength <= .01) return;
-    const active = cosmosBoostActive();
+    const ultimate = run.cosmosUltimate;
+    const ultra = ultimate && timestamp >= ultimate.chargeUntil && timestamp < ultimate.fadeUntil
+      ? cosmosUltimatePower(ultimate, timestamp) : 0;
+    const active = cosmosBoostActive() || ultra > 0;
     const ignition = run.cosmosCometIgnitedAt
       ? clamp(1 - (timestamp - run.cosmosCometIgnitedAt) / 520, 0, 1)
       : 0;
     const pulse = .5 + Math.sin(timestamp / 72) * .5;
-    const wakeLength = radius * (.45 + strength * 1.72 + (active ? .78 + pulse * .2 : 0));
-    const wakeWidth = radius * (.55 + strength * .32 + (active ? .12 : 0));
+    const wakeLength = radius * (.45 + strength * 1.72 + (active ? .78 + pulse * .2 : 0)) * (1 + ultra * 1.35);
+    const wakeWidth = radius * (.55 + strength * .32 + (active ? .12 : 0)) * (1 + ultra * .85);
 
     ctx.save();
     ctx.translate(x, y);
     ctx.globalCompositeOperation = 'lighter';
     if (!front) {
-      const glowRadius = radius * (1.12 + strength * .78 + ignition * .3);
+      const glowRadius = radius * (1.12 + strength * .78 + ignition * .3 + ultra * 1.15);
       const glow = ctx.createRadialGradient(0, radius * .24, radius * .12, 0, radius * .2, glowRadius);
-      glow.addColorStop(0, `rgba(250,235,255,${.12 + strength * .18})`);
-      glow.addColorStop(.42, `rgba(174,75,255,${.1 + strength * .23})`);
+      glow.addColorStop(0, `rgba(250,235,255,${strength * (.12 + strength * .18)})`);
+      glow.addColorStop(.42, `rgba(174,75,255,${strength * (.1 + strength * .23)})`);
       glow.addColorStop(1, 'rgba(78,25,196,0)');
       ctx.fillStyle = glow;
       ctx.beginPath(); ctx.arc(0, radius * .2, glowRadius, 0, Math.PI * 2); ctx.fill();
 
       const flame = ctx.createLinearGradient(0, radius * .88, 0, -wakeLength);
-      flame.addColorStop(0, `rgba(255,244,255,${.66 + strength * .3})`);
-      flame.addColorStop(.22, `rgba(226,120,255,${.58 + strength * .34})`);
-      flame.addColorStop(.6, `rgba(121,42,255,${.4 + strength * .28})`);
+      flame.addColorStop(0, `rgba(255,244,255,${strength * (.66 + strength * .3)})`);
+      flame.addColorStop(.22, `rgba(226,120,255,${strength * (.58 + strength * .34)})`);
+      flame.addColorStop(.6, `rgba(121,42,255,${strength * (.4 + strength * .28)})`);
       flame.addColorStop(1, 'rgba(46,16,155,0)');
       ctx.fillStyle = flame;
       ctx.shadowColor = '#9d45ff';
-      ctx.shadowBlur = 13 + strength * 16;
+      ctx.shadowBlur = 13 + strength * 16 + ultra * 28;
       const sway = Math.sin(timestamp / 64) * radius * .09;
       ctx.beginPath();
       ctx.moveTo(-radius * .84, radius * .34);
@@ -8968,8 +11361,8 @@
       ctx.fill();
 
       const inner = ctx.createLinearGradient(0, radius * .72, 0, -wakeLength * .74);
-      inner.addColorStop(0, `rgba(255,255,255,${.58 + strength * .38})`);
-      inner.addColorStop(.28, `rgba(238,173,255,${.5 + strength * .34})`);
+      inner.addColorStop(0, `rgba(255,255,255,${strength * (.58 + strength * .38)})`);
+      inner.addColorStop(.28, `rgba(238,173,255,${strength * (.5 + strength * .34)})`);
       inner.addColorStop(1, 'rgba(128,54,255,0)');
       ctx.fillStyle = inner;
       ctx.shadowBlur = 12;
@@ -8981,7 +11374,7 @@
       ctx.closePath();
       ctx.fill();
 
-      ctx.globalAlpha = .36 + strength * .38;
+      ctx.globalAlpha = strength * (.36 + strength * .38);
       ctx.strokeStyle = '#bc66ff';
       ctx.lineWidth = 2 + strength * 2;
       for (const side of [-1, 1]) {
@@ -8991,7 +11384,7 @@
         ctx.stroke();
       }
     } else {
-      ctx.globalAlpha = .42 + strength * .56;
+      ctx.globalAlpha = strength * (.42 + strength * .56);
       ctx.strokeStyle = active ? '#fff4ff' : '#dfadff';
       ctx.lineWidth = 3 + strength * 3.6;
       ctx.shadowColor = '#922fff';
@@ -8999,22 +11392,118 @@
       ctx.beginPath();
       ctx.arc(0, 0, radius * (1.03 + strength * .055), Math.PI * .04, Math.PI * .96);
       ctx.stroke();
-      ctx.globalAlpha = .22 + strength * .42;
+      ctx.globalAlpha = strength * (.22 + strength * .42);
       ctx.strokeStyle = '#9e42ff';
       ctx.lineWidth = 2 + strength * 1.5;
       ctx.beginPath();
       ctx.arc(0, radius * .04, radius * (1.18 + strength * .08), Math.PI * .12, Math.PI * .88);
       ctx.stroke();
 
-      const sparks = active ? 12 : 7;
+      const sparks = ultra > 0 ? 22 : active ? 12 : 7;
       for (let index = 0; index < sparks; index += 1) {
         const phase = (timestamp / (310 + index * 13) + index * .173) % 1;
         const side = index % 2 ? 1 : -1;
         const sparkY = radius * .36 - phase * (wakeLength + radius * .12);
         const sparkX = side * radius * (.42 + (index % 3) * .2) * (1 - phase * .58) + Math.sin(timestamp / 90 + index * 2.4) * 3;
-        ctx.globalAlpha = (1 - phase) * (.35 + strength * .65);
+        ctx.globalAlpha = strength * (1 - phase) * (.35 + strength * .65);
         ctx.fillStyle = index % 3 ? '#c86bff' : '#fff4ff';
         ctx.beginPath(); ctx.arc(sparkX, sparkY, 1.3 + strength * 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function telekinesisPressScreenBounds(press) {
+    return {
+      top: Math.max(0, press.topY - run.cameraY),
+      bottom: Math.min(VIEW_H, press.bottomY - run.cameraY)
+    };
+  }
+
+  function drawTelekinesisPressBackdrop(timestamp) {
+    const press = run.telekinesisPress;
+    if (!press || press.collided) return;
+    const { top, bottom } = telekinesisPressScreenBounds(press);
+    if (bottom <= top) return;
+    const progress = telekinesisPressProgress(press, timestamp);
+    const front = progress * VIEW_W * .5;
+    ctx.save();
+    ctx.globalAlpha = .18 + progress * .2;
+    ctx.fillStyle = '#3675c9';
+    ctx.fillRect(0, top, front, bottom - top);
+    ctx.fillRect(VIEW_W - front, top, front, bottom - top);
+    ctx.restore();
+  }
+
+  function drawTelekinesisPressScene(timestamp) {
+    const press = run.telekinesisPress;
+    if (!press) return;
+    const { top, bottom } = telekinesisPressScreenBounds(press);
+    if (bottom <= top) return;
+    const elapsed = timestamp - press.startedAt;
+    const progress = telekinesisPressProgress(press, timestamp);
+    const middle = VIEW_W / 2;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, top, VIEW_W, bottom - top); ctx.clip();
+    if (!press.collided) {
+      const front = Math.max(2, progress * (middle - 4));
+      const breathe = .78 + Math.sin(timestamp / 47) * .22;
+      const strokeWall = x => {
+        ctx.beginPath();
+        for (let sy = top - 9, index = 0; sy <= bottom + 12; sy += 16, index += 1) {
+          const wobble = Math.sin(sy * .09 + timestamp * .024) * 4
+            + Math.sin(sy * .21 - timestamp * .033) * 2;
+          if (!index) ctx.moveTo(x + wobble, sy);
+          else ctx.lineTo(x + wobble, sy);
+        }
+        ctx.stroke();
+      };
+      ctx.globalAlpha = (.48 + progress * .45) * breathe;
+      ctx.shadowColor = '#5fcaff';
+      ctx.shadowBlur = 18;
+      ctx.strokeStyle = '#71bfff';
+      ctx.lineWidth = 7 + progress * 5;
+      for (const x of [front, VIEW_W - front]) strokeWall(x);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#e6faff';
+      ctx.lineWidth = 2;
+      for (const x of [front, VIEW_W - front]) strokeWall(x);
+      ctx.globalAlpha = progress * .55;
+      ctx.strokeStyle = '#91b5ff';
+      ctx.lineWidth = 1.6;
+      for (let y = press.topY; y < press.bottomY; y += run.cellSize * 2) {
+        const sy = y - run.cameraY;
+        if (sy < top - 12 || sy > bottom + 12) continue;
+        ctx.beginPath();
+        ctx.moveTo(front, sy - 9);
+        ctx.lineTo(front + 13, sy);
+        ctx.lineTo(front, sy + 9);
+        ctx.moveTo(VIEW_W - front, sy - 9);
+        ctx.lineTo(VIEW_W - front - 13, sy);
+        ctx.lineTo(VIEW_W - front, sy + 9);
+        ctx.stroke();
+      }
+    } else {
+      const release = clamp((elapsed - TELEKINESIS_PRESS_COLLIDE_MS) / TELEKINESIS_PRESS_FADE_MS, 0, 1);
+      const strength = 1 - release;
+      const blast = ctx.createLinearGradient(middle - 80, 0, middle + 80, 0);
+      blast.addColorStop(0, 'rgba(99,114,255,0)');
+      blast.addColorStop(.5, `rgba(204,244,255,${strength * .85})`);
+      blast.addColorStop(1, 'rgba(99,114,255,0)');
+      ctx.globalAlpha = strength;
+      ctx.fillStyle = blast;
+      ctx.fillRect(0, top, VIEW_W, bottom - top);
+      ctx.globalAlpha = strength * .78;
+      ctx.strokeStyle = '#ddfaff';
+      ctx.shadowColor = '#6b8dff';
+      ctx.shadowBlur = 16;
+      ctx.lineWidth = Math.max(1, 5 - release * 4);
+      for (let y = press.topY + run.cellSize; y < press.bottomY; y += run.cellSize * 2) {
+        const sy = y - run.cameraY;
+        if (sy < top - 20 || sy > bottom + 20) continue;
+        ctx.beginPath();
+        ctx.ellipse(middle, sy, 12 + release * VIEW_W * .6, 7 + release * run.cellSize * .65, 0, 0, Math.PI * 2);
+        ctx.stroke();
       }
     }
     ctx.restore();
@@ -9027,95 +11516,78 @@
       const progress = clamp((timestamp - mark.startedAt) / mark.duration, 0, 1);
       const sy = mark.y - run.cameraY;
       ctx.globalAlpha = (1 - progress) * .88;
-      ctx.shadowColor = '#72f5db';
+      ctx.shadowColor = '#65bfff';
       ctx.shadowBlur = 10;
-      ctx.strokeStyle = '#b4ffec';
+      ctx.strokeStyle = '#b5dcff';
       ctx.lineWidth = 2.5;
       ctx.strokeRect(mark.x + 4, sy + 4, mark.w - 8, mark.h - 8);
-      ctx.fillStyle = 'rgba(51,225,181,.16)';
+      ctx.fillStyle = 'rgba(65,160,255,.22)';
       ctx.fillRect(mark.x + 4, sy + 4, mark.w - 8, mark.h - 8);
     }
     ctx.shadowBlur = 0;
     const cycle = run.telekinesisCycle;
     if (cycle) for (const projectile of cycle.projectiles) {
-      const elapsed = timestamp - cycle.startedAt - projectile.delay;
-      if (elapsed < 0 || projectile.impacted) continue;
+      const elapsed = timestamp - cycle.startedAt;
+      const pullAt = TELEKINESIS_PULL_START_MS + projectile.delay;
+      const orbitAt = TELEKINESIS_RECOIL_START_MS + projectile.delay;
+      if (elapsed < pullAt || projectile.impacted) continue;
       const source = projectile.source;
       let x = source.x;
       let y = source.y;
       let scale = 1;
-      let rotation = 0;
-      if (elapsed >= TELEKINESIS_PULL_START_MS) {
-        const catchX = run.slime.x + projectile.side * (run.slime.radius + 12);
-        const catchY = run.slime.y - run.slime.radius * .2;
-        if (elapsed < TELEKINESIS_RECOIL_START_MS) {
-          const t = clamp((elapsed - TELEKINESIS_PULL_START_MS) / (TELEKINESIS_RECOIL_START_MS - TELEKINESIS_PULL_START_MS), 0, 1);
-          const eased = 1 - Math.pow(1 - t, 3);
-          x = lerp(source.x, catchX, eased);
-          y = lerp(source.y, catchY, eased) - Math.sin(t * Math.PI) * 9;
-          scale = lerp(1, .31, eased);
-          rotation = t * projectile.side * .32;
-        } else if (elapsed < TELEKINESIS_THROW_START_MS) {
-          const t = (elapsed - TELEKINESIS_RECOIL_START_MS) / (TELEKINESIS_THROW_START_MS - TELEKINESIS_RECOIL_START_MS);
-          x = catchX + projectile.side * t * 10;
-          y = catchY - t * 12;
-          scale = .31 - t * .035;
-          rotation = projectile.side * (.32 + t * .12);
-        } else if (projectile.target && projectile.launchFrom) {
-          const t = clamp((elapsed - TELEKINESIS_THROW_START_MS) / (TELEKINESIS_IMPACT_MS - TELEKINESIS_THROW_START_MS), 0, 1);
-          const eased = t * t;
-          x = lerp(projectile.launchFrom.x, projectile.target.x, eased) + Math.sin(t * Math.PI) * projectile.side * 8;
-          y = lerp(projectile.launchFrom.y, projectile.target.y, eased) - Math.sin(t * Math.PI) * 10;
-          scale = lerp(.275, .42, t);
-          rotation = projectile.side * (.44 + t * 1.1);
-        }
+      const orbiting = cycle.mode === 'ultimate';
+      const hold = orbiting ? telekinesisOrbitPosition(projectile, elapsed)
+        : { x: run.slime.x + projectile.side * (run.slime.radius + 12), y: run.slime.y - run.slime.radius * .2 };
+      if (elapsed < orbitAt) {
+        const t = clamp((elapsed - pullAt) / (orbitAt - pullAt), 0, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        x = lerp(source.x, hold.x, eased);
+        y = lerp(source.y, hold.y, eased) - Math.sin(t * Math.PI) * 9;
+        scale = lerp(1, orbiting ? .45 : .48, eased);
+      } else if (elapsed < projectile.throwAt || !projectile.target || !projectile.launchFrom) {
+        x = hold.x;
+        y = hold.y;
+        scale = orbiting ? .45 : .48;
+      } else {
+        const t = clamp((elapsed - projectile.throwAt) / (projectile.impactAt - projectile.throwAt), 0, 1);
+        const eased = t * t;
+        x = lerp(projectile.launchFrom.x, projectile.target.x, eased);
+        y = lerp(projectile.launchFrom.y, projectile.target.y, eased) - Math.sin(t * Math.PI) * 12;
+        scale = lerp(orbiting ? .45 : .48, .94, t);
       }
-      if (elapsed < TELEKINESIS_PULL_START_MS && !projectile.block.dead) continue;
       const screenY = y - run.cameraY;
-      const orbStrength = clamp((elapsed - TELEKINESIS_PULL_START_MS) / 420, 0, 1);
       ctx.save();
-      ctx.globalAlpha = 1;
-      ctx.shadowColor = '#54edca';
-      ctx.shadowBlur = elapsed >= TELEKINESIS_RECOIL_START_MS ? 16 : 9;
-      ctx.fillStyle = elapsed >= TELEKINESIS_RECOIL_START_MS ? 'rgba(25,105,93,.44)' : 'rgba(45,215,184,.22)';
-      ctx.beginPath(); ctx.arc(x, screenY, Math.max(11, projectile.visual.w * scale * .61), 0, Math.PI * 2); ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.globalAlpha = .9;
+      ctx.fillStyle = 'rgba(65,173,255,.25)';
+      ctx.fillRect(x - projectile.visual.w * scale * .62, screenY - projectile.visual.h * scale * .62,
+        projectile.visual.w * scale * 1.24, projectile.visual.h * scale * 1.24);
       ctx.translate(x, screenY);
-      ctx.rotate(rotation);
+      ctx.rotate(Math.sin(elapsed / 165 + projectile.index) * .09);
       ctx.scale(scale, scale);
       ctx.translate(-source.x, -(source.y - run.cameraY));
-      ctx.globalAlpha = 1 - orbStrength * .9;
+      ctx.globalAlpha = 1;
+      ctx.shadowColor = '#63bfff';
+      ctx.shadowBlur = 13;
       drawBlock(projectile.visual, projectile.visual.y - run.cameraY, timestamp);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#9ed9ff';
+      ctx.lineWidth = 2.4;
+      ctx.strokeRect(projectile.visual.x + 1, projectile.visual.y - run.cameraY + 1,
+        projectile.visual.w - 2, projectile.visual.h - 2);
       ctx.restore();
-      if (orbStrength > 0) {
-        const orbRadius = Math.max(6, projectile.visual.w * scale * .54);
-        ctx.save();
-        ctx.globalAlpha = orbStrength * .92;
-        ctx.shadowColor = '#67efd4';
-        ctx.shadowBlur = 6 + orbStrength * 7;
-        const orbColor = ctx.createRadialGradient(x - orbRadius * .3, screenY - orbRadius * .35, 1, x, screenY, orbRadius);
-        orbColor.addColorStop(0, '#83ffe1');
-        orbColor.addColorStop(.38, '#184d52');
-        orbColor.addColorStop(1, '#102536');
-        ctx.fillStyle = orbColor;
-        ctx.strokeStyle = '#8dffe0';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(x, screenY, orbRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.restore();
-      }
     }
     for (const burst of run.telekinesisBursts) {
       const t = clamp((timestamp - burst.startedAt) / 330, 0, 1);
       const sy = burst.y - run.cameraY;
       const radius = run.cellSize * (0.38 + t * 1.1);
       ctx.globalAlpha = (1 - t) * .8;
-      ctx.strokeStyle = '#80f5d8';
+      ctx.strokeStyle = '#99d4ff';
       ctx.lineWidth = 4 - t * 2.5;
-      ctx.shadowColor = '#4de6c6';
+      ctx.shadowColor = '#58aaff';
       ctx.shadowBlur = 11;
       ctx.beginPath(); ctx.arc(burst.x, sy, radius, 0, Math.PI * 2); ctx.stroke();
       ctx.globalAlpha = (1 - t) * .13;
-      ctx.fillStyle = '#55e9c7';
+      ctx.fillStyle = '#62b4ff';
       const cell = run.cellSize;
       for (const [col, row] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) {
         ctx.fillRect(burst.x + (col - .5) * cell, sy + (row - .5) * cell, cell, cell);
@@ -9141,63 +11613,329 @@
     target.restore();
   }
 
-  function drawNanoDrones(timestamp) {
-    const count = Math.min(2, elementalLevel('nano'));
-    if (!count) return;
-    const shotSprite = projectSprite(NANO_SHOT_SPRITE);
+  function drawMechSuit(timestamp, avatarOptions) {
+    const mech = run.mechSuit;
+    if (!mech) return;
+    const size = run.cellSize * MECH_VISUAL_CELLS;
+    const x = run.slime.x;
+    const restingY = run.slime.y - run.cameraY;
+    const descent = mech.phase === 'descending'
+      ? clamp((timestamp - mech.startedAt) / MECH_LAND_MS, 0, 1) : 1;
+    const eased = 1 - Math.pow(1 - descent, 3);
+    const y = restingY - (1 - eased) * (VIEW_H * .47 + size);
+    const steering = fallSteeringVector();
+    const jetPower = mech.phase === 'descending' ? 1
+      : steering.y < -.12 ? 1 : Math.abs(steering.x) > .12 ? .55 : 0;
     ctx.save();
-    for (const shot of run.nanoShots || []) {
-      const progress = clamp((timestamp - shot.startedAt) / 340, 0, 1);
-      const x = shot.fromX + (shot.toX - shot.fromX) * progress;
-      const y = shot.fromY + (shot.toY - shot.fromY) * progress - run.cameraY;
-      const angle = Math.atan2(shot.toY - shot.fromY, shot.toX - shot.fromX);
+    ctx.translate(x, y);
+    if (mech.phase === 'descending') ctx.globalAlpha = clamp(descent * 4, 0, 1);
+    if (jetPower > 0) for (const side of [-1, 1]) {
+      // The two painted lower nozzles sit at x≈160/352 and y≈390 in the sprite.
+      const flameX = side * size * .19;
+      const flameY = size * .32;
+      const pulse = .92 + Math.sin(timestamp / 145 + side * .7) * .08;
+      const flameLength = size * (mech.phase === 'descending' ? .3 : .39 * jetPower) * pulse;
+      const width = size * .075;
+      const outer = ctx.createLinearGradient(flameX, flameY, flameX, flameY + flameLength);
+      outer.addColorStop(0, 'rgba(255,246,202,.95)');
+      outer.addColorStop(.32, 'rgba(255,157,54,.9)');
+      outer.addColorStop(.72, 'rgba(255,65,44,.63)');
+      outer.addColorStop(1, 'rgba(255,44,47,0)');
       ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.globalAlpha = progress < .82 ? 1 : 1 - (progress - .82) / .18;
-      ctx.shadowColor = '#68f6ff';
-      ctx.shadowBlur = 8;
-      if (shotSprite?.complete && shotSprite.naturalWidth) {
-        ctx.drawImage(shotSprite, -18, -8, 36, 16);
-      } else {
-        const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 18);
-        glow.addColorStop(0, '#efffff');
-        glow.addColorStop(.45, '#64f5ff');
-        glow.addColorStop(1, 'rgba(39,205,231,0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath(); ctx.ellipse(0, 0, 18, 8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = '#ff5132'; ctx.shadowBlur = size * .09;
+      ctx.fillStyle = outer;
+      ctx.beginPath();
+      ctx.moveTo(flameX - width, flameY);
+      ctx.bezierCurveTo(flameX - width * 1.12, flameY + flameLength * .36,
+        flameX - width * .48, flameY + flameLength * .75, flameX, flameY + flameLength);
+      ctx.bezierCurveTo(flameX + width * .48, flameY + flameLength * .75,
+        flameX + width * 1.12, flameY + flameLength * .36, flameX + width, flameY);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff2bd';
+      ctx.globalAlpha *= .7;
+      ctx.beginPath();
+      ctx.moveTo(flameX - width * .38, flameY + size * .018);
+      ctx.quadraticCurveTo(flameX - width * .24, flameY + flameLength * .55,
+        flameX, flameY + flameLength * .73);
+      ctx.quadraticCurveTo(flameX + width * .24, flameY + flameLength * .55,
+        flameX + width * .38, flameY + size * .018);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    if (technoMechSprite.complete && technoMechSprite.naturalWidth) {
+      ctx.drawImage(technoMechSprite, -size / 2, -size / 2, size, size);
+    } else {
+      ctx.fillStyle = '#30414b';
+      ctx.strokeStyle = '#f64b55';
+      ctx.lineWidth = Math.max(3, size * .035);
+      ctx.beginPath(); ctx.arc(0, 0, size * .4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    if (jetPower > 0) {
+      ctx.save();
+      ctx.fillStyle = '#fff7d8'; ctx.shadowColor = '#ff7539'; ctx.shadowBlur = size * .055;
+      for (const side of [-1, 1]) {
+        ctx.beginPath(); ctx.ellipse(side * size * .19, size * .32, size * .04, size * .016, 0, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
-      if (progress > .78) {
-        ctx.globalAlpha = (1 - progress) * 3.2;
-        ctx.strokeStyle = '#65eaf2';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(shot.toX, shot.toY - run.cameraY, 4 + (progress - .78) * 25, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (mech.phase === 'active') {
+      // The pilot uses the actual techno ultra body; the sprite itself has an empty cockpit.
+      const cockpitY = -size * .145;
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(0, cockpitY, size * .205, size * .17, 0, 0, Math.PI * 2);
+      ctx.clip();
+      drawSlimeAvatar(ctx, {
+        ...avatarOptions,
+        x: 0, y: cockpitY + size * .075, radius: run.cellSize * .49,
+        skin: 'classic', colors: SKINS[0].colors,
+        scaleX: 1, scaleY: 1, rotation: 0, alpha: 1,
+        bodyVariant: 'technoUltra', irisTint: '#f04a55', nanoEyeOpenness: 0
+      });
+      const glass = ctx.createLinearGradient(0, cockpitY - size * .17, 0, cockpitY + size * .17);
+      glass.addColorStop(0, 'rgba(168,248,255,.25)');
+      glass.addColorStop(.55, 'rgba(38,179,198,.05)');
+      glass.addColorStop(1, 'rgba(15,97,111,.28)');
+      ctx.fillStyle = glass;
+      ctx.fillRect(-size * .23, cockpitY - size * .18, size * .46, size * .36);
+      ctx.restore();
+      const shotAge = timestamp - (mech.lastShotAt || 0);
+      if (shotAge >= 0 && shotAge < 130) {
+        ctx.save();
+        ctx.globalAlpha = 1 - shotAge / 130;
+        ctx.fillStyle = '#fff0df'; ctx.shadowColor = '#ff344c'; ctx.shadowBlur = 12;
+        for (const side of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(side * size * .43, size * .22, size * .037, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+      }
+      const hitAge = timestamp - run.lastHeartLossAt;
+      if (hitAge >= 0 && hitAge < 190) {
+        ctx.save();
+        ctx.globalAlpha = 1 - hitAge / 190;
+        ctx.strokeStyle = '#ffe1a2'; ctx.lineWidth = 2.3;
+        ctx.shadowColor = '#ff6654'; ctx.shadowBlur = 7;
+        for (let index = 0; index < 4; index += 1) {
+          const angle = index * Math.PI / 2 + hitAge / 160;
+          const inner = size * .3;
+          const outer = inner + size * .055;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+          ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+          ctx.stroke();
+        }
+        ctx.restore();
       }
     }
     ctx.restore();
-    for (let index = 0; index < count; index += 1) {
-      const position = nanoDronePosition(index, timestamp);
-      drawNanoDroneSprite(ctx, position.x, position.y - run.cameraY, 46,
-        run.portalEntry ? clamp(1 - (timestamp - run.portalEntry.startedAt) / run.portalEntry.duration, 0, 1) : 1);
+    if (mech.phase === 'active') {
+      const remaining = clamp((mech.expireAt - timestamp) / MECH_ACTIVE_MS, 0, 1);
+      const timerWidth = 78;
+      const timerHeight = 31;
+      const timerY = Math.max(62, y - size * .52 - timerHeight - 5);
+      const timerX = clamp(x - timerWidth / 2, 5, VIEW_W - timerWidth - 5);
+      ctx.save();
+      ctx.fillStyle = 'rgba(15,29,38,.94)';
+      ctx.strokeStyle = remaining < .22 ? '#ff684d' : '#69e5ed';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = remaining < .22 ? '#ff5549' : '#34e6ef';
+      ctx.shadowBlur = 9;
+      ctx.beginPath();
+      const corner = 10;
+      ctx.moveTo(timerX + corner, timerY);
+      ctx.lineTo(timerX + timerWidth - corner, timerY);
+      ctx.quadraticCurveTo(timerX + timerWidth, timerY, timerX + timerWidth, timerY + corner);
+      ctx.lineTo(timerX + timerWidth, timerY + timerHeight - corner);
+      ctx.quadraticCurveTo(timerX + timerWidth, timerY + timerHeight, timerX + timerWidth - corner, timerY + timerHeight);
+      ctx.lineTo(timerX + corner, timerY + timerHeight);
+      ctx.quadraticCurveTo(timerX, timerY + timerHeight, timerX, timerY + timerHeight - corner);
+      ctx.lineTo(timerX, timerY + corner);
+      ctx.quadraticCurveTo(timerX, timerY, timerX + corner, timerY);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = remaining < .22 ? '#ffb497' : '#a8faff';
+      ctx.fillRect(timerX + 7, timerY + timerHeight - 5, (timerWidth - 14) * remaining, 2);
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 17px sans-serif';
+      ctx.fillText(`${Math.max(0, (mech.expireAt - timestamp) / 1000).toFixed(1)}с`, timerX + timerWidth / 2, timerY + 13);
+      ctx.restore();
     }
   }
 
-  let miniSlimeSprite = null;
+  function drawMechExplosion(timestamp) {
+    const burst = run.mechExplosion;
+    if (!burst) return;
+    const progress = (timestamp - burst.startedAt) / MECH_EXPLOSION_MS;
+    if (progress >= 1) { run.mechExplosion = null; return; }
+    const x = burst.x;
+    const y = burst.y - run.cameraY;
+    const radius = run.cellSize * (burst.expired ? .5 + progress * .85 : .65 + progress * 1.7);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, (1 - progress) * (burst.expired ? .7 : 1));
+    ctx.strokeStyle = burst.expired ? '#9df5fb' : '#ff6a49';
+    ctx.lineWidth = Math.max(2, run.cellSize * (burst.expired ? .07 - progress * .04 : .10 - progress * .06));
+    ctx.shadowColor = burst.expired ? '#54ddea' : '#ff3e42'; ctx.shadowBlur = burst.expired ? 11 : 20;
+    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.stroke();
+    for (let i = 0; i < (burst.expired ? 6 : 8); i += 1) {
+      const angle = i * Math.PI / 4 + .12;
+      const distance = radius * (.65 + (i % 3) * .1);
+      ctx.fillStyle = i % 2 ? '#ffb766' : '#d4faff';
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(angle) * distance, y + Math.sin(angle) * distance,
+        run.cellSize * .06 * (1 - progress), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
-  function getMiniSlimeSprite() {
-    if (miniSlimeSprite) return miniSlimeSprite;
-    const canvas = document.createElement('canvas');
-    canvas.width = 96;
-    canvas.height = 96;
-    const spriteCtx = canvas.getContext('2d');
-    if (!spriteCtx) return null;
-    drawSlimeAvatar(spriteCtx, {
-      x: 48, y: 48, radius: 35, skin: 'classic', colors: SKINS[0].colors,
-      emotion: 'joy', timestamp: performance.now()
-    });
-    miniSlimeSprite = canvas;
-    return canvas;
+  function drawNanoDrones(timestamp) {
+    if (!elementalLevel('nano')) return;
+    ctx.save();
+    for (const shot of run.nanoShots || []) {
+      const age = timestamp - shot.startedAt;
+      const travelMs = shot.mech ? MECH_SHOT_TRAVEL_MS : 135;
+      const fadeEnd = shot.mech ? 245 : 270;
+      const reach = clamp(age / travelMs, 0, 1);
+      const fade = clamp((fadeEnd - age) / (fadeEnd - travelMs), 0, 1);
+      const endX = shot.fromX + (shot.toX - shot.fromX) * reach;
+      const endY = shot.fromY + (shot.toY - shot.fromY) * reach - run.cameraY;
+      ctx.save();
+      ctx.globalAlpha = fade;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = '#ff283c';
+      ctx.shadowBlur = 22;
+      ctx.strokeStyle = '#680810'; ctx.lineWidth = 13;
+      ctx.beginPath(); ctx.moveTo(shot.fromX, shot.fromY - run.cameraY); ctx.lineTo(endX, endY); ctx.stroke();
+      ctx.strokeStyle = '#ff2940'; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(shot.fromX, shot.fromY - run.cameraY); ctx.lineTo(endX, endY); ctx.stroke();
+      ctx.shadowBlur = 9;
+      ctx.strokeStyle = '#fff1df'; ctx.lineWidth = 2.8;
+      ctx.beginPath(); ctx.moveTo(shot.fromX, shot.fromY - run.cameraY); ctx.lineTo(endX, endY); ctx.stroke();
+      ctx.restore();
+      if (age >= travelMs) {
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.strokeStyle = '#ff5360'; ctx.lineWidth = 3;
+        ctx.shadowColor = '#ff253b'; ctx.shadowBlur = 14;
+        ctx.beginPath(); ctx.arc(shot.toX, shot.toY - run.cameraY, 6 + (age - travelMs) * .13, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+    }
+    const mine = run.nanoMine;
+    if (mine) {
+      if (window.BlockEffectDraft && !mine.target.dead) {
+        window.BlockEffectDraft.drawNanoTarget(ctx, mine.target.x, mine.target.y - run.cameraY,
+          Math.min(mine.target.w, mine.target.h), timestamp);
+      }
+      if (timestamp >= mine.launchedAt) {
+        const progress = clamp((timestamp - mine.launchedAt) / 320, 0, 1);
+        const eased = progress * progress * (3 - 2 * progress);
+        const x = mine.fromX + (mine.toX - mine.fromX) * eased;
+        const y = mine.fromY + (mine.toY - mine.fromY) * eased - run.cameraY - Math.sin(progress * Math.PI) * 15;
+        const size = run.cellSize * .43;
+        const sprite = projectSprite(NANO_MINI_DRONE_SPRITE);
+        ctx.save();
+        ctx.shadowColor = '#ff334e'; ctx.shadowBlur = 15;
+        if (sprite?.complete && sprite.naturalWidth) ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
+        else { ctx.fillStyle = '#ad1e30'; ctx.beginPath(); ctx.arc(x, y, size * .3, 0, Math.PI * 2); ctx.fill(); }
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+    if (run.mechSuit) return;
+    const position = nanoDronePosition(0, timestamp);
+    drawNanoDroneSprite(ctx, position.x, position.y - run.cameraY, run.slime.radius * .70,
+      run.portalEntry ? clamp(1 - (timestamp - run.portalEntry.startedAt) / run.portalEntry.duration, 0, 1) : 1);
+  }
+
+  const miniMushroomSprite = new Image();
+  miniMushroomSprite.src = versionedAsset('assets/vfx/spores-mini-mushroom-v1.png');
+  const sporeSeedSprite = new Image();
+  const sporePodSprite = new Image();
+  const sporeBurstSprite = new Image();
+  let sporeSpritesRequested = false;
+  function ensureSporeSprites() {
+    if (sporeSpritesRequested) return;
+    sporeSpritesRequested = true;
+    sporeSeedSprite.src = versionedAsset('assets/vfx/spores-seed-v1.webp');
+    sporePodSprite.src = versionedAsset('assets/vfx/spores-pod-v5.webp');
+    sporeBurstSprite.src = versionedAsset('assets/vfx/spores-burst-v1.webp');
+  }
+
+  function drawSporeShape(size, color) {
+    ctx.fillStyle = 'rgba(185,255,109,.24)';
+    ctx.beginPath(); ctx.ellipse(0, 0, size * 1.35, size * 1.75, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#397e2f';
+    ctx.beginPath(); ctx.ellipse(0, 0, size * .7, size * 1.02, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(0, 0, size * .52, size * .84, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,239,.85)';
+    ctx.beginPath(); ctx.ellipse(-size * .17, -size * .3, size * .14, size * .23, -.3, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function drawSporeEffects(timestamp) {
+    if (!run.sporeProjectiles.length && !run.sporePods.length && !run.sporeBursts.length) return;
+    const lowPower = isLowPowerDevice();
+    const cell = run.cellSize;
+    const seedReady = sporeSeedSprite.complete && sporeSeedSprite.naturalWidth > 0;
+    const podReady = sporePodSprite.complete && sporePodSprite.naturalWidth > 0;
+    const burstReady = sporeBurstSprite.complete && sporeBurstSprite.naturalWidth > 0;
+    for (const projectile of run.sporeProjectiles) {
+      if (timestamp < projectile.launchedAt) continue;
+      const flight = sporeFlightPoint(projectile, timestamp);
+      const x = flight.x;
+      const y = flight.y - run.cameraY;
+      if (y < -50 || y > VIEW_H + 50) continue;
+      const size = 7.8 + flight.progress * 2.1;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.sin(flight.progress * Math.PI * 2) * .25);
+      if (!lowPower) { ctx.shadowColor = '#b5ff79'; ctx.shadowBlur = 6; }
+      drawSporeShape(size, '#bbff6b');
+      ctx.restore();
+    }
+    for (const pod of run.sporePods) {
+      if (pod.detonated || pod.block.dead) continue;
+      const center = blockCenter(pod.block);
+      const y = center.y - run.cameraY;
+      if (y < -cell || y > VIEW_H + cell) continue;
+      const growth = clamp((timestamp - pod.plantedAt) / SPORE_GROW_MS, 0, 1);
+      const transition = clamp((growth - .28) / .53, 0, 1);
+      const matureBlend = transition * transition * (3 - 2 * transition);
+      const pulse = 1 + Math.sin(timestamp * .006 + pod.block.col) * .025 * matureBlend;
+      const seedSize = cell * 1.05 * (.88 + growth * .12);
+      const matureSize = cell * 1.05 * (.48 + .52 * (1 - Math.pow(1 - growth, 2))) * pulse;
+      ctx.save();
+      ctx.translate(center.x, y);
+      if (!lowPower) { ctx.shadowColor = '#afff60'; ctx.shadowBlur = 6; }
+      if (seedReady && matureBlend < 1) {
+        ctx.globalAlpha = 1 - matureBlend;
+        ctx.drawImage(sporeSeedSprite, -seedSize / 2, -seedSize / 2, seedSize, seedSize);
+      }
+      if (podReady && (matureBlend > 0 || !seedReady)) {
+        ctx.globalAlpha = seedReady ? matureBlend : 1;
+        ctx.drawImage(sporePodSprite, -matureSize / 2, -matureSize / 2, matureSize, matureSize);
+      }
+      if (!seedReady && !podReady) {
+        ctx.fillStyle = '#9ceb4e'; ctx.beginPath(); ctx.arc(0, 0, cell * (.15 + growth * .32), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+    for (const burst of run.sporeBursts) {
+      const y = burst.y - run.cameraY;
+      if (y < -cell * 2 || y > VIEW_H + cell * 2) continue;
+      const t = clamp((timestamp - burst.startedAt) / 520, 0, 1);
+      const size = cell * (1.1 + t * 2.1);
+      ctx.save();
+      ctx.globalAlpha = (1 - t) * (1 - t);
+      if (burstReady) ctx.drawImage(sporeBurstSprite, burst.x - size / 2, y - size / 2, size, size);
+      else { ctx.fillStyle = '#c9ff6e'; ctx.beginPath(); ctx.arc(burst.x, y, size * .35, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+    }
   }
 
   function drawCloningCharge(timestamp) {
@@ -9231,21 +11969,23 @@
 
   function drawMiniSlimes(timestamp) {
     if (!run.miniSlimes?.length) return;
-    const sprite = getMiniSlimeSprite();
+    const spriteReady = miniMushroomSprite.complete && miniMushroomSprite.naturalWidth > 0;
     for (const mini of run.miniSlimes) {
       const sy = mini.y - run.cameraY;
       if (sy < -40 || sy > VIEW_H + 40) continue;
       const pop = clamp((timestamp - mini.bornAt) / 140, 0, 1);
-      const size = mini.radius * 2.7 * (.35 + .65 * (1 - Math.pow(1 - pop, 3)));
+      const size = mini.radius * 3.2 * (.35 + .65 * (1 - Math.pow(1 - pop, 3)));
       ctx.save();
       ctx.translate(mini.x, sy);
       ctx.rotate(clamp(mini.vx / 1300, -.3, .3));
       ctx.shadowColor = '#75f795';
       ctx.shadowBlur = 5;
-      if (sprite) ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+      if (spriteReady) ctx.drawImage(miniMushroomSprite, -size / 2, -size / 2, size, size);
       else {
         ctx.fillStyle = '#72ec75';
         ctx.beginPath(); ctx.arc(0, 0, mini.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#e85236';
+        ctx.beginPath(); ctx.ellipse(0, -mini.radius * .65, mini.radius * 1.1, mini.radius * .5, 0, Math.PI, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
     }
@@ -9254,10 +11994,10 @@
   function drawSlime(timestamp) {
     const s = run.slime;
     const screenY = s.y - run.cameraY;
-    if (els.impactText.classList.contains('combo-impact')) positionComboImpact();
+    const ghost = phantomActive(timestamp) && !run.portalEntry;
     const selected = skinById(save.selectedSkin);
     const frozen = isSlimeFrozen(timestamp);
-    const hurtActive = !frozen && timestamp < (run.hurtFlashUntil || 0);
+    const hurtActive = !run.mechSuit && !frozen && timestamp < (run.hurtFlashUntil || 0);
     const hurtPulse = hurtActive ? .5 + Math.sin(timestamp / 42) * .5 : 0;
     const portalProgress = run.portalEntry
       ? clamp((timestamp - run.portalEntry.startedAt) / run.portalEntry.duration, 0, 1)
@@ -9391,6 +12131,8 @@
         : hurtActive && hurtPulse > .32
           ? ['#fff1f0', '#ff7377', '#cf3347']
           : selected.colors,
+      phantomActive: ghost,
+      preservePhantomBody: true,
       scaleX: scaleX * (1 - cloneCharge * .16 + cloneRelease * .19) * portalScale * launchScale,
       scaleY: scaleY * (1 + cloneCharge * .13 - cloneRelease * .12) * portalScale * launchScale,
       rotation: (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24)) + portalProgress * 1.8,
@@ -9418,9 +12160,40 @@
         : 0,
       electricFlash: electricAbilityActive ? clamp(1 - electricAbilityElapsed / 280, 0, 1) : 0
     };
-    if (!frozen) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, false);
-    drawElementalSlimeAvatar(ctx, avatarOptions, elementalVisuals, timestamp);
-    if (!frozen) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, true);
+    const phantomWarningRemaining = run.phantomNextAt - timestamp;
+    const phantomWarning = !run.portalEntry && elementalLevel('phantom') >= 1 && run.phantomUntil <= 0
+      && phantomWarningRemaining > 0 && phantomWarningRemaining <= PHANTOM_WARNING_MS;
+    const phantomEntering = !run.portalEntry && run.phantomEnterUntil > timestamp && run.phantomEnteredAt > 0;
+    const phantomReturning = ghost && run.phantomUntil - timestamp < 440;
+    if (phantomWarning || phantomEntering) ensurePhantomSoulBurstSprite();
+    if (phantomWarning || phantomEntering) {
+      const collapse = phantomEntering
+        ? clamp((timestamp - run.phantomEnteredAt) / PHANTOM_ENTER_MS, 0, 1) : 0;
+      const ringRadius = radius * 2.05 * (1 - collapse);
+      ctx.save();
+      const haze = ctx.createRadialGradient(s.x, screenY, 0, s.x, screenY, Math.max(1, ringRadius));
+      const strength = phantomWarning ? .36 : .46 * (1 - collapse);
+      haze.addColorStop(0, 'rgba(214,222,228,0)');
+      haze.addColorStop(.51, 'rgba(214,222,228,0)');
+      haze.addColorStop(.68, `rgba(202,211,217,${strength * .45})`);
+      haze.addColorStop(.77, `rgba(181,191,200,${strength})`);
+      haze.addColorStop(1, 'rgba(213,222,228,0)');
+      ctx.fillStyle = haze;
+      ctx.beginPath(); ctx.arc(s.x, screenY, ringRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    if (ghost) avatarOptions.alpha *= phantomReturning
+      ? .54 + (1 - clamp((run.phantomUntil - timestamp) / 440, 0, 1)) * .16 : .54;
+    else if (phantomEntering) avatarOptions.alpha *= Math.sin(timestamp / 46) > .14 ? .94 : .42;
+    else if (phantomWarning) avatarOptions.alpha *= Math.sin(timestamp / 85) > .28 ? 1 : .7;
+    avatarOptions.phantomActive = ghost || phantomWarning || phantomEntering;
+    if (!frozen || run.cosmosUltimate) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, false);
+    if (run.mechSuit?.phase === 'active') drawMechSuit(timestamp, avatarOptions);
+    else {
+      drawElementalSlimeAvatar(ctx, avatarOptions, elementalVisuals, timestamp);
+      if (run.mechSuit) drawMechSuit(timestamp, avatarOptions);
+    }
+    if (!frozen || run.cosmosUltimate) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, true);
     drawActiveElementalAbility(timestamp, s.x, screenY, fireRadius);
     if (!run.portalEntry && timestamp < (run.gravitySwitchFlashUntil || 0)) {
       const progress = clamp((run.gravitySwitchFlashUntil - timestamp) / 620, 0, 1);
@@ -9526,46 +12299,9 @@
     els.impactText.className = 'impact-text';
     els.impactText.removeAttribute('style');
     els.impactText.replaceChildren();
-    els.shaft.classList.remove('combo-burst');
-    els.shaft.style.removeProperty('--combo-x');
-    els.shaft.style.removeProperty('--combo-y');
   }
 
   function impact() {}
-
-  function comboImpact(multiplier, count) {
-    const phase = multiplier >= 10 ? 5 : multiplier >= 6 ? 4 : multiplier >= 4 ? 3 : multiplier >= 2 ? 2 : 1;
-    const ratings = ['КОМБО!', 'ХОРОШО!', 'СУПЕР!', 'НЕВЕРОЯТНО!', 'НЕВОЗМОЖНО!'];
-    const milestone = [2, 4, 6, 10].includes(multiplier);
-    run.comboDisplaySide = run.slime.x > VIEW_W * .5 ? -1 : 1;
-    els.impactText.className = `impact-text combo-impact combo-stage-${phase}${milestone ? ' combo-milestone' : ''}`;
-    els.impactText.style.setProperty('--combo-power', String(Math.min(1.14, .95 + multiplier / 15 * .19)));
-    const badgeSprite = VFX_SPRITES?.[`combo-stage-${phase}`];
-    if (badgeSprite?.src) els.impactText.style.setProperty('--combo-badge', `url("${badgeSprite.src}")`);
-    positionComboImpact();
-    els.impactText.innerHTML = `<span class="combo-rating">${ratings[phase - 1]}</span><span class="combo-line"><small>КОМБО</small><b><i>×</i><strong>${Math.round(multiplier)}</strong></b></span>`;
-    void els.impactText.offsetWidth;
-    els.impactText.classList.add('combo-show');
-    if (milestone) {
-      els.shaft.classList.remove('combo-burst');
-      void els.shaft.offsetWidth;
-      els.shaft.classList.add('combo-burst');
-    }
-    run.shake = Math.max(run.shake, Math.min(5.8, .6 + phase * .9));
-    feedback(phase >= 5 ? [9, 15, 11, 15, 13] : phase >= 4 ? [7, 13, 9] : phase >= 3 ? [6, 10, 7] : phase >= 2 ? 5 : 3);
-  }
-
-  function positionComboImpact() {
-    if (!run?.slime) return;
-    const side = run.comboDisplaySide || (run.slime.x > VIEW_W * .5 ? -1 : 1);
-    const radius = run.slime.radius || 28;
-    const x = clamp(run.slime.x + side * (radius + 66), 70, VIEW_W - 70);
-    const y = clamp(run.slime.y - run.cameraY - radius * .28, 54, VIEW_H - 54);
-    els.impactText.style.left = `${x / VIEW_W * 100}%`;
-    els.impactText.style.top = `${y / VIEW_H * 100}%`;
-    els.shaft.style.setProperty('--combo-x', `${x / VIEW_W * 100}%`);
-    els.shaft.style.setProperty('--combo-y', `${y / VIEW_H * 100}%`);
-  }
 
   function continueEndlessWorld() {
     if (!run || run.ended) return;
@@ -9578,6 +12314,20 @@
     run.portalEntry = null;
     run.portalTransitioning = false;
     run.blocks = generateBlockField(run);
+    run.nanoShots = [];
+    run.nanoMine = null;
+    run.mechSuit = null;
+    run.mechExplosion = null;
+    run.mechExitZoneGraceUntil = 0;
+    run.frostStorm = null;
+    run.telekinesisPress = null;
+    run.telekinesisUltimatePending = false;
+    if (run.ultimateRechargePending === 'elemental') finishUltimateRecharge();
+    run.elementalAbilityActive = '';
+    run.elementalAbilityUntil = 0;
+    run.nanoEyeOpenedAt = 0;
+    run.nanoNextShotAt = [performance.now() + 1400];
+    run.nanoNextMineAt = performance.now() + NANO_MINE_INTERVAL_MS;
     indexRunBlocks();
     run.flasks = generateFlasks(run);
     run.honeyZones = generateHoneyZones(run);
@@ -9593,7 +12343,30 @@
     run.freezeZoneTriggeredId = '';
     run.particles = [];
     run.specialEffects = [];
+    run.ultimateIntro = null;
+    run.phoenixUltimate = null;
+    run.phoenixWaves = [];
+    run.electricStorm = null;
+    run.electricStormBolts = [];
+    run.electricStormHits = [];
     run.meteorShowers = [];
+    run.phantomUntil = 0;
+    run.phantomWarned = false;
+    run.phantomEnteredAt = 0;
+    run.phantomEnterUntil = 0;
+    run.phantomNextAt = performance.now() + PHANTOM_COOLDOWN_MS;
+    run.phantomMarkedBlocks?.clear();
+    run.phantomBursts = [];
+    run.glitchNextInfectionAt = performance.now() + 4500;
+    run.glitchNextNeutralizeAt = performance.now() + 8500;
+    run.glitchInfectedBlocks.clear();
+    run.glitchShock = null;
+    run.glitchChoice = null;
+    run.glitchClone = null;
+    run.glitchDeleteQueue = [];
+    run.glitchSpreadQueue = [];
+    run.glitchChange = null;
+    hideGlitchChoice();
     run.hitCooldowns.clear();
     run.geyserCapture = null;
     run.slime.x = run.startX;
@@ -9633,8 +12406,8 @@
     if (run.isFinalCompletion) save.gameCompleted = true;
     sound('win');
     endRun(true, unlockedNextWorld
-      ? `Мир «${world.name}» пройден! Получен кубок. Следующий мир открыт!`
-      : `Мир «${world.name}» пройден! Получен кубок.`);
+      ? `Шахта «${world.name}» пройдена! Получен кубок. Следующая шахта открыта!`
+      : `Шахта «${world.name}» пройдена! Получен кубок.`);
   }
 
   function finishWorld() {
@@ -9757,12 +12530,13 @@
     els.resultResearchFlask.classList.add('unit-earned');
   }
 
-  function animateResultResearch(data, startProgress, startUnits, token) {
+  function animateResultResearch(data, startUnits, token) {
     cancelAnimationFrame(resultResearchAnimationId);
     const totalData = Math.max(0, Math.floor(data));
     const duration = clamp(760 + totalData * 2.2, 880, 1900);
     const startedAt = performance.now();
     let lastUnits = startUnits;
+    let lastPulseAt = -Infinity;
     els.resultResearchStream?.classList.add('is-pouring');
     return new Promise(resolve => {
       const finish = () => {
@@ -9774,17 +12548,17 @@
         const ratio = clamp((timestamp - startedAt) / duration, 0, 1);
         const eased = 1 - Math.pow(1 - ratio, 3);
         const added = Math.round(totalData * eased);
-        const absolute = startProgress + added;
-        const units = startUnits + Math.floor(absolute / 100);
-        const progress = absolute % 100;
+        const units = startUnits + added;
         if (els.resultResearchData) els.resultResearchData.textContent = `+${added.toLocaleString('ru-RU')}`;
         if (els.resultResearchUnits) els.resultResearchUnits.textContent = formatCompactNumber(units);
-        if (els.resultResearchProgress) els.resultResearchProgress.style.width = `${progress}%`;
         if (units !== lastUnits) {
           lastUnits = units;
-          pulseResultResearchFlask();
-          sound('coin');
-          feedback([4, 8, 4]);
+          if (timestamp - lastPulseAt >= 190 || ratio >= 1) {
+            lastPulseAt = timestamp;
+            pulseResultResearchFlask();
+            sound('coin');
+            feedback([4, 8, 4]);
+          }
         }
         if (ratio < 1) resultResearchAnimationId = requestAnimationFrame(step);
         else finish();
@@ -9805,9 +12579,8 @@
     if (reducedMotion) {
       els.resultResearchData.textContent = `+${researchData.toLocaleString('ru-RU')}`;
       els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsAfter);
-      els.resultResearchProgress.style.width = `${run.researchProgressAfter}%`;
     } else {
-      await animateResultResearch(researchData, run.researchProgressBefore, run.researchUnitsBefore, token);
+      await animateResultResearch(researchData, run.researchUnitsBefore, token);
     }
     if (token !== resultRevealToken || !run) return;
     researchStat?.classList.remove('is-counting');
@@ -9843,6 +12616,13 @@
 
   function endRun(completed, reason) {
     if (!run || run.ended) return;
+    if (save.tutorialStep === 'run-wait') {
+      clearTimeout(tutorialRunTimer);
+      setTutorialStep('post-run');
+    }
+    run.completed = Boolean(completed);
+    hideGlitchChoice();
+    run.glitchChoice = null;
     hideRunMenu();
     clearRunImpactFeedback();
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
@@ -9858,19 +12638,19 @@
       save.endlessBestDepth[run.worldId] = Math.max(save.endlessBestDepth[run.worldId] || 0, Math.max(0, Math.floor(run.maxDepth)));
       save.endlessRuns[run.worldId] = Math.max(0, Math.floor(save.endlessRuns[run.worldId] || 0)) + 1;
     } else {
+      const failureKey = `${run.worldId}:${run.level}`;
+      save.levelFailures[failureKey] = window.SlimeMinePlans?.nextFailureStreak(save.levelFailures[failureKey], completed)
+        ?? (completed ? 0 : Math.min(99, (save.levelFailures[failureKey] || 0) + 1));
       save.worldBest[run.worldId] = Math.max(save.worldBest[run.worldId] || 0, Math.min(run.maxDepth, run.world.targetDepth));
       save.lastRunDepth[`${run.worldId}:${run.level}`] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
       save.worldLastRun[run.worldId] = Math.min(run.world.targetDepth, Math.max(0, Math.floor(run.maxDepth)));
     }
     const baseCoins = Math.max(0, Math.floor(run.coins));
-    const researchData = Math.max(0, Math.floor(run.researchData || 0));
-    run.researchUnitsBefore = save.researchUnits;
-    run.researchProgressBefore = save.researchProgress;
-    const researchTotal = save.researchProgress + researchData;
-    save.researchUnits += Math.floor(researchTotal / 100);
-    save.researchProgress = researchTotal % 100;
+    const completionBonus = completed && !run.endless ? 25 : 0;
+    const researchData = Math.max(0, Math.floor(run.researchData || 0)) + completionBonus;
+    run.researchUnitsBefore = Math.max(0, save.researchUnits - Math.max(0, Math.floor(run.researchData || 0)));
+    save.researchUnits += completionBonus;
     run.researchUnitsAfter = save.researchUnits;
-    run.researchProgressAfter = save.researchProgress;
     run.awardedCoins = 0;
     run.finalCoins = 0;
     run.rewardClaimed = false;
@@ -9884,18 +12664,19 @@
     resultModal?.classList.add('result-reveal-pending');
     els.resultResearchData?.closest('.result-stat')?.classList.remove('is-counting', 'is-complete');
     els.resultCoins.closest('.result-stat')?.classList.remove('is-counting', 'is-complete');
-    els.resultWorldIcon.src = versionedAsset(`assets/ui/world-icons/world-${run.worldId}.webp`);
+    els.resultWorldIcon.src = worldIconSource(run.worldId);
     els.resultWorldName.textContent = run.world.name;
     els.resultBadge.textContent = run.endless
       ? '∞ БЕСКОНЕЧНЫЙ ЗАБЕГ'
       : completed
-      ? 'МИР ПРОЙДЕН'
+      ? 'ШАХТА ПРОЙДЕНА'
       : 'ЗАБЕГ ОКОНЧЕН';
     els.resultTitle.textContent = run.endless ? 'Бесконечный забег' : 'Результат забега';
     els.resultText.textContent = reason;
     els.resultResearchData.textContent = '+0';
+    const bonusLabel = document.getElementById('resultResearchBonus');
+    if (bonusLabel) bonusLabel.textContent = completionBonus ? `ПРОЙДЕНО +${completionBonus}` : '';
     els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsBefore);
-    els.resultResearchProgress.style.width = `${run.researchProgressBefore}%`;
     els.resultCoins.textContent = '+0';
     els.resultMultiplierLabel.textContent = formatResultMultiplier(RESULT_MULTIPLIERS[0]);
     els.resultMultiplierHint.textContent = 'Нажми, чтобы остановить стрелку';
@@ -9903,11 +12684,13 @@
     els.resultMultiplierBtn.innerHTML = '<span class="result-ad-play" aria-hidden="true">▶</span><span>УМНОЖИТЬ НАГРАДУ</span>';
     els.continueBtn.disabled = true;
     els.continueBtn.textContent = 'Продолжить';
-    els.resultOverlay.classList.remove('hidden', 'is-arriving');
+    // Start the entrance animation on the first visible frame. Revealing the
+    // overlay one frame before adding this class makes the result flash in.
+    els.resultOverlay.classList.add('is-arriving');
+    els.resultOverlay.classList.remove('hidden');
     syncInteractionLayers();
     const revealToken = ++resultRevealToken;
     requestAnimationFrame(() => {
-      els.resultOverlay.classList.add('is-arriving');
       els.resultOverlay.querySelector('.modal')?.focus();
       revealResultSummary(researchData, completed && !run.endless ? 1 : 0, revealToken);
     });
@@ -9970,6 +12753,8 @@
     syncInteractionLayers();
     run = null;
     newDraft();
+    requestAnimationFrame(playHomeRewardFlight);
+    queueSecondTutorialGift();
   }
 
   function startEndlessFromCompletion() {
@@ -9977,6 +12762,16 @@
     syncInteractionLayers();
     run = null;
     startDrop({ endless: true });
+  }
+
+  function queueSecondTutorialGift() {
+    if (save.tutorialStep !== 'post-run') return;
+    const waitForRewards = () => {
+      if (save.tutorialStep !== 'post-run' || document.body.dataset.screen !== 'home') return;
+      if (homeRewardFlight) return setTimeout(waitForRewards, 150);
+      setTutorialStep('second-gift');
+    };
+    setTimeout(waitForRewards, 100);
   }
 
   function continueAfterRun() {
@@ -9990,11 +12785,15 @@
     els.resultOverlay.classList.remove('is-arriving');
     syncInteractionLayers();
     if (showFinale) {
+      prepareHomeRewardFlight(run);
       showGameComplete();
       return;
     }
+    prepareHomeRewardFlight(run);
     run = null;
     newDraft();
+    requestAnimationFrame(playHomeRewardFlight);
+    queueSecondTutorialGift();
   }
 
   function upgradeCost(key) {
@@ -10019,16 +12818,118 @@
   }
 
   function renderPanel(type) {
+    if (type === 'shop' || type === 'skins' || (type === 'form-index' && !save.discoveredForms?.length)) return;
     lastFocusedElement = document.activeElement;
     els.panelOverlay.querySelector('.panel-modal')?.classList.toggle('encyclopedia-modal', type === 'encyclopedia');
     if (type === 'upgrades') renderUpgradesPanel();
     if (type === 'shop' || type === 'skins') renderShopPanel(activeShopTab);
     if (type === 'rewards') renderRewardsPanel();
     if (type === 'recipes') renderRecipesPanel();
+    if (type === 'recipes' && save.tutorialStep === 'upgrade-home-mutations') {
+      selectedLaboratoryMutationId = 'fire';
+      renderRecipesPanel();
+      setTutorialStep('upgrade-fire');
+    }
+    if (type === 'recipes' && save.tutorialStep === 'home-mutations') {
+      setTutorialStep('gift-delay');
+      clearTimeout(tutorialGiftTimer);
+      tutorialGiftTimer = setTimeout(() => {
+        if (save.tutorialStep === 'gift-delay') setTutorialStep('gift');
+      }, 550);
+    }
     if (type === 'encyclopedia') renderEncyclopediaPanel(save.world);
+    if (type === 'form-index') {
+      renderFormIndexPanel();
+      const hadUnseenForms = save.unseenForms.length > 0;
+      save.unseenForms = [];
+      updateFormIndexBadge();
+      if (hadUnseenForms) persist();
+    }
     els.panelOverlay.classList.remove('hidden');
     syncInteractionLayers();
+    queueTutorialRender();
     requestAnimationFrame(() => els.panelOverlay.querySelector('.modal')?.focus());
+  }
+
+  function updateFormIndexBadge() {
+    if (!els.formIndexBadge) return;
+    const hasNew = Boolean(save.unseenForms?.length);
+    els.formIndexBadge.hidden = !hasNew;
+    els.formIndexBtn?.classList.toggle('has-new-form', hasNew);
+    els.formIndexBtn?.setAttribute('aria-label', !save.discoveredForms?.length ? 'Формы откроются после первой формы' : hasNew ? 'Открыть индекс форм, есть новые формы' : 'Открыть индекс форм');
+  }
+
+  function renderFormIndexPanel() {
+    const discovered = new Set(save.discoveredForms);
+    const unseen = new Set(save.unseenForms);
+    els.panelTitle.textContent = 'Индекс форм';
+    els.panelContent.innerHTML = `<div class="form-index-panel">
+      <header class="form-index-intro">
+        <span class="form-index-intro-icon"><span class="form-index-silhouette" aria-hidden="true"><img src="assets/ui/slime/forms/slime-body-frost-v1.webp" alt=""><i>?</i></span></span>
+        <div class="form-index-intro-copy"><small>КОЛЛЕКЦИЯ ПРЕВРАЩЕНИЙ</small><strong>ОТКРЫТО ${discovered.size} ИЗ ${FORM_INDEX.length}</strong><p>Улучши мутацию до III и съешь три её еды, чтобы открыть форму.</p></div>
+      </header>
+      <div class="form-index-progress" role="progressbar" aria-label="Открытые формы" aria-valuenow="${discovered.size}" aria-valuemin="0" aria-valuemax="${FORM_INDEX.length}"><i style="width:${discovered.size / FORM_INDEX.length * 100}%"></i></div>
+      <div class="form-index-grid">${FORM_INDEX.map((form, index) => {
+        const open = discovered.has(form.id);
+        const number = String(index + 1).padStart(2, '0');
+        const recipeFamily = form.id === 'frost' ? 'ice' : form.id;
+        const recipeIcon = versionedAsset(RECIPE_FAMILY_ICONS[recipeFamily]);
+        return `<article class="form-index-card ${open ? 'is-open' : 'is-locked'}" style="--form-accent:${form.color}" aria-label="${open ? form.name : `Форма ${index + 1}: неизвестна`}">
+          <div class="form-index-card-top"><span>№ ${number}</span><span>ID F-${number}</span>${open && unseen.has(form.id) ? '<b class="form-index-new">НОВОЕ</b>' : ''}</div>
+          <div class="form-index-art"><img src="${versionedAsset(form.art)}" alt="" loading="lazy"><i aria-hidden="true">?</i></div>
+          <div class="form-index-card-copy">
+            <h3>${open ? form.name : '???'}</h3>
+            <div class="form-index-recipe" aria-label="Рецепт: три эмблемы ${form.mutation}"><span>РЕЦЕПТ</span><div>${Array.from({ length: 3 }, () => `<img src="${recipeIcon}" alt="">`).join('')}</div></div>
+            <div class="form-index-ultra"><span>УЛЬТА</span>${open && form.ultra
+              ? `<b>${form.ultra[0]}</b><p>${form.ultra[1]}</p>`
+              : '<b class="form-index-empty-ultra">—</b>'}</div>
+          </div>
+        </article>`;
+      }).join('')}</div>
+    </div>`;
+  }
+
+  function discoverCurrentForm({ animate = true, notify = true } = {}) {
+    const entry = FORM_INDEX.find(form => menuCategoryLevels()[form.id] === 3);
+    if (!entry || save.discoveredForms.includes(entry.id)) return;
+    save.discoveredForms.push(entry.id);
+    if (notify) save.unseenForms.push(entry.id);
+    persist();
+    if (!animate || menuReducedMotion || document.body.dataset.screen !== 'home' || !els.formIndexBtn) {
+      updateFormIndexBadge();
+      return;
+    }
+    els.slime.classList.remove('form-discovering');
+    void els.slime.offsetWidth;
+    els.slime.classList.add('form-discovering');
+    setTimeout(() => {
+      els.slime.classList.remove('form-discovering');
+      if (document.body.dataset.screen !== 'home') return updateFormIndexBadge();
+      const from = els.slime.getBoundingClientRect();
+      const to = els.formIndexBtn.getBoundingClientRect();
+      const size = Math.min(90, from.width * .8);
+      const sprite = document.createElement('img');
+      sprite.className = 'form-index-flight';
+      sprite.src = versionedAsset(entry.art);
+      sprite.alt = '';
+      sprite.style.cssText = `left:${from.left + (from.width - size) / 2}px;top:${from.top + (from.height - size) / 2}px;width:${size}px;height:${size}px`;
+      document.body.appendChild(sprite);
+      const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+      const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+      const flight = sprite.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 0 },
+        { transform: 'translate(0,0) scale(1.12)', opacity: 1, offset: .16 },
+        { transform: `translate(${dx}px,${dy}px) scale(.24)`, opacity: 1, offset: .84 },
+        { transform: `translate(${dx}px,${dy}px) scale(.08)`, opacity: 0 }
+      ], { duration: 780, easing: 'cubic-bezier(.22,.76,.35,1)', fill: 'forwards' });
+      flight.finished.catch(() => {}).finally(() => {
+        sprite.remove();
+        updateFormIndexBadge();
+        els.formIndexBtn.classList.remove('form-index-arrived');
+        void els.formIndexBtn.offsetWidth;
+        els.formIndexBtn.classList.add('form-index-arrived');
+      });
+    }, 1150);
   }
 
   function laboratoryTabsMarkup() {
@@ -10055,11 +12956,12 @@
   }
 
   function renderLaboratoryConveyorPanel() {
-    const unlocked = new Set([...STARTER_MUTATIONS.map(item => item.id), ...(save.unlockedMutations || [])]);
-    const pool = save.activeMutationPool || ['frost', 'fire', 'electric'];
+    const unlocked = new Set(save.unlockedMutations || []);
+    const pool = save.activeMutationPool || [];
+    const full = stomachIsFull();
     const pipes = pool.map((id, index) => {
       const mutation = mutationById(id);
-      return `<button class="lab-feed-pipe mutation-${id} ${index === selectedConveyorSlot ? 'selected' : ''}" data-conveyor-slot="${index}" type="button" aria-label="${index + 1} дозатор: ${mutation?.name || 'пусто'}">
+      return `<button class="lab-feed-pipe mutation-${id} ${index === selectedConveyorSlot ? 'selected' : ''}" data-conveyor-slot="${index}" type="button" ${full ? 'disabled' : ''} aria-label="${index + 1} дозатор: ${mutation?.name || 'пусто'}">
         <span class="lab-pipe-neck" aria-hidden="true"></span>
         <span class="lab-pipe-body"><span class="lab-pipe-emblem">${mutation ? `<img src="${versionedAsset(mutation.image)}" alt="">` : '<i>+</i>'}</span></span>
         <span class="lab-pipe-mouth" aria-hidden="true"></span>
@@ -10067,7 +12969,7 @@
     }).join('');
     const slots = [...allMutations(), { id: 'future-1', future: true }, { id: 'future-2', future: true }].map(mutation => {
       const available = !mutation.future && unlocked.has(mutation.id);
-      return `<button class="lab-pool-mutation mutation-${mutation.id} ${available ? 'available' : 'locked'} ${pool.includes(mutation.id) ? 'equipped' : ''}" ${available ? `data-pool-mutation="${mutation.id}"` : 'disabled'} type="button" aria-label="${available ? mutation.name : 'Неизвестная мутация'}">
+      return `<button class="lab-pool-mutation mutation-${mutation.id} ${available ? 'available' : 'locked'} ${pool.includes(mutation.id) ? 'equipped' : ''}" ${available && !full ? `data-pool-mutation="${mutation.id}"` : 'disabled'} type="button" aria-label="${available ? mutation.name : 'Неизвестная мутация'}">
         ${available ? `<img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b>` : '<i>?</i>'}
       </button>`;
     }).join('');
@@ -10090,8 +12992,8 @@
   }
 
   function setActiveConveyorMutation(id) {
-    if (!mutationById(id)) return;
-    const pool = [...(save.activeMutationPool || ['frost', 'fire', 'electric'])];
+    if (!mutationById(id) || stomachIsFull() || session?.offerTransition) return;
+    const pool = [...(save.activeMutationPool || [])];
     const occupiedSlot = pool.indexOf(id);
     if (occupiedSlot === selectedConveyorSlot) return;
     if (occupiedSlot >= 0) [pool[selectedConveyorSlot], pool[occupiedSlot]] = [pool[occupiedSlot], pool[selectedConveyorSlot]];
@@ -10118,28 +13020,35 @@
     activeLaboratoryTab = 'mutations';
 
     const unlocked = new Set(save.unlockedMutations || []);
-    const availableIds = new Set([...STARTER_MUTATIONS.map(item => item.id), ...unlocked]);
+    const availableIds = new Set(unlocked);
     if (!availableIds.has(selectedLaboratoryMutationId)) selectedLaboratoryMutationId = STARTER_MUTATIONS[0].id;
     const selectedMutation = mutationById(selectedLaboratoryMutationId) || STARTER_MUTATIONS[0];
-    const selectedDetails = MUTATION_DETAILS[selectedMutation.id] || { stage1: 'Открывает базовый эффект мутации.', stage2: 'Усиливает эффект после второй порции.' };
-    const activePool = save.activeMutationPool || ['frost', 'fire', 'electric'];
+    const selectedAvailable = availableIds.has(selectedMutation.id);
+    const selectedDetails = selectedAvailable
+      ? MUTATION_DETAILS[selectedMutation.id] || { stage1: 'Открывает базовый эффект мутации.', stage2: 'Усиливает эффект после второй порции.' }
+      : { stage1: 'Синтезируй мутацию, чтобы узнать её эффект.', stage2: 'Сначала открой эмблему в реакторе.' };
+    const selectedLevel = selectedAvailable ? mutationLevel(selectedMutation.id) : 0;
+    const levelName = ['', 'I', 'II', 'III'][selectedLevel];
+    const nextLevelName = ['', 'II', 'III'][selectedLevel] || '';
+    const upgradeCost = MUTATION_UPGRADE_COSTS[selectedLevel] || 0;
+    const activePool = save.activeMutationPool || [];
     const selectedIsActive = activePool.includes(selectedMutation.id);
-    const allUnlocked = unlocked.size >= MUTATION_DISCOVERIES.length;
-    const mutationCost = MUTATION_STEPS;
+    const allUnlocked = allSynthesesUnlocked();
+    const mutationCost = currentMutationCost();
     const progress = allUnlocked ? mutationCost : Math.min(mutationCost, Math.max(0, save.mutationProgress));
     const readyToReveal = progress >= mutationCost && !allUnlocked;
     const remaining = Math.max(0, mutationCost - progress);
     const fillPercent = allUnlocked ? 100 : Math.min(100, progress / mutationCost * 100);
     const liquidFillPercent = allUnlocked ? 0 : fillPercent;
     const researchBalance = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
-    const collectionCapacity = 9;
-    const visibleUnlockedCount = STARTER_MUTATIONS.length + unlocked.size;
+    const collectionCapacity = 10;
+    const visibleUnlockedCount = unlocked.size;
     const futureMutations = Array.from({ length: Math.max(0, collectionCapacity - allMutations().length) }, (_, index) => ({ id: `future-${index + 1}`, future: true }));
 
     els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
 
     const collection = [...allMutations(), ...futureMutations].map(mutation => {
-      if (mutation.future) return `<button class="mutation-collection-slot future locked" type="button" disabled aria-label="Неизвестная будущая мутация"><i>?</i><b>???</b></button>`;
+      if (mutation.future) return `<button class="mutation-collection-slot future locked" type="button" disabled aria-label="Пустое место для будущей мутации"></button>`;
       const available = availableIds.has(mutation.id);
       const equipped = activePool.includes(mutation.id);
       const replaceTarget = laboratoryReplaceMode && equipped;
@@ -10162,28 +13071,19 @@
       return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#38e77e" stop-opacity="0"></stop><stop offset=".28" stop-color="#21ee72" stop-opacity=".62"></stop><stop offset=".62" stop-color="#13dd63"></stop><stop offset="1" stop-color="#66ff8d"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efffd3" stop-opacity="0"></stop><stop offset=".34" stop-color="#efffd3" stop-opacity=".72"></stop><stop offset="1" stop-color="#f8ffe7"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
     }).join('');
 
-    const stageOneIcons = `<img src="${versionedAsset(selectedMutation.image)}" alt="">`;
-    const stageTwoIcons = `${stageOneIcons}${stageOneIcons}`;
-    const selectedEmblemFx = selectedMutation.id === 'cosmos'
-      ? `<span class="mutation-gravity-particles" aria-hidden="true">${MUTATION_GRAVITY_ARROW_SVG.repeat(5)}</span>`
-      : selectedMutation.id === 'nano'
-        ? `<span class="mutation-nano-drones" aria-hidden="true"><img src="${versionedAsset(NANO_DRONE_SPRITE)}" alt=""><img src="${versionedAsset(NANO_DRONE_SPRITE)}" alt=""></span>`
-        : selectedMutation.id === 'cloning'
-          ? `<span class="mutation-clone-echoes" aria-hidden="true"><img src="${versionedAsset(selectedMutation.image)}" alt=""><img src="${versionedAsset(selectedMutation.image)}" alt=""></span>`
-          : mutationElementFxMarkup(selectedMutation.id, 'mutation-info-fx');
+    const selectedEmblemFx = selectedAvailable ? mutationElementFxMarkup(selectedMutation.id, 'mutation-info-fx') : '';
+    const stageTrack = [1, 2, 3].map((stage, index) => `<span class="${stage <= selectedLevel ? 'is-open' : 'is-closed'}" aria-label="Стадия ${stage}: ${stage} ${stage === 1 ? 'еда' : 'еды'}; ${stage <= selectedLevel ? 'открыта' : 'закрыта'}">${['I', 'II', 'III'][index]}<small>${stage} ${stage === 1 ? 'ЕДА' : 'ЕДЫ'}</small></span>`).join('');
     const machineHint = allUnlocked
       ? 'ВСЕ МУТАЦИИ ОТКРЫТЫ'
       : readyToReveal
         ? 'РЕАКТОР ГОТОВ · НАЖМИ СИНТЕЗ'
-        : adminInfiniteResearch || save.researchUnits > 0
-          ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ, ЧТОБЫ ДОБАВИТЬ КОЛБЫ'
-          : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+        : mutationInvestmentHint();
 
     els.panelContent.innerHTML = `<div class="laboratory-panel mutation-lab-v2">
       <div class="mutation-main-grid">
         <section class="mutation-synth-pane" aria-label="Синтезатор мутаций">
           <header class="mutation-pane-title"><h3>СИНТЕЗАТОР</h3></header>
-          <button id="mutationCapsuleBtn" class="mutation-capsule mutation-capsule-v2 ${allUnlocked ? 'is-complete' : ''} ${readyToReveal ? 'is-ready-to-synthesize' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все мутации открыты' : readyToReveal ? 'Реактор заполнен' : `Добавить одну колбу. Осталось ${remaining}`}">
+          <button id="mutationCapsuleBtn" class="mutation-capsule mutation-capsule-v2 ${allUnlocked ? 'is-complete' : ''} ${readyToReveal ? 'is-ready-to-synthesize' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все мутации открыты' : readyToReveal ? 'Реактор заполнен' : `Добавить ${nextMutationInvestmentAmount()} колб. Осталось ${remaining}`}">
             <span class="mutation-machine-visual" aria-hidden="true">
               <img class="mutation-machine-art" src="${versionedAsset('assets/ui/lab-synth-machine-v1.webp')}" alt="">
               <span class="mutation-glass">
@@ -10208,14 +13108,20 @@
           </div>
         </section>
 
-        <section class="mutation-info-pane mutation-family-${selectedMutation.id}" aria-label="Информация о мутации ${selectedMutation.name}">
-          <span class="mutation-info-emblem"><span class="mutation-emblem-halo" aria-hidden="true"></span>${selectedEmblemFx}<img src="${versionedAsset(selectedMutation.image)}" alt=""></span>
-          <h3>${selectedMutation.name}</h3>
-          <div class="mutation-stage-list">
-            <article aria-label="Один значок мутации"><span class="mutation-stage-icons">${stageOneIcons}</span><p>${selectedDetails.stage1}</p></article>
-            <article aria-label="Два значка мутации"><span class="mutation-stage-icons">${stageTwoIcons}</span><p>${selectedDetails.stage2}</p></article>
+        <section class="mutation-info-pane mutation-family-${selectedMutation.id} ${selectedAvailable ? '' : 'is-locked'}" aria-label="${selectedAvailable ? `Информация о мутации ${selectedMutation.name}` : 'Неизвестная мутация'}">
+          <span class="mutation-info-emblem"><span class="mutation-emblem-halo" aria-hidden="true"></span>${selectedEmblemFx}${selectedAvailable ? `<img src="${versionedAsset(selectedMutation.image)}" alt="">` : '<i class="mutation-locked-symbol">?</i>'}</span>
+          <h3>${selectedAvailable ? selectedMutation.name : 'НЕИЗВЕСТНО'}${selectedAvailable ? ` <em class="mutation-level-badge">${levelName}</em>` : ''}</h3>
+          <div class="mutation-level-track" aria-label="Открытые стадии мутации">${stageTrack}</div>
+          <div class="mutation-stage-list mutation-level-list">
+            <article class="${selectedLevel >= 1 ? 'is-open' : 'is-hidden'}" aria-label="Стадия I"><b>I</b><p>${selectedLevel >= 1 ? selectedDetails.stage1 : '???'}</p></article>
+            <article class="${selectedLevel >= 2 ? 'is-open' : 'is-hidden'}" aria-label="Стадия II"><b>II</b><p>${selectedLevel >= 2 ? selectedDetails.stage2 : '???'}</p></article>
           </div>
-          <button id="mutationChooseBtn" class="mutation-choose-btn ${laboratoryReplaceMode ? 'is-cancel' : ''}" type="button" aria-pressed="${laboratoryReplaceMode}" ${selectedIsActive ? 'disabled' : ''}><span>${selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</span></button>
+          <div class="mutation-level-action">
+            ${selectedLevel > 0 && selectedLevel < 3
+              ? `<button id="mutationUpgradeBtn" class="mutation-upgrade-btn ${save.researchUnits < upgradeCost && !adminInfiniteResearch ? 'needs-flasks' : ''}" type="button" ${mutationUpgrading ? 'disabled' : ''} aria-label="Открыть стадию ${nextLevelName} за ${upgradeCost} колб"><span>ОТКРЫТЬ ${nextLevelName}</span><span class="mutation-upgrade-price"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt="">${upgradeCost}</span></button>`
+              : `<span class="mutation-level-note">${selectedLevel === 3 ? 'III · 3 ЕДЫ → ФОРМА' : 'ОТКРОЙ МУТАЦИЮ'}</span>`}
+          </div>
+          <button id="mutationChooseBtn" class="mutation-choose-btn ${laboratoryReplaceMode ? 'is-cancel' : ''}" type="button" aria-pressed="${laboratoryReplaceMode}" ${!selectedAvailable || selectedIsActive ? 'disabled' : ''}><span>${!selectedAvailable ? 'ЗАКРЫТО' : selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</span></button>
         </section>
       </div>
       <div class="mutation-collection-head"><b>МУТАЦИИ</b><span>${visibleUnlockedCount}/${collectionCapacity}</span></div>
@@ -10229,7 +13135,14 @@
     capsuleButton?.addEventListener('pointercancel', stopMutationFeedHold);
     capsuleButton?.addEventListener('lostpointercapture', stopMutationFeedHold);
     $('#mutationSynthesizeBtn')?.addEventListener('click', () => startMutationSynthesis(capsuleButton));
+    $('#mutationUpgradeBtn')?.addEventListener('click', event => { void upgradeMutation(selectedMutation.id, event.currentTarget); });
     $('#mutationChooseBtn')?.addEventListener('click', () => {
+      if (!selectedIsActive && activePool.length < 3) {
+        selectedConveyorSlot = activePool.length;
+        setActiveConveyorMutation(selectedLaboratoryMutationId);
+        if (save.tutorialStep === 'choose') setTutorialStep('close-lab');
+        return;
+      }
       laboratoryReplaceMode = !laboratoryReplaceMode;
       sound('tap');
       renderRecipesPanel();
@@ -10250,11 +13163,71 @@
       selectedLaboratoryMutationId = id;
       sound('tap');
       renderRecipesPanel();
+      if (save.tutorialStep === 'fire-slot' && id === 'fire') setTutorialStep('choose');
     }));
+    queueTutorialRender();
+  }
+
+  async function upgradeMutation(id, button) {
+    const level = mutationLevel(id);
+    const cost = MUTATION_UPGRADE_COSTS[level];
+    if (!cost || mutationUpgrading || mutationAnimating || !button) return;
+    if (!adminInfiniteResearch && save.researchUnits < cost) {
+      showToast(`Нужно ещё ${cost - save.researchUnits} колб`);
+      feedback(7);
+      return;
+    }
+    mutationUpgrading = true;
+    button.disabled = true;
+    button.classList.add('is-upgrading');
+    const source = els.panelTitle.querySelector('.mutation-panel-balance img')?.getBoundingClientRect();
+    const destination = button.getBoundingClientRect();
+    const initialBalance = save.researchUnits;
+    if (!adminInfiniteResearch) save.researchUnits -= cost;
+    save.mutationLevels = { ...(save.mutationLevels || {}), [id]: level + 1 };
+    persist({ refreshUI: false });
+    const flights = Array.from({ length: 5 }, (_, index) => {
+      const flask = document.createElement('img');
+      flask.className = 'mutation-upgrade-flight';
+      flask.src = versionedAsset('assets/ui/research-flask.webp');
+      flask.alt = '';
+      const startX = (source?.left || destination.left) + (source?.width || 0) / 2 - 15;
+      const startY = (source?.top || destination.top) + (source?.height || 0) / 2 - 15;
+      const endX = destination.left + destination.width / 2 - 15;
+      const endY = destination.top + destination.height / 2 - 15;
+      flask.style.left = `${startX}px`;
+      flask.style.top = `${startY}px`;
+      document.body.appendChild(flask);
+      const flight = flask.animate([
+        { transform: 'translate(0,0) scale(.7)', opacity: 0 },
+        { transform: 'translate(0,-14px) scale(1)', opacity: 1, offset: .25 },
+        { transform: `translate(${endX - startX}px,${endY - startY}px) scale(.42)`, opacity: 1 }
+      ], { duration: menuReducedMotion ? 80 : 420, delay: index * (menuReducedMotion ? 15 : 90), easing: 'ease-in', fill: 'forwards' });
+      return flight.finished.catch(() => {}).finally(() => {
+        flask.remove();
+        if (adminInfiniteResearch) return;
+        const shown = initialBalance - Math.round(cost * (index + 1) / 5);
+        if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = String(shown);
+        const panelBalance = $('#mutationPanelBalance');
+        if (panelBalance) panelBalance.textContent = String(shown);
+      });
+    });
+    await Promise.all(flights);
+    mutationUpgrading = false;
+    sound('coin');
+    feedback([7, 12, 7]);
+    if (session && (save.activeMutationPool || []).includes(id) && !session.offerTransition && !stomachIsFull()) {
+      generateOffer({ resetRerolls: false });
+      renderDraft({ offerMotion: 'enter' });
+      void settleConveyorArrival(menuReducedMotion);
+    } else updatePersistentUI();
+    if (!els.panelOverlay.classList.contains('hidden') && activeLaboratoryTab === 'mutations') renderRecipesPanel();
+    if (save.tutorialStep === 'upgrade-fire' && id === 'fire' && level === 1) setTutorialStep('upgrade-close-lab');
   }
 
   function startMutationSynthesis(button) {
     if (!button || mutationAnimating || save.mutationProgress < currentMutationCost()) return;
+    if (save.tutorialStep === 'synthesize') setTutorialStep('wait-synthesis');
     const synthButton = $('#mutationSynthesizeBtn');
     mutationAnimating = true;
     button.disabled = true;
@@ -10274,15 +13247,15 @@
       return;
     }
     const unlocked = new Set(save.unlockedMutations || []);
-    const allUnlocked = unlocked.size >= MUTATION_DISCOVERIES.length;
-    const mutationCost = MUTATION_STEPS * (unlocked.size + 1);
+    const allUnlocked = allSynthesesUnlocked();
+    const mutationCost = currentMutationCost();
     const readyToReveal = save.mutationProgress >= mutationCost && !allUnlocked;
     const remaining = Math.max(0, mutationCost - save.mutationProgress);
-    const collectionCapacity = 9;
-    const visibleUnlockedCount = STARTER_MUTATIONS.length + unlocked.size;
+    const collectionCapacity = 10;
+    const visibleUnlockedCount = unlocked.size;
     const futureMutations = Array.from({ length: Math.max(0, collectionCapacity - STARTER_MUTATIONS.length - MUTATION_DISCOVERIES.length) }, (_, index) => ({ id: `future-${index + 1}`, future: true }));
-    const collection = [...STARTER_MUTATIONS.map(mutation => ({ ...mutation, starter: true })), ...MUTATION_DISCOVERIES, ...futureMutations].map(mutation => {
-      if (mutation.future) return `<span class="mutation-collection-slot future locked" data-mutation-slot="${mutation.id}" aria-label="Неизвестная будущая мутация"><i>?</i></span>`;
+    const collection = [...allMutations(), ...futureMutations].map(mutation => {
+      if (mutation.future) return `<span class="mutation-collection-slot future locked" data-mutation-slot="${mutation.id}" aria-label="Пустое место для будущей мутации"></span>`;
       if (mutation.starter) return `<span class="mutation-collection-slot starter unlocked${mutation.name.length > 9 ? ' long-name' : ''}" data-mutation-slot="${mutation.id}" aria-label="${mutation.name}. Начальная мутация"><img src="${versionedAsset(mutation.image)}" alt=""><b>${mutation.name}</b></span>`;
       const isUnlocked = unlocked.has(mutation.id);
       return `<span class="mutation-collection-slot ${isUnlocked ? 'unlocked' : 'locked'}${isUnlocked && mutation.name.length > 9 ? ' long-name' : ''}" data-mutation-slot="${mutation.id}" aria-label="${isUnlocked ? mutation.name : 'Неизвестная мутация'}">
@@ -10303,7 +13276,7 @@
       return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#38e77e" stop-opacity="0"></stop><stop offset=".28" stop-color="#21ee72" stop-opacity=".62"></stop><stop offset=".62" stop-color="#13dd63"></stop><stop offset="1" stop-color="#66ff8d"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efffd3" stop-opacity="0"></stop><stop offset=".34" stop-color="#efffd3" stop-opacity=".72"></stop><stop offset="1" stop-color="#f8ffe7"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
     }).join('');
     els.panelContent.innerHTML = `<div class="laboratory-panel">${laboratoryTabsMarkup()}<div class="panel-section mutation-lab-panel">
-      <button id="mutationCapsuleBtn" class="mutation-capsule ${allUnlocked ? 'is-complete' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все тестовые мутации открыты' : readyToReveal ? 'Открывается новая мутация' : `Добавить одну колбу. Осталось ${remaining}`}">
+      <button id="mutationCapsuleBtn" class="mutation-capsule ${allUnlocked ? 'is-complete' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все тестовые мутации открыты' : readyToReveal ? 'Открывается новая мутация' : `Добавить ${nextMutationInvestmentAmount()} колб. Осталось ${remaining}`}">
         <span class="mutation-side-feed" aria-hidden="true">
           <span id="mutationInlet" class="mutation-inlet"><i></i></span>
           <span class="mutation-feed-count"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationRemaining">${allUnlocked || readyToReveal ? '✓' : remaining}</b></span>
@@ -10347,7 +13320,21 @@
   }
 
   function currentMutationCost() {
-    return MUTATION_STEPS;
+    if (!save.legacyStarterAccess && !save.unlockedMutations?.includes('fire')) return 10;
+    if (!save.legacyStarterAccess && !save.unlockedMutations?.includes('frost')) return 75;
+    const discovered = availableSyntheses().filter(mutation => save.unlockedMutations?.includes(mutation.id)).length;
+    return MUTATION_STEPS * (discovered + 1);
+  }
+
+  function nextMutationInvestmentAmount() {
+    const remaining = Math.max(0, currentMutationCost() - save.mutationProgress);
+    const nextTap = Math.max(1, (save.mutationInvestTapCount || 0) + 1);
+    return Math.min(nextTap, remaining, adminInfiniteResearch ? remaining : save.researchUnits);
+  }
+
+  function mutationInvestmentHint() {
+    const amount = nextMutationInvestmentAmount();
+    return amount > 0 ? `СЛЕДУЮЩИЙ ТАП: +${amount} КОЛБ` : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
   }
 
   function handleMutationCapsuleClick(event) {
@@ -10374,7 +13361,7 @@
     button?.classList.remove('is-auto-feeding');
     if (wasFeeding && button && !button.disabled && !mutationAnimating) {
       const hint = $('#mutationCapsuleHint');
-      if (hint) hint.textContent = adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ, ЧТОБЫ ДОБАВИТЬ КОЛБЫ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+      if (hint) hint.textContent = mutationInvestmentHint();
     }
   }
 
@@ -10423,7 +13410,8 @@
   function investMutationResearch(options = {}) {
     const button = $('#mutationCapsuleBtn');
     if (!button || button.disabled || mutationAnimating) return false;
-    if (!adminInfiniteResearch && save.researchUnits < 1) {
+    const investedAmount = nextMutationInvestmentAmount();
+    if (investedAmount < 1) {
       button.classList.remove('needs-research');
       void button.offsetWidth;
       button.classList.add('needs-research');
@@ -10432,18 +13420,19 @@
       return false;
     }
     const token = mutationAnimationToken;
-    if (!adminInfiniteResearch) save.researchUnits -= 1;
-    save.mutationProgress += 1;
+    if (!adminInfiniteResearch) save.researchUnits -= investedAmount;
+    save.mutationProgress += investedAmount;
+    save.mutationInvestTapCount = (save.mutationInvestTapCount || 0) + 1;
     persist();
     updatePersistentUI();
     const balance = $('#mutationPanelBalance');
     if (balance) balance.textContent = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
     sound('tap');
 
-    const flyingFlask = document.createElement('img');
+    const flyingFlask = document.createElement('span');
     flyingFlask.className = 'mutation-invest-flask';
-    flyingFlask.src = versionedAsset('assets/ui/research-flask.webp');
-    flyingFlask.alt = '';
+    flyingFlask.setAttribute('aria-hidden', 'true');
+    flyingFlask.innerHTML = `<img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b>+${investedAmount}</b>`;
     const flightLayer = els.panelOverlay.querySelector('.panel-modal') || button;
     const sourceRect = els.panelTitle.querySelector('.mutation-panel-balance')?.getBoundingClientRect();
     const targetRect = $('#mutationInlet')?.getBoundingClientRect();
@@ -10465,7 +13454,7 @@
     const mutationCost = currentMutationCost();
     const remaining = mutationCost - save.mutationProgress;
     const nextFillPercent = Math.min(100, save.mutationProgress / mutationCost * 100);
-    button.setAttribute('aria-label', `Добавить одну колбу. Осталось ${Math.max(0, remaining)}`);
+    button.setAttribute('aria-label', `Добавить ${nextMutationInvestmentAmount()} колб. Осталось ${Math.max(0, remaining)}`);
     const remainingLabel = $('#mutationRemaining');
     if (remainingLabel) remainingLabel.textContent = remaining > 0 ? String(remaining) : '✓';
     const progressBar = $('.mutation-synth-progress');
@@ -10505,20 +13494,26 @@
       if (hint) hint.textContent = 'РЕАКТОР ГОТОВ · НАЖМИ СИНТЕЗ';
       sound('happy');
       feedback([5, 9, 5]);
+      if (save.tutorialStep === 'reactor') setTutorialStep('synthesize');
       return true;
     }
     const hint = $('#mutationCapsuleHint');
-    if (hint) hint.textContent = mutationFeedHoldActive ? 'УДЕРЖИВАЙ, ЧТОБЫ БЫСТРЕЕ ДОБАВЛЯТЬ КОЛБЫ' : adminInfiniteResearch || save.researchUnits > 0 ? 'НАЖМИ ИЛИ УДЕРЖИВАЙ, ЧТОБЫ ДОБАВИТЬ КОЛБЫ' : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+    if (hint) hint.textContent = mutationInvestmentHint();
     return true;
   }
 
   async function revealRandomMutation(token, button) {
-    const locked = MUTATION_DISCOVERIES.filter(mutation => !(save.unlockedMutations || []).includes(mutation.id));
+    const locked = !save.legacyStarterAccess && !save.unlockedMutations?.includes('fire')
+      ? [STARTER_MUTATIONS[0]]
+      : !save.legacyStarterAccess && !save.unlockedMutations?.includes('frost')
+      ? [STARTER_MUTATIONS.find(item => item.id === 'frost')]
+      : availableSyntheses().filter(mutation => !(save.unlockedMutations || []).includes(mutation.id));
     const pendingStillLocked = pendingMutationReveal && locked.some(mutation => mutation.id === pendingMutationReveal.id);
     const mutation = pendingStillLocked ? pendingMutationReveal : locked[Math.floor(Math.random() * locked.length)];
     if (!mutation) {
       pendingMutationReveal = null;
       save.mutationProgress = 0;
+      save.mutationInvestTapCount = 0;
       persist();
       renderRecipesPanel();
       return;
@@ -10578,6 +13573,7 @@
     button.disabled = false;
     if (hint) hint.textContent = 'НАЖМИ НА ЭМБЛЕМУ';
     feedback([5, 8]);
+    if (save.tutorialStep === 'wait-synthesis') setTutorialStep('core');
   }
 
   async function revealSynthesizedMutation(token, button) {
@@ -10599,12 +13595,14 @@
     prize.className = `mutation-prize mutation-family-${mutation.id}`;
     prize.type = 'button';
     prize.style.setProperty('--prize-art', `url("${versionedAsset(MUTATION_REVEAL_BACKGROUNDS[mutation.id])}")`);
-    prize.innerHTML = `<small>НОВАЯ МУТАЦИЯ</small><span class="mutation-prize-emblem"><span class="mutation-emblem-halo" aria-hidden="true"></span>${mutationRevealFxMarkup(mutation)}<img src="${versionedAsset(mutation.image)}" alt=""></span><b>${mutation.name}</b><span class="mutation-prize-cta">НАЖМИ, ЧТОБЫ ЗАБРАТЬ</span>`;
+    const description = MUTATION_REVEAL_DESCRIPTIONS[mutation.id] || MUTATION_DETAILS[mutation.id]?.stage1 || '';
+    prize.innerHTML = `${mutationRevealBackgroundMarkup(mutation)}<small class="mutation-prize-kicker">НОВАЯ МУТАЦИЯ</small><span class="mutation-prize-emblem"><span class="mutation-emblem-halo" aria-hidden="true"></span>${mutationRevealFxMarkup(mutation)}<img src="${versionedAsset(mutation.image)}" alt=""></span><span class="mutation-prize-caption"><strong class="mutation-prize-name">${mutation.name}</strong><span class="mutation-prize-ability">${description}</span></span><span class="mutation-prize-cta"><span>ЗАБРАТЬ МУТАЦИЮ</span></span>`;
     prize.setAttribute('aria-label', `Новая мутация: ${mutation.name}. Нажми, чтобы добавить в коллекцию`);
     const modal = els.panelOverlay.querySelector('.panel-modal');
     modal?.appendChild(prize);
     requestAnimationFrame(() => prize.classList.add('is-visible'));
     prize.addEventListener('click', () => collectSynthesizedMutation(token, mutation, prize), { once: true });
+    if (save.tutorialStep === 'core') setTutorialStep('prize');
   }
 
   async function collectSynthesizedMutation(token, mutation, prize) {
@@ -10642,13 +13640,17 @@
     prizeFlyer?.remove();
     if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
     save.unlockedMutations = [...new Set([...(save.unlockedMutations || []), mutation.id])];
+    save.mutationLevels = { ...(save.mutationLevels || {}), [mutation.id]: 1 };
     save.mutationProgress = 0;
+    save.mutationInvestTapCount = 0;
     pendingMutationReveal = null;
     persist();
+    updatePersistentUI();
     mutationAnimating = false;
     renderRecipesPanel();
     const unlockedSlot = $(`[data-mutation-slot="${mutation.id}"]`);
     requestAnimationFrame(() => unlockedSlot?.classList.add('just-unlocked'));
+    if (save.tutorialStep === 'prize' && mutation.id === 'fire') setTutorialStep('fire-slot');
   }
 
   function renderUpgradesPanel() {
@@ -10710,7 +13712,7 @@
         const unlocked = save.unlockedSkins.includes(skin.id);
         const selected = save.selectedSkin === skin.id;
         const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
-        const reward = skin.world ? `<span class="shop-reward ${unlocked ? 'collected' : ''}"><b>${unlocked ? 'ПОЛУЧЕН' : 'НАГРАДА'}</b><i>МИР ${Math.max(1, skin.world - 1)}</i></span>` : '';
+        const reward = skin.world ? `<span class="shop-reward ${unlocked ? 'collected' : ''}"><b>${unlocked ? 'ПОЛУЧЕН' : 'НАГРАДА'}</b><i>ШАХТА ${Math.max(1, skin.world - 1)}</i></span>` : '';
         const label = selected ? 'ВЫБРАН' : unlocked ? 'ВЫБРАТЬ' : skin.cost ? 'КУПИТЬ' : 'ЗАКРЫТ';
         return `<div class="skin-card ${selected ? 'selected' : ''}">
           <div class="skin-preview ${skin.className}"><canvas data-skin-preview="${skin.id}" width="96" height="96" aria-hidden="true"></canvas></div>
@@ -10984,6 +13986,11 @@
   function openAdminTools() {
     if (!els.adminToolsOverlay || !els.adminToolsOverlay.classList.contains('hidden')) return;
     syncAdminInfiniteFlasksUI();
+    syncAdminInfiniteUltimateUI();
+    if (els.adminUnlockMutationsIcon) {
+      const mutation = MUTATION_DISCOVERIES[Math.floor(Math.random() * MUTATION_DISCOVERIES.length)];
+      els.adminUnlockMutationsIcon.src = versionedAsset(mutation.image);
+    }
     lastFocusedElement = document.activeElement;
     els.adminToolsOverlay.classList.remove('hidden');
     els.adminMenuBtn?.setAttribute('aria-expanded', 'true');
@@ -10991,6 +13998,7 @@
     requestAnimationFrame(() => els.adminToolsOverlay.querySelector('.admin-tools-modal')?.focus({ preventScroll: true }));
     sound('tap');
     feedback(5);
+    queueTutorialRender();
   }
 
   function closeAdminTools() {
@@ -10999,6 +14007,7 @@
     els.adminMenuBtn?.setAttribute('aria-expanded', 'false');
     syncInteractionLayers();
     if (lastFocusedElement?.focus) lastFocusedElement.focus({ preventScroll: true });
+    queueTutorialRender();
   }
 
   function closePanel() {
@@ -11009,6 +14018,9 @@
     els.panelOverlay.classList.add('hidden');
     syncInteractionLayers();
     if (lastFocusedElement?.focus) lastFocusedElement.focus();
+    if (save.tutorialStep === 'close-lab') setTutorialStep('feed');
+    else if (save.tutorialStep === 'upgrade-close-lab') setTutorialStep('upgrade-summary');
+    else queueTutorialRender();
   }
 
   function updateTouchJoystick(event) {
@@ -11016,7 +14028,7 @@
     const maxDistance = 32;
     let dx = event.clientX - run.steer.originX;
     let dy = event.clientY - run.steer.originY;
-    const freeDirection = run.effects.gravitySwitch || speedDrillActive() || Boolean(jellyZoneForSlime(run.slime));
+    const freeDirection = Boolean(run.mechSuit) || run.effects.gravitySwitch || speedDrillActive() || phantomActive() || Boolean(jellyZoneForSlime(run.slime));
     if (freeDirection) {
       const distance = Math.hypot(dx, dy);
       if (distance > maxDistance) {
@@ -11029,9 +14041,10 @@
     }
     run.steer.touchX = clamp(dx / maxDistance, -1, 1);
     const vertical = clamp(dy / maxDistance, -1, 1);
+    run.steer.touchRawY = vertical;
     run.steer.touchDown = elementalLevel('mobility') >= 1 ? clamp(vertical, 0, 1) : 0;
-    run.steer.touchY = speedDrillActive() || jellyZoneForSlime(run.slime) ? vertical : 0;
-    if (run.effects.gravitySwitch) {
+    run.steer.touchY = run.mechSuit || speedDrillActive() || jellyZoneForSlime(run.slime) || phantomActive() ? vertical : 0;
+    if (run.effects.gravitySwitch && !phantomActive() && !run.mechSuit) {
       if (Math.abs(vertical) < .18) run.steer.gravityGestureLocked = false;
       else if (Math.abs(vertical) >= .42 && !run.steer.gravityGestureLocked) {
         setGravityDirection(vertical < 0 ? -1 : 1);
@@ -11052,6 +14065,7 @@
     run.steer.originY = event.clientY;
     run.steer.touchX = 0;
     run.steer.touchY = 0;
+    run.steer.touchRawY = 0;
     run.steer.touchDown = 0;
     run.steer.gravityGestureLocked = false;
     const localX = clamp(event.clientX - rect.left, 43, rect.width - 43);
@@ -11076,6 +14090,7 @@
       run.steer.pointerId = null;
       run.steer.touchX = 0;
       run.steer.touchY = 0;
+      run.steer.touchRawY = 0;
       run.steer.touchDown = 0;
       run.steer.gravityGestureLocked = false;
     }
@@ -11090,12 +14105,12 @@
 
   function setKeyboardSteering(code, pressed) {
     if (!run?.steer || run.ended || run.paused || run.portalEntry) return false;
-    if (run.effects.gravitySwitch && ['ArrowUp', 'KeyW', 'ArrowDown', 'KeyS'].includes(code)) {
+    if (run.effects.gravitySwitch && !phantomActive() && !run.mechSuit && ['ArrowUp', 'KeyW', 'ArrowDown', 'KeyS'].includes(code)) {
       if (code === 'ArrowDown' || code === 'KeyS') run.steer.keyDown = pressed;
       if (pressed) setGravityDirection(code === 'ArrowUp' || code === 'KeyW' ? -1 : 1);
       return true;
     }
-    if (pressed && !speedDrillActive() && !jellyZoneForSlime(run.slime) && (code === 'ArrowUp' || code === 'KeyW')) return false;
+    if (pressed && !run.mechSuit && !speedDrillActive() && !jellyZoneForSlime(run.slime) && !phantomActive() && (code === 'ArrowUp' || code === 'KeyW')) return false;
     const key = {
       ArrowLeft: 'keyLeft', KeyA: 'keyLeft',
       ArrowRight: 'keyRight', KeyD: 'keyRight',
@@ -11118,21 +14133,34 @@
   }
 
   function bindEvents() {
+    document.addEventListener('pointerdown', blockTutorialInput, true);
+    document.addEventListener('click', blockTutorialInput, true);
+    document.addEventListener('keydown', blockTutorialKey, true);
+    els.tutorialAdminBtn?.addEventListener('click', openAdminTools);
+    els.tutorialPauseBtn?.addEventListener('click', openRunMenu);
+    els.tutorialSkipBtn?.addEventListener('click', skipTutorial);
+    els.tutorialRunSkipBtn?.addEventListener('click', skipTutorial);
+    els.tutorialGiftClaimBtn?.addEventListener('click', claimTutorialGift);
+    els.tutorialControlsCloseBtn?.addEventListener('click', finishTutorial);
+    els.tutorialUpgradeSummaryCloseBtn?.addEventListener('click', finishUpgradeTutorial);
+    window.addEventListener('resize', queueTutorialRender, { passive: true });
+    window.addEventListener('scroll', queueTutorialRender, { passive: true });
     bindMenuSlimeInteractions();
     els.rerollBtn.addEventListener('click', activateConveyorControl);
-    els.homeScreen?.addEventListener('click', event => {
-      if (els.worldCarousel?.classList.contains('is-transitioning')) return;
-      const button = event.detail
-        ? [...els.worldCarousel.querySelectorAll('.world-carousel-card:not(.current)[data-world]')]
-          .find(card => worldImageHit(card.querySelector('.world-card-image'), event.clientX, event.clientY))
-        : event.target.closest?.('.world-carousel-card:not(.current)[data-world]');
-      if (!button) return;
-      event.preventDefault();
-      event.stopPropagation();
-      animateCarouselSelection(button.dataset.world);
-    }, true);
-    els.worldStartBtn?.addEventListener('click', () => { void beginRoomLaunch(); });
-    els.normalModeV2?.addEventListener('click', () => showToast('Обычный режим'));
+    els.worldPrevBtn?.addEventListener('click', () => {
+      const index = ACTIVE_WORLD_IDS.indexOf(carouselPendingWorldId || carouselWorld().id);
+      if (index > 0) animateCarouselSelection(ACTIVE_WORLD_IDS[index - 1]);
+    });
+    els.worldNextBtn?.addEventListener('click', () => {
+      const index = ACTIVE_WORLD_IDS.indexOf(carouselPendingWorldId || carouselWorld().id);
+      if (index < ACTIVE_WORLD_IDS.length - 1) animateCarouselSelection(ACTIVE_WORLD_IDS[index + 1]);
+    });
+    els.worldCarouselDots?.addEventListener('click', event => {
+      const dot = event.target.closest('.world-carousel-dot[data-world]');
+      if (dot) animateCarouselSelection(dot.dataset.world);
+    });
+    els.abyssModeV2?.addEventListener('click', () => selectHomeMode(save.homeMode === 'endless' ? 'campaign' : 'endless'));
+    els.worldStartBtn?.addEventListener('click', () => { void beginRoomLaunch({ endless: save.homeMode === 'endless' }); });
     els.levelButtons?.addEventListener('click', event => {
       const button = event.target.closest('.level-btn');
       if (!button) return;
@@ -11166,11 +14194,39 @@
     els.adminPrevWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(-1));
     els.adminNextWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(1));
     els.adminUnlockAllBtn?.addEventListener('click', unlockEverythingFromAdmin);
+    els.adminUnlockMutationsBtn?.addEventListener('click', unlockMutationsFromAdmin);
     els.adminInfiniteFlasksBtn?.addEventListener('click', toggleAdminInfiniteFlasks);
+    els.adminInfiniteUltimateBtn?.addEventListener('click', toggleAdminInfiniteUltimate);
     els.adminResetProgressBtn?.addEventListener('click', resetProgressFromAdmin);
     els.abilityBtn.addEventListener('click', activateAbility);
+    els.glitchUltimateOverlay?.addEventListener('click', event => {
+      const option = event.target.closest?.('[data-glitch-bug]');
+      if (option) selectGlitchBug(option.dataset.glitchBug);
+    });
+    document.addEventListener('keydown', event => {
+      if (!run?.glitchChoice || run.glitchChoice.phase !== 'choosing') return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (event.key === 'Tab') {
+        const options = [...els.glitchUltimateOverlay.querySelectorAll('.glitch-choice-option')];
+        const focused = options.indexOf(document.activeElement);
+        if ((event.shiftKey && focused === 0) || (!event.shiftKey && focused === options.length - 1)) {
+          event.preventDefault();
+          options[event.shiftKey ? options.length - 1 : 0].focus();
+        }
+        return;
+      }
+      const bug = GLITCH_BUGS[Number(event.key) - 1];
+      if (!bug) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      selectGlitchBug(bug.id);
+    }, true);
     els.shaft.addEventListener('pointerdown', event => {
-      if (!run || run.ended || run.paused || event.target.closest?.('button')) return;
+      if (!run || run.ended || run.paused || run.glitchChoice || event.target.closest?.('button')) return;
       event.preventDefault();
       if (run.geyserCapture) {
         launchGeyserTowardClientPoint(event.clientX, event.clientY, performance.now());
@@ -11285,15 +14341,18 @@
       if (homeTopbar) homeFitObserver.observe(homeTopbar);
     }
     updatePersistentUI();
+    updateFormIndexBadge();
     if (save.pendingWheel) finishPendingWheel(false);
     if (restoreSession(save.activeDraft)) {
       syncMenuCategoryVisuals({ instant: true });
+      discoverCurrentForm({ animate: false, notify: false });
       showScreen('home');
       renderDraft();
       persist();
     } else newDraft();
     document.documentElement.classList.remove('app-booting');
     document.documentElement.classList.add('app-ready');
+    restoreTutorial();
     yandexPlatform?.ysdk?.features?.LoadingAPI?.ready?.();
     window.SlimeGameDebug = {
       reset: () => {
@@ -11348,12 +14407,14 @@
       }, { snow: 0, snowflakes: 0, burning: 0, electrified: 0 }) : null,
       elementalLevels: (levels = {}) => {
         if (!run || run.ended) return null;
-        for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'explosion']) {
+        for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch', 'explosion']) {
           if (Object.hasOwn(levels, key)) run.categoryVisuals[key] = clamp(Math.round(levels[key]), 0, 3);
         }
         run.effects.gravitySwitch = elementalLevel('cosmos') >= 1 || session.effects.gravitySwitch;
-        run.elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'explosion', 'cloning'].find(key => run.categoryVisuals[key] >= 3) || '';
-        run.elementalAbilityCharges = run.elementalAbilityType ? 1 : 0;
+        run.elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'explosion', 'cloning', 'glitch'].find(key => run.categoryVisuals[key] >= 3) || '';
+        run.elementalAbilityCharges = 0;
+        run.ultimateCharge = 0;
+        run.ultimateRechargePending = '';
         run.elementalAbilityActive = '';
         run.elementalAbilityUntil = 0;
         run.goldRushUntil = 0;
@@ -11371,7 +14432,7 @@
           fire: elementalLevel('fire'), frost: elementalLevel('frost'), electric: elementalLevel('electric'),
           gold: elementalLevel('gold'), explosion: elementalLevel('explosion'), mass: elementalLevel('mass'),
           mobility: elementalLevel('mobility'), cosmos: elementalLevel('cosmos'), nano: elementalLevel('nano'),
-          telekinesis: elementalLevel('telekinesis'), cloning: elementalLevel('cloning')
+          telekinesis: elementalLevel('telekinesis'), cloning: elementalLevel('cloning'), phantom: elementalLevel('phantom'), glitch: elementalLevel('glitch')
         },
         ability: run.elementalAbilityType,
         charges: run.elementalAbilityCharges,

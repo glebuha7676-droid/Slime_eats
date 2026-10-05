@@ -1,0 +1,28 @@
+.mutation-lab-v2 .mutation-info-pane>h3{display:flex;align-items:center;justify-content:center;gap:5px;margin:0 0 4px;font-size:13px}
+.mutation-level-badge{display:inline-grid;place-items:center;min-width:25px;height:22px;padding:0 4px;border:1px solid #9bdddf;border-radius:7px;background:linear-gradient(#27667a,#123d50);box-shadow:inset 0 1px #e2fffa,0 2px #071e2a;color:#fff;font:1000 12px/1 ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;font-style:normal}
+.mutation-level-track{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:5px}
+.mutation-level-track span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;height:29px;border:1px solid #5c8290;border-radius:6px;background:#102c3a;color:#8aabb0;font:1000 11px ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif}
+.mutation-level-track small{font-size:7px;line-height:1;opacity:.9}
+.mutation-level-track span.is-open{border-color:#9adfe0;background:linear-gradient(#328a95,#185e74);box-shadow:inset 0 1px #d7ffed;color:#fff}
+.mutation-lab-v2 .mutation-level-list{gap:4px;margin:0 0 5px}
+.mutation-lab-v2 .mutation-level-list article{min-height:57px;display:flex;flex-direction:row;align-items:center;gap:6px;padding:5px 6px;border:1px solid #6199a2;border-radius:9px;background:linear-gradient(130deg,rgba(47,119,133,.62),rgba(12,53,70,.76));text-align:left}
+.mutation-lab-v2 .mutation-level-list article+article:before{display:none}
+.mutation-lab-v2 .mutation-level-list article.is-hidden{border-color:#426675;background:linear-gradient(#1a3b48,#102d3b);color:#a2b9be}
+.mutation-lab-v2 .mutation-level-list article>b{width:26px;height:26px;display:grid;place-items:center;flex:none;border:1px solid #9ad1cc;border-radius:7px;background:#20566a;color:#fff;font:1000 13px ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif}
+.mutation-lab-v2 .mutation-level-list article.is-hidden>b{border-color:#63838a;background:#2b4752;color:#adc4c6}
+.mutation-lab-v2 .mutation-level-list article p{margin:0;color:#fff;font-size:10px;line-height:1.15;text-align:left;text-shadow:0 1px #082934}
+.mutation-lab-v2 .mutation-level-list article.is-hidden p{color:#b3c9cb;font-size:16px;letter-spacing:2px}
+.mutation-level-action{width:100%;min-height:48px;display:flex;align-items:stretch;margin:0 0 5px}
+.mutation-upgrade-btn{width:100%;min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:3px;padding:3px 6px;border:2px solid #89d3cf;border-radius:12px;background:linear-gradient(#61b9ae,#278b94 54%,#176477);box-shadow:inset 0 2px #d9fff2,0 3px #092f43;color:#fff;font:1000 10px ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;cursor:pointer;text-shadow:0 1px #134956}
+.mutation-upgrade-btn:not(:disabled):active{transform:translateY(2px);box-shadow:inset 0 2px #d9fff2,0 1px #092f43}
+.mutation-upgrade-btn.needs-flasks{filter:saturate(.62);border-color:#738d91}
+.mutation-upgrade-btn.is-upgrading{filter:brightness(1.15)}
+.mutation-upgrade-price{display:flex;align-items:center;gap:2px;padding:1px 4px;border:1px solid #a2e3d3;border-radius:8px;background:#dbf7e9;color:#174b50;font-size:12px;text-shadow:none}
+.mutation-upgrade-price img{width:21px;height:21px;object-fit:contain}
+.mutation-level-note{width:100%;display:grid;place-items:center;border:1px solid #6f9eaa;border-radius:10px;background:#133c4d;color:#ddf9ed;font-size:10px;font-weight:1000;text-align:center}
+.mutation-upgrade-flight{position:fixed;z-index:1800;width:30px;height:30px;object-fit:contain;pointer-events:none}
+.mutation-invest-flask>img{display:block;width:100%;height:100%;object-fit:contain}
+.mutation-invest-flask>b{position:absolute;right:-7px;bottom:-3px;min-width:23px;padding:2px 3px;border:2px solid #fff9bd;border-radius:9px;background:#1f8b70;color:#fff;font:1000 12px/1 ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;text-align:center;text-shadow:0 1px #124a42;box-shadow:0 2px #155261}
+html body #homeScreen .recipe-accessories-button.form-locked,html body #homeScreen .form-index-button.form-locked,html body #homeScreen .form-index-button.form-locked:hover{filter:grayscale(.9) brightness(.72)!important;opacity:.7!important;transform:none!important;cursor:not-allowed!important}
+@media(max-width:390px){.mutation-lab-v2 .mutation-level-list article{min-height:53px;padding:4px}.mutation-lab-v2 .mutation-level-list article p{font-size:9px}.mutation-upgrade-btn{font-size:9px}.mutation-upgrade-price img{width:18px;height:18px}}
+@media(prefers-reduced-motion:reduce){.mutation-upgrade-btn{transition:none}}

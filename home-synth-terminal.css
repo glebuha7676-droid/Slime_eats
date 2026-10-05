@@ -1,0 +1,374 @@
+/* The synthesizer and world terminal share one uninterrupted illustrated shell. */
+html body[data-screen="home"] #app{
+  background:#9ac8ca url("assets/ui/home-laboratory-v4.webp") center top/100% 365px no-repeat!important;
+}
+/* The generated laboratory already contains the pedestal in the original position. */
+html body #homeScreen .slime-center-stage::before{display:none!important}
+html body #homeScreen .lab-portal-frame{
+  top:-31px;
+  width:232px;
+  height:196px;
+  opacity:.7;
+}
+html body #homeScreen>#slimeStage .stage-foliage{display:none!important}
+html body #homeScreen .slime-mutation-summary,
+html body #homeScreen .slime-feed-count,
+html body #homeScreen #conveyorChoiceCount,
+html body #homeScreen .world-terminal-endless{display:none!important}
+html body #homeScreen #slime{
+  top:-4px!important;
+  width:220px!important;
+  height:220px!important;
+}
+html body #homeScreen .slime-playground{
+  position:relative!important;
+}
+html body #homeScreen .slime-playground::after{display:none!important}
+html body #homeScreen>#slimeStage::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  z-index:0!important;
+  left:50%!important;
+  bottom:-7px!important;
+  width:150px!important;
+  height:18px!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:radial-gradient(ellipse,rgba(13,48,55,.22) 0%,rgba(19,71,70,.09) 46%,transparent 75%)!important;
+  box-shadow:none!important;
+  filter:none!important;
+  opacity:1!important;
+  transform:translateX(-50%)!important;
+  transition:opacity .7s ease!important;
+  pointer-events:none!important;
+}
+html body #homeScreen .slime-stage.launch-opening::after{
+  opacity:0!important;
+}
+@media(max-width:370px){
+  html body #homeScreen #slime{width:205px!important;height:205px!important}
+  html body #homeScreen>#slimeStage::after{width:130px!important}
+}
+body[data-screen="home"] #homeScreen.active{position:relative}
+body[data-screen="home"] #homeScreen.active::before{
+  content:"";
+  grid-column:1;
+  grid-row:2 / 4;
+  position:relative;
+  z-index:1;
+  min-width:0;
+  min-height:0;
+  margin:-5px -5px -5px;
+  background:url("assets/ui/synth-terminal-base-v1.webp") center/100% 100% no-repeat;
+  pointer-events:none;
+}
+body[data-screen="home"] #homeScreen.active::after{
+  content:"";
+  grid-column:1;
+  grid-row:2;
+  position:relative;
+  z-index:0;
+  justify-self:center;
+  align-self:start;
+  width:70%;
+  height:56px;
+  margin-top:-34px;
+  background:url("assets/ui/world-terminal/synthesis-count-plate-v2.webp") center/contain no-repeat;
+  pointer-events:none;
+}
+body[data-screen="home"] #homeScreen>#slimeStage{grid-column:1;grid-row:1}
+body[data-screen="home"] #homeScreen>#conveyor{grid-column:1;grid-row:2}
+body[data-screen="home"] #homeScreen>#playSetupCard{grid-column:1;grid-row:3}
+
+html body #homeScreen .synthesizer .synthesis-machine{
+  background:none!important;
+}
+html body #homeScreen .synthesizer .conveyor-dispensers{
+  left:7.9%!important;
+  right:7.9%!important;
+  z-index:35!important;
+}
+html body #homeScreen .synthesizer .conveyor-dispenser{
+  --emblem-width:38%!important;
+}
+html body #homeScreen .synthesizer .conveyor-pipe-socket{
+  top:10%!important;
+}
+/* The three painted sockets in synthesis-triple-v2.png are not exactly on the grid centres. */
+html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(1) .conveyor-pipe-socket{left:47%!important}
+html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(2) .conveyor-pipe-socket{left:49.8%!important}
+html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(3) .conveyor-pipe-socket{left:52%!important}
+html body #homeScreen .synthesizer .synthesis-machine .food-choices{
+  left:5.8%!important;
+  right:5.8%!important;
+  top:26%!important;
+  bottom:27%!important;
+}
+html body #homeScreen .synthesizer .conveyor-food-pick .food-model{
+  width:min(82%,78px)!important;
+  height:87%!important;
+  max-width:82%!important;
+  max-height:87%!important;
+}
+html body #homeScreen .synthesizer .synthesis-food-visual>.food-mutation-fx{
+  width:min(96%,88px)!important;
+  height:100%!important;
+}
+html body #homeScreen .synthesizer .synthesis-beam{height:50%}
+html body #homeScreen #conveyorChoiceCount{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  z-index:61!important;
+  top:-29px!important;
+  width:60%!important;
+  max-width:none!important;
+  min-width:0!important;
+  height:27px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  box-shadow:none!important;
+  color:#f4fbff!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:.03em!important;
+  text-shadow:0 2px 2px #031b2d,0 0 4px #1e5c68!important;
+}
+html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{
+  margin-right:4px;
+  color:#e9f7ff;
+  font-size:11px;
+  letter-spacing:.04em;
+}
+html body #homeScreen #conveyorChoiceCount .conveyor-count-current,
+html body #homeScreen #conveyorChoiceCount .conveyor-count-target{
+  display:grid;
+  place-items:center;
+  width:27px;
+  height:23px;
+  border-radius:6px;
+  font-size:18px;
+  line-height:1;
+  text-shadow:none;
+}
+html body #homeScreen #conveyorChoiceCount .conveyor-count-current{
+  background:#ffe79b;
+  color:#17384a;
+  box-shadow:inset 0 1px 0 #fff9d9,0 1px 2px #061b26;
+}
+html body #homeScreen #conveyorChoiceCount .conveyor-count-target{
+  background:#315a6c;
+  color:#f3fbff;
+  box-shadow:inset 0 1px 0 #7595a4,0 1px 2px #061b26;
+}
+html body #homeScreen #conveyorChoiceCount .conveyor-count-divider{
+  color:#a8cfdd;
+  font-size:16px;
+  text-shadow:none;
+}
+html body #homeScreen #conveyorChoiceCount.is-full .conveyor-count-current{
+  background:#baf4a2;
+  box-shadow:inset 0 1px 0 #efffe8,0 1px 2px #061b26;
+}
+
+body[data-screen="home"] #homeScreen>.play-setup-card{
+  background:transparent!important;
+}
+.world-terminal-shell{
+  left:0;
+  right:0;
+  top:0;
+  bottom:0;
+  background:none;
+  filter:none;
+}
+.world-terminal-heading{
+  left:35%;
+  top:-13.5%;
+  width:30%;
+  height:12%;
+  font-size:clamp(10px,3.2vw,14px);
+}
+.world-terminal-screen{
+  left:19%;
+  top:2%;
+  width:62%;
+  height:58%;
+  border-radius:clamp(7px,2vw,13px);
+}
+.world-terminal-title{display:none!important}
+.world-terminal-preview{inset:-4%!important;width:108%!important;height:108%!important;object-fit:cover!important;object-position:center!important;transition:opacity .14s steps(4,end),filter .14s ease}
+.world-terminal-screen.is-channel-out .world-terminal-preview{opacity:0!important;filter:grayscale(1) brightness(.12)!important}
+.world-terminal-screen.is-channel-out>:not(.world-terminal-preview){opacity:0!important}
+.world-terminal-arrow{
+  top:21.5%;
+  width:13.5%;
+  height:20%;
+  border:0;
+  border-radius:0;
+  appearance:none;
+  background:none!important;
+  box-shadow:none;
+  filter:none!important;
+  transform:none!important;
+}
+.world-terminal-arrow.previous{left:5.5%}
+.world-terminal-arrow.next{right:5.5%}
+.world-terminal-arrow:focus:not(:focus-visible){outline:none}
+.world-terminal-arrow::before{display:none}
+.world-terminal-arrow::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url("assets/ui/world-terminal/arrow-right-v2.webp") center/contain no-repeat;
+  pointer-events:none;
+  transition:transform .12s ease;
+}
+.world-terminal-arrow.previous::after{transform:scaleX(-1)}
+.world-terminal-arrow.next:not(:disabled):active::after{transform:scale(.93)}
+.world-terminal-arrow.previous:not(:disabled):active::after{transform:scaleX(-1) scale(.93)}
+.world-terminal-arrow:disabled{opacity:1}
+.world-terminal-arrow:disabled::after{
+  display:block;
+  inset:0;
+  border-radius:0;
+  background:url("assets/ui/world-terminal/arrow-right-v2.webp") center/contain no-repeat;
+  filter:grayscale(.7) brightness(.75);
+}
+.terminal-launch{
+  left:16.5%;
+  top:calc(71.3% - 2px);
+  width:67%;
+  height:25%;
+  background:none;
+  font-size:clamp(16px,5.6vw,26px);
+  color:#4b2a06;
+  text-shadow:0 1px #fff4b0,0 2px 2px #b8650d;
+}
+.terminal-launch::before{
+  content:"";
+  display:block;
+  position:absolute;
+  inset:0;
+  z-index:0;
+  background:url("assets/ui/world-terminal/play-insert-v4.webp") center/contain no-repeat;
+  pointer-events:none;
+}
+.terminal-launch.hungry{
+  color:#f2fbff;
+  text-shadow:0 1px 2px #1c303d,0 0 2px #1c303d;
+  filter:none;
+}
+.terminal-launch.hungry::before{filter:grayscale(1) brightness(.68)}
+.terminal-launch>span{position:relative;z-index:1;margin-left:16%}
+.terminal-launch.ready{animation:none}
+.world-terminal-corner-rock{display:none}
+
+/* Home controls use icon-first sizing while keeping their existing hit targets. */
+html body[data-screen="home"] .topbar.world-summary{padding:2px 6px!important;overflow:visible!important}
+html body[data-screen="home"] .world-summary-head{gap:5px!important}
+html body[data-screen="home"] .world-summary .research-wallet{
+  flex:0 0 108px!important;width:108px!important;height:40px!important;min-height:40px!important;
+  box-sizing:border-box!important;padding:2px 7px!important;transform:none!important;
+}
+html body[data-screen="home"] .research-wallet-flask>img{width:40px!important;height:40px!important}
+html body[data-screen="home"] .research-wallet-flask>b{font-size:17px!important}
+html body[data-screen="home"] .world-summary .currency.coin-wallet{
+  flex:0 0 auto!important;min-width:74px!important;width:auto!important;height:40px!important;min-height:40px!important;
+  box-sizing:border-box!important;padding:2px 8px!important;gap:3px!important;transform:none!important;
+}
+html body[data-screen="home"] .world-summary .currency-icon{width:33px!important;height:33px!important;flex:none!important}
+html body[data-screen="home"] .world-summary .currency-values>b{font-size:17px!important}
+html body[data-screen="home"] .world-summary .header-rewards-btn,
+html body[data-screen="home"] .world-summary .header-admin-btn{
+  flex:0 0 41px!important;width:41px!important;height:41px!important;min-width:41px!important;min-height:41px!important;
+  box-sizing:border-box!important;padding:4px!important;
+}
+html body[data-screen="home"] .world-summary .header-rewards-btn img,
+html body[data-screen="home"] .world-summary .header-admin-btn img{width:32px!important;height:32px!important;object-fit:contain!important}
+
+html body #homeScreen .recipe-book-button,
+html body #homeScreen .recipe-accessories-button,
+html body #homeScreen .form-index-button{
+  box-sizing:border-box!important;width:76px!important;height:76px!important;min-width:76px!important;min-height:76px!important;
+  display:grid!important;grid-template-rows:1fr!important;place-items:center!important;gap:0!important;padding:4px!important;
+}
+html body #homeScreen .recipe-rail{transform:translateY(6px)!important}
+html body #homeScreen .mutation-lab-button>span:not(.mutation-trio-icon),
+html body #homeScreen .recipe-accessories-button>span,
+html body #homeScreen .form-index-button>span:not(.form-index-silhouette){display:none!important}
+html body #homeScreen .mutation-lab-button .mutation-trio-icon{
+  width:64px!important;height:60px!important;grid-row:1!important;align-self:center!important;justify-self:center!important;transform:none!important;
+}
+html body #homeScreen .mutation-lab-button .mutation-trio-icon img{
+  width:37px!important;height:37px!important;max-width:37px!important;max-height:37px!important;
+}
+html body #homeScreen .mutation-lab-button .mutation-trio-fire{left:0!important;top:0!important}
+html body #homeScreen .mutation-lab-button .mutation-trio-frost{left:27px!important;top:0!important}
+html body #homeScreen .mutation-lab-button .mutation-trio-electric{left:13px!important;top:23px!important}
+html body #homeScreen .recipe-accessories-button>img{width:60px!important;height:60px!important;max-width:60px!important;max-height:60px!important}
+html body #homeScreen .form-index-button .form-index-silhouette{
+  width:60px!important;height:60px!important;grid-row:1!important;align-self:center!important;justify-self:center!important;transform:none!important;
+}
+html body #homeScreen .form-index-button .form-index-silhouette img{width:100%!important;height:100%!important}
+html body #homeScreen .form-index-button .form-index-silhouette i{font-size:32px!important}
+
+/* The first techno food has a deep transparent lower margin in its source art. */
+html body #homeScreen .synthesizer .conveyor-food-pick[data-food-id="nanoChip"] .food-model-wrap{inset:14px 0 -14px!important}
+html body #homeScreen .synthesizer .conveyor-food-pick[data-food-id="nanoChip"] .food-mutation-fx{bottom:-10px!important}
+
+@media(max-width:370px){
+  html body #homeScreen .lab-portal-frame{width:208px;height:178px;top:-28px}
+  html body #homeScreen #slime{width:196px!important;height:196px!important}
+  .world-terminal-shell{top:0;bottom:0}
+  .world-terminal-screen{top:2%;height:58%}
+  .world-terminal-heading{font-size:clamp(9px,3.6vw,13px)}
+  .terminal-launch{font-size:clamp(14px,5.2vw,18px)}
+  html body #homeScreen #conveyorChoiceCount{gap:3px!important}
+  html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{font-size:10px;margin-right:2px}
+  html body #homeScreen #conveyorChoiceCount .conveyor-count-current,
+  html body #homeScreen #conveyorChoiceCount .conveyor-count-target{width:24px;height:22px;font-size:17px}
+  html body[data-screen="home"] .world-summary .research-wallet{flex-basis:98px!important;width:98px!important}
+  html body[data-screen="home"] .world-summary .currency.coin-wallet{min-width:68px!important;padding-inline:5px!important}
+  html body[data-screen="home"] .world-summary .header-rewards-btn,
+  html body[data-screen="home"] .world-summary .header-admin-btn{flex-basis:38px!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important}
+  html body[data-screen="home"] .world-summary .header-rewards-btn img,
+  html body[data-screen="home"] .world-summary .header-admin-btn img{width:30px!important;height:30px!important}
+  html body #homeScreen .recipe-book-button,
+  html body #homeScreen .recipe-accessories-button,
+  html body #homeScreen .form-index-button{width:68px!important;height:68px!important;min-width:68px!important;min-height:68px!important}
+  html body #homeScreen .mutation-lab-button .mutation-trio-icon{transform:scale(.86)!important}
+  html body #homeScreen .recipe-accessories-button>img{width:56px!important;height:56px!important}
+  html body #homeScreen .form-index-button .form-index-silhouette{width:56px!important;height:56px!important}
+}
+@media(prefers-reduced-motion:reduce){.terminal-launch.ready{animation:none}}
+
+.home-reward-flight-layer{
+  position:absolute;
+  inset:0;
+  z-index:70;
+  overflow:hidden;
+  pointer-events:none;
+}
+.home-reward-particle{
+  position:absolute;
+  width:27px;
+  height:27px;
+  object-fit:contain;
+  opacity:0;
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+.home-reward-trophy{width:34px;height:34px}
+html body[data-screen="home"] .research-wallet.is-receiving .research-wallet-flask>b{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.06em;
+}
+html body[data-screen="home"] .research-wallet.is-receiving[data-reward-digits="5"] .research-wallet-flask>b{font-size:14px!important}
+html body[data-screen="home"] .research-wallet.is-receiving[data-reward-digits="6"] .research-wallet-flask>b{font-size:12px!important}
+html body[data-screen="home"] .research-wallet.is-receiving[data-reward-digits="7"] .research-wallet-flask>b{font-size:10px!important}

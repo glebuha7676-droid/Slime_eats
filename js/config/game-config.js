@@ -26,7 +26,7 @@
       cellSize: 72, hazardChance: .055
     },
     {
-      id: 2, name: 'Ледяная пещера', targetDepth: 500, reward: 700,
+      id: 2, name: 'Ледяная пещера', targetDepth: 1000, reward: 700,
       active: false, status: 'paused',
       pathWidth: 3, minPathWidth: 2, turnRate: .18,
       hardCap: .15, reinforcedCap: .02, oreChance: .06, specialChance: .115,
@@ -35,7 +35,7 @@
       cellSize: 72, hazardChance: .075
     },
     {
-      id: 3, name: 'Конфетная фабрика', targetDepth: 500, reward: 1550,
+      id: 3, name: 'Конфетная фабрика', targetDepth: 1000, reward: 1550,
       pathWidth: 2, minPathWidth: 2, turnRate: .28,
       hardCap: .27, reinforcedCap: .07, oreChance: .075, specialChance: .095,
       sky: '#8f4b82', earth: '#4a244d', deep: '#21142d', accent: '#f472b6', icon: '🍬',
@@ -43,7 +43,7 @@
       cellSize: 72
     },
     {
-      id: 4, name: 'Магмовое ядро', targetDepth: 500, reward: 3300,
+      id: 4, name: 'Магмовое ядро', targetDepth: 1000, reward: 3300,
       pathWidth: 2, minPathWidth: 1, turnRate: .37,
       hardCap: .39, reinforcedCap: .15, oreChance: .09, specialChance: .082,
       sky: '#7d3426', earth: '#45221e', deep: '#1b1112', accent: '#fb7185', icon: '🌋',
@@ -59,7 +59,7 @@
     maxFallSpeedBase: 360,
     maxFallSpeedWorld1: 305,
     maxFallSpeedPerWorld: 0,
-    weakBreakDrag: .96,
+    weakBreakDrag: .92,
     denseBreakDrag: .92,
     flightKeepSoft: .80,
     flightKeepDense: .55,
@@ -102,9 +102,9 @@
   const SKINS = [
     { id: 'classic', name: 'Классический', className: 'skin-classic', icon: '🟢', condition: 'Доступен сразу', colors: ['#e9ff9c', '#67d348', '#2fa345'] },
     { id: 'cat', name: 'Котик', className: 'skin-cat', icon: '🐱', world: 2, condition: 'Получи кубок в первом мире', colors: ['#ffe0e8', '#ff92ad', '#dc557b'] },
-    { id: 'water', name: 'Капля воды', className: 'skin-water', icon: '💧', world: 3, condition: 'Открой Мир 2', colors: ['#e3fbff', '#50c9f2', '#1688c6'] },
+    { id: 'water', name: 'Капля воды', className: 'skin-water', icon: '💧', world: 3, condition: 'Открой шахту 2', colors: ['#e3fbff', '#50c9f2', '#1688c6'] },
     { id: 'honey', name: 'Медовый', className: 'skin-honey', icon: '🍯', cost: 15, condition: 'Купить за 15 колб исследования', colors: ['#fff0a6', '#f4a629', '#c96b15'] },
-    { id: 'dumpling', name: 'Дамплинг', className: 'skin-dumpling', icon: '🥟', world: 4, condition: 'Открой Мир 3', colors: ['#fff9e8', '#ead9b7', '#ba8d62'] },
+    { id: 'dumpling', name: 'Дамплинг', className: 'skin-dumpling', icon: '🥟', world: 4, condition: 'Открой шахту 3', colors: ['#fff9e8', '#ead9b7', '#ba8d62'] },
     { id: 'ball', name: 'Футбольный мяч', className: 'skin-ball', icon: '⚽', cost: 12, condition: 'Купить за 12 колб исследования', colors: ['#ffffff', '#edf2f5', '#b9c7d1'] }
   ];
 
@@ -117,12 +117,20 @@
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 23,
+    schemaVersion: 27,
     researchUnits: 0,
     researchProgress: 0,
     mutationProgress: 0,
+    mutationInvestTapCount: 0,
     unlockedMutations: [],
-    activeMutationPool: ['frost', 'fire', 'electric'],
+    mutationLevels: {},
+    discoveredForms: [],
+    unseenForms: [],
+    activeMutationPool: [],
+    tutorialStep: 'home-mutations',
+    tutorialGiftClaimed: false,
+    tutorialSecondGiftClaimed: false,
+    legacyStarterAccess: false,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
     worldTrophies: { 1: 0, 2: 0, 3: 0, 4: 0 },

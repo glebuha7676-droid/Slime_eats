@@ -31,6 +31,7 @@ body[data-screen="drop"] #dropScreen .shaft{
 #dropScreen .run-top-hud .run-hearts{height:32px!important;display:flex!important;align-items:center!important;gap:1px!important}
 #dropScreen .run-top-hud .run-heart{width:27px!important;height:27px!important;margin:0!important}
 #dropScreen .run-top-hud .run-heart>img{width:27px!important;height:27px!important}
+#dropScreen .run-top-hud .shaft-health.is-mech{display:none!important}
 
 #dropScreen .run-top-hud .run-route{
   position:relative!important;flex:1 1 auto!important;min-width:84px!important;width:auto!important;height:38px!important;

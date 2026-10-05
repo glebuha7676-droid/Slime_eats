@@ -87,7 +87,13 @@ async function main() {
     await sleep(100);
   }
   await evaluate('window.SlimeGameDebug.__qaPortal()');
-  await sleep(4300);
+  await sleep(350);
+  const duringPortal = await evaluate(`({ resultHidden: document.querySelector('#resultOverlay').classList.contains('hidden'),
+    resultBadge: document.querySelector('#resultBadge').textContent })`);
+  await sleep(600);
+  const arriving = await evaluate(`({ resultHidden: document.querySelector('#resultOverlay').classList.contains('hidden'),
+    entranceAnimating: document.querySelector('#resultOverlay .result-modal').getAnimations().some(animation => animation.playState === 'running') })`);
+  await sleep(3350);
   const beforeContinue = await evaluate(`({ portal: document.querySelector('#resultOverlay').className,
       badge: document.querySelector('#resultBadge').textContent,
       continueDisabled: document.querySelector('#continueBtn').disabled,
@@ -98,6 +104,9 @@ async function main() {
   await sleep(200);
   const afterContinue = await evaluate(`({ portal: document.querySelector('#resultOverlay').className,
     screen: document.body.dataset.screen })`);
+  assert.equal(duringPortal.resultHidden, true);
+  assert.equal(arriving.resultHidden, false);
+  assert.equal(arriving.entranceAnimating, true);
   assert.equal(beforeContinue.badge, 'МИР ПРОЙДЕН');
   assert.equal(beforeContinue.continueDisabled, false);
   assert.equal(beforeContinue.trophies, 1);
@@ -106,6 +115,8 @@ async function main() {
   assert.equal(afterContinue.portal.includes('hidden'), true);
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({
+    duringPortal,
+    arriving,
     beforeContinue,
     afterContinue,
     errors

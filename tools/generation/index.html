@@ -7,13 +7,16 @@
   <link rel="stylesheet" href="styles.css?v=1">
   <link rel="stylesheet" href="responsive.css?v=2">
   <link rel="stylesheet" href="editor-v4.css?v=2">
+  <link rel="stylesheet" href="mine-plan-editor.css?v=2">
 </head>
 <body>
   <header class="topbar">
     <a class="back" href="../../index.html" aria-label="Вернуться в игру">←</a>
-    <div><small>МИР 1 · ЗЕЛЁНЫЕ ГЛУБИНЫ</small><h1>Редактор секций</h1></div>
+    <div><small>РЕДАКТОР ШАХТЫ</small><h1>Секции и генерация</h1></div>
+    <label class="generation-world-label">Шахта <select id="generationWorld"><option value="1">1 · Зелёные глубины</option><option value="2">2 · Ледяная пещера</option><option value="3">3 · Конфетная фабрика</option><option value="4">4 · Магмовое ядро</option></select></label>
   </header>
-  <main class="editor-main">
+  <nav class="generator-tabs" aria-label="Раздел редактора"><button type="button" data-editor-tab="sections" class="active">Секции</button><button type="button" data-editor-tab="mine">Генерация шахты</button><button type="button" id="generationExport" title="Скачать копию шаблонов">Экспорт</button><button type="button" id="generationImport" title="Импортировать шаблоны из прежнего редактора">Импорт</button><input id="generationImportFile" type="file" accept="application/json,.json" hidden></nav>
+  <main class="editor-main" id="sectionEditor">
     <section class="panel editor-panel">
       <div class="section-heading"><div><small>ОДИН ДЛИННЫЙ ЗАБЕГ</small><h2>Создание секций</h2></div><span id="editStatus" class="edit-status">Новая секция</span></div>
       <div class="editor-layout">
@@ -25,7 +28,7 @@
         <aside class="editor-controls">
           <div class="control-row"><b>Версия</b><div id="modeTabs" class="segmented"></div></div>
           <div class="control-row"><b>Категория</b><div id="categoryTabs" class="category-tabs"></div></div>
-          <div class="control-row"><b>Сложность</b><div id="difficultyButtons" class="stars"></div></div>
+          <div class="control-row" hidden><b>Сложность</b><div id="difficultyButtons" class="stars"></div></div>
           <div class="control-row"><b>Рядов в секции</b><div id="widthButtons" class="width-buttons"></div></div>
           <div class="quick-actions"><button id="addBtn" class="save-new" type="button">＋ Добавить в пул</button><button id="newBtn" type="button">Новая пустая</button></div>
         </aside>
@@ -43,10 +46,28 @@
       <div id="savedSections" class="saved-sections" aria-label="Сохранённые секции"></div>
     </section>
   </main>
+  <main id="mineEditor" class="mine-editor" hidden>
+    <div class="mine-toolbar panel">
+      <div><small id="mineRouteSummary">500 М · 10 ОТРЕЗКОВ · 70 РЯДОВ</small><h2>Маршрут шахты</h2></div>
+      <label>Режим <select id="mineMode"><option value="normal">Обычный</option><option value="easy">Лёгкий</option></select></label>
+      <label>Шаблон <select id="mineSelect"></select></label>
+      <label>Название <input id="mineName" maxlength="64" placeholder="Название шаблона"></label>
+      <button id="mineSave" type="button">Сохранить</button><button id="mineSaveAs" type="button">Сохранить как новый</button>
+      <button id="mineNew" type="button">Новый</button><button id="mineDelete" type="button">Удалить</button>
+    </div>
+    <div class="mine-layout">
+      <aside class="mine-inventory panel"><h3>Модули</h3><p>Перетащи модуль в ячейку. Нажми на ячейку, чтобы убрать его.</p><div id="minePalette"></div><p class="mine-palette-hint">Для размещения на телефоне нажми модуль, затем пустую ячейку.</p></aside>
+      <section class="mine-track panel"><div class="mine-totals"><b id="mineFlasks">Колбы: 0</b><span id="mineValidation"></span></div><div id="mineBands"></div></section>
+    </div>
+  </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="../../world-catalog.js?v=25"></script>
+  <script src="../../world-catalog.js?v=29"></script>
+  <script>document.write('<script src="../../js/generation/generated-data.js?t=' + Date.now() + '"><\/script>');</script>
   <script src="../../js/generation/section-catalog.js?v=13"></script>
-  <script src="../../js/generation/section-catalog-v4.js?v=2"></script>
-  <script src="generation.js?v=11"></script>
+  <script src="../../js/generation/section-catalog-v4.js?v=3"></script>
+  <script src="../../js/generation/mine-plans.js?v=3"></script>
+  <script src="generation.js?v=12"></script>
+  <script src="mine-plan-editor.js?v=3"></script>
+  <script src="generation-sync.js?v=2"></script>
 </body>
 </html>

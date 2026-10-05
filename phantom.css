@@ -1,0 +1,25 @@
+.mutation-family-phantom { --emblem-glow: #dce7fa; }
+.mutation-prize.mutation-family-phantom { --prize-glow: #dce7fa; }
+
+.mutation-phantom-fx { isolation: isolate; }
+.mutation-phantom-fx::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 48%, rgba(226,249,255,.31) 68%, rgba(171,227,245,.22) 76%, transparent 90%);
+  filter: blur(3px);
+  animation: phantomHalo 2.4s ease-in-out infinite alternate;
+}
+.mutation-info-emblem .mutation-phantom-fx::before { inset: -45%; }
+.mutation-family-phantom .mutation-info-emblem > img,
+.mutation-prize.mutation-family-phantom .mutation-prize-emblem > img {
+  animation: phantomFloat 2.5s ease-in-out infinite;
+}
+@keyframes phantomHalo { to { opacity: .58; transform: scale(1.05); } }
+@keyframes phantomFloat { 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  .mutation-phantom-fx::before,
+  .mutation-family-phantom .mutation-info-emblem > img,
+  .mutation-prize.mutation-family-phantom .mutation-prize-emblem > img { animation: none; }
+}

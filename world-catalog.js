@@ -5,7 +5,7 @@
     'ground-weak': 'assets/Мир 1/непрочный блок.webp',
     'stone': 'assets/Мир 1/Обычный блок.webp',
     'stone-reinforced': 'assets/Мир 1/Прочный блок.webp',
-    'stone-hazard': 'assets/Мир 1/Опасный блок.webp',
+    'stone-hazard': 'assets/Мир 1/Колючий враг-v1.png',
     'dynamite': 'assets/Мир 1/Динамит.webp',
     'spring': 'assets/Мир 1/Пружина.webp',
     'heal': 'assets/Мир 1/Аптечка.webp',
@@ -68,7 +68,7 @@
       block('dense', ice ? 'Непрочный лёд' : candy ? 'Непрочная карамель' : 'Земля · непрочная', 'dense', ice ? 'snow-packed' : candy ? 'cookie-packed' : 'ground-weak'),
       block('hard', ice ? 'Обычный лёд' : candy ? 'Обычная карамель' : 'Камень · обычный', 'hard', ice ? 'glacier' : candy ? 'candy-normal' : 'stone'),
       block('reinforced', ice ? 'Прочный лёд' : candy ? 'Прочная карамель' : 'Обсидиан · прочный', 'reinforced', ice ? 'ice-reinforced' : candy ? 'candy-reinforced' : 'stone-reinforced'),
-      block('hazard', ice ? 'Ледяные шипы' : candy ? 'Кислая карамель' : 'Опасный камень', 'hazard', ice ? 'ice-spikes' : candy ? 'candy-hazard' : 'stone-hazard', { hp: 1.2 }),
+      block('hazard', ice ? 'Ледяные шипы' : candy ? 'Кислая карамель' : 'Колючий враг', 'hazard', ice ? 'ice-spikes' : candy ? 'candy-hazard' : 'stone-hazard', { hp: 1.2 }),
       ...(candy ? [
         block('jelly', 'Пружинящая желейка', 'jelly', 'jelly-bounce', { hp: 1 })
       ] : !ice ? [
@@ -104,7 +104,7 @@
     return ['soft','dense','hard','reinforced','bomb','heal','hazard'];
   };
   const world = (id, name, accent, top, bottom, depths) => ({ id, name, accent, background: { top, bottom, image: '', x: 0, y: 0, scale: 1 }, levels: depths.map((depth, index) => level(depth, enabledForLevel(id, index))), blocks: blocksFor(id) });
-  const builtInDefaults = () => ({ version: 12, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[100,200,300,400,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[150,250,350,450,550]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,600]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,550,650])] });
+  const builtInDefaults = () => ({ version: 13, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[100,200,300,400,500]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[150,250,350,450,1000]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,1000]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,1000])] });
   const defaults = () => builtInDefaults();
   const load = () => defaults();
   window.SlimeWorldCatalog = Object.freeze({ defaults, load, assetSource });
