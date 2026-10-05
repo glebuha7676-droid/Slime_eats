@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;width:420px;height:292px;background:#8ddcb8}canvas{display:block}</style></head><body>
+<canvas id="preview" width="420" height="292"></canvas>
+<script src="effects-lab/slime-avatar-workbench.js?v=52"></script>
+<script>setTimeout(() => {
+  window.SlimeAvatarRenderer.drawSlimeAvatar(document.getElementById('preview').getContext('2d'), {
+    x:210,y:153,radius:77,skin:'classic',emotion:'focused',
+    bodyVariant:'electricUltra',irisTint:'#ffd84e',timestamp:0
+  });
+}, 1000);</script></body></html>

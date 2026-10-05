@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <base href="../">
+  <title>Макет слайма и эффектов</title>
+  <style>
+    :root{font-family:"Arial Rounded MT Bold",ui-rounded,system-ui,sans-serif;color:#1e4150;background:#b7dfd2;font-synthesis:none}
+    *{box-sizing:border-box}body{min-height:100dvh;margin:0;padding:16px;display:grid;place-items:center;background:radial-gradient(circle at 50% 0,#e9fff1,#b7dfd2 65%,#8dbfb6)}button{font:inherit;cursor:pointer}
+    .app{width:min(100%,455px);padding:14px;border:4px solid #375460;border-radius:27px;background:linear-gradient(#fbfffa,#e4f6eb);box-shadow:0 9px 0 #4775665c,0 15px 28px #315a5745}
+    h1{margin:0 0 10px;text-align:center;font-size:23px;line-height:1.1;color:#214a55;text-shadow:0 1px #fff}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px;border:2px solid #719391;border-radius:17px;background:#b9d8d0;margin-bottom:14px}
+    .tabs button{height:42px;border:0;border-radius:12px;background:transparent;color:#547478;font-size:14px;font-weight:1000}
+    .tabs button[aria-selected="true"]{background:linear-gradient(#fffef0,#d8f6e7);color:#1a5a57;box-shadow:0 3px 0 #6ea89b,inset 0 1px #fff}
+    [hidden]{display:none!important}.section-title{margin:0 0 9px;font-size:13px;font-weight:1000;letter-spacing:.4px;color:#315e64}
+    .palette{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:13px}
+    .emblem{min-width:0;min-height:76px;padding:4px 1px 3px;border:2px solid #739398;border-radius:12px;background:linear-gradient(#fffef5,#d8eae6);box-shadow:0 3px 0 #8daaaa;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;touch-action:none;user-select:none}
+    .emblem:active{transform:translateY(2px);box-shadow:0 1px 0 #8daaaa}.emblem:disabled{opacity:.55;cursor:default}
+    .emblem img{width:48px;height:48px;object-fit:contain;pointer-events:none}.emblem span{max-width:100%;font-size:7px;line-height:1;white-space:nowrap;letter-spacing:-.25px;font-weight:1000;color:#285462;pointer-events:none}
+    .stage{position:relative;height:292px;border:3px solid #537b7e;border-radius:19px;overflow:hidden;background:radial-gradient(circle at 50% 36%,#b7ffcf 0,#7ac7ae 48%,#418c89 100%);box-shadow:inset 0 4px 10px #eaffed91,0 4px 0 #789f9a}
+    .stage::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#173f4040,transparent 26%,transparent 74%,#173f4040),radial-gradient(circle at 15% 86%,#437f5e99,transparent 23%),radial-gradient(circle at 84% 82%,#3a715e99,transparent 22%);pointer-events:none}
+    #slimeCanvas{position:relative;z-index:1;width:100%;height:100%;display:block}
+    .stage.pop{animation:stagePop .42s ease-out}@keyframes stagePop{45%{filter:brightness(1.15)}100%{filter:none}}
+    .count{position:relative;z-index:2;width:max-content;margin:-18px auto 8px;padding:7px 13px;border:2px solid #799d9b;border-radius:999px;background:#f9fff8;box-shadow:0 3px 0 #91b6ac;color:#28545b;font-size:11px;font-weight:1000}
+    .spore-preview-actions{display:flex;gap:7px;margin:8px 0 10px}.spore-preview-actions button{flex:1;min-height:39px;padding:5px;border:2px solid #559c68;border-radius:11px;background:linear-gradient(#edffce,#aceb92);color:#29613e;font-size:10px;font-weight:1000;box-shadow:0 3px 0 #75ae82}.spore-preview-actions button:disabled{opacity:.48;cursor:default}.spore-preview-actions button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #75ae82}
+    .tray-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:7px 2px 7px}.tray-head b{font-size:12px}.clear{padding:7px 13px;border:2px solid #6e858d;border-radius:10px;background:linear-gradient(#fff,#d8e5e6);box-shadow:0 2px 0 #8ba4a8;color:#315760;font-size:11px;font-weight:1000}.clear:disabled{opacity:.48;cursor:default}
+    .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.slot{height:74px;border:2px dashed #8dadaa;border-radius:14px;background:#f4fff8b0;display:grid;place-items:center;color:#99b5b1;font-size:22px;font-weight:1000}.slot.filled{border:2px solid #58b29d;background:linear-gradient(#eaffea,#c0e9d4);box-shadow:inset 0 2px #fff}.slot img{width:59px;height:59px;object-fit:contain}
+    .hint{margin:9px 1px 0;text-align:center;color:#66817e;font-size:10px;font-weight:800}.drag-icon{position:fixed;z-index:999;width:58px;height:58px;pointer-events:none;filter:drop-shadow(0 0 9px #fff);transform:translate(-50%,-50%);transition:none}.drag-icon.fly{transition:left .32s cubic-bezier(.22,.8,.25,1),top .32s cubic-bezier(.22,.8,.25,1),transform .32s ease,opacity .32s ease}
+    .effect-subtabs{display:flex;gap:7px;margin-bottom:10px}.effect-subtabs button{min-width:112px;padding:8px 14px;border:2px solid #6f9694;border-radius:12px;background:linear-gradient(#fafff8,#d9eee7);box-shadow:0 3px 0 #91b0a8;color:#295461;font-size:12px;font-weight:1000}.effect-subtabs button[aria-selected="true"]{border-color:#3a7778;background:linear-gradient(#dffff4,#8cddc4);color:#174e51}
+    .block-preview{padding:9px;border:2px solid #71918f;border-radius:18px;background:linear-gradient(#eefbf4,#d9ede7);box-shadow:0 3px 0 #9cbab2}.block-preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 3px 8px;color:#315d62;font-size:11px;font-weight:1000}.block-preview-head small{color:#6d8887;font-size:9px}.block-stage{height:292px;overflow:hidden;border:3px solid #3d6169;border-radius:15px;background:radial-gradient(circle at 50% 44%,#456f73 0,#254954 56%,#172f3f 100%);box-shadow:inset 0 3px 13px #0b273eaa;position:relative}.block-stage::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0a233263,transparent 24%,transparent 76%,#0a233263),radial-gradient(circle at 50% 52%,#aedddc22,transparent 58%);pointer-events:none}.block-stage canvas{position:relative;width:100%;height:100%;display:block}.block-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.block-actions button{height:46px;border:2px solid #73908e;border-radius:12px;background:linear-gradient(#fff,#dcebe8);box-shadow:0 3px 0 #8baaa6;color:#49686c;font-size:11px;font-weight:1000;display:flex;align-items:center;justify-content:center;gap:5px}.block-actions #applyBlockGlitch{border-color:#7652b9;background:linear-gradient(#eee3ff,#c4a8fa);box-shadow:0 3px 0 #7156ad;color:#392471}.block-actions #applyBlockFire{border-color:#c36a31;background:linear-gradient(#fff0b4,#ffbd67);box-shadow:0 3px 0 #bc7836;color:#813911}.block-actions #applyBlockCracks{border-color:#607382;background:linear-gradient(#f5f8fb,#bbcbd4);box-shadow:0 3px 0 #79909d;color:#304857}.block-actions #applyBlockPhantom{border-color:#9cacb5;background:linear-gradient(#fff,#dce8ee);color:#4a6170}.block-actions #applyBlockNano{border-color:#399cca;background:linear-gradient(#d9fbff,#8cddf4);color:#125777}.block-actions #applyBlockElectric{border-color:#b6942e;background:linear-gradient(#fff9cb,#f2d96e);color:#70540e}.block-actions button img{width:29px;height:29px;object-fit:contain}.block-actions button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #7156ad}.block-actions button:disabled{opacity:.45;cursor:default}.block-hint{margin:11px 2px 2px;text-align:center;color:#66817e;font-size:10px;font-weight:800}
+    @media(max-width:390px){body{padding:6px}.app{padding:10px;border-radius:22px}.palette{gap:4px}.emblem{min-height:69px}.emblem img{width:43px;height:43px}.emblem span{font-size:6.4px}.stage{height:268px}}
+    @media(prefers-reduced-motion:reduce){.stage.pop{animation:none}.drag-icon.fly{transition:none}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>Макет слайма</h1>
+    <div class="tabs" role="tablist" aria-label="Раздел макета">
+      <button id="slimeTab" type="button" role="tab" aria-selected="true" aria-controls="slimePanel">СЛАЙМ</button>
+      <button id="effectsTab" type="button" role="tab" aria-selected="false" aria-controls="effectsPanel">ЭФФЕКТЫ</button>
+    </div>
+    <section id="slimePanel" role="tabpanel" aria-labelledby="slimeTab">
+      <p class="section-title">МУТАЦИИ</p>
+      <div id="palette" class="palette" aria-label="Эмблемы мутаций"></div>
+      <div id="stage" class="stage"><canvas id="slimeCanvas" width="420" height="292" aria-label="Слайм"></canvas></div>
+      <div id="count" class="count" aria-live="polite">СЪЕДЕНО 0 ИЗ 3</div>
+      <div id="sporePreviewActions" class="spore-preview-actions" hidden><button id="previewSporeFlight" type="button">ВЫЛЕТ ГРИБОЧКОВ</button><button id="previewSporeUltimate" type="button" disabled>УЛЬТА: СПОРЫ</button></div>
+      <div class="tray-head"><b>СЪЕДЕННЫЕ ЭМБЛЕМЫ</b><button id="clear" class="clear" type="button" disabled>СТЕРЕТЬ</button></div>
+      <div id="slots" class="slots" aria-label="Три ячейки мутаций"></div>
+      <p class="hint">Нажми на эмблему или перетащи её на слайма.</p>
+    </section>
+    <section id="effectsPanel" role="tabpanel" aria-labelledby="effectsTab" hidden>
+      <div class="effect-subtabs" role="tablist" aria-label="Объекты для эффектов"><button id="blocksTab" type="button" role="tab" aria-selected="true" aria-controls="blocksPanel">БЛОКИ</button></div>
+      <section id="blocksPanel" role="tabpanel" aria-labelledby="blocksTab" class="block-preview">
+        <div class="block-preview-head"><span>МИР 1 · СЦЕНКА 4×4</span><small id="blockEffectCount" aria-live="polite">ЭФФЕКТЫ: 0 ИЗ 16</small></div>
+        <div class="block-stage"><canvas id="blockCanvas" width="840" height="584" aria-label="Сценка шахты четыре на четыре из непрочных, обычных и прочных блоков"></canvas></div>
+        <div class="block-actions">
+          <button id="applyBlockGlitch" type="button"><img src="effects-lab/assets/glitch-emblem-v2.webp" alt="">ГЛИТЧ</button>
+          <button id="applyBlockFire" type="button"><img src="assets/ui/recipe-categories/emblem-v2-fire.webp" alt="">ГОРЕНИЕ</button>
+          <button id="applyBlockCracks" type="button">ТРЕЩИНЫ 1/3</button>
+          <button id="applyBlockPhantom" type="button"><img src="effects-lab/assets/phantom-emblem-v2.png" alt="">ПРИЗРАК</button>
+          <button id="applyBlockNano" type="button"><img src="effects-lab/assets/techno-emblem-v3.webp" alt="">ПРИЦЕЛ</button>
+          <button id="applyBlockElectric" type="button"><img src="assets/ui/recipe-categories/emblem-v2-electric.webp" alt="">РАЗРЯД</button>
+          <button id="clearBlockEffects" type="button" disabled>ОЧИСТИТЬ</button>
+        </div>
+      </section>
+      <p id="blockHint" class="block-hint">Трещины: три нажатия по одному блоку. Разряд запускает короткую цепь по соседним блокам.</p>
+    </section>
+  </main>
+  <script src="js/config/game-config.js?v=77"></script>
+  <script src="effects-lab/slime-avatar-workbench.js?v=100"></script>
+  <script src="effects-lab/workbench-effects.js?v=74"></script>
+  <script src="effects-lab/block-effects-workbench.js?v=18"></script>
+  <script>
+  (() => {
+    'use strict';
+    const mutations = [
+      ['fire','ОГОНЬ','emblem-v2-fire.webp'],
+      ['electric','ЭЛЕКТРИЧЕСТВО','emblem-v2-electric.webp'],
+      ['frost','МОРОЗ','emblem-v2-frost.webp'],
+      ['cosmos','КОСМОС','effects-lab/assets/cosmos-emblem-v1.webp'],
+      ['nano','ТЕХНО','effects-lab/assets/techno-emblem-v3.webp'],
+      ['telekinesis','ПСИОНИКА','effects-lab/assets/psionics-emblem-v1.webp'],
+      ['cloning','СПОРЫ','assets/ui/recipe-categories/emblem-v3-spores.webp'],
+      ['phantom','ФАНТОМ','effects-lab/assets/phantom-emblem-v2.png'],
+      ['glitch','ГЛИТЧ','effects-lab/assets/glitch-emblem-v2.webp']
+    ].map(([id,name,file]) => ({id,name,src:file.includes('/') ? file : `assets/ui/recipe-categories/${file}`}));
+    const canvas=document.getElementById('slimeCanvas');
+    const ctx=canvas.getContext('2d');
+    const palette=document.getElementById('palette');
+    const slots=document.getElementById('slots');
+    const stage=document.getElementById('stage');
+    const count=document.getElementById('count');
+    const clear=document.getElementById('clear');
+    const effectsPanel=document.getElementById('effectsPanel');
+    const blockCanvas=document.getElementById('blockCanvas');
+    const blockCtx=blockCanvas.getContext('2d');
+    blockCtx.scale(2,2);
+    const blockImages=['непрочный блок.webp','Обычный блок.webp','Прочный блок.webp'].map(file=>{
+      const image=new Image();image.src=`assets/Мир 1/${file}`;return image;
+    });
+    const blockLayout=[0,1,0,2,1,0,2,1,0,1,0,1,2,0,1,0];
+    const blockEffects=new Map();
+    const effectButtons={
+      glitch:document.getElementById('applyBlockGlitch'),
+      fire:document.getElementById('applyBlockFire'),
+      cracks:document.getElementById('applyBlockCracks'),
+      phantom:document.getElementById('applyBlockPhantom'),
+      nano:document.getElementById('applyBlockNano'),
+      electric:document.getElementById('applyBlockElectric')
+    };
+    const clearBlockEffects=document.getElementById('clearBlockEffects');
+    const blockEffectCount=document.getElementById('blockEffectCount');
+    const blockHint=document.getElementById('blockHint');
+    let lastBlockFrame=-Infinity,latestEffectIndex=-1,latestEffectAt=0,crackTarget=-1,electricChain=null;
+    function refreshBlockActions(){
+      blockEffectCount.textContent=electricChain?`РАЗРЯД: ${electricChain.hits.length} БЛОКОВ`:`ЭФФЕКТЫ: ${blockEffects.size} ИЗ 16`;
+      for(const type of ['glitch','fire','phantom','nano'])effectButtons[type].disabled=blockEffects.size===16;
+      const crack=blockEffects.get(crackTarget);
+      const nextStage=crack?.type==='cracks'&&crack.stage<3?crack.stage+1:1;
+      effectButtons.cracks.textContent=`ТРЕЩИНЫ ${nextStage}/3`;
+      effectButtons.cracks.disabled=blockEffects.size===16&&nextStage===1;
+      clearBlockEffects.disabled=blockEffects.size===0&&!electricChain;
+      blockHint.textContent=electricChain?'Разряд: удар по блоку, затем молния перескакивает на соседние и гаснет.'
+        :nextStage>1?`Трещины: следующий удар — стадия ${nextStage} из 3 на том же блоке.`
+        :'Трещины: три нажатия по одному блоку. Разряд запускает короткую цепь по соседним блокам.';
+      lastBlockFrame=-Infinity;
+    }
+    function chooseFreeBlock(){
+      const available=blockLayout.map((_,index)=>index).filter(index=>!blockEffects.has(index));
+      return available.length?available[Math.floor(Math.random()*available.length)]:-1;
+    }
+    function applyBlockEffect(type,index=chooseFreeBlock()){
+      if(index<0)return;
+      latestEffectIndex=index;
+      latestEffectAt=performance.now();
+      blockEffects.set(index,{type,stage:1,stageChangedAt:latestEffectAt});
+      refreshBlockActions();
+    }
+    effectButtons.glitch.addEventListener('click',()=>applyBlockEffect('glitch'));
+    effectButtons.fire.addEventListener('click',()=>applyBlockEffect('fire'));
+    effectButtons.phantom.addEventListener('click',()=>applyBlockEffect('phantom'));
+    effectButtons.nano.addEventListener('click',()=>applyBlockEffect('nano'));
+    effectButtons.electric.addEventListener('click',()=>{
+      const first=Math.floor(Math.random()*4);
+      const hits=[{index:first,parent:-1,at:0}];
+      const visited=new Set([first]);
+      const targetCount=2+Math.floor(Math.random()*3);
+      const neighbors=index=>{
+        const row=Math.floor(index/4),col=index%4,result=[];
+        if(row>0)result.push(index-4);
+        if(row<3)result.push(index+4);
+        if(col>0)result.push(index-1);
+        if(col<3)result.push(index+1);
+        return result;
+      };
+      for(let step=1;step<=targetCount;step++){
+        const candidates=[];
+        for(const hit of hits)for(const next of neighbors(hit.index)){
+          if(!visited.has(next))candidates.push({index:next,parent:hit.index,weight:next>hit.index?2:1});
+        }
+        if(!candidates.length)break;
+        const total=candidates.reduce((sum,item)=>sum+item.weight,0);
+        let pick=Math.random()*total,selected=candidates[0];
+        for(const candidate of candidates){pick-=candidate.weight;if(pick<=0){selected=candidate;break}}
+        hits.push({index:selected.index,parent:selected.parent,at:step*155});
+        visited.add(selected.index);
+      }
+      electricChain={startedAt:performance.now(),hits,endAt:hits[hits.length-1].at+680};
+      latestEffectIndex=-1;
+      refreshBlockActions();
+    });
+    effectButtons.cracks.addEventListener('click',()=>{
+      const active=blockEffects.get(crackTarget);
+      if(active?.type==='cracks'&&active.stage<3){
+        active.stage++;
+        active.stageChangedAt=performance.now();
+        latestEffectIndex=crackTarget;
+        latestEffectAt=active.stageChangedAt;
+        if(active.stage===3)crackTarget=-1;
+        refreshBlockActions();
+        return;
+      }
+      const index=chooseFreeBlock();
+      if(index<0)return;
+      crackTarget=index;
+      applyBlockEffect('cracks',index);
+    });
+    clearBlockEffects.addEventListener('click',()=>{
+      blockEffects.clear();electricChain=null;latestEffectIndex=-1;crackTarget=-1;refreshBlockActions();
+    });
+    const skin=window.SlimeGameConfig.SKINS[0];
+    const eaten=[];
+    const sporePreviewActions=document.getElementById('sporePreviewActions');
+    const previewSporeFlight=document.getElementById('previewSporeFlight');
+    const previewSporeUltimate=document.getElementById('previewSporeUltimate');
+    const miniMushroomImage=new Image();
+    miniMushroomImage.src='assets/vfx/spores-mini-mushroom-v1.png';
+    let previewMinis=[],previewSpores=[],lastSporePreviewAt=0;
+    let emotionUntil=0,emotion='focused',drag=null,suppressClickUntil=0,pendingFeeds=0,resetVersion=0;
+    const icon=mutation=>{const image=document.createElement('img');image.src=mutation.src;image.alt=mutation.name;return image};
+    function levels(){const result={};for(const item of eaten)result[item.id]=(result[item.id]||0)+1;return result}
+    function renderSlots(){
+      slots.replaceChildren();
+      for(let i=0;i<3;i++){
+        const slot=document.createElement('div');slot.className=`slot${eaten[i]?' filled':''}`;
+        if(eaten[i]){slot.appendChild(icon(eaten[i]));slot.setAttribute('aria-label',eaten[i].name)}
+        else {slot.textContent='+';slot.setAttribute('aria-label','Пустая ячейка')}
+        slots.appendChild(slot);
+      }
+      count.textContent=`СЪЕДЕНО ${eaten.length} ИЗ 3`;
+      clear.disabled=eaten.length+pendingFeeds===0;
+      for(const button of palette.querySelectorAll('button'))button.disabled=eaten.length+pendingFeeds>=3;
+      const sporeLevel=levels().cloning||0;
+      sporePreviewActions.hidden=sporeLevel===0;
+      previewSporeUltimate.disabled=sporeLevel<3;
+    }
+    function launchSporePreview(ultimate){
+      const level=levels().cloning||0;
+      if(!level||(ultimate&&level<3))return;
+      const now=performance.now();
+      const amount=ultimate?15:level>=2?2:1;
+      const burstCount=ultimate?54:level>=2?11:7;
+      previewMinis=[];previewSpores=[];
+      for(let i=0;i<amount;i++){
+        const angle=ultimate?-Math.PI/2+i*Math.PI*2/amount:amount===1?(Math.random()<.5?Math.PI:0):i===0?Math.PI:0;
+        const speed=ultimate?150+Math.random()*40:155+Math.random()*30;
+        previewMinis.push({x:210+Math.cos(angle)*24,y:153+Math.sin(angle)*24,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,bornAt:now,lastSporeAt:now,life:ultimate?1.4:1.55});
+      }
+      for(let i=0;i<burstCount;i++){
+        const angle=i*Math.PI*2/burstCount+(Math.random()-.5)*.3;
+        const speed=(ultimate?105:65)+Math.random()*(ultimate?150:75);
+        previewSpores.push({x:210,y:153,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:.55+Math.random()*.45,maxLife:1,size:2.5+Math.random()*2.2});
+      }
+      lastSporePreviewAt=now;
+    }
+    previewSporeFlight.addEventListener('click',()=>launchSporePreview(false));
+    previewSporeUltimate.addEventListener('click',()=>launchSporePreview(true));
+    function drawSporePreview(timestamp){
+      const dt=Math.min(.04,Math.max(0,(timestamp-lastSporePreviewAt)/1000));
+      lastSporePreviewAt=timestamp;
+      for(const mini of previewMinis){
+        mini.life-=dt;mini.x+=mini.vx*dt;mini.y+=mini.vy*dt;mini.vy+=35*dt;
+        if(timestamp-mini.lastSporeAt>95){
+          mini.lastSporeAt=timestamp;
+          previewSpores.push({x:mini.x,y:mini.y,vx:-mini.vx*.13+(Math.random()-.5)*30,vy:-mini.vy*.13-12,life:.45,maxLife:.45,size:2.5+Math.random()*1.3});
+        }
+      }
+      previewMinis=previewMinis.filter(mini=>mini.life>0&&mini.x>-25&&mini.x<445&&mini.y>-25&&mini.y<317);
+      for(const spore of previewSpores){spore.life-=dt;spore.x+=spore.vx*dt;spore.y+=spore.vy*dt;spore.vy-=12*dt}
+      previewSpores=previewSpores.filter(spore=>spore.life>0);
+      for(const spore of previewSpores){
+        ctx.save();ctx.translate(spore.x,spore.y);ctx.rotate(Math.atan2(spore.vy,spore.vx)+Math.PI/2);ctx.globalAlpha=Math.min(1,spore.life/spore.maxLife);
+        ctx.fillStyle='rgba(179,255,98,.25)';ctx.beginPath();ctx.ellipse(0,0,spore.size*1.3,spore.size*1.7,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#417d29';ctx.beginPath();ctx.ellipse(0,0,spore.size*.7,spore.size,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#e9ffae';ctx.beginPath();ctx.ellipse(0,0,spore.size*.5,spore.size*.83,0,0,Math.PI*2);ctx.fill();ctx.restore();
+      }
+      for(const mini of previewMinis){
+        const size=34*Math.min(1,(timestamp-mini.bornAt)/140);
+        if(size<=0)continue;
+        ctx.save();ctx.translate(mini.x,mini.y);ctx.rotate(Math.max(-.3,Math.min(.3,mini.vx/1300)));
+        if(miniMushroomImage.complete&&miniMushroomImage.naturalWidth)ctx.drawImage(miniMushroomImage,-size/2,-size/2,size,size);
+        ctx.restore();
+      }
+    }
+    function feed(mutation,start){
+      if(eaten.length+pendingFeeds>=3)return;
+      pendingFeeds++;renderSlots();
+      const version=resetVersion;
+      const target=canvas.getBoundingClientRect();
+      const finish=()=>{
+        if(version!==resetVersion)return;
+        pendingFeeds--;
+        eaten.push(mutation);renderSlots();emotion='chewing';emotionUntil=performance.now()+750;
+        stage.classList.remove('pop');void stage.offsetWidth;stage.classList.add('pop');
+      };
+      if(!start||matchMedia('(prefers-reduced-motion:reduce)').matches){finish();return}
+      const flyer=icon(mutation);flyer.className='drag-icon';flyer.alt='';flyer.style.left=`${start.x}px`;flyer.style.top=`${start.y}px`;document.body.appendChild(flyer);
+      requestAnimationFrame(()=>{flyer.classList.add('fly');flyer.style.left=`${target.left+target.width*.5}px`;flyer.style.top=`${target.top+target.height*.58}px`;flyer.style.transform='translate(-50%,-50%) scale(.18)';flyer.style.opacity='0'});
+      setTimeout(()=>{flyer.remove();finish()},330);
+    }
+    for(const mutation of mutations){
+      const button=document.createElement('button');button.type='button';button.className='emblem';button.setAttribute('aria-label',mutation.name);
+      button.append(icon(mutation));const label=document.createElement('span');label.textContent=mutation.name;button.append(label);palette.appendChild(button);
+      button.addEventListener('click',()=>{if(performance.now()<suppressClickUntil)return;const rect=button.getBoundingClientRect();feed(mutation,{x:rect.left+rect.width/2,y:rect.top+rect.height/2})});
+      button.addEventListener('pointerdown',event=>{
+        if(button.disabled)return;drag={mutation,id:event.pointerId,startX:event.clientX,startY:event.clientY,active:false,flyer:null};button.setPointerCapture(event.pointerId)
+      });
+      button.addEventListener('pointermove',event=>{
+        if(!drag||drag.id!==event.pointerId)return;
+        if(!drag.active&&Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY)>9){drag.active=true;drag.flyer=icon(mutation);drag.flyer.className='drag-icon';drag.flyer.alt='';document.body.appendChild(drag.flyer)}
+        if(drag.active){drag.flyer.style.left=`${event.clientX}px`;drag.flyer.style.top=`${event.clientY}px`}
+      });
+      button.addEventListener('pointerup',event=>{
+        if(!drag||drag.id!==event.pointerId)return;
+        if(drag.active){suppressClickUntil=performance.now()+400;drag.flyer.remove();const rect=stage.getBoundingClientRect();if(event.clientX>=rect.left&&event.clientX<=rect.right&&event.clientY>=rect.top&&event.clientY<=rect.bottom)feed(mutation,{x:event.clientX,y:event.clientY})}
+        drag=null;
+      });
+      button.addEventListener('pointercancel',()=>{drag?.flyer?.remove();drag=null});
+    }
+    clear.addEventListener('click',()=>{resetVersion++;eaten.length=0;pendingFeeds=0;emotion='focused';emotionUntil=0;previewMinis=[];previewSpores=[];renderSlots()});
+    const tabs=[document.getElementById('slimeTab'),document.getElementById('effectsTab')];
+    tabs.forEach((tab,index)=>tab.addEventListener('click',()=>{
+      tabs.forEach((item,i)=>item.setAttribute('aria-selected',String(i===index)));
+      document.getElementById('slimePanel').hidden=index!==0;
+      effectsPanel.hidden=index!==1;
+    }));
+    renderSlots();
+    function frame(timestamp){
+      if(!effectsPanel.hidden&&timestamp-lastBlockFrame>(electricChain?25:55)){
+        blockCtx.clearRect(0,0,420,292);
+        const blockSize=66,sceneX=78,sceneY=14;
+        blockLayout.forEach((kind,index)=>{
+          const image=blockImages[kind];
+          if(!image.naturalWidth)return;
+          const x=sceneX+(index%4)*blockSize,y=sceneY+Math.floor(index/4)*blockSize;
+          blockCtx.drawImage(image,x,y,blockSize,blockSize);
+        });
+        for(const [index,effect] of blockEffects){
+          const x=sceneX+(index%4)*blockSize,y=sceneY+Math.floor(index/4)*blockSize;
+          if(effect.type==='glitch')window.BlockEffectDraft.drawGlitchBlock(blockCtx,blockImages[blockLayout[index]],x,y,blockSize,timestamp);
+          if(effect.type==='fire')window.BlockEffectDraft.drawBurningBlock(blockCtx,x,y,blockSize,timestamp,index);
+          if(effect.type==='cracks')window.BlockEffectDraft.drawCrackedBlock(blockCtx,x,y,blockSize,effect.stage,timestamp,effect.stageChangedAt,index,blockLayout[index]);
+          if(effect.type==='phantom')window.BlockEffectDraft.drawPhantomBlock(blockCtx,blockImages[blockLayout[index]],x,y,blockSize,timestamp,index);
+          if(effect.type==='nano')window.BlockEffectDraft.drawNanoTarget(blockCtx,x,y,blockSize,timestamp);
+        }
+        if(electricChain){
+          const elapsed=timestamp-electricChain.startedAt;
+          for(const hit of electricChain.hits){
+            const x=sceneX+(hit.index%4)*blockSize,y=sceneY+Math.floor(hit.index/4)*blockSize;
+            window.BlockEffectDraft.drawElectricShockBlock(blockCtx,blockImages[blockLayout[hit.index]],x,y,blockSize,elapsed-hit.at,hit.index);
+          }
+          for(const hit of electricChain.hits){
+            if(hit.parent<0)continue;
+            const fromX=sceneX+(hit.parent%4+.5)*blockSize;
+            const fromY=sceneY+(Math.floor(hit.parent/4)+.5)*blockSize;
+            const toX=sceneX+(hit.index%4+.5)*blockSize;
+            const toY=sceneY+(Math.floor(hit.index/4)+.5)*blockSize;
+            window.BlockEffectDraft.drawElectricLink(blockCtx,fromX,fromY,toX,toY,elapsed-hit.at+125,hit.index);
+          }
+          if(elapsed>electricChain.endAt){electricChain=null;refreshBlockActions()}
+        }
+        if(latestEffectIndex>=0&&timestamp-latestEffectAt<520){
+          const x=sceneX+(latestEffectIndex%4)*blockSize,y=sceneY+Math.floor(latestEffectIndex/4)*blockSize;
+          blockCtx.save();blockCtx.globalAlpha=(1-(timestamp-latestEffectAt)/520)*.85;
+          blockCtx.strokeStyle='#e9faff';blockCtx.lineWidth=3;
+          blockCtx.strokeRect(x+2,y+2,blockSize-4,blockSize-4);blockCtx.restore();
+        }
+        lastBlockFrame=timestamp;
+      }
+      if(effectsPanel.hidden){
+        ctx.clearRect(0,0,420,292);
+        const x=210,baseY=153,radius=77;
+        const activeLevels=levels();
+        const motion=activeLevels.telekinesis>=2
+          ? window.MutationEffectDraft.psionicsMotion(timestamp,radius)
+          : {offset:0,energy:0};
+        const y=baseY+motion.offset;
+        const currentEmotion=timestamp<emotionUntil?emotion:'focused';
+        const bodyVariant=activeLevels.frost>=3?'frostUltra':activeLevels.cosmos>=3?'cosmosUltra':activeLevels.nano>=3?'technoUltra':activeLevels.electric>=3?'electricUltra':activeLevels.fire>=3?'fireUltra':activeLevels.telekinesis>=3?'psionicsUltra':activeLevels.phantom>=3?'phantomUltra':activeLevels.cloning>=3?'sporesUltra':activeLevels.glitch>=3?'glitchUltra':activeLevels.cloning?'sporesStage1':'';
+        const state={x,y,baseY,radius,levels:activeLevels,psionicsEnergy:motion.energy,
+          skin:skin.id,colors:skin.colors,emotion:currentEmotion,timestamp};
+        window.MutationEffectDraft.drawBehind(ctx,state);
+        window.SlimeAvatarRenderer.drawSlimeAvatar(ctx,{
+          x,y,radius,skin:skin.id,colors:skin.colors,emotion:currentEmotion,
+          blink:timestamp%4100<115,
+          bodyVariant,
+          irisTint:activeLevels.frost>=3?'#3a9fff':activeLevels.cosmos>=3?'#a576ff':activeLevels.nano>=3?'#f04a55':activeLevels.electric>=3?'#ffd84e':activeLevels.fire>=3?'#ff9a22':activeLevels.telekinesis>=3?'#8d5cff':activeLevels.glitch>=3?'#d8ff50':activeLevels.cloning>=3?'#ce782f':'',
+          cheekFilter:activeLevels.frost?'hue-rotate(195deg) saturate(.85) brightness(1.08) contrast(1.06)':'',
+          mouthStyle:state.levels.frost&&window.MutationEffectDraft.isFrostBreathing(timestamp)?'pursed':'',
+          nanoEyeOpenness:state.levels.nano>=2?window.MutationEffectDraft.nanoEyeOpenness(timestamp):null,
+          psionicsEyes:state.levels.telekinesis>=2,
+          phantomEyes:state.levels.phantom>=2,
+          sporesEyes:bodyVariant==='sporesUltra',
+          cosmosEyes:bodyVariant==='cosmosUltra',
+          frostEyes:bodyVariant==='frostUltra',
+          fireEyes:bodyVariant==='fireUltra',
+          electricEyes:bodyVariant==='electricUltra',
+          glitchEyes:bodyVariant==='glitchUltra',
+          glitchFaceLevel:activeLevels.glitch,
+          bodyFilter:state.levels.phantom>=2&&state.levels.phantom<3?'grayscale(1) brightness(1.8) contrast(.85)':'',
+          outlineColor:state.levels.phantom?'#d8f7ff':'#26334a',
+          frontLayer:activeLevels.frost===2 ? layerCtx=>window.MutationEffectDraft.drawInside(layerCtx,state) : null,
+          timestamp
+        });
+        window.MutationEffectDraft.drawFront(ctx,state);
+        window.MutationEffectDraft.drawComposite(ctx,state);
+        if(activeLevels.cloning)drawSporePreview(timestamp);
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
