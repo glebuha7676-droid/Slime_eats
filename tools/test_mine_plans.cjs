@@ -46,4 +46,4 @@ plans.update(custom);
 assert.equal(plans.all(1, 'normal').find(item => item.id === custom.id).bands[2].slots[0].category, 'special');
 plans.remove(custom.id);
 assert.equal(plans.all(1, 'normal').length, 1);
-console.log('Mine plan checks passed: world 1 has 10 bands / 70 rows; other worlds have 20 / 140, with pools and persistence.');
+console.log('Legacy mine-plan editor checks passed (runtime World 1 now uses the separate 105-row descent generator).');

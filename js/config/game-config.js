@@ -3,22 +3,17 @@
 
   const WORLD_LEVELS = {
     1: [
-      { depth: 100, features: { dynamite: false, medkit: false, hazards: true, boss: false }, utilityCadence: 0,
-        sections: ['tutorial', 'flow', 'ore', 'flow', 'ore', 'flow', 'final'] },
-      { depth: 200, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 8,
-        sections: ['tutorial', 'flow', 'bomb', 'ore', 'flow', 'bomb', 'flow', 'final'] },
-      { depth: 300, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 7,
-        sections: ['tutorial', 'flow', 'bomb', 'recovery', 'ore', 'flow', 'bomb', 'recovery', 'final'] },
-      { depth: 400, features: { dynamite: true, medkit: true, hazards: true, boss: false }, utilityCadence: 7,
-        sections: ['tutorial', 'flow', 'bomb', 'recovery', 'challenge', 'ore', 'bomb', 'challenge', 'final'] },
-      { depth: 500, features: { dynamite: true, medkit: true, hazards: true, boss: true }, utilityCadence: 6,
-        sections: ['tutorial', 'flow', 'bomb', 'recovery', 'challenge', 'ore', 'bomb', 'recovery', 'boss', 'final'] }
+      ...Array.from({ length: 5 }, () => ({
+        depth: 750,
+        features: { dynamite: false, medkit: true, hazards: true, boss: false },
+        utilityCadence: 0, sections: ['descent']
+      }))
     ]
   };
 
   const WORLDS = [
     {
-      id: 1, name: 'Зелёные глубины', targetDepth: 500, reward: 300,
+      id: 1, name: 'Зелёные глубины', targetDepth: 750, reward: 300,
       pathWidth: 3, minPathWidth: 3, turnRate: .08,
       hardCap: .08, reinforcedCap: .018, oreChance: .075, specialChance: .16,
       sky: '#63825b', earth: '#3b3027', deep: '#171c20', accent: '#54d7b0', icon: '🌿',
@@ -82,7 +77,7 @@
   };
 
   const WORLD_SPRITE_NAMES = {
-    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'stone-hazard', 'dynamite', 'heal', 'portal'],
+    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'ground-weak-flask', 'stone-flask', 'stone-reinforced-flask', 'stone-hazard', 'heal', 'portal'],
     2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'cryo', 'snowflake', 'heal', 'portal'],
     3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'jelly-bounce', 'heal', 'portal'],
     4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'geyser', 'meteor', 'heal', 'portal']

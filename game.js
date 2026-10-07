@@ -3065,7 +3065,7 @@
     // Fill the shaft exactly. Six old 72px tiles occupied only 432px of the
     // 440px canvas and left a visible four-pixel seam on both sides.
     const cellSize = VIEW_W / columns;
-    const rowCount = world.id === 1 ? 70 : 140;
+    const rowCount = world.id === 1 ? window.SlimeWorld1Descent.ROWS : 140;
     const finishY = 285 + rowCount * cellSize + cellSize * 1.5;
     const gridOffsetX = 0;
     const categoryVisuals = menuCategoryLevels();
@@ -3371,7 +3371,64 @@
     return weak;
   }
 
+  function generateFirstWorldDescent(runState) {
+    const layout = window.SlimeWorld1Descent.build({ columns: runState.columns });
+    const blocks = [];
+    const movingHazards = [];
+    const cell = runState.cellSize;
+    const originY = 285;
+    for (let row = 0; row < layout.rows; row += 1) {
+      for (let col = 0; col < runState.columns; col += 1) {
+        const planned = layout.cells[row][col];
+        const x = runState.gridOffsetX + col * cell;
+        const y = originY + row * cell;
+        const maxHp = planned.hazard || planned.special ? 1
+          : blockHpForTier(planned.tier, runState.world, row / layout.rows, row, col, planned.path);
+        const block = {
+          id: blocks.length, row, col, x, y, w: cell, h: cell,
+          hp: maxHp, maxHp, tier: planned.tier, special: planned.special,
+          material: planned.hazard ? 'hazard'
+            : row === 0 ? 'grass'
+              : chooseMaterial(runState.world, row / layout.rows, planned.special, planned.tier),
+          dead: planned.dead, path: planned.path, segment: 'descent',
+          hazard: planned.hazard, unbreakable: planned.hazard,
+          hazardVariant: null, frozen: false, visualId: '', environmentRemoved: '',
+          flaskTier: planned.flaskTier, topGrass: row === 0, coins: 0
+        };
+        if (planned.motion) {
+          block.motion = {
+            axis: planned.motion.axis,
+            min: planned.motion.axis === 'x'
+              ? runState.gridOffsetX + planned.motion.from * cell
+              : originY + planned.motion.from * cell,
+            max: planned.motion.axis === 'x'
+              ? runState.gridOffsetX + planned.motion.to * cell
+              : originY + planned.motion.to * cell,
+            phase: planned.motion.phase,
+            period: planned.motion.period
+          };
+          movingHazards.push(block);
+        }
+        blocks.push(block);
+      }
+    }
+    runState.movingHazards = movingHazards;
+    return blocks;
+  }
+
+  function updateMovingHazards(timestamp) {
+    for (const block of run?.movingHazards || []) {
+      if (block.dead) continue;
+      const motion = block.motion;
+      const position = motion.min + (motion.max - motion.min)
+        * (.5 - .5 * Math.cos(timestamp * Math.PI * 2 / motion.period + motion.phase));
+      if (motion.axis === 'x') block.x = position;
+      else block.y = position;
+    }
+  }
+
   function generateBlockField(runState) {
+    if (runState.worldId === 1) return generateFirstWorldDescent(runState);
     const { world, finishY } = runState;
     const blocks = [];
     const cell = runState.cellSize || BALANCE.gridCell;
@@ -3488,6 +3545,7 @@
   }
 
   function generateFlasks(runState) {
+    if (runState.worldId === 1) return [];
     const blocks = runState.blocks || [];
     if (!blocks.some(block => block.flaskTier) && runState.worldId !== 1) {
       // Later worlds use sparse temporary placements until their own sections are authored.
@@ -3624,55 +3682,9 @@
     return zones;
   }
 
-  function generateJellyZones(runState) {
-    if (runState.worldId !== 1) return [];
-    const authoredZones = authoredEnvironmentZones(runState, 'jelly');
-    if (authoredZones.length) return authoredZones;
-    const blocks = runState.blocks || [];
-    const cell = runState.cellSize;
-    const rowCount = blocks.reduce((maximum, block) => Math.max(maximum, block.row + 1), 0);
-    const desired = clamp(1 + Math.floor(((runState.level || 1) - 1) / 2), 1, 3);
-    const targetRatios = desired === 1 ? [.5] : desired === 2 ? [.34, .69] : [.26, .51, .75];
-    const zones = [];
-
-    for (let index = 0; index < targetRatios.length; index += 1) {
-      const heightCells = runState.level >= 4 && index === targetRatios.length - 1 ? 3 : 2;
-      const widthCells = 2;
-      const targetRow = clamp(Math.round(rowCount * targetRatios[index]), 5, rowCount - heightCells - 4);
-      let selected = null;
-      for (const offset of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
-        const row = clamp(targetRow + offset, 4, rowCount - heightCells - 4);
-        const pathBlocks = blocks.filter(block => block.row === row && block.path && !block.dead && !block.special && !block.hazard && block.tier !== 'ore');
-        for (const pathBlock of pathBlocks) {
-          const startCol = clamp(pathBlock.col - (pathBlock.col >= runState.columns / 2 ? 1 : 0), 0, runState.columns - widthCells);
-          const cells = blocks.filter(block => block.row >= row && block.row < row + heightCells && block.col >= startCol && block.col < startCol + widthCells);
-          if (cells.length !== widthCells * heightCells) continue;
-          if (cells.some(block => block.dead || block.special || block.hazard || block.tier === 'ore')) continue;
-          const unsafeNeighbor = blocks.some(block => !block.dead && block.hazard
-            && block.row >= row - 1 && block.row <= row + heightCells
-            && block.col >= startCol - 1 && block.col <= startCol + widthCells);
-          if (unsafeNeighbor) continue;
-          selected = { row, startCol, widthCells, heightCells, cells };
-          break;
-        }
-        if (selected) break;
-      }
-      if (!selected) continue;
-      selected.cells.forEach(block => {
-        block.dead = true;
-        block.environmentRemoved = 'jelly';
-      });
-      zones.push({
-        id: `jelly-${index}`,
-        x: Math.min(...selected.cells.map(block => block.x)),
-        y: Math.min(...selected.cells.map(block => block.y)),
-        w: Math.max(...selected.cells.map(block => block.x + block.w)) - Math.min(...selected.cells.map(block => block.x)),
-        h: Math.max(...selected.cells.map(block => block.y + block.h)) - Math.min(...selected.cells.map(block => block.y)),
-        cells: selected.cells.map(block => ({ x: block.x, y: block.y, w: block.w, h: block.h })),
-        seed: selected.row * .27 + index * 1.91
-      });
-    }
-    return zones;
+  function generateJellyZones() {
+    // Jelly pockets were exclusive to the former first-world section plans.
+    return [];
   }
 
   function generateFreezeZones(runState) {
@@ -3849,6 +3861,7 @@
 
   function gameFrame(timestamp) {
     if (!run || run.ended || run.paused || run.portalTransitioning) return;
+    updateMovingHazards(timestamp);
     // ProMotion iPhones may request 120 frames per second. Physics is designed
     // for 60 FPS, so rendering the duplicate frames only heats the phone up.
     if (isMobileDevice()) {
@@ -4280,6 +4293,11 @@
     s.y += collision.ny * (collision.penetration + 7);
     applyBlockBounce(s, collision, { hazard: false, timestamp });
     block.glitchNeutralized = false;
+    if (run.worldId === 1) {
+      // A glitch can let the slime pass one spike safely, but cannot erase it.
+      block.glitchTransformUntil = timestamp + 900;
+      return true;
+    }
     block.hazard = false;
     block.unbreakable = false;
     block.hazardVariant = null;
@@ -4368,6 +4386,7 @@
       `${startRow + 8}:${middleCol}`
     ]);
     for (const block of cells) {
+      if (run.worldId === 1 && block.hazard) continue;
       run.glitchInfectedBlocks.delete(block);
       block.glitchInfected = false;
       block.glitchNeutralized = false;
@@ -4377,6 +4396,8 @@
       block.special = null;
       block.visualId = '';
       block.flaskTier = 0;
+      block.flaskValue = 0;
+      block.flaskGranted = false;
       block.topGrass = false;
       block.frozen = false;
       block.frozenOre = false;
@@ -4391,14 +4412,24 @@
       const smallFlask = !bonusFlask && block.col > 0 && block.col < run.columns - 1
         && Math.random() < .08;
       if (bonusFlask || smallFlask) {
-        block.dead = true;
         const value = bonusFlask ? 2 : 1;
-        run.flasks.push({ id: `rewrite-flask-${block.id}-${timestamp}`, worldId: run.worldId,
-          tier: 1, value, x: block.x + block.w / 2, y: block.y + block.h / 2,
-          phase: (block.row * run.columns + block.col) * .41, collected: false, glitch: true });
+        if (run.worldId === 1) {
+          block.dead = false;
+          block.tier = 'dense';
+          block.material = chooseMaterial(run.world, .15, null, block.tier);
+          block.maxHp = block.hp = 1;
+          block.path = true;
+          block.flaskTier = 1;
+          block.flaskValue = value;
+        } else {
+          block.dead = true;
+          run.flasks.push({ id: `rewrite-flask-${block.id}-${timestamp}`, worldId: run.worldId,
+            tier: 1, value, x: block.x + block.w / 2, y: block.y + block.h / 2,
+            phase: (block.row * run.columns + block.col) * .41, collected: false, glitch: true });
+        }
       } else {
         block.dead = false;
-        block.tier = 'soft';
+        block.tier = run.worldId === 1 ? 'dense' : 'soft';
         block.material = chooseMaterial(run.world, .15, null, block.tier);
         block.maxHp = block.hp = 1;
         block.path = true;
@@ -5420,9 +5451,12 @@
     const mech = mechSuitActive() ? run.mechSuit : null;
     const centerX = block.x + block.w / 2;
     const centerY = block.y + block.h / 2;
-    block.dead = true;
-    block.hp = 0;
-    run.blocksDestroyed += 1;
+    const persistentSpike = run.worldId === 1;
+    if (!persistentSpike) {
+      block.dead = true;
+      block.hp = 0;
+      run.blocksDestroyed += 1;
+    }
     if (mech) {
       for (let index = 0; index < 6; index += 1) {
         const angle = index * Math.PI / 3 + rand(-.18, .18);
@@ -5434,7 +5468,7 @@
       }
       trimParticles(180);
       run.shake = Math.max(run.shake, 3.5);
-    } else {
+    } else if (!persistentSpike) {
       createDebris(block, 16, true);
       spawnSpecialBurst('bomb', centerX, centerY);
       run.shake = Math.max(run.shake, 8.5);
@@ -5448,6 +5482,12 @@
     }
 
     if (timestamp < run.damageInvulnerableUntil) {
+      if (persistentSpike) {
+        slime.x += collision.nx * (collision.penetration + 7);
+        slime.y += collision.ny * (collision.penetration + 7);
+        applyBlockBounce(slime, collision, { hazard: true, timestamp });
+        return true;
+      }
       sound('break');
       return false;
     }
@@ -7058,7 +7098,7 @@
   function destroyBlock(block, cause = 'impact', timestamp = performance.now()) {
     if (!block || block.dead) return;
     // The press is the sole remote attack allowed to crush a hazard.
-    if (block.hazard && cause !== 'telekinesisPress') return false;
+    if (block.hazard && (run?.worldId === 1 || cause !== 'telekinesisPress')) return false;
     if (typeof cause !== 'string') cause = 'impact';
     if (block.sporePod) {
       if (cause === 'sporeExplosion') {
@@ -7088,11 +7128,11 @@
         impact('УЛЬТА ГОТОВА');
       }
     }
+    registerBrokenBlock(block);
     if (cause === 'telekinesisPress') {
       if (block.special === 'boss') impact('СТРАЖ НЕДР ПОБЕЖДЁН!');
       return true;
     }
-    registerBrokenBlock(block);
     if (cause !== 'telekinesisLift' && cause !== 'electricStorm') createDebris(block, block.special === 'geyser' ? 0 : cause === 'mech' ? 5 : block.special === 'bomb' ? 8 : 9, true);
 
     if (block.special === 'coin') {
@@ -7137,6 +7177,18 @@
 
   function registerBrokenBlock(block) {
     awardRunExperience(block);
+    if (run?.worldId === 1 && block?.flaskTier && !block.flaskGranted) {
+      block.flaskGranted = true;
+      const value = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
+      awardFlaskData(value);
+      sound('coin');
+      for (let index = 0; index < 5; index += 1) {
+        const life = rand(.35, .6);
+        run.particles.push({ kind: 'special', shape: 'orb', x: block.x + block.w / 2, y: block.y + block.h / 2,
+          vx: rand(-80, 80), vy: rand(-110, -35), gravity: 110,
+          life, maxLife: life, size: rand(2.5, 5), color: '#74edf5' });
+      }
+    }
     if (!run?.effects?.breakHealEveryFive) return;
     run.blocksBrokenForHeal += 1;
     if (run.blocksBrokenForHeal % 5 !== 0) return;
@@ -7955,7 +8007,7 @@
           ctx.save();
           ctx.translate((VIEW_W / 2 - centerX) * squeeze, 0);
           ctx.globalAlpha = 1 - squeeze * .3;
-        } else visibleBlocks.push(block);
+        } else if (!block.motion) visibleBlocks.push(block);
         drawBlock(block, sy, timestamp);
         if (block.phantomMarked) drawPhantomMarkedBlock(block, sy, timestamp);
         if (block.glitchInfected || block.glitchDisperseUntil > timestamp || block.glitchNeutralized || block.glitchDeleteAt > timestamp
@@ -10120,6 +10172,11 @@
     else if (block.tier === 'hard') spriteName = 'stone';
     else if (block.tier === 'soft') spriteName = 'dirt-grass';
     else spriteName = 'stone';
+
+    if (run.worldId === 1 && block.flaskTier && !frostIsPrimary) {
+      spriteName = block.tier === 'reinforced' ? 'stone-reinforced-flask'
+        : block.tier === 'hard' ? 'stone-flask' : 'ground-weak-flask';
+    }
 
     const contentId = block.frozen
       ? 'dense'

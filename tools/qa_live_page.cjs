@@ -98,7 +98,7 @@ let server;
     await sleep(700);
   }
   const result = await send('Runtime.evaluate', {
-    expression: `({url:location.href,ready:document.readyState,htmlClass:document.documentElement.className,screen:document.body.dataset.screen,debug:!!window.SlimeGameDebug,home:!!document.querySelector('#homeScreen.active'),visible:!!document.querySelector('.phone-viewport')&&getComputedStyle(document.querySelector('.phone-viewport')).visibility,level:document.querySelector('#coinsLabel')?.textContent,levelProgress:document.querySelector('#playerLevelExperience')?.textContent,worldLock:document.querySelector('#worldTerminalLock')?.textContent,worldLocked:!document.querySelector('#worldTerminalLock')?.hidden,play:(()=>{let b=document.querySelector('#worldStartBtn'),p=getComputedStyle(b,'::before'),r=b.getBoundingClientRect();return {rect:[r.x,r.y,r.width,r.height],before:{content:p.content,display:p.display,background:p.backgroundImage,opacity:p.opacity,visibility:p.visibility,zIndex:p.zIndex},style:getComputedStyle(b).cssText}})(),domReadyMs:Math.round(performance.getEntriesByType('navigation')[0]?.domContentLoadedEventEnd||0),loadMs:Math.round(performance.getEntriesByType('navigation')[0]?.loadEventEnd||0),slowest:performance.getEntriesByType('resource').sort((a,b)=>b.responseEnd-a.responseEnd).slice(0,8).map(x=>({name:x.name.split('/').pop(),end:Math.round(x.responseEnd),duration:Math.round(x.duration)}))})`,
+    expression: `({url:location.href,ready:document.readyState,htmlClass:document.documentElement.className,screen:document.body.dataset.screen,debug:!!window.SlimeGameDebug,home:!!document.querySelector('#homeScreen.active'),visible:!!document.querySelector('.phone-viewport')&&getComputedStyle(document.querySelector('.phone-viewport')).visibility,depth:document.querySelector('#depthValue')?.textContent,research:document.querySelector('#runResearchScore')?.textContent,level:document.querySelector('#coinsLabel')?.textContent,levelProgress:document.querySelector('#playerLevelExperience')?.textContent,worldLock:document.querySelector('#worldTerminalLock')?.textContent,worldLocked:!document.querySelector('#worldTerminalLock')?.hidden,play:(()=>{let b=document.querySelector('#worldStartBtn'),p=getComputedStyle(b,'::before'),r=b.getBoundingClientRect();return {rect:[r.x,r.y,r.width,r.height],before:{content:p.content,display:p.display,background:p.backgroundImage,opacity:p.opacity,visibility:p.visibility,zIndex:p.zIndex},style:getComputedStyle(b).cssText}})(),domReadyMs:Math.round(performance.getEntriesByType('navigation')[0]?.domContentLoadedEventEnd||0),loadMs:Math.round(performance.getEntriesByType('navigation')[0]?.loadEventEnd||0),slowest:performance.getEntriesByType('resource').sort((a,b)=>b.responseEnd-a.responseEnd).slice(0,8).map(x=>({name:x.name.split('/').pop(),end:Math.round(x.responseEnd),duration:Math.round(x.duration)}))})`,
     returnByValue: true
   });
   console.log(JSON.stringify({ state: result.result.value, pending: [...requests.values()], issues }, null, 2));
@@ -107,4 +107,14 @@ let server;
     fs.writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
   }
   socket.close();
-})().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { browser.kill(); server?.close(); });
+})().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
+  browser.kill();
+  server?.close();
+  await sleep(700);
+  const tempRoot = fs.realpathSync(os.tmpdir());
+  const generatedProfile = path.resolve(profile);
+  if (path.dirname(generatedProfile) === tempRoot && path.basename(generatedProfile).startsWith('slime-live-qa-')) {
+    try { fs.rmSync(generatedProfile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); }
+    catch (error) { console.warn(`Could not remove QA profile: ${error.message}`); }
+  }
+});

@@ -91,14 +91,18 @@ html body #homeScreen .synthesizer .conveyor-dispensers{
 }
 html body #homeScreen .synthesizer .conveyor-dispenser{
   --emblem-width:38%!important;
+  --emitter-x:50%;
 }
 html body #homeScreen .synthesizer .conveyor-pipe-socket{
   top:10%!important;
 }
-/* The three painted sockets in synthesis-triple-v2.png are not exactly on the grid centres. */
-html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(1) .conveyor-pipe-socket{left:47%!important}
-html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(2) .conveyor-pipe-socket{left:49.8%!important}
-html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(3) .conveyor-pipe-socket{left:52%!important}
+/* Share the painted socket's axis with its glow and ray. */
+html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(1){--emitter-x:47%}
+html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(2){--emitter-x:49.8%}
+html body #homeScreen .synthesizer .conveyor-dispenser:nth-child(3){--emitter-x:52%}
+html body #homeScreen .synthesizer .conveyor-pipe-socket,
+html body #homeScreen .synthesizer .synthesis-emitter-glow,
+html body #homeScreen .synthesizer .synthesis-beam{left:var(--emitter-x)!important}
 html body #homeScreen .synthesizer .synthesis-machine .food-choices{
   left:5.8%!important;
   right:5.8%!important;
@@ -120,13 +124,13 @@ html body #homeScreen #conveyorChoiceCount{
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
-  gap:4px!important;
+  gap:3px!important;
   z-index:61!important;
-  top:-29px!important;
+  top:-31px!important;
   width:60%!important;
   max-width:none!important;
   min-width:0!important;
-  height:27px!important;
+  height:26px!important;
   padding:0!important;
   border:0!important;
   border-radius:0!important;
@@ -137,43 +141,45 @@ html body #homeScreen #conveyorChoiceCount{
   line-height:1!important;
   font-weight:1000!important;
   letter-spacing:.03em!important;
-  text-shadow:0 2px 2px #031b2d,0 0 4px #1e5c68!important;
+  text-shadow:0 1px 2px #031b2d!important;
 }
 html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{
-  margin-right:4px;
-  color:#e9f7ff;
-  font-size:11px;
-  letter-spacing:.04em;
+  margin-right:6px;
+  color:#d8eef8;
+  font-size:10px;
+  letter-spacing:.06em;
 }
 html body #homeScreen #conveyorChoiceCount .conveyor-count-current,
 html body #homeScreen #conveyorChoiceCount .conveyor-count-target{
   display:grid;
   place-items:center;
-  width:27px;
+  box-sizing:border-box;
+  width:26px;
   height:23px;
-  border-radius:6px;
-  font-size:18px;
+  border:1px solid #91bccb;
+  border-radius:5px;
+  font-size:17px;
   line-height:1;
   text-shadow:none;
 }
 html body #homeScreen #conveyorChoiceCount .conveyor-count-current{
-  background:#ffe79b;
-  color:#17384a;
-  box-shadow:inset 0 1px 0 #fff9d9,0 1px 2px #061b26;
+  background:linear-gradient(#204a5c,#113342);
+  color:#ffe28a;
+  box-shadow:inset 0 1px 0 #5c8a9b,0 1px 2px #061b26;
 }
 html body #homeScreen #conveyorChoiceCount .conveyor-count-target{
-  background:#315a6c;
-  color:#f3fbff;
-  box-shadow:inset 0 1px 0 #7595a4,0 1px 2px #061b26;
+  background:linear-gradient(#173b4d,#0c2938);
+  color:#e5f5fa;
+  box-shadow:inset 0 1px 0 #4f7e8f,0 1px 2px #061b26;
 }
 html body #homeScreen #conveyorChoiceCount .conveyor-count-divider{
-  color:#a8cfdd;
-  font-size:16px;
+  color:#88b6c7;
+  font-size:15px;
   text-shadow:none;
 }
 html body #homeScreen #conveyorChoiceCount.is-full .conveyor-count-current{
-  background:#baf4a2;
-  box-shadow:inset 0 1px 0 #efffe8,0 1px 2px #061b26;
+  color:#b8f7a7;
+  box-shadow:inset 0 1px 0 #5c8a9b,0 1px 2px #061b26;
 }
 
 body[data-screen="home"] #homeScreen>.play-setup-card{
@@ -261,10 +267,10 @@ body[data-screen="home"] #homeScreen>.play-setup-card{
   z-index:0;
   box-sizing:border-box;
   border:0 solid transparent;
-  border-inline-width:42px;
-  border-image-source:url("assets/ui/world-terminal/play-insert-v4.webp");
+  border-inline-width:32px;
+  border-image-source:url("assets/ui/world-terminal/play-insert-v5.webp");
   border-image-slice:0 110 fill;
-  border-image-width:0 42px;
+  border-image-width:0 32px;
   border-image-repeat:stretch;
   background:none;
   pointer-events:none;
@@ -339,10 +345,10 @@ html body #homeScreen .synthesizer .conveyor-food-pick[data-food-id="nanoChip"] 
   .world-terminal-screen{top:2%;height:58%}
   .world-terminal-heading{font-size:clamp(9px,3.6vw,13px)}
   .terminal-launch{font-size:clamp(14px,5.2vw,18px)}
-  html body #homeScreen #conveyorChoiceCount{gap:3px!important}
-  html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{font-size:10px;margin-right:2px}
+  html body #homeScreen #conveyorChoiceCount{gap:2px!important}
+  html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{font-size:9px;margin-right:3px}
   html body #homeScreen #conveyorChoiceCount .conveyor-count-current,
-  html body #homeScreen #conveyorChoiceCount .conveyor-count-target{width:24px;height:22px;font-size:17px}
+  html body #homeScreen #conveyorChoiceCount .conveyor-count-target{width:23px;height:21px;font-size:16px}
   html body[data-screen="home"] .world-summary .research-wallet{flex-basis:98px!important;width:98px!important}
   html body[data-screen="home"] .world-summary .currency.coin-wallet{min-width:68px!important;padding-inline:5px!important}
   html body[data-screen="home"] .world-summary .header-rewards-btn,
