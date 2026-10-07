@@ -23,16 +23,16 @@
   <link rel="stylesheet" href="home-layout.css?v=182" />
   <link rel="stylesheet" href="home-mode-fix.css?v=128" />
   <link rel="stylesheet" href="home-visual-refresh.css?v=52" />
-  <link rel="stylesheet" href="drop-visual-refresh.css?v=5" />
-  <link rel="stylesheet" href="lab-redesign.css?v=45" />
+  <link rel="stylesheet" href="drop-visual-refresh.css?v=6" />
+  <link rel="stylesheet" href="lab-redesign.css?v=46" />
   <link rel="stylesheet" href="phantom.css?v=3" />
   <link rel="stylesheet" href="glitch.css?v=7" />
   <link rel="stylesheet" href="form-index.css?v=3" />
   <link rel="stylesheet" href="synthesis.css?v=14" />
-  <link rel="stylesheet" href="playable-polish.css?v=7" />
+  <link rel="stylesheet" href="playable-polish.css?v=8" />
   <link rel="stylesheet" href="world-picker-v2.css?v=29" />
   <link rel="stylesheet" href="home-synth-terminal.css?v=21" />
-  <link rel="stylesheet" href="experience.css?v=1" />
+  <link rel="stylesheet" href="experience.css?v=2" />
   <link rel="stylesheet" href="tutorial.css?v=5" />
   <link rel="stylesheet" href="mutation-progression.css?v=3" />
 </head>
@@ -52,12 +52,12 @@
           <img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true">
         </button>
         <div class="currency coin-wallet player-level-wallet" aria-label="Уровень 1, опыт 0 из 100">
-          <img class="currency-icon" src="assets/ui/player-level-star-v1.webp" alt="" aria-hidden="true">
-          <div class="player-level-content"><span>УРОВЕНЬ <b id="coinsLabel">1</b></span><i class="player-level-track"><i id="playerLevelProgress"></i></i><small id="playerLevelExperience">0/100 XP</small></div>
+          <span class="player-level-badge"><img class="currency-icon" src="assets/ui/player-level-star-v2.webp" alt="" aria-hidden="true"><b id="coinsLabel">1</b></span>
+          <div class="player-level-content"><span>УРОВЕНЬ</span><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience">0/100 XP</small></div></div>
         </div>
         <div class="research-wallet" aria-label="Колбы исследования: 0">
           <span class="research-wallet-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask.webp?v=1" alt="">
+            <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="">
             <b id="researchUnitsLabel">0</b>
           </span>
         </div>
@@ -246,17 +246,17 @@
               <div class="run-route-labels" aria-hidden="true">
                 <span>0 М</span>
                 <b id="depthLabel">0 М</b>
-                <strong id="routeTargetLabel">120 М</strong>
+                <strong id="routeTargetLabel">750 М</strong>
               </div>
               <div class="run-route-track">
                 <span id="routeProgress" class="run-route-progress"></span>
                 <span id="routeBestMarker" class="run-route-best" aria-hidden="true"><small id="routeBestLabel">РЕКОРД 0 М</small><i></i></span>
                 <span id="routeSlimeMarker" class="run-route-slime" aria-hidden="true"><img src="assets/ui/slime.webp" alt=""></span>
-                <span class="run-route-portal" aria-hidden="true"></span>
+                <span class="run-route-portal" aria-hidden="true"><img id="routePortalIcon" src="assets/ui/portals/world-1.webp" alt=""></span>
               </div>
             </div>
             <div id="runResearchHud" class="run-research-hud" aria-label="Колбы за забег: 0">
-              <img src="assets/ui/research-flask.webp?v=1" alt="" aria-hidden="true">
+              <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="" aria-hidden="true">
               <span><small>КОЛБЫ</small><b id="runResearchScore">0</b></span>
               <i id="runResearchGain" aria-hidden="true">+1</i>
             </div>
@@ -313,10 +313,10 @@
           </div>
         </div>
         <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать 30 уровень и открыть игровой прогресс" title="Выдать 30 уровень и открыть игровой прогресс">
-          <img src="assets/ui/player-level-star-v1.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Уровни и прогресс</small></span><i aria-hidden="true">+</i>
+          <img src="assets/ui/player-level-star-v2.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Уровни и прогресс</small></span><i aria-hidden="true">+</i>
         </button>
         <button id="adminInfiniteFlasksBtn" class="admin-infinite-flasks" type="button" aria-pressed="false" aria-label="Включить бесконечные колбы исследования">
-          <img src="assets/ui/research-flask.webp?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
+          <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
         </button>
         <button id="adminInfiniteUltimateBtn" class="admin-infinite-flasks admin-infinite-ultimate" type="button" aria-pressed="false" aria-label="Включить бесконечную суперспособность">
           <img src="assets/ui/recipe-categories/emblem-v2-electric.webp" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНАЯ УЛЬТА</b><small id="adminInfiniteUltimateState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
@@ -364,7 +364,7 @@
   <button id="tutorialAdminBtn" class="tutorial-admin-access" type="button" aria-label="Админ-меню" hidden><img src="assets/ui/game-menu-gear.webp?v=1" alt=""></button>
   <button id="tutorialPauseBtn" class="tutorial-pause-access" type="button" aria-label="Пауза" hidden><img src="assets/ui/pause-button-v2.webp?v=1" alt=""></button>
   <div id="tutorialGift" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Подарок: 10 колб" hidden>
-    <div class="tutorial-dialog-card"><img src="assets/ui/research-flask.webp" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 КОЛБ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
+    <div class="tutorial-dialog-card"><img src="assets/ui/research-flask-blue-v1.webp" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 КОЛБ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
   </div>
   <div id="tutorialControls" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Управление в шахте" hidden>
     <div class="tutorial-dialog-card tutorial-controls-card"><strong>УПРАВЛЕНИЕ</strong><p id="tutorialControlsText"></p><div class="tutorial-goals"><span><img src="assets/collectibles/flasks/world-1-small.webp" alt="">СОБИРАЙ КОЛБЫ</span><span><img src="assets/Мир 1/Колючий враг-v1.png" alt="">БЕРЕГИСЬ КОЛЮЧЕК</span></div><button id="tutorialControlsCloseBtn" type="button" aria-label="Закрыть подсказку" hidden>✕</button></div>
@@ -388,7 +388,7 @@
       <div class="result-summary" aria-label="Результат забега">
         <div class="result-stat result-research-stat">
           <span id="resultResearchFlask" class="result-research-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask.webp?v=1" alt="">
+            <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="">
             <b id="resultResearchUnits">0</b>
           </span>
           <span class="result-research-copy">
@@ -399,7 +399,7 @@
           <span id="resultResearchStream" class="result-research-stream" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
         </div>
         <div class="result-stat result-coins-stat">
-          <img src="assets/ui/player-level-star-v1.webp" alt="" aria-hidden="true">
+          <img src="assets/ui/player-level-star-v2.webp" alt="" aria-hidden="true">
           <span><small>ОПЫТ ЗА ЗАБЕГ</small><b id="resultCoins">+0 XP</b><small id="resultExperienceBonus"></small></span>
         </div>
       </div>
@@ -480,6 +480,6 @@
   <script src="effects-lab/workbench-effects.js?v=77"></script>
   <script src="effects-lab/block-effects-workbench.js?v=19"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=502"></script>
+  <script src="game.js?v=503"></script>
 </body>
 </html>

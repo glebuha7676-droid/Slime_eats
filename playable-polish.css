@@ -110,7 +110,7 @@ html body #homeScreen .world-start-v2.ready{filter:drop-shadow(0 3px 8px #eaa93a
   50%{transform:scale(1.08)}
 }
 .result-research-bonus{display:flex;align-items:center;gap:3px;color:#23503a!important;font-size:10px!important;font-weight:900;line-height:1.1;white-space:nowrap}
-.result-research-bonus:not(:empty)::after{content:"";display:inline-block;width:12px;height:12px;flex:0 0 12px;background:url("assets/ui/research-flask.webp?v=1") center/contain no-repeat}
+.result-research-bonus:not(:empty)::after{content:"";display:inline-block;width:12px;height:12px;flex:0 0 12px;background:url("assets/ui/research-flask-blue-v1.webp?v=1") center/contain no-repeat}
 @media(max-width:390px){
   html body[data-screen="home"] .world-summary .research-wallet{
     flex-basis:101px!important;width:101px!important;height:37px!important;

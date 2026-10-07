@@ -160,7 +160,7 @@
     runResearchHud: $('#runResearchHud'), runResearchScore: $('#runResearchScore'), runResearchGain: $('#runResearchGain'),
     runExperienceHud: $('#runExperienceHud'), runExperienceScore: $('#runExperienceScore'), runExperienceGain: $('#runExperienceGain'),
     routeProgress: $('#routeProgress'), routeBestMarker: $('#routeBestMarker'), routeBestLabel: $('#routeBestLabel'),
-    routeSlimeMarker: $('#routeSlimeMarker'), routeTargetLabel: $('#routeTargetLabel'),
+    routeSlimeMarker: $('#routeSlimeMarker'), routeTargetLabel: $('#routeTargetLabel'), routePortalIcon: $('#routePortalIcon'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'),
     glitchUltimateOverlay: $('#glitchUltimateOverlay'), glitchChoiceAnnouncement: $('#glitchChoiceAnnouncement'),
     touchJoystick: $('#touchJoystick'),
@@ -817,7 +817,7 @@
     for (let index = 0; index < 5; index += 1) {
       const flask = document.createElement('img');
       flask.className = 'tutorial-flask-flight';
-      flask.src = versionedAsset('assets/ui/research-flask.webp');
+      flask.src = versionedAsset('assets/ui/research-flask-blue-v1.webp');
       flask.alt = '';
       flask.style.left = `${source?.left || innerWidth / 2}px`;
       flask.style.top = `${source?.top || innerHeight / 2}px`;
@@ -1550,13 +1550,14 @@
     const levelCost = level < EXPERIENCE.MAX_LEVEL ? EXPERIENCE.nextLevelCost(level) : 0;
     els.coinsLabel.textContent = String(level);
     if (els.playerLevelProgress) els.playerLevelProgress.style.width = `${levelCost ? Math.min(100, levelProgress / levelCost * 100) : 100}%`;
-    if (els.playerLevelExperience) els.playerLevelExperience.textContent = levelCost ? `${levelProgress}/${levelCost} XP` : 'МАКС. УРОВЕНЬ';
+    if (els.playerLevelExperience) els.playerLevelExperience.textContent = levelCost ? `${levelProgress}/${levelCost} XP` : 'МАКСИМУМ';
     els.coinsLabel.closest('.player-level-wallet')?.setAttribute('aria-label', levelCost
       ? `Уровень ${level}, опыт ${levelProgress} из ${levelCost}` : `Максимальный уровень ${level}`);
-    const exactResearchCount = Boolean(homeRewardFlight) && researchUnits < 10_000_000 && !adminInfiniteResearch;
+    const exactResearchCount = Boolean(homeRewardFlight) && researchUnits < 10000 && !adminInfiniteResearch;
     if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = adminInfiniteResearch ? '∞'
       : exactResearchCount ? String(researchUnits) : formatCompactNumber(researchUnits);
     const researchWallet = els.researchUnitsLabel?.closest('.research-wallet');
+    if (researchWallet) researchWallet.dataset.balanceLength = String(els.researchUnitsLabel.textContent.length);
     researchWallet?.classList.toggle('is-receiving', exactResearchCount);
     if (researchWallet) researchWallet.dataset.rewardDigits = exactResearchCount ? String(researchUnits).length : '';
     researchWallet?.setAttribute('aria-label', adminInfiniteResearch ? 'Исследование: бесконечные колбы' : `Колбы исследования: ${researchUnits}`);
@@ -1618,7 +1619,7 @@
         const scatterY = startY - rand(42, 96);
         const image = document.createElement('img');
         image.className = `home-reward-particle home-reward-${kind}`;
-        image.src = kind === 'experience' ? 'assets/ui/player-level-star-v1.webp' : 'assets/ui/research-flask.webp?v=1';
+        image.src = kind === 'experience' ? 'assets/ui/player-level-star-v2.webp' : 'assets/ui/research-flask-blue-v1.webp?v=1';
         image.alt = '';
         image.style.left = `${startX}px`;
         image.style.top = `${startY}px`;
@@ -7830,6 +7831,11 @@
     els.routeProgress.style.width = `${routePosition}%`;
     els.routeSlimeMarker.style.left = `${routePosition}%`;
     els.routeTargetLabel.textContent = run.endless ? `∞ · КРУГ ${run.endlessLap}` : `${targetDepth} М`;
+    if (els.routePortalIcon && els.routePortalIcon.dataset.world !== String(run.worldId)) {
+      els.routePortalIcon.dataset.world = String(run.worldId);
+      els.routePortalIcon.src = versionedAsset(`assets/ui/portals/world-${run.worldId}.webp`);
+    }
+    els.routeTargetLabel.closest('.run-route')?.setAttribute('aria-label', `Пройдено ${currentDepth} метров, портал на ${targetDepth} метрах`);
     els.routeBestLabel.textContent = showPreviousBest ? `ПРОШЛЫЙ ${previousBest} М` : '';
     els.routeBestMarker.style.left = `${bestPosition}%`;
     els.routeBestMarker.classList.toggle('hidden', !showPreviousBest);
@@ -10209,12 +10215,10 @@
     if (firstWorldSpikeEnemy) {
       const hover = Math.sin(timestamp / 430 + block.id * .7) * 1.35;
       ctx.save();
-      ctx.globalAlpha = .22;
-      ctx.fillStyle = '#101824';
-      ctx.beginPath();
-      ctx.ellipse(block.x + block.w / 2, sy + block.h - 3, block.w * .3, 2.4, 0, 0, Math.PI * 2);
-      ctx.fill();
       ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+      ctx.filter = 'none';
       ctx.drawImage(sprite, drawX, drawY - hover - 1.5, width, height);
       ctx.restore();
       return true;
@@ -10285,7 +10289,11 @@
 
   function drawBlockTransitions(visibleBlocks) {
     const liveBlocks = new Map();
-    for (const block of visibleBlocks) liveBlocks.set(`${block.row}:${block.col}`, block);
+    for (const block of visibleBlocks) {
+      // Floating round enemies are not stone tiles and must not acquire square seams.
+      if (block.hazard && run.worldId === 1) continue;
+      liveBlocks.set(`${block.row}:${block.col}`, block);
+    }
 
     ctx.save();
     // A single neutral grid line separates tiles. Unlike the old colour blends,
@@ -13166,7 +13174,7 @@
     const visibleUnlockedCount = unlocked.size;
     const futureMutations = Array.from({ length: Math.max(0, collectionCapacity - allMutations().length) }, (_, index) => ({ id: `future-${index + 1}`, future: true }));
 
-    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
 
     const collection = [...allMutations(), ...futureMutations].map(mutation => {
       if (mutation.future) return `<button class="mutation-collection-slot future locked" type="button" disabled aria-label="Пустое место для будущей мутации"></button>`;
@@ -13189,7 +13197,7 @@
       const points = reactorArcPaths[index % reactorArcPaths.length];
       const glowId = `reactor-v2-glow-${index}`;
       const coreId = `reactor-v2-core-${index}`;
-      return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#38e77e" stop-opacity="0"></stop><stop offset=".28" stop-color="#21ee72" stop-opacity=".62"></stop><stop offset=".62" stop-color="#13dd63"></stop><stop offset="1" stop-color="#66ff8d"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efffd3" stop-opacity="0"></stop><stop offset=".34" stop-color="#efffd3" stop-opacity=".72"></stop><stop offset="1" stop-color="#f8ffe7"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
+      return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#08bce9" stop-opacity="0"></stop><stop offset=".28" stop-color="#15cdf4" stop-opacity=".62"></stop><stop offset=".62" stop-color="#08b5e8"></stop><stop offset="1" stop-color="#88eaff"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dafaff" stop-opacity="0"></stop><stop offset=".34" stop-color="#dafaff" stop-opacity=".72"></stop><stop offset="1" stop-color="#f0fdff"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
     }).join('');
 
     const selectedEmblemFx = selectedAvailable ? mutationElementFxMarkup(selectedMutation.id, 'mutation-info-fx') : '';
@@ -13224,7 +13232,7 @@
             <span class="mutation-synth-progress-fill" style="width:${fillPercent}%"></span>
           </div>
           <div class="mutation-synth-controls">
-            <span class="mutation-synth-balance"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><span><small>ОСТАЛОСЬ</small><b id="mutationRemaining">${allUnlocked ? 0 : remaining}</b></span></span>
+            <span class="mutation-synth-balance"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt=""><span><small>ОСТАЛОСЬ</small><b id="mutationRemaining">${allUnlocked ? 0 : remaining}</b></span></span>
             <button id="mutationSynthesizeBtn" class="mutation-synthesize-btn ${readyToReveal ? 'ready' : ''}" type="button" ${readyToReveal ? '' : 'disabled'}><span>СИНТЕЗ</span></button>
           </div>
         </section>
@@ -13239,7 +13247,7 @@
           </div>
           <div class="mutation-level-action">
             ${selectedLevel > 0 && selectedLevel < 3
-              ? `<button id="mutationUpgradeBtn" class="mutation-upgrade-btn ${save.researchUnits < upgradeCost && !adminInfiniteResearch ? 'needs-flasks' : ''}" type="button" ${mutationUpgrading ? 'disabled' : ''} aria-label="Открыть стадию ${nextLevelName} за ${upgradeCost} колб"><span>ОТКРЫТЬ ${nextLevelName}</span><span class="mutation-upgrade-price"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt="">${upgradeCost}</span></button>`
+              ? `<button id="mutationUpgradeBtn" class="mutation-upgrade-btn ${save.researchUnits < upgradeCost && !adminInfiniteResearch ? 'needs-flasks' : ''}" type="button" ${mutationUpgrading ? 'disabled' : ''} aria-label="Открыть стадию ${nextLevelName} за ${upgradeCost} колб"><span>ОТКРЫТЬ ${nextLevelName}</span><span class="mutation-upgrade-price"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt="">${upgradeCost}</span></button>`
               : `<span class="mutation-level-note">${selectedLevel === 3 ? 'III · 3 ЕДЫ → ФОРМА' : 'ОТКРОЙ МУТАЦИЮ'}</span>`}
           </div>
           <button id="mutationChooseBtn" class="mutation-choose-btn ${laboratoryReplaceMode ? 'is-cancel' : ''}" type="button" aria-pressed="${laboratoryReplaceMode}" ${!selectedAvailable || selectedIsActive ? 'disabled' : ''}><span>${!selectedAvailable ? 'ЗАКРЫТО' : selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</span></button>
@@ -13310,7 +13318,7 @@
     const flights = Array.from({ length: 5 }, (_, index) => {
       const flask = document.createElement('img');
       flask.className = 'mutation-upgrade-flight';
-      flask.src = versionedAsset('assets/ui/research-flask.webp');
+      flask.src = versionedAsset('assets/ui/research-flask-blue-v1.webp');
       flask.alt = '';
       const startX = (source?.left || destination.left) + (source?.width || 0) / 2 - 15;
       const startY = (source?.top || destination.top) + (source?.height || 0) / 2 - 15;
@@ -13362,7 +13370,7 @@
     mutationAnimating = false;
     $('#mutationPrize')?.remove();
     const researchBalance = adminInfiniteResearch ? '∞' : formatCompactNumber(save.researchUnits);
-    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
+    els.panelTitle.innerHTML = `<span>Лаборатория</span><span class="mutation-panel-balance" aria-label="${adminInfiniteResearch ? 'Бесконечные колбы исследования' : `Колбы исследования: ${save.researchUnits}`}"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt=""><b id="mutationPanelBalance">${researchBalance}</b></span>`;
     if (activeLaboratoryTab === 'conveyor') {
       renderLaboratoryConveyorPanel();
       return;
@@ -13394,13 +13402,13 @@
       const points = reactorArcPaths[index % reactorArcPaths.length];
       const glowId = `reactor-bolt-glow-${index}`;
       const coreId = `reactor-bolt-core-${index}`;
-      return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#38e77e" stop-opacity="0"></stop><stop offset=".28" stop-color="#21ee72" stop-opacity=".62"></stop><stop offset=".62" stop-color="#13dd63"></stop><stop offset="1" stop-color="#66ff8d"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efffd3" stop-opacity="0"></stop><stop offset=".34" stop-color="#efffd3" stop-opacity=".72"></stop><stop offset="1" stop-color="#f8ffe7"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
+      return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#08bce9" stop-opacity="0"></stop><stop offset=".28" stop-color="#15cdf4" stop-opacity=".62"></stop><stop offset=".62" stop-color="#08b5e8"></stop><stop offset="1" stop-color="#88eaff"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dafaff" stop-opacity="0"></stop><stop offset=".34" stop-color="#dafaff" stop-opacity=".72"></stop><stop offset="1" stop-color="#f0fdff"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
     }).join('');
     els.panelContent.innerHTML = `<div class="laboratory-panel">${laboratoryTabsMarkup()}<div class="panel-section mutation-lab-panel">
       <button id="mutationCapsuleBtn" class="mutation-capsule ${allUnlocked ? 'is-complete' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все тестовые мутации открыты' : readyToReveal ? 'Открывается новая мутация' : `Добавить ${nextMutationInvestmentAmount()} колб. Осталось ${remaining}`}">
         <span class="mutation-side-feed" aria-hidden="true">
           <span id="mutationInlet" class="mutation-inlet"><i></i></span>
-          <span class="mutation-feed-count"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b id="mutationRemaining">${allUnlocked || readyToReveal ? '✓' : remaining}</b></span>
+          <span class="mutation-feed-count"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt=""><b id="mutationRemaining">${allUnlocked || readyToReveal ? '✓' : remaining}</b></span>
         </span>
         <span class="mutation-dispenser">
           <span class="mutation-dispenser-mouth">
@@ -13553,7 +13561,7 @@
     const flyingFlask = document.createElement('span');
     flyingFlask.className = 'mutation-invest-flask';
     flyingFlask.setAttribute('aria-hidden', 'true');
-    flyingFlask.innerHTML = `<img src="${versionedAsset('assets/ui/research-flask.webp')}" alt=""><b>+${investedAmount}</b>`;
+    flyingFlask.innerHTML = `<img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt=""><b>+${investedAmount}</b>`;
     const flightLayer = els.panelOverlay.querySelector('.panel-modal') || button;
     const sourceRect = els.panelTitle.querySelector('.mutation-panel-balance')?.getBoundingClientRect();
     const targetRect = $('#mutationInlet')?.getBoundingClientRect();
@@ -13832,7 +13840,7 @@
         if (unlockedByWorld && !save.unlockedSkins.includes(skin.id)) save.unlockedSkins.push(skin.id);
         const unlocked = save.unlockedSkins.includes(skin.id);
         const selected = save.selectedSkin === skin.id;
-        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
+        const price = !unlocked && skin.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(skin.cost)}</b></span>` : '';
         const reward = skin.world ? `<span class="shop-reward ${unlocked ? 'collected' : ''}"><b>${unlocked ? 'ПОЛУЧЕН' : 'НАГРАДА'}</b><i>ШАХТА ${Math.max(1, skin.world - 1)}</i></span>` : '';
         const label = selected ? 'ВЫБРАН' : unlocked ? 'ВЫБРАТЬ' : skin.cost ? 'КУПИТЬ' : 'ЗАКРЫТ';
         return `<div class="skin-card ${selected ? 'selected' : ''}">
@@ -13899,7 +13907,7 @@
       ${TRAILS.map(trail => {
         const unlocked = save.unlockedTrails.includes(trail.id);
         const selected = save.selectedTrail === trail.id;
-        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(trail.cost)}</b></span>` : '';
+        const price = !unlocked && trail.cost ? `<span class="shop-price"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt="" aria-hidden="true"><b>${formatCompactNumber(trail.cost)}</b></span>` : '';
         const previewAsset = trail.id === 'none' ? 'assets/ui/trail-none.webp' : trail.asset;
         return `<div class="trail-card ${selected ? 'selected' : ''}">
           <div class="trail-preview"><img src="${versionedAsset(previewAsset)}" alt="" aria-hidden="true" loading="eager" decoding="async"></div>
