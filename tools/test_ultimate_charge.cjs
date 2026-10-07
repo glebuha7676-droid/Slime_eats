@@ -13,6 +13,7 @@ const context = {
   performance: { now: () => 1000 },
   blockIsGolden: () => false,
   spreadFireFromBrokenBlock: () => {},
+  awardRunExperience: () => {},
   registerBrokenBlock: () => {},
   createDebris: () => {},
   elementalLevel: () => 0,

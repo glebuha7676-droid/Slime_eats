@@ -30,6 +30,7 @@ const context = {
   blockCenter: block => ({ x: block.x + block.w / 2, y: block.y + block.h / 2 }),
   elementalLevel: () => level,
   elementalDamageable: block => Boolean(block && !block.dead && !block.unbreakable && !block.hazard),
+  awardRunExperience: () => {},
   destroyBlock: block => { block.dead = true; block.hp = 0; },
   damageBlockByElement: (block, amount) => { block.hp -= amount; if (block.hp <= 0) block.dead = true; }
 };

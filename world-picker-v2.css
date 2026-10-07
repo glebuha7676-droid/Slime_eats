@@ -135,5 +135,4 @@ html body #homeScreen>.play-setup-card::before{display:none!important;content:no
 @media(prefers-reduced-motion:reduce){
   .terminal-launch.ready,.world-terminal-endless.selected img,.world-terminal-screen.is-transitioning .world-terminal-preview{animation:none}
 }
-.trophy-wallet #runCoinsGain{display:none!important}
 #resultOverlay .result-multiplier,#resultOverlay .result-multiplier-btn,.game-complete-modal .game-complete-endless{display:none!important}

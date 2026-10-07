@@ -101,7 +101,7 @@
 
   const SKINS = [
     { id: 'classic', name: 'Классический', className: 'skin-classic', icon: '🟢', condition: 'Доступен сразу', colors: ['#e9ff9c', '#67d348', '#2fa345'] },
-    { id: 'cat', name: 'Котик', className: 'skin-cat', icon: '🐱', world: 2, condition: 'Получи кубок в первом мире', colors: ['#ffe0e8', '#ff92ad', '#dc557b'] },
+    { id: 'cat', name: 'Котик', className: 'skin-cat', icon: '🐱', world: 2, condition: 'Пройди первую шахту', colors: ['#ffe0e8', '#ff92ad', '#dc557b'] },
     { id: 'water', name: 'Капля воды', className: 'skin-water', icon: '💧', world: 3, condition: 'Открой шахту 2', colors: ['#e3fbff', '#50c9f2', '#1688c6'] },
     { id: 'honey', name: 'Медовый', className: 'skin-honey', icon: '🍯', cost: 15, condition: 'Купить за 15 колб исследования', colors: ['#fff0a6', '#f4a629', '#c96b15'] },
     { id: 'dumpling', name: 'Дамплинг', className: 'skin-dumpling', icon: '🥟', world: 4, condition: 'Открой шахту 3', colors: ['#fff9e8', '#ead9b7', '#ba8d62'] },
@@ -117,7 +117,8 @@
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 27,
+    schemaVersion: 28,
+    playerExperience: 0,
     researchUnits: 0,
     researchProgress: 0,
     mutationProgress: 0,
@@ -133,7 +134,6 @@
     legacyStarterAccess: false,
     world: 1,
     worldBest: { 1: 0, 2: 0, 3: 0, 4: 0 },
-    worldTrophies: { 1: 0, 2: 0, 3: 0, 4: 0 },
     unlockedWorlds: [1],
     worldLastRun: { 1: 0, 2: 0, 3: 0, 4: 0 },
     lastRunDepth: {},

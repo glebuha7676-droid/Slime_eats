@@ -3,45 +3,51 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'game.js'), 'utf8');
-const logic = source.slice(source.indexOf('  function totalTrophies()'), source.indexOf('  function updatePersistentUI()'));
+const gameSource = fs.readFileSync(path.join(__dirname, '..', 'game.js'), 'utf8');
+const logic = gameSource.slice(gameSource.indexOf('  function renderWalletBalances()'), gameSource.indexOf('  function updatePersistentUI()'));
 assert.ok(logic.includes('function playHomeRewardFlight'));
+const experienceContext = { window: {} };
+vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'js/config/experience.js'), 'utf8'), experienceContext);
 
 function wallet() {
   return { dataset: {}, classList: { toggle() {} }, setAttribute() {} };
 }
 const researchWallet = wallet();
-const trophyWallet = wallet();
+const levelWallet = wallet();
 const context = {
-  save: { researchUnits: 125, worldTrophies: { 1: 2 } },
+  save: { researchUnits: 125, playerExperience: 270 },
+  EXPERIENCE: experienceContext.window.SlimeExperience,
   adminInfiniteResearch: false,
   homeRewardFlight: null,
   clearTimeout() {},
   document: { getElementById: () => ({ replaceChildren() {} }) },
   formatCompactNumber: value => String(value),
   els: {
-    coinsLabel: { closest: () => trophyWallet },
+    coinsLabel: { closest: () => levelWallet },
+    playerLevelProgress: { style: {} },
+    playerLevelExperience: {},
     researchUnitsLabel: { closest: () => researchWallet },
   },
 };
 vm.createContext(context);
 vm.runInContext(`${logic}\nthis.prepareHomeRewardFlight = prepareHomeRewardFlight; this.renderWalletBalances = renderWalletBalances; this.settleHomeRewardFlight = settleHomeRewardFlight;`, context);
 
-context.prepareHomeRewardFlight({ researchUnitsBefore: 100, researchUnitsAfter: 125, completed: true, endless: false });
+context.prepareHomeRewardFlight({ researchUnitsBefore: 100, researchUnitsAfter: 125, experienceEarned: 30 });
 context.renderWalletBalances();
 assert.equal(context.els.researchUnitsLabel.textContent, '100', 'home counter waits for arriving flasks');
-assert.equal(context.els.coinsLabel.textContent, '1', 'home counter waits for arriving trophy');
-assert.equal(context.save.researchUnits, 125, 'reward remains saved during animation');
-assert.equal(context.save.worldTrophies[1], 2, 'trophy remains saved during animation');
+assert.equal(context.els.coinsLabel.textContent, '2', 'level waits for arriving experience');
+assert.equal(context.els.playerLevelExperience.textContent, '140/150 XP');
+assert.equal(context.save.playerExperience, 270, 'experience is already saved during animation');
 
 context.homeRewardFlight.flaskShown = 15;
-context.homeRewardFlight.trophyShown = 1;
+context.homeRewardFlight.experienceShown = 15;
 context.renderWalletBalances();
-assert.equal(context.els.researchUnitsLabel.textContent, '115', 'arrivals advance the visible balance');
-assert.equal(context.els.coinsLabel.textContent, '2', 'trophy arrival advances its balance');
+assert.equal(context.els.researchUnitsLabel.textContent, '115');
+assert.equal(context.els.coinsLabel.textContent, '3', 'level increments when experience arrives');
+assert.equal(context.els.playerLevelExperience.textContent, '5/200 XP');
 
 context.settleHomeRewardFlight();
-assert.equal(context.els.researchUnitsLabel.textContent, '125', 'settling restores the saved final balance');
+assert.equal(context.els.researchUnitsLabel.textContent, '125');
+assert.equal(context.els.playerLevelExperience.textContent, '20/200 XP');
 assert.equal(context.homeRewardFlight, null);
-
-console.log('Home reward flight: saved rewards, staged counters, and final settlement passed.');
+console.log('Home reward flight: staged flasks, experience and level-up passed.');

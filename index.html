@@ -18,6 +18,7 @@
   <link rel="preload" as="image" href="assets/ui/slime/slime-cheeks-reference-v1.webp?v=1" />
   <link rel="preload" as="image" href="assets/ui/slime/slime-eye-expressions-v1.webp?v=1" />
   <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.webp?v=1" />
+  <link rel="preload" as="image" href="assets/ui/world-terminal/play-insert-v4.webp" fetchpriority="high" />
   <link rel="stylesheet" href="styles.css?v=89" />
   <link rel="stylesheet" href="home-layout.css?v=182" />
   <link rel="stylesheet" href="home-mode-fix.css?v=128" />
@@ -29,15 +30,16 @@
   <link rel="stylesheet" href="form-index.css?v=3" />
   <link rel="stylesheet" href="synthesis.css?v=14" />
   <link rel="stylesheet" href="playable-polish.css?v=7" />
-  <link rel="stylesheet" href="world-picker-v2.css?v=28" />
-  <link rel="stylesheet" href="home-synth-terminal.css?v=18" />
+  <link rel="stylesheet" href="world-picker-v2.css?v=29" />
+  <link rel="stylesheet" href="home-synth-terminal.css?v=20" />
+  <link rel="stylesheet" href="experience.css?v=1" />
   <link rel="stylesheet" href="tutorial.css?v=5" />
   <link rel="stylesheet" href="mutation-progression.css?v=3" />
 </head>
 <body>
   <div id="phoneViewport" class="phone-viewport">
   <div id="app" class="app">
-    <header class="topbar world-summary" aria-label="Шахта, исследование и кубки">
+    <header class="topbar world-summary" aria-label="Уровень и колбы исследования">
       <div class="world-summary-head">
         <div class="world-identity">
           <span class="world-emblem" aria-hidden="true"><img id="worldIcon" src="assets/ui/world-icons/world-1.webp" alt=""></span>
@@ -49,15 +51,15 @@
         <button id="adminMenuBtn" class="header-admin-btn" type="button" aria-label="Открыть админ-меню" aria-controls="adminToolsOverlay" aria-expanded="false">
           <img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true">
         </button>
+        <div class="currency coin-wallet player-level-wallet" aria-label="Уровень 1, опыт 0 из 100">
+          <img class="currency-icon" src="assets/ui/player-level-star-v1.webp" alt="" aria-hidden="true">
+          <div class="player-level-content"><span>УРОВЕНЬ <b id="coinsLabel">1</b></span><i class="player-level-track"><i id="playerLevelProgress"></i></i><small id="playerLevelExperience">0/100 XP</small></div>
+        </div>
         <div class="research-wallet" aria-label="Колбы исследования: 0">
           <span class="research-wallet-flask" aria-hidden="true">
             <img src="assets/ui/research-flask.webp?v=1" alt="">
             <b id="researchUnitsLabel">0</b>
           </span>
-        </div>
-        <div class="currency coin-wallet trophy-wallet" aria-label="Кубки за пройденные шахты">
-          <img class="currency-icon" src="assets/ui/world-picker-v2/trophy.webp" alt="" aria-hidden="true">
-          <div class="currency-values"><b id="coinsLabel">0</b><small id="runCoinsGain" aria-label="Кубки за забег">+0</small></div>
         </div>
         <button class="header-rewards-btn" data-panel="rewards" type="button" aria-label="Открыть награды">
           <img src="assets/ui/gift.webp" alt="" aria-hidden="true">
@@ -141,7 +143,7 @@
                 <img id="worldTerminalPreview" class="world-terminal-preview" src="assets/ui/world-terminal/mine-green-depths-v4.webp" alt="" aria-hidden="true">
                 <div class="world-terminal-screen-shade" aria-hidden="true"></div>
                 <div class="world-terminal-title"><small id="worldTerminalNumber">ШАХТА 1</small><b id="worldTerminalName">ЗЕЛЁНЫЕ ГЛУБИНЫ</b></div>
-                <div id="worldTerminalLock" class="world-terminal-lock" hidden><img src="assets/ui/level-lock.webp" alt="" aria-hidden="true"><strong>МИР ЗАКРЫТ</strong><span>НУЖНО <img src="assets/ui/world-picker-v2/trophy.webp" alt="" aria-hidden="true"><b id="worldTerminalTrophies">0/10</b></span></div>
+                <div id="worldTerminalLock" class="world-terminal-lock" hidden><img src="assets/ui/level-lock.webp" alt="" aria-hidden="true"><strong>МИР ЗАКРЫТ</strong><span>НУЖЕН УРОВЕНЬ <b id="worldTerminalTrophies">10</b></span></div>
                 <div id="worldTerminalStats" class="world-terminal-stats" hidden><span><small>ЛУЧШИЙ СЧЁТ</small><b id="terminalBestScore">0</b></span><span><small>МАКС. ГЛУБИНА</small><b id="terminalBestDepth">0 М</b></span><span><small>КРУГОВ</small><b id="terminalBestLaps">0</b></span><span><small>ЗАБЕГОВ</small><b id="terminalRuns">0</b></span></div>
                 <div id="worldCarouselDots" class="world-carousel-dots" aria-label="Страницы шахт"></div>
               </div>
@@ -260,6 +262,7 @@
             </div>
             <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/pause-button-v2.webp?v=1" alt="" aria-hidden="true"><span>ПАУЗА</span></button>
           </div>
+          <div id="runExperienceHud" class="run-experience-hud" data-stage="0" aria-live="off" aria-label="Опыт за забег: 0"><span id="runExperienceScore">0</span><small>XP</small><i id="runExperienceGain">+1</i></div>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div class="barrier-control" aria-label="Суперспособность">
             <button id="abilityBtn" class="ability-btn barrier-btn ultimate-control" type="button" aria-label="Активировать суперспособность" disabled>
@@ -309,8 +312,8 @@
             <button id="adminNextWorldBtn" type="button" aria-label="Следующая шахта">›</button>
           </div>
         </div>
-        <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать кубки и открыть игровой прогресс" title="Выдать кубки и открыть игровой прогресс">
-          <img src="assets/ui/world-picker-v2/trophy.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Кубки и прогресс</small></span><i aria-hidden="true">+</i>
+        <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать 30 уровень и открыть игровой прогресс" title="Выдать 30 уровень и открыть игровой прогресс">
+          <img src="assets/ui/player-level-star-v1.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Уровни и прогресс</small></span><i aria-hidden="true">+</i>
         </button>
         <button id="adminInfiniteFlasksBtn" class="admin-infinite-flasks" type="button" aria-pressed="false" aria-label="Включить бесконечные колбы исследования">
           <img src="assets/ui/research-flask.webp?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
@@ -396,8 +399,8 @@
           <span id="resultResearchStream" class="result-research-stream" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
         </div>
         <div class="result-stat result-coins-stat">
-          <img src="assets/ui/world-picker-v2/trophy.webp" alt="" aria-hidden="true">
-          <span><small>КУБОК ЗА ШАХТУ</small><b id="resultCoins">+0</b></span>
+          <img src="assets/ui/player-level-star-v1.webp" alt="" aria-hidden="true">
+          <span><small>ОПЫТ ЗА ЗАБЕГ</small><b id="resultCoins">+0 XP</b><small id="resultExperienceBonus"></small></span>
         </div>
       </div>
 
@@ -436,7 +439,7 @@
       <div class="game-complete-portal" aria-hidden="true"><img src="assets/ui/portals/world-4.webp" alt=""><span><img src="assets/ui/slime.webp" alt=""></span></div>
       <small class="game-complete-kicker">ВСЕ ШАХТЫ ОТКРЫТЫ</small>
       <h2 id="gameCompleteTitle">ВЫ ПРОШЛИ ИГРУ!</h2>
-      <p>Слайм добрался до последнего портала. Кубки за шахты можно собирать и дальше.</p>
+      <p>Слайм добрался до последнего портала. Продолжайте повышать уровень и исследовать шахты!</p>
       <button id="playEndlessBtn" class="game-complete-action game-complete-endless" type="button"><span aria-hidden="true"><img src="assets/ui/endless-mode.webp?v=2" alt=""></span><b>БЕСКОНЕЧНАЯ ШАХТА</b><small>Новый круг — сложнее предыдущего</small></button>
       <button id="gameCompleteHomeBtn" class="game-complete-action game-complete-home" type="button"><span aria-hidden="true">⌂</span><b>В МЕНЮ</b></button>
       <button class="game-complete-action game-complete-soon" type="button" disabled><span aria-hidden="true">✦</span><b>ПРОДОЛЖЕНИЕ</b><small>СКОРО</small></button>
@@ -467,7 +470,8 @@
   <script src="js/generation/section-catalog-v4.js?v=3"></script>
   <script src="js/generation/mine-plans.js?v=3"></script>
   <script src="js/config/gameplay-balance.js?v=3"></script>
-  <script src="js/config/game-config.js?v=87"></script>
+  <script src="js/config/game-config.js?v=88"></script>
+  <script src="js/config/experience.js?v=1"></script>
   <script src="js/platform/yandex-platform.js?v=2"></script>
   <script src="js/core/game-assets.js?v=39"></script>
   <script src="js/core/audio.js?v=2"></script>
@@ -475,6 +479,6 @@
   <script src="effects-lab/workbench-effects.js?v=77"></script>
   <script src="effects-lab/block-effects-workbench.js?v=19"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=499"></script>
+  <script src="game.js?v=500"></script>
 </body>
 </html>

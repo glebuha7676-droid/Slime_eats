@@ -3,7 +3,8 @@
 
   const CONFIG = window.SlimeGameConfig;
   const ASSETS = window.SlimeGameAssets;
-  if (!CONFIG || !ASSETS || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
+  const EXPERIENCE = window.SlimeExperience;
+  if (!CONFIG || !ASSETS || !EXPERIENCE || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
     throw new Error('Game modules must be loaded before game.js');
   }
 
@@ -116,7 +117,7 @@
   const els = {
     phoneViewport: $('#phoneViewport'),
     app: $('#app'),
-    coinsLabel: $('#coinsLabel'), runCoinsGain: $('#runCoinsGain'),
+    coinsLabel: $('#coinsLabel'), playerLevelProgress: $('#playerLevelProgress'), playerLevelExperience: $('#playerLevelExperience'),
     researchUnitsLabel: $('#researchUnitsLabel'),
     worldLabel: $('#worldLabel'), worldIcon: $('#worldIcon'),
     worldEyebrow: $('#worldEyebrow'), levelPassedBadge: $('#levelPassedBadge'), worldProgressPrefix: $('#worldProgressPrefix'), worldProgressText: $('#worldProgressText'),
@@ -157,6 +158,7 @@
     worldStartText: $('#worldStartText'), abyssModeV2: $('#abyssModeV2'), terminalEndlessLabel: $('#terminalEndlessLabel'),
     depthLabel: $('#depthLabel'), runHeartHud: $('.shaft-health'), runHearts: $$('.run-heart'), runHeartCount: $('#runHeartCount'),
     runResearchHud: $('#runResearchHud'), runResearchScore: $('#runResearchScore'), runResearchGain: $('#runResearchGain'),
+    runExperienceHud: $('#runExperienceHud'), runExperienceScore: $('#runExperienceScore'), runExperienceGain: $('#runExperienceGain'),
     routeProgress: $('#routeProgress'), routeBestMarker: $('#routeBestMarker'), routeBestLabel: $('#routeBestLabel'),
     routeSlimeMarker: $('#routeSlimeMarker'), routeTargetLabel: $('#routeTargetLabel'),
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'),
@@ -469,10 +471,8 @@
     merged.totalRuns = Math.max(0, Math.round(+merged.totalRuns || 0));
     merged.worldBest = { ...defaultSave.worldBest };
     for (const world of WORLDS) merged.worldBest[world.id] = clamp(+(value.worldBest?.[world.id] || 0), 0, world.targetDepth);
-    merged.worldTrophies = { ...defaultSave.worldTrophies };
     merged.worldLastRun = { ...defaultSave.worldLastRun };
     for (const world of WORLDS) {
-      merged.worldTrophies[world.id] = Math.max(0, Math.floor(+(value.worldTrophies?.[world.id] || 0)));
       merged.worldLastRun[world.id] = clamp(+(value.worldLastRun?.[world.id] || 0), 0, world.targetDepth);
     }
     const legacyWorldIndex = value.worldTrophies ? 0 : Math.max(0, ACTIVE_WORLD_IDS.indexOf(merged.world));
@@ -480,6 +480,21 @@
       (index > 0 && +(value.worldBest?.[ACTIVE_WORLDS[index - 1].id] || 0) >= ACTIVE_WORLDS[index - 1].targetDepth)).map(world => world.id);
     merged.unlockedWorlds = [...new Set([ACTIVE_WORLD_IDS[0], ...(Array.isArray(value.unlockedWorlds) ? value.unlockedWorlds : legacyUnlockedWorlds)])]
       .filter(id => ACTIVE_WORLD_IDS.includes(Number(id))).map(Number);
+    const oldWorldIndex = Math.max(0, ACTIVE_WORLD_IDS.indexOf(merged.world),
+      ...merged.unlockedWorlds.map(id => ACTIVE_WORLD_IDS.indexOf(id)),
+      ...ACTIVE_WORLDS.slice(1).map((world, index) =>
+        +(value.worldTrophies?.[ACTIVE_WORLDS[index].id] || 0) >= 10 ? index + 1 : 0));
+    const legacyTrophyExperience = ACTIVE_WORLDS.reduce((best, world, index) => {
+      const trophies = clamp(Math.floor(+(value.worldTrophies?.[world.id] || 0)), 0, 10);
+      if (!trophies) return best;
+      const start = EXPERIENCE.experienceForLevel(EXPERIENCE.requiredLevelForWorldIndex(index));
+      const end = EXPERIENCE.experienceForLevel(EXPERIENCE.requiredLevelForWorldIndex(index + 1));
+      return Math.max(best, Math.round(start + (end - start) * trophies / 10));
+    }, 0);
+    merged.playerExperience = Number.isFinite(+value.playerExperience)
+      ? Math.max(0, Math.floor(+value.playerExperience))
+      : Math.max(EXPERIENCE.experienceForLevel(EXPERIENCE.requiredLevelForWorldIndex(oldWorldIndex)), legacyTrophyExperience);
+    delete merged.worldTrophies;
     const finalWorld = ACTIVE_WORLDS[ACTIVE_WORLDS.length - 1];
     merged.gameCompleted = Boolean(value.gameCompleted || (finalWorld && merged.worldBest[finalWorld.id] >= levelTargetDepth(finalWorld, LEVEL_COUNT)));
     merged.lastRunDepth = {};
@@ -1213,10 +1228,7 @@
   function worldIsUnlocked(worldId) {
     const index = ACTIVE_WORLD_IDS.indexOf(Number(worldId));
     if (index < 0) return false;
-    if (index === 0) return true;
-    if (save.unlockedWorlds?.includes(Number(worldId))) return true;
-    const previous = ACTIVE_WORLDS[index - 1];
-    return Boolean(previous && (save.worldTrophies?.[previous.id] || 0) >= 10);
+    return EXPERIENCE.levelForExperience(save.playerExperience) >= EXPERIENCE.requiredLevelForWorldIndex(index);
   }
   let carouselWorldId = null;
   function carouselWorld() {
@@ -1264,8 +1276,7 @@
     const world = carouselWorld();
     const index = ACTIVE_WORLD_IDS.indexOf(world.id);
     const locked = !worldIsUnlocked(world.id);
-    const previousWorld = ACTIVE_WORLDS[index - 1];
-    const trophies = Math.min(10, save.worldTrophies?.[previousWorld?.id] || 0);
+    const requiredLevel = EXPERIENCE.requiredLevelForWorldIndex(index);
     const previews = {
       1: 'assets/ui/world-terminal/mine-green-depths-v4.webp',
       3: 'assets/ui/world-terminal/mine-candy.webp',
@@ -1275,11 +1286,11 @@
     if (els.worldTerminalPreview && els.worldTerminalPreview.getAttribute('src') !== preview) els.worldTerminalPreview.src = preview;
     if (els.worldTerminalNumber) els.worldTerminalNumber.textContent = `ШАХТА ${worldDisplayNumber(world.id)}`;
     if (els.worldTerminalName) els.worldTerminalName.textContent = world.name.toLocaleUpperCase('ru-RU');
-    if (els.worldTerminalTrophies) els.worldTerminalTrophies.textContent = `${trophies}/10`;
+    if (els.worldTerminalTrophies) els.worldTerminalTrophies.textContent = String(requiredLevel);
     if (els.worldTerminalLock) els.worldTerminalLock.hidden = !locked;
     els.worldCarousel.classList.toggle('locked', locked);
     els.worldCarousel.setAttribute('aria-label', locked
-      ? `Шахта ${worldDisplayNumber(world.id)}, ${world.name}. Закрыта, кубков ${trophies} из 10`
+      ? `Шахта ${worldDisplayNumber(world.id)}, ${world.name}. Закрыта до уровня ${requiredLevel}`
       : `Шахта ${worldDisplayNumber(world.id)}, ${world.name}`);
     if (els.worldPrevBtn) els.worldPrevBtn.disabled = index <= 0;
     if (els.worldNextBtn) els.worldNextBtn.disabled = index >= ACTIVE_WORLDS.length - 1;
@@ -1527,19 +1538,21 @@
     renderLevelPicker();
   }
 
-  function totalTrophies() {
-    return Object.values(save.worldTrophies || {}).reduce((sum, count) => sum + Math.max(0, count || 0), 0);
-  }
-
   function renderWalletBalances() {
-    const trophies = homeRewardFlight
-      ? homeRewardFlight.trophyStart + homeRewardFlight.trophyShown
-      : totalTrophies();
+    const experience = homeRewardFlight
+      ? homeRewardFlight.experienceStart + homeRewardFlight.experienceShown
+      : save.playerExperience;
     const researchUnits = homeRewardFlight
       ? homeRewardFlight.flaskStart + homeRewardFlight.flaskShown
       : save.researchUnits;
-    els.coinsLabel.textContent = formatCompactNumber(trophies);
-    els.coinsLabel.title = `${trophies.toLocaleString('ru-RU')} кубков за пройденные миры`;
+    const level = EXPERIENCE.levelForExperience(experience);
+    const levelProgress = Math.max(0, experience - EXPERIENCE.experienceForLevel(level));
+    const levelCost = level < EXPERIENCE.MAX_LEVEL ? EXPERIENCE.nextLevelCost(level) : 0;
+    els.coinsLabel.textContent = String(level);
+    if (els.playerLevelProgress) els.playerLevelProgress.style.width = `${levelCost ? Math.min(100, levelProgress / levelCost * 100) : 100}%`;
+    if (els.playerLevelExperience) els.playerLevelExperience.textContent = levelCost ? `${levelProgress}/${levelCost} XP` : 'МАКС. УРОВЕНЬ';
+    els.coinsLabel.closest('.player-level-wallet')?.setAttribute('aria-label', levelCost
+      ? `Уровень ${level}, опыт ${levelProgress} из ${levelCost}` : `Максимальный уровень ${level}`);
     const exactResearchCount = Boolean(homeRewardFlight) && researchUnits < 10_000_000 && !adminInfiniteResearch;
     if (els.researchUnitsLabel) els.researchUnitsLabel.textContent = adminInfiniteResearch ? '∞'
       : exactResearchCount ? String(researchUnits) : formatCompactNumber(researchUnits);
@@ -1547,7 +1560,6 @@
     researchWallet?.classList.toggle('is-receiving', exactResearchCount);
     if (researchWallet) researchWallet.dataset.rewardDigits = exactResearchCount ? String(researchUnits).length : '';
     researchWallet?.setAttribute('aria-label', adminInfiniteResearch ? 'Исследование: бесконечные колбы' : `Колбы исследования: ${researchUnits}`);
-    els.coinsLabel.closest('.trophy-wallet')?.setAttribute('aria-label', `Кубки за пройденные шахты: ${trophies}`);
   }
 
   function settleHomeRewardFlight() {
@@ -1565,13 +1577,13 @@
     if (!completedRun) return;
     const flaskGain = adminInfiniteResearch ? 0 : Math.max(0,
       (completedRun.researchUnitsAfter || 0) - (completedRun.researchUnitsBefore || 0));
-    const trophyGain = completedRun.completed && !completedRun.endless ? 1 : 0;
-    if (!flaskGain && !trophyGain) return;
+    const experienceGain = Math.max(0, Math.floor(completedRun.experienceEarned || 0));
+    if (!flaskGain && !experienceGain) return;
     homeRewardFlight = {
       flaskStart: Math.max(0, save.researchUnits - flaskGain),
       flaskGain, flaskShown: 0,
-      trophyStart: Math.max(0, totalTrophies() - trophyGain),
-      trophyGain, trophyShown: 0,
+      experienceStart: Math.max(0, save.playerExperience - experienceGain),
+      experienceGain, experienceShown: 0,
       animations: [], timeout: 0, started: false
     };
   }
@@ -1594,7 +1606,7 @@
     const particles = [];
     const addFlight = (kind, amount, targetIcon, targetWallet) => {
       if (!amount || !targetIcon || !targetWallet) return;
-      const count = kind === 'trophy' ? 1 : Math.min(9, amount);
+      const count = kind === 'experience' ? Math.min(6, amount) : Math.min(9, amount);
       const targetRect = targetIcon.getBoundingClientRect();
       const targetX = targetRect.left + targetRect.width / 2 - viewportRect.left;
       const targetY = targetRect.top + targetRect.height / 2 - viewportRect.top;
@@ -1606,7 +1618,7 @@
         const scatterY = startY - rand(42, 96);
         const image = document.createElement('img');
         image.className = `home-reward-particle home-reward-${kind}`;
-        image.src = kind === 'trophy' ? 'assets/ui/world-picker-v2/trophy.webp' : 'assets/ui/research-flask.webp?v=1';
+        image.src = kind === 'experience' ? 'assets/ui/player-level-star-v1.webp' : 'assets/ui/research-flask.webp?v=1';
         image.alt = '';
         image.style.left = `${startX}px`;
         image.style.top = `${startY}px`;
@@ -1620,13 +1632,13 @@
           { offset: .28, opacity: 1, transform: at(scatterX, scatterY, 1.08) },
           { offset: .63, opacity: 1, transform: at(middleX, middleY, .84) },
           { offset: 1, opacity: 0, transform: at(targetX, targetY, .42) }
-        ], { duration: kind === 'trophy' ? 1120 : 880, delay: kind === 'trophy' ? 310 : index * 78,
+        ], { duration: kind === 'experience' ? 1120 : 880, delay: kind === 'experience' ? 180 + index * 95 : index * 78,
           easing: 'cubic-bezier(.22,.62,.25,1)', fill: 'forwards' });
         flight.animations.push(animation);
         particles.push(animation.finished.then(() => {
           if (homeRewardFlight !== flight) return;
           image.remove();
-          if (kind === 'trophy') flight.trophyShown += piece;
+          if (kind === 'experience') flight.experienceShown += piece;
           else flight.flaskShown += piece;
           renderWalletBalances();
           targetWallet.animate([
@@ -1634,8 +1646,8 @@
             { scale: '1.16', filter: 'brightness(1.25)', offset: .42 },
             { scale: '1', filter: 'brightness(1)' }
           ], { duration: 290, easing: 'ease-out' });
-          if (kind === 'trophy' || index % 3 === 0 || index === count - 1) sound('coin');
-          if (kind === 'trophy' || index === count - 1) feedback(5);
+          if (kind === 'experience' || index % 3 === 0 || index === count - 1) sound('coin');
+          if (kind === 'experience' || index === count - 1) feedback(5);
         }).catch(() => {}));
       }
     };
@@ -1643,9 +1655,9 @@
     addFlight('flask', flight.flaskGain,
       document.querySelector('.research-wallet-flask>img'),
       document.querySelector('.research-wallet'));
-    addFlight('trophy', flight.trophyGain,
-      document.querySelector('.trophy-wallet .currency-icon'),
-      document.querySelector('.trophy-wallet'));
+    addFlight('experience', flight.experienceGain,
+      document.querySelector('.player-level-wallet .currency-icon'),
+      document.querySelector('.player-level-wallet'));
     if (!particles.length) return settleHomeRewardFlight();
     flight.timeout = setTimeout(() => { if (homeRewardFlight === flight) settleHomeRewardFlight(); }, 2400);
     Promise.all(particles).then(() => {
@@ -1905,7 +1917,7 @@
   }
 
   function resetProgressFromAdmin() {
-    if (!window.confirm('Сбросить весь прогресс, улучшения, исследование, кубки и текущий набор еды?')) return;
+    if (!window.confirm('Сбросить весь прогресс, улучшения, исследование, уровень и текущий набор еды?')) return;
     const storage = saveStorage || browserStorage();
     try {
       storage?.removeItem(SAVE_KEY);
@@ -1944,19 +1956,20 @@
       save.unlockedLevels[world.id] = LEVEL_COUNT;
       save.selectedLevels[world.id] = 1;
       save.worldBest[world.id] = world.targetDepth;
-      save.worldTrophies[world.id] = 10;
       save.worldLastRun[world.id] = world.targetDepth;
       for (let level = 1; level <= LEVEL_COUNT; level += 1) {
         save.lastRunDepth[`${world.id}:${level}`] = levelTargetDepth(world, level);
       }
     }
+    save.playerExperience = EXPERIENCE.experienceForLevel(EXPERIENCE.MAX_LEVEL);
     save.activeDraft = null;
     session = null;
     persist();
     sound('coin');
     feedback([20, 35, 20]);
     newDraft();
-    showToast('Все миры открыты · кубки и исследование выданы');
+    updatePersistentUI();
+    showToast('Все миры открыты · уровень 30 и исследование выданы');
   }
 
   function unlockMutationsFromAdmin() {
@@ -2478,7 +2491,8 @@
     els.worldStartBtn.disabled = !ready;
     els.worldStartBtn.classList.toggle('hungry', !ready);
     els.worldStartBtn.classList.toggle('ready', ready);
-    els.worldStartBtn.setAttribute('aria-label', locked ? 'Шахта закрыта. Для открытия нужно 10 кубков' : ready ? 'Отправиться в шахту' : 'Сначала покормите слайма');
+    const requiredLevel = EXPERIENCE.requiredLevelForWorldIndex(ACTIVE_WORLD_IDS.indexOf(carouselWorld().id));
+    els.worldStartBtn.setAttribute('aria-label', locked ? `Шахта закрыта до уровня ${requiredLevel}` : ready ? 'Отправиться в шахту' : 'Сначала покормите слайма');
     if (els.worldStartText) els.worldStartText.textContent = 'ИГРАТЬ';
   }
 
@@ -3222,6 +3236,11 @@
       maxShieldCharges: 1,
       coins: 0,
       researchData: 0,
+      experienceEarned: 0,
+      experienceCombo: 0,
+      experienceComboAt: 0,
+      experiencePendingGain: 0,
+      experienceHudFrame: 0,
       depth: 0,
       maxDepth: 0,
       flightDistance: 0,
@@ -3259,6 +3278,8 @@
     run.freezeZones = generateFreezeZones(run);
     prepareCanvas();
     showScreen('drop');
+    els.runExperienceHud?.classList.remove('is-hit');
+    if (els.runExperienceHud) els.runExperienceHud.dataset.stage = '0';
     clearRunImpactFeedback();
     updateRunUI();
     yandexPlatform?.gameplay.start();
@@ -7058,6 +7079,7 @@
     run.glitchInfectedBlocks?.delete(block);
     block.glitchInfected = false;
     run.blocksDestroyed += 1;
+    awardRunExperience(block);
     if (!ultimateChargeBlocked(cause) && run.elementalAbilityCharges < 1 && run.shieldCharges < 1) {
       run.ultimateCharge = Math.min(ULTIMATE_BLOCKS_REQUIRED, (run.ultimateCharge || 0) + 1);
       if (run.ultimateCharge >= ULTIMATE_BLOCKS_REQUIRED) {
@@ -7114,11 +7136,45 @@
   }
 
   function registerBrokenBlock(block) {
+    awardRunExperience(block);
     if (!run?.effects?.breakHealEveryFive) return;
     run.blocksBrokenForHeal += 1;
     if (run.blocksBrokenForHeal % 5 !== 0) return;
     spawnSpecialBurst('heal', block.x + block.w / 2, block.y + block.h / 2);
     healRun(5, '5-Й СЛОМАННЫЙ БЛОК');
+  }
+
+  function awardRunExperience(block) {
+    if (!run || run.ended || !block || block.experienceGranted || block.hazard || block.unbreakable) return;
+    block.experienceGranted = true;
+    const amount = EXPERIENCE.experienceForBlock(block);
+    run.experienceEarned += amount;
+    run.experiencePendingGain += amount;
+    const now = performance.now();
+    run.experienceCombo = now - run.experienceComboAt < 2300 ? run.experienceCombo + 1 : 1;
+    run.experienceComboAt = now;
+    if (run.experienceHudFrame) return;
+    const currentRun = run;
+    run.experienceHudFrame = requestAnimationFrame(() => {
+      currentRun.experienceHudFrame = 0;
+      if (run !== currentRun || run.ended || !els.runExperienceHud) return;
+      const gain = currentRun.experiencePendingGain;
+      currentRun.experiencePendingGain = 0;
+      const stage = currentRun.experienceCombo >= 14 ? 4 : currentRun.experienceCombo >= 8 ? 3 : currentRun.experienceCombo >= 4 ? 2 : 1;
+      if (els.runExperienceScore) els.runExperienceScore.textContent = currentRun.experienceEarned.toLocaleString('ru-RU');
+      if (els.runExperienceGain) els.runExperienceGain.textContent = `+${gain}`;
+      els.runExperienceHud.dataset.stage = String(stage);
+      els.runExperienceHud.setAttribute('aria-label', `Опыт за забег: ${currentRun.experienceEarned}`);
+      els.runExperienceHud.classList.remove('is-hit');
+      void els.runExperienceHud.offsetWidth;
+      els.runExperienceHud.classList.add('is-hit');
+      clearTimeout(currentRun.experiencePulseTimer);
+      currentRun.experiencePulseTimer = setTimeout(() => els.runExperienceHud?.classList.remove('is-hit'), 560);
+      clearTimeout(currentRun.experienceStageTimer);
+      currentRun.experienceStageTimer = setTimeout(() => {
+        if (run === currentRun) els.runExperienceHud.dataset.stage = '0';
+      }, 2300);
+    });
   }
 
   function awardFlaskData(value) {
@@ -7718,11 +7774,7 @@
     els.depthLabel.textContent = `${currentDepth} М`;
     if (els.runResearchScore) els.runResearchScore.textContent = Math.max(0, Math.floor(run.researchData || 0)).toLocaleString('ru-RU');
     if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Колбы за забег: ${Math.max(0, Math.floor(run.researchData || 0))}`);
-    if (els.runCoinsGain) {
-      const earnedCoins = Math.max(0, Math.floor(run.coins));
-      els.runCoinsGain.textContent = `+${formatCompactNumber(earnedCoins)}`;
-      els.runCoinsGain.title = `За забег: +${earnedCoins.toLocaleString('ru-RU')}`;
-    }
+    if (els.runExperienceScore) els.runExperienceScore.textContent = Math.max(0, run.experienceEarned).toLocaleString('ru-RU');
     els.routeProgress.style.width = `${routePosition}%`;
     els.routeSlimeMarker.style.left = `${routePosition}%`;
     els.routeTargetLabel.textContent = run.endless ? `∞ · КРУГ ${run.endlessLap}` : `${targetDepth} М`;
@@ -12395,19 +12447,19 @@
     const world = run.world;
     save.worldBest[world.id] = Math.max(save.worldBest[world.id] || 0, world.targetDepth);
     save.unlockedLevels[world.id] = LEVEL_COUNT;
-    save.worldTrophies[world.id] = Math.max(0, save.worldTrophies[world.id] || 0) + 1;
     const activeIndex = ACTIVE_WORLD_IDS.indexOf(world.id);
     const nextWorldId = ACTIVE_WORLD_IDS[activeIndex + 1];
-    const unlockedNextWorld = Boolean(nextWorldId && save.worldTrophies[world.id] >= 10 && !save.unlockedWorlds.includes(nextWorldId));
-    if (unlockedNextWorld) save.unlockedWorlds.push(nextWorldId);
+    const nextLevel = EXPERIENCE.levelForExperience(save.playerExperience + run.experienceEarned + 150);
+    const unlockedNextWorld = Boolean(nextWorldId && nextLevel >= EXPERIENCE.requiredLevelForWorldIndex(activeIndex + 1)
+      && !worldIsUnlocked(nextWorldId));
     const unlockedSkin = { 1: 'cat', 3: 'dumpling' }[world.id];
     if (unlockedSkin && !save.unlockedSkins.includes(unlockedSkin)) save.unlockedSkins.push(unlockedSkin);
     run.isFinalCompletion = world.id === ACTIVE_WORLD_IDS[ACTIVE_WORLD_IDS.length - 1];
     if (run.isFinalCompletion) save.gameCompleted = true;
     sound('win');
     endRun(true, unlockedNextWorld
-      ? `Шахта «${world.name}» пройдена! Получен кубок. Следующая шахта открыта!`
-      : `Шахта «${world.name}» пройдена! Получен кубок.`);
+      ? `Шахта «${world.name}» пройдена! +150 опыта. Следующая шахта открыта!`
+      : `Шахта «${world.name}» пройдена! +150 опыта.`);
   }
 
   function finishWorld() {
@@ -12516,7 +12568,7 @@
   function animateResultCoins(from, to) {
     const stat = els.resultCoins.closest('.result-stat');
     stat?.classList.add('is-counting');
-    animateResultNumber(els.resultCoins, from, to, 520, value => `+${formatCompactNumber(value)}`).then(() => {
+    animateResultNumber(els.resultCoins, from, to, 520, value => `+${formatCompactNumber(value)} XP`).then(() => {
       stat?.classList.remove('is-counting');
       stat?.classList.add('is-complete');
       setTimeout(() => stat?.classList.remove('is-complete'), 420);
@@ -12592,8 +12644,8 @@
     researchStat?.classList.remove('is-complete');
     coinsStat?.classList.add('is-counting');
     sound('coin');
-    if (reducedMotion) els.resultCoins.textContent = `+${formatCompactNumber(coins)}`;
-    else await animateResultNumber(els.resultCoins, 0, coins, 620, value => `+${formatCompactNumber(value)}`);
+    if (reducedMotion) els.resultCoins.textContent = `+${formatCompactNumber(coins)} XP`;
+    else await animateResultNumber(els.resultCoins, 0, coins, 620, value => `+${formatCompactNumber(value)} XP`);
     if (token !== resultRevealToken || !run) return;
     coinsStat?.classList.remove('is-counting');
     coinsStat?.classList.add('is-complete');
@@ -12648,6 +12700,11 @@
     const baseCoins = Math.max(0, Math.floor(run.coins));
     const completionBonus = completed && !run.endless ? 25 : 0;
     const researchData = Math.max(0, Math.floor(run.researchData || 0)) + completionBonus;
+    run.experienceEarned = Math.max(0, Math.floor(run.experienceEarned || 0)) + (completed && !run.endless ? 150 : 0);
+    run.experienceBefore = save.playerExperience;
+    save.playerExperience += run.experienceEarned;
+    save.unlockedWorlds = ACTIVE_WORLD_IDS.filter((id, index) =>
+      EXPERIENCE.levelForExperience(save.playerExperience) >= EXPERIENCE.requiredLevelForWorldIndex(index));
     run.researchUnitsBefore = Math.max(0, save.researchUnits - Math.max(0, Math.floor(run.researchData || 0)));
     save.researchUnits += completionBonus;
     run.researchUnitsAfter = save.researchUnits;
@@ -12677,7 +12734,9 @@
     const bonusLabel = document.getElementById('resultResearchBonus');
     if (bonusLabel) bonusLabel.textContent = completionBonus ? `ПРОЙДЕНО +${completionBonus}` : '';
     els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsBefore);
-    els.resultCoins.textContent = '+0';
+    els.resultCoins.textContent = '+0 XP';
+    const experienceBonusLabel = document.getElementById('resultExperienceBonus');
+    if (experienceBonusLabel) experienceBonusLabel.textContent = completed && !run.endless ? 'ПРОХОЖДЕНИЕ +150' : '';
     els.resultMultiplierLabel.textContent = formatResultMultiplier(RESULT_MULTIPLIERS[0]);
     els.resultMultiplierHint.textContent = 'Нажми, чтобы остановить стрелку';
     els.resultMultiplierBtn.disabled = true;
@@ -12692,7 +12751,7 @@
     const revealToken = ++resultRevealToken;
     requestAnimationFrame(() => {
       els.resultOverlay.querySelector('.modal')?.focus();
-      revealResultSummary(researchData, completed && !run.endless ? 1 : 0, revealToken);
+      revealResultSummary(researchData, run.experienceEarned, revealToken);
     });
     if (!completed) sound('fail');
   }

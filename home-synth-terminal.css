@@ -241,22 +241,32 @@ body[data-screen="home"] #homeScreen>.play-setup-card{
   filter:grayscale(.7) brightness(.75);
 }
 .terminal-launch{
-  left:16.5%;
-  top:calc(71.3% - 2px);
-  width:67%;
-  height:25%;
+  left:19.2%;
+  top:calc(73% - 2px);
+  width:61.6%;
+  height:22%;
   background:none;
   font-size:clamp(16px,5.6vw,26px);
   color:#4b2a06;
   text-shadow:0 1px #fff4b0,0 2px 2px #b8650d;
 }
-.terminal-launch::before{
+@media(max-width:520px){
+  .terminal-launch{top:calc(73% + 11vw - 41px)}
+}
+.world-terminal-shell .terminal-launch::before{
   content:"";
   display:block;
   position:absolute;
   inset:0;
   z-index:0;
-  background:url("assets/ui/world-terminal/play-insert-v4.webp") center/contain no-repeat;
+  box-sizing:border-box;
+  border:0 solid transparent;
+  border-inline-width:42px;
+  border-image-source:url("assets/ui/world-terminal/play-insert-v4.webp");
+  border-image-slice:0 110 fill;
+  border-image-width:0 42px;
+  border-image-repeat:stretch;
+  background:none;
   pointer-events:none;
 }
 .terminal-launch.hungry{
@@ -264,7 +274,7 @@ body[data-screen="home"] #homeScreen>.play-setup-card{
   text-shadow:0 1px 2px #1c303d,0 0 2px #1c303d;
   filter:none;
 }
-.terminal-launch.hungry::before{filter:grayscale(1) brightness(.68)}
+.world-terminal-shell .terminal-launch.hungry::before{filter:grayscale(1) brightness(.68)}
 .terminal-launch>span{position:relative;z-index:1;margin-left:16%}
 .terminal-launch.ready{animation:none}
 .world-terminal-corner-rock{display:none}
