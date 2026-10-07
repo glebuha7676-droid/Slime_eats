@@ -77,7 +77,7 @@
   };
 
   const WORLD_SPRITE_NAMES = {
-    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'ground-weak-flask', 'stone-flask', 'stone-reinforced-flask', 'stone-hazard', 'heal', 'portal'],
+    1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'ground-weak-liquid', 'stone-liquid', 'stone-reinforced-liquid', 'stone-hazard', 'heal', 'portal'],
     2: ['ice-light', 'snow-packed', 'glacier', 'ice-reinforced', 'ice-shards', 'ice-spikes', 'cryo', 'snowflake', 'heal', 'portal'],
     3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'jelly-bounce', 'heal', 'portal'],
     4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'geyser', 'meteor', 'heal', 'portal']

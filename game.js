@@ -10173,10 +10173,11 @@
     else if (block.tier === 'soft') spriteName = 'dirt-grass';
     else spriteName = 'stone';
 
-    if (run.worldId === 1 && block.flaskTier && !frostIsPrimary) {
-      spriteName = block.tier === 'reinforced' ? 'stone-reinforced-flask'
-        : block.tier === 'hard' ? 'stone-flask' : 'ground-weak-flask';
-    }
+    // Keep the original stone pixels; only the resource veins are layered on top.
+    const liquidVeinName = run.worldId === 1 && block.flaskTier && !frostIsPrimary && !block.special && !block.hazard
+      ? block.tier === 'reinforced' ? 'stone-reinforced-liquid'
+        : block.tier === 'hard' ? 'stone-liquid' : 'ground-weak-liquid'
+      : null;
 
     const contentId = block.frozen
       ? 'dense'
@@ -10258,6 +10259,10 @@
       ctx.restore();
     } else {
       ctx.drawImage(sprite, drawX, drawY, width, height);
+      const liquidVeins = liquidVeinName && WORLD_SPRITES[1]?.[liquidVeinName];
+      if (liquidVeins?.complete && liquidVeins.naturalWidth) {
+        ctx.drawImage(liquidVeins, drawX, drawY, width, height);
+      }
     }
     if (frostTransformed && !frostIsPrimary) {
       const frostSpriteName = block.elementalSnowflake ? 'snowflake' : 'snow-packed';
