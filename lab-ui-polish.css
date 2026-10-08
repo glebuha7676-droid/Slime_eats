@@ -21,8 +21,9 @@ html body #homeScreen #conveyorChoiceCount{
   background:linear-gradient(#164a5a,#0b3040)!important;
   box-shadow:inset 0 1px #5b94a2,0 2px 0 #173b48!important;letter-spacing:0!important;
 }
-html body #homeScreen .lab-portal-frame{width:252px;height:216px;top:-41px}
-@media(max-width:370px){html body #homeScreen .lab-portal-frame{width:228px;height:198px;top:-38px}}
+html body #homeScreen .lab-portal-frame{width:232px;height:196px;top:-31px}
+html body #homeScreen .slime-playground{--portal-size:154px;--portal-top:-10px}
+@media(max-width:370px){html body #homeScreen .lab-portal-frame{width:208px;height:178px;top:-28px}}
 html body #homeScreen .world-terminal-screen.locked .world-terminal-title{display:none!important}
 #homeScreen .world-terminal-new{
   position:absolute;z-index:5;top:12%;left:50%;transform:translateX(-50%);white-space:nowrap;

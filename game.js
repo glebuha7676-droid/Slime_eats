@@ -1174,7 +1174,7 @@
     const base = art.getBoundingClientRect(), host = shell.getBoundingClientRect();
     const sx = host.width / shell.offsetWidth, sy = host.height / shell.offsetHeight;
     // Coordinates measured in the 925 × 1110 terminal artwork, shared at every viewport.
-    const slots = { play: [174, 909, 577, 163], screen: [148, 501, 631, 358], heading: [314, 425, 297, 54], previous: [88, 626, 124, 118], next: [717, 626, 124, 118] };
+    const slots = { play: [171, 905, 583, 173], screen: [148, 501, 631, 358], heading: [314, 425, 297, 54], previous: [88, 626, 124, 118], next: [717, 626, 124, 118] };
     for (const [name, [x,y,w,h]] of Object.entries(slots)) {
       const values = [(base.left + base.width * x / 925 - host.left) / sx, (base.top + base.height * y / 1110 - host.top) / sy, base.width * w / 925 / sx, base.height * h / 1110 / sy];
       ['left','top','width','height'].forEach((property,index) => shell.style.setProperty(`--terminal-${name}-${property}`, `${values[index].toFixed(3)}px`));
