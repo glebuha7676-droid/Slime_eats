@@ -1174,11 +1174,22 @@
     const base = art.getBoundingClientRect(), host = shell.getBoundingClientRect();
     const sx = host.width / shell.offsetWidth, sy = host.height / shell.offsetHeight;
     // Coordinates measured in the 925 × 1110 terminal artwork, shared at every viewport.
-    const slots = { play: [178, 912, 569, 158], screen: [150, 511, 629, 348], heading: [314, 425, 297, 54], previous: [88, 626, 124, 118], next: [717, 626, 124, 118] };
+    const slots = { play: [174, 909, 577, 163], screen: [148, 501, 631, 358], heading: [314, 425, 297, 54], previous: [88, 626, 124, 118], next: [717, 626, 124, 118] };
     for (const [name, [x,y,w,h]] of Object.entries(slots)) {
       const values = [(base.left + base.width * x / 925 - host.left) / sx, (base.top + base.height * y / 1110 - host.top) / sy, base.width * w / 925 / sx, base.height * h / 1110 / sy];
       ['left','top','width','height'].forEach((property,index) => shell.style.setProperty(`--terminal-${name}-${property}`, `${values[index].toFixed(3)}px`));
     }
+    // Align to the painted sockets, including nonuniform scaling on short phones.
+    els.conveyorDispensers?.querySelectorAll('.conveyor-pipe-socket').forEach((button,index)=>{
+      const parent=button.offsetParent;if(!parent?.offsetWidth||!parent.offsetHeight)return;
+      const rect=parent.getBoundingClientRect(), px=rect.width/parent.offsetWidth, py=rect.height/parent.offsetHeight;
+      const centerX=base.left+base.width*[190,462,736][index]/925;
+      const centerY=base.top+base.height*65/1110;
+      const x=(centerX-rect.left)/px,y=(centerY-rect.top)/py;
+      for(const [key,value] of Object.entries({left:x,top:y,width:base.width*98/925/px,height:base.height*100/1110/py}))
+        button.style.setProperty(`--socket-${key}`,`${value.toFixed(3)}px`);
+      parent.style.setProperty('--emitter-x',`${x.toFixed(3)}px`);
+    });
     const counter=els.conveyorChoiceCount, counterHost=counter?.offsetParent;
     if(counterHost?.offsetWidth && counterHost.offsetHeight) {
       const rect=counterHost.getBoundingClientRect(), cx=rect.width/counterHost.offsetWidth, cy=rect.height/counterHost.offsetHeight;
@@ -2558,6 +2569,15 @@
     return allMutations().filter(mutation => unlocked.has(mutation.id) && !pool.includes(mutation.id));
   }
 
+  function conveyorEmblemStyle(family) {
+    // Opaque medal bounds, excluding different transparent margins in the source art.
+    const [size,x,y,right,bottom] = ({fire:[640,31,28,607,595],ice:[640,31,27,608,595],
+      electric:[640,31,27,607,595],cosmos:[640,1,2,639,636],nano:[640,1,5,640,635],
+      telekinesis:[640,0,4,639,635],cloning:[640,4,6,633,625],
+      phantom:[1254,0,7,1254,1244],glitch:[640,1,2,639,638]})[family] || [640,0,0,640,640];
+    return `--medal-width:${100*size/(right-x)}%;--medal-height:${100*size/(bottom-y)}%;--medal-left:${-100*x/(right-x)}%;--medal-top:${-100*y/(bottom-y)}%`;
+  }
+
   function renderConveyorDispensers() {
     if (!els.conveyorDispensers) return;
     const pool = save.activeMutationPool || [];
@@ -2572,7 +2592,7 @@
       const mutation = mutationById(id);
       const family = mutationFoodFamily(id);
       const icon = RECIPE_FAMILY_ICONS[family];
-      return `<span class="conveyor-dispenser family-${family}" data-dispenser-index="${index}">
+      return `<span class="conveyor-dispenser family-${family}" data-dispenser-index="${index}" style="${conveyorEmblemStyle(family)}">
         <button class="conveyor-pipe-socket" data-quick-mutation-slot="${index}" type="button" ${canSwap ? '' : 'disabled'} aria-label="${full ? 'Смена мутаций недоступна: слайм сыт' : !hasReserve ? 'Нет мутаций в запасе' : `Сменить мутацию синтезатора ${index + 1}: ${mutation?.name || 'пусто'}`}" aria-controls="quickMutationPicker" aria-expanded="false">${icon ? `<img src="${versionedAsset(icon)}" alt="">` : ''}</button>
         <span class="synthesis-emitter-glow"></span>
         <span class="synthesis-beam"></span>
@@ -2581,6 +2601,7 @@
     els.conveyorDispensers.querySelectorAll('[data-quick-mutation-slot]').forEach(button => {
       button.addEventListener('click', () => openQuickMutationPicker(Number(button.dataset.quickMutationSlot)));
     });
+    scheduleHomeFit();
   }
 
   function closeQuickMutationPicker() {
@@ -5822,6 +5843,12 @@
     applyDominantShieldReaction(shieldReactionSource(), timestamp);
   }
 
+  function updateShieldLifetime(timestamp) {
+    if (run.barrier > 0 && timestamp - run.barrierStartedAt >= 4000) {
+      burstDominantShield(null, timestamp);
+    }
+  }
+
   function applyDominantShieldReaction(source, timestamp) {
     const type = shieldDominant();
     const origin = blockCenter(source);
@@ -6023,7 +6050,8 @@
 
   function finishMechSuit(timestamp) {
     if (!run?.mechSuit) return;
-    run.mechExplosion = { x: run.slime.x, y: run.slime.y, startedAt: timestamp, expired: true };
+    const cell=run.cellSize;
+    run.mechExplosion = null;
     run.mechSuit = null;
     run.elementalAbilityActive = '';
     run.elementalAbilityUntil = 0;
@@ -6044,8 +6072,11 @@
     run.shake = Math.max(run.shake, 4);
     run.emotion = 'surprised';
     run.emotionUntil = timestamp + 450;
-    sound('tap');
-    feedback([8, 12, 8]);
+    explodeBomb({x:run.slime.x-cell/2,y:run.slime.y-cell/2,w:cell,h:cell,
+      row:Math.floor((run.slime.y-run.blockRowOrigin)/cell),
+      col:clamp(Math.floor((run.slime.x-run.gridOffsetX)/cell),0,run.columns-1)},0,false);
+    sound('epic');
+    feedback([16,26,12]);
     updateRunUI();
   }
 
@@ -7068,6 +7099,7 @@
     if (!run || run.ended) return;
 
     if (run.mechSuit?.phase === 'active' && timestamp >= run.mechSuit.expireAt) finishMechSuit(timestamp);
+    updateShieldLifetime(timestamp);
     if (run.ultimateRechargePending === 'shield' && run.barrier <= 0 && !run.ultimateIntro) finishUltimateRecharge();
 
     run.phoenixWaves = (run.phoenixWaves || []).filter(wave => timestamp - wave.startedAt < 490);
@@ -8301,7 +8333,7 @@
     els.abilityBtn.classList.toggle('is-active', run.barrier > 0 && !adminInfiniteUltimate);
     els.abilityBtn.setAttribute('aria-label', adminInfiniteUltimate || charges ? 'Активировать щит' : `Щит заряжается: ${Math.floor(run.ultimateCharge || 0)} из ${ULTIMATE_BLOCKS_REQUIRED} блоков`);
     els.abilityText.textContent = adminInfiniteUltimate ? 'ЩИТ · ∞ ГОТОВО' : run.barrier > 0
-      ? 'ЩИТ · 1 УДАР'
+      ? `ЩИТ · ${Math.max(0,(4000-now+run.barrierStartedAt)/1000).toFixed(1)}с`
       : charges ? 'ЩИТ ГОТОВ' : `ЩИТ · ${Math.floor(run.ultimateCharge || 0)}/${ULTIMATE_BLOCKS_REQUIRED}`;
   }
 
@@ -9009,7 +9041,7 @@
     ctx.save();
     for (const effect of run.specialEffects) {
       if ((effect.delay || 0) > 0) continue;
-      const slimeOverlay = false;
+      const slimeOverlay = effect.type === 'essenceCollect';
       if (slimeOverlay !== overlayOnly) continue;
       const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
       const alpha = Math.pow(1 - progress, .94);
@@ -11334,6 +11366,7 @@
         radius: options.radius, timestamp, psionicsEnergy: motion.energy,
         effectDetail: effectDensity(),
         phantomActive: Boolean(options.phantomActive),
+        bodyTransform: {rotation:options.rotation||0,scaleX:options.scaleX??1,scaleY:options.scaleY??1},
         // Gameplay draws the real drones separately so their position also drives shots.
         levels: { fire: fireLevel, frost: frostLevel, electric: electricLevel, cosmos: cosmosLevel,
           telekinesis: psionicsLevel, cloning: sporesLevel, phantom: phantomLevel, glitch: glitchLevel, nano: 0 }

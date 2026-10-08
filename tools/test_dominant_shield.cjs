@@ -28,9 +28,10 @@ const context = { window, run, Math, VIEW_W:240, performance:{now:()=>1000},
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js/rendering/dominant-shield.js'),'utf8'),context);
 vm.runInContext(['blockCenter','nearbyGridBlocks','elementalDamageable','shieldDominant','burstDominantShield',
-  'applyDominantShieldReaction','updateShieldMines','resolveHazardHit'].map(take).join('\n'),context);
+  'applyDominantShieldReaction','updateShieldLifetime','updateShieldMines','resolveHazardHit'].map(take).join('\n'),context);
 const shield = window.DominantShield;
 assert.equal(shield.dominant({}), 'base');
+assert.equal(shield.dominant({fire:1,electric:1,frost:1}), 'base','Stage I gets the ordinary bubble');
 assert.equal(shield.dominant({fire:1,frost:2}), 'frost');
 assert.equal(shield.dominant({nano:2,fire:1}), 'nano');
 const colors = new Set(), icons = new Set();
@@ -75,4 +76,7 @@ for(const type of ['fire','frost','electric','nano','cloning','glitch','cosmos',
   if(['cosmos','telekinesis','phantom'].includes(type))assert.ok(run.blocks.slice(1).every(b=>b.hp===4));
 }
 assert.equal(colors.size,9);assert.equal(icons.size,9);assert.equal(recharge,9);
+run.categoryVisuals={fire:1};run.barrier=25;run.barrierStartedAt=2000;
+context.updateShieldLifetime(5999);assert.equal(run.barrier,25);
+context.updateShieldLifetime(6000);assert.equal(run.barrier,0);assert.equal(run.shieldPop.type,'base');
 console.log('Nine shield colours/icons; one protected hit; six reactions around the hit block; two mines/spores; recharge; other dominants cosmetic only.');

@@ -43,7 +43,7 @@
       particles.push({kind:'debris',shape:'drop',x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-75,
         gravity:190,life,maxLife:life,size:random(2.5,5),color:i%2?'#25caff':'#c7fbff'});
     }
-    return {particles,impact:{type:'essenceCollect',x,y,value,life:.56,maxLife:.56,radius:block.w*.6}};
+    return {particles,impact:{type:'essenceCollect',x,y,value,life:.9,maxLife:.9,radius:block.w*.6}};
   }
   function drawParticle(ctx,p,y) {
     if(p.shape==='drop'){
@@ -70,15 +70,21 @@
     const t=1-Math.max(0,e.life/e.maxLife), y=e.y-cameraY, radius=e.radius*(.35+t*1.25);
     ctx.translate(e.x,y);
     if(e.type==='essenceCollect'){
-      ctx.globalAlpha=Math.pow(1-t,1.3);ctx.strokeStyle='#57e5ff';ctx.lineWidth=3*(1-t)+1;
+      ctx.globalAlpha=Math.min(1,(1-t)*2.4);ctx.strokeStyle='#57e5ff';ctx.lineWidth=3*(1-t)+1;
       ctx.beginPath();ctx.ellipse(0,0,radius*1.35,radius*.9,0,0,Math.PI*2);ctx.stroke();
-      ctx.translate(0,-18-t*46);ctx.font='1000 19px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.lineWidth=4;ctx.strokeStyle='#073b5e';ctx.strokeText(`+${e.value}`,0,0);
-      ctx.fillStyle='#a5f5ff';ctx.fillText(`+${e.value}`,0,0);
-      // A blue liquid drop beside the value identifies essence, rather than XP.
-      const dx=ctx.measureText(`+${e.value}`).width/2+9;
-      ctx.translate(dx,0);ctx.fillStyle='#23cfff';ctx.strokeStyle='#cffaff';ctx.lineWidth=1.2;
-      ctx.beginPath();ctx.moveTo(0,-8);ctx.quadraticCurveTo(9,1,4,5);ctx.quadraticCurveTo(0,9,-4,5);ctx.quadraticCurveTo(-9,1,0,-8);ctx.fill();ctx.stroke();
+      const pop=1+Math.sin(Math.min(1,t/.2)*Math.PI)*.12;
+      ctx.font='1000 25px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+      const textWidth=ctx.measureText(`+${e.value}`).width,dx=textWidth/2+8;
+      const fit=Math.min(1,e.radius/.6*.94/(textWidth+36));
+      ctx.translate(0,-18-t*40);ctx.scale(fit,pop*fit);
+      ctx.fillStyle='#052d4a';ctx.beginPath();ctx.ellipse(3,1,textWidth/2+18,18,0,0,Math.PI*2);ctx.fill();
+      ctx.lineWidth=4;ctx.strokeStyle='#031b34';ctx.strokeText(`+${e.value}`,-5,0);
+      ctx.fillStyle='#ecffff';ctx.fillText(`+${e.value}`,-5,0);
+      // A tiny flask identifies the reward without loading an extra bitmap.
+      ctx.translate(dx,0);ctx.fillStyle='#21cfff';ctx.strokeStyle='#e4ffff';ctx.lineWidth=1.8;
+      ctx.beginPath();ctx.moveTo(-3,-11);ctx.lineTo(3,-11);ctx.lineTo(3,-5);
+      ctx.bezierCurveTo(12,3,9,10,0,10);ctx.bezierCurveTo(-9,10,-12,3,-3,-5);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-4,-11);ctx.lineTo(4,-11);ctx.moveTo(-5,1);ctx.lineTo(4,1);ctx.stroke();
       return;
     }
     if(t<.5) {

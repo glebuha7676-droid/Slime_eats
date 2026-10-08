@@ -15,7 +15,7 @@
   const icons = new Map();
   const palette = type => palettes[type] || palettes.base;
   function dominant(levels = {}) {
-    let type = 'base', highest = 0;
+    let type = 'base', highest = 1;
     for (const key of Object.keys(palettes)) {
       if ((levels[key] || 0) > highest) { highest = levels[key]; type = key; }
     }

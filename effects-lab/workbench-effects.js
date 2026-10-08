@@ -704,7 +704,13 @@
     if (state.levels.electric >= 2) electricBodyBolts(ctx, state);
     if (state.levels.electric && state.levels.electric < 3) electricMark(ctx, state);
     if (state.levels.fire >= 2) fireBodyParticles(ctx, state);
-    if (state.levels.fire && state.levels.fire < 3) flame(ctx, state);
+    if (state.levels.fire && state.levels.fire < 3) {
+      // The flame root shares the body's pose; only its tip sways independently.
+      ctx.save();ctx.translate(state.x,state.y);
+      ctx.rotate(state.bodyTransform?.rotation||0);
+      ctx.scale(state.bodyTransform?.scaleX??1,state.bodyTransform?.scaleY??1);
+      flame(ctx,{...state,x:0,y:0});ctx.restore();
+    }
     if (state.levels.nano) nanoDrone(ctx, state);
     if (state.levels.glitch) glitchBodyFragments(ctx, state);
   }

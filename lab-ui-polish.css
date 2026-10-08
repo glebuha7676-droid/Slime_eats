@@ -60,6 +60,15 @@ body[data-screen="home"] #homeScreen>.synth-terminal-art{
   margin:-5px;background:url("assets/ui/synth-terminal-base-v1.webp") center/100% 100% no-repeat;pointer-events:none;
 }
 /* A native gel insert fills the measured recess; no image padding or stretching. */
+html body #homeScreen .synthesizer .conveyor-pipe-socket{
+  left:var(--socket-left,var(--emitter-x))!important;top:var(--socket-top,10%)!important;
+  width:var(--socket-width,38%)!important;height:var(--socket-height,auto)!important;aspect-ratio:auto!important;
+}
+html body #homeScreen .synthesizer .conveyor-pipe-socket>img{
+  position:absolute!important;left:var(--medal-left,0%)!important;top:var(--medal-top,0%)!important;
+  width:var(--medal-width,100%)!important;height:var(--medal-height,100%)!important;
+  max-width:none!important;max-height:none!important;object-fit:fill!important;border-radius:0!important;
+}
 #homeScreen .world-terminal-shell .terminal-launch{
   left:var(--terminal-play-left)!important;top:var(--terminal-play-top)!important;
   width:var(--terminal-play-width)!important;height:var(--terminal-play-height)!important;
