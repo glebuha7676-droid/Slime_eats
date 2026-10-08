@@ -1563,7 +1563,7 @@ body[data-screen="home"] .world-summary .header-admin-btn{order:4!important}
   --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v3-spores.webp");
 }
 #homeScreen .family-phantom,.recipe-book-family.family-phantom{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v5-phantom.png");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v5-phantom-lossless.webp");
 }
 #homeScreen .family-glitch,.recipe-book-family.family-glitch{
   --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-glitch.webp");

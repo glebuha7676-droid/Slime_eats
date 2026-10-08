@@ -4,28 +4,23 @@
   const defaultColors = window.SlimeGameConfig?.SKINS?.[0]?.colors || ['#e9ff9c', '#67d348', '#2fa345'];
   const referenceBodyImage = new Image();
   const formBodySources = Object.freeze({
-    explosion: 'assets/ui/slime/forms/slime-body-explosion-v1.webp?v=1',
     frost: 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1',
     cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.webp?v=1',
     electric: 'assets/ui/slime/forms/slime-body-electric-v1.webp?v=1',
     fire: 'assets/ui/slime/forms/slime-body-fire-v1.webp?v=1',
     frostUltra: 'effects-lab/assets/frost-ultra-body-v1.webp',
-    cosmosUltra: 'effects-lab/assets/cosmos-ultra-body-v2.png',
-    technoUltra: 'effects-lab/assets/techno-ultra-body-v2.png',
-    psionicsUltra: 'effects-lab/assets/psionics-ultra-body-v1.png',
-    phantomUltra: 'effects-lab/assets/phantom-ultra-body-v6.png',
-    sporesStage1: 'effects-lab/assets/spores-stage1-body-v1.png',
-    sporesUltra: 'effects-lab/assets/spores-ultra-body-v5.png',
-    electricUltra: 'effects-lab/assets/electric-ultra-body-v7.png',
-    fireUltra: 'effects-lab/assets/fire-ultra-phoenix-body-v4.png',
-    glitchUltra: 'effects-lab/assets/glitch-ultra-body-v3.png'
+    cosmosUltra: 'effects-lab/assets/cosmos-ultra-body-v2-lossless.webp',
+    technoUltra: 'effects-lab/assets/techno-ultra-body-v2-lossless.webp',
+    psionicsUltra: 'effects-lab/assets/psionics-ultra-body-v1-lossless.webp',
+    phantomUltra: 'effects-lab/assets/phantom-ultra-body-v6-lossless.webp',
+    sporesStage1: 'effects-lab/assets/spores-stage1-body-v1-lossless.webp',
+    sporesUltra: 'effects-lab/assets/spores-ultra-body-v5-lossless.webp',
+    electricUltra: 'effects-lab/assets/electric-ultra-body-v7-lossless.webp',
+    fireUltra: 'effects-lab/assets/fire-ultra-phoenix-body-v4-lossless.webp',
+    glitchUltra: 'effects-lab/assets/glitch-ultra-body-v3-lossless.webp'
   });
   const formBodyImages = Object.create(null);
   const formBodyReady = Object.create(null);
-  const bodyTintCanvas = document.createElement('canvas');
-  const bodyTintContext = bodyTintCanvas.getContext('2d');
-  bodyTintCanvas.width = 512;
-  bodyTintCanvas.height = 512;
   const tintedPupilLayers = new Map();
   const tintedCheekLayers = new Map();
   const referenceEyeSocketsImage = new Image();
@@ -117,34 +112,78 @@
   referenceCheeksImage.src = 'assets/ui/slime/slime-cheeks-reference-v1.webp?v=1';
   referenceEyeExpressionsImage.src = 'assets/ui/slime/slime-eye-expressions-v1.webp?v=1';
   referenceMouthExpressionsImage.src = 'assets/ui/slime/slime-mouth-expressions-v1.webp?v=1';
-  electricEyeBaseImage.src = 'effects-lab/assets/electric-eye-base-v1.png';
-  electricPupilImage.src = 'effects-lab/assets/electric-pupil-v1.png';
-  fireEyeBaseImage.src = 'effects-lab/assets/fire-eye-base-v1.png';
-  firePupilImage.src = 'effects-lab/assets/fire-pupil-v1.png';
-  frostEyeBaseImage.src = 'effects-lab/assets/frost-eye-base-v1.png';
-  frostPupilImage.src = 'effects-lab/assets/frost-pupil-v1.png';
-  cosmosEyeBaseImage.src = 'effects-lab/assets/cosmos-eye-base-v1.png';
-  cosmosPupilImage.src = 'effects-lab/assets/cosmos-pupil-v1.png';
-  nanoCyborgEyeClosedImage.src = 'effects-lab/assets/nano-eye-closed-v11.webp';
-  nanoCyborgEyeTunnelImage.src = 'effects-lab/assets/nano-eye-tunnel-v11.webp';
-  psionicsEyeBaseImage.src = 'effects-lab/assets/psionics-eye-base-v2.png';
-  psionicsPupilImage.src = 'effects-lab/assets/psionics-pupil-v2.png';
-  phantomPupilsImage.src = 'effects-lab/assets/phantom-pupils-v3.png';
-  sporesEyeBaseImage.src = 'effects-lab/assets/spores-eye-base-v1.png';
-  sporesPupilImage.src = 'effects-lab/assets/spores-pupil-v1.png';
-  glitchEyeBaseImage.src = 'effects-lab/assets/glitch-eye-base-v3.png';
-  glitchPupilImage.src = 'effects-lab/assets/glitch-pupil-v2.png';
-  glitchXImage.src = 'effects-lab/assets/glitch-symbol-x-v1.png';
-  glitchOImage.src = 'effects-lab/assets/glitch-symbol-o-v1.png';
-  glitchMouthImage.src = 'effects-lab/assets/glitch-mouth-v1.png';
-
-  Object.entries(formBodySources).forEach(([form, source]) => {
-    const image = new Image();
+  // Decode only the face/body currently in use, not every unlock at startup.
+  const deferredImages = new Map([
+    [electricEyeBaseImage, 'effects-lab/assets/electric-eye-base-v1-lossless.webp'],
+    [electricPupilImage, 'effects-lab/assets/electric-pupil-v1-lossless.webp'],
+    [fireEyeBaseImage, 'effects-lab/assets/fire-eye-base-v1-lossless.webp'],
+    [firePupilImage, 'effects-lab/assets/fire-pupil-v1-lossless.webp'],
+    [frostEyeBaseImage, 'effects-lab/assets/frost-eye-base-v1-lossless.webp'],
+    [frostPupilImage, 'effects-lab/assets/frost-pupil-v1-lossless.webp'],
+    [cosmosEyeBaseImage, 'effects-lab/assets/cosmos-eye-base-v1-lossless.webp'],
+    [cosmosPupilImage, 'effects-lab/assets/cosmos-pupil-v1-lossless.webp'],
+    [nanoCyborgEyeClosedImage, 'effects-lab/assets/nano-eye-closed-v11.webp'],
+    [nanoCyborgEyeTunnelImage, 'effects-lab/assets/nano-eye-tunnel-v11.webp'],
+    [psionicsEyeBaseImage, 'effects-lab/assets/psionics-eye-base-v2-lossless.webp'],
+    [psionicsPupilImage, 'effects-lab/assets/psionics-pupil-v2-lossless.webp'],
+    [phantomPupilsImage, 'effects-lab/assets/phantom-pupils-v3-lossless.webp'],
+    [sporesEyeBaseImage, 'effects-lab/assets/spores-eye-base-v1-lossless.webp'],
+    [sporesPupilImage, 'effects-lab/assets/spores-pupil-v1-lossless.webp'],
+    [glitchEyeBaseImage, 'effects-lab/assets/glitch-eye-base-v3-lossless.webp'],
+    [glitchPupilImage, 'effects-lab/assets/glitch-pupil-v2-lossless.webp'],
+    [glitchXImage, 'effects-lab/assets/glitch-symbol-x-v1-lossless.webp'],
+    [glitchOImage, 'effects-lab/assets/glitch-symbol-o-v1-lossless.webp'],
+    [glitchMouthImage, 'effects-lab/assets/glitch-mouth-v1-lossless.webp']
+  ]);
+  const imageLoads = new WeakMap();
+  function loadImage(image, source = deferredImages.get(image)) {
+    if (!image || !source) return Promise.resolve();
+    if (imageLoads.has(image)) return imageLoads.get(image);
     image.decoding = 'async';
+    const promise = new Promise(resolve => {
+      const timeout = setTimeout(() => resolve(false), 5000);
+      const finish = result => { clearTimeout(timeout); resolve(result); };
+      image.addEventListener('load', () => finish(true), { once: true });
+      image.addEventListener('error', () => finish(false), { once: true });
+      image.src = source;
+
+    }).then(async loaded => {
+      if (loaded && image.decode) await image.decode().catch(() => {});
+      return loaded;
+    });
+    imageLoads.set(image, promise);
+    return promise;
+  }
+  Object.keys(formBodySources).forEach(form => {
+    const image = new Image();
     image.onload = () => { formBodyReady[form] = true; };
-    image.src = source;
     formBodyImages[form] = image;
   });
+  const appearanceLoads = new Map();
+  function preloadAppearance(options = {}) {
+    const key = [options.bodyVariant, options.fireEyes, options.electricEyes, options.frostEyes,
+      options.cosmosEyes, options.psionicsEyes, options.phantomEyes, options.sporesEyes,
+      options.nanoEyeOpenness != null, Boolean(options.glitchEyes || options.glitchFaceLevel)].join('|');
+    if (appearanceLoads.has(key)) return appearanceLoads.get(key);
+    const tasks = [];
+    if (formBodySources[options.bodyVariant]) tasks.push(loadImage(formBodyImages[options.bodyVariant], formBodySources[options.bodyVariant]));
+    const groups = [
+      [options.fireEyes, fireEyeBaseImage, firePupilImage],
+      [options.electricEyes, electricEyeBaseImage, electricPupilImage],
+      [options.frostEyes, frostEyeBaseImage, frostPupilImage],
+      [options.cosmosEyes, cosmosEyeBaseImage, cosmosPupilImage],
+      [options.psionicsEyes, psionicsEyeBaseImage, psionicsPupilImage],
+      [options.phantomEyes, phantomPupilsImage],
+      [options.sporesEyes, sporesEyeBaseImage, sporesPupilImage],
+      [options.nanoEyeOpenness != null, nanoCyborgEyeClosedImage, nanoCyborgEyeTunnelImage],
+      [options.glitchEyes || options.glitchFaceLevel, glitchEyeBaseImage, glitchPupilImage, glitchXImage, glitchOImage, glitchMouthImage]
+    ];
+    for (const [needed, ...images] of groups) if (needed) for (const image of images) tasks.push(loadImage(image));
+    const result = Promise.all(tasks);
+    appearanceLoads.set(key, result);
+    return result;
+  }
+  const bodyLayers = new Map();
 
   function drawReferenceBody(targetCtx, radius, tint = '', image = referenceBodyImage, filter = '') {
     const glitchUltra = image === formBodyImages.glitchUltra;
@@ -157,26 +196,29 @@
       : image === formBodyImages.electricUltra ? 1.11 : 1;
     const bodyTop = glitchUltra ? -radius * 1.168
       : -radius * 1.18 - bodySize * (fireUltra ? 58 / 512 : heightScale - 1);
-    if (filter) {
-      targetCtx.save();
-      targetCtx.filter = filter;
-      targetCtx.drawImage(image, bodyLeft, bodyTop, bodyWidth, bodySize * heightScale);
-      targetCtx.restore();
-      return;
-    }
-    if (!tint || !bodyTintContext) {
+    if (!tint && !filter) {
       targetCtx.drawImage(image, bodyLeft, bodyTop, bodyWidth, bodySize * heightScale);
       return;
     }
-    bodyTintContext.clearRect(0, 0, 512, 512);
-    bodyTintContext.globalCompositeOperation = 'source-over';
-    bodyTintContext.globalAlpha = 1;
-    bodyTintContext.drawImage(image, 0, 0, 512, 512);
-    bodyTintContext.globalCompositeOperation = 'source-atop';
-    bodyTintContext.fillStyle = tint;
-    bodyTintContext.fillRect(0, 0, 512, 512);
-    bodyTintContext.globalCompositeOperation = 'source-over';
-    targetCtx.drawImage(bodyTintCanvas, bodyLeft, bodyTop, bodyWidth, bodySize * heightScale);
+    const key = `${image.src}|${tint}|${filter}`;
+    let layer = bodyLayers.get(key);
+    if (!layer) {
+      layer = document.createElement('canvas');
+      layer.width = layer.height = 512;
+      const context = layer.getContext('2d');
+      context.filter = filter || 'none';
+      context.drawImage(image, 0, 0, 512, 512);
+      context.filter = 'none';
+      if (tint) {
+        context.globalCompositeOperation = 'source-atop';
+        context.fillStyle = tint;
+        context.fillRect(0, 0, 512, 512);
+      }
+      // Bound decoded tint/filter memory to ten 512px layers (~10 MB).
+      if (bodyLayers.size >= 10) bodyLayers.delete(bodyLayers.keys().next().value);
+      bodyLayers.set(key, layer);
+    }
+    targetCtx.drawImage(layer, bodyLeft, bodyTop, bodyWidth, bodySize * heightScale);
   }
 
   function tintedPupilLayer(tint) {
@@ -898,6 +940,8 @@
     const usesDefaultPalette = Array.isArray(colors)
       && colors.length === defaultColors.length
       && colors.every((color, index) => color === defaultColors[index]);
+    preloadAppearance({ bodyVariant, fireEyes, electricEyes, frostEyes, cosmosEyes,
+      psionicsEyes, phantomEyes, sporesEyes, nanoEyeOpenness, glitchEyes, glitchFaceLevel });
     const variantBodyImage = formBodyReady[bodyVariant] ? formBodyImages[bodyVariant] : null;
     const activeBodyImage = variantBodyImage || referenceBodyImage;
     const useReferenceBody = cuteV2
@@ -1256,5 +1300,5 @@
     targetCtx.restore();
   }
 
-  window.SlimeAvatarRenderer = Object.freeze({ drawSlimeAvatar });
+  window.SlimeAvatarRenderer = Object.freeze({ drawSlimeAvatar, preloadAppearance });
 })();

@@ -1,0 +1,1428 @@
+{
+  "count": 128,
+  "beforeBytes": 106902552,
+  "afterBytes": 73279054,
+  "modifiedFiles": [
+    "food-catalog.js",
+    "game.js",
+    "home-mode-fix.css",
+    "index.html",
+    "synthesis.css",
+    "world-catalog.js",
+    "effects-lab/slime-avatar-workbench.js",
+    "effects-lab/workbench-effects.js",
+    "effects-lab/workbench.html",
+    "js/rendering/slime-avatar.js"
+  ],
+  "originals": "archive/assets-before-lossless-webp",
+  "images": [
+    {
+      "source": "assets/ui/ability-shield-v1.png",
+      "output": "assets/ui/ability-shield-v1-lossless.webp",
+      "before": 66218,
+      "after": 49354,
+      "size": [
+        256,
+        256
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/cloning-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/cloning-scene-v2-lossless.webp",
+      "before": 2091855,
+      "after": 1632658,
+      "size": [
+        941,
+        1671
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/cosmos-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/cosmos-scene-v2-lossless.webp",
+      "before": 2100659,
+      "after": 1665112,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/electric-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/electric-scene-v2-lossless.webp",
+      "before": 1781538,
+      "after": 1354388,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/fire-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/fire-scene-v2-lossless.webp",
+      "before": 1696404,
+      "after": 1367554,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/frost-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/frost-scene-v2-lossless.webp",
+      "before": 1909958,
+      "after": 1511764,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/glitch-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/glitch-scene-v2-lossless.webp",
+      "before": 1834124,
+      "after": 1462342,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/nano-scene-v4.png",
+      "output": "assets/ui/mutation-reveal/nano-scene-v4-lossless.webp",
+      "before": 1830198,
+      "after": 1361386,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/phantom-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/phantom-scene-v2-lossless.webp",
+      "before": 1736085,
+      "after": 1314762,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/mutation-reveal/telekinesis-scene-v2.png",
+      "output": "assets/ui/mutation-reveal/telekinesis-scene-v2-lossless.webp",
+      "before": 1746990,
+      "after": 1316326,
+      "size": [
+        941,
+        1672
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/quick-mutation-panel-v1.png",
+      "output": "assets/ui/quick-mutation-panel-v1-lossless.webp",
+      "before": 1248030,
+      "after": 845466,
+      "size": [
+        2172,
+        724
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/recipe-categories/emblem-v5-phantom.png",
+      "output": "assets/ui/recipe-categories/emblem-v5-phantom-lossless.webp",
+      "before": 1343646,
+      "after": 899646,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/synth-terminal-base-v1.png",
+      "output": "assets/ui/synth-terminal-base-v1-lossless.webp",
+      "before": 1098126,
+      "after": 793324,
+      "size": [
+        925,
+        1110
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/synthesis-triple-v2.png",
+      "output": "assets/ui/synthesis-triple-v2-lossless.webp",
+      "before": 1922837,
+      "after": 1316104,
+      "size": [
+        1859,
+        846
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/tutorial-pointer-v1.png",
+      "output": "assets/ui/tutorial-pointer-v1-lossless.webp",
+      "before": 611512,
+      "after": 393578,
+      "size": [
+        1287,
+        1222
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/tutorial-pointer-v2.png",
+      "output": "assets/ui/tutorial-pointer-v2-lossless.webp",
+      "before": 45303,
+      "after": 31756,
+      "size": [
+        256,
+        243
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/tutorial-pointer-v3.png",
+      "output": "assets/ui/tutorial-pointer-v3-lossless.webp",
+      "before": 50401,
+      "after": 33018,
+      "size": [
+        256,
+        256
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/world-terminal/base-clean-v1.png",
+      "output": "assets/ui/world-terminal/base-clean-v1-lossless.webp",
+      "before": 123497,
+      "after": 93210,
+      "size": [
+        438,
+        274
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/world-terminal/base-clean-v2.png",
+      "output": "assets/ui/world-terminal/base-clean-v2-lossless.webp",
+      "before": 122131,
+      "after": 92156,
+      "size": [
+        438,
+        274
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/world-terminal/base-clean-v3.png",
+      "output": "assets/ui/world-terminal/base-clean-v3-lossless.webp",
+      "before": 98451,
+      "after": 82460,
+      "size": [
+        438,
+        274
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/world-terminal/base-clean-v4.png",
+      "output": "assets/ui/world-terminal/base-clean-v4-lossless.webp",
+      "before": 94623,
+      "after": 74936,
+      "size": [
+        438,
+        274
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ui/world-terminal/base-clean-v5.png",
+      "output": "assets/ui/world-terminal/base-clean-v5-lossless.webp",
+      "before": 96099,
+      "after": 80424,
+      "size": [
+        438,
+        274
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/vfx/electric-storm-cloud-v1.png",
+      "output": "assets/vfx/electric-storm-cloud-v1-lossless.webp",
+      "before": 1118290,
+      "after": 765064,
+      "size": [
+        1774,
+        887
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/vfx/electric-storm-cloud-v2.png",
+      "output": "assets/vfx/electric-storm-cloud-v2-lossless.webp",
+      "before": 1056100,
+      "after": 644118,
+      "size": [
+        1774,
+        887
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/vfx/fire-phoenix-ultimate-v1.png",
+      "output": "assets/vfx/fire-phoenix-ultimate-v1-lossless.webp",
+      "before": 1342258,
+      "after": 980904,
+      "size": [
+        1182,
+        1330
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/vfx/frost-storm-flake-v1.png",
+      "output": "assets/vfx/frost-storm-flake-v1-lossless.webp",
+      "before": 22960,
+      "after": 18696,
+      "size": [
+        128,
+        128
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/vfx/spores-mini-mushroom-v1.png",
+      "output": "assets/vfx/spores-mini-mushroom-v1-lossless.webp",
+      "before": 952668,
+      "after": 620612,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Глитч/01-glitch-burger.png",
+      "output": "assets/ЕДА/Новая/Глитч/01-glitch-burger-lossless.webp",
+      "before": 1236515,
+      "after": 883628,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Глитч/02-glitch-sushi.png",
+      "output": "assets/ЕДА/Новая/Глитч/02-glitch-sushi-lossless.webp",
+      "before": 1269846,
+      "after": 911120,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Глитч/03-glitch-carrot.png",
+      "output": "assets/ЕДА/Новая/Глитч/03-glitch-carrot-lossless.webp",
+      "before": 722114,
+      "after": 492436,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Космос/01-planet-candy.png",
+      "output": "assets/ЕДА/Новая/Космос/01-planet-candy-lossless.webp",
+      "before": 853371,
+      "after": 593816,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Космос/02-star-candy.png",
+      "output": "assets/ЕДА/Новая/Космос/02-star-candy-lossless.webp",
+      "before": 1463540,
+      "after": 1102068,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Космос/03-galaxy-jelly.png",
+      "output": "assets/ЕДА/Новая/Космос/03-galaxy-jelly-lossless.webp",
+      "before": 1540404,
+      "after": 1136946,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Морозная/01-popsicle.png",
+      "output": "assets/ЕДА/Новая/Морозная/01-popsicle-lossless.webp",
+      "before": 839271,
+      "after": 585496,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Морозная/02-shaved-ice.png",
+      "output": "assets/ЕДА/Новая/Морозная/02-shaved-ice-lossless.webp",
+      "before": 1099778,
+      "after": 789540,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Морозная/03-berries.png",
+      "output": "assets/ЕДА/Новая/Морозная/03-berries-lossless.webp",
+      "before": 1368196,
+      "after": 994714,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Огненная/01-berries.png",
+      "output": "assets/ЕДА/Новая/Огненная/01-berries-lossless.webp",
+      "before": 1067560,
+      "after": 726540,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Огненная/02-pepper.png",
+      "output": "assets/ЕДА/Новая/Огненная/02-pepper-lossless.webp",
+      "before": 698058,
+      "after": 457724,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Огненная/03-ramen.png",
+      "output": "assets/ЕДА/Новая/Огненная/03-ramen-lossless.webp",
+      "before": 1429603,
+      "after": 1060212,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Псионика/01-crystal-sweets.png",
+      "output": "assets/ЕДА/Новая/Псионика/01-crystal-sweets-lossless.webp",
+      "before": 976420,
+      "after": 667188,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Псионика/02-psionic-donut.png",
+      "output": "assets/ЕДА/Новая/Псионика/02-psionic-donut-lossless.webp",
+      "before": 1103693,
+      "after": 727536,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Псионика/03-psionic-potion.png",
+      "output": "assets/ЕДА/Новая/Псионика/03-psionic-potion-lossless.webp",
+      "before": 826983,
+      "after": 557186,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Споры/01-mushrooms.png",
+      "output": "assets/ЕДА/Новая/Споры/01-mushrooms-lossless.webp",
+      "before": 1239274,
+      "after": 847162,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Споры/02-mushroom-cake.png",
+      "output": "assets/ЕДА/Новая/Споры/02-mushroom-cake-lossless.webp",
+      "before": 1464997,
+      "after": 1034964,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Споры/03-spore-drink.png",
+      "output": "assets/ЕДА/Новая/Споры/03-spore-drink-lossless.webp",
+      "before": 1099749,
+      "after": 772092,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Техно/01-mechanical-snack.png",
+      "output": "assets/ЕДА/Новая/Техно/01-mechanical-snack-lossless.webp",
+      "before": 1404495,
+      "after": 1000230,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Техно/02-circuit-soup.png",
+      "output": "assets/ЕДА/Новая/Техно/02-circuit-soup-lossless.webp",
+      "before": 1607230,
+      "after": 1134974,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Техно/03-tech-dessert.png",
+      "output": "assets/ЕДА/Новая/Техно/03-tech-dessert-lossless.webp",
+      "before": 1191575,
+      "after": 833562,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Фантом/01-ghost-essence.png",
+      "output": "assets/ЕДА/Новая/Фантом/01-ghost-essence-lossless.webp",
+      "before": 957334,
+      "after": 634268,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Фантом/02-ghost-soup.png",
+      "output": "assets/ЕДА/Новая/Фантом/02-ghost-soup-lossless.webp",
+      "before": 1280064,
+      "after": 859488,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Фантом/03-ghost-fruit.png",
+      "output": "assets/ЕДА/Новая/Фантом/03-ghost-fruit-lossless.webp",
+      "before": 1135394,
+      "after": 755986,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Электро/01-energy-can.png",
+      "output": "assets/ЕДА/Новая/Электро/01-energy-can-lossless.webp",
+      "before": 999179,
+      "after": 691526,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Электро/02-candy.png",
+      "output": "assets/ЕДА/Новая/Электро/02-candy-lossless.webp",
+      "before": 1216753,
+      "after": 875158,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/ЕДА/Новая/Электро/03-noodles.png",
+      "output": "assets/ЕДА/Новая/Электро/03-noodles-lossless.webp",
+      "before": 1454687,
+      "after": 1049758,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "assets/Мир 1/Колючий враг-v1.png",
+      "output": "assets/Мир 1/Колючий враг-v1-lossless.webp",
+      "before": 1015549,
+      "after": 669182,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cloning-bud-left-v1.png",
+      "output": "effects-lab/assets/cloning-bud-left-v1-lossless.webp",
+      "before": 359700,
+      "after": 217592,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cloning-bud-left-v2.png",
+      "output": "effects-lab/assets/cloning-bud-left-v2-lossless.webp",
+      "before": 362674,
+      "after": 216366,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cloning-bud-left-v3.png",
+      "output": "effects-lab/assets/cloning-bud-left-v3-lossless.webp",
+      "before": 252197,
+      "after": 152780,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cloning-bud-left-v4.png",
+      "output": "effects-lab/assets/cloning-bud-left-v4-lossless.webp",
+      "before": 284564,
+      "after": 175972,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cloning-bud-v2.png",
+      "output": "effects-lab/assets/cloning-bud-v2-lossless.webp",
+      "before": 252124,
+      "after": 149582,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cosmos-eye-base-v1.png",
+      "output": "effects-lab/assets/cosmos-eye-base-v1-lossless.webp",
+      "before": 1032978,
+      "after": 683834,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cosmos-pupil-v1.png",
+      "output": "effects-lab/assets/cosmos-pupil-v1-lossless.webp",
+      "before": 613475,
+      "after": 393254,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/cosmos-ultra-body-v2.png",
+      "output": "effects-lab/assets/cosmos-ultra-body-v2-lossless.webp",
+      "before": 1175961,
+      "after": 771598,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/division-bud-left-v1.png",
+      "output": "effects-lab/assets/division-bud-left-v1-lossless.webp",
+      "before": 287795,
+      "after": 172842,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/division-nucleus-v1.png",
+      "output": "effects-lab/assets/division-nucleus-v1-lossless.webp",
+      "before": 897506,
+      "after": 563830,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/division-nucleus-v2.png",
+      "output": "effects-lab/assets/division-nucleus-v2-lossless.webp",
+      "before": 976459,
+      "after": 633524,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/electric-eye-base-v1.png",
+      "output": "effects-lab/assets/electric-eye-base-v1-lossless.webp",
+      "before": 668479,
+      "after": 440910,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/electric-pupil-v1.png",
+      "output": "effects-lab/assets/electric-pupil-v1-lossless.webp",
+      "before": 866516,
+      "after": 578784,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/electric-ultra-body-v6.png",
+      "output": "effects-lab/assets/electric-ultra-body-v6-lossless.webp",
+      "before": 221271,
+      "after": 149258,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/electric-ultra-body-v7.png",
+      "output": "effects-lab/assets/electric-ultra-body-v7-lossless.webp",
+      "before": 233206,
+      "after": 157418,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/fire-eye-base-v1.png",
+      "output": "effects-lab/assets/fire-eye-base-v1-lossless.webp",
+      "before": 677362,
+      "after": 427394,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/fire-pupil-v1.png",
+      "output": "effects-lab/assets/fire-pupil-v1-lossless.webp",
+      "before": 714907,
+      "after": 452806,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/fire-ultra-body-v1.png",
+      "output": "effects-lab/assets/fire-ultra-body-v1-lossless.webp",
+      "before": 212004,
+      "after": 140862,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/fire-ultra-body-v2.png",
+      "output": "effects-lab/assets/fire-ultra-body-v2-lossless.webp",
+      "before": 234155,
+      "after": 156896,
+      "size": [
+        512,
+        576
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/fire-ultra-phoenix-body-v3.png",
+      "output": "effects-lab/assets/fire-ultra-phoenix-body-v3-lossless.webp",
+      "before": 1051215,
+      "after": 701052,
+      "size": [
+        1182,
+        1330
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/fire-ultra-phoenix-body-v4.png",
+      "output": "effects-lab/assets/fire-ultra-phoenix-body-v4-lossless.webp",
+      "before": 1120546,
+      "after": 743224,
+      "size": [
+        1182,
+        1330
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/frost-eye-base-v1.png",
+      "output": "effects-lab/assets/frost-eye-base-v1-lossless.webp",
+      "before": 1114573,
+      "after": 718026,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/frost-pupil-v1.png",
+      "output": "effects-lab/assets/frost-pupil-v1-lossless.webp",
+      "before": 545640,
+      "after": 358930,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-eye-base-v1.png",
+      "output": "effects-lab/assets/glitch-eye-base-v1-lossless.webp",
+      "before": 871191,
+      "after": 564918,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-eye-base-v2.png",
+      "output": "effects-lab/assets/glitch-eye-base-v2-lossless.webp",
+      "before": 1028731,
+      "after": 666054,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-eye-base-v3.png",
+      "output": "effects-lab/assets/glitch-eye-base-v3-lossless.webp",
+      "before": 296899,
+      "after": 179242,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-eye-base-v4.png",
+      "output": "effects-lab/assets/glitch-eye-base-v4-lossless.webp",
+      "before": 292152,
+      "after": 182930,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-mouth-v1.png",
+      "output": "effects-lab/assets/glitch-mouth-v1-lossless.webp",
+      "before": 432240,
+      "after": 270704,
+      "size": [
+        1774,
+        887
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-pupil-v1.png",
+      "output": "effects-lab/assets/glitch-pupil-v1-lossless.webp",
+      "before": 832698,
+      "after": 550406,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-pupil-v2.png",
+      "output": "effects-lab/assets/glitch-pupil-v2-lossless.webp",
+      "before": 1066378,
+      "after": 719808,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-pupil-v3.png",
+      "output": "effects-lab/assets/glitch-pupil-v3-lossless.webp",
+      "before": 653859,
+      "after": 404452,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-symbol-o-v1.png",
+      "output": "effects-lab/assets/glitch-symbol-o-v1-lossless.webp",
+      "before": 703676,
+      "after": 436406,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-symbol-x-v1.png",
+      "output": "effects-lab/assets/glitch-symbol-x-v1-lossless.webp",
+      "before": 633449,
+      "after": 376446,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-ultra-body-v1.png",
+      "output": "effects-lab/assets/glitch-ultra-body-v1-lossless.webp",
+      "before": 1409466,
+      "after": 977662,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-ultra-body-v2.png",
+      "output": "effects-lab/assets/glitch-ultra-body-v2-lossless.webp",
+      "before": 1300065,
+      "after": 887244,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/glitch-ultra-body-v3.png",
+      "output": "effects-lab/assets/glitch-ultra-body-v3-lossless.webp",
+      "before": 1300452,
+      "after": 887242,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-cyborg-eye-closed-v1.png",
+      "output": "effects-lab/assets/nano-cyborg-eye-closed-v1-lossless.webp",
+      "before": 1021908,
+      "after": 627950,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-cyborg-eye-closed-v2.png",
+      "output": "effects-lab/assets/nano-cyborg-eye-closed-v2-lossless.webp",
+      "before": 750636,
+      "after": 475240,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-cyborg-eye-open-v1.png",
+      "output": "effects-lab/assets/nano-cyborg-eye-open-v1-lossless.webp",
+      "before": 1094552,
+      "after": 703912,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-cyborg-eye-open-v2.png",
+      "output": "effects-lab/assets/nano-cyborg-eye-open-v2-lossless.webp",
+      "before": 1021686,
+      "after": 667740,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-cyborg-pupil-v1.png",
+      "output": "effects-lab/assets/nano-cyborg-pupil-v1-lossless.webp",
+      "before": 226674,
+      "after": 130706,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-eye-base-v3.png",
+      "output": "effects-lab/assets/nano-eye-base-v3-lossless.webp",
+      "before": 614179,
+      "after": 381572,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-eye-base-v4.png",
+      "output": "effects-lab/assets/nano-eye-base-v4-lossless.webp",
+      "before": 922089,
+      "after": 606108,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-eye-open-v3.png",
+      "output": "effects-lab/assets/nano-eye-open-v3-lossless.webp",
+      "before": 683653,
+      "after": 431310,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-eye-open-v4.png",
+      "output": "effects-lab/assets/nano-eye-open-v4-lossless.webp",
+      "before": 986970,
+      "after": 645652,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-eye-reticle-v3.png",
+      "output": "effects-lab/assets/nano-eye-reticle-v3-lossless.webp",
+      "before": 308192,
+      "after": 180154,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/nano-eye-reticle-v4.png",
+      "output": "effects-lab/assets/nano-eye-reticle-v4-lossless.webp",
+      "before": 864718,
+      "after": 535698,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/phantom-emblem-v2.png",
+      "output": "effects-lab/assets/phantom-emblem-v2-lossless.webp",
+      "before": 1343646,
+      "after": 899646,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/phantom-eye-v2.png",
+      "output": "effects-lab/assets/phantom-eye-v2-lossless.webp",
+      "before": 323894,
+      "after": 191574,
+      "size": [
+        1185,
+        1327
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/phantom-pupils-v3.png",
+      "output": "effects-lab/assets/phantom-pupils-v3-lossless.webp",
+      "before": 265833,
+      "after": 151896,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/phantom-ultra-body-v3.png",
+      "output": "effects-lab/assets/phantom-ultra-body-v3-lossless.webp",
+      "before": 177371,
+      "after": 110794,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/phantom-ultra-body-v4.png",
+      "output": "effects-lab/assets/phantom-ultra-body-v4-lossless.webp",
+      "before": 189095,
+      "after": 117712,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/phantom-ultra-body-v5.png",
+      "output": "effects-lab/assets/phantom-ultra-body-v5-lossless.webp",
+      "before": 184218,
+      "after": 118552,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/phantom-ultra-body-v6.png",
+      "output": "effects-lab/assets/phantom-ultra-body-v6-lossless.webp",
+      "before": 185966,
+      "after": 118380,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/psionics-antennae-ultra-v1.png",
+      "output": "effects-lab/assets/psionics-antennae-ultra-v1-lossless.webp",
+      "before": 1410107,
+      "after": 878978,
+      "size": [
+        1536,
+        1024
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/psionics-antennae-v1.png",
+      "output": "effects-lab/assets/psionics-antennae-v1-lossless.webp",
+      "before": 1295110,
+      "after": 793262,
+      "size": [
+        1536,
+        1024
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/psionics-eye-base-v1.png",
+      "output": "effects-lab/assets/psionics-eye-base-v1-lossless.webp",
+      "before": 656736,
+      "after": 403368,
+      "size": [
+        1239,
+        1269
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/psionics-eye-base-v2.png",
+      "output": "effects-lab/assets/psionics-eye-base-v2-lossless.webp",
+      "before": 551734,
+      "after": 333754,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/psionics-pupil-v1.png",
+      "output": "effects-lab/assets/psionics-pupil-v1-lossless.webp",
+      "before": 395408,
+      "after": 242236,
+      "size": [
+        1240,
+        1269
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/psionics-pupil-v2.png",
+      "output": "effects-lab/assets/psionics-pupil-v2-lossless.webp",
+      "before": 280696,
+      "after": 160946,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/psionics-ultra-body-v1.png",
+      "output": "effects-lab/assets/psionics-ultra-body-v1-lossless.webp",
+      "before": 206952,
+      "after": 133456,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/spores-eye-base-v1.png",
+      "output": "effects-lab/assets/spores-eye-base-v1-lossless.webp",
+      "before": 791924,
+      "after": 518724,
+      "size": [
+        995,
+        995
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/spores-pupil-v1.png",
+      "output": "effects-lab/assets/spores-pupil-v1-lossless.webp",
+      "before": 458645,
+      "after": 305600,
+      "size": [
+        636,
+        700
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/spores-pupil-v2.png",
+      "output": "effects-lab/assets/spores-pupil-v2-lossless.webp",
+      "before": 959301,
+      "after": 617238,
+      "size": [
+        979,
+        1160
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/spores-stage1-body-v1.png",
+      "output": "effects-lab/assets/spores-stage1-body-v1-lossless.webp",
+      "before": 205014,
+      "after": 133958,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/spores-ultra-body-v2.png",
+      "output": "effects-lab/assets/spores-ultra-body-v2-lossless.webp",
+      "before": 230454,
+      "after": 153206,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/spores-ultra-body-v4.png",
+      "output": "effects-lab/assets/spores-ultra-body-v4-lossless.webp",
+      "before": 245416,
+      "after": 161722,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/spores-ultra-body-v5.png",
+      "output": "effects-lab/assets/spores-ultra-body-v5-lossless.webp",
+      "before": 245861,
+      "after": 161714,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/techno-mini-drone-red-v1.png",
+      "output": "effects-lab/assets/techno-mini-drone-red-v1-lossless.webp",
+      "before": 605453,
+      "after": 383562,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/techno-mini-drone-red-v2.png",
+      "output": "effects-lab/assets/techno-mini-drone-red-v2-lossless.webp",
+      "before": 567664,
+      "after": 353458,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/techno-ultra-body-v2.png",
+      "output": "effects-lab/assets/techno-ultra-body-v2-lossless.webp",
+      "before": 261051,
+      "after": 169082,
+      "size": [
+        512,
+        512
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/telekinesis-rock-left-v1.png",
+      "output": "effects-lab/assets/telekinesis-rock-left-v1-lossless.webp",
+      "before": 328155,
+      "after": 171948,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    },
+    {
+      "source": "effects-lab/assets/telekinesis-rock-right-v1.png",
+      "output": "effects-lab/assets/telekinesis-rock-right-v1-lossless.webp",
+      "before": 362435,
+      "after": 202380,
+      "size": [
+        1254,
+        1254
+      ],
+      "verified": "exact visible RGBA"
+    }
+  ]
+}

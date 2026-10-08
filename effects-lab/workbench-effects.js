@@ -3,16 +3,18 @@
 
   // The hooks use avatar coordinates, ready for the game's renderer later.
   const assets = {};
+  const sources = new Map();
+  const loads = new WeakMap();
   for (const [key, file] of Object.entries({
-    psionicsAntennae: 'psionics-antennae-v1.png',
-    psionicsAntennaeUltra: 'psionics-antennae-ultra-v1.png'
+    psionicsAntennae: 'psionics-antennae-v1-lossless.webp',
+    psionicsAntennaeUltra: 'psionics-antennae-ultra-v1-lossless.webp'
   })) {
     const image = new Image();
-    image.src = `effects-lab/assets/${file}`;
+    sources.set(image, `effects-lab/assets/${file}`);
     assets[key] = image;
   }
   assets.nanoDrone = new Image();
-  assets.nanoDrone.src = 'effects-lab/assets/techno-drone-red-v1.webp';
+  sources.set(assets.nanoDrone, 'effects-lab/assets/techno-drone-red-v1.webp');
   const glitchPixelCanvas = document.createElement('canvas');
   const glitchPixelCtx = glitchPixelCanvas.getContext('2d');
   let frostBottomLayer = null;
@@ -32,7 +34,32 @@
     layerCtx.fillRect(0, 0, 512, 512);
     frostBottomLayer = layer;
   };
-  frostBodyImage.src = 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1';
+  sources.set(frostBodyImage, 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1');
+  function load(image) {
+    if (loads.has(image)) return loads.get(image);
+    image.decoding = 'async';
+    const promise = new Promise(resolve => {
+      const timeout = setTimeout(() => resolve(false), 5000);
+      const finish = result => { clearTimeout(timeout); resolve(result); };
+      image.addEventListener('load', () => finish(true), { once: true });
+      image.addEventListener('error', () => finish(false), { once: true });
+      image.src = sources.get(image);
+    });
+    loads.set(image, promise);
+    return promise;
+  }
+  const preloads = new Map();
+  function preload(levels) {
+    const key = `${levels.telekinesis || 0}|${levels.frost || 0}|${levels.nano || 0}`;
+    if (preloads.has(key)) return preloads.get(key);
+    const tasks = [];
+    if (levels.telekinesis) tasks.push(load(levels.telekinesis >= 3 ? assets.psionicsAntennaeUltra : assets.psionicsAntennae));
+    if (levels.frost === 2) tasks.push(load(frostBodyImage));
+    if (levels.nano) tasks.push(load(assets.nanoDrone));
+    const promise = Promise.all(tasks);
+    preloads.set(key, promise);
+    return promise;
+  }
   const ready = image => image.complete && image.naturalWidth > 0;
   const frostBreathPhase = timestamp => Math.max(0, Math.min(1, (((timestamp % 3350) / 3350) - .62) / .27));
   const isFrostBreathing = timestamp => {
@@ -100,7 +127,7 @@
     ctx.restore();
   }
 
-  function fireBodyParticles(ctx, {x, y, radius, timestamp, levels}) {
+  function fireBodyParticles(ctx, {x, y, radius, timestamp, levels, effectDetail = 1}) {
     if (levels.fire < 2) return;
     const origins = [
       [-.77, .50], [.78, .46], [-.92, .12], [.92, .08],
@@ -109,6 +136,7 @@
     ];
     ctx.save();
     for (let index = 0; index < origins.length; index++) {
+      if (effectDetail < .8 && index % 2) continue;
       const [originX, originY] = origins[index];
       const phase = (timestamp / (1200 + index * 75) + index * .213) % 1;
       const fade = Math.sin(phase * Math.PI);
@@ -180,13 +208,14 @@
     ctx.restore();
   }
 
-  function frostSnowflakes(ctx, {x, y, radius, timestamp, levels}) {
+  function frostSnowflakes(ctx, {x, y, radius, timestamp, levels, effectDetail = 1}) {
     if (levels.frost < 2) return;
     const origins = [
       [-1.00, .25], [-.83, -.44], [-.45, -.83], [.35, -.87],
       [.82, -.45], [1.00, .18], [.86, .56], [-.86, .58]
     ];
     for (let index = 0; index < origins.length; index++) {
+      if (effectDetail < .8 && index % 2) continue;
       const [originX, originY] = origins[index];
       const phase = (timestamp / (2050 + index * 145) + index * .239) % 1;
       const side = Math.sign(originX);
@@ -342,43 +371,6 @@
   }
 
   function cosmosAura(ctx, {x, y, radius, timestamp, levels}) {
-    const flow = cosmosFlow(timestamp);
-    const comet = levels.cosmos >= 2 ? flow.energy : 0;
-    const breathe = 1 + Math.sin(timestamp / 2650) * .018;
-    const field = (cx, cy, rx, ry, colors, opacity = 1) => {
-      ctx.save();
-      ctx.translate(x + radius * (cx + flow.x), y + radius * (cy + flow.y));
-      ctx.scale(radius * rx * breathe, radius * ry * breathe);
-      ctx.globalAlpha = opacity;
-      const mist = ctx.createRadialGradient(0, 0, .12, 0, 0, 1);
-      mist.addColorStop(0, colors[0]);
-      mist.addColorStop(.56, colors[1]);
-      mist.addColorStop(1, 'rgba(59,10,133,0)');
-      ctx.fillStyle = mist;
-      ctx.beginPath();
-      ctx.arc(0, 0, 1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    };
-
-    if (levels.cosmos >= 2) {
-      ctx.save();
-      field(0, .02, 1.34 + comet * .32, 1.28 + comet * .30,
-        ['rgba(49,7,125,.77)', 'rgba(98,28,194,.43)']);
-      ctx.globalCompositeOperation = 'screen';
-      field(-.76, -.15, .55 + comet * .17, .76 + comet * .15,
-        ['rgba(193,104,255,.62)', 'rgba(111,38,219,.28)']);
-      field(.75, .10, .57 + comet * .17, .73 + comet * .15,
-        ['rgba(170,91,255,.64)', 'rgba(107,36,215,.30)']);
-      field(0, -.78, .75 + comet * .20, .47 + comet * .12,
-        ['rgba(193,126,255,.34)', 'rgba(124,52,224,.13)']);
-      field(0, .79, .77 + comet * .20, .44 + comet * .12,
-        ['rgba(149,95,242,.31)', 'rgba(89,41,186,.13)']);
-      if (comet > .01) field(0, .04, 1.65, 1.53,
-        ['rgba(161,63,255,.47)', 'rgba(112,40,219,.22)'], comet);
-      ctx.restore();
-    }
-
     const stars = [
       [-1.10,-.38],[-1.08,.46],[-.48,-1.14],
       [.62,-1.10],[1.12,-.28],[1.06,.52],[-.16,1.10]
@@ -411,37 +403,6 @@
       ctx.restore();
     }
 
-    if (levels.cosmos < 2) return;
-
-    // Independent, sparse gravity markers drift in both directions.
-    const arrows = [[-1.13,-.02,-1],[1.14,.18,1],[-.79,.78,1],[.82,-.78,-1]];
-    for (let index = 0; index < arrows.length; index++) {
-      const [ox, oy, direction] = arrows[index];
-      const phase = (timestamp / (4200 + index * 440) + index * .26) % 1;
-      const fade = phase < .30 ? Math.sin(phase / .30 * Math.PI) ** 2 : 0;
-      if (fade < .08) continue;
-      const px = x + radius * ox;
-      const py = y + radius * (oy + direction * (phase - .5) * .28);
-      const size = radius * .078;
-      ctx.save();
-      ctx.translate(px, py);
-      if (direction < 0) ctx.rotate(Math.PI);
-      ctx.globalAlpha = fade * .88;
-      ctx.shadowColor = '#b457ff';
-      ctx.shadowBlur = radius * .085;
-      ctx.fillStyle = '#bc70ff';
-      ctx.beginPath();
-      ctx.moveTo(-size * .25, -size * .68);
-      ctx.lineTo(size * .25, -size * .68);
-      ctx.lineTo(size * .25, size * .10);
-      ctx.lineTo(size * .52, size * .10);
-      ctx.lineTo(0, size * .82);
-      ctx.lineTo(-size * .52, size * .10);
-      ctx.lineTo(-size * .25, size * .10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
   }
 
   function cosmosFlow(timestamp) {
@@ -463,12 +424,6 @@
     ctx.translate(x + flow.x * radius, y + flow.y * radius);
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = strength;
-    const halo = ctx.createRadialGradient(0, 0, radius * .28, 0, 0, radius * 1.9);
-    halo.addColorStop(0, 'rgba(247,228,255,.36)');
-    halo.addColorStop(.48, 'rgba(171,72,255,.36)');
-    halo.addColorStop(1, 'rgba(68,20,159,0)');
-    ctx.fillStyle = halo;
-    ctx.beginPath(); ctx.arc(0, 0, radius * 1.9, 0, Math.PI * 2); ctx.fill();
     const outer = ctx.createLinearGradient(0, radius * .68, 0, -length);
     outer.addColorStop(0, 'rgba(255,239,255,.80)');
     outer.addColorStop(.24, 'rgba(215,113,255,.76)');
@@ -507,17 +462,21 @@
     };
   }
 
+  const glowLayers = new Map();
   function psionicsGlow(ctx, x, y, width, height, colors, opacity) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(width, height);
-    ctx.globalAlpha = opacity;
-    const glow = ctx.createRadialGradient(0, 0, .02, 0, 0, 1);
-    colors.forEach(([at, color]) => glow.addColorStop(at, color));
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(0, 0, 1, 0, Math.PI * 2);
-    ctx.fill();
+    const key = colors.flat().join('|');
+    let layer = glowLayers.get(key);
+    if (!layer) {
+      layer = document.createElement('canvas'); layer.width = layer.height = 128;
+      const context = layer.getContext('2d');
+      const glow = context.createRadialGradient(64, 64, 1.28, 64, 64, 64);
+      for (const [at, color] of colors) glow.addColorStop(at, color);
+      context.fillStyle = glow; context.fillRect(0, 0, 128, 128);
+      if (glowLayers.size >= 16) glowLayers.delete(glowLayers.keys().next().value);
+      glowLayers.set(key, layer);
+    }
+    ctx.save(); ctx.globalAlpha = opacity;
+    ctx.drawImage(layer, x - width, y - height, width * 2, height * 2);
     ctx.restore();
   }
 
@@ -620,30 +579,39 @@
     return openness * openness * (3 - 2 * openness);
   }
 
-  function glitchBodyFragments(ctx, {x, y, radius, timestamp}) {
-    if (!glitchPixelCtx) return;
-    const left = Math.max(0, Math.floor(x - radius * 1.24));
-    const top = Math.max(0, Math.floor(y - radius * 1.24));
-    const width = Math.min(ctx.canvas.width - left, Math.ceil(radius * 2.48));
-    const height = Math.min(ctx.canvas.height - top, Math.ceil(radius * 2.48));
-    if (width <= 0 || height <= 0) return;
+  const glitchFragments = [
+    [-.67, -.47, .43, 120], [.58, -.34, .38, 1180],
+    [-.56, .08, .48, 2020], [.56, .39, .44, 780],
+    [-.16, .70, .51, 1630], [-.10, -.76, .12, 2430], [.33, .63, .14, 370]
+  ];
+  const glitchFragmentActive = (timestamp, offset) => {
+    const phase = ((timestamp + offset) % 2800) / 2800;
+    return (phase >= .12 && phase < .32) || (phase >= .53 && phase < .67);
+  };
+  let glitchCopyKey = '';
+  let glitchCopySource = null;
+  function glitchBodyFragments(ctx, {x, y, radius, timestamp, effectDetail = 1}) {
+    if (!glitchPixelCtx || !glitchFragments.some(fragment => glitchFragmentActive(timestamp, fragment[3]))) return;
+    const left = Math.floor(x - radius * 1.24), top = Math.floor(y - radius * 1.24);
+    const width = Math.ceil(radius * 2.48), height = width;
     if (glitchPixelCanvas.width !== width || glitchPixelCanvas.height !== height) {
-      glitchPixelCanvas.width = width;
-      glitchPixelCanvas.height = height;
+      glitchPixelCanvas.width = width; glitchPixelCanvas.height = height;
+      glitchCopyKey = '';
     }
-    glitchPixelCtx.clearRect(0, 0, width, height);
-    glitchPixelCtx.drawImage(ctx.canvas, left, top, width, height, 0, 0, width, height);
+    const key = `${left}|${top}|${width}|${Math.floor(timestamp / (effectDetail < .8 ? 34 : 16))}`;
+    if (key !== glitchCopyKey || glitchCopySource !== ctx.canvas) {
+      glitchPixelCtx.clearRect(0, 0, width, height);
+      const transform = ctx.getTransform();
+      // Source canvas pixels use device coordinates, fragments use game coordinates.
+      glitchPixelCtx.drawImage(ctx.canvas, left * transform.a + transform.e,
+        top * transform.d + transform.f, width * transform.a, height * transform.d,
+        0, 0, width, height);
+      glitchCopyKey = key; glitchCopySource = ctx.canvas;
+    }
 
-    // Match the food effect: a handful of broad cyan/magenta data slices,
-    // followed by two square pixels. Each fragment has its own short pulse.
-    const fragments = [
-      [-.67, -.47, .43, 120], [.58, -.34, .38, 1180],
-      [-.56, .08, .48, 2020], [.56, .39, .44, 780],
-      [-.16, .70, .51, 1630], [-.10, -.76, .12, 2430], [.33, .63, .14, 370]
-    ];
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    fragments.forEach(([bx, by, span, offset], index) => {
+    glitchFragments.forEach(([bx, by, span, offset], index) => {
       const phase = ((timestamp + offset) % 2800) / 2800;
       if (!((phase >= .12 && phase < .32) || (phase >= .53 && phase < .67))) return;
       const strong = phase < .32;
@@ -716,6 +684,7 @@
   }
 
   function drawBehind(ctx, state) {
+    preload(state.levels);
     if (state.levels.cloning >= 2) flyingSpores(ctx, state);
     if (state.levels.cosmos) {
       cosmosAura(ctx, state);
@@ -742,5 +711,5 @@
 
   function drawComposite() {}
 
-  window.MutationEffectDraft = Object.freeze({ drawBehind, drawInside, drawFront, drawComposite, isFrostBreathing, nanoEyeOpenness, psionicsMotion });
+  window.MutationEffectDraft = Object.freeze({ preload, drawBehind, drawInside, drawFront, drawComposite, isFrostBreathing, nanoEyeOpenness, psionicsMotion });
 })();

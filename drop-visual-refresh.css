@@ -20,16 +20,16 @@ body[data-screen="drop"] #dropScreen .shaft{
   box-shadow:inset 0 2px #f8ffff,0 3px #123d4f99;pointer-events:none;
 }
 #dropScreen .run-top-hud .shaft-health{
-  position:relative!important;inset:auto!important;flex:0 0 81px!important;width:81px!important;height:38px!important;
+  position:relative!important;inset:auto!important;flex:0 0 87px!important;width:87px!important;height:44px!important;
   box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;
-  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;transform:none!important;pointer-events:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:10px!important;background:linear-gradient(#f5ffff,#d3edf4)!important;box-shadow:inset 0 1px #fff,0 1px #97bdca!important;transform:none!important;pointer-events:none!important;
 }
 #dropScreen .run-top-hud :is(.shaft-health-title,.shaft-health-count){display:none!important}
 #dropScreen .run-top-hud .run-hearts{height:30px!important;display:flex!important;align-items:center!important;gap:0!important}
 #dropScreen .run-top-hud :is(.run-heart,.run-heart>img){width:27px!important;height:27px!important;margin:0!important}
 #dropScreen .run-top-hud .shaft-health.is-mech{display:none!important}
 #dropScreen .run-top-hud .run-route{
-  position:relative!important;flex:1 1 auto!important;min-width:96px!important;width:auto!important;height:46px!important;min-height:46px!important;
+  position:relative!important;flex:1 1 auto!important;min-width:96px!important;width:auto!important;height:44px!important;min-height:44px!important;
   box-sizing:border-box!important;margin:0!important;padding:5px 8px!important;overflow:visible!important;
   border:0!important;border-radius:10px!important;background:linear-gradient(#184d64,#0d374c)!important;box-shadow:inset 0 2px 2px #05253777!important;
 }
@@ -54,9 +54,9 @@ body[data-screen="drop"] #dropScreen .shaft{
 #dropScreen .run-top-hud .run-route-portal{right:-10px!important;top:50%!important;width:23px!important;height:23px!important;transform:translateY(-50%)!important;border:0!important;background:none!important;filter:none!important;animation:none!important}
 #dropScreen .run-top-hud .run-route-portal img{display:block;width:100%;height:100%;object-fit:contain}
 #dropScreen .run-top-hud .run-research-hud{
-  position:relative!important;inset:auto!important;flex:0 0 52px!important;width:52px!important;height:38px!important;
-  box-sizing:border-box!important;display:grid!important;grid-template-columns:26px minmax(0,1fr)!important;align-items:center!important;
-  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  position:relative!important;inset:auto!important;flex:0 0 60px!important;width:60px!important;height:44px!important;
+  box-sizing:border-box!important;display:grid!important;grid-template-columns:28px minmax(0,1fr)!important;align-items:center!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:10px!important;background:linear-gradient(#f5ffff,#d3edf4)!important;box-shadow:inset 0 1px #fff,0 1px #97bdca!important;
 }
 #dropScreen .run-top-hud .run-research-hud>img{width:26px!important;height:30px!important;object-fit:contain!important}
 #dropScreen .run-top-hud .run-research-hud>span{display:grid!important;place-items:center!important;min-width:0!important}
@@ -64,19 +64,24 @@ body[data-screen="drop"] #dropScreen .shaft{
 #dropScreen .run-top-hud .run-research-hud b{margin:0!important;color:#0b4560!important;font-size:14px!important;line-height:1!important;white-space:nowrap!important}
 #dropScreen .run-top-hud .run-research-hud>i{right:2px!important;top:-7px!important;color:#087da9!important}
 #dropScreen .run-top-hud .run-menu-btn{
-  position:relative!important;inset:auto!important;flex:0 0 35px!important;width:35px!important;min-width:35px!important;
-  height:38px!important;min-height:38px!important;display:grid!important;place-items:center!important;overflow:visible!important;
+  position:relative!important;inset:auto!important;flex:0 0 44px!important;width:44px!important;min-width:44px!important;
+  height:44px!important;min-height:44px!important;display:grid!important;place-items:center!important;overflow:hidden!important;
   margin:0!important;padding:0!important;border:0!important;border-radius:10px!important;background:transparent!important;box-shadow:none!important;pointer-events:auto!important;
 }
-#dropScreen .run-top-hud .run-menu-btn img{position:absolute!important;left:50%!important;top:50%!important;width:61px!important;height:61px!important;max-width:none!important;display:block!important;object-fit:contain!important;transform:translate(-50%,-50%)!important;filter:none!important;pointer-events:none!important}
+#dropScreen .run-top-hud .run-menu-btn img{position:absolute!important;left:50%!important;top:50%!important;width:72px!important;height:72px!important;max-width:none!important;display:block!important;object-fit:contain!important;transform:translate(-50%,-50%)!important;filter:none!important;pointer-events:none!important}
 #dropScreen .run-top-hud .run-menu-btn span{display:none!important}
 #dropScreen .run-top-hud .run-menu-btn:active{transform:scale(.94)!important;box-shadow:none!important}
 @media(max-width:350px){
   #dropScreen .run-top-hud{left:5px;right:5px;gap:3px;padding-inline:4px}
-  #dropScreen .run-top-hud .shaft-health{flex-basis:72px!important;width:72px!important}
+  #dropScreen .run-top-hud .shaft-health{flex-basis:78px!important;width:78px!important}
   #dropScreen .run-top-hud :is(.run-heart,.run-heart>img){width:24px!important;height:24px!important}
   #dropScreen .run-top-hud .run-route{padding-inline:6px!important;min-width:94px!important}
   #dropScreen .run-top-hud .run-route-labels>b{font-size:12px!important}
-  #dropScreen .run-top-hud .run-research-hud{flex-basis:47px!important;width:47px!important}
+  #dropScreen .run-top-hud .run-research-hud{flex-basis:54px!important;width:54px!important}
   #dropScreen .run-top-hud .run-research-hud b{font-size:12px!important}
+}
+
+@media(max-width:350px){
+  #dropScreen .run-top-hud .run-menu-btn{flex-basis:40px!important;width:40px!important;min-width:40px!important}
+  #dropScreen .run-top-hud .run-menu-btn img{width:66px!important;height:66px!important}
 }

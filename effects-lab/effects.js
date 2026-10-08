@@ -36,7 +36,6 @@
     electricity: { icon: 'electricity-aligned.png', title: 'Электрическая форма', labels: ['1 РАЗРЯД', '2 РАЗРЯДА', '3 РАЗРЯДА'], states: ['Метка молнии', 'Заряженный слайм', 'Сгусток энергии'] },
     protection: { icon: 'protection-aligned.png', title: 'Защитная форма', labels: ['1 ЩИТ', '2 ЩИТА', '3 ЩИТА'], states: ['Эффект будет позже', 'Форма будет позже', 'Скин будет позже'] },
     mobility: { icon: 'mobility-aligned.png', title: 'Скоростная форма', labels: ['1 СКОРОСТЬ', '2 СКОРОСТИ', '3 СКОРОСТИ'], states: ['Накопление скорости', 'Бур-рывок', 'Бур-машина на 5 секунд'] },
-    explosion: { icon: 'explosion-aligned.png', title: 'Взрывная форма', labels: ['1 ВЗРЫВ', '2 ВЗРЫВА', '3 ВЗРЫВА'], states: ['Спящая бомба', 'Горящий фитиль', 'Слайм-бомба'] }
   };
   const effectKeys = Object.keys(effectInfo);
   const mixVisual = Object.fromEntries(effectKeys.map(key => [key, 0]));
@@ -1118,144 +1117,8 @@
     }
   }
 
-  function drawBombFuse(target, x, y, radius, amount, time) {
-    if (amount < .01) return;
-    const startX = x;
-    const startY = y - radius * .93;
-    const tipX = x + radius * .065;
-    const tipY = y - radius * 1.31;
-    target.save();
-    target.globalAlpha = amount;
-    target.lineCap = 'round';
-    target.lineJoin = 'round';
 
-    target.fillStyle = '#8c7b76';
-    target.strokeStyle = '#2b2b35';
-    target.lineWidth = radius * .022;
-    target.beginPath();
-    target.ellipse(startX, startY, radius * .13, radius * .07, 0, 0, Math.PI * 2);
-    target.fill();
-    target.stroke();
 
-    target.strokeStyle = '#3b3540';
-    target.lineWidth = radius * .085;
-    target.beginPath();
-    target.moveTo(startX, startY);
-    target.bezierCurveTo(x, y - radius * 1.07, x + radius * .055, y - radius * 1.18, tipX, tipY);
-    target.stroke();
-    target.strokeStyle = '#d9a84c';
-    target.lineWidth = radius * .028;
-    target.setLineDash([radius * .06, radius * .035]);
-    target.lineDashOffset = 0;
-    target.stroke();
-    target.setLineDash([]);
-    target.restore();
-
-    target.save();
-    target.globalAlpha = amount;
-    target.shadowColor = '#ff7b1c';
-    target.shadowBlur = radius * .1;
-    target.fillStyle = '#ffb522';
-    target.beginPath();
-    target.arc(tipX, tipY, radius * .045, 0, Math.PI * 2);
-    target.fill();
-    target.restore();
-
-    drawLivingFlame(target, tipX, tipY + radius * .025, radius * .31, radius * .19, time, amount);
-    target.save();
-    target.globalAlpha = amount;
-    for (let index = 0; index < 2; index += 1) {
-      const phase = (time / (530 + index * 70) + index * .46) % 1;
-      target.globalAlpha = amount * Math.sin(phase * Math.PI);
-      target.fillStyle = index ? '#ffcf38' : '#ff6b22';
-      target.beginPath();
-      target.arc(
-        tipX + Math.sin(index * 4.3 + time / 210) * radius * .08,
-        tipY - phase * radius * .27,
-        radius * (.018 + (1 - phase) * .018),
-        0,
-        Math.PI * 2
-      );
-      target.fill();
-    }
-    target.restore();
-  }
-
-  function drawBombShell(target, { radius }) {
-    target.save();
-    target.fillStyle = '#777f91';
-    target.strokeStyle = '#252a38';
-    target.lineWidth = radius * .035;
-    target.beginPath();
-    target.ellipse(0, -radius * .88, radius * .18, radius * .105, 0, 0, Math.PI * 2);
-    target.fill();
-    target.stroke();
-
-    target.globalAlpha = .42;
-    target.strokeStyle = '#eef5ff';
-    target.lineWidth = radius * .04;
-    target.lineCap = 'round';
-    target.beginPath();
-    target.arc(-radius * .08, -radius * .08, radius * .63, Math.PI * .84, Math.PI * 1.35);
-    target.stroke();
-    target.restore();
-  }
-
-  function paintBombHeartbeat(target, { radius, timestamp, colors }, amount) {
-    const base = target.createRadialGradient(-radius * .25, -radius * .35, radius * .12, 0, 0, radius * 1.1);
-    base.addColorStop(0, colors[0]);
-    base.addColorStop(.58, colors[1]);
-    base.addColorStop(1, colors[2]);
-    target.fillStyle = base;
-    target.fillRect(-radius * 1.2, -radius * 1.2, radius * 2.4, radius * 2.4);
-
-    const beat = reduceMotion ? .62 : .5 + Math.sin(timestamp / 720) * .5;
-    const coreRadius = radius * (.48 + beat * .16);
-    const heart = target.createRadialGradient(0, radius * .12, 0, 0, radius * .12, coreRadius);
-    heart.addColorStop(0, `rgba(255,38,44,${amount * (.62 + beat * .28)})`);
-    heart.addColorStop(.34, `rgba(241,31,43,${amount * (.4 + beat * .25)})`);
-    heart.addColorStop(.72, `rgba(205,24,40,${amount * (.12 + beat * .15)})`);
-    heart.addColorStop(1, 'rgba(173,16,38,0)');
-    target.fillStyle = heart;
-    target.fillRect(-radius, -radius * .8, radius * 2, radius * 1.8);
-
-    if (beat > .05) {
-      target.save();
-      target.globalCompositeOperation = 'screen';
-      target.globalAlpha = amount * (.12 + beat * .24);
-      const hotCore = target.createRadialGradient(0, radius * .12, 0, 0, radius * .12, radius * .24);
-      hotCore.addColorStop(0, 'rgba(255,224,177,.9)');
-      hotCore.addColorStop(.42, 'rgba(255,83,62,.7)');
-      hotCore.addColorStop(1, 'rgba(255,52,52,0)');
-      target.fillStyle = hotCore;
-      target.fillRect(-radius * .45, -radius * .35, radius * .9, radius * .9);
-      target.restore();
-    }
-  }
-
-  function drawExplosionForm(level, time, x, y, radius) {
-    const sleeping = smooth(level);
-    const fused = smooth(level - 1);
-    const ultra = smooth(level - 2);
-    const baseAlpha = 1 - ultra;
-    if (baseAlpha > .01) {
-      drawSlimeAvatar(ctx, {
-        x, y, radius, skin: classic.id, colors: classic.colors, emotion: 'neutral',
-        alpha: baseAlpha, timestamp: time,
-        bodyPaint: (target, state) => paintBombHeartbeat(target, state, sleeping)
-      });
-    }
-
-    if (ultra > .01) {
-      drawSlimeAvatar(ctx, {
-        x, y, radius, skin: 'coin', colors: ['#b7c0d1', '#596174', '#252b39'],
-        emotion: 'neutral', alpha: ultra, timestamp: time,
-        outlineColor: '#1d2230', frontLayer: drawBombShell, bodyHighlight: false
-      });
-    }
-
-    drawBombFuse(ctx, x, y, radius, fused * baseAlpha + ultra, time);
-  }
 
   function previewMotion(time) {
     if (reduceMotion) return { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, gazeX: 0, gazeY: 0, blink: false, tipSway: 0, emotion: null, speed: 0 };
@@ -1390,11 +1253,6 @@
     const frostLevel = selectedEffect === 'mix' ? mixVisual.frost : selectedEffect === 'frost' ? visualLevel : 0;
     const weightLevel = selectedEffect === 'mix' ? mixVisual.weight : selectedEffect === 'weight' ? visualLevel : 0;
     const electricityLevel = selectedEffect === 'mix' ? mixVisual.electricity : selectedEffect === 'electricity' ? visualLevel : 0;
-    const explosionLevel = selectedEffect === 'mix' ? mixVisual.explosion : selectedEffect === 'explosion' ? visualLevel : 0;
-    if (explosionLevel > .001) {
-      drawExplosionForm(explosionLevel, time, x, y, radius);
-      return;
-    }
     if (electricityLevel > .001) {
       drawElectricForm(electricityLevel, time, x, y, radius);
       return;

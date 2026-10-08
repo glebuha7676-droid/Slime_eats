@@ -1,0 +1,13 @@
+/* Small levitating psychic sparks share one emitter on emblems and food. */
+.mutation-psionics-fx:before,.mutation-psionics-fx:after{display:none!important;content:none!important}
+.mutation-psionics-fx>i{display:block!important;position:absolute;bottom:35%;width:4px;height:6px;border-radius:1px;background:#f3d5ff;box-shadow:0 0 3px #b974ff;opacity:0;animation:psychic-spark-rise 2.2s ease-in-out infinite;--spark-drift:4px}
+.mutation-psionics-fx>i:after{content:"";position:absolute;top:7px;left:1px;width:2px;height:7px;border-radius:1px;background:linear-gradient(#b986f088,transparent)}
+.mutation-psionics-fx>i:nth-child(1){left:12%;animation-delay:-.2s;--spark-drift:-5px}
+.mutation-psionics-fx>i:nth-child(2){left:27%;bottom:52%;animation-delay:-1.1s;--spark-drift:-3px}
+.mutation-psionics-fx>i:nth-child(3){left:75%;animation-delay:-.7s;--spark-drift:5px;background:#cdf7ff}
+.mutation-psionics-fx>i:nth-child(4){left:86%;bottom:55%;animation-delay:-1.6s;--spark-drift:3px}
+.mutation-psionics-fx>i:nth-child(5){left:51%;bottom:79%;animation-delay:-.5s;--spark-drift:0px}
+html body #homeScreen .synthesizer .synthesis-food-visual>.food-mutation-fx.mutation-psionics-fx{z-index:3!important;width:min(96%,84px)!important;height:68%!important;bottom:0!important}
+#panelOverlay .mutation-info-emblem .mutation-psionics-fx{z-index:4!important}
+@keyframes psychic-spark-rise{0%{opacity:0;transform:translate3d(0,3px,0) rotate(45deg) scale(.65)}25%{opacity:1}75%{opacity:.8}100%{opacity:0;transform:translate3d(var(--spark-drift),-18px,0) rotate(70deg) scale(.45)}}
+@media(prefers-reduced-motion:reduce){.mutation-psionics-fx>i{animation:none!important;opacity:.65;transform:rotate(45deg)}}

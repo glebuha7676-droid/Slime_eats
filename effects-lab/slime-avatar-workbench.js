@@ -4,18 +4,17 @@
   const defaultColors = window.SlimeGameConfig?.SKINS?.[0]?.colors || ['#e9ff9c', '#67d348', '#2fa345'];
   const referenceBodyImage = new Image();
   const formBodySources = Object.freeze({
-    explosion: 'assets/ui/slime/forms/slime-body-explosion-v1.webp?v=1',
     frost: 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1',
     frostUltra: 'effects-lab/assets/frost-ultra-body-v1.webp',
-    cosmosUltra: 'effects-lab/assets/cosmos-ultra-body-v2.png',
-    technoUltra: 'effects-lab/assets/techno-ultra-body-v2.png',
-    electricUltra: 'effects-lab/assets/electric-ultra-body-v7.png',
-    fireUltra: 'effects-lab/assets/fire-ultra-phoenix-body-v4.png',
-    glitchUltra: 'effects-lab/assets/glitch-ultra-body-v3.png',
-    psionicsUltra: 'effects-lab/assets/psionics-ultra-body-v1.png',
-    phantomUltra: 'effects-lab/assets/phantom-ultra-body-v6.png',
-    sporesStage1: 'effects-lab/assets/spores-stage1-body-v1.png',
-    sporesUltra: 'effects-lab/assets/spores-ultra-body-v5.png',
+    cosmosUltra: 'effects-lab/assets/cosmos-ultra-body-v2-lossless.webp',
+    technoUltra: 'effects-lab/assets/techno-ultra-body-v2-lossless.webp',
+    electricUltra: 'effects-lab/assets/electric-ultra-body-v7-lossless.webp',
+    fireUltra: 'effects-lab/assets/fire-ultra-phoenix-body-v4-lossless.webp',
+    glitchUltra: 'effects-lab/assets/glitch-ultra-body-v3-lossless.webp',
+    psionicsUltra: 'effects-lab/assets/psionics-ultra-body-v1-lossless.webp',
+    phantomUltra: 'effects-lab/assets/phantom-ultra-body-v6-lossless.webp',
+    sporesStage1: 'effects-lab/assets/spores-stage1-body-v1-lossless.webp',
+    sporesUltra: 'effects-lab/assets/spores-ultra-body-v5-lossless.webp',
     cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.webp?v=1',
     electric: 'assets/ui/slime/forms/slime-body-electric-v1.webp?v=1',
     fire: 'assets/ui/slime/forms/slime-body-fire-v1.webp?v=1'
@@ -119,24 +118,24 @@
   referenceMouthExpressionsImage.src = 'assets/ui/slime/slime-mouth-expressions-v1.webp?v=1';
   nanoCyborgEyeClosedImage.src = 'effects-lab/assets/nano-eye-closed-v11.webp';
   nanoCyborgEyeTunnelImage.src = 'effects-lab/assets/nano-eye-tunnel-v11.webp';
-  psionicsEyeBaseImage.src = 'effects-lab/assets/psionics-eye-base-v2.png';
-  psionicsPupilImage.src = 'effects-lab/assets/psionics-pupil-v2.png';
-  phantomPupilsImage.src = 'effects-lab/assets/phantom-pupils-v3.png';
-  electricEyeBaseImage.src = 'effects-lab/assets/electric-eye-base-v1.png';
-  electricPupilImage.src = 'effects-lab/assets/electric-pupil-v1.png';
-  fireEyeBaseImage.src = 'effects-lab/assets/fire-eye-base-v1.png';
-  firePupilImage.src = 'effects-lab/assets/fire-pupil-v1.png';
-  glitchEyeBaseImage.src = 'effects-lab/assets/glitch-eye-base-v3.png';
-  glitchPupilImage.src = 'effects-lab/assets/glitch-pupil-v2.png';
-  glitchXImage.src = 'effects-lab/assets/glitch-symbol-x-v1.png';
-  glitchOImage.src = 'effects-lab/assets/glitch-symbol-o-v1.png';
-  glitchMouthImage.src = 'effects-lab/assets/glitch-mouth-v1.png';
-  frostEyeBaseImage.src = 'effects-lab/assets/frost-eye-base-v1.png';
-  frostPupilImage.src = 'effects-lab/assets/frost-pupil-v1.png';
-  cosmosEyeBaseImage.src = 'effects-lab/assets/cosmos-eye-base-v1.png';
-  cosmosPupilImage.src = 'effects-lab/assets/cosmos-pupil-v1.png';
-  sporesEyeBaseImage.src = 'effects-lab/assets/spores-eye-base-v1.png';
-  sporesPupilImage.src = 'effects-lab/assets/spores-pupil-v1.png';
+  psionicsEyeBaseImage.src = 'effects-lab/assets/psionics-eye-base-v2-lossless.webp';
+  psionicsPupilImage.src = 'effects-lab/assets/psionics-pupil-v2-lossless.webp';
+  phantomPupilsImage.src = 'effects-lab/assets/phantom-pupils-v3-lossless.webp';
+  electricEyeBaseImage.src = 'effects-lab/assets/electric-eye-base-v1-lossless.webp';
+  electricPupilImage.src = 'effects-lab/assets/electric-pupil-v1-lossless.webp';
+  fireEyeBaseImage.src = 'effects-lab/assets/fire-eye-base-v1-lossless.webp';
+  firePupilImage.src = 'effects-lab/assets/fire-pupil-v1-lossless.webp';
+  glitchEyeBaseImage.src = 'effects-lab/assets/glitch-eye-base-v3-lossless.webp';
+  glitchPupilImage.src = 'effects-lab/assets/glitch-pupil-v2-lossless.webp';
+  glitchXImage.src = 'effects-lab/assets/glitch-symbol-x-v1-lossless.webp';
+  glitchOImage.src = 'effects-lab/assets/glitch-symbol-o-v1-lossless.webp';
+  glitchMouthImage.src = 'effects-lab/assets/glitch-mouth-v1-lossless.webp';
+  frostEyeBaseImage.src = 'effects-lab/assets/frost-eye-base-v1-lossless.webp';
+  frostPupilImage.src = 'effects-lab/assets/frost-pupil-v1-lossless.webp';
+  cosmosEyeBaseImage.src = 'effects-lab/assets/cosmos-eye-base-v1-lossless.webp';
+  cosmosPupilImage.src = 'effects-lab/assets/cosmos-pupil-v1-lossless.webp';
+  sporesEyeBaseImage.src = 'effects-lab/assets/spores-eye-base-v1-lossless.webp';
+  sporesPupilImage.src = 'effects-lab/assets/spores-pupil-v1-lossless.webp';
 
   Object.entries(formBodySources).forEach(([form, source]) => {
     const image = new Image();

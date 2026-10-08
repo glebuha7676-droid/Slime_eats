@@ -316,56 +316,41 @@
   }
 
   const fractureLines = [
-    {stage: 1, width: 1, points: [[.10,.24],[.22,.28],[.30,.37],[.43,.34],[.51,.46],[.65,.50]]},
-    {stage: 1, width: .65, points: [[.43,.34],[.46,.25],[.56,.20]]},
-    {stage: 2, width: .9, points: [[.51,.46],[.47,.58],[.55,.66],[.50,.78]]},
-    {stage: 2, width: .72, points: [[.30,.37],[.25,.47],[.16,.51]]},
-    {stage: 2, width: .75, points: [[.65,.50],[.70,.39],[.82,.34]]},
-    {stage: 3, width: .88, points: [[.65,.50],[.75,.59],[.81,.68],[.90,.72]]},
-    {stage: 3, width: .76, points: [[.55,.66],[.65,.72],[.68,.84]]},
-    {stage: 3, width: .62, points: [[.50,.78],[.44,.86],[.42,.94]]},
-    {stage: 3, width: .65, points: [[.25,.47],[.21,.62],[.13,.68]]},
-    {stage: 3, width: .58, points: [[.46,.25],[.39,.17],[.38,.10]]}
+    {stage: 1, width: 1, points: [[.06,.20],[.17,.25],[.20,.23],[.28,.34],[.35,.38],[.39,.33],[.47,.38],[.50,.48],[.59,.47],[.64,.52]]},
+    {stage: 1, width: .38, points: [[.39,.33],[.43,.28],[.42,.24],[.51,.17]]},
+    {stage: 2, width: .84, points: [[.50,.48],[.45,.57],[.49,.62],[.55,.65],[.51,.72],[.54,.79],[.50,.86]]},
+    {stage: 2, width: .46, points: [[.28,.34],[.27,.43],[.21,.45],[.23,.48],[.12,.55]]},
+    {stage: 2, width: .53, points: [[.64,.52],[.71,.43],[.69,.38],[.79,.36],[.86,.29]]},
+    {stage: 3, width: .77, points: [[.64,.52],[.72,.56],[.73,.61],[.80,.65],[.82,.72],[.95,.77]]},
+    {stage: 3, width: .44, points: [[.55,.65],[.63,.70],[.67,.68],[.70,.76],[.68,.88]]},
+    {stage: 3, width: .33, points: [[.50,.86],[.44,.88],[.46,.93],[.42,.98]]},
+    {stage: 3, width: .39, points: [[.27,.43],[.23,.55],[.24,.61],[.14,.68],[.09,.73]]},
+    {stage: 3, width: .30, points: [[.42,.24],[.36,.19],[.38,.14],[.31,.06]]}
   ].map(fracture => {
     const path = new Path2D();
     fracture.points.forEach(([px, py], index) => index ? path.lineTo(px, py) : path.moveTo(px, py));
     return {...fracture, path};
   });
-  const fractureColors = [
-    {depth: '#65371e', light: '#ffd095'},
-    {depth: '#4c5669', light: '#edf4ff'},
-    {depth: '#111824', light: '#b8c8e7'}
-  ];
-
-  function drawCrackedBlock(ctx, x, y, size, stage, timestamp, stageChangedAt, seed = 0, kind = 0) {
-    const reveal = reducedMotion ? 1 : Math.min(1, Math.max(0, (timestamp - stageChangedAt) / 280));
-    const colors = fractureColors[kind] || fractureColors[0];
+  // One readable fracture palette on dirt, stone, ice and essence alike.
+  function drawCrackedBlock(ctx, x, y, size, stage, timestamp, stageChangedAt, seed = 0) {
+    const age = Math.max(0, timestamp - stageChangedAt);
+    const pulse = reducedMotion ? 0 : Math.max(0, 1 - age / 110);
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(x + size * .04, y + size * .04, size * .92, size * .92);
-    ctx.clip();
+    const opacity = ctx.globalAlpha;
+    ctx.beginPath(); ctx.rect(x + size * .04, y + size * .04, size * .92, size * .92); ctx.clip();
     ctx.translate(x + size / 2, y + size / 2);
     ctx.rotate((seed % 4) * Math.PI / 2);
-    ctx.scale(size, size);
-    ctx.translate(-.5, -.5);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
+    ctx.scale(size * 1.14, size * 1.14); ctx.translate(-.5, -.5);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     for (const fracture of fractureLines) {
       if (fracture.stage > stage) continue;
-      const visibility = fracture.stage === stage ? reveal : 1;
-      const thickness = fracture.width * (stage === 3 ? 2.1 : 1.8) / size;
-      ctx.save();
-      ctx.translate(-1.15 / size, -1.05 / size);
-      ctx.globalAlpha = visibility * (kind === 2 ? .75 : .58);
-      ctx.lineWidth = thickness + .85 / size;
-      ctx.strokeStyle = colors.light;
-      ctx.stroke(fracture.path);
+      const thickness = Math.max(3.1, size * .057) * fracture.width * (stage === 3 ? 1.18 : 1)
+        * (1 + (fracture.stage === stage ? pulse * .18 : 0)) / (size * 1.14);
+      ctx.globalAlpha = opacity;
+      ctx.strokeStyle = '#071f2d'; ctx.lineWidth = thickness + 1.4 / size; ctx.stroke(fracture.path);
+      ctx.save();ctx.translate(-.008,-.008);
+      ctx.strokeStyle = '#fff2bd';ctx.lineWidth = Math.max(.8 / size,thickness * .34);ctx.stroke(fracture.path);
       ctx.restore();
-      ctx.globalAlpha = visibility * (kind === 2 ? .95 : .82);
-      ctx.lineWidth = thickness;
-      ctx.strokeStyle = colors.depth;
-      ctx.stroke(fracture.path);
     }
     ctx.restore();
   }

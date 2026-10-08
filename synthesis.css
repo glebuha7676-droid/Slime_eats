@@ -45,7 +45,7 @@ html body #homeScreen .synthesizer .synthesis-machine{
   overflow:visible!important;
   border:0!important;
   border-radius:0!important;
-  background:url("assets/ui/synthesis-triple-v2.png") center/100% 100% no-repeat!important;
+  background:url("assets/ui/synthesis-triple-v2-lossless.webp") center/100% 100% no-repeat!important;
   box-shadow:none!important;
 }
 html body #homeScreen .synthesizer .synthesis-machine:before,
@@ -291,7 +291,7 @@ html body #homeScreen .quick-mutation-picker{
   position:absolute;z-index:100;left:50%;top:calc(100% - 38px);
   box-sizing:border-box;width:min(350px,calc(100% - 12px));height:116px;
   padding:27px 23px 22px;
-  border:0;background:url('assets/ui/quick-mutation-panel-v1.png') center/100% 100% no-repeat;
+  border:0;background:url('assets/ui/quick-mutation-panel-v1-lossless.webp') center/100% 100% no-repeat;
   filter:drop-shadow(0 10px 13px rgba(1,19,31,.42));
   transform:translate(-50%,-50%);
   animation:quickMutationOpen .22s cubic-bezier(.17,.85,.24,1.13) both;
@@ -335,9 +335,9 @@ html body #homeScreen .quick-mutation-option:focus-visible{
   100%{opacity:1;scale:1}
 }
 @keyframes synthesisFoodMaterialize{
-  0%{opacity:0;filter:brightness(1.55) blur(2px);transform:scale(.42,.03)}
-  22%{opacity:1}
-  100%{opacity:1;filter:none;transform:scale(1)}
+  0%{opacity:0;transform:scale(.84,.68)}
+  28%{opacity:.5}
+  100%{opacity:1;transform:scale(1)}
 }
 @keyframes synthesisEmitter{0%,100%{opacity:0}9%,68%{opacity:1}}
 @keyframes synthesisRay{0%,100%{opacity:0}10%{opacity:.65}23%,58%{opacity:.94}82%{opacity:.2}}

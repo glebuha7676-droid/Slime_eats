@@ -1,0 +1,183 @@
+/* Lab panels are bounded by the game frame, including on desktop. */
+#panelOverlay:has(.mutation-lab-v2){padding:8px!important}
+#panelOverlay .panel-modal:has(.mutation-lab-v2){display:flex;flex-direction:column;min-height:0;max-height:100%!important;overflow:hidden!important;box-sizing:border-box}
+#panelOverlay .panel-modal:has(.mutation-lab-v2) .modal-head{flex:none}
+#panelOverlay .panel-modal:has(.mutation-lab-v2) #panelTitle{gap:6px;min-width:0}
+#panelOverlay #panelTitle>.mutation-panel-balance{flex:none;min-width:0;gap:3px;padding:2px 7px!important}
+#panelOverlay #panelTitle>.mutation-panel-balance b{min-width:0;white-space:nowrap}
+#panelOverlay .panel-content:has(.mutation-lab-v2){flex:1 1 auto;min-width:0;min-height:0;width:100%;box-sizing:border-box;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:#6eabbd #d6e8ef;scrollbar-gutter:stable}
+#panelOverlay .mutation-lab-v2{width:100%;min-width:0;box-sizing:border-box;padding-right:6px!important;grid-template-columns:minmax(0,1fr)}
+#panelOverlay .mutation-main-grid,#panelOverlay .mutation-lab-v2 .mutation-info-pane{width:100%;min-width:0}
+#panelOverlay .mutation-lab-v2{--lab-pane-height:360px}
+#panelOverlay .mutation-lab-v2 .mutation-synth-pane{grid-template-rows:minmax(0,1fr) 24px 50px;align-content:start;padding-top:0}
+#panelOverlay .mutation-lab-v2 .mutation-capsule-v2{height:calc(var(--lab-pane-height) - 92px)!important}
+#panelOverlay .mutation-machine-visual{width:min(100%,calc((var(--lab-pane-height) - 112px) * .879));align-self:start}
+#panelOverlay .mutation-lab-v2 .mutation-info-pane{
+  padding:14px;grid-template-columns:94px minmax(0,1fr);grid-template-rows:36px 42px minmax(0,1fr) 52px;
+  gap:10px;border:2px solid #7eacbd;border-radius:22px;color:#214d63;
+  background:radial-gradient(ellipse at 12% 8%,color-mix(in srgb,var(--emblem-glow,#8ceeee) 18%,transparent),transparent 58%),linear-gradient(#f5ffff,#dcecf3);
+  box-shadow:inset 0 2px #fff,0 3px #37687b22;overflow:visible;
+}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem{width:84px;height:84px;grid-column:1;grid-row:1/3;place-self:center;isolation:isolate}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem>img{width:80px;height:80px;filter:drop-shadow(0 2px 2px #23475744)}
+#panelOverlay .mutation-info-pane>h3{grid-column:2;grid-row:1;justify-content:flex-start;text-align:left;font-size:20px;color:#163e53;text-shadow:none;gap:6px}
+#panelOverlay .mutation-level-badge{display:none}
+#panelOverlay .mutation-info-pane .mutation-level-track{grid-column:2;grid-row:2;gap:5px}
+#panelOverlay .mutation-level-track span{height:42px;box-sizing:border-box;border:1px solid #a9bfcc;border-radius:11px;background:linear-gradient(#e6edf1,#d0dde5);color:#78929f;box-shadow:inset 0 1px #ffffffaa;font-size:17px;line-height:1.1}
+#panelOverlay .mutation-level-track span.is-open{background:linear-gradient(#cffff4,#90e2d9);border-color:#66aaaf;color:#215567;box-shadow:inset 0 2px #eaffff}
+#panelOverlay .mutation-level-track span.is-current{border:2px solid #2d8e99;background:linear-gradient(#b5fff2,#68cfc8);color:#123e52}
+#panelOverlay .mutation-level-track small{font-size:8px;letter-spacing:.02em;color:inherit}
+#panelOverlay .mutation-lab-v2[data-view="mutations"]{--lab-pane-height:clamp(260px,calc(var(--app-height,100dvh) - 340px),324px)}
+#panelOverlay .mutation-lab-v2 .mutation-level-list{grid-template-rows:repeat(3,minmax(0,1fr));gap:6px}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article{
+  min-width:0;flex-direction:row;align-items:center;justify-content:flex-start;padding:10px;gap:11px;text-align:left;
+  border:1px solid #a5c4d1;border-radius:15px;background:linear-gradient(#fcffff,#e8f4f7);box-shadow:inset 0 1px #fff;
+}
+#panelOverlay .mutation-level-list article+article:before{display:none}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article>b{width:34px;height:38px;flex:none;border:1px solid #76b5bc;border-radius:11px;background:linear-gradient(#bafff1,#7bd7cf);color:#215567;font-size:19px;box-shadow:inset 0 1px #fff}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article p{min-width:0;margin:0;color:#245269;font-size:16px;line-height:1.25;font-weight:800;text-align:left;text-shadow:none;overflow-wrap:break-word}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article.is-hidden{background:#d9e6ed;border-color:#b4c8d2;box-shadow:none}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article.is-hidden>b{background:#c4d5df;border-color:#a8beca;color:#708996;box-shadow:none}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article.is-hidden p{font-size:14px;color:#6b8797;text-shadow:none}
+#panelOverlay .mutation-level-action{grid-column:1/3;grid-row:4;width:calc(50% - 5px);align-self:stretch}
+#panelOverlay .mutation-choose-btn{grid-column:1/3;grid-row:4;width:calc(50% - 5px)!important;justify-self:end}
+#panelOverlay .mutation-upgrade-btn{height:50px;min-height:50px;display:flex;flex-wrap:nowrap;gap:5px;font-size:11px;padding:5px 7px}
+#panelOverlay .mutation-upgrade-price{flex:none;padding:2px 4px!important;font-size:14px!important}
+#panelOverlay .mutation-upgrade-price img{width:24px;height:24px}
+#panelOverlay .mutation-lab-v2 .mutation-choose-btn span{font-size:12px!important;letter-spacing:0!important}
+#panelOverlay .mutation-level-note{height:50px;display:grid;place-items:center;border:1px solid #94b6c5;border-radius:14px;background:#deedf2;color:#38687b;font-size:11px;font-weight:900}
+
+/* Nine icon sockets: five above, four centered beneath. */
+#panelOverlay .mutation-collection-head{display:flex;justify-content:space-between;align-items:center;padding:5px 4px!important;border-top:1px solid #bdd3dd}
+#panelOverlay .mutation-collection-head>b{color:#406c7e;font-size:12px;letter-spacing:.06em}
+#panelOverlay .mutation-lab-v2 .mutation-collection-head>span{display:flex;align-items:center;gap:5px;min-width:61px;justify-content:center;padding:4px 9px!important;border:1px solid #79aebe!important;border-radius:11px!important;background:linear-gradient(#f8ffff,#c7e8ef)!important;color:#214f66!important;box-shadow:inset 0 1px #fff!important}
+#panelOverlay .mutation-collection-head strong{font-size:19px!important;line-height:1;font-weight:1000;color:#214f66!important;background:none!important;padding:0!important}
+#panelOverlay .mutation-collection-head small{font-size:13px!important;color:#608497!important;letter-spacing:0}
+#panelOverlay .mutation-collection-v2{grid-template-columns:repeat(10,minmax(0,1fr))!important;gap:7px!important;padding:3px 1px 5px!important}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot{grid-column:span 2;height:76px!important;grid-template-rows:1fr!important;padding:3px!important;border:2px solid #8bafbf!important;border-radius:18px!important;background:linear-gradient(#fcffff,#d8edf3)!important;box-shadow:inset 0 2px #fff,0 3px #527d902b!important;overflow:hidden;isolation:isolate}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot:nth-child(6){grid-column:2/span 2}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot.selected{border-color:#32949c!important;background:linear-gradient(#ccfff3,#94e2d9)!important;box-shadow:inset 0 2px #fff,0 3px #327b8655!important}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot:disabled{opacity:1!important}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot.locked{filter:none!important;background:linear-gradient(#e1ebf0,#cbdde6)!important;border-color:#abc0cc!important;box-shadow:inset 0 1px #f4fcff!important}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot.locked>i{width:40px!important;height:40px!important;border:1px solid #abc2ce!important;background:#d2e3eb!important;color:#819ba9!important;font-size:25px!important;box-shadow:inset 0 1px #ffffff88}
+#panelOverlay .mutation-collection-v2 .mutation-info-emblem{grid-area:auto;place-self:center;width:60px;height:60px;max-width:100%;max-height:100%;pointer-events:none}
+#panelOverlay .mutation-collection-v2 .mutation-info-emblem>img{width:58px!important;height:58px!important;max-width:100%;object-fit:contain;filter:drop-shadow(0 2px 1px #274b6533)}
+#panelOverlay .mutation-collection-v2 .mutation-equipped-mark{width:18px;height:18px;right:2px;top:2px;z-index:5;border:1px solid #5c9e9c;background:#f2fff5;color:#27736e;font-size:12px;box-shadow:0 1px 2px #22546733}
+/* Keep fixed-size emitters in the same local coordinates on every emblem. */
+#panelOverlay .mutation-info-emblem .mutation-info-fx{width:84px!important;height:84px!important;inset:auto!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;pointer-events:none}
+#panelOverlay .mutation-collection-v2 .mutation-info-emblem .mutation-info-fx{transform:translate(-50%,-50%) scale(.68)!important}
+#panelOverlay .mutation-info-emblem .mutation-emblem-halo{filter:none;animation:none;opacity:.25}
+#panelOverlay .mutation-collection-v2 .mutation-techno-mini-fx>img{width:18px!important;height:18px!important}
+
+/* Family colours carry the identity; the lab casing and layout stay shared. */
+.mutation-info-pane.mutation-family-fire{--mut-accent:#ff9c43;--mut-light:#ffe3c6;--mut-ink:#743b22;--mut-socket:#692d21}
+.mutation-info-pane.mutation-family-frost{--mut-accent:#66cfee;--mut-light:#d2f5ff;--mut-ink:#205f7b;--mut-socket:#164f6b}
+.mutation-info-pane.mutation-family-electric{--mut-accent:#eec54b;--mut-light:#fff3bd;--mut-ink:#73551e;--mut-socket:#625021}
+.mutation-info-pane.mutation-family-cosmos{--mut-accent:#b88af0;--mut-light:#eee0ff;--mut-ink:#594282;--mut-socket:#38265c}
+.mutation-info-pane.mutation-family-nano{--mut-accent:#f88998;--mut-light:#ffe0e6;--mut-ink:#843b52;--mut-socket:#5a263e}
+.mutation-info-pane.mutation-family-telekinesis{--mut-accent:#bf9cf3;--mut-light:#f0e5ff;--mut-ink:#654686;--mut-socket:#493063}
+.mutation-info-pane.mutation-family-cloning{--mut-accent:#91d871;--mut-light:#e4f8d8;--mut-ink:#3d6936;--mut-socket:#2d5437}
+.mutation-info-pane.mutation-family-phantom{--mut-accent:#a4bdd5;--mut-light:#e6eef8;--mut-ink:#435d78;--mut-socket:#314257;--emblem-glow:#accde9}
+.mutation-info-pane.mutation-family-glitch{--mut-accent:#e58bd9;--mut-light:#ffe0fa;--mut-ink:#584274;--emblem-glow:#eb8bdc}
+#panelOverlay .mutation-lab-v2 .mutation-info-pane:not(.is-locked){
+  border-color:var(--mut-accent);
+  background:radial-gradient(ellipse at 12% 0%,color-mix(in srgb,var(--mut-accent) 27%,transparent),transparent 60%),linear-gradient(145deg,color-mix(in srgb,var(--mut-ink) 85%,#102638),color-mix(in srgb,var(--mut-ink) 50%,#102638));
+  box-shadow:inset 0 1px #ffffff35,0 3px #183c4c33;
+}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem:before{
+  content:none;display:none;
+}
+#panelOverlay .mutation-lab-v2 .mutation-info-pane.mutation-family-glitch:not(.is-locked){background:radial-gradient(ellipse at 0% 12%,#ee60cf33,transparent 55%),linear-gradient(110deg,#723775 0%,#473e82 44%,#144d88 65%,#095a90 100%);border-color:#d58bd7}
+#panelOverlay .mutation-info-emblem .mutation-phantom-fx:before{inset:-3%;filter:none;opacity:.75}
+#panelOverlay .mutation-info-emblem .mutation-emblem-halo{display:none!important}
+#panelOverlay .mutation-info-pane>h3{color:var(--mut-light);font-weight:1000;letter-spacing:.025em;text-shadow:0 1px #102b3b}
+#panelOverlay .mutation-info-pane .mutation-level-track .is-open{
+  border-color:color-mix(in srgb,var(--mut-accent) 40%,#294a5d);
+  background:color-mix(in srgb,var(--mut-ink) 65%,#173246);color:color-mix(in srgb,var(--mut-light) 60%,#6d8897);box-shadow:none;
+}
+#panelOverlay .mutation-info-pane .mutation-level-track .is-current{border:2px solid var(--mut-light);background:linear-gradient(var(--mut-light),var(--mut-accent));color:var(--mut-ink);box-shadow:inset 0 2px #ffffffaa,0 2px #0c233955}
+#panelOverlay .mutation-info-pane .mutation-level-track>span{height:42px;border-radius:12px;gap:2px}
+#panelOverlay .mutation-info-pane .mutation-level-track>span>b{font-size:19px;line-height:1}
+#panelOverlay .mutation-info-pane .mutation-level-track .is-closed{border-color:#6c879650;background:#10293899;box-shadow:none;color:#7c97a7}
+#panelOverlay .mutation-level-track>span>img{width:15px;height:15px;object-fit:contain;opacity:.75}
+#panelOverlay .mutation-info-pane .mutation-level-track small{font-size:7px;letter-spacing:.01em;line-height:1}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-open{border-color:color-mix(in srgb,var(--mut-accent) 70%,#78939f);background:linear-gradient(#ffffff0d,#122b3b55);box-shadow:inset 0 1px #ffffff16}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-open>b{border-color:color-mix(in srgb,var(--mut-accent) 65%,var(--mut-ink));background:linear-gradient(var(--mut-light),var(--mut-accent));color:var(--mut-ink)}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-open p{color:#fff5eb;font-weight:900;text-shadow:0 1px #102535}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-open:not(.is-current){background:#10263766;border-color:#859dad66}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-open:not(.is-current) p{color:#c0c5d2}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-open:not(.is-current)>b{background:#ffffff15;color:#c0c5d2;border-color:#859dad66;box-shadow:none}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-current{border:2px solid var(--mut-accent);background:linear-gradient(#ffffff13,#ffffff06)}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-hidden{border-color:#8aabba40;background:#10263777}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-hidden>b{background:#314b5d;border-color:#6d8d9c;color:#9eb8c5}
+#panelOverlay .mutation-info-pane .mutation-level-list article.is-hidden p{color:#a0bac8}
+#panelOverlay .mutation-info-pane.is-locked>.mutation-info-emblem:before{display:none}
+/* Existing sparks and snowflakes, kept visible in front of the emblem. */
+#panelOverlay .mutation-info-pane>.mutation-info-emblem .mutation-info-fx{z-index:4!important}
+#panelOverlay .mutation-info-emblem .mutation-fire-fx:before,#panelOverlay .mutation-info-emblem .mutation-fire-fx:after,
+#panelOverlay .mutation-info-emblem .mutation-frost-fx:before,#panelOverlay .mutation-info-emblem .mutation-frost-fx:after{display:none!important}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem .mutation-fire-fx>i{bottom:58%;width:4px;height:5px;box-shadow:0 0 2px #fff3b9,0 0 5px #ffbd45}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem .mutation-frost-fx>i{width:7px;height:7px;filter:drop-shadow(0 0 1px #96eaff);bottom:40%}
+#panelOverlay .mutation-info-pane .mutation-level-note{border-color:var(--mut-accent);background:#112b3b8a;color:var(--mut-light);padding:3px}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot.equipped{
+  border:2px solid #298b83!important;background:linear-gradient(#bfffee,#68cfc0)!important;
+  box-shadow:inset 0 2px #eefff9,inset 0 -3px #4ab2a7,0 3px #24625a66!important;
+}
+#panelOverlay .mutation-collection-v2 .mutation-collection-slot.selected{border-color:#d0a142!important;box-shadow:inset 0 0 0 1px #ffe9a5,0 3px #896d2a44!important}
+#panelOverlay .mutation-collection-v2 .mutation-equipped-mark{width:23px;height:23px;top:2px;right:2px;border:2px solid #eafff7;background:linear-gradient(#35bca3,#118f81);color:#fff;box-shadow:0 1px 3px #164c5a55}
+#panelOverlay .mutation-equipped-mark svg{display:block;width:17px;height:17px}
+@media(max-width:350px){
+  #panelOverlay .panel-modal:has(.mutation-lab-v2) #panelTitle>span:first-child{font-size:17px!important;letter-spacing:0}
+  #panelOverlay #panelTitle>.mutation-panel-balance{height:34px!important;padding:2px 5px!important}
+  #panelOverlay #panelTitle>.mutation-panel-balance img{width:24px!important;height:24px!important}
+  #panelOverlay #panelTitle>.mutation-panel-balance b{font-size:16px!important}
+  #panelOverlay .mutation-lab-v2{--lab-pane-height:340px}
+  #panelOverlay .mutation-lab-v2 .mutation-info-pane{padding:10px;gap:8px;grid-template-columns:77px minmax(0,1fr);grid-template-rows:34px 40px minmax(0,1fr) 52px}
+  #panelOverlay .mutation-info-pane>.mutation-info-emblem{width:72px;height:72px}
+  #panelOverlay .mutation-info-pane>.mutation-info-emblem>img{width:70px;height:70px}
+  #panelOverlay .mutation-info-pane>h3{font-size:16px}
+  #panelOverlay .mutation-level-track span{height:40px}
+  #panelOverlay .mutation-lab-v2 .mutation-level-list article{padding:8px;gap:8px}
+  #panelOverlay .mutation-lab-v2 .mutation-level-list article p{font-size:14px}
+  #panelOverlay .mutation-lab-v2 .mutation-level-list article.is-hidden p{font-size:13px}
+  #panelOverlay .mutation-collection-v2{gap:5px!important}
+  #panelOverlay .mutation-collection-v2 .mutation-collection-slot{height:65px!important;border-radius:15px!important}
+  #panelOverlay .mutation-collection-v2 .mutation-info-emblem{width:50px;height:50px}
+  #panelOverlay .mutation-collection-v2 .mutation-info-emblem>img{width:49px!important;height:49px!important}
+  #panelOverlay .mutation-collection-v2 .mutation-info-emblem .mutation-info-fx{transform:translate(-50%,-50%) scale(.57)!important}
+  #panelOverlay .mutation-upgrade-btn{font-size:10px;gap:3px;padding:4px}
+  #panelOverlay .mutation-lab-v2 .mutation-choose-btn span{font-size:10px!important}
+  #panelOverlay .mutation-collection-v2 .mutation-equipped-mark{width:20px;height:20px}
+  #panelOverlay .mutation-equipped-mark svg{width:14px;height:14px}
+}
+/* Three stages and all nine emblems fit together inside the portrait frame. */
+#panelOverlay .panel-modal:has(.mutation-lab-v2) .modal-head{margin-bottom:8px!important}
+#panelOverlay .panel-modal:has(.mutation-lab-v2) #panelTitle>span:first-child{font-size:20px}
+#panelOverlay .panel-modal:has(.mutation-lab-v2) #closePanelBtn{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important}
+#panelOverlay .mutation-lab-v2 .lab-view-tabs button{height:36px;font-size:14px}
+#panelOverlay .mutation-lab-v2 .mutation-info-pane{padding:11px;gap:8px;grid-template-columns:80px minmax(0,1fr);grid-template-rows:30px 36px minmax(0,1fr) 44px}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem{width:74px;height:74px}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem>img{width:72px;height:72px}
+#panelOverlay .mutation-info-pane>h3{font-size:18px}
+#panelOverlay .mutation-info-pane .mutation-level-track>span{height:36px;border-radius:10px}
+#panelOverlay .mutation-info-pane .mutation-level-track>span>b{font-size:17px}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article{padding:6px 8px;gap:9px}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article>b{width:30px;height:32px;font-size:17px;border-radius:9px}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article p{font-size:14px;line-height:1.17;letter-spacing:0}
+#panelOverlay .mutation-lab-v2 .mutation-level-list article.is-hidden p{font-size:13px}
+#panelOverlay .mutation-lab-v2 .mutation-choose-btn,#panelOverlay .mutation-upgrade-btn,#panelOverlay .mutation-level-note{height:44px!important;min-height:44px!important}
+#panelOverlay .mutation-lab-v2 .mutation-collection-slot{height:64px!important;border-radius:15px!important}
+#panelOverlay .mutation-collection-v2 .mutation-info-emblem{width:52px;height:52px}
+#panelOverlay .mutation-collection-v2 .mutation-info-emblem>img{width:50px!important;height:50px!important}
+#panelOverlay .mutation-lab-v2 .mutation-collection-head>span{padding:3px 8px!important}
+@media(max-width:350px){
+  #panelOverlay .mutation-lab-v2 .mutation-info-pane{padding:9px;gap:7px;grid-template-columns:72px minmax(0,1fr)}
+  #panelOverlay .mutation-info-pane>h3{font-size:16px}
+  #panelOverlay .mutation-info-pane>.mutation-info-emblem{width:68px;height:68px}
+  #panelOverlay .mutation-info-pane>.mutation-info-emblem>img{width:66px;height:66px}
+  #panelOverlay .mutation-lab-v2 .mutation-level-list article{padding:5px 6px;gap:7px}
+  #panelOverlay .mutation-lab-v2 .mutation-level-list article p{font-size:13px}
+  #panelOverlay .mutation-lab-v2 .mutation-collection-slot{height:60px!important}
+  #panelOverlay .mutation-info-pane .mutation-level-track small{font-size:6px}
+}
+@media(prefers-reduced-motion:reduce){#panelOverlay .mutation-info-emblem *{animation:none!important}}

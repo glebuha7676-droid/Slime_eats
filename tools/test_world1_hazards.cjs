@@ -17,10 +17,12 @@ const run = {
 };
 const context = {
   run, mechSuitActive: () => false, rand: () => 0,
+  clamp:(n,a,b)=>Math.max(a,Math.min(b,n)),
   applyBlockBounce: () => { bounces += 1; },
   createDebris: () => {}, spawnSpecialBurst: () => {}, trimParticles: () => {},
   resetCombo: () => {}, impact: () => {}, sound: () => {}, feedback: () => {},
   updateRunUI: () => {}, endRun: () => {}, finishUltimateRecharge: () => {},
+  burstDominantShield: () => { run.barrier = 0; },
   Math
 };
 vm.createContext(context);

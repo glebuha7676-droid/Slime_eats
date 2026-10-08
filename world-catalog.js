@@ -8,7 +8,7 @@
     'ground-weak-liquid': 'assets/Мир 1/Жилы жидкости - хрупкий-v1.webp',
     'stone-liquid': 'assets/Мир 1/Жилы жидкости - обычный-v1.webp',
     'stone-reinforced-liquid': 'assets/Мир 1/Жилы жидкости - прочный-v1.webp',
-    'stone-hazard': 'assets/Мир 1/Колючий враг-v1.png',
+    'stone-hazard': 'assets/Мир 1/Колючий враг-v1-lossless.webp',
     'dynamite': 'assets/Мир 1/Динамит.webp',
     'spring': 'assets/Мир 1/Пружина.webp',
     'heal': 'assets/Мир 1/Аптечка.webp',

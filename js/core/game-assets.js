@@ -11,7 +11,7 @@
     FOOD_ART_OFFSETS,
     WORLD_SPRITE_NAMES
   } = config;
-  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch', 'blast']);
+  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch']);
   const worldSprites = {};
   const projectSprites = {};
   const thumbnailFitCache = new Map();
@@ -36,7 +36,7 @@
   }
 
   function versionedAsset(source) {
-    const value = String(source || '');
+    const value = window.SlimeAssetPaths?.resolve(String(source || '')) || String(source || '');
     if (!/^assets\//i.test(value)) return value;
     return `${value}${value.includes('?') ? '&' : '?'}v=${ASSET_REVISION}`;
   }

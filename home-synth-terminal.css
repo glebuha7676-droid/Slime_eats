@@ -334,10 +334,6 @@ html body #homeScreen .form-index-button .form-index-silhouette{
 html body #homeScreen .form-index-button .form-index-silhouette img{width:100%!important;height:100%!important}
 html body #homeScreen .form-index-button .form-index-silhouette i{font-size:32px!important}
 
-/* The first techno food has a deep transparent lower margin in its source art. */
-html body #homeScreen .synthesizer .conveyor-food-pick[data-food-id="nanoChip"] .food-model-wrap{inset:14px 0 -14px!important}
-html body #homeScreen .synthesizer .conveyor-food-pick[data-food-id="nanoChip"] .food-mutation-fx{bottom:-10px!important}
-
 @media(max-width:370px){
   html body #homeScreen .lab-portal-frame{width:208px;height:178px;top:-28px}
   html body #homeScreen #slime{width:196px!important;height:196px!important}

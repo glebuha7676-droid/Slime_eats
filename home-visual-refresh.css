@@ -484,9 +484,6 @@ html body #homeScreen .food-mutation-fx.mutation-spores-fx>i{
   html body #homeScreen .food-mutation-fx.mutation-cosmos-stage-fx{bottom:7px!important;width:86px;height:78px}
   html body #homeScreen .food-mutation-fx.mutation-psionics-fx{bottom:7px!important;width:78px;height:72px}
 }
-html body #homeScreen .conveyor-food-pick[data-food-id="nanoChip"] .food-model{
-  transform:translateY(23px)!important;
-}
 html body #homeScreen .food-mutation-fx.mutation-techno-mini-fx{
   z-index:4!important;bottom:11px!important;width:96px;height:80px;
 }

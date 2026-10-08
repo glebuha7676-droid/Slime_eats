@@ -31,7 +31,7 @@ let server;
       const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
       const file = path.resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
       if (!file.startsWith(root) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return response.writeHead(404).end();
-      const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png' };
+      const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
       response.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');
       fs.createReadStream(file).pipe(response);
     });

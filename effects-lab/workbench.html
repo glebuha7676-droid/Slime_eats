@@ -59,7 +59,7 @@
           <button id="applyBlockGlitch" type="button"><img src="effects-lab/assets/glitch-emblem-v2.webp" alt="">ГЛИТЧ</button>
           <button id="applyBlockFire" type="button"><img src="assets/ui/recipe-categories/emblem-v2-fire.webp" alt="">ГОРЕНИЕ</button>
           <button id="applyBlockCracks" type="button">ТРЕЩИНЫ 1/3</button>
-          <button id="applyBlockPhantom" type="button"><img src="effects-lab/assets/phantom-emblem-v2.png" alt="">ПРИЗРАК</button>
+          <button id="applyBlockPhantom" type="button"><img src="effects-lab/assets/phantom-emblem-v2-lossless.webp" alt="">ПРИЗРАК</button>
           <button id="applyBlockNano" type="button"><img src="effects-lab/assets/techno-emblem-v3.webp" alt="">ПРИЦЕЛ</button>
           <button id="applyBlockElectric" type="button"><img src="assets/ui/recipe-categories/emblem-v2-electric.webp" alt="">РАЗРЯД</button>
           <button id="clearBlockEffects" type="button" disabled>ОЧИСТИТЬ</button>
@@ -83,7 +83,7 @@
       ['nano','ТЕХНО','effects-lab/assets/techno-emblem-v3.webp'],
       ['telekinesis','ПСИОНИКА','effects-lab/assets/psionics-emblem-v1.webp'],
       ['cloning','СПОРЫ','assets/ui/recipe-categories/emblem-v3-spores.webp'],
-      ['phantom','ФАНТОМ','effects-lab/assets/phantom-emblem-v2.png'],
+      ['phantom','ФАНТОМ','effects-lab/assets/phantom-emblem-v2-lossless.webp'],
       ['glitch','ГЛИТЧ','effects-lab/assets/glitch-emblem-v2.webp']
     ].map(([id,name,file]) => ({id,name,src:file.includes('/') ? file : `assets/ui/recipe-categories/${file}`}));
     const canvas=document.getElementById('slimeCanvas');
@@ -196,7 +196,7 @@
     const previewSporeFlight=document.getElementById('previewSporeFlight');
     const previewSporeUltimate=document.getElementById('previewSporeUltimate');
     const miniMushroomImage=new Image();
-    miniMushroomImage.src='assets/vfx/spores-mini-mushroom-v1.png';
+    miniMushroomImage.src='assets/vfx/spores-mini-mushroom-v1-lossless.webp';
     let previewMinis=[],previewSpores=[],lastSporePreviewAt=0;
     let emotionUntil=0,emotion='focused',drag=null,suppressClickUntil=0,pendingFeeds=0,resetVersion=0;
     const icon=mutation=>{const image=document.createElement('img');image.src=mutation.src;image.alt=mutation.name;return image};

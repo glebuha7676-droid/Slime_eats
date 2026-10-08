@@ -1,16 +1,23 @@
 .tutorial-layer{position:fixed;inset:0;z-index:1400;pointer-events:none}
 .tutorial-layer[hidden],.tutorial-dialog[hidden],.admin-tutorial-skip[hidden],.run-menu-tutorial-skip[hidden]{display:none!important}
 .tutorial-dim{display:none}
-.tutorial-focus{position:fixed;box-sizing:border-box;border:2px solid #ffe693;border-radius:15px;box-shadow:0 0 0 2px rgba(18,57,65,.9),0 0 16px rgba(255,228,120,.62);pointer-events:none}
+.tutorial-focus{position:fixed;display:block;overflow:visible;pointer-events:none}
+.tutorial-focus-edge{fill:none;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.tutorial-focus-edge-dark{stroke:#083542;stroke-width:5px}
+.tutorial-focus-edge-gold{stroke:#ffe693;stroke-width:2.5px}
+:is(#homeScreen,#panelOverlay) .tutorial-outline-source,
+:is(#homeScreen,#panelOverlay) .tutorial-outline-source :is(.food-model-wrap,.synthesis-food-visual,img){animation:none!important;transition:none!important}
 .tutorial-pointer{position:fixed;z-index:2;width:62px;height:62px;object-fit:contain;pointer-events:none;animation:tutorialTap 1.15s ease-in-out infinite;transform-origin:10% 18%}
 @keyframes tutorialTap{0%,100%{transform:scale(.92)}50%{transform:scale(1.09)}}
 .tutorial-caption{position:fixed;z-index:2;max-width:min(260px,72vw);padding:7px 11px;border:2px solid #8dc8ca;border-radius:11px;background:#083b4bf2;color:#fff;font:900 12px/1.2 ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;text-align:center;box-shadow:0 3px 0 #082a38;pointer-events:none}
-.tutorial-admin-access{position:fixed;z-index:1600;top:12px;right:12px;width:44px;height:44px;padding:4px;border:2px solid #ffe693;border-radius:12px;background:#f0fffa;box-shadow:0 0 0 2px #174b58,0 0 16px #ffe693,0 3px 0 #265464;cursor:pointer}
+.tutorial-admin-access{position:fixed;z-index:1600;top:12px;right:12px;width:44px;height:44px;padding:0;border:0;border-radius:12px;background:transparent;box-shadow:none;cursor:pointer}
 .tutorial-admin-access[hidden]{display:none!important}
-.tutorial-admin-access img{width:100%;height:100%;object-fit:contain}
-.tutorial-pause-access{position:fixed;z-index:1600;padding:3px;border:2px solid #8ab8bd;border-radius:12px;background:#e7faf6;cursor:pointer}
+.tutorial-admin-access img{display:none}
+.tutorial-admin-access:focus-visible{outline:2px solid #b9f3ff;outline-offset:2px}
+.tutorial-pause-access{position:fixed;z-index:1600;padding:0;border:0;border-radius:10px;background:transparent;box-shadow:none;cursor:pointer}
 .tutorial-pause-access[hidden]{display:none!important}
-.tutorial-pause-access img{width:100%;height:100%;object-fit:contain}
+.tutorial-pause-access img{display:none}
+.tutorial-pause-access:focus-visible{outline:2px solid #b9f3ff;outline-offset:2px}
 .tutorial-dialog{position:fixed;inset:0;z-index:1500;display:grid;place-items:center;padding:16px;background:rgba(3,20,29,.68)}
 .tutorial-dialog#tutorialControls,.tutorial-note-dialog{background:transparent}
 .tutorial-dialog-card{box-sizing:border-box;width:min(320px,100%);display:flex;flex-direction:column;align-items:center;gap:9px;padding:21px 18px;border:4px solid #77afb9;border-radius:24px;background:linear-gradient(#f7fffb,#c4e8e4);box-shadow:0 7px 0 #164151,0 13px 25px #001d28a8;color:#16414e;text-align:center;font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif}
