@@ -39,4 +39,8 @@ assert.equal(context.resolveHazardHit(block,null,1200),false);
 assert.equal(block.dead,true,'Mech contact crushes spikes');
 block=spike({id:4});assert.equal(context.damageBlockByElement(block,2,'mech',1300),true);
 assert.equal(block.dead,true,'Mech shots crush spikes');assert.equal(run.health,3);
+block=spike({id:5});assert.equal(context.destroyBlock(block,'phantomExpress',1400),true);
+assert.equal(block.dead,true,'Phantom express destroys protected spikes');
+block=spike({id:6});assert.equal(context.damageBlockByElement(block,2,'phantomExpress',1500),true);
+assert.equal(block.dead,true);assert.equal(block.hp,0,'Express never subtracts finite damage from infinite spike HP');
 console.log('Spikes: ordinary attacks blocked; comet, mech contact and shots destroy them without bounce, duplicate rewards or null-collision errors.');

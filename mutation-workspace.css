@@ -77,7 +77,7 @@
 .mutation-info-pane.mutation-family-nano{--mut-accent:#f88998;--mut-light:#ffe0e6;--mut-ink:#843b52;--mut-socket:#5a263e}
 .mutation-info-pane.mutation-family-telekinesis{--mut-accent:#bf9cf3;--mut-light:#f0e5ff;--mut-ink:#654686;--mut-socket:#493063}
 .mutation-info-pane.mutation-family-cloning{--mut-accent:#91d871;--mut-light:#e4f8d8;--mut-ink:#3d6936;--mut-socket:#2d5437}
-.mutation-info-pane.mutation-family-phantom{--mut-accent:#a4bdd5;--mut-light:#e6eef8;--mut-ink:#435d78;--mut-socket:#314257;--emblem-glow:#accde9}
+.mutation-info-pane.mutation-family-phantom{--mut-accent:#78efc8;--mut-light:#defff1;--mut-ink:#255d63;--mut-socket:#123e46;--emblem-glow:#8dffe0;background:radial-gradient(ellipse at 50% 20%,rgba(93,234,189,.21),transparent 60%),linear-gradient(155deg,#153b40,#0c252d 58%,#1c454b)}
 .mutation-info-pane.mutation-family-glitch{--mut-accent:#e58bd9;--mut-light:#ffe0fa;--mut-ink:#584274;--emblem-glow:#eb8bdc}
 #panelOverlay .mutation-lab-v2 .mutation-info-pane:not(.is-locked){
   border-color:var(--mut-accent);

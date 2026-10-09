@@ -7,10 +7,10 @@
   const ROCK_WEIGHTS = [
     { dense: 68, hard: 32, reinforced: 0 },
     { dense: 28, hard: 60, reinforced: 12 },
-    { dense: 8, hard: 46, reinforced: 46 }
+    { dense: 35, hard: 35, reinforced: 30 }
   ];
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-  const isRock = cell => !cell.dead && !cell.hazard && !cell.special && cell.tier !== 'soft';
+  const isRock = cell => !!cell && !cell.dead && !cell.hazard && !cell.special && cell.tier !== 'soft';
 
   function weightedTier(weights, random) {
     const roll = random() * (weights.dense + weights.hard + weights.reinforced);
@@ -29,52 +29,54 @@
     };
     const encounters = [];
     const startOnLeft = random() < .5;
-    const centerPatrolZone = random() < .5 ? 0 : 1;
+    const centerPatrolZone = 0;
     let sideIndex = 0;
     for (let zone = 0; zone < 3; zone += 1) {
       // Four pressure events plus a quiet ore pocket in a recovery interval.
       const types = zone === 1
-        ? [...shuffled(['side-three', 'horizontal-pair', 'center-four']), 'vertical']
-        : shuffled(['side-three', 'side-three', 'horizontal-pair', 'center-four']);
+        ? [...shuffled(['side-three', 'horizontal', 'center-four']), 'vertical']
+        : shuffled(['side-three', 'side-three', 'horizontal', 'center-four']);
+      if (zone === 1 && types[0] === 'horizontal') [types[0], types[1]] = [types[1], types[0]];
       if (zone === 0 && types[0] === 'center-four') [types[0], types[3]] = [types[3], types[0]];
-      // Leave rock below the faster patrol for its guarded currency vein.
-      if (zone === 2 && types[3] === 'horizontal-pair') [types[0], types[3]] = [types[3], types[0]];
+      // Leave rock below the patrol for its guarded currency vein.
+      if (zone === 2 && types[3] === 'horizontal') [types[0], types[3]] = [types[3], types[0]];
       const locals = zone === 2 ? [3, 11, 19, 32] : [5, 13, 21, 29];
       const local = [];
       for (let index = 0; index < types.length; index += 1) {
         const kind = types[index];
         const row = zone * ZONE_ROWS + locals[index] + Math.floor(random() * 2);
-        const centerPatrol = kind === 'horizontal-pair' && zone === centerPatrolZone;
-        const side = kind === 'center-four' || centerPatrol ? -1 : (sideIndex++ % 2 === (startOnLeft ? 0 : 1) ? 0 : columns - 1);
+        const centerPatrol = kind === 'horizontal' && zone === centerPatrolZone;
+        const fullWidth = kind === 'horizontal' && zone === 1;
+        const side = kind === 'center-four' || centerPatrol || fullWidth ? -1 : (sideIndex++ % 2 === (startOnLeft ? 0 : 1) ? 0 : columns - 1);
         const nextFirst = index < 3 ? zone * ZONE_ROWS + locals[index + 1] - (zone === 1 && index === 2 ? 1 : 0) : (zone + 1) * ZONE_ROWS + 4;
         const maxHeight = Math.min(3, nextFirst - row - 4, (zone + 1) * ZONE_ROWS - row,
           zone === 2 && index === 2 ? zone * ZONE_ROWS + 23 - row : 3);
         const choices = kind === 'side-three'
-          ? [{ variant: 'bar', height: 1 }, { variant: 'corner', height: 2 }, { variant: 'bracket', height: 2 }, { variant: 'stair', height: 3 }]
+          ? [{ variant: 'bar', height: 1 }, { variant: 'corner', height: 2 }, { variant: 'up-chevron', height: 2 }, { variant: 'descending-stair', height: 3 }, { variant: 'terrace', height: 3 }]
           : kind === 'center-four'
             ? [{ variant: 'square', height: 2 }, { variant: 'double-gate', height: 3 }, { variant: 'staggered', height: 3 }, { variant: 'side-gates', height: 3 }]
-            : kind === 'horizontal-pair'
-              ? centerPatrol ? [{ variant: 'center-patrol', height: 2 }]
-                : zone === 2 ? [{ variant: 'fast-parallel', height: 2 }, { variant: 'fast-wide', height: 2 }]
-                  : [{ variant: 'parallel', height: 2 }, { variant: 'wide', height: 2 }, { variant: 'offset', height: 3 }]
+            : kind === 'horizontal'
+              ? fullWidth ? [{ variant: 'full-width', height: 1 }]
+                : centerPatrol ? [{ variant: 'center-patrol', height: 1 }]
+                  : [{ variant: 'side-patrol', height: 1 }, { variant: 'wide-patrol', height: 1 }]
               : [{ variant: 'vertical', height: 1 }];
         const valid = choices.filter(choice => choice.height <= maxHeight);
         const { variant, height } = valid[Math.floor(random() * valid.length)];
         const center = Math.floor(columns / 2) - 1;
         const bypasses = variant === 'side-gates' ? [center]
           : kind === 'center-four' || centerPatrol ? [0, columns - 2]
-            : variant === 'wide' || variant === 'fast-wide' ? [side === 0 ? columns - 2 : 0]
+            : variant === 'wide-patrol' ? [side === 0 ? columns - 2 : 0]
               : side === 0 ? [3, columns - 2] : [0, columns - 5];
         local.push({ zone, row, side, kind, variant, center,
           firstRow: kind === 'vertical' ? row - 1 : row,
           lastRow: kind === 'vertical' ? row + 1 : row + height - 1,
-          preferred: bypasses[Math.floor(random() * bypasses.length)] });
+          timed: fullWidth, preferred: bypasses[Math.floor(random() * bypasses.length)] });
       }
       const before = local[Math.floor(random() * 3)];
       const variant = random() < .5 ? 'seam' : 'pocket';
       const preferred = before.side === 0 ? columns - 3 : before.side === -1 && variant === 'pocket' ? columns - 2 : 1;
-      local.push({ zone, row: before.lastRow + 2, side: -1, kind: 'quiet-deposit', variant,
-        center: Math.floor(columns / 2) - 1, firstRow: before.lastRow + 2, lastRow: before.lastRow + 3, preferred });
+      local.push({ zone, row: before.lastRow + 3, side: -1, kind: 'quiet-deposit', variant,
+        center: Math.floor(columns / 2) - 1, firstRow: before.lastRow + 3, lastRow: before.lastRow + 4, preferred });
       local.sort((a,b) => a.firstRow - b.firstRow);
       local.forEach((item,index) => encounters.push({ ...item, index, id: encounters.length }));
     }
@@ -102,23 +104,19 @@
         const inward = side === 0 ? 1 : -1;
         const pattern = variant === 'bar' ? [[0,0],[0,1],[0,2]]
           : variant === 'corner' ? [[0,0],[0,1],[1,1]]
-            : variant === 'bracket' ? [[0,0],[0,2],[1,1]] : [[0,0],[1,1],[2,2]];
+            : variant === 'up-chevron' ? [[0,1],[1,0],[1,2]]
+              : variant === 'terrace' ? [[0,1],[0,2],[2,0]] : [[0,2],[1,1],[2,0]];
         for (const [y, x] of pattern) spike(encounter, row + y, col + inward * x);
-      } else if (kind === 'horizontal-pair') {
+      } else if (kind === 'horizontal') {
         const centered = variant === 'center-patrol';
-        const fast = variant.startsWith('fast-');
-        const phase = random() * Math.PI * 2;
-        const period = fast ? 2800 + random() * 600 : centered ? 4200 + random() * 600 : 5000 + random() * 1200;
-        for (let index = 0; index < 2; index += 1) {
-          const left = side === 0;
-          const width = variant === 'wide' || variant === 'fast-wide' ? 4 : centered || variant === 'offset' ? 2 : 3;
-          const shift = variant === 'offset' ? index : 0;
-          const from = centered ? center : left ? shift : columns - width - shift;
+        const fullWidth = variant === 'full-width';
+        const period = fullWidth ? 7200 + random() * 1000 : 5400 + random() * 1200;
+        {
+          const width = fullWidth ? columns : variant === 'wide-patrol' ? 4 : centered ? 2 : 3;
+          const from = fullWidth ? 0 : centered ? center : side === 0 ? 0 : columns - width;
           const to = from + width - 1;
-          const patrolRow = row + index * (variant === 'offset' ? 2 : 1);
-          for (let col = from; col <= to; col += 1) air(patrolRow, col, encounter.id);
-          spike(encounter, patrolRow, from + 1, { axis: 'x', from, to,
-            phase: centered || fast ? phase + index * Math.PI : random() * Math.PI * 2, period });
+          for (let col = from; col <= to; col += 1) { air(row, col, encounter.id); cells[row][col].timed = fullWidth; }
+          spike(encounter, row, from, { axis: 'x', from, to, phase: random() * Math.PI * 2, period });
         }
       } else {
         for (let current = row - 1; current <= row + 1; current += 1) air(current, side, encounter.id);
@@ -149,7 +147,7 @@
         // Include body clearance above and below a threat, not only its tile.
         let blocked = false;
         for (let neighborRow = Math.max(0, row - 1); neighborRow <= Math.min(ROWS - 1, row + 1); neighborRow += 1) {
-          if ([cells[neighborRow][start], cells[neighborRow][start + 1]].some(cell => cell.dead || cell.hazard)) { blocked = true; break; }
+          if ([cells[neighborRow][start], cells[neighborRow][start + 1]].some(cell => !cell.timed && (cell.dead || cell.hazard))) { blocked = true; break; }
         }
         if (blocked) continue;
         const preference = Math.abs(start - desired[row]) * .3;
@@ -171,7 +169,9 @@
     let guide = pathStarts[0];
     for (let row = 0; row < ROWS; row += 1) {
       const start = pathStarts[row];
+      const previousGuide = guide;
       guide = clamp(guide, start, start + 1);
+      if (row % 6 === 0 && random() < .4) guide = clamp(guide + (random() < .5 ? -1 : 1), Math.max(start, previousGuide - 1), Math.min(start + 1, previousGuide + 1));
       guideCols[row] = guide;
       cells[row][start].path = cells[row][start + 1].path = true;
       cells[row][guide].guide = true;
@@ -185,27 +185,38 @@
     for (let zone = 0; zone < 3; zone += 1) {
       const local = encounters.filter(item => item.zone === zone);
       const guarded = local.filter(item => item.kind !== 'quiet-deposit' && item.kind !== 'vertical'
-        && item.lastRow + 2 < (zone + 1) * ZONE_ROWS).map(item => ({ item,
-          rank: random() - (item.variant === 'center-patrol' || item.variant.startsWith('fast-') ? 1 : 0) })).sort((a, b) => a.rank - b.rank);
+        && item.lastRow + 5 < (zone + 1) * ZONE_ROWS).map(item => ({ item,
+          rank: random() - (item.variant === 'center-patrol' || item.variant === 'full-width' ? 1 : 0) })).sort((a, b) => a.rank - b.rank);
       selected.push(...guarded.slice(0, 2).map(({ item }, index) => ({ encounter: item, rich: index === 1 })),
         { encounter: local.find(item => item.kind === 'quiet-deposit'), rich: false });
     }
     for (const { encounter, rich } of selected) {
       const guarded = encounter.kind !== 'quiet-deposit';
-      const firstRow = guarded ? encounter.lastRow + 1 : encounter.row;
+      const firstRow = guarded ? encounter.lastRow + 3 : encounter.row;
       const lastSide = encounter.side;
       const col = !guarded ? encounter.preferred : lastSide === -1 ? encounter.center : lastSide === 0 ? 0 : columns - 2;
       const core = [], growth = [];
-      const coordinates = !guarded && encounter.variant === 'seam'
-        ? [[0,-1],[0,0],[1,0],[1,1],[1,2],[2,1]] : [[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]];
-      for (const [index, [y, x]] of coordinates.entries()) {
-        const row = firstRow + y;
-        const column = col + x;
-        if (row >= (encounter.zone + 1) * ZONE_ROWS || !isRock(cells[row][column])) continue;
-        (index < 4 ? core : growth).push({ row, col: column });
+      const pocket = [[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]];
+      const seam = [[0,-1],[0,0],[1,0],[1,1],[1,2],[2,1]];
+      const occupied = new Set(deposits.flatMap(item => [...item.core,...item.growth].map(spot => `${spot.row}:${spot.col}`)));
+      const shapes = !guarded && encounter.variant === 'seam' ? [seam,pocket] : [pocket];
+      const positions = Array.from({length:columns},(_,column)=>column).sort((a,b)=>Math.abs(a-col)-Math.abs(b-col));
+      let coordinates, base;
+      for (const shape of shapes) {
+        base = positions.find(column => shape.slice(0,4).every(([y,x]) => {
+          const row = firstRow+y, c = column+x;
+          return row < (encounter.zone+1)*ZONE_ROWS && isRock(cells[row]?.[c]) && !occupied.has(`${row}:${c}`);
+        }));
+        if (base !== undefined) { coordinates = shape; break; }
+      }
+      if (!coordinates) throw new Error('World 1 ore pockets overlap');
+      for (const [index,[y,x]] of coordinates.entries()) {
+        const row = firstRow+y, column = base+x;
+        if (row >= (encounter.zone+1)*ZONE_ROWS || !isRock(cells[row]?.[column]) || occupied.has(`${row}:${column}`)) continue;
+        (index < 4 ? core : growth).push({row,col:column});
       }
       deposits.push({ id: deposits.length, zone: encounter.zone, guardId: guarded ? encounter.id : null,
-        encounterId: encounter.id, guarded, rich, core, growth, cells: [], value: 0 });
+        encounterId: encounter.id, guarded, rich, minRow: firstRow, maxRow: Math.min(firstRow + 4, (encounter.zone + 1) * ZONE_ROWS - 1), core, growth, cells: [], value: 0 });
     }
     return deposits;
   }
@@ -219,37 +230,44 @@
     remaining.hard = count - remaining.dense - remaining.reinforced;
     const assign = (cell, tier) => {
       if (!isRock(cell) || cell.tier) return;
+      if (remaining[tier] <= 0) tier = weightedTier(remaining, random);
       cell.tier = tier;
       remaining[tier] -= 1;
     };
-    if (zone === 2) for (let row = hardBand.from; row <= hardBand.to; row += 1) {
-      for (const cell of cells[row]) assign(cell, 'reinforced');
-    }
-    for (const deposit of deposits.filter(item => item.zone === zone)) {
-      const tier = deposit.guarded && (zone === 2 || (zone === 1 && deposit.rich)) ? 'reinforced' : 'hard';
-      for (const { row, col } of deposit.core) assign(cells[row][col], tier === 'reinforced' && col === guideCols[row] ? 'hard' : tier);
+    // The fragile seam is allocated before ore or dense strata. It stays
+    // connected through every rock row, including the reinforced band.
+    for (let row = first; row < first + ZONE_ROWS; row += 1) assign(cells[row][guideCols[row]], 'dense');
+    const localDeposits = deposits.filter(item => item.zone === zone);
+    for (const deposit of localDeposits) {
+      const richOnly = zone === 2 && deposit.rich && random() < .18;
+      const sequence = richOnly ? ['reinforced'] : zone === 0 ? ['dense','hard','hard','dense']
+        : ['dense','hard','reinforced','hard'];
+      deposit.core.forEach(({row,col},index) => assign(cells[row][col], sequence[index % sequence.length]));
     }
     const localEncounters = encounters.filter(item => item.zone === zone);
-    for (let row = Math.max(first, 1); row < first + ZONE_ROWS; row += 1) {
-      const guide = cells[row][guideCols[row]];
-      const streak = zone === 0 || localEncounters.some(item => zone === 1
-        ? (row >= item.firstRow - 3 && row < item.firstRow) || row === item.lastRow + 1
-        : item.kind === 'center-four' ? row >= item.row - 2 && row < item.row
-          : item.kind === 'horizontal-pair' && row === item.row - 1);
-      assign(guide, streak && remaining.dense > 0 ? 'dense' : 'hard');
-      if (guide.tier === 'reinforced' && row < hardBand.from) {
-        const start = pathStarts[row];
-        assign(cells[row][guideCols[row] === start ? start + 1 : start], 'hard');
-      }
-    }
     for (const encounter of localEncounters.filter(item => item.kind === 'center-four' && item.variant !== 'side-gates')) {
       const alternative = pathStarts[encounter.row] === 0 ? columns - 2 : 1;
       for (let row = encounter.row - 1; row <= Math.min(first + ZONE_ROWS - 1, encounter.lastRow + 1); row += 1) {
         const cell = cells[row][alternative];
         if (!isRock(cell)) continue;
         cell.branch = true;
-        assign(cell, remaining.dense > 0 ? 'dense' : 'hard');
+        assign(cell, 'dense');
       }
+    }
+    // Widen some connected stretches to two or three tiles rather than
+    // scattering all fragile rock into isolated random specks.
+    for (let row = first; row < first + ZONE_ROWS; row += 1) {
+      if (row % 8 >= 4 || remaining.dense <= 8) continue;
+      const guide = guideCols[row];
+      const adjacent = guide === pathStarts[row] ? guide + 1 : guide - 1;
+      assign(cells[row][adjacent], 'dense');
+      if (zone !== 1 && row % 8 === 1 && remaining.dense > 8) {
+        const outer = clamp(adjacent + (adjacent > guide ? 1 : -1), 0, columns - 1);
+        assign(cells[row][outer], 'dense');
+      }
+    }
+    if (zone === 2) for (let row = hardBand.from; row <= hardBand.to; row += 1) {
+      for (const cell of cells[row]) assign(cell, random() < .7 ? 'reinforced' : 'hard');
     }
     // Correlated patches form strata; fixed quotas keep difficulty comparable.
     for (let row = first; row < first + ZONE_ROWS; row += 1) {
@@ -275,6 +293,9 @@
     const mark = (row, col, deposit = null) => {
       const cell = cells[row]?.[col];
       if (!cell || !isRock(cell)) return false;
+      if (deposit && (row < deposit.minRow || row > deposit.maxRow)) return false;
+      if (encounters.some(item => item.zone === zone && ['side-three','center-four','horizontal'].includes(item.kind)
+        && row > item.lastRow && row < item.lastRow + 3)) return false;
       if (deposit && cell.depositId >= 0 && cell.depositId !== deposit.id) return false;
       const added = cell.flaskTier ? 0 : REWARD_VALUES[cell.tier];
       if (value + added > target) return false;
@@ -301,7 +322,7 @@
     for (const encounter of encounters.filter(item => item.zone === zone && item.kind !== 'quiet-deposit'
       && !localDeposits.some(deposit => deposit.encounterId === item.id))) {
       const col = encounter.side === -1 ? encounter.center : encounter.side === 0 ? 1 : cells[0].length - 2;
-      for (let offset = 1; offset <= 2; offset += 1) {
+      for (let offset = 3; offset <= 4; offset += 1) {
         const row = encounter.lastRow + offset;
         if (row < first + ZONE_ROWS) mark(row, col);
       }
@@ -325,7 +346,10 @@
       const { row, col } = candidates.splice(index, 1)[0];
       const neighbor = [[row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]]
         .map(([y, x]) => cells[y]?.[x]).find(cell => cell?.depositId >= 0);
-      mark(row, col, neighbor ? deposits[neighbor.depositId] : null);
+      const owner = neighbor ? deposits[neighbor.depositId] : null;
+      // Stop guarded pockets from growing back up against their hazard.
+      if (owner && row >= owner.minRow && row <= owner.maxRow) mark(row, col, owner);
+      else mark(row, col);
     }
     return value;
   }

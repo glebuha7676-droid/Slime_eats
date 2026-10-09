@@ -260,14 +260,14 @@ body[data-screen="drop"] .research-wallet{display:none}
 #homeScreen .food-category-badge.family-blast{--food-family-fill:#ff775d!important;--food-family-line:#8b3c34!important}
 #homeScreen .food-category-badge.family-secret{--food-family-fill:#3f1024!important;--food-family-line:#8d2142!important}
 
-#homeScreen .family-fire,#homeScreen .family-damage,.recipe-book-family.family-fire,.recipe-book-family.family-damage{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-fire.webp")}
-#homeScreen .family-ice,.recipe-book-family.family-ice{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-frost.webp")}
-#homeScreen .family-electric,.recipe-book-family.family-electric{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-electric.webp")}
-#homeScreen .family-gold,.recipe-book-family.family-gold{--recipe-category-icon:url("assets/ui/recipe-categories/gold-aligned.webp")}
-#homeScreen .family-bounce,.recipe-book-family.family-bounce{--recipe-category-icon:url("assets/ui/recipe-categories/mobility-aligned.webp")}
-#homeScreen .family-mass,#homeScreen .family-health,.recipe-book-family.family-mass,.recipe-book-family.family-health{--recipe-category-icon:url("assets/ui/recipe-categories/weight-aligned.webp")}
-#homeScreen .family-protection,#homeScreen .family-shield,.recipe-book-family.family-protection,.recipe-book-family.family-shield{--recipe-category-icon:url("assets/ui/recipe-categories/protection-aligned.webp")}
-#homeScreen .family-blast,.recipe-book-family.family-blast{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-explosion.webp")}
+#homeScreen .family-fire,#homeScreen .family-damage,.recipe-book-family.family-fire,.recipe-book-family.family-damage{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-fire.webp?v=20261008-optimized-v1")}
+#homeScreen .family-ice,.recipe-book-family.family-ice{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-frost.webp?v=20261008-optimized-v1")}
+#homeScreen .family-electric,.recipe-book-family.family-electric{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-electric.webp?v=20261008-optimized-v1")}
+#homeScreen .family-gold,.recipe-book-family.family-gold{--recipe-category-icon:url("assets/ui/recipe-categories/gold-aligned.webp?v=20261008-optimized-v1")}
+#homeScreen .family-bounce,.recipe-book-family.family-bounce{--recipe-category-icon:url("assets/ui/recipe-categories/mobility-aligned.webp?v=20261008-optimized-v1")}
+#homeScreen .family-mass,#homeScreen .family-health,.recipe-book-family.family-mass,.recipe-book-family.family-health{--recipe-category-icon:url("assets/ui/recipe-categories/weight-aligned.webp?v=20261008-optimized-v1")}
+#homeScreen .family-protection,#homeScreen .family-shield,.recipe-book-family.family-protection,.recipe-book-family.family-shield{--recipe-category-icon:url("assets/ui/recipe-categories/protection-aligned.webp?v=20261008-optimized-v1")}
+#homeScreen .family-blast,.recipe-book-family.family-blast{--recipe-category-icon:url("assets/ui/recipe-categories/emblem-v2-explosion.webp?v=20261008-optimized-v1")}
 
 #homeScreen .food-category-badge:not(.family-secret),
 #homeScreen .recipe-category-slot.filled:not(.family-secret){
@@ -366,11 +366,11 @@ body[data-screen="drop"] .research-wallet{display:none}
 #homeScreen .conveyor-controls .reroll-icon{
   position:absolute!important;left:50%!important;top:50%!important;
   display:block!important;width:72px!important;height:72px!important;max-width:none!important;margin:0!important;
-  object-fit:contain!important;content:url("assets/ui/reroll-button-v2.webp?v=1")!important;
+  object-fit:contain!important;content:url("assets/ui/reroll-button-v2.webp?v=20261008-optimized-v1")!important;
   transform:translate(-50%,-50%)!important;filter:none!important;
 }
 #homeScreen .conveyor-controls .reroll-btn.confirm-mode .reroll-icon{
-  content:url("assets/ui/ready-button-v2.webp?v=1")!important;
+  content:url("assets/ui/ready-button-v2.webp?v=20261008-optimized-v1")!important;
   animation:none!important;
 }
 #homeScreen .conveyor-controls .reroll-btn.confirm-mode:not(:disabled){
@@ -513,10 +513,10 @@ body[data-screen="home"] .header-admin-btn{order:3!important}
   -webkit-mask:none!important;mask:none!important;
 }
 
-body[data-world="1"]{--launch-glow:#64efb0;--launch-core:#dfffaa;--launch-rim:#28765e;--launch-world-image:url("assets/backgrounds/world-1-depths.webp?v=20260910-1");--launch-world-position:50% 11%}
-body[data-world="2"]{--launch-glow:#62e7ff;--launch-core:#e9feff;--launch-rim:#347f9d;--launch-world-image:url("assets/backgrounds/world-2-ice.webp?v=20260910-1");--launch-world-position:50% 16%}
-body[data-world="3"]{--launch-glow:#ff80c9;--launch-core:#fff0ac;--launch-rim:#984578;--launch-world-image:url("assets/backgrounds/world-3-factory.webp?v=20260910-1");--launch-world-position:50% 18%}
-body[data-world="4"]{--launch-glow:#ff7840;--launch-core:#ffd369;--launch-rim:#8c3b31;--launch-world-image:url("assets/backgrounds/world-4-magma.webp?v=20260910-1");--launch-world-position:50% 16%}
+body[data-world="1"]{--launch-glow:#64efb0;--launch-core:#dfffaa;--launch-rim:#28765e;--launch-world-image:url("assets/backgrounds/world-1-depths.webp?v=20261008-optimized-v1");--launch-world-position:50% 11%}
+body[data-world="2"]{--launch-glow:#62e7ff;--launch-core:#e9feff;--launch-rim:#347f9d;--launch-world-image:url("assets/backgrounds/world-2-ice.webp?v=20261008-optimized-v1");--launch-world-position:50% 16%}
+body[data-world="3"]{--launch-glow:#ff80c9;--launch-core:#fff0ac;--launch-rim:#984578;--launch-world-image:url("assets/backgrounds/world-3-factory.webp?v=20261008-optimized-v1");--launch-world-position:50% 18%}
+body[data-world="4"]{--launch-glow:#ff7840;--launch-core:#ffd369;--launch-rim:#8c3b31;--launch-world-image:url("assets/backgrounds/world-4-magma.webp?v=20261008-optimized-v1");--launch-world-position:50% 16%}
 
 #homeScreen .slime-playground:after{
   display:block!important;content:""!important;opacity:1!important;transform:translateX(-50%)!important;
@@ -1551,22 +1551,22 @@ body[data-screen="home"] .world-summary .header-admin-btn{order:4!important}
   color:#fff!important;
 }
 #homeScreen .family-cosmos,.recipe-book-family.family-cosmos{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-cosmos.webp");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-cosmos.webp?v=20261008-optimized-v1");
 }
 #homeScreen .family-nano,.recipe-book-family.family-nano{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-techno.webp");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-techno.webp?v=20261008-optimized-v1");
 }
 #homeScreen .family-telekinesis,.recipe-book-family.family-telekinesis{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-psionics.webp");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-psionics.webp?v=20261008-optimized-v1");
 }
 #homeScreen .family-cloning,.recipe-book-family.family-cloning{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v3-spores.webp");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v3-spores.webp?v=20261008-optimized-v1");
 }
 #homeScreen .family-phantom,.recipe-book-family.family-phantom{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v5-phantom-lossless.webp");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v6-phantom-lossless.webp?v=561");
 }
 #homeScreen .family-glitch,.recipe-book-family.family-glitch{
-  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-glitch.webp");
+  --recipe-category-icon:url("assets/ui/recipe-categories/emblem-v4-glitch.webp?v=20261008-optimized-v1");
 }
 
 #homeScreen .food-choices>.food-card.conveyor-food-pick>.food-category-badge.family-cosmos{

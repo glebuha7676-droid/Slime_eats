@@ -4,7 +4,7 @@
   const WORLD_LEVELS = {
     1: [
       ...Array.from({ length: 5 }, () => ({
-        depth: 750,
+        depth: 500,
         features: { dynamite: false, medkit: true, hazards: true, boss: false },
         utilityCadence: 0, sections: ['descent']
       }))
@@ -13,7 +13,7 @@
 
   const WORLDS = [
     {
-      id: 1, name: 'Зелёные глубины', targetDepth: 750, reward: 300,
+      id: 1, name: 'Зелёные глубины', targetDepth: 500, reward: 300,
       pathWidth: 3, minPathWidth: 3, turnRate: .08,
       hardCap: .08, reinforcedCap: .018, oreChance: .075, specialChance: .16,
       sky: '#63825b', earth: '#3b3027', deep: '#171c20', accent: '#54d7b0', icon: '🌿',
@@ -127,6 +127,7 @@
     unseenForms: [],
     activeMutationPool: [],
     tutorialStep: 'home-mutations',
+    onboarding: { version: 2, enabled: true, firstRunFinished: false, secondRunFinished: false, controlsLearned: false, shieldLearned: false, veinsLearned: false, crossingSeen: false, formSeen: false, quest: '', pendingMemo: '' },
     tutorialGiftClaimed: false,
     tutorialSecondGiftClaimed: false,
     legacyStarterAccess: false,
@@ -167,7 +168,7 @@
     VIEW_H: 840,
     LEVEL_COUNT: 5,
     LEVEL_DEPTH_RATIOS: [.36, .52, .68, .84, 1],
-    ASSET_REVISION: '20261008-lossless',
+    ASSET_REVISION: '20261008-optimized-v1',
     FOOD_ASSET_ROOT: 'assets/ЕДА/Общий пул/',
     UI_ASSET_ROOT: 'assets/ui/',
     WORLD_LEVELS,

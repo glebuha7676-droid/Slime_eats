@@ -60,7 +60,8 @@ html body #homeScreen .form-index-button:focus-visible{outline:3px solid #f6cf66
 #panelOverlay .form-index-recipe .mutation-emblem-halo{inset:0;filter:none;opacity:.3;animation:none}
 .form-index-art{position:relative;display:grid;place-items:center;min-height:0}
 .form-index-art img{width:88px;height:88px;object-fit:contain;filter:drop-shadow(0 2px 2px #284b4f33)}
-.form-index-art canvas{width:100px;height:100px;object-fit:contain}
+.form-index-card[data-form="nano"],.form-index-card[data-form="phantom"]{grid-template-rows:32px 90px minmax(0,1fr)}
+.form-index-card[data-form="nano"] .form-index-art img,.form-index-card[data-form="phantom"] .form-index-art img{width:100px;height:100px}
 .form-index-art i{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:32px;font-weight:1000;font-style:normal;color:#f5ffff;text-shadow:0 2px #173b4c}
 .form-index-card.is-locked .form-index-art img{filter:brightness(0);opacity:.7}
 .form-index-card.is-locked .form-index-art i{display:block}

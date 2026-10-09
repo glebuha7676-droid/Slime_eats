@@ -54,29 +54,17 @@ for(const type of ['fire','frost','electric','nano','cloning','glitch','cosmos',
   assert.equal(context.resolveHazardHit(spike,{nx:0,ny:-1,penetration:2},1000),true);
   assert.equal(run.health,3,type+' consumes no heart');assert.equal(run.barrier,0);
   assert.equal(spike.dead,false,'Shield never destroys the spike');
-  assert.equal(run.shieldPop.type,type);assert.equal(run.ultimateRechargePending,'');
+  assert.equal(run.shieldPop.type,'base','Legacy protection never inherits a mutation colour');assert.equal(run.ultimateRechargePending,'');
   assert.equal(beforeBurst,run.specialEffects.length+run.sporeProjectiles.length+run.shieldMines.length,'Breaking the shield must not apply the reaction again');
   const count=run.specialEffects.length+run.sporeProjectiles.length+run.shieldMines.length;
   assert.equal(context.burstDominantShield(spike,1001),false,'One reaction per shield');
   assert.equal(count,run.specialEffects.length+run.sporeProjectiles.length+run.shieldMines.length);
-  if(type==='fire')assert.ok(neighbors.every(b=>b.fireDamageAt===2000));
-  if(type==='frost')assert.ok(neighbors.every(b=>b.elementalSnow));
-  if(type==='glitch')assert.ok(neighbors.every(b=>b.glitchInfected));
-  if(type==='electric') {
-    assert.equal(run.specialEffects.length,2);
-    for(const [i,side] of [[0,-1],[1,1]])assert.ok(run.specialEffects[i].points.slice(1).every(p=>side*(p.x-100)>0));
-  }
-  if(type==='nano') {
-    assert.equal(run.shieldMines.length,2);assert.notEqual(run.shieldMines[0].target,run.shieldMines[1].target);
-    assert.ok(run.shieldMines.every(m=>m.target.row>spike.row));
-    context.updateShieldMines(1400);assert.equal(run.shieldMines.length,2);
-    context.updateShieldMines(1600);assert.equal(run.shieldMines.length,0);
-  }
-  if(type==='cloning')assert.equal(run.sporeProjectiles.length,2);
-  if(['cosmos','telekinesis','phantom'].includes(type))assert.ok(run.blocks.slice(1).every(b=>b.hp===4));
+  assert.ok(neighbors.every(b=>b.hp===4 && !b.fireDamageAt && !b.elementalSnow && !b.glitchInfected),'Mutation reactions are removed');
+  assert.equal(run.specialEffects.length+run.shieldMines.length+run.sporeProjectiles.length,0);
+
 }
 assert.equal(colors.size,9);assert.equal(icons.size,9);assert.equal(recharge,9);
 run.categoryVisuals={fire:1};run.barrier=25;run.barrierStartedAt=2000;
 context.updateShieldLifetime(5999);assert.equal(run.barrier,25);
 context.updateShieldLifetime(6000);assert.equal(run.barrier,0);assert.equal(run.shieldPop.type,'base');
-console.log('Nine shield colours/icons; one protected hit; six reactions around the hit block; two mines/spores; recharge; other dominants cosmetic only.');
+console.log('Legacy bubble protection is neutral, has no mutation reaction and expires after four seconds; player shield activation is covered by tutorial tests.');

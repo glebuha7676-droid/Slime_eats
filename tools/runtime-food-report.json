@@ -1,0 +1,380 @@
+[
+  {
+    "source": "assets/ЕДА/Новая/Глитч/01-glitch-burger-lossless.webp",
+    "runtime": "assets/food/01-glitch-burger.webp",
+    "beforeBytes": 883628,
+    "afterBytes": 205624,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Глитч/02-glitch-sushi-lossless.webp",
+    "runtime": "assets/food/02-glitch-sushi.webp",
+    "beforeBytes": 911120,
+    "afterBytes": 211094,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Глитч/03-glitch-carrot-lossless.webp",
+    "runtime": "assets/food/03-glitch-carrot.webp",
+    "beforeBytes": 492436,
+    "afterBytes": 118406,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Космос/01-planet-candy-lossless.webp",
+    "runtime": "assets/food/01-planet-candy.webp",
+    "beforeBytes": 593816,
+    "afterBytes": 138680,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Космос/02-star-candy-lossless.webp",
+    "runtime": "assets/food/02-star-candy.webp",
+    "beforeBytes": 1102068,
+    "afterBytes": 251168,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Космос/03-galaxy-jelly-lossless.webp",
+    "runtime": "assets/food/03-galaxy-jelly.webp",
+    "beforeBytes": 1136946,
+    "afterBytes": 260780,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Морозная/01-popsicle-lossless.webp",
+    "runtime": "assets/food/01-popsicle.webp",
+    "beforeBytes": 585496,
+    "afterBytes": 137918,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Морозная/02-shaved-ice-lossless.webp",
+    "runtime": "assets/food/02-shaved-ice.webp",
+    "beforeBytes": 789540,
+    "afterBytes": 182868,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Морозная/03-berries-lossless.webp",
+    "runtime": "assets/food/03-berries.webp",
+    "beforeBytes": 994714,
+    "afterBytes": 230550,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Огненная/01-berries-lossless.webp",
+    "runtime": "assets/food/01-berries.webp",
+    "beforeBytes": 726540,
+    "afterBytes": 168958,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Огненная/02-pepper-lossless.webp",
+    "runtime": "assets/food/02-pepper.webp",
+    "beforeBytes": 457724,
+    "afterBytes": 107664,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Огненная/03-ramen-lossless.webp",
+    "runtime": "assets/food/03-ramen.webp",
+    "beforeBytes": 1060212,
+    "afterBytes": 242730,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Псионика/01-crystal-sweets-lossless.webp",
+    "runtime": "assets/food/01-crystal-sweets.webp",
+    "beforeBytes": 667188,
+    "afterBytes": 156494,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Псионика/02-psionic-donut-lossless.webp",
+    "runtime": "assets/food/02-psionic-donut.webp",
+    "beforeBytes": 727536,
+    "afterBytes": 171792,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Псионика/03-psionic-potion-lossless.webp",
+    "runtime": "assets/food/03-psionic-potion.webp",
+    "beforeBytes": 557186,
+    "afterBytes": 131792,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Споры/01-mushrooms-lossless.webp",
+    "runtime": "assets/food/01-mushrooms.webp",
+    "beforeBytes": 847162,
+    "afterBytes": 191300,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Споры/02-mushroom-cake-lossless.webp",
+    "runtime": "assets/food/02-mushroom-cake.webp",
+    "beforeBytes": 1034964,
+    "afterBytes": 236060,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Споры/03-spore-drink-lossless.webp",
+    "runtime": "assets/food/03-spore-drink.webp",
+    "beforeBytes": 772092,
+    "afterBytes": 179782,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Техно/01-mechanical-snack-lossless.webp",
+    "runtime": "assets/food/01-mechanical-snack.webp",
+    "beforeBytes": 1000230,
+    "afterBytes": 226368,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Техно/02-circuit-soup-lossless.webp",
+    "runtime": "assets/food/02-circuit-soup.webp",
+    "beforeBytes": 1134974,
+    "afterBytes": 256476,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Техно/03-tech-dessert-lossless.webp",
+    "runtime": "assets/food/03-tech-dessert.webp",
+    "beforeBytes": 833562,
+    "afterBytes": 186026,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Фантом/01-ghost-essence-lossless.webp",
+    "runtime": "assets/food/01-ghost-essence.webp",
+    "beforeBytes": 634268,
+    "afterBytes": 146550,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Фантом/02-ghost-soup-lossless.webp",
+    "runtime": "assets/food/02-ghost-soup.webp",
+    "beforeBytes": 859488,
+    "afterBytes": 193422,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Фантом/03-ghost-fruit-lossless.webp",
+    "runtime": "assets/food/03-ghost-fruit.webp",
+    "beforeBytes": 755986,
+    "afterBytes": 169158,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Электро/01-energy-can-lossless.webp",
+    "runtime": "assets/food/01-energy-can.webp",
+    "beforeBytes": 691526,
+    "afterBytes": 160766,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Электро/02-candy-lossless.webp",
+    "runtime": "assets/food/02-candy.webp",
+    "beforeBytes": 875158,
+    "afterBytes": 204164,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/ЕДА/Новая/Электро/03-noodles-lossless.webp",
+    "runtime": "assets/food/03-noodles.webp",
+    "beforeBytes": 1049758,
+    "afterBytes": 236650,
+    "beforePixels": [
+      1254,
+      1254
+    ],
+    "afterPixels": [
+      512,
+      512
+    ]
+  }
+]

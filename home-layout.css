@@ -603,22 +603,22 @@ body[data-world="4"] .world-emblem img,#resultOverlay[data-world="4"] .result-wo
 body[data-world="1"]{
   --world-bg-top:#86d9bf;--world-bg-bottom:#eef8f3;--world-shell:#dcebe4;--world-panel:#f5fbf7;--world-panel-soft:#e5f1eb;
   --world-line:#527565;--world-line-soft:#9eb7ab;--world-accent-top:#78ddb5;--world-accent-bottom:#3caf82;--world-accent-deep:#26765d;
-  --world-metal:#d9e5df;--world-metal-deep:#aebfb7;--world-text:#214f40;--world-portal:url("assets/ui/portals/world-1.webp?v=20260812-16");
+  --world-metal:#d9e5df;--world-metal-deep:#aebfb7;--world-text:#214f40;--world-portal:url("assets/ui/portals/world-1.webp?v=20261008-optimized-v1");
 }
 body[data-world="2"]{
   --world-bg-top:#86d8ef;--world-bg-bottom:#e7f6fb;--world-shell:#d9e9f0;--world-panel:#f2f9fc;--world-panel-soft:#e0eef4;
   --world-line:#547b90;--world-line-soft:#9cb8c6;--world-accent-top:#8de2f4;--world-accent-bottom:#48acd4;--world-accent-deep:#2e789c;
-  --world-metal:#d8e6ec;--world-metal-deep:#a9c0cb;--world-text:#285b73;--world-portal:url("assets/ui/portals/world-2.webp?v=20260812-16");
+  --world-metal:#d8e6ec;--world-metal-deep:#a9c0cb;--world-text:#285b73;--world-portal:url("assets/ui/portals/world-2.webp?v=20261008-optimized-v1");
 }
 body[data-world="3"]{
   --world-bg-top:#f6b1d0;--world-bg-bottom:#fff0f7;--world-shell:#f0dce8;--world-panel:#fff4f9;--world-panel-soft:#f5e4ed;
   --world-line:#91647f;--world-line-soft:#c8a6ba;--world-accent-top:#f4a4d2;--world-accent-bottom:#db67aa;--world-accent-deep:#a83d7f;
-  --world-metal:#eadce5;--world-metal-deep:#c4a8b8;--world-text:#75335f;--world-portal:url("assets/ui/portals/world-3.webp?v=20260812-16");
+  --world-metal:#eadce5;--world-metal-deep:#c4a8b8;--world-text:#75335f;--world-portal:url("assets/ui/portals/world-3.webp?v=20261008-optimized-v1");
 }
 body[data-world="4"]{
   --world-bg-top:#df8b62;--world-bg-bottom:#fff0e8;--world-shell:#ead5ca;--world-panel:#fff4ed;--world-panel-soft:#f2dfd4;
   --world-line:#80514a;--world-line-soft:#b99a8f;--world-accent-top:#f3a06d;--world-accent-bottom:#d75f45;--world-accent-deep:#973d35;
-  --world-metal:#e3d5ce;--world-metal-deep:#bda79d;--world-text:#6f382f;--world-portal:url("assets/ui/portals/world-4.webp?v=20260812-16");
+  --world-metal:#e3d5ce;--world-metal-deep:#bda79d;--world-text:#6f382f;--world-portal:url("assets/ui/portals/world-4.webp?v=20261008-optimized-v1");
 }
 body[data-world]{background:linear-gradient(180deg,var(--world-bg-top) 0 112px,var(--world-bg-bottom) 112px 100%)}
 
@@ -2391,10 +2391,10 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 @media(prefers-reduced-motion:reduce){.launch-card-booms>i{animation:none!important}}
 
 /* V69: world scene launch card and a truly centred slime stage. */
-body[data-world="1"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-1-cave.webp?v=1")}
-body[data-world="2"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-2-cave.webp?v=1")}
-body[data-world="3"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-3-cave.webp?v=1")}
-body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-4-cave.webp?v=1")}
+body[data-world="1"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-1-cave.webp?v=20261008-optimized-v1")}
+body[data-world="2"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-2-cave.webp?v=20261008-optimized-v1")}
+body[data-world="3"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-3-cave.webp?v=20261008-optimized-v1")}
+body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-4-cave.webp?v=20261008-optimized-v1")}
 
 #homeScreen .food-choices>.conveyor-start-card{
   width:100%;min-width:0;max-width:420px;height:223px;min-height:223px;padding:12px;
@@ -3057,6 +3057,17 @@ body[data-screen="home"] #homeScreen>.card{box-sizing:border-box;margin:0!import
 #homeScreen .home-tool-dock b{font-size:8.5px!important;letter-spacing:.35px!important;color:#2e514d}
 
 body[data-screen="home"],body[data-screen="home"] .phone-viewport{overscroll-behavior:none!important;overflow:hidden!important}
+
+/* The platform's desktop playfield fills the available height (requirement 1.6.2.1). */
+@media(min-width:600px) and (hover:hover){
+html[data-yandex-games="true"] body{padding:0!important}
+
+  html[data-yandex-games="true"] .phone-viewport{height:min(100dvh,calc(100vw * 2));max-height:none;max-width:100vw;margin:0 auto;border-radius:0}
+}
+/* The petpet spring deforms the avatar in canvas, including attached effects. */
+html body #homeScreen .slime-playground #slime.petting{
+  animation:none!important;transform:none!important;cursor:none;
+}
 #homeScreen .conveyor-food-pick{touch-action:none!important;-webkit-user-drag:none!important}
 body.food-dragging{touch-action:none!important;cursor:grabbing}
 .food-drag-ghost{

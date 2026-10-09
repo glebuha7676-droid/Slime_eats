@@ -43,7 +43,7 @@
       const finish = result => { clearTimeout(timeout); resolve(result); };
       image.addEventListener('load', () => finish(true), { once: true });
       image.addEventListener('error', () => finish(false), { once: true });
-      image.src = sources.get(image);
+      image.src = window.SlimeGameAssets.versionedAsset(sources.get(image));
     });
     loads.set(image, promise);
     return promise;
@@ -370,89 +370,6 @@
     ctx.restore();
   }
 
-  function cosmosAura(ctx, {x, y, radius, timestamp, levels}) {
-    const stars = [
-      [-1.10,-.38],[-1.08,.46],[-.48,-1.14],
-      [.62,-1.10],[1.12,-.28],[1.06,.52],[-.16,1.10]
-    ];
-    for (let index = 0; index < stars.length; index++) {
-      const [ox, oy] = stars[index];
-      const phase = (timestamp / (1950 + index * 130) + index * .31) % 1;
-      const twinkle = Math.pow(Math.max(0, Math.sin(phase * Math.PI)), 6);
-      const px = x + radius * ox;
-      const py = y + radius * oy;
-      ctx.save();
-      ctx.globalAlpha = .25 + twinkle * .74;
-      ctx.shadowColor = '#dfb8ff';
-      ctx.shadowBlur = radius * (.045 + twinkle * .11);
-      ctx.fillStyle = '#fff9ff';
-      ctx.beginPath();
-      ctx.arc(px, py, radius * (.011 + twinkle * .016), 0, Math.PI * 2);
-      ctx.fill();
-      if (twinkle > .28) {
-        const arm = radius * (.025 + twinkle * .055);
-        ctx.strokeStyle = '#fff5ff';
-        ctx.lineWidth = Math.max(.8, radius * .012 * twinkle);
-        ctx.beginPath();
-        ctx.moveTo(px - arm, py);
-        ctx.lineTo(px + arm, py);
-        ctx.moveTo(px, py - arm);
-        ctx.lineTo(px, py + arm);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-  }
-
-  function cosmosFlow(timestamp) {
-    return {
-      energy: .84 + Math.sin(timestamp / 1500) * .07,
-      x: Math.sin(timestamp / 1350) * .035,
-      y: Math.sin(timestamp / 1650 + .7) * .025
-    };
-  }
-
-  function cosmosCometWake(ctx, {x, y, radius, timestamp, levels}) {
-    if (levels.cosmos < 2) return;
-    const flow = cosmosFlow(timestamp);
-    const strength = flow.energy;
-    const length = radius * (.85 + strength * 1.15);
-    const width = radius * (.52 + strength * .34);
-    const sway = Math.sin(timestamp / 1050) * radius * .075;
-    ctx.save();
-    ctx.translate(x + flow.x * radius, y + flow.y * radius);
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = strength;
-    const outer = ctx.createLinearGradient(0, radius * .68, 0, -length);
-    outer.addColorStop(0, 'rgba(255,239,255,.80)');
-    outer.addColorStop(.24, 'rgba(215,113,255,.76)');
-    outer.addColorStop(.64, 'rgba(110,35,245,.48)');
-    outer.addColorStop(1, 'rgba(53,15,155,0)');
-    ctx.fillStyle = outer;
-    ctx.shadowColor = '#a340ff';
-    ctx.shadowBlur = radius * .21;
-    ctx.beginPath();
-    ctx.moveTo(-radius * .77, radius * .32);
-    ctx.bezierCurveTo(-radius * .96, -radius * .15, -width * .73, -length * .65, sway, -length);
-    ctx.bezierCurveTo(width * .73, -length * .65, radius * .96, -radius * .15, radius * .77, radius * .32);
-    ctx.quadraticCurveTo(0, radius * .89, -radius * .77, radius * .32);
-    ctx.fill();
-    const core = ctx.createLinearGradient(0, radius * .52, 0, -length * .78);
-    core.addColorStop(0, 'rgba(255,255,255,.83)');
-    core.addColorStop(.3, 'rgba(236,184,255,.72)');
-    core.addColorStop(1, 'rgba(136,60,255,0)');
-    ctx.fillStyle = core;
-    ctx.shadowBlur = radius * .10;
-    ctx.beginPath();
-    ctx.moveTo(-radius * .43, radius * .45);
-    ctx.bezierCurveTo(-radius * .53, -radius * .12, -radius * .22 + sway * .3, -length * .52, sway * .3, -length * .78);
-    ctx.bezierCurveTo(radius * .24 + sway * .3, -length * .5, radius * .53, -radius * .12, radius * .43, radius * .45);
-    ctx.quadraticCurveTo(0, radius * .67, -radius * .43, radius * .45);
-    ctx.fill();
-    ctx.restore();
-  }
-
   function psionicsMotion(timestamp, radius) {
     const phase = timestamp / 620;
     const lift = (1 - Math.cos(phase)) * .5;
@@ -537,24 +454,6 @@
           ], psionicsEnergy * .78);
       }
     }
-    ctx.restore();
-  }
-
-  function phantomHalo(ctx, {x, y, radius, phantomActive = false}) {
-    if (phantomActive) return;
-    ctx.save();
-    const outerRadius = radius * 2.05;
-    const halo = ctx.createRadialGradient(x, y, 0, x, y, outerRadius);
-    halo.addColorStop(0, 'rgba(215,223,227,0)');
-    halo.addColorStop(.52, 'rgba(215,223,227,0)');
-    halo.addColorStop(.67, 'rgba(202,211,217,.11)');
-    halo.addColorStop(.77, 'rgba(180,190,199,.27)');
-    halo.addColorStop(.9, 'rgba(213,222,228,.09)');
-    halo.addColorStop(1, 'rgba(213,222,228,0)');
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(x, y, outerRadius, 0, Math.PI * 2);
-    ctx.fill();
     ctx.restore();
   }
 
@@ -686,13 +585,9 @@
   function drawBehind(ctx, state) {
     preload(state.levels);
     if (state.levels.cloning >= 2) flyingSpores(ctx, state);
-    if (state.levels.cosmos) {
-      cosmosAura(ctx, state);
-      cosmosCometWake(ctx, state);
-    }
     if (state.levels.telekinesis >= 2) psionicsAura(ctx, state);
     if (state.levels.telekinesis) psionicsAntennae(ctx, state);
-    if (state.levels.phantom) phantomHalo(ctx, state);
+
   }
   function drawInside(ctx, state) {
     if (state.levels.frost === 2) frostBottom(ctx, state);

@@ -1,6 +1,6 @@
 /* The synthesizer and world terminal share one uninterrupted illustrated shell. */
 html body[data-screen="home"] #app{
-  background:#9ac8ca url("assets/ui/home-laboratory-v4.webp") center top/100% 365px no-repeat!important;
+  background:#9ac8ca url("assets/ui/home-laboratory-v4.webp?v=20261008-optimized-v1") center top/100% 365px no-repeat!important;
 }
 /* The generated laboratory already contains the pedestal in the original position. */
 html body #homeScreen .slime-center-stage::before{display:none!important}
@@ -24,28 +24,22 @@ html body #homeScreen .slime-playground{
   position:relative!important;
 }
 html body #homeScreen .slime-playground::after{display:none!important}
-html body #homeScreen>#slimeStage::after{
-  content:""!important;
-  display:block!important;
-  position:absolute!important;
-  z-index:0!important;
-  left:50%!important;
-  bottom:-7px!important;
-  width:150px!important;
-  height:18px!important;
-  border:0!important;
-  border-radius:50%!important;
-  background:radial-gradient(ellipse,rgba(13,48,55,.22) 0%,rgba(19,71,70,.09) 46%,transparent 75%)!important;
-  box-shadow:none!important;
-  filter:none!important;
-  opacity:1!important;
-  transform:translateX(-50%)!important;
-  transition:opacity .7s ease!important;
-  pointer-events:none!important;
+/* Ground contact stays outside the animated slime canvas and portal capture. */
+html body #homeScreen>#slimeStage::after{display:none!important}
+html body #homeScreen .slime-playground{--menu-slime-size:220px}
+html body #homeScreen .slime-ground-shadow{
+  position:absolute;z-index:5;left:50%;
+  /* The expanded canvas draws the resting feet at .872222 of the body box.
+     Add a small contact offset, accounting for the body's -4px placement. */
+  top:calc(var(--menu-slime-size) * .872222);
+  width:calc(var(--menu-slime-size) * .72);height:calc(var(--menu-slime-size) * .074);
+  border:0;border-radius:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse at center,rgba(8,31,39,.34) 0%,rgba(11,39,46,.23) 34%,rgba(15,49,53,.10) 60%,transparent 78%);
+  opacity:1;pointer-events:none;transition:opacity .45s ease;filter:none;box-shadow:none;
 }
-html body #homeScreen .slime-stage.launch-opening::after{
-  opacity:0!important;
-}
+html body #homeScreen .slime-stage.launch-opening .slime-ground-shadow{opacity:0}
+@media(max-width:370px){html body #homeScreen .slime-playground{--menu-slime-size:196px}}
+@media(prefers-reduced-motion:reduce){html body #homeScreen .slime-ground-shadow{transition-duration:.12s}}
 @media(max-width:370px){
   html body #homeScreen #slime{width:205px!important;height:205px!important}
   html body #homeScreen>#slimeStage::after{width:130px!important}
@@ -60,7 +54,7 @@ body[data-screen="home"] #homeScreen.active::before{
   min-width:0;
   min-height:0;
   margin:-5px -5px -5px;
-  background:url("assets/ui/synth-terminal-base-v1.webp") center/100% 100% no-repeat;
+  background:url("assets/ui/synth-terminal-base-v1.webp?v=20261008-optimized-v1") center/100% 100% no-repeat;
   pointer-events:none;
 }
 body[data-screen="home"] #homeScreen.active::after{
@@ -74,7 +68,7 @@ body[data-screen="home"] #homeScreen.active::after{
   width:70%;
   height:56px;
   margin-top:-34px;
-  background:url("assets/ui/world-terminal/synthesis-count-plate-v2.webp") center/contain no-repeat;
+  background:url("assets/ui/world-terminal/synthesis-count-plate-v2.webp?v=20261008-optimized-v1") center/contain no-repeat;
   pointer-events:none;
 }
 body[data-screen="home"] #homeScreen>#slimeStage{grid-column:1;grid-row:1}
@@ -231,7 +225,7 @@ body[data-screen="home"] #homeScreen>.play-setup-card{
   content:"";
   position:absolute;
   inset:0;
-  background:url("assets/ui/world-terminal/arrow-right-v2.webp") center/contain no-repeat;
+  background:url("assets/ui/world-terminal/arrow-right-v2.webp?v=20261008-optimized-v1") center/contain no-repeat;
   pointer-events:none;
   transition:transform .12s ease;
 }
@@ -243,7 +237,7 @@ body[data-screen="home"] #homeScreen>.play-setup-card{
   display:block;
   inset:0;
   border-radius:0;
-  background:url("assets/ui/world-terminal/arrow-right-v2.webp") center/contain no-repeat;
+  background:url("assets/ui/world-terminal/arrow-right-v2.webp?v=20261008-optimized-v1") center/contain no-repeat;
   filter:grayscale(.7) brightness(.75);
 }
 .terminal-launch{
@@ -268,7 +262,7 @@ body[data-screen="home"] #homeScreen>.play-setup-card{
   box-sizing:border-box;
   border:0 solid transparent;
   border-inline-width:32px;
-  border-image-source:url("assets/ui/world-terminal/play-insert-v5.webp");
+  border-image-source:url("assets/ui/world-terminal/play-insert-v5.webp?v=20261008-optimized-v1");
   border-image-slice:0 110 fill;
   border-image-width:0 32px;
   border-image-repeat:stretch;

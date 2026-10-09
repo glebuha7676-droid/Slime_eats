@@ -12,59 +12,72 @@
   </style>
   <title>Слайм: Копай глубже</title>
   <link rel="icon" href="data:," />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-body-reference-v1.webp?v=2" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-sockets-reference-v1.webp?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-pupils-reference-v1.webp?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-cheeks-reference-v1.webp?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-expressions-v1.webp?v=1" />
-  <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.webp?v=1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-body-reference-v1.webp?v=20261008-optimized-v1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-sockets-reference-v1.webp?v=20261008-optimized-v1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-pupils-reference-v1.webp?v=20261008-optimized-v1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-cheeks-reference-v1.webp?v=20261008-optimized-v1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-eye-expressions-v1.webp?v=20261008-optimized-v1" />
+  <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.webp?v=20261008-optimized-v1" />
+  <link rel="stylesheet" href="loading.css?v=1" />
   <link rel="stylesheet" href="styles.css?v=90" />
-  <link rel="stylesheet" href="home-layout.css?v=182" />
-  <link rel="stylesheet" href="home-mode-fix.css?v=129" />
-  <link rel="stylesheet" href="home-visual-refresh.css?v=53" />
+  <link rel="stylesheet" href="home-layout.css?v=184" />
+  <link rel="stylesheet" href="home-mode-fix.css?v=130" />
+  <link rel="stylesheet" href="home-visual-refresh.css?v=54" />
   <link rel="stylesheet" href="drop-visual-refresh.css?v=7" />
   <link rel="stylesheet" href="lab-redesign.css?v=47" />
-  <link rel="stylesheet" href="phantom.css?v=3" />
-  <link rel="stylesheet" href="glitch.css?v=7" />
-  <link rel="stylesheet" href="form-index.css?v=10" />
-  <link rel="stylesheet" href="synthesis.css?v=16" />
+  <link rel="stylesheet" href="phantom.css?v=5" />
+  <link rel="stylesheet" href="glitch.css?v=8" />
+  <link rel="stylesheet" href="form-index.css?v=11" />
+  <link rel="stylesheet" href="synthesis.css?v=17" />
   <link rel="stylesheet" href="playable-polish.css?v=8" />
   <link rel="stylesheet" href="world-picker-v2.css?v=29" />
-  <link rel="stylesheet" href="home-synth-terminal.css?v=22" />
+  <link rel="stylesheet" href="home-synth-terminal.css?v=23" />
   <link rel="stylesheet" href="experience.css?v=10" />
-  <link rel="stylesheet" href="tutorial.css?v=7" />
+  <link rel="stylesheet" href="tutorial.css?v=16" />
   <link rel="stylesheet" href="mutation-progression.css?v=3" />
-  <link rel="stylesheet" href="lab-ui-polish.css?v=12" />
-  <link rel="stylesheet" href="mutation-workspace.css?v=8" />
+  <link rel="stylesheet" href="lab-ui-polish.css?v=16" />
+  <link rel="stylesheet" href="mutation-workspace.css?v=9" />
   <link rel="stylesheet" href="psionic-wave.css?v=2" />
 </head>
 <body>
+  <section id="bootScreen" class="boot-screen" role="progressbar" aria-label="Загрузка игры" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div class="boot-scene">
+      <div class="boot-title"><strong>СЛАЙМ</strong><span>КОПАЙ ГЛУБЖЕ</span></div>
+      <div class="boot-console"><p class="boot-label">Готовим приключение!</p>
+        <div class="boot-track"><i id="bootFill" class="boot-fill"></i><b id="bootPercent" class="boot-percent">0%</b></div>
+        <p id="bootStatus" class="boot-status" aria-live="polite">Загружаем лабораторию…</p>
+        <button id="bootRetry" class="boot-retry" type="button" hidden>Повторить</button>
+      </div>
+    </div>
+  </section>
+  <script src="js/core/boot-manifest.js?v=567"></script>
+  <script src="js/core/boot-loader.js?v=3"></script>
   <div id="phoneViewport" class="phone-viewport">
   <div id="app" class="app">
     <header class="topbar world-summary" aria-label="Уровень и колбы исследования">
       <div class="world-summary-head">
         <div class="world-identity">
-          <span class="world-emblem" aria-hidden="true"><img id="worldIcon" src="assets/ui/world-icons/world-1.webp" alt=""></span>
+          <span class="world-emblem" aria-hidden="true"><img id="worldIcon" src="assets/ui/world-icons/world-1.webp?v=20261008-optimized-v1" alt=""></span>
           <span class="world-title-block">
             <span class="world-meta-row"><small id="worldEyebrow">ШАХТА 1</small><i id="levelPassedBadge" class="level-passed-badge" hidden>✓ ПРОЙДЕНО</i></span>
             <b id="worldLabel">Зелёные глубины</b>
           </span>
         </div>
         <button id="adminMenuBtn" class="header-admin-btn" type="button" aria-label="Открыть админ-меню" aria-controls="adminToolsOverlay" aria-expanded="false">
-          <img src="assets/ui/game-menu-gear.webp?v=1" alt="" aria-hidden="true">
+          <img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
         </button>
         <div class="currency coin-wallet player-level-wallet" aria-label="Уровень 1, опыт 0 из 100">
-          <span class="player-level-badge"><img class="currency-icon" src="assets/ui/player-level-star-v2.webp" alt="" aria-hidden="true"><b id="coinsLabel">1</b></span>
+          <span class="player-level-badge"><img class="currency-icon" src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><b id="coinsLabel">1</b></span>
           <div class="player-level-content"><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience"><b>0</b><span> / 100 XP</span></small></div></div>
         </div>
         <div class="research-wallet" aria-label="Колбы исследования: 0">
           <span class="research-wallet-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="">
+            <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="">
             <b id="researchUnitsLabel">0</b>
           </span>
         </div>
         <button class="header-rewards-btn" data-panel="rewards" type="button" aria-label="Открыть награды">
-          <img src="assets/ui/gift.webp" alt="" aria-hidden="true">
+          <img src="assets/ui/gift.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
         </button>
       </div>
     </header>
@@ -77,20 +90,21 @@
             <div class="recipe-rail" aria-label="Мутации и гардероб">
               <button class="recipe-book-button mutation-lab-button" data-panel="recipes" type="button" aria-label="Открыть мутации">
                 <span class="mutation-trio-icon" aria-hidden="true">
-                  <img class="mutation-trio-fire" src="assets/ui/recipe-categories/emblem-v2-fire.webp" alt="">
-                  <img class="mutation-trio-frost" src="assets/ui/recipe-categories/emblem-v2-frost.webp" alt="">
-                  <img class="mutation-trio-electric" src="assets/ui/recipe-categories/emblem-v2-electric.webp" alt="">
+                  <img class="mutation-trio-fire" src="assets/ui/recipe-categories/emblem-v2-fire.webp?v=20261008-optimized-v1" alt="">
+                  <img class="mutation-trio-frost" src="assets/ui/recipe-categories/emblem-v2-frost.webp?v=20261008-optimized-v1" alt="">
+                  <img class="mutation-trio-electric" src="assets/ui/recipe-categories/emblem-v2-electric.webp?v=20261008-optimized-v1" alt="">
                 </span>
                 <span>МУТАЦИИ</span>
                 <i id="mutationLabBadge" class="mutation-lab-badge" aria-label="Доступен синтез мутации" hidden></i>
               </button>
               <button id="wardrobeBtn" class="recipe-accessories-button" data-panel="shop" type="button" aria-label="Открыть гардероб">
-                <img src="assets/ui/accessories-cap.webp?v=2" alt="" aria-hidden="true">
+                <img src="assets/ui/accessories-cap.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
                 <span>ГАРДЕРОБ</span>
               </button>
             </div>
             <div class="slime-center-stage">
               <div class="slime-playground">
+                <span class="slime-ground-shadow" aria-hidden="true"></span>
                 <div class="lab-portal-frame" aria-hidden="true"></div>
                 <div id="launchPortal" class="launch-portal" aria-hidden="true">
                   <span class="launch-portal-core"></span>
@@ -98,7 +112,7 @@
                   <span class="launch-portal-depth launch-portal-depth-inner"></span>
                   <span class="launch-portal-rim"></span>
                 </div>
-                <div id="slime" class="slime skin-classic" role="button" tabindex="0" aria-label="Слайм. Нажми или погладь его">
+                <div id="slime" class="slime skin-classic" role="button" tabindex="0" aria-label="Слайм. Нажми, чтобы погладить">
                   <canvas id="menuSlimeCanvas" class="menu-slime-canvas" width="260" height="260" aria-hidden="true"></canvas>
                   <div id="menuSlimeMouth" class="menu-slime-mouth-target" aria-hidden="true"></div>
                   <div id="foodInside" class="food-inside"></div>
@@ -112,15 +126,17 @@
               <div id="slimeFeedCount" class="slime-feed-count" aria-live="polite">СЪЕДЕНО 0 ИЗ 3</div>
             </div>
             <button id="formIndexBtn" class="form-index-button" data-panel="form-index" type="button" aria-label="Открыть индекс форм">
-              <span class="form-index-silhouette" aria-hidden="true"><img src="assets/ui/slime/forms/slime-body-frost-v1.webp" alt=""><i>?</i></span>
+              <span class="form-index-silhouette" aria-hidden="true"><img src="assets/ui/slime/forms/slime-body-frost-v1.webp?v=20261008-optimized-v1" alt=""><i>?</i></span>
               <span>ФОРМЫ</span>
               <i id="formIndexBadge" class="form-index-badge" aria-label="Есть новые формы" hidden></i>
             </button>
           </div>
           <span class="stage-foliage stage-foliage-left" aria-hidden="true"></span>
           <span class="stage-foliage stage-foliage-right" aria-hidden="true"></span>
-          <div id="quickMutationPicker" class="quick-mutation-picker" role="group" aria-label="Быстрый выбор мутации" hidden></div>
         </section>
+
+        <div id="quickMutationPicker" class="quick-mutation-picker" role="group" aria-label="Быстрый выбор мутации" hidden></div>
+        <button id="tutorialQuest" class="tutorial-quest" type="button" hidden></button>
 
         <div id="conveyorChoiceCount" class="conveyor-choice-count" aria-live="polite" aria-label="Съедено 0 из 3">
                 <span class="conveyor-choice-label" aria-hidden="true">СЪЕДЕНО</span>
@@ -141,11 +157,11 @@
               <div class="world-terminal-heading">ВЫБОР МИРА</div>
               <button id="abyssModeV2" class="world-terminal-endless" type="button" aria-label="Бесконечный режим" aria-pressed="false" title="Бесконечный режим"><b aria-hidden="true">∞</b><small id="terminalEndlessLabel">БЕСКОНЕЧНО</small></button>
               <div id="worldCarousel" class="world-terminal-screen" aria-live="polite" aria-label="Шахты">
-                <img id="worldTerminalPreview" class="world-terminal-preview" src="assets/ui/world-terminal/mine-green-depths-v4.webp" alt="" aria-hidden="true">
+                <img id="worldTerminalPreview" class="world-terminal-preview" src="assets/ui/world-terminal/mine-green-depths-v4.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
                 <div class="world-terminal-screen-shade" aria-hidden="true"></div>
-                <div class="world-terminal-title"><b id="worldTerminalName">ЗЕЛЁНЫЕ ГЛУБИНЫ</b><small id="worldTerminalNumber">750 М</small></div>
+                <div class="world-terminal-title"><b id="worldTerminalName">ЗЕЛЁНЫЕ ГЛУБИНЫ</b><small id="worldTerminalNumber">500 М</small></div>
                 <span id="worldTerminalNew" class="world-terminal-new" hidden>НОВЫЙ МИР</span>
-                <div id="worldTerminalLock" class="world-terminal-lock" hidden><img src="assets/ui/lock.webp" alt="" aria-hidden="true"><span>Нужен <b id="worldTerminalTrophies">10</b><img src="assets/ui/player-level-star-v2.webp" alt="уровень"></span></div>
+                <div id="worldTerminalLock" class="world-terminal-lock" hidden><img src="assets/ui/lock.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span>Нужен <b id="worldTerminalTrophies">10</b><img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="уровень"></span></div>
                 <div id="worldTerminalStats" class="world-terminal-stats" hidden><span><small>ЛУЧШИЙ СЧЁТ</small><b id="terminalBestScore">0</b></span><span><small>МАКС. ГЛУБИНА</small><b id="terminalBestDepth">0 М</b></span><span><small>КРУГОВ</small><b id="terminalBestLaps">0</b></span><span><small>ЗАБЕГОВ</small><b id="terminalRuns">0</b></span></div>
                 <div id="worldCarouselDots" class="world-carousel-dots" aria-label="Страницы шахт"></div>
               </div>
@@ -163,12 +179,12 @@
             <div class="play-setup-control world-control">
               <div class="home-world-selector">
                 <button id="homeWorldPicker" class="home-world-picker" type="button" aria-label="Выбрать шахту" aria-haspopup="listbox" aria-controls="homeWorldMenu" aria-expanded="false">
-                  <span class="home-world-emblem"><img id="homeWorldPickerIcon" src="assets/ui/world-icons/world-1.webp" alt="" aria-hidden="true"></span>
+                  <span class="home-world-emblem"><img id="homeWorldPickerIcon" src="assets/ui/world-icons/world-1.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"></span>
                   <span class="home-world-copy">
                     <small id="homeWorldPickerEyebrow">ШАХТА 1</small>
                     <b id="homeWorldPickerName">Зелёная долина</b>
                   </span>
-                  <span class="home-world-chevron" aria-hidden="true"><img src="assets/ui/world-picker-chevron.webp?v=1" alt=""></span>
+                  <span class="home-world-chevron" aria-hidden="true"><img src="assets/ui/world-picker-chevron.webp?v=20261008-optimized-v1" alt=""></span>
                 </button>
                 <div id="homeWorldMenu" class="home-world-menu" role="listbox" aria-label="Шахты" hidden></div>
                 <select id="homeWorldSelect" class="home-world-native-select" tabindex="-1" aria-hidden="true" hidden></select>
@@ -185,9 +201,9 @@
                   <span><b>УРОВНИ</b><small>ВЫБОР ЭТАПА</small></span>
                 </button>
                 <button id="endlessModeBtn" class="home-mode-tab" type="button" role="tab" aria-selected="false" aria-controls="endlessModePanel">
-                  <i class="home-mode-icon home-mode-endless-icon" aria-hidden="true"><img src="assets/ui/endless-mode.webp?v=2" alt=""></i>
+                  <i class="home-mode-icon home-mode-endless-icon" aria-hidden="true"><img src="assets/ui/endless-mode.webp?v=20261008-optimized-v1" alt=""></i>
                   <span><b>БЕСКОНЕЧНЫЙ</b><small id="endlessModeHint">ПОСЛЕ ФИНАЛА</small></span>
-                  <img class="home-mode-lock" src="assets/ui/level-lock.webp" alt="" aria-hidden="true">
+                  <img class="home-mode-lock" src="assets/ui/level-lock.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
                 </button>
               </div>
             </div>
@@ -201,17 +217,17 @@
 
           <div id="endlessModePanel" class="home-mode-panel endless-mode-panel hidden" role="tabpanel" aria-labelledby="endlessModeBtn">
             <div class="endless-mode-records" aria-label="Рекорды бесконечного режима">
-              <span class="endless-stat-card"><img src="assets/ui/endless-score.webp?v=1" alt="" aria-hidden="true"><span><small>ЛУЧШИЙ СЧЁТ</small><b id="endlessBestScore">0</b></span></span>
-              <span class="endless-stat-card"><img src="assets/ui/endless-depth.webp?v=1" alt="" aria-hidden="true"><span><small>МАКС. ГЛУБИНА</small><b id="endlessBestDepth">0 М</b></span></span>
-              <span class="endless-stat-card"><img src="assets/ui/endless-laps.webp?v=1" alt="" aria-hidden="true"><span><small>ПРОЙДЕНО КРУГОВ</small><b id="endlessBestLaps">0</b></span></span>
-              <span class="endless-stat-card"><img src="assets/ui/endless-runs.webp?v=1" alt="" aria-hidden="true"><span><small>БЕСКОНЕЧНЫХ ЗАБЕГОВ</small><b id="endlessRuns">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-score.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><small>ЛУЧШИЙ СЧЁТ</small><b id="endlessBestScore">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-depth.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><small>МАКС. ГЛУБИНА</small><b id="endlessBestDepth">0 М</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-laps.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><small>ПРОЙДЕНО КРУГОВ</small><b id="endlessBestLaps">0</b></span></span>
+              <span class="endless-stat-card"><img src="assets/ui/endless-runs.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><small>БЕСКОНЕЧНЫХ ЗАБЕГОВ</small><b id="endlessRuns">0</b></span></span>
             </div>
           </div>
 
           <div class="home-reroll-row" aria-label="Управление конвейером">
             <div class="conveyor-controls">
               <button id="rerollBtn" class="reroll-btn" type="button">
-                <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll-button-v2.webp?v=1" alt="" aria-hidden="true"></span>
+                <span class="reroll-icon-well"><img class="reroll-icon" src="assets/ui/reroll-button-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"></span>
                 <span class="reroll-copy"><b id="rerollTitle">РЕРОЛЛ</b></span>
                 <em id="rerollText">БЕСПЛАТНО ∞</em>
               </button>
@@ -241,9 +257,9 @@
             <div class="shaft-health" aria-label="У слайма три сердца">
               <span class="shaft-health-title" aria-hidden="true">ЖИЗНИ</span>
               <div class="run-hearts" role="img" aria-label="3 из 3 сердец">
-                <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=1" alt=""></span>
-                <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=1" alt=""></span>
-                <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=1" alt=""></span>
+                <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=20261008-optimized-v1" alt=""></span>
+                <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=20261008-optimized-v1" alt=""></span>
+                <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=20261008-optimized-v1" alt=""></span>
               </div>
               <span class="shaft-health-count"><b id="runHeartCount">3</b>/3</span>
             </div>
@@ -251,31 +267,32 @@
               <div class="run-route-labels" aria-hidden="true">
                 <span>0 М</span>
                 <b id="depthLabel">0 М</b>
-                <strong id="routeTargetLabel">750 М</strong>
+                <strong id="routeTargetLabel">500 М</strong>
               </div>
               <div class="run-route-track">
                 <span id="routeProgress" class="run-route-progress"></span>
                 <span id="routeBestMarker" class="run-route-best" aria-hidden="true"><small id="routeBestLabel">РЕКОРД 0 М</small><i></i></span>
-                <span id="routeSlimeMarker" class="run-route-slime" aria-hidden="true"><img src="assets/ui/slime.webp" alt=""></span>
-                <span class="run-route-portal" aria-hidden="true"><img id="routePortalIcon" src="assets/ui/portals/world-1.webp" alt=""></span>
+                <span id="routeSlimeMarker" class="run-route-slime" aria-hidden="true"><img src="assets/ui/slime.webp?v=20261008-optimized-v1" alt=""></span>
+                <span class="run-route-portal" aria-hidden="true"><img id="routePortalIcon" src="assets/ui/portals/world-1.webp?v=20261008-optimized-v1" alt=""></span>
               </div>
             </div>
             <div id="runResearchHud" class="run-research-hud" aria-label="Колбы за забег: 0">
-              <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="" aria-hidden="true">
+              <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
               <span><small>КОЛБЫ</small><b id="runResearchScore">0</b></span>
               <i id="runResearchGain" aria-hidden="true">+1</i>
             </div>
-            <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/pause-button-v2.webp?v=1" alt="" aria-hidden="true"><span>ПАУЗА</span></button>
+            <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/pause-button-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span>ПАУЗА</span></button>
           </div>
           <div id="runExperienceHud" class="run-experience-hud" data-stage="0" aria-live="off" aria-label="Опыт за забег: 0"><span id="runExperienceScore">0</span><small>XP</small><i id="runExperienceGain">+1</i></div>
+          <div id="tutorialRunGoal" class="tutorial-run-goal" hidden>Дойди до конца!</div>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
-          <div class="barrier-control" aria-label="Суперспособность">
+          <div class="barrier-control" aria-label="Суперспособность" hidden>
             <button id="abilityBtn" class="ability-btn barrier-btn ultimate-control" type="button" aria-label="Активировать суперспособность" disabled>
-              <img class="ability-icon-muted" src="assets/ui/ability-shield-v1-lossless.webp" alt="" aria-hidden="true">
-              <img class="ability-icon-color" src="assets/ui/ability-shield-v1-lossless.webp" alt="" aria-hidden="true">
+              <img class="ability-icon-muted" alt="" aria-hidden="true">
+              <img class="ability-icon-color" alt="" aria-hidden="true">
               <span id="abilityPercent">0%</span>
             </button>
-            <small id="abilityText">ЩИТ · 0/65</small>
+            <small id="abilityText">СУПЕРСПОСОБНОСТЬ</small>
           </div>
           <div class="fall-controls" aria-label="Сенсорное управление траекторией слайма">
             <div id="touchJoystick" class="touch-joystick" aria-hidden="true"><span aria-hidden="true"></span></div>
@@ -286,10 +303,10 @@
               <small>ГЛИТЧ · СУПЕРСПОСОБНОСТЬ</small>
               <h2 id="glitchChoiceTitle">ВЫБЕРИ СБОЙ</h2>
               <div class="glitch-choice-grid">
-                <button type="button" class="glitch-choice-option" data-glitch-bug="copy"><b>1</b><span>КОПИРОВАНИЕ</span></button>
-                <button type="button" class="glitch-choice-option" data-glitch-bug="delete"><b>2</b><span>УДАЛЕНИЕ</span></button>
-                <button type="button" class="glitch-choice-option" data-glitch-bug="infect"><b>3</b><span>ЗАРАЖЕНИЕ</span></button>
-                <button type="button" class="glitch-choice-option" data-glitch-bug="change"><b>4</b><span>ИЗМЕНЕНИЕ</span></button>
+                <button type="button" class="glitch-choice-option" data-glitch-bug="hack"><b>1</b><span>ВЗЛОМ</span><em>Обезвредить колючки</em></button>
+                <button type="button" class="glitch-choice-option" data-glitch-bug="delete"><b>2</b><span>УДАЛЕНИЕ</span><em>Стереть часть блоков</em></button>
+                <button type="button" class="glitch-choice-option" data-glitch-bug="infect"><b>3</b><span>ЗАРАЖЕНИЕ</span><em>Связать блоки вокруг</em></button>
+                <button type="button" class="glitch-choice-option" data-glitch-bug="change"><b>4</b><span>ИЗМЕНЕНИЕ</span><em>Сделать блоки хрупкими</em></button>
               </div>
             </div>
             <div id="glitchChoiceAnnouncement" class="glitch-choice-announcement" aria-live="assertive"></div>
@@ -304,7 +321,7 @@
   <div id="adminToolsOverlay" class="overlay admin-tools-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminToolsTitle">
     <section class="modal admin-tools-modal" tabindex="-1">
       <div class="admin-tools-heading">
-        <span class="admin-tools-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=1" alt=""></span>
+        <span class="admin-tools-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt=""></span>
         <div><small>ИНСТРУМЕНТЫ ТЕСТИРОВАНИЯ</small><h2 id="adminToolsTitle">Админ-меню</h2></div>
         <button id="closeAdminToolsBtn" class="icon-btn admin-tools-close" type="button" aria-label="Закрыть админ-меню">✕</button>
       </div>
@@ -318,18 +335,18 @@
           </div>
         </div>
         <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать 30 уровень и открыть игровой прогресс" title="Выдать 30 уровень и открыть игровой прогресс">
-          <img src="assets/ui/player-level-star-v2.webp" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Уровни и прогресс</small></span><i aria-hidden="true">+</i>
+          <img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Уровни и прогресс</small></span><i aria-hidden="true">+</i>
         </button>
         <button id="adminInfiniteFlasksBtn" class="admin-infinite-flasks" type="button" aria-pressed="false" aria-label="Включить бесконечные колбы исследования">
-          <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
+          <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
         </button>
         <button id="adminInfiniteUltimateBtn" class="admin-infinite-flasks admin-infinite-ultimate" type="button" aria-pressed="false" aria-label="Включить бесконечную суперспособность">
-          <img src="assets/ui/recipe-categories/emblem-v2-electric.webp" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНАЯ УЛЬТА</b><small id="adminInfiniteUltimateState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
+          <img src="assets/ui/recipe-categories/emblem-v2-electric.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНАЯ УЛЬТА</b><small id="adminInfiniteUltimateState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
         </button>
         <button id="adminUnlockMutationsBtn" class="admin-unlock-mutations" type="button" aria-label="Открыть все мутации">
-          <img id="adminUnlockMutationsIcon" src="assets/ui/recipe-categories/emblem-v4-glitch.webp" alt="" aria-hidden="true"><b>ОТКРЫТЬ ВСЕ МУТАЦИИ</b>
+          <img id="adminUnlockMutationsIcon" src="assets/ui/recipe-categories/emblem-v4-glitch.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><b>ОТКРЫТЬ ВСЕ МУТАЦИИ</b>
         </button>
-        <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
+        <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
         <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
         <button id="tutorialSkipBtn" class="admin-tutorial-skip" type="button" hidden>ПРОПУСТИТЬ ОБУЧЕНИЕ</button>
       </div>
@@ -347,15 +364,15 @@
   <div id="runMenuOverlay" class="overlay run-menu-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="runMenuTitle">
     <div class="modal run-menu-modal" tabindex="-1">
       <div class="run-menu-heading">
-        <span class="run-menu-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=1" alt=""></span>
+        <span class="run-menu-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt=""></span>
         <div><small>ЗАБЕГ ОСТАНОВЛЕН</small><h2 id="runMenuTitle">Меню</h2></div>
       </div>
-      <button id="resumeRunBtn" class="run-menu-action run-menu-resume" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/continue.webp?v=20260815-1" alt=""></span><b>ПРОДОЛЖИТЬ</b></button>
-      <button id="toggleRunSoundBtn" class="run-menu-action run-menu-sound" type="button"><span id="runSoundIcon" class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/sound.webp?v=20260815-1" alt=""></span><b id="runSoundLabel">ЗВУК ВКЛЮЧЁН</b></button>
+      <button id="resumeRunBtn" class="run-menu-action run-menu-resume" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/continue.webp?v=20261008-optimized-v1" alt=""></span><b>ПРОДОЛЖИТЬ</b></button>
+      <button id="toggleRunSoundBtn" class="run-menu-action run-menu-sound" type="button"><span id="runSoundIcon" class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/sound.webp?v=20261008-optimized-v1" alt=""></span><b id="runSoundLabel">ЗВУК ВКЛЮЧЁН</b></button>
       <button id="tutorialRunSkipBtn" class="run-menu-action run-menu-tutorial-skip" type="button" hidden><b>ПРОПУСТИТЬ ОБУЧЕНИЕ</b></button>
       <div class="run-menu-danger-zone">
-        <button id="restartRunBtn" class="run-menu-action run-menu-restart" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/restart.webp?v=20260815-1" alt=""></span><b>НАЧАТЬ ЗАНОВО</b></button>
-        <button id="finishRunBtn" class="run-menu-action run-menu-finish" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/finish.webp?v=20260815-1" alt=""></span><b>ЗАКОНЧИТЬ ЗАБЕГ</b></button>
+        <button id="restartRunBtn" class="run-menu-action run-menu-restart" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/restart.webp?v=20261008-optimized-v1" alt=""></span><b>НАЧАТЬ ЗАНОВО</b></button>
+        <button id="finishRunBtn" class="run-menu-action run-menu-finish" type="button"><span class="run-menu-icon" aria-hidden="true"><img src="assets/ui/run-menu/finish.webp?v=20261008-optimized-v1" alt=""></span><b>ЗАКОНЧИТЬ ЗАБЕГ</b></button>
       </div>
     </div>
   </div>
@@ -380,25 +397,32 @@
       <path class="tutorial-focus-edge tutorial-focus-edge-dark"/>
       <path class="tutorial-focus-edge tutorial-focus-edge-gold"/>
     </svg>
-    <img id="tutorialPointer" class="tutorial-pointer" src="assets/ui/tutorial-pointer-v3-lossless.webp" alt="">
+    <img id="tutorialPointer" class="tutorial-pointer" src="assets/ui/tutorial-pointer-v3-lossless.webp?v=20261008-optimized-v1" alt="">
     <div id="tutorialCaption" class="tutorial-caption"></div>
   </div>
-  <button id="tutorialAdminBtn" class="tutorial-admin-access" type="button" aria-label="Админ-меню" hidden><img src="assets/ui/game-menu-gear.webp?v=1" alt=""></button>
-  <button id="tutorialPauseBtn" class="tutorial-pause-access" type="button" aria-label="Пауза" hidden><img src="assets/ui/pause-button-v2.webp?v=1" alt=""></button>
+  <button id="tutorialAdminBtn" class="tutorial-admin-access" type="button" aria-label="Админ-меню" hidden><img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt=""></button>
+  <button id="tutorialPauseBtn" class="tutorial-pause-access" type="button" aria-label="Пауза" hidden><img src="assets/ui/pause-button-v2.webp?v=20261008-optimized-v1" alt=""></button>
   <div id="tutorialGift" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Подарок: 10 колб" hidden>
-    <div class="tutorial-dialog-card"><img src="assets/ui/research-flask-blue-v1.webp" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 КОЛБ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
+    <div class="tutorial-dialog-card"><img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 КОЛБ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
   </div>
   <div id="tutorialControls" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Управление в шахте" hidden>
-    <div class="tutorial-dialog-card tutorial-controls-card"><strong>УПРАВЛЕНИЕ</strong><p id="tutorialControlsText"></p><div class="tutorial-goals"><span><img src="assets/collectibles/flasks/world-1-small.webp" alt="">СОБИРАЙ КОЛБЫ</span><span><img src="assets/Мир 1/Колючий враг-v1-lossless.webp" alt="">БЕРЕГИСЬ КОЛЮЧЕК</span></div><button id="tutorialControlsCloseBtn" type="button" aria-label="Закрыть подсказку" hidden>✕</button></div>
+    <div class="tutorial-dialog-card tutorial-controls-card"><strong>УПРАВЛЕНИЕ</strong><p id="tutorialControlsText"></p><button id="tutorialControlsCloseBtn" class="tutorial-next" type="button" hidden>ДАЛЕЕ</button></div>
   </div>
   <div id="tutorialUpgradeSummary" class="tutorial-dialog tutorial-note-dialog" role="dialog" aria-modal="true" aria-label="Огонь усилен" hidden>
-    <div class="tutorial-dialog-card tutorial-summary-card"><strong>ОГОНЬ II!</strong><p>Теперь появляется ещё одна огненная еда. Съешь две, чтобы усилить Огонь: горящие блоки будут поджигать соседние!</p><button id="tutorialUpgradeSummaryCloseBtn" type="button">ПОНЯТНО</button></div>
+    <div class="tutorial-dialog-card tutorial-summary-card"><strong>ОГОНЬ УСИЛЕН!</strong><div class="tutorial-fire-unlock"><img src="assets/ui/recipe-categories/emblem-v2-fire.webp?v=20261008-optimized-v1" alt="Огонь"><b>2</b><span>огненных блюда</span></div><p>Съешь оба: огонь начнёт прыгать на соседние блоки!</p><button id="tutorialUpgradeSummaryCloseBtn" class="tutorial-next" type="button">ДАЛЕЕ</button></div>
+  </div>
+  <div id="tutorialMemo" class="tutorial-dialog tutorial-note-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialMemoTitle" hidden>
+    <div class="tutorial-dialog-card tutorial-memo-card"><strong id="tutorialMemoTitle"></strong><div id="tutorialMemoContent"></div><button id="tutorialMemoNext" class="tutorial-next" type="button" hidden>ДАЛЕЕ</button></div>
+  </div>
+  <div id="tutorialDodge" class="tutorial-dodge" hidden>
+    <div class="tutorial-dodge-note"><strong>КОЛЮЧКА!</strong><span>Береги слайма. Увернись вправо!</span><div class="tutorial-hearts"><b>♥ ♥ ♥</b><span>У тебя 3 сердца</span></div><div class="tutorial-dodge-action"></div></div>
+    <img class="tutorial-swipe-hand" src="assets/ui/tutorial-pointer-v3-lossless.webp?v=20261008-optimized-v1" alt="">
   </div>
 
   <div id="resultOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
     <div class="modal result-modal" tabindex="-1">
       <div class="result-heading">
-        <span class="result-world-icon" aria-hidden="true"><img id="resultWorldIcon" src="assets/ui/world-icons/world-1.webp" alt=""></span>
+        <span class="result-world-icon" aria-hidden="true"><img id="resultWorldIcon" src="assets/ui/world-icons/world-1.webp?v=20261008-optimized-v1" alt=""></span>
         <div>
           <small id="resultWorldName" class="result-world-name">Зелёные глубины</small>
           <h2 id="resultTitle">Результат забега</h2>
@@ -410,7 +434,7 @@
       <div class="result-summary" aria-label="Результат забега">
         <div class="result-stat result-research-stat">
           <span id="resultResearchFlask" class="result-research-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask-blue-v1.webp?v=1" alt="">
+            <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="">
             <b id="resultResearchUnits" hidden>0</b>
           </span>
           <span class="result-research-copy">
@@ -420,7 +444,7 @@
           <span id="resultResearchStream" class="result-research-stream" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
         </div>
         <div class="result-stat result-coins-stat">
-          <img src="assets/ui/player-level-star-v2.webp" alt="" aria-hidden="true">
+          <img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
           <span class="result-experience-copy"><small>ВСЕГО<br>ОПЫТА</small><b id="resultCoins">+0 XP</b></span>
         </div>
       </div>
@@ -428,8 +452,8 @@
       <section id="resultCompletionBonus" class="result-completion-bonus" aria-label="Бонус за прохождение, включён в итоговую награду" hidden>
         <h3>БОНУС ЗА ПРОХОЖДЕНИЕ</h3>
         <div class="result-completion-values">
-          <span><img src="assets/ui/research-flask-blue-v1.webp" alt="Колбы"><b id="resultResearchBonus">+25</b></span>
-          <span><img src="assets/ui/player-level-star-v2.webp" alt="Опыт"><b id="resultExperienceBonus">+150 XP</b></span>
+          <span><img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="Колбы"><b id="resultResearchBonus">+25</b></span>
+          <span><img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="Опыт"><b id="resultExperienceBonus">+150 XP</b></span>
         </div>
       </section>
 
@@ -465,11 +489,11 @@
     <div class="modal game-complete-modal" tabindex="-1">
       <div class="game-complete-glow" aria-hidden="true"></div>
       <div class="game-complete-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="game-complete-portal" aria-hidden="true"><img src="assets/ui/portals/world-4.webp" alt=""><span><img src="assets/ui/slime.webp" alt=""></span></div>
+      <div class="game-complete-portal" aria-hidden="true"><img src="assets/ui/portals/world-4.webp?v=20261008-optimized-v1" alt=""><span><img src="assets/ui/slime.webp?v=20261008-optimized-v1" alt=""></span></div>
       <small class="game-complete-kicker">ВСЕ ШАХТЫ ОТКРЫТЫ</small>
       <h2 id="gameCompleteTitle">ВЫ ПРОШЛИ ИГРУ!</h2>
       <p>Слайм добрался до последнего портала. Продолжайте повышать уровень и исследовать шахты!</p>
-      <button id="playEndlessBtn" class="game-complete-action game-complete-endless" type="button"><span aria-hidden="true"><img src="assets/ui/endless-mode.webp?v=2" alt=""></span><b>БЕСКОНЕЧНАЯ ШАХТА</b><small>Новый круг — сложнее предыдущего</small></button>
+      <button id="playEndlessBtn" class="game-complete-action game-complete-endless" type="button"><span aria-hidden="true"><img src="assets/ui/endless-mode.webp?v=20261008-optimized-v1" alt=""></span><b>БЕСКОНЕЧНАЯ ШАХТА</b><small>Новый круг — сложнее предыдущего</small></button>
       <button id="gameCompleteHomeBtn" class="game-complete-action game-complete-home" type="button"><span aria-hidden="true">⌂</span><b>В МЕНЮ</b></button>
       <button class="game-complete-action game-complete-soon" type="button" disabled><span aria-hidden="true">✦</span><b>ПРОДОЛЖЕНИЕ</b><small>СКОРО</small></button>
     </div>
@@ -488,33 +512,50 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </div>
   <script>
-    if (location.protocol !== 'file:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !location.hostname.endsWith('.github.io')) {
-      document.write('<script src="/sdk.js"><\/script>');
+    window.SlimeSdkScriptReady = Promise.resolve();
+    if (location.protocol !== 'file:' && !/^(localhost|127(?:\.\d+){3}|\[::1\])$/.test(location.hostname) && !location.hostname.endsWith('.github.io')) {
+      window.SlimeSdkScriptReady = new Promise((resolve, reject) => {
+        const sdk = document.createElement('script');
+        const timeout = setTimeout(() => reject(new Error('SDK timeout')), 20000);
+        sdk.src = '/sdk.js'; sdk.async = true;
+        sdk.onload = () => { clearTimeout(timeout); resolve(); };
+        sdk.onerror = () => { clearTimeout(timeout); reject(new Error('SDK unavailable')); };
+        document.head.appendChild(sdk);
+      });
+      window.SlimeSdkScriptReady.catch(error => window.SlimeBootLoader.fail(error));
     }
   </script>
-  <script src="js/config/image-paths.js?v=1"></script>
+  <script src="js/config/image-paths.js?v=3"></script>
   <script src="food-catalog.js?v=39"></script>
   <script src="world-catalog.js?v=32"></script>
-  <script>document.write('<script src="js/generation/generated-data.js?t=' + Date.now() + '"><\/script>');</script>
+  <script src="js/generation/generated-data.js?v=1"></script>
   <script src="js/generation/section-catalog.js?v=13"></script>
   <script src="js/generation/section-catalog-v4.js?v=3"></script>
   <script src="js/generation/mine-plans.js?v=3"></script>
-  <script src="js/generation/world1-descent.js?v=7"></script>
+  <script src="js/generation/world1-descent.js?v=8"></script>
+  <script src="js/generation/tutorial-descent.js?v=2"></script>
   <script src="js/config/gameplay-balance.js?v=3"></script>
-  <script src="js/config/game-config.js?v=93"></script>
+  <script src="js/config/game-config.js?v=96"></script>
   <script src="js/config/experience.js?v=3"></script>
-  <script src="js/platform/yandex-platform.js?v=2"></script>
-  <script src="js/core/game-assets.js?v=41"></script>
+  <script src="js/platform/yandex-platform.js?v=4"></script>
+  <script src="js/core/game-assets.js?v=42"></script>
   <script src="js/config/food-ground-bounds.js?v=1"></script>
   <script src="js/rendering/food-grounding.js?v=2"></script>
-  <script src="js/core/audio.js?v=3"></script>
-  <script src="js/rendering/slime-avatar.js?v=57"></script>
+  <script src="js/core/audio.js?v=4"></script>
+  <script src="js/config/spectral-contours.js?v=1"></script>
+  <script src="js/rendering/spectral-glow.js?v=3"></script>
+  <script src="js/rendering/spectral-dom-aura.js?v=2"></script>
+  <script src="js/rendering/slime-avatar.js?v=64"></script>
   <script src="js/rendering/menu-mutation-reveal.js?v=6"></script>
+  <script src="js/rendering/menu-petpet.js?v=12"></script>
   <script src="js/rendering/dominant-shield.js?v=3"></script>
+  <script src="js/rendering/cosmos-orbits.js?v=5"></script>
+  <script src="js/rendering/techno-feedback.js?v=2"></script>
+  <script src="js/rendering/phantom-effects.js?v=8"></script>
   <script src="js/rendering/block-break-feedback.js?v=3"></script>
-  <script src="effects-lab/workbench-effects.js?v=80"></script>
+  <script src="effects-lab/workbench-effects.js?v=83"></script>
   <script src="effects-lab/block-effects-workbench.js?v=21"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=529"></script>
+  <script src="game.js?v=567"></script>
 </body>
 </html>

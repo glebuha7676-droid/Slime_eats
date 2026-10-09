@@ -1,0 +1,13 @@
+# Новая рука, версия 549
+
+Рука сгенерирована заново встроенным инструментом imagegen. Исходная генерация: `C:/Users/User/.codex/generated_images/01a0d472-6c77-7802-9042-ac07db6305e8/exec-ed512d7f-0c1d-41ff-af7c-cf9deb2eabc1.png`.
+
+Игровой файл: `C:/Users/User/Desktop/Копай глубже/assets/ui/petpet-grip-v6-lossless.webp`. Два кадра в одном атласе 1024 × 512, 177 972 байта, WebP без потерь после уменьшения. Предыдущие варианты не загружаются в игру.
+
+Размер в игре увеличен с 2,2 до 2,48 радиуса слайма, примерно на 13%. Точка контакта опущена на 9 единиц игрового холста. Рука повёрнута вокруг запястья на 8 градусов, чтобы нижний палец проходил по лбу. Используются целые непрозрачные спрайты, без вырезания силуэта слайма внутри руки.
+
+## Промпт генерации
+
+Use case: stylized-concept. Asset: two matching raster sprite frames for petpet head-rubbing in a children's slime game. Generate a NEW hand design from scratch, not a revision of previous gloves. Two equal square cells, horizontal 2:1 transparent atlas. Images1 and2 show movement and VIEW ANGLE: cupped hand approaching from LEFT slightly above, wrapping head, viewed from the SIDE and a little above, narrow side of palm visible. Image3 is MATERIAL/STYLE ONLY: glossy white cursor glove with soft blue shadows and navy outline, do not copy its pointing gesture. LEFT cell relaxed pose (image1), RIGHT cell tight rubbing pose (image2). Upper fingers are CURLED together over the far side of head: show one smooth bent INDEX-FINGER ARCH and only hints of other folded fingers behind it. NO fan of four extended flat fingers, NO flat back-of-hand mitten. Long slim THUMB is nearest camera, crossing the forehead from left to right. Relaxed thumb tip points down-right; rubbing thumb slides UP and RIGHT while straightening across forehead, almost meeting index fingertip. Upper index arch flexes downward slightly in response, thumb makes 4x larger movement. Natural narrow wrist angled into palm, modest cuff to LEFT, wrist position same both frames. Elegant believable glove anatomy, slim rather than puffy. Curve inside grip matches dome of round head but do NOT draw head or slime. Actual glove fully opaque; only naturally empty space between index arch and thumb transparent. Small opening in relaxed pose, tiny slit in tight pose. Plain transparent background, no labels or arrows, no vector look, no cast shadow. A playful white cursor hand genuinely grasping/rubbing a head, not tapping, not pointing, not a claw. Center each hand at same scale/anchor in its cell and maintain matching lighting/colors.
+
+Референсы: два присланных кадра GIF и `assets/ui/tutorial-pointer-v3-lossless.webp` для стиля перчатки. Актуальная локальная сборка: `dist/yandex`, архив `dist/slime-yandex-549.zip`.

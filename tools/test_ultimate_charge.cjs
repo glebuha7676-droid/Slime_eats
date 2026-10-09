@@ -16,6 +16,7 @@ const context = {
   awardRunExperience: () => {},
   registerBrokenBlock: () => {},
   createDebris: () => {},
+  createGlitchDebris: () => {},
   elementalLevel: () => 0,
   impact: () => {},
 };
@@ -53,6 +54,10 @@ assert.equal(run.elementalAbilityCharges, 0, 'ultimate is not ready after 64 blo
 breakBlock();
 assert.equal(run.elementalAbilityCharges, 1, 'ultimate is ready after 65 blocks');
 
+run = freshRun();
+breakBlock('cosmosOrbit');
+assert.equal(run.ultimateCharge, 1, 'passive orbital destruction charges the ultimate');
+
 run = freshRun({ ultimateRechargePending: 'elemental', elementalAbilityActive: 'fire' });
 breakBlock('impact');
 breakBlock('fireUltimate');
@@ -68,7 +73,8 @@ assert.equal(context.finishUltimateRecharge(), false, 'completion cannot grant t
 breakBlock('fireUltimate');
 breakBlock('electricStorm');
 breakBlock('sporeUltimate');
-breakBlock('glitchClone');
+breakBlock('glitchHack');
+breakBlock('glitchDelete');
 assert.equal(run.ultimateCharge, 10, 'delayed ultimate damage cannot recharge it');
 breakBlock();
 assert.equal(run.ultimateCharge, 11, 'ordinary damage resumes charging afterward');
@@ -84,7 +90,7 @@ assert.match(source, /ultimateRechargePending === 'shield' && run\.barrier <= 0[
 assert.match(source, /run\.elementalAbilityActive = '';\s*run\.elementalAbilityNextTickAt = 0;\s*finishUltimateRecharge\(\)/);
 assert.match(source, /function finishMechSuit\([\s\S]*?finishUltimateRecharge\(\)/);
 
-// A hazard must consume the default shield once, preserve the heart, and
+// Legacy protection must consume the bubble once, preserve the heart, and
 // release ultimate charging as soon as the shield breaks.
 const hazardLogic = source.slice(source.indexOf('  function resolveHazardHit('), source.indexOf('  function elementalLevel('));
 context.mechSuitActive = () => false;
@@ -93,15 +99,17 @@ context.applyBlockBounce = () => {};
 context.sound = () => {};
 context.feedback = () => {};
 context.updateRunUI = () => {};
+const shieldLogic = source.slice(source.indexOf('  function shieldDominant('), source.indexOf('  function shieldReactionSource('));
+vm.runInContext(shieldLogic, context);
 vm.runInContext(`${hazardLogic}\nthis.resolveHazardHit = resolveHazardHit;`, context);
 run = freshRun({
-  health: 3, barrier: 25, shieldCharges: 0, ultimateRechargePending: 'shield',
-  slime: { x: 40, y: 40, vx: 0, vy: 180 }, damageInvulnerableUntil: 0,
+  worldId: 1, shake: 0, health: 3, barrier: 25, shieldCharges: 0, ultimateRechargePending: 'shield',
+  slime: { x: 40, y: 40, radius: 22, vx: 0, vy: 180 }, damageInvulnerableUntil: 0,
   flightDistance: 20,
 });
-const hazard = { x: 20, y: 65, w: 40, h: 40, hp: 1, hazard: true };
+const hazard = { x: 20, y: 65, w: 40, h: 40, hp: Infinity, hazard: true, unbreakable: true, dead: false };
 context.resolveHazardHit(hazard, { nx: 0, ny: -1, penetration: 2 }, 1000);
-assert.equal(hazard.dead, true, 'hazard is removed after the shielded hit');
+assert.equal(hazard.dead, false, 'legacy protection never destroys the hazard');
 assert.equal(run.health, 3, 'shielded hazard hit does not remove a heart');
 assert.equal(run.barrier, 0, 'the first hazard consumes the entire shield');
 assert.equal(run.ultimateCharge, 10, 'shield break starts the next charge');

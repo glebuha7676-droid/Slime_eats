@@ -38,7 +38,10 @@
   function versionedAsset(source) {
     const value = window.SlimeAssetPaths?.resolve(String(source || '')) || String(source || '');
     if (!/^assets\//i.test(value)) return value;
-    return `${value}${value.includes('?') ? '&' : '?'}v=${ASSET_REVISION}`;
+    const [path, query = ''] = value.split('?');
+    const parameters = new URLSearchParams(query);
+    parameters.set('v', ASSET_REVISION);
+    return `${path}?${parameters}`;
   }
 
   function ensureWorldSprites(worldId) {
@@ -74,12 +77,7 @@
     'meteor-impact-1',
     'meteor-impact-2',
     'pandora-box',
-    'jelly-zone-texture',
-    'combo-stage-1',
-    'combo-stage-2',
-    'combo-stage-3',
-    'combo-stage-4',
-    'combo-stage-5'
+    'jelly-zone-texture'
   ]);
   const vfxSprites = new Proxy({}, {
     get(sprites, name) {
@@ -87,11 +85,8 @@
       if (!sprites[name]) {
         const image = new Image();
         const geyserFrame = name.match(/^geyser-compact-(\d)$/)?.[1];
-        const comboStage = name.match(/^combo-stage-(\d)$/)?.[1];
         image.src = versionedAsset(geyserFrame
           ? `assets/vfx/geyser-compact/frame-${geyserFrame}.webp`
-          : comboStage
-            ? `assets/ui/combo/stage-${comboStage}.webp`
             : name === 'pandora-box'
               ? 'assets/vfx/pandora-box.webp'
             : name === 'jelly-zone-texture'
@@ -116,7 +111,7 @@
   function foodImageSource(food) {
     const customImage = String(food.image || '').trim();
     const isEmbeddedImage = /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(customImage);
-    const isProjectAsset = /^assets\/(?:ЕДА|food|ui\/recipe-categories)\/[\p{L}\p{N} _()./-]+\.(?:png|jpe?g|webp|gif)$/iu.test(customImage);
+    const isProjectAsset = /^assets\/(?:ЕДА|food|runtime|ui\/recipe-categories)\/[\p{L}\p{N} _()./-]+\.(?:png|jpe?g|webp|gif)$/iu.test(customImage);
     if (isEmbeddedImage) return customImage;
     return versionedAsset(isProjectAsset ? customImage : `${FOOD_ASSET_ROOT}${food.id}.webp`);
   }

@@ -1,23 +1,18 @@
-.mutation-family-phantom { --emblem-glow: #dce7fa; }
-.mutation-prize.mutation-family-phantom { --prize-glow: #dce7fa; }
+.mutation-family-phantom { --emblem-glow: #8dffe0; }
+.mutation-prize.mutation-family-phantom { --prize-glow: #8dffe0; }
 
 .mutation-phantom-fx { isolation: isolate; }
-.mutation-phantom-fx::before {
-  content: "";
-  position: absolute;
-  inset: -20%;
-  border-radius: 50%;
-  background: radial-gradient(circle, transparent 48%, rgba(226,249,255,.31) 68%, rgba(171,227,245,.22) 76%, transparent 90%);
-  filter: blur(3px);
-  animation: phantomHalo 2.4s ease-in-out infinite alternate;
+html body .mutation-phantom-fx::before,
+html body .mutation-phantom-fx::after { content: none!important; display:none!important; }
+html body .mutation-phantom-fx,
+html body #homeScreen .synthesizer .synthesis-food-visual>.food-mutation-fx.mutation-phantom-fx {
+  inset:0!important;width:100%!important;height:100%!important;transform:none!important;z-index:5!important;
 }
-.mutation-info-emblem .mutation-phantom-fx::before { inset: -45%; }
+.spectral-ui-aura { display:block; }
 .mutation-family-phantom .mutation-info-emblem > img,
 .mutation-prize.mutation-family-phantom .mutation-prize-emblem > img {
-  animation: phantomFloat 2.5s ease-in-out infinite;
+  animation: none;
 }
-@keyframes phantomHalo { to { opacity: .58; transform: scale(1.05); } }
-@keyframes phantomFloat { 50% { transform: translateY(-3px); } }
 @media (prefers-reduced-motion: reduce) {
   .mutation-phantom-fx::before,
   .mutation-family-phantom .mutation-info-emblem > img,

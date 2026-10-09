@@ -45,7 +45,7 @@ html body #homeScreen .synthesizer .synthesis-machine{
   overflow:visible!important;
   border:0!important;
   border-radius:0!important;
-  background:url("assets/ui/synthesis-triple-v2-lossless.webp") center/100% 100% no-repeat!important;
+  background:url("assets/ui/synthesis-triple-v2-lossless.webp?v=20261008-optimized-v1") center/100% 100% no-repeat!important;
   box-shadow:none!important;
 }
 html body #homeScreen .synthesizer .synthesis-machine:before,
@@ -91,7 +91,7 @@ html body #homeScreen .synthesizer .mutation-family-telekinesis{--synth-rgb:211,
 html body #homeScreen .synthesizer .family-cloning,
 html body #homeScreen .synthesizer .mutation-family-cloning{--synth-rgb:159,242,87}
 html body #homeScreen .synthesizer .family-phantom,
-html body #homeScreen .synthesizer .mutation-family-phantom{--synth-rgb:198,236,255}
+html body #homeScreen .synthesizer .mutation-family-phantom{--synth-rgb:141,255,224}
 html body #homeScreen .synthesizer .family-glitch,
 html body #homeScreen .synthesizer .mutation-family-glitch{--synth-rgb:246,90,227}
 html body #homeScreen .synthesizer .family-blast,
@@ -291,7 +291,7 @@ html body #homeScreen .quick-mutation-picker{
   position:absolute;z-index:100;left:50%;top:calc(100% - 38px);
   box-sizing:border-box;width:min(350px,calc(100% - 12px));height:116px;
   padding:27px 23px 22px;
-  border:0;background:url('assets/ui/quick-mutation-panel-v1-lossless.webp') center/100% 100% no-repeat;
+  border:0;background:url('assets/ui/quick-mutation-panel-v1-lossless.webp?v=20261008-optimized-v1') center/100% 100% no-repeat;
   filter:drop-shadow(0 10px 13px rgba(1,19,31,.42));
   transform:translate(-50%,-50%);
   animation:quickMutationOpen .22s cubic-bezier(.17,.85,.24,1.13) both;

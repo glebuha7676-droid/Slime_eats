@@ -97,12 +97,13 @@
 .glitch-choice-panel h2{margin:8px 0 17px;color:#fff;font:1000 clamp(22px,6vw,30px)/1 system-ui,sans-serif;letter-spacing:.04em;text-shadow:-2px 0 #39eafd,2px 0 #f459d7,0 4px 10px #050b23}
 .glitch-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
 .glitch-choice-option{
-  min-height:102px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  min-height:116px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
   border:2px solid #66b9ca;border-radius:16px;color:#fff;cursor:pointer;
   background:linear-gradient(160deg,#224860,#151d3c 65%,#3f214e);
   box-shadow:inset 0 2px rgba(255,255,255,.2),0 5px 0 #08162b,0 9px 14px rgba(0,0,0,.26);
   transition:transform .16s,filter .16s,border-color .16s;
 }
+.glitch-choice-option:nth-child(1){--choice-color:#73ffa5}
 .glitch-choice-option:nth-child(2){--choice-color:#ff8292}
 .glitch-choice-option:nth-child(3){--choice-color:#b2fb71}
 .glitch-choice-option:nth-child(4){--choice-color:#d4a4ff}
@@ -113,10 +114,12 @@
   box-shadow:inset 0 2px rgba(255,255,255,.35),0 3px 0 #080e25,0 0 12px var(--choice-color,#7af6ff);
 }
 .glitch-choice-option span{font:900 clamp(10px,2.7vw,12px)/1.1 system-ui,sans-serif;letter-spacing:.04em}
+.glitch-choice-option em{color:#d1eef5;font:700 clamp(10px,2.5vw,11px)/1.2 system-ui,sans-serif;font-style:normal;letter-spacing:0}
 .glitch-choice-option:hover,.glitch-choice-option:focus-visible{transform:translateY(-3px);border-color:var(--choice-color,#7af6ff);filter:brightness(1.13)}
 .glitch-choice-option:active{transform:translateY(2px);box-shadow:inset 0 2px rgba(255,255,255,.2),0 2px 0 #08162b}
 .glitch-choice-announcement{display:none;position:relative;z-index:2;max-width:96%;align-items:center;justify-content:center;gap:.14em;color:#fff;font:1000 clamp(21px,6vw,33px)/1.15 system-ui,sans-serif;text-align:center;text-shadow:-2px 0 #51f7ff,2px 0 #fa53dc,0 4px 10px #05091f}
 .glitch-choice-announcement[data-bug="delete"]{text-shadow:-2px 0 #ff546d,2px 0 #ffc062,0 4px 10px #05091f}
+.glitch-choice-announcement[data-bug="hack"]{text-shadow:-2px 0 #62ffa0,2px 0 #64ebff,0 4px 10px #05091f}
 .glitch-choice-announcement[data-bug="infect"]{text-shadow:-2px 0 #b4ff73,2px 0 #55ecff,0 4px 10px #05091f}
 .glitch-choice-announcement[data-bug="change"]{text-shadow:-2px 0 #d698ff,2px 0 #71ffed,0 4px 10px #05091f}
 .glitch-choice-announcement span{display:inline-block;min-width:.36em;animation:glitchLetterLand .82s cubic-bezier(.18,.87,.28,1.18) both;animation-delay:calc(var(--letter-index)*47ms)}

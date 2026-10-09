@@ -4,7 +4,7 @@
   const SOUND_ROOT = 'assets/audio/';
   // Increase this value whenever sound files are replaced under the same names.
   // The query string prevents phones and GitHub Pages from keeping stale audio.
-  const SOUND_ASSET_VERSION = '20260815-1';
+  const SOUND_ASSET_VERSION = window.SlimeGameConfig.ASSET_REVISION;
   const SOUND_ASSETS = {
     tap: { file: 'button.ogg', volume: .34, size: 3 },
     eatBite: { file: 'eat-bite.ogg', volume: .42, size: 2 },
@@ -27,6 +27,7 @@
     const soundPools = new Map();
 
     function fallbackSound(kind = 'tap') {
+      if (!isEnabled() || document.hidden) return;
       try {
         audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
@@ -80,7 +81,7 @@
     }
 
     function sound(kind = 'tap', timing = {}) {
-      if (!isEnabled()) return;
+      if (!isEnabled() || document.hidden) return;
       if (kind === 'eat' || kind === 'eatSlow') {
         mealTimers.forEach(clearTimeout);
         mealTimers = [];

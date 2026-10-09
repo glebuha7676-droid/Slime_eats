@@ -12,7 +12,7 @@
     cosmosUltra: 'effects-lab/assets/cosmos-ultra-body-v2-lossless.webp',
     technoUltra: 'effects-lab/assets/techno-ultra-body-v2-lossless.webp',
     psionicsUltra: 'effects-lab/assets/psionics-ultra-body-v1-lossless.webp',
-    phantomUltra: 'effects-lab/assets/phantom-ultra-body-v6-lossless.webp',
+    phantomUltra: 'effects-lab/assets/phantom-ultra-body-v7-lossless.webp',
     sporesStage1: 'effects-lab/assets/spores-stage1-body-v1-lossless.webp',
     sporesUltra: 'effects-lab/assets/spores-ultra-body-v5-lossless.webp',
     electricUltra: 'effects-lab/assets/electric-ultra-body-v7-lossless.webp',
@@ -106,12 +106,12 @@
   glitchXImage.onload = () => { glitchXReady = true; };
   glitchOImage.onload = () => { glitchOReady = true; };
   glitchMouthImage.onload = () => { glitchMouthReady = true; };
-  referenceBodyImage.src = 'assets/ui/slime/slime-body-reference-v1.webp?v=2';
-  referenceEyeSocketsImage.src = 'assets/ui/slime/slime-eye-sockets-reference-v1.webp?v=1';
-  referencePupilsImage.src = 'assets/ui/slime/slime-pupils-reference-v1.webp?v=1';
-  referenceCheeksImage.src = 'assets/ui/slime/slime-cheeks-reference-v1.webp?v=1';
-  referenceEyeExpressionsImage.src = 'assets/ui/slime/slime-eye-expressions-v1.webp?v=1';
-  referenceMouthExpressionsImage.src = 'assets/ui/slime/slime-mouth-expressions-v1.webp?v=1';
+  referenceBodyImage.src = window.SlimeGameAssets.versionedAsset('assets/ui/slime/slime-body-reference-v1.webp?v=2');
+  referenceEyeSocketsImage.src = window.SlimeGameAssets.versionedAsset('assets/ui/slime/slime-eye-sockets-reference-v1.webp?v=1');
+  referencePupilsImage.src = window.SlimeGameAssets.versionedAsset('assets/ui/slime/slime-pupils-reference-v1.webp?v=1');
+  referenceCheeksImage.src = window.SlimeGameAssets.versionedAsset('assets/ui/slime/slime-cheeks-reference-v1.webp?v=1');
+  referenceEyeExpressionsImage.src = window.SlimeGameAssets.versionedAsset('assets/ui/slime/slime-eye-expressions-v1.webp?v=1');
+  referenceMouthExpressionsImage.src = window.SlimeGameAssets.versionedAsset('assets/ui/slime/slime-mouth-expressions-v1.webp?v=1');
   // Decode only the face/body currently in use, not every unlock at startup.
   const deferredImages = new Map([
     [electricEyeBaseImage, 'effects-lab/assets/electric-eye-base-v1-lossless.webp'],
@@ -138,6 +138,7 @@
   const imageLoads = new WeakMap();
   function loadImage(image, source = deferredImages.get(image)) {
     if (!image || !source) return Promise.resolve();
+    if (image.complete && image.naturalWidth) return Promise.resolve(true);
     if (imageLoads.has(image)) return imageLoads.get(image);
     image.decoding = 'async';
     const promise = new Promise(resolve => {
@@ -145,7 +146,7 @@
       const finish = result => { clearTimeout(timeout); resolve(result); };
       image.addEventListener('load', () => finish(true), { once: true });
       image.addEventListener('error', () => finish(false), { once: true });
-      image.src = source;
+      image.src = window.SlimeGameAssets.versionedAsset(source);
 
     }).then(async loaded => {
       if (loaded && image.decode) await image.decode().catch(() => {});
@@ -185,19 +186,29 @@
   }
   const bodyLayers = new Map();
 
-  function drawReferenceBody(targetCtx, radius, tint = '', image = referenceBodyImage, filter = '') {
+  function referenceBodyRect(radius, image) {
     const glitchUltra = image === formBodyImages.glitchUltra;
-    const bodySize = radius * 2.36 * (glitchUltra ? .886 : 1);
+    const phantomUltra = image === formBodyImages.phantomUltra;
+    const bodySize = radius * 2.36 * (glitchUltra ? .886 : phantomUltra ? 1.12 : 1);
     const fireUltra = image === formBodyImages.fireUltra;
     const bodyWidth = bodySize * (fireUltra ? .935 : 1);
     const bodyLeft = glitchUltra ? -bodySize * .5 : -bodyWidth * .5;
     const heightScale = glitchUltra ? .925 / .886
       : fireUltra ? image.naturalHeight / image.naturalWidth
       : image === formBodyImages.electricUltra ? 1.11 : 1;
-    const bodyTop = glitchUltra ? -radius * 1.168
+    const bodyTop = phantomUltra ? -bodySize * .5 : glitchUltra ? -radius * 1.168
       : -radius * 1.18 - bodySize * (fireUltra ? 58 / 512 : heightScale - 1);
+    return [bodyLeft, bodyTop, bodyWidth, bodySize * heightScale];
+  }
+
+  function drawSpectralBodyAura(targetCtx, radius, image, timestamp, strength, part='outer') {
+    window.SlimeSpectralGlow.draw(targetCtx,image,referenceBodyRect(radius,image),timestamp,strength,part);
+  }
+
+  function drawReferenceBody(targetCtx, radius, tint = '', image = referenceBodyImage, filter = '') {
+    const [bodyLeft, bodyTop, bodyWidth, bodyHeight] = referenceBodyRect(radius, image);
     if (!tint && !filter) {
-      targetCtx.drawImage(image, bodyLeft, bodyTop, bodyWidth, bodySize * heightScale);
+      targetCtx.drawImage(image, bodyLeft, bodyTop, bodyWidth, bodyHeight);
       return;
     }
     const key = `${image.src}|${tint}|${filter}`;
@@ -218,7 +229,7 @@
       if (bodyLayers.size >= 10) bodyLayers.delete(bodyLayers.keys().next().value);
       bodyLayers.set(key, layer);
     }
-    targetCtx.drawImage(layer, bodyLeft, bodyTop, bodyWidth, bodySize * heightScale);
+    targetCtx.drawImage(layer, bodyLeft, bodyTop, bodyWidth, bodyHeight);
   }
 
   function tintedPupilLayer(tint) {
@@ -235,6 +246,7 @@
     context.globalCompositeOperation = 'destination-in';
     context.drawImage(referencePupilsImage, 0, 0, 512, 512);
     context.globalCompositeOperation = 'source-over';
+    if (tintedPupilLayers.size >= 10) tintedPupilLayers.delete(tintedPupilLayers.keys().next().value);
     tintedPupilLayers.set(tint, canvas);
     return canvas;
   }
@@ -248,6 +260,7 @@
     const context = canvas.getContext('2d');
     context.filter = filter;
     context.drawImage(referenceCheeksImage, 0, 0, 512, 512);
+    if (tintedCheekLayers.size >= 10) tintedCheekLayers.delete(tintedCheekLayers.keys().next().value);
     tintedCheekLayers.set(filter, canvas);
     return canvas;
   }
@@ -784,7 +797,7 @@
       if (emotion === 'hurt') mouthExpression = 3;
       else if (emotion === 'chewing') {
         const chewSequence = [5, 6, 7, 8, 7, 4];
-        const chewStep = Math.min(chewSequence.length - 1, Math.floor(Math.max(0, emotionTime) / 114));
+        const chewStep = Math.min(chewSequence.length - 1, Math.floor(Math.max(0, emotionTime) / 105));
         mouthExpression = chewSequence[chewStep];
         if (mouthExpression === 7) mouthOffsetX = -radius * .018;
         if (mouthExpression === 8) mouthOffsetX = radius * .018;
@@ -846,7 +859,8 @@
     timestamp = performance.now(), emotionTime = 0,
     bodyPaint = null, backLayer = null, frontLayer = null, afterLayer = null,
     bodyHighlight = true, outlineColor = '#26334a', faceColor = null,
-    faceScaleX = 1, faceScaleY = 1, appearance = 'classic', bodyTint = '', bodyFilter = '',
+    faceScaleX = 1, faceScaleY = 1, faceOffsetY = 0, ghostAura = 0,
+    appearance = 'classic', bodyTint = '', bodyFilter = '',
     bodyVariant = '', irisTint = '', cheekFilter = '', mouthStyle = '', hideFace = false,
     nanoEyeOpenness = null, psionicsEyes = false, phantomEyes = false, sporesEyes = false,
     fireEyes = false, electricEyes = false, frostEyes = false, cosmosEyes = false, glitchEyes = false,
@@ -975,6 +989,26 @@
 
     if (typeof backLayer === 'function') backLayer(targetCtx, layerState);
 
+    if (ghostAura > 0) {
+      if (useReferenceBody) {
+        targetCtx.save();
+        if (bodyVariant === 'cosmosUltra') {
+          targetCtx.translate(0, -radius * .018); targetCtx.scale(.94, .94);
+        }
+        drawSpectralBodyAura(targetCtx, radius, activeBodyImage, timestamp, ghostAura);
+        targetCtx.restore();
+      } else {
+        // Procedural skins use their very same current body path, no guessed ring.
+        targetCtx.save();
+        for (const [color, width, opacity] of [['#59dce9', .21, .18], ['#8affd1', .13, .4]]) {
+          targetCtx.globalAlpha = alpha * ghostAura * opacity;
+          targetCtx.strokeStyle = color; targetCtx.lineWidth = radius * width;
+          traceSlimeBody(targetCtx, skinId, radius, tipX, cuteV2); targetCtx.stroke();
+        }
+        targetCtx.restore();
+      }
+    }
+
     if (skinId === 'cat') {
       for (const side of [-1, 1]) {
         targetCtx.fillStyle = gradient;
@@ -1020,6 +1054,13 @@
         targetCtx.fill();
       }
       targetCtx.stroke();
+    }
+
+    if(ghostAura>0&&useReferenceBody){
+      targetCtx.save();
+      if(bodyVariant==='cosmosUltra'){targetCtx.translate(0,-radius*.018);targetCtx.scale(.94,.94);}
+      drawSpectralBodyAura(targetCtx,radius,activeBodyImage,timestamp,ghostAura,'inner');
+      targetCtx.restore();
     }
 
     if (cuteV2 && !useReferenceBody && usesDefaultPalette && typeof bodyPaint !== 'function') {
@@ -1175,6 +1216,7 @@
       return;
     }
 
+    targetCtx.translate(0, faceOffsetY);
     targetCtx.scale(faceScaleX, faceScaleY);
     if (cuteV2) {
       drawCuteFaceV2(targetCtx, {
@@ -1189,7 +1231,7 @@
     }
     const eyeY = -radius * .12;
     const eyeX = radius * .245;
-    const chewPulse = (Math.sin(timestamp / 48 - Math.PI / 2) + 1) / 2;
+    const chewPulse = (1 - Math.cos(Math.max(0, emotionTime) * Math.PI * 2 / 210)) / 2;
     const chewSquint = emotion === 'chewing';
     const anticipationSquint = emotion === 'anticipating' || emotion === 'savoring';
     const closedHappy = emotion === 'petting' || emotion === 'pleased';
@@ -1300,5 +1342,12 @@
     targetCtx.restore();
   }
 
-  window.SlimeAvatarRenderer = Object.freeze({ drawSlimeAvatar, preloadAppearance });
+  async function whenReady() {
+    const base = await Promise.all([referenceBodyImage, referenceEyeSocketsImage, referencePupilsImage,
+      referenceCheeksImage, referenceEyeExpressionsImage, referenceMouthExpressionsImage]
+      .map(image => loadImage(image, image.src)));
+    const variants = await Promise.all(appearanceLoads.values());
+    if (base.includes(false) || variants.some(results => results.includes(false))) throw new Error('Slime artwork unavailable');
+  }
+  window.SlimeAvatarRenderer = Object.freeze({ drawSlimeAvatar, preloadAppearance, whenReady });
 })();

@@ -32,8 +32,14 @@ html body #homeScreen .world-terminal-screen.locked .world-terminal-title{displa
   box-shadow:0 0 8px #50ffc466;pointer-events:none;
 }
 #homeScreen .world-terminal-new[hidden]{display:none}
-#homeScreen .world-carousel-dot.new-world{background:#8cffd5!important;border-color:#e6fff8!important;box-shadow:0 0 5px #53ffb8;animation:world-unlock-pulse 1.5s ease-in-out infinite}
-#homeScreen #worldNextBtn.has-new-world:after{content:"";position:absolute;right:4px;top:4px;width:8px;height:8px;border:1px solid #eefff9;border-radius:50%;background:#6fffc4;box-shadow:0 0 5px #4affb3}
+#homeScreen .world-carousel-dot.new-world{background:#ff5367!important;border-color:#fff0ee!important;box-shadow:0 0 4px #ff4159;animation:world-unlock-pulse 1.5s ease-in-out infinite}
+#homeScreen .world-terminal-arrow.has-new-world::before{
+  content:"";display:block;position:absolute;z-index:3;right:2px;top:-3px;width:10px;height:10px;
+  border:1.5px solid #fff0ee;border-radius:50%;background:#ff4159;
+  box-shadow:0 1px 2px #521c35,0 0 5px #ff415966;pointer-events:none;
+}
+#homeScreen .world-terminal-lock.is-unlocking>span{visibility:hidden}
+
 @keyframes world-unlock-pulse{50%{transform:scale(1.3)}}
 @media(prefers-reduced-motion:reduce){#homeScreen .world-carousel-dot.new-world{animation:none}}
 html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{
@@ -58,7 +64,7 @@ html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{
 body[data-screen="home"] #homeScreen.active::before{display:none!important;content:none!important}
 body[data-screen="home"] #homeScreen>.synth-terminal-art{
   grid-column:1;grid-row:2 / 4;position:relative;z-index:1;min-width:0;min-height:0;
-  margin:-5px;background:url("assets/ui/synth-terminal-base-v1.webp") center/100% 100% no-repeat;pointer-events:none;
+  margin:-5px;background:url("assets/ui/synth-terminal-base-v1.webp?v=20261008-optimized-v1") center/100% 100% no-repeat;pointer-events:none;
 }
 /* A native gel insert fills the measured recess; no image padding or stretching. */
 html body #homeScreen .synthesizer .conveyor-pipe-socket{
@@ -123,7 +129,7 @@ html body #homeScreen .synthesizer .conveyor-pipe-socket>img{
 /* Soft navigation overlaps the monitor edge by exactly half its width. */
 #homeScreen .world-terminal-arrow::after,
 #homeScreen .world-terminal-arrow:disabled::after{
-  background-image:url("assets/ui/world-terminal/arrow-gel-v3.svg");
+  background-image:url("assets/ui/world-terminal/arrow-gel-v3.svg?v=20261008-optimized-v1");
   background-size:100% 100%;
 }
 #homeScreen .world-terminal-arrow:disabled::after{filter:grayscale(1) brightness(.76)}
@@ -148,11 +154,13 @@ html body #homeScreen .synthesizer .conveyor-pipe-socket>img{
 #homeScreen .world-terminal-screen.locked .world-terminal-title{top:24%;gap:4px}
 #homeScreen .world-terminal-screen.locked .world-terminal-title>b{font-size:clamp(11px,3.5vw,15px)}
 #homeScreen .world-terminal-screen.locked .world-terminal-title>small{font-size:11px;padding:2px 8px}
-#homeScreen .world-terminal-lock{top:62%;gap:3px}
-#homeScreen .world-terminal-lock>img{width:28px;height:28px}
-#homeScreen .world-terminal-lock>span{padding:3px 9px;font-size:12px;border-radius:10px}
-#homeScreen .world-terminal-lock span b{font-size:15px}
-#homeScreen .world-terminal-lock span img{width:20px;height:20px}
+#homeScreen .world-terminal-lock{top:46%;gap:8px}
+#homeScreen .world-terminal-lock>img{width:56px;height:56px}
+#homeScreen .world-terminal-lock>span{padding:6px 14px;font-size:15px;border-radius:13px}
+#homeScreen .world-terminal-lock span b{font-size:21px}
+#homeScreen .world-terminal-lock span img{width:29px;height:29px}
+html body #homeScreen>.quick-mutation-picker{z-index:100!important;top:var(--food-count-top);}
+@media(max-width:370px){#homeScreen .world-terminal-lock>img{width:48px;height:48px}#homeScreen .world-terminal-lock>span{padding:5px 11px;font-size:13px}}
 
 /* Both tab panels share one footprint. The collection stays outside that footprint. */
 html body #homeScreen .synthesizer .conveyor-food-pick>.synthesis-food-visual{
@@ -283,12 +291,13 @@ html:not([data-keyboard-navigation]) .mutation-lab-v2 .mutation-capsule:is(:focu
 html[data-keyboard-navigation] body button:focus{outline:3px solid #ffd95e!important;outline-offset:3px!important}
 
 /* Every page closes with the existing generated red X asset. */
-html body :is(#closePanelBtn,#closeAdminToolsBtn,#tutorialControlsCloseBtn){
+html body :is(#closePanelBtn,#closeAdminToolsBtn){
   flex:none!important;box-sizing:border-box!important;width:43px!important;height:43px!important;min-width:43px!important;min-height:43px!important;
   margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;
-  background:url("assets/ui/lab-close-button-v1.webp?v=1") center/150% 150% no-repeat!important;
+  background:url("assets/ui/lab-close-button-v1.webp?v=20261008-optimized-v1") center/150% 150% no-repeat!important;
   box-shadow:none!important;color:transparent!important;font-size:0!important;text-shadow:none!important;
   display:grid;place-items:center;cursor:pointer;transition:transform .15s ease,filter .15s ease;
 }
-html body :is(#closePanelBtn,#closeAdminToolsBtn,#tutorialControlsCloseBtn):active{transform:scale(.94)!important}
+html body :is(#closePanelBtn,#closeAdminToolsBtn):active{transform:scale(.94)!important}
 html body #tutorialControlsCloseBtn[hidden]{display:none!important}
+.food-dissolve-fragment{position:fixed;z-index:120;display:block;object-fit:fill;pointer-events:none;transform-origin:50% 50%;will-change:transform,opacity}
