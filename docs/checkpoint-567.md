@@ -22,3 +22,8 @@ JavaScript is combined into one request plus the two loading scripts.
 Checks: Cosmos cached visuals/contact rules/ultimate distance, Phantom alpha
 aura regression, startup loader, dynamic resource closure, optimization and
 combined runtime syntax. Browser review uses a private save.
+
+Pages publishing mode is now `workflow`. The former simultaneous legacy branch
+publication is disabled so it cannot overwrite the assembled runtime. The
+deployment workflow also verifies dynamic resource closure, Cosmos cached
+visuals and bundled JavaScript syntax before upload.

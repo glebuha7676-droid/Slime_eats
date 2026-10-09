@@ -35,6 +35,11 @@ jobs:
           python-version: '3.12'
       - name: Build complete game release
         run: python tools/build_yandex_release.py
+      - name: Verify complete runtime
+        run: |
+          node tools/test_runtime_asset_closure.cjs
+          node tools/test_cosmos_orbit_visuals.cjs
+          node --check dist/yandex/game-runtime.js
       - name: Upload game
         uses: actions/upload-pages-artifact@v4
         with:
