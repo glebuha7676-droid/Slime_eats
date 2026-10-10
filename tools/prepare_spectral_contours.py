@@ -11,9 +11,9 @@ paths = set(re.findall(r"'(effects-lab/assets/[^']*body[^']*\.webp|assets/ui/sli
 paths.add('assets/ui/slime/slime-body-reference-v1.webp')
 paths.update(p.relative_to(root).as_posix() for p in (root / 'assets/food').glob('*ghost*.webp'))
 paths.update([
-    'assets/ui/recipe-categories/emblem-v6-phantom-lossless.webp',
-    'assets/vfx/phantom-spirit-mint-v2-lossless.webp',
-    'assets/vfx/phantom-spirit-blue-v2-lossless.webp',
+    'assets/ui/recipe-categories/emblem-v7-phantom-lossless.webp',
+    'assets/vfx/phantom-spirit-mint-v3-lossless.webp',
+    'assets/vfx/phantom-spirit-blue-v3-lossless.webp',
     'assets/vfx/phantom-express-train-v1-lossless.webp',
     'assets/vfx/phantom-express-rails-v1-lossless.webp',
 ])

@@ -1,0 +1,18 @@
+# Обновление главного экрана — 570
+Основа портала и плашка выбора мутаций созданы встроенным imagegen в режиме редактирования. Исходные ассеты сохранены.
+- `assets/ui/lab-portal-frame-soft-v4.webp`:600×499,WebP95, прозрачное отверстие и фон, прежняя конструкция на двух опорах.
+- `assets/ui/quick-mutation-panel-soft-v2.webp`:960×320,WebP95, светлая читаемая поверхность и спокойный синий корпус.
+- `assets/ui/world-terminal/arrow-soft-v6.svg`:исходный SVG переработан вручную, цельная поверхность без белой кромки; шеврон вместо треугольника.
+Стрелки сдвинуты в стороны на16% собственной ширины (около8px на390px). Еда ниже по высоте на8%; её видимая нижняя граница сохраняет прежнюю точку контакта с пьедесталом.
+Размеры портала, кнопки запуска, панели выбора, терминала и координаты их посадки сохранены.
+## Проверка
+Встроенный браузер:390×844,360×740,1280×720. Проверены открытие плашки поверх счётчика, шесть резервных эмблем, замена огня на космос, нижняя граница еды на пьедесталах и включение запуска после кормления. В computed style стрелок подтверждены v6 и box-shadow:none. Пройдены room_launch, runtime_asset_closure, проверка синтаксиса food-grounding и итогового bundle, git diff --check. Собран dist/slime-yandex-570.zip (325файлов,51 380 588байт).
+## Prompt: portal
+Use case: precise-object-edit / style-transfer. Transparent game UI asset.
+Image1 is the edit target: empty circular laboratory portal hardware frame on two feet, front view, transparent outside and transparent central opening. Image2 is the game's current unified synthesizer/world-selection casing, the material/style reference.
+Regenerate Image1 hardware in the same soft friendly illustrated children's game style as Image2. Keep the SAME canvas ratio1024:852 and the same outer circular silhouette, centered hole size and position, two curved support struts and feet touching the same baseline. No portal energy, no filling in the opening, no background, no slime, no text.
+Use a deeper slate-blue/teal enamel for the main broad circular rim to distinguish it from the muted blue laboratory wall; medium muted turquoise inner bevel and a few restrained mint indicator inserts. Soft rounded chunky plastic forms, dark blue controlled contour, simple broad shading, no realistic chrome. Less clutter: four simple broad joints with small rounded bolts at most; quiet feet and struts. Subtle mint inner edge but NO broad white outer stripe or shiny silver outline. It must read as a laboratory portal ring and contrast with the lab wall behind it without garish neon. Preserve transparent hole and outside. Entire asset aligned and sized as original.
+## Prompt: mutation picker
+Use case: precise-object-edit / style-transfer. Transparent game UI panel background.
+Image1 is the edit target: the elongated blank mutation selection plaque. Image2 is the current soft unified synthesizer/world console, style/palette reference.
+Create a NEW simplified friendly laboratory mutation-picker plaque, same3:1canvas aspect as image1, same object bounds. Single wide softly rounded rectangle/capsule. Calm muted slate-blue outer rim, softly shaded pale blue/mint interior to make colorful round mutation emblems and dark text readable. A slim muted teal border and two small mint side inlays integrated into frame, no bolts, no screw clutter, no vents. Soft enamel/plastic, modest restrained highlights, no white glowing rim or harsh silver chrome. Keep the central rectangle completely blank and spacious; text and icons will be added by code. No text, no icons, no symbols, no arrows, no background. Transparent outside the plaque. Front facing, no perspective, same exact position and aspect as image1.

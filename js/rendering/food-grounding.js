@@ -23,7 +23,9 @@
       const y = (base.top + base.height * contactY / 1110 - rect.top) / sy;
       const scale = Math.min(Math.min(wrap.offsetWidth * .82, 78) / (right - left),
         wrap.offsetHeight * .93 / (bottom - top));
-      const values = {width:width*scale,height:height*scale,left:x-(left+right)*.5*scale,top:y-bottom*scale};
+      // Slightly shorter food, with its visible lower edge still on the plate.
+      const verticalScale = scale * .92;
+      const values = {width:width*scale,height:height*verticalScale,left:x-(left+right)*.5*scale,top:y-bottom*verticalScale};
       for (const [key, value] of Object.entries(values)) image.style.setProperty(`--ground-${key}`, `${value.toFixed(3)}px`);
       const visual = button.querySelector('.synthesis-food-visual');
       visual.style.setProperty('--ground-x', `${x.toFixed(3)}px`);

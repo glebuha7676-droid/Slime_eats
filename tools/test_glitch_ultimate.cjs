@@ -18,7 +18,7 @@ const classes = new Set(['hidden']);
 const announcement = { children: [], dataset: {}, replaceChildren() { this.children = []; },
   appendChild(child) { this.children.push(child); }, setAttribute(name, value) { this[name] = value; } };
 const context = {
-  run, Math: Object.assign(Object.create(Math), { random }), performance: { now: () => 1000 },
+  run, Math: Object.assign(Object.create(Math), { random }), performance: { now: () => 1000 }, graphicsBudget:1,
   VIEW_W: 240, VIEW_H: 480, GLITCH_INFECTION_INTERVAL_MS: 11500, GLITCH_NEUTRALIZE_INTERVAL_MS: 17500,
   ULTIMATE_BLOCKS_REQUIRED: 65, FLASK_VALUES: { 1: 1, 2: 3, 3: 5 },
   EXPERIENCE: { experienceForBlock: b => ({ dense: 1, hard: 3, reinforced: 5 }[b.tier] || 1) },
@@ -37,7 +37,7 @@ const context = {
 vm.createContext(context);
 const start = source.indexOf('  const GLITCH_BUGS =');
 const end = source.indexOf('  function updatePhysics(', start);
-vm.runInContext(source.slice(start, end) + ['destroyBlock', 'registerBrokenBlock', 'awardRunExperience', 'updateMovingHazards'].map(take).join('\n'), context);
+vm.runInContext(source.slice(start, end) + ['scaledEffectCount','particleLimit','takeDecorativeParticles','appendTransientEffect','destroyBlock', 'registerBrokenBlock', 'awardRunExperience', 'updateMovingHazards'].map(take).join('\n'), context);
 context.damageBlockByElement = (b, amount, cause, time) => {
   if (!b || b.dead || b.hazard) return false;
   b.hp -= amount;

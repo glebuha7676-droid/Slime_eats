@@ -12,6 +12,11 @@ const run={cameraY:0,particles:[],specialEffects:[],shake:0,world:{}};
 Object.assign(context,{run,VIEW_H:750,materialColor:()=> '#637b87',effectDensity:()=>.56,
  isMobileDevice:()=>true,trimParticles:n=>{const cap=Math.round(n*.58);if(run.particles.length>cap)run.particles.splice(0,run.particles.length-cap);}});
 const game=fs.readFileSync('game.js','utf8');
+context.performance={now:()=>1000};context.graphicsBudget=1;
+for(const name of ['particleLimit','takeDecorativeParticles','appendTransientEffect']){
+ const start=game.indexOf(`  function ${name}(`),end=game.indexOf('\n  function ',start+10);
+ vm.runInNewContext(game.slice(start,end),context);
+}
 vm.runInNewContext(game.slice(game.indexOf('  function createDebris('),game.indexOf('  function spawnPortalBurst(')),context);
 for(let i=0;i<100;i++)context.createDebris(block,9,true);
 assert(run.particles.length<=140,'a mass break stays inside the mobile particle budget');

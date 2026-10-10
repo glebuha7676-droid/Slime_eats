@@ -5,6 +5,8 @@
 html body .mutation-phantom-fx::before,
 html body .mutation-phantom-fx::after { content: none!important; display:none!important; }
 html body .mutation-phantom-fx,
+html body .mutation-info-emblem>.mutation-phantom-fx,
+html body .mutation-prize-emblem>.mutation-phantom-fx,
 html body #homeScreen .synthesizer .synthesis-food-visual>.food-mutation-fx.mutation-phantom-fx {
   inset:0!important;width:100%!important;height:100%!important;transform:none!important;z-index:5!important;
 }

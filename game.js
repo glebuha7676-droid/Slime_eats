@@ -231,7 +231,7 @@
     { id: 'nano', name: 'ТЕХНО', image: 'assets/ui/recipe-categories/emblem-v4-techno.webp' },
     { id: 'telekinesis', name: 'ПСИОНИКА', image: 'assets/ui/recipe-categories/emblem-v4-psionics.webp' },
     { id: 'cloning', name: 'СПОРЫ', image: 'assets/ui/recipe-categories/emblem-v3-spores.webp' },
-    { id: 'phantom', name: 'ФАНТОМ', image: 'assets/ui/recipe-categories/emblem-v6-phantom-lossless.webp' },
+    { id: 'phantom', name: 'ФАНТОМ', image: 'assets/ui/recipe-categories/emblem-v7-phantom-lossless.webp' },
     { id: 'glitch', name: 'ГЛИТЧ', image: 'assets/ui/recipe-categories/emblem-v4-glitch.webp' }
   ]);
   const MUTATION_DETAILS = Object.freeze({
@@ -668,22 +668,22 @@
 
   function tutorialTarget() {
     switch (save.tutorialStep) {
-      case 'home-mutations': return ['.mutation-lab-button', 'Нажми на мутации'];
-      case 'reactor': return ['#mutationCapsuleBtn', 'Добавь 10 колб в синтезатор'];
+      case 'home-mutations': return ['.mutation-lab-button', 'Открой мутации'];
+      case 'reactor': return ['#mutationCapsuleBtn', 'Добавь 10 колб'];
       case 'synthesize': return ['#mutationSynthesizeBtn', 'Начни синтез'];
-      case 'core': return ['#mutationMystery', 'Нажми на готовую эмблему'];
+      case 'core': return ['#mutationMystery', 'Забери эмблему'];
       case 'prize': return ['#mutationPrize .mutation-prize-cta', 'Забери Огонь'];
       case 'fire-slot': return ['[data-lab-mutation="fire"]', 'Выбери Огонь'];
       case 'choose': return ['#mutationChooseBtn', 'Поставь Огонь в синтезатор'];
       case 'close-lab': return ['#closePanelBtn', 'Вернись к слайму'];
-      case 'feed': return ['.conveyor-food-pick:not(.locked)', 'Перетащи одну еду к слайму'];
+      case 'feed': return ['.conveyor-food-pick:not(.locked)', 'Перетащи еду к слайму'];
 
       case 'second-feed': return ['.conveyor-food-pick:not(.locked)', 'Съешь два огненных блюда'];
       case 'second-play': return ['#worldStartBtn', 'Попробуй усиленный Огонь'];
       case 'shield-use': return ['#abilityBtn', 'Щит заряжен! Нажми на него'];
       case 'play': return ['#worldStartBtn', 'Нажми «Играть»'];
       case 'upgrade-home-mutations': return ['.mutation-lab-button', 'Открой мутации'];
-      case 'upgrade-fire': return ['#mutationUpgradeBtn', 'Улучши Огонь до II'];
+      case 'upgrade-fire': return ['#mutationUpgradeBtn', 'Открой 2 стадию Огня'];
       case 'upgrade-close-lab': return ['#closePanelBtn', 'Вернись к слайму'];
       default: return null;
     }
@@ -795,10 +795,18 @@
     els.tutorialLayer.hidden = false;
     const top = bounds.top;
     const bottom = bounds.bottom;
-    els.tutorialCaption.textContent = instruction[1];
-    const captionAbove = bottom > innerHeight - 90;
-    els.tutorialCaption.style.left = `${Math.max(8, Math.min(innerWidth - 268, bounds.left + bounds.width / 2 - 120))}px`;
-    els.tutorialCaption.style.top = `${captionAbove ? Math.max(8, top - 43) : Math.min(innerHeight - 37, bottom + 10)}px`;
+    els.tutorialCaption.replaceChildren();
+    instruction[1].split(/(Огонь|Огня|Играть|10 колб|2 стадию|два огненных блюда|еду|мутации|эмблему|синтез)/g).forEach((part, index) => {
+      if (!part) return;
+      const word = document.createElement(index % 2 ? 'b' : 'span');
+      word.textContent = part;
+      els.tutorialCaption.append(word);
+    });
+    const captionWidth = els.tutorialCaption.offsetWidth;
+    const captionHeight = els.tutorialCaption.offsetHeight;
+    const captionAbove = bottom + captionHeight + 24 > innerHeight;
+    els.tutorialCaption.style.left = `${Math.max(8, Math.min(innerWidth - captionWidth - 8, bounds.left + bounds.width / 2 - captionWidth / 2))}px`;
+    els.tutorialCaption.style.top = `${captionAbove ? Math.max(8, top - captionHeight - 16) : Math.min(innerHeight - captionHeight - 8, bottom + 16)}px`;
     tutorialPointerFlight?.cancel();
     tutorialPointerFlight = null;
     els.tutorialLayer.classList.toggle('is-dragging', ['feed','second-feed'].includes(save.tutorialStep));
@@ -993,6 +1001,12 @@
     $('#tutorialMemoContent').innerHTML = markup;
     els.tutorialMemo.dataset.kind = kind;
     const card = els.tutorialMemo.querySelector('.tutorial-memo-card');
+    const narrator = card.querySelector('.tutorial-narrator');
+    if (narrator) {
+      const pose = kind === 'fire' || kind === 'crossing' || title.includes('форма') ? 'happy' : 'explain';
+      const portraits = { explain:'assets/ui/tutorial/narrator-explain-v1.webp', happy:'assets/ui/tutorial/narrator-happy-v1.webp' };
+      narrator.src = versionedAsset(portraits[pose]);
+    }
     card.style.removeProperty('left'); card.style.removeProperty('top');
     els.tutorialMemo.classList.toggle('is-dimmed', dim);
     $('#tutorialMemoNext').hidden = true;
@@ -1031,7 +1045,7 @@
 
   function showFoodCounterMemo() {
     if (save.tutorialStep !== 'feed-count') return;
-    showOnboardingMemo('Это твой желудок', '<p>Одна лампа — одно блюдо.<br>В желудке <b>3 места</b>.</p>', () => setTutorialStep('play'), { kind: 'food-counter' });
+    showOnboardingMemo('Это твой желудок', `<div class="tutorial-meal-link"><span class="tutorial-lamp-example" role="img" aria-label="Лампочка"></span><span>=</span><img src="${versionedAsset('assets/food/01-berries.webp')}" alt="Еда"></div><p><b>1 лампочка</b> — <b>1 еда</b>.</p><p class="tutorial-memo-small">Слайм может съесть <b>максимум 3</b>.</p>`, () => setTutorialStep('play'), { kind: 'food-counter' });
   }
 
   function showTutorialControls() {
@@ -1058,7 +1072,7 @@
     const invulnerableUntil = run.damageInvulnerableUntil || 0;
     run.tutorialSlowUntil = Infinity;
     run.damageInvulnerableUntil = Infinity;
-    showOnboardingMemo('Используй суперспособность!', '<p>Она заряжена.<br><b>Нажми на выделенную кнопку!</b></p>', () => {
+    showOnboardingMemo('Суперспособность готова!', '<p><b>Нажми</b> на выделенную кнопку!</p>', () => {
       save.onboarding.abilityLearned = true;
       persist({ refreshUI: false });
       if (run === currentRun) {
@@ -1076,7 +1090,7 @@
 
   function showFireDominanceMemo() {
     const emblem = tutorialRecipeIcon('fire');
-    showOnboardingMemo('Два огня — сильнее!', `<div class="tutorial-fire-pair">${emblem}<b>+</b>${emblem}<span>→</span><strong>ОГОНЬ II</strong></div><div class="tutorial-fire-spread"><i></i><span>→</span><i class="is-next"></i></div><p>Горящий блок подожжёт соседний.<br><b>Огонь распространяется!</b></p>`, () => { save.onboarding.dominanceSeen = true; persist({ refreshUI: false }); }, { kind: 'fire' });
+    showOnboardingMemo('Два огня — сильнее!', `<div class="tutorial-fire-pair">${emblem}<b>+</b>${emblem}<span>→</span><strong>ОГОНЬ II</strong></div><div class="tutorial-fire-spread" role="img" aria-label="Горящий блок ломается, затем огонь переходит на соседний"><span class="fire-demo-cell is-source"><i class="fire-demo-rock"></i><i class="fire-demo-flame"></i><span class="fire-demo-fragments"><i></i><i></i><i></i><i></i></span></span><i class="fire-demo-ember"></i><span class="fire-demo-cell is-next"><i class="fire-demo-rock"></i><i class="fire-demo-flame"></i></span></div><p><b>Огонь теперь распространяется!</b></p><p class="tutorial-memo-small">Сломай горящий блок —<br>он подожжёт соседний.</p>`, () => { save.onboarding.dominanceSeen = true; persist({ refreshUI: false }); }, { kind: 'fire' });
   }
 
   function updateTutorialRun(timestamp) {
@@ -1101,7 +1115,7 @@
           const base = ['непрочный блок','Обычный блок','Прочный блок'][index];
           return `<div><span class="tutorial-plasma-block" role="img" aria-label="${tier} блок с плазмой"><img src="${versionedAsset(`assets/Мир 1/${base}.webp`)}" alt=""><img src="${versionedAsset(`assets/Мир 1/Жилы жидкости - ${tier}-v1.webp`)}" alt=""></span><b>+${[1,3,5][index]}<img src="assets/ui/research-flask-blue-v1.webp" alt="колб"></b></div>`;
         }).join('');
-        showOnboardingMemo('Ты нашёл плазму!', `<p>Ломай блоки с синими жилами.<br>Плазма наполняет колбы!</p><div class="tutorial-vein-blocks">${blocks}</div><p class="tutorial-memo-small">За колбы открывай новые мутации<br>и улучшай те, что уже есть.</p>`, () => {
+        showOnboardingMemo('Ты нашёл плазму!', `<p><b>Ломай блоки с синими жилами</b><br>и получай колбы!</p><div class="tutorial-vein-blocks">${blocks}</div><p class="tutorial-memo-small">Трать <b>колбы</b> на новые мутации<br>и <b>улучшения</b>.</p>`, () => {
           save.onboarding.veinsLearned = true; persist({ refreshUI: false }); resumeRun();
         }, { kind: 'plasma' });
         return true;
@@ -1211,7 +1225,7 @@
       if (document.body.dataset.screen !== 'home' || !els.panelOverlay.classList.contains('hidden') || tutorialMemoState) return;
       if (homeRewardFlight || playerExperiencePresentation?.frame || menuMutationReveal || formDiscoverySequence) { queueOnboardingMemo(); return; }
       const kind = save.onboarding.pendingMemo;
-      const shown = kind === 'crossing' ? showOnboardingMemo('Скрещивание мутаций', `<div class="tutorial-crossing-row is-strong"><span class="tutorial-recipe-icons">${tutorialRecipeIcon('fire')}${tutorialRecipeIcon('fire')}${tutorialRecipeIcon('frost')}</span><b>2 + 1</b><small>Две одинаковые усиливают мутацию.<br>Третья может помочь ей!</small></div><div class="tutorial-crossing-row"><span class="tutorial-recipe-icons">${tutorialRecipeIcon('fire')}${tutorialRecipeIcon('frost')}${tutorialRecipeIcon('electric')}</span><b>1 + 1 + 1</b><small>Попробуй три разные мутации.</small></div><p class="tutorial-memo-small">Мутации могут помогать друг другу.<br><b>Экспериментируй с сочетаниями!</b></p>`, () => { save.onboarding.crossingSeen = true; persist({ refreshUI: false }); })
+      const shown = kind === 'crossing' ? showOnboardingMemo('СИНЕРГИИ', `<p>Мутации могут <b>улучшать друг друга</b>.</p><div class="tutorial-synergy-examples" aria-label="Примеры сочетаний мутаций"><div>${tutorialRecipeIcon('frost')}<b>+</b>${tutorialRecipeIcon('fire')}</div><div>${tutorialRecipeIcon('fire')}<b>+</b>${tutorialRecipeIcon('frost')}<b>+</b>${tutorialRecipeIcon('electric')}</div></div><p class="tutorial-memo-small">Экспериментируй!<br>Ищи <b>интересные сочетания</b>.</p>`, () => { save.onboarding.crossingSeen = true; persist({ refreshUI: false }); }, {kind:'crossing'})
         : kind === 'form' ? showOnboardingMemo('Три одинаковых — форма!', `<div class="tutorial-form-recipe">${tutorialRecipeIcon('fire')}${tutorialRecipeIcon('fire')}${tutorialRecipeIcon('fire')}<span>→</span><span class="tutorial-unknown-form" role="img" aria-label="Неизвестная особая форма"><img src="${versionedAsset('assets/ui/slime/slime-body-reference-v1.webp')}" alt=""><b>?</b></span></div><p>Особая форма —<br><b>мощная суперспособность!</b></p>`, () => { save.onboarding.formSeen = true; persist({ refreshUI: false }); }) : false;
       if (shown) {
         const next = tutorialMemoState.next;
@@ -1330,10 +1344,10 @@
   let graphicsBudget = 1;
   let graphicsCost = 0;
   function trackGraphicsCost(milliseconds) {
-    graphicsCost = graphicsCost * .95 + milliseconds * .05;
+    graphicsCost = graphicsCost * .85 + milliseconds * .15;
     // Adapt decorative density, preserving physics and the face resolution.
-    const desired = graphicsCost > 15 ? .55 : graphicsCost > 10 ? .75 : 1;
-    graphicsBudget += (desired - graphicsBudget) * .025;
+    const desired = graphicsCost > 22 ? .55 : graphicsCost > 15 ? .75 : 1;
+    graphicsBudget += (desired - graphicsBudget) * (desired < graphicsBudget ? .12 : .015);
   }
   function effectDensity() {
     return (isMobileDevice() ? .56 : isLowPowerDevice() ? .62 : 1) * graphicsBudget;
@@ -1352,6 +1366,43 @@
     if (!run?.particles) return;
     const maximum = particleLimit(limit);
     if (run.particles.length > maximum) run.particles.splice(0, run.particles.length - maximum);
+  }
+
+  function takeDecorativeParticles(requested, priority = false) {
+    if (!run) return 0;
+    const now = performance.now();
+    if (!Number.isFinite(run.decorativeBurstAt) || now - run.decorativeBurstAt >= 50) {
+      run.decorativeBurstAt = now;
+      run.decorativeBurstUsed = 0;
+    }
+    const density = effectDensity();
+    const burstLimit = Math.max(32, Math.round(120 * density));
+    const reserve = priority ? 0 : Math.max(12, Math.round(24 * density));
+    const available = Math.max(0, Math.min(particleLimit(240) - run.particles.length - reserve,
+      burstLimit - run.decorativeBurstUsed + (priority ? 16 : 0)));
+    const count = Math.max(0, Math.min(Math.round(requested), available));
+    run.decorativeBurstUsed += count;
+    return count;
+  }
+
+  function appendTransientEffect(effect, limit = 36, sameTypeLimit = 0) {
+    const effects = run.specialEffects;
+    if (sameTypeLimit) {
+      let first = -1, count = 0;
+      for (let i = 0; i < effects.length; i++) if (effects[i].type === effect.type) {
+        if (first < 0) first = i;
+        count++;
+      }
+      if (count >= sameTypeLimit) effects.splice(first, 1);
+    }
+    if (!effect.targetBlockId && effects.length >= limit) {
+      // Frost projectiles resolve gameplay on expiry and must never be evicted.
+      const expendable = effects.findIndex(item => !item.targetBlockId);
+      if (expendable < 0) return false;
+      effects.splice(expendable, 1);
+    }
+    effects.push(effect);
+    return true;
   }
 
   function indexRunBlocks() {
@@ -1415,6 +1466,13 @@
     const shell = els.homeScreen.querySelector('.world-terminal-shell');
     if (!art || !shell || !shell.offsetWidth || !shell.offsetHeight) return;
     const base = art.getBoundingClientRect(), host = shell.getBoundingClientRect();
+    // The generated platform's resting contact line is at 51% of the scene.
+    // Follow the resting feet when the home screen scales on phones or desktop.
+    const ground = els.slimeStage?.querySelector('.slime-ground-shadow')?.getBoundingClientRect();
+    if (ground?.height) {
+      const contactY = ground.top + ground.height / 2 - els.app.getBoundingClientRect().top;
+      els.app.style.setProperty('--lab-scene-height', `${(contactY / .51).toFixed(2)}px`);
+    }
     const sx = host.width / shell.offsetWidth, sy = host.height / shell.offsetHeight;
     // Coordinates measured in the 925 × 1110 terminal artwork, shared at every viewport.
     const slots = { play: [171, 905, 583, 173], screen: [148, 501, 631, 358], heading: [314, 425, 297, 54], previous: [88, 626, 124, 118], next: [717, 626, 124, 118] };
@@ -1660,7 +1718,7 @@
     const locked = !worldIsUnlocked(world.id);
     const requiredLevel = EXPERIENCE.requiredLevelForWorldIndex(index);
     const previews = {
-      1: 'assets/ui/world-terminal/mine-blue-essence-v1.webp',
+      1: 'assets/ui/world-terminal/mine-blue-essence-calm-v2.webp',
       3: 'assets/ui/world-terminal/mine-candy.webp',
       4: 'assets/ui/world-terminal/mine-magma.webp'
     };
@@ -2753,7 +2811,7 @@
     nano: 'assets/ui/recipe-categories/emblem-v4-techno.webp',
     telekinesis: 'assets/ui/recipe-categories/emblem-v4-psionics.webp',
     cloning: 'assets/ui/recipe-categories/emblem-v3-spores.webp',
-    phantom: 'assets/ui/recipe-categories/emblem-v6-phantom-lossless.webp',
+    phantom: 'assets/ui/recipe-categories/emblem-v7-phantom-lossless.webp',
     glitch: 'assets/ui/recipe-categories/emblem-v4-glitch.webp',
   });
 
@@ -2913,8 +2971,11 @@
     const homeBounds = els.homeScreen.getBoundingClientRect();
     const countBounds = els.conveyorChoiceCount.getBoundingClientRect();
     const homeScale = homeBounds.height / els.homeScreen.offsetHeight || 1;
-    els.quickMutationPicker.style.top = `${(countBounds.top + countBounds.height / 2 - homeBounds.top) / homeScale}px`;
     els.quickMutationPicker.hidden = false;
+    const slotBounds = els.conveyorDispensers?.querySelector('[data-quick-mutation-slot]')?.getBoundingClientRect() || countBounds;
+    const pickerHalfHeight = els.quickMutationPicker.offsetHeight / 2;
+    const pickerCenter = (slotBounds.top - homeBounds.top - 12) / homeScale - pickerHalfHeight;
+    els.quickMutationPicker.style.top = `${Math.max(pickerHalfHeight + 8, pickerCenter)}px`;
     els.conveyorDispensers?.querySelectorAll('[data-quick-mutation-slot]').forEach(button => button.setAttribute('aria-expanded', String(Number(button.dataset.quickMutationSlot) === selectedConveyorSlot)));
     els.quickMutationPicker.querySelectorAll('[data-quick-mutation]').forEach(button => {
       button.addEventListener('click', () => { void selectQuickMutation(selectedConveyorSlot, button.dataset.quickMutation); });
@@ -3561,6 +3622,7 @@
   function pauseRun({ allowPortal = false } = {}) {
     if (!run || run.ended || run.paused || (!allowPortal && run.portalEntry) || run.portalTransitioning) return false;
     run.paused = true;
+    flushRunResearchAwards(run);
     run.pausedAt = performance.now();
     cancelAnimationFrame(run.animationId);
     run.animationId = 0;
@@ -4499,6 +4561,7 @@
       if (!run.paused && !run.ended) run.animationId = requestAnimationFrame(gameFrame);
       return;
     }
+    const workStartedAt = performance.now();
     updateMovingHazards(timestamp);
     if (run.ultimateIntro) {
       const intro = run.ultimateIntro;
@@ -4552,9 +4615,8 @@
     updateSlimeTrail(simulationDt, timestamp);
     updateParticles(simulationDt);
     updateSpecialEffects(simulationDt);
-    const paintStartedAt = performance.now();
     renderCanvas(timestamp);
-    trackGraphicsCost(performance.now() - paintStartedAt);
+    trackGraphicsCost(performance.now() - workStartedAt);
     if (!run.lastUiUpdateAt || timestamp - run.lastUiUpdateAt >= (isMobileDevice() ? 90 : 70)) {
       run.lastUiUpdateAt = timestamp;
       updateRunUI();
@@ -5174,7 +5236,7 @@
   function createGlitchDebris(block, timestamp, safe = false) {
     if (block.y + block.h < run.cameraY || block.y > run.cameraY + VIEW_H) return;
     const colors = safe ? ['#69ff99', '#baffd0', '#35edc8'] : ['#68faff', '#ff59df', '#e0ffff'];
-    const count = isLowPowerDevice() ? 8 : 14;
+    const count = takeDecorativeParticles(scaledEffectCount(14, 4));
     for (let i = 0; i < count; i++) {
       const angle = Math.PI * 2 * i / count;
       const speed = 75 + Math.random() * 100;
@@ -5374,13 +5436,16 @@
         const cooldown = run.hitCooldowns.get(block.id) || 0;
         if (timestamp - cooldown < 72 || (timestamp < run.bounceGraceUntil && movingOutOfBlock) || (timestamp < run.geyserLaunchGraceUntil && movingOutOfBlock)) {
           stabilizeSlimeContact(s, collision);
+          if (releaseSlimeFromPatrol(block, collision, timestamp)) break;
           continue;
         }
         run.hitCooldowns.set(block.id, timestamp);
         const bounced = resolveBlockHit(block, collision, timestamp);
         if (run.ended) return;
+        if (releaseSlimeFromPatrol(block, collision, timestamp)) break;
         if (bounced) break;
       }
+      s.x = clamp(s.x, wallRadius, VIEW_W - wallRadius);
     }
 
     updateFlasks(timestamp);
@@ -5997,6 +6062,24 @@
     }
   }
 
+  function releaseSlimeFromPatrol(block, collision, timestamp) {
+    if (!block.hazard || block.dead || block.glitchNeutralized || block.motion?.axis !== 'x') return false;
+    const slime = run.slime;
+    const leftTrap = collision.nx < -.35 && block.x < slime.radius * 2 + 8;
+    const rightTrap = collision.nx > .35 && VIEW_W - block.x - block.w < slime.radius * 2 + 8;
+    if (!leftTrap && !rightTrap) return false;
+    // A wall leaves no room for sideways separation. Release above the patrol
+    // even during the contact cooldown, instead of pushing out of the shaft.
+    slime.x = clamp(slime.x, slime.radius + 4, VIEW_W - slime.radius - 4);
+    slime.y = Math.max(slime.radius + 4, Math.min(slime.y, block.y - slime.radius - 9));
+    slime.vx = leftTrap ? 65 : -65;
+    slime.vy = -Math.max(320, Math.abs(slime.vy));
+    run.bounceGraceUntil = Math.max(run.bounceGraceUntil || 0, timestamp + 260);
+    run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil || 0, timestamp + 650);
+    run.flightDistance = 0;
+    return true;
+  }
+
   function applyBlockBounce(slime, collision, { hazard, timestamp, isolated = false, steeringEnabled = true }) {
     const nx = collision.nx;
     const ny = collision.ny;
@@ -6295,7 +6378,10 @@
   }
 
   function nearbyGridBlocks(source, predicate = () => true) {
-    return (run?.blocks || []).filter(block => {
+    const candidates = run?.blocksByRow
+      ? [run.blocksByRow.get(source.row - 1) || [], run.blocksByRow.get(source.row) || [], run.blocksByRow.get(source.row + 1) || []].flat()
+      : run?.blocks || [];
+    return candidates.filter(block => {
       if (block === source || block.dead) return false;
       const rowDistance = Math.abs(block.row - source.row);
       const columnDistance = Math.abs(block.col - source.col);
@@ -7064,8 +7150,7 @@
             : type === 'snowballKnockback' ? .62
           : type === 'coinArc' ? .72
             : .58;
-    run.specialEffects.push({ type, x, y, life, maxLife: life, ...extra });
-    if (run.specialEffects.length > 36) run.specialEffects.shift();
+    appendTransientEffect({ type, x, y, life, maxLife: life, ...extra });
   }
 
   function markFrostTransformation(block, timestamp, kind, quiet = false) {
@@ -7083,6 +7168,7 @@
     shareGlitchHit(block, 0, timestamp, 'snow');
     ensureWorldSprites(2);
     block.elementalSnow = true;
+    if (block.flaskTier) block.flaskValue = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
     block.elementalFrozen = false;
     block.elementalFrostPower = 0;
     block.maxHp = 1;
@@ -7099,6 +7185,7 @@
     ensureWorldSprites(2);
     block.elementalSnow = false;
     block.elementalSnowflake = true;
+    if (block.flaskTier) block.flaskValue = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
     block.elementalFrozen = false;
     block.maxHp = 1;
     block.hp = 1;
@@ -7381,8 +7468,9 @@
   }
 
   function spawnElectricIncineration(block) {
+    if (block.y + block.h < run.cameraY - 100 || block.y > run.cameraY + VIEW_H + 100) return;
     const center = blockCenter(block);
-    const particleCount = scaledEffectCount(20, 10);
+    const particleCount = takeDecorativeParticles(scaledEffectCount(20, 6));
     for (let index = 0; index < particleCount; index += 1) {
       const angle = index * Math.PI * 2 / particleCount + rand(-.18, .18);
       const smoke = index % 3 === 0;
@@ -7927,14 +8015,13 @@
       const value = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
       awardFlaskData(value);
       sound('coin');
-      const essence=window.SlimeBlockBreakFeedback.emitEssence(block,value,effectDensity());
-      run.particles.push(...essence.particles);
-      const flashes=run.specialEffects.filter(effect=>effect.type==='essenceCollect');
-      if(flashes.length>=(isMobileDevice()?6:10)){
-        run.specialEffects.splice(run.specialEffects.indexOf(flashes[0]),1);
+      if (block.y + block.h >= run.cameraY - 100 && block.y <= run.cameraY + VIEW_H + 100) {
+        const density = effectDensity();
+        const count = takeDecorativeParticles(Math.max(5, Math.round((10 + (block.flaskTier || 1) * 2) * density)), true);
+        const essence=window.SlimeBlockBreakFeedback.emitEssence(block,value,density,count);
+        run.particles.push(...essence.particles);
+        appendTransientEffect(essence.impact, 36, isMobileDevice() ? 6 : 10);
       }
-      run.specialEffects.push(essence.impact);
-      trimParticles(240);
     }
     if (!run?.effects?.breakHealEveryFive) return;
     run.blocksBrokenForHeal += 1;
@@ -8002,9 +8089,25 @@
     if (!amount) return 0;
     run.researchData += amount;
     save.researchUnits += amount;
+    run.researchPendingGain = (run.researchPendingGain || 0) + amount;
+    if (!run.researchHudFrame) {
+      const currentRun = run;
+      run.researchHudFrame = requestAnimationFrame(() => flushRunResearchAwards(currentRun));
+    }
+    return amount;
+  }
+
+  function flushRunResearchAwards(currentRun = run) {
+    if (!currentRun) return;
+    if (currentRun.researchHudFrame) cancelAnimationFrame(currentRun.researchHudFrame);
+    currentRun.researchHudFrame = 0;
+    const amount = currentRun.researchPendingGain || 0;
+    if (!amount) return;
+    currentRun.researchPendingGain = 0;
     persist({ refreshUI: false });
-    if (els.runResearchScore) els.runResearchScore.textContent = run.researchData.toLocaleString('ru-RU');
-    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Колбы за забег: ${run.researchData}`);
+    if (run !== currentRun || currentRun.ended) return;
+    if (els.runResearchScore) els.runResearchScore.textContent = currentRun.researchData.toLocaleString('ru-RU');
+    if (els.runResearchHud) els.runResearchHud.setAttribute('aria-label', `Колбы за забег: ${currentRun.researchData}`);
     if (els.runResearchGain) {
       els.runResearchGain.textContent = `+${amount}`;
       els.runResearchGain.classList.remove('is-visible');
@@ -8262,15 +8365,14 @@
       : run.worldId===1 && !block.special && !block.hazard
         ? block.tier==='reinforced'?'#505561':block.tier==='hard'?'#96a4ad':block.topGrass?'#78a844':'#df811f'
         : materialColor(block.material, run.world, 0);
-    const feedback = window.SlimeBlockBreakFeedback.emit(block, {color,count,strong,density:effectDensity()});
+    const density = effectDensity();
+    const desired = Math.min(24, Math.max(strong ? 6 : 2, Math.round(count * (strong ? 2.1 : 1.25) * density)));
+    const maxParticles = takeDecorativeParticles(desired);
+    const feedback = window.SlimeBlockBreakFeedback.emit(block, {color,count,strong,density,maxParticles});
     run.particles.push(...feedback.particles);
     if (feedback.impact) {
       // Keep burst flashes bounded separately from gameplay effects.
-      const flashes=run.specialEffects.filter(effect=>effect.type==='blockBreak');
-      if(flashes.length >= (isMobileDevice()?8:12)) {
-        run.specialEffects.splice(run.specialEffects.indexOf(flashes[0]),1);
-      }
-      run.specialEffects.push(feedback.impact);
+      appendTransientEffect(feedback.impact, 36, isMobileDevice() ? 8 : 12);
       run.shake=Math.max(run.shake,isMobileDevice()?2.3:2.9);
     }
     trimParticles(240);
@@ -8331,7 +8433,9 @@
       }
       p.life -= dt;
     }
-    run.particles = run.particles.filter(p => p.life > 0);
+    let alive = 0;
+    for (const p of run.particles) if (p.life > 0) run.particles[alive++] = p;
+    run.particles.length = alive;
   }
 
   function spawnSpecialBurst(type, x, y, nx = 0, ny = -1, scale = 1) {
@@ -8350,10 +8454,10 @@
       shieldBurst: { colors: ['#ecfaff', '#99eaff', '#6d9dff', '#ffffff'], count: 16, life: .7 },
     }[type];
     if (!config) return;
-    run.specialEffects.push({
+    appendTransientEffect({
       type, x, y, nx, ny, scale, life: config.life, maxLife: config.life
     });
-    const particleCount = scaledEffectCount(Math.max(4, Math.round(config.count * scale)), 4);
+    const particleCount = takeDecorativeParticles(scaledEffectCount(Math.max(4, Math.round(config.count * scale)), 4));
     for (let i = 0; i < particleCount; i += 1) {
       const bombSmoke = type === 'bomb' && i >= Math.ceil(particleCount * .7);
       const angle = type === 'spring' || type === 'geyser'
@@ -8391,7 +8495,6 @@
           : 'orb'
       });
     }
-    if (run.specialEffects.length > 16) run.specialEffects.shift();
     trimParticles(240);
   }
 
@@ -8412,7 +8515,9 @@
       else if (effect.transformKind === 'snow') turnBlockToSnow(target, timestamp);
       target.frostReservedUntil = 0;
     }
-    run.specialEffects = run.specialEffects.filter(effect => effect.life > 0);
+    let alive = 0;
+    for (const effect of run.specialEffects) if (effect.life > 0) run.specialEffects[alive++] = effect;
+    run.specialEffects.length = alive;
   }
 
   function startUltimateIntro(type, timestamp) {
@@ -8640,7 +8745,7 @@
         cosmos: 'assets/ui/recipe-categories/emblem-v4-cosmos.webp',
         nano: 'assets/ui/recipe-categories/emblem-v4-techno.webp',
         telekinesis: 'assets/ui/recipe-categories/emblem-v4-psionics.webp',
-        phantom: 'assets/ui/recipe-categories/emblem-v6-phantom-lossless.webp',
+        phantom: 'assets/ui/recipe-categories/emblem-v7-phantom-lossless.webp',
         cloning: 'assets/ui/recipe-categories/emblem-v3-spores.webp',
         gold: 'assets/ui/recipe-categories/gold-aligned.webp',
         mass: 'assets/ui/recipe-categories/weight-aligned.webp',
@@ -8772,8 +8877,10 @@
 
     // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions(visibleBlocks);
-    for(const effect of run.nanoDisintegrations)window.SlimeTechnoFeedback.disintegration(ctx,effect,run.cameraY,timestamp);
-    for(const effect of run.nanoMineBlasts)window.SlimeTechnoFeedback.mineBlast(ctx,effect,run.cameraY,timestamp);
+    for(const effect of run.nanoDisintegrations) if (effect.y + effect.h > run.cameraY - 80 && effect.y < run.cameraY + VIEW_H + 80)
+      window.SlimeTechnoFeedback.disintegration(ctx,effect,run.cameraY,timestamp);
+    for(const effect of run.nanoMineBlasts) if (effect.y + effect.size > run.cameraY && effect.y - effect.size < run.cameraY + VIEW_H)
+      window.SlimeTechnoFeedback.mineBlast(ctx,effect,run.cameraY,timestamp);
     drawTelekinesisPressScene(timestamp);
     drawSporeEffects(timestamp);
     drawGlitchShock(timestamp);
@@ -9387,6 +9494,8 @@
       const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
       const alpha = Math.pow(1 - progress, .94);
       const y = effect.y - run.cameraY;
+      if (['blockBreak','essenceCollect','frostTouch','frostPulse','firePulse','freeze','cryo','heal','bomb'].includes(effect.type)
+          && (y < -200 || y > VIEW_H + 200)) continue;
       ctx.save();
       if (effect.type === 'blockBreak' || effect.type==='essenceCollect') {
         window.SlimeBlockBreakFeedback.drawImpact(ctx,effect,run.cameraY);
@@ -10916,7 +11025,7 @@
     else spriteName = 'stone';
 
     // Keep the original stone pixels; only the resource veins are layered on top.
-    const liquidVeinName = run.worldId === 1 && block.flaskTier && !frostIsPrimary && !block.special && !block.hazard
+    const liquidVeinName = run.worldId === 1 && block.flaskTier && !block.special && !block.hazard
       ? block.flaskTier >= 3 ? 'stone-reinforced-liquid'
         : block.flaskTier === 2 ? 'stone-liquid' : 'ground-weak-liquid'
       : null;
@@ -10999,10 +11108,6 @@
       ctx.restore();
     } else {
       ctx.drawImage(sprite, drawX, drawY, width, height);
-      const liquidVeins = liquidVeinName && WORLD_SPRITES[1]?.[liquidVeinName];
-      if (liquidVeins?.complete && liquidVeins.naturalWidth) {
-        ctx.drawImage(liquidVeins, drawX, drawY, width, height);
-      }
     }
     if (frostTransformed && !frostIsPrimary) {
       const frostSpriteName = block.elementalSnowflake ? 'snowflake' : 'snow-packed';
@@ -11016,7 +11121,13 @@
         ctx.restore();
       }
     }
+    // Resource identity survives snow/snowflake transformations. Draw the
+    // original vein layer after the frost reveal, without changing its reward.
     ctx.globalAlpha = 1;
+    const liquidVeins = liquidVeinName && WORLD_SPRITES[1]?.[liquidVeinName];
+    if (liquidVeins?.complete && liquidVeins.naturalWidth) {
+      ctx.drawImage(liquidVeins, drawX, drawY, width, height);
+    }
     drawSpecialBlockAura(block, sy);
     drawCrackStage(block, sy, hpRatio, timestamp);
 
@@ -13604,6 +13715,7 @@
 
   function endRun(completed, reason) {
     if (!run || run.ended) return;
+    flushRunResearchAwards(run);
     finishOnboardingRun(completed);
     run.completed = Boolean(completed);
     hideGlitchChoice();
@@ -14058,6 +14170,9 @@
     const pane = root.querySelector(`[data-lab-pane="${view}"]`);
     if (animate && !menuReducedMotion && pane) {
       laboratoryTabAnimation = pane.animate([{ opacity:0,transform:'translateY(7px)' },{ opacity:1,transform:'none' }],{ duration:220,easing:'ease-out' });
+      // The first measurement includes the entrance translation. Re-measure
+      // the target at its final position when this tab has finished moving.
+      laboratoryTabAnimation.finished.then(queueTutorialRender, () => {});
     }
     queueTutorialRender();
   }
@@ -14136,19 +14251,19 @@
         <section id="labSynthesisPane" class="mutation-synth-pane" data-lab-pane="synthesis" role="tabpanel" aria-labelledby="labSynthesisTab">
           <button id="mutationCapsuleBtn" class="mutation-capsule mutation-capsule-v2 ${allUnlocked ? 'is-complete' : ''} ${readyToReveal ? 'is-ready-to-synthesize' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все мутации открыты' : readyToReveal ? 'Реактор заполнен' : `Добавить ${nextMutationInvestmentAmount()} колб. Осталось ${remaining}`}">
             <span class="mutation-machine-visual" aria-hidden="true">
-              <img class="mutation-machine-art" src="${versionedAsset('assets/ui/lab-synth-machine-v1.webp')}" alt="">
+              <img class="mutation-machine-art" src="${versionedAsset('assets/ui/lab-synth-machine-soft-v2.webp')}" alt="">
               <span class="mutation-glass">
                 <span id="mutationLiquid" class="mutation-liquid-chamber" style="--liquid-fill:${liquidFillPercent}%"><span class="mutation-liquid-sprite"></span><span class="mutation-liquid-bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
                 <span class="mutation-reactor-energy">${reactorEnergyArcs}</span>
-                <span id="mutationImpact" class="mutation-impact"></span>
               </span>
+              <span id="mutationImpact" class="mutation-impact"></span>
               <span id="mutationInlet" class="mutation-inlet-target"></span>
               <span class="mutation-dispenser">
-                <span class="mutation-dispenser-mouth"><span class="mutation-dispenser-flap"></span><span id="mutationMystery" class="mutation-mystery"><i>?</i></span></span>
+                <span class="mutation-dispenser-mouth"><span class="mutation-door-clip"><span class="mutation-dispenser-flap"></span></span><span id="mutationMystery" class="mutation-mystery"><i>?</i></span></span>
                 <span class="mutation-dispenser-tray"></span>
               </span>
+              <span id="mutationCapsuleHint" class="mutation-capsule-hint">${machineHint}</span>
             </span>
-            <span id="mutationCapsuleHint" class="mutation-capsule-hint">${machineHint}</span>
           </button>
           <div class="mutation-synth-progress" role="progressbar" aria-label="Прогресс синтеза" aria-valuemin="0" aria-valuemax="${mutationCost}" aria-valuenow="${progress}">
             <span class="mutation-synth-progress-fill" style="width:${fillPercent}%"></span>
@@ -14406,7 +14521,9 @@
 
   function mutationInvestmentHint() {
     const amount = nextMutationInvestmentAmount();
-    return amount > 0 ? `СЛЕДУЮЩИЙ ТАП: +${amount} КОЛБ` : 'НУЖНА КОЛБА ИССЛЕДОВАНИЯ';
+    const unit = amount % 10 === 1 && amount % 100 !== 11 ? 'КОЛБУ'
+      : amount % 10 >= 2 && amount % 10 <= 4 && (amount % 100 < 12 || amount % 100 > 14) ? 'КОЛБЫ' : 'КОЛБ';
+    return amount > 0 ? `НАЖМИ: +${amount} ${unit}` : 'НУЖНЫ КОЛБЫ';
   }
 
   function handleMutationCapsuleClick(event) {
@@ -14611,7 +14728,7 @@
     await mutationDelay(menuReducedMotion ? 100 : 3000);
     if (token !== mutationAnimationToken || !mystery || els.panelOverlay.classList.contains('hidden')) return;
     button.classList.remove('is-processing');
-    button.classList.add('is-synthesis-ready');
+    button.classList.add('is-synthesis-ready', 'is-completion-flash');
     if (hint) hint.textContent = 'СИНТЕЗ ЗАВЕРШЁН';
     sound('happy');
     feedback([7, 12, 7]);
@@ -14620,7 +14737,10 @@
     mystery.style.setProperty('--result-glow', synthColors.glow);
     mystery.innerHTML = `<img src="${mutationImageSrc}" alt="${mutation.name}">`;
     mystery.classList.add('is-vended');
-    await mutationDelay(menuReducedMotion ? 100 : 720);
+    await mutationDelay(menuReducedMotion ? 80 : 510);
+    if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
+    button.classList.remove('is-completion-flash');
+    await mutationDelay(menuReducedMotion ? 20 : 210);
     if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
     button.classList.add('is-drain-armed');
     void button.offsetWidth;
@@ -15225,6 +15345,9 @@
     els.tutorialUpgradeSummaryCloseBtn?.addEventListener('click', finishUpgradeTutorial);
     window.addEventListener('resize', queueTutorialRender, { passive: true });
     document.addEventListener('scroll', queueTutorialRender, { capture: true, passive: true });
+    document.addEventListener('animationend', event => {
+      if (tutorialOutlineSource && event.target.contains(tutorialOutlineSource)) queueTutorialRender();
+    }, true);
     bindMenuSlimeInteractions();
     els.rerollBtn.addEventListener('click', activateConveyorControl);
     els.worldPrevBtn?.addEventListener('click', () => {

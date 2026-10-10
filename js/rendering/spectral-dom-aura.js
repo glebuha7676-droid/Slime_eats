@@ -8,10 +8,10 @@
     return art.get(source);
   }
   function geometry(entry){
-    const {image,host,canvas}=entry;
-    const base=host.getBoundingClientRect(),rect=image.getBoundingClientRect();
+    const {image,fx,canvas}=entry;
+    const base=fx.getBoundingClientRect(),rect=image.getBoundingClientRect();
     if(!base.width||!base.height||!rect.width||!rect.height)return;
-    const sx=base.width/host.offsetWidth,sy=base.height/host.offsetHeight;
+    const sx=base.width/fx.offsetWidth,sy=base.height/fx.offsetHeight;
     if(!sx||!sy)return;
     const w=rect.width/sx,h=rect.height/sy,pad=Math.max(w,h)*.28;
     const width=w+pad*2,height=h+pad*2,dpr=Math.min(devicePixelRatio||1,2);
@@ -54,7 +54,7 @@
     const host=fx.parentElement,image=host.querySelector('.food-model')||host.querySelector(':scope > img');
     if(!image)return;
     const canvas=document.createElement('canvas');canvas.className='spectral-ui-aura';fx.appendChild(canvas);
-    const entry={host,image,canvas,dirty:true,visible:false};entries.set(fx,entry);
+    const entry={host,fx,image,canvas,dirty:true,visible:false};entries.set(fx,entry);
     image.addEventListener('load',()=>{entry.dirty=true;wake();});
     resize.observe(host);resize.observe(image);visibility.observe(fx);
   }

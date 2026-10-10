@@ -32,22 +32,24 @@ for(const image of [c.referenceBodyImage,forms.phantomUltra,forms.glitchUltra,fo
     assert.ok(main.log.every(d=>!d.blur),'live draw never computes blur');
   }
 }
-assert.equal(created,20,'four one-time canvases per silhouette, two retained light layers');
+assert.equal(created,45,'nine one-time canvases per silhouette, including four small edge frames');
 for(let t=0;t<6000;t+=16)c.drawSpectralBodyAura(ctx(),40,forms.phantomUltra,t,.85);
-assert.equal(created,20,'no canvas allocations during animation');
-for(let i=0;i<cachedContexts.length;i+=4){
+assert.equal(created,45,'no canvas allocations during animation');
+for(let i=0;i<cachedContexts.length;i+=9){
   assert.ok(cachedContexts[i].log[0].image.src,'mask is drawn from actual body artwork');
   assert.equal(cachedContexts[i+1].log.at(-1).op,'destination-out','body alpha removed from glow');
-  assert.ok(cachedContexts[i+1].log.some(d=>d.blur>=46),'wide soft glow is baked into the cache');
+  assert.ok(cachedContexts[i+4].log.some(d=>d.blur>=46),'wide diffuse fringe is baked into the cache');
   assert.ok(cachedContexts[i+1].log.every(d=>d.rect[0]===0&&d.rect[1]===0),'no shifted mask copies forming a sharp rim');
   assert.ok(cachedContexts[i+3].log.some(d=>d.op==='destination-in'),'inner light is intersected with the real body alpha');
 }
 const firstOuter=ctx(),laterOuter=ctx();
 c.drawSpectralBodyAura(firstOuter,70,forms.phantomUltra,0,1);
-c.drawSpectralBodyAura(laterOuter,70,forms.phantomUltra,700,1);
+c.drawSpectralBodyAura(laterOuter,70,forms.phantomUltra,1100,1);
 assert.deepEqual(firstOuter.log[0].rect,laterOuter.log[0].rect,'base aura stays exactly on the body');
-assert.deepEqual(firstOuter.roots,laterOuter.roots,'flame roots remain anchored to the real contour');
-assert.notDeepEqual(firstOuter.turns,laterOuter.turns,'only the fuzzy tips sway');
+assert.deepEqual(firstOuter.roots,[],'no detached ornaments around the contour');
+assert.deepEqual(laterOuter.turns,[],'no rotating wisps');
+assert.notEqual(firstOuter.log[1].image,laterOuter.log[1].image,'the diffuse edge changes cached frames');
+assert.deepEqual(firstOuter.log[1].rect,laterOuter.log[1].rect,'moving edge retains the body origin and size');
 let captured;
 const w={Math,clamp:(n,a,b)=>Math.max(a,Math.min(b,n)),effectDensity:()=>1,ctx:{},menuSlimeCtx:{},
   drawSlimeAvatar:(_target,options)=>captured=options,

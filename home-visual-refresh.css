@@ -14,7 +14,7 @@ html body #homeScreen .conveyor-dispenser.is-dispensing .conveyor-pipe-socket{an
   32%{filter:brightness(1.65) drop-shadow(0 0 7px var(--pipe-accent));transform:translateX(-50%)}
   62%{filter:brightness(1.18) drop-shadow(0 0 3px var(--pipe-accent));transform:translateX(-50%)}
 }
-html body[data-screen="home"] #app{background:#bddfd2 url("assets/ui/home-laboratory-v2.webp?v=20261008-optimized-v1") center top / 100% 330px no-repeat!important}
+html body[data-screen="home"] #app{background:#bddfd2 url("assets/ui/home-laboratory-soft-v6.webp") center top / 100% 330px no-repeat!important}
 html body[data-screen="home"] .topbar.world-summary{background:transparent!important;border:0!important;box-shadow:none!important}
 html body[data-screen="home"] .topbar.world-summary:before,
 html body[data-screen="home"] .topbar.world-summary:after{display:none!important}
@@ -65,7 +65,7 @@ html body #homeScreen>#slimeStage,
 html body #homeScreen .slime-hero-layout,
 html body #homeScreen .slime-center-stage,
 html body #homeScreen .slime-playground{overflow:visible!important}
-html body #homeScreen .lab-portal-frame{position:absolute;z-index:4;isolation:isolate;pointer-events:none;box-sizing:border-box;left:50%;top:-24px;width:220px;height:184px;transform:translateX(-50%);border:0;border-radius:0;background:url("assets/ui/lab-portal-frame-v3.webp?v=20261008-optimized-v1") center/contain no-repeat;box-shadow:none;opacity:.58;filter:saturate(.46) brightness(.78) contrast(.94) drop-shadow(0 5px 4px rgba(18,55,53,.32));transition:opacity .34s ease,filter .34s ease}
+html body #homeScreen .lab-portal-frame{position:absolute;z-index:4;isolation:isolate;pointer-events:none;box-sizing:border-box;left:50%;top:-24px;width:220px;height:184px;transform:translateX(-50%);border:0;border-radius:0;background:url("assets/ui/lab-portal-frame-soft-v4.webp?v=570") center/contain no-repeat;box-shadow:none;opacity:1;filter:none;transition:opacity .34s ease}
 html body #homeScreen .lab-portal-frame:after{content:""!important;display:block!important;position:absolute;z-index:-1;left:50%;bottom:7px;width:168px;height:18px;transform:translateX(-50%);border:0!important;border-radius:50%;background:rgba(19,57,53,.34)!important;box-shadow:none!important;filter:blur(5px)}
 html body #homeScreen .slime-stage.portal-ready .lab-portal-frame,
 html body #homeScreen .slime-stage.launch-charging .lab-portal-frame,

@@ -10,7 +10,7 @@
   function ensureGhosts() {
     if(ghostImages.length)return;
     const version=window.SlimeGameAssets?.versionedAsset || (p=>p);
-    for(const path of ['assets/vfx/phantom-spirit-mint-v2-lossless.webp','assets/vfx/phantom-spirit-blue-v2-lossless.webp']){
+    for(const path of ['assets/vfx/phantom-spirit-mint-v3-lossless.webp','assets/vfx/phantom-spirit-blue-v3-lossless.webp']){
       const image=new Image();image.src=version(path);ghostImages.push(image);
     }
   }

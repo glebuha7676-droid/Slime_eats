@@ -1,0 +1,78 @@
+/* Broad cabinet and windows measured from the 4:3 generated appliance. */
+html body #panelOverlay .mutation-lab-v2 .mutation-synth-pane{
+  width:100%;max-width:410px;padding:0;grid-template-rows:minmax(0,1fr) 24px 50px;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-machine-visual{
+  width:min(100%,calc((var(--lab-pane-height) - 92px) * 1.333333));
+  aspect-ratio:4/3;align-self:center;transform:none;isolation:isolate;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-capsule-v2 .mutation-machine-art{filter:none!important}
+html body #panelOverlay .mutation-lab-v2 .mutation-capsule-v2:active .mutation-machine-visual{transform:scale(.985)}
+html body #panelOverlay .mutation-lab-v2 .mutation-glass{
+  left:11.5%!important;top:32.6%!important;width:51.8%!important;height:35.3%!important;
+  border-radius:9%!important;overflow:hidden!important;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-glass::before,
+html body #panelOverlay .mutation-lab-v2 .mutation-glass::after,
+html body #panelOverlay .mutation-lab-v2 .mutation-inlet-target::before,
+html body #panelOverlay .mutation-lab-v2 .mutation-mystery::before,
+html body #panelOverlay .mutation-lab-v2 .mutation-mystery::after{content:none!important;display:none!important}
+html body #panelOverlay .mutation-lab-v2 .mutation-liquid-chamber{overflow:hidden!important;border-radius:inherit!important}
+html body #panelOverlay .mutation-lab-v2 .mutation-liquid-sprite,
+html body #panelOverlay .mutation-lab-v2 .mutation-liquid-bubbles{inset:0!important;mask:none!important;border-radius:inherit}
+html body #panelOverlay .mutation-lab-v2 .mutation-dispenser{
+  /* PNG niche: x=696..918, y=315..539 in the 1000 x 750 machine. */
+  left:69.6%!important;top:42%!important;width:22.2%!important;height:29.8667%!important;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-dispenser-mouth{border-radius:12%!important;overflow:visible!important}
+html body #panelOverlay .mutation-lab-v2 .mutation-door-clip{position:absolute;inset:0;z-index:5;overflow:hidden;border-radius:inherit;pointer-events:none}
+html body #panelOverlay .mutation-lab-v2 .mutation-dispenser-flap{
+  inset:0!important;border:0!important;border-radius:12%!important;
+  background:url("assets/ui/lab-synth-door-soft-v5.webp") center/100% 100% no-repeat!important;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-dispenser-flap::before,
+html body #panelOverlay .mutation-lab-v2 .mutation-dispenser-flap::after,
+html body #panelOverlay .mutation-lab-v2 .mutation-dispenser-mouth::before{content:none!important;display:none!important}
+html body #panelOverlay .mutation-lab-v2 .mutation-mystery img{filter:none!important}
+/* Completion glow extends a little past the glass, then fades before draining. */
+html body #panelOverlay .mutation-lab-v2 .mutation-impact{
+  position:absolute!important;inset:auto!important;left:5.9%!important;top:26.5%!important;z-index:6!important;
+  width:63%!important;height:47.5%!important;border:0!important;border-radius:0!important;
+  display:block!important;opacity:0!important;pointer-events:none!important;
+  background:none!important;mix-blend-mode:screen;
+  box-shadow:none!important;filter:none!important;transform:none!important;animation:none!important;
+  transition:none!important;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-impact::before,
+html body #panelOverlay .mutation-lab-v2 .mutation-impact::after{
+  content:""!important;display:block!important;position:absolute;pointer-events:none;border:0!important;
+  border-radius:50%;opacity:0;transform-origin:center;filter:none!important;box-shadow:none!important;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-impact::before{
+  inset:5% 0;background:radial-gradient(ellipse,#fff 0%,#efffff 15%,#7df4ffdd 30%,#28caff80 48%,#16baff26 65%,#009fff08 79%,transparent 100%);
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-impact::after{
+  inset:-8% -4%;background:radial-gradient(ellipse,#edffffda 0%,#79eaff99 20%,#35d5ff4d 43%,#16baff1a 65%,#009fff07 78%,transparent 100%);
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-capsule.is-completion-flash .mutation-impact{
+  opacity:1!important;transition:none!important;
+}
+html body #panelOverlay .mutation-lab-v2 .is-completion-flash .mutation-impact::before{animation:synthLightCore .46s ease-out both}
+html body #panelOverlay .mutation-lab-v2 .is-completion-flash .mutation-impact::after{animation:synthLightBloom .5s ease-out both}
+@keyframes synthLightCore{0%{transform:scale(.04,.3);opacity:1}20%{transform:scale(1);opacity:1}45%{transform:scale(1.04);opacity:.9}100%{transform:scale(1.1);opacity:0}}
+@keyframes synthLightBloom{0%{transform:scale(.1,.4);opacity:.25}24%{transform:scale(1);opacity:1}55%{transform:scale(1.04);opacity:.6}100%{transform:scale(1.12);opacity:0}}
+@media(prefers-reduced-motion:reduce){
+  html body #panelOverlay .mutation-lab-v2 .is-completion-flash .mutation-impact::before,
+  html body #panelOverlay .mutation-lab-v2 .is-completion-flash .mutation-impact::after{animation:none;opacity:.8;transform:scale(1)}
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-inlet-target{
+  left:19%!important;top:5.8%!important;width:16%!important;height:5%!important;
+}
+html body #panelOverlay .mutation-lab-v2 .mutation-capsule-hint{
+  left:21%!important;right:auto!important;top:77%!important;bottom:auto!important;
+  width:58%!important;height:9%!important;min-height:0!important;box-sizing:border-box;
+  padding:2px 5px!important;background:none!important;border:0!important;border-radius:0!important;
+  color:#edfdff!important;font-size:clamp(8px,2.3vw,10px)!important;letter-spacing:.015em!important;
+  line-height:1.1!important;text-shadow:none!important;box-shadow:none!important;white-space:nowrap;
+}
+@media(prefers-reduced-motion:reduce){html body #panelOverlay .mutation-lab-v2 .mutation-machine-visual{transition:none}}

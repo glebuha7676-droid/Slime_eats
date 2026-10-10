@@ -44,7 +44,7 @@ for(let i=0;i<90;i++){
 }
 model.spirit(ctx,point,20,1,13000,1);
 assert.equal(images.filter(i=>i.src.includes('phantom-spirit')).length,2,'generated raster companions');
-assert.equal(canvases,warmed+11,'two tinted bodies with shared inner/outer aura plus one blue halo are cached');
+assert.equal(canvases,warmed+21,'two tinted bodies with cached edge frames plus one blue halo');
 const visualCaches=canvases;
 ctx=context2d();model.burst(ctx,{x:100,y:200,startedAt:1000},0,60,1200);
 assert.equal(ctx.log.filter(e=>e.kind==='line').length,0,'exit splash uses soft bitmap light, no vector rays or rings');

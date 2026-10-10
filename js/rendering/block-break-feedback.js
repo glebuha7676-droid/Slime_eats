@@ -13,6 +13,23 @@
   });
   const random = (a,b) => a + Math.random() * (b-a);
   const palettes=new Map();
+  const shardSprites=new Map();
+  function shardSprite(color,variant) {
+    const key=color+':'+variant;
+    if(shardSprites.has(key))return shardSprites.get(key);
+    if(typeof OffscreenCanvas==='undefined' && typeof document==='undefined')return null;
+    const canvas=typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(48,48):document.createElement('canvas');
+    canvas.width=canvas.height=48;
+    const target=canvas.getContext('2d');
+    if(!target)return null;
+    target.translate(24,24);target.scale(14,14);
+    target.fillStyle=color;target.strokeStyle='#112c36';target.lineWidth=.22;
+    target.fill(outlines[variant]);target.stroke(outlines[variant]);
+    target.strokeStyle='#fff1c9';target.lineWidth=.16;target.beginPath();target.moveTo(-.55,-.53);target.lineTo(.35,-.72);target.stroke();
+    if(shardSprites.size>=48)shardSprites.delete(shardSprites.keys().next().value);
+    shardSprites.set(key,canvas);
+    return canvas;
+  }
   function palette(color){
     if(!palettes.has(color)){
       const hex=parseInt(color.slice(1),16),light=[16,8,0].map(shift=>Math.min(255,((hex>>shift)&255)+30));
@@ -20,8 +37,8 @@
     }
     return palettes.get(color);
   }
-  function emit(block, {color, count, strong, density}) {
-    const total = Math.min(24, Math.max(strong ? 6 : 2, Math.round(count * (strong ? 2.1 : 1.25) * density)));
+  function emit(block, {color, count, strong, density, maxParticles = 24}) {
+    const total = Math.max(0, Math.min(maxParticles, 24, Math.max(strong ? 6 : 2, Math.round(count * (strong ? 2.1 : 1.25) * density))));
     const particles = [], cx=block.x+block.w/2, cy=block.y+block.h/2;
     for(let i=0;i<total;i++) {
       const spark=strong && i%4===0, angle=Math.PI*2*i/total+random(-.23,.23);
@@ -35,8 +52,8 @@
     return {particles,impact:strong?{type:'blockBreak',x:cx,y:cy,life:.26,maxLife:.26,
       radius:Math.min(block.w,block.h)*.46,color}:null};
   }
-  function emitEssence(block,value,density){
-    const particles=[],count=Math.max(5,Math.round((10+(block.flaskTier||1)*2)*density));
+  function emitEssence(block,value,density,maxParticles=24){
+    const particles=[],count=Math.max(0,Math.min(maxParticles,Math.max(5,Math.round((10+(block.flaskTier||1)*2)*density))));
     const x=block.x+block.w/2,y=block.y+block.h/2;
     for(let i=0;i<count;i++){
       const angle=i/count*Math.PI*2,life=random(.3,.55),speed=random(85,180);
@@ -60,7 +77,10 @@
       ctx.beginPath();ctx.moveTo(p.x,y);ctx.lineTo(p.x-p.vx/speed*length,y-p.vy/speed*length);ctx.stroke();
       return;
     }
-    ctx.save();ctx.translate(p.x,y);ctx.rotate(p.rotation+(p.maxLife-p.life)*p.spin);ctx.scale(p.size,p.size);
+    const sprite=shardSprite(p.color,p.variant);
+    ctx.save();ctx.translate(p.x,y);ctx.rotate(p.rotation+(p.maxLife-p.life)*p.spin);
+    if(sprite){const size=p.size*48/14;ctx.drawImage(sprite,-size/2,-size/2,size,size);ctx.restore();return;}
+    ctx.scale(p.size,p.size);
     ctx.fillStyle=p.color;ctx.strokeStyle='#112c36';ctx.lineWidth=.22;
     ctx.fill(outlines[p.variant]);ctx.stroke(outlines[p.variant]);
     ctx.strokeStyle='#fff1c9';ctx.lineWidth=.16;ctx.beginPath();ctx.moveTo(-.55,-.53);ctx.lineTo(.35,-.72);ctx.stroke();

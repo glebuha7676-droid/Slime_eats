@@ -39,6 +39,8 @@ jobs:
         run: |
           node tools/test_runtime_asset_closure.cjs
           node tools/test_cosmos_orbit_visuals.cjs
+          node tools/test_mass_effects.cjs
+          node tools/test_block_break_feedback.cjs
           node --check dist/yandex/game-runtime.js
       - name: Upload game
         uses: actions/upload-pages-artifact@v4

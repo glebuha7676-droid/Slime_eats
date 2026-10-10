@@ -12,7 +12,7 @@
   "assets/ui/mutation-reveal/phantom-scene-v2.png": "assets/ui/mutation-reveal/phantom-scene-v2-lossless.webp",
   "assets/ui/mutation-reveal/telekinesis-scene-v2.png": "assets/ui/mutation-reveal/telekinesis-scene-v2-lossless.webp",
   "assets/ui/quick-mutation-panel-v1.png": "assets/ui/quick-mutation-panel-v1-lossless.webp",
-  "assets/ui/recipe-categories/emblem-v5-phantom.png": "assets/ui/recipe-categories/emblem-v6-phantom-lossless.webp",
+  "assets/ui/recipe-categories/emblem-v5-phantom.png": "assets/ui/recipe-categories/emblem-v7-phantom-lossless.webp",
   "assets/ui/synth-terminal-base-v1.png": "assets/ui/synth-terminal-base-v1-lossless.webp",
   "assets/ui/synthesis-triple-v2.png": "assets/ui/synthesis-triple-v2-lossless.webp",
   "assets/ui/tutorial-pointer-v1.png": "assets/ui/tutorial-pointer-v1-lossless.webp",

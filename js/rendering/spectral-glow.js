@@ -4,7 +4,6 @@
   const contours=Object.entries(window.SlimeSpectralContours||{}).map(([path,anchors])=>[
     window.SlimeAssetPaths?.resolve(path)||path,anchors
   ]);
-  const wisp=new Image();wisp.src=(window.SlimeGameAssets?.versionedAsset||(p=>p))('assets/vfx/spectral-aura-wisp-v1-lossless.webp');
   function canvas(){const c=document.createElement('canvas');c.width=c.height=size+pad*2;return c;}
   function layers(image){
     if(cache.has(image))return cache.get(image);
@@ -17,7 +16,7 @@
     try{source=decodeURIComponent(source);}catch{}
     const anchors=contours.find(([path])=>source===path||source.endsWith('/'+path))?.[1]||[];
     const outer=canvas(),o=outer.getContext('2d');
-    for(const [color,blur,alpha]of [['#56e6eb',46,1],['#92ffe0',24,1],['#d0fff0',12,.85]]){
+    for(const [color,blur,alpha]of [['#92ffe0',24,1],['#d0fff0',12,.85]]){
       o.globalAlpha=alpha;o.shadowColor=color;o.shadowBlur=blur;o.drawImage(mask,0,0);
     }
     o.shadowBlur=0;o.globalAlpha=1;o.globalCompositeOperation='destination-out';o.drawImage(mask,0,0);
@@ -32,24 +31,35 @@
     }
     i.shadowBlur=0;i.globalCompositeOperation='destination-in';i.drawImage(mask,0,0);
     i.globalCompositeOperation='source-over';i.globalAlpha=.16;i.drawImage(mask,0,0);
-    const result={outer,inner,anchors};cache.set(image,result);return result;
+    // Four small, pre-baked frames gently deform only the diffuse outer edge.
+    // The body and the near glow stay fixed. No extra wisps or live blur.
+    const fringe=canvas(),f=fringe.getContext('2d');
+    f.shadowColor='#56e6eb';f.shadowBlur=46;f.globalAlpha=.8;f.drawImage(mask,0,0);
+    f.shadowBlur=0;f.globalAlpha=1;f.globalCompositeOperation='destination-out';f.drawImage(mask,0,0);
+    const waves=[];
+    for(let n=0;n<4;n++){
+      const c=document.createElement('canvas');c.width=c.height=192;
+      const q=c.getContext('2d'),phase=n*Math.PI/2;
+      for(let row=0;row<192;row++){
+        const shift=Math.sin(row/192*Math.PI*3+phase)*1.7+Math.sin(row/192*Math.PI*5-phase)*.6;
+        q.drawImage(fringe,0,row*512/192,512,512/192,shift,row,192,1);
+      }
+      q.globalCompositeOperation='destination-out';q.drawImage(mask,0,0,192,192);
+      waves.push(c);
+    }
+    const result={outer,inner,anchors,waves};cache.set(image,result);return result;
   }
   function draw(ctx,image,rect,time,strength=1,part='all'){
     if(!image||strength<=0)return;
-    const {outer,inner,anchors}=layers(image),[x,y,w,h]=rect,px=w*pad/size,py=h*pad/size;
+    const {outer,inner,waves}=layers(image),[x,y,w,h]=rect,px=w*pad/size,py=h*pad/size;
     const ow=w+px*2,oh=h+py*2;
     ctx.save();const alpha=ctx.globalAlpha*strength;
     if(part!=='inner'){
-      // The base never slides or scales away from the body. Only fuzzy tips
-      // breathe around fixed points sampled from the actual alpha contour.
+      // A continuous, softly blended fringe follows the exact silhouette.
       ctx.globalAlpha=Math.min(1,alpha*.98);ctx.drawImage(outer,x-px,y-py,ow,oh);
-      if(wisp.complete&&wisp.naturalWidth)for(let n=0;n<anchors.length;n++){
-        const a=anchors[n],phase=time/430+n*1.71,length=Math.min(w,h)*(.20+.025*Math.sin(phase));
-        ctx.save();ctx.translate(x+a.x*w,y+a.y*h);
-        ctx.rotate(a.angle+Math.PI/2+.09*Math.sin(phase));
-        ctx.globalAlpha=Math.min(1,alpha*(.42+.08*Math.sin(phase+.7)));
-        ctx.drawImage(wisp,-length*.34,-length*.84,length*.68,length);ctx.restore();
-      }
+      const phase=((time/850)%4+4)%4,index=Math.floor(phase),blend=phase-index;
+      ctx.globalAlpha=Math.min(1,alpha*(1-blend));ctx.drawImage(waves[index],x-px,y-py,ow,oh);
+      ctx.globalAlpha=Math.min(1,alpha*blend);ctx.drawImage(waves[(index+1)%4],x-px,y-py,ow,oh);
     }
     if(part!=='outer'){
       ctx.globalCompositeOperation='screen';ctx.globalAlpha=Math.min(1,alpha*1.15);

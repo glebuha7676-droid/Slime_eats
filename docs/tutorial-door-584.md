@@ -1,0 +1,11 @@
+# Tutorial readability and fitted door — 584
+
+The tutorial now uses a 4.5px warm highlight with a 9px dark supporting stroke. A restrained screen dim leaves the highlighted target fully visible. The dim panels and outline share the measured target bounds; they do not intercept input. Reduced motion disables the colour pulse. Caption text increased from 12px to 16px and uses dark text on an opaque light card. Captions are positioned using their actual width and height. Memo body text is 18px, or 16px for compact lessons.
+
+Short action copy: «Открой мутации», «Добавь 10 колб», «Забери эмблему», «Перетащи еду к слайму», «Открой 2 стадию Огня». The tutorial sequence and Next buttons remain in place.
+
+Door asset: `assets/ui/lab-synth-door-soft-v4.webp`, 280 × 286, lossless WebP, prepared with the built-in imagegen editor from the marked screenshot and complete machine reference. Its transparent export margin is cropped. The dispenser covers x=70.7% to 90.4% and y=43.1% to 71.5% of the machine artwork. The door and clipping container have zero inset; the closed door spans the full measured opening.
+
+## Built-in imagegen prompt
+
+Edit target: generate ONLY a perfectly fitted CLOSED two-panel door for the right dispensing niche of the supplied blue laboratory synthesizer. Supporting first screenshot marks the niche boundary in red; second image is the complete machine to match colours and the rounded niche geometry. Preserve the soft glossy cyan/blue children's-game machine style. Door should be a broad rounded rectangle, overall width-to-height ratio 0.98 (almost square, slightly taller), with TWO equal broad blue panels and a single thin straight dark central seam. Outer corners smoothly rounded to match the dispensing recess. Panels form one continuous outer boundary and cover the entire recess right up to its edges; no surrounding frame, no gaps, no extra handles, no horizontal lines, no pedestal, no machine body, no red marks, no text. Soft pale cyan edging follows only the outer silhouette, no thick inset frame that leaves a visible smaller inner door. Front-facing, perfectly level, symmetric width and height, tight framing with minimal transparent margin. Transparent background. The supplied old door is too narrow: make this genuinely wider in proportion, more squared, so it fills the full niche horizontally.

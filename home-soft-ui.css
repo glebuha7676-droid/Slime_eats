@@ -1,0 +1,146 @@
+/* Reuse the soft lab cards and gel buttons from results and tutorial.
+   The painted synthesizers, food, icons, fonts and measured recesses stay intact. */
+html body[data-screen="home"] #app{
+  --lab-floor:#437fa4;
+  --lab-scene-height:520px;
+  background-color:var(--lab-floor)!important;
+  background-image:linear-gradient(to bottom,transparent calc(var(--lab-scene-height) - 60px),var(--lab-floor) var(--lab-scene-height)),url("assets/ui/home-laboratory-soft-v6.webp")!important;
+  background-position:center top!important;
+  background-size:100% 100%,100% var(--lab-scene-height)!important;
+  background-repeat:no-repeat!important;
+}
+
+/* The same blue-white card surface as result totals, with a clear soft edge. */
+html body[data-screen="home"] .world-summary :is(.research-wallet,.header-rewards-btn,.header-admin-btn){
+  border:2px solid #63a8c4!important;border-radius:14px!important;
+  background:linear-gradient(#f4fdff,#cdeaf6)!important;
+  box-shadow:inset 0 2px #fff,0 2px #29607644!important;
+}
+html body #homeScreen :is(.recipe-book-button,.recipe-accessories-button,.form-index-button){
+  border:2px solid #63a8c4!important;border-radius:18px!important;
+  background:linear-gradient(#f4fdff,#cdeaf6)!important;
+  box-shadow:inset 0 2px #fff,0 3px #29607655!important;
+}
+html body #homeScreen :is(.recipe-accessories-button,.form-index-button).form-locked{
+  opacity:1!important;filter:none!important;border-color:#91aeba!important;
+  background:linear-gradient(#e4edf2,#bdd1dc)!important;
+  box-shadow:inset 0 1px #fff,0 2px #29607633!important;
+}
+html body #homeScreen .form-locked :is(img,.form-index-silhouette){filter:grayscale(1)!important;opacity:.65}
+html body #homeScreen :is(.recipe-book-button,.recipe-accessories-button,.form-index-button):not(:disabled):active{
+  transform:translateY(2px)!important;box-shadow:inset 0 2px #fff,0 1px #29607655!important;
+}
+
+/* The existing stomach lamps use the mint surface of tutorial goal cards. */
+html body #homeScreen #conveyorChoiceCount{
+  border:2px solid #5b9fb3!important;border-radius:14px!important;
+  background:linear-gradient(#f5fffb,#c9ece6)!important;
+  box-shadow:inset 0 1px #fff,0 2px #29607644!important;
+}
+html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{
+  color:#194d57!important;text-shadow:none!important;letter-spacing:.025em!important;
+}
+html body #homeScreen #conveyorChoiceCount .food-count-slot{
+  border-color:#77a7b2;background:#83b5c2;box-shadow:inset 0 2px 2px #3c718155,0 1px #fff;
+}
+html body #homeScreen #conveyorChoiceCount .food-count-slot.is-filled{
+  border-color:#50828f;
+  background:linear-gradient(#ffffffaa,transparent 65%),var(--food-slot-color,#79f2b5);
+  box-shadow:inset 0 1px #fff,inset 0 -2px #153c4233;
+}
+html body #homeScreen #conveyorChoiceCount[data-mode="dominant"] .is-dominant{border-color:#356478;box-shadow:inset 0 1px #fff,0 0 4px var(--dominant-color)}
+html body #homeScreen #conveyorChoiceCount[data-mode="ultra"]{border-color:#50828f!important;box-shadow:inset 0 1px #fff,0 0 7px var(--dominant-color)!important}
+
+/* Clear world text over the quiet preview; the distance is a small soft badge. */
+html body #homeScreen .world-terminal-title>b{
+  font-size:clamp(14px,calc(var(--terminal-screen-width) * .0625),19px);
+  text-shadow:0 2px 3px #052c3e;letter-spacing:.01em;
+}
+html body #homeScreen .world-terminal-title>small{
+  border:1.5px solid #63a8c4;border-radius:9px;
+  background:linear-gradient(#f4fdff,#cdeaf6);box-shadow:inset 0 1px #fff,0 2px #29607644;
+  color:#22566b;text-shadow:none;letter-spacing:.02em;
+}
+html body #homeScreen .world-terminal-arrow::after,
+html body #homeScreen .world-terminal-arrow:disabled::after{
+  background-image:url("assets/ui/world-terminal/arrow-soft-v10.svg?v=583");
+  inset:-8%!important;
+}
+html body #homeScreen #worldPrevBtn{left:calc(var(--terminal-previous-left) - var(--terminal-previous-width) * .16)!important}
+html body #homeScreen #worldNextBtn{left:calc(var(--terminal-next-left) + var(--terminal-next-width) * .16)!important}
+html body #homeScreen .quick-mutation-head{color:#16455b;font-size:12px;letter-spacing:.035em;text-shadow:none}
+html body #homeScreen .quick-mutation-option,
+html body #homeScreen .quick-mutation-option:is(:hover,:focus-visible),
+html body #homeScreen .quick-mutation-option img{filter:none!important}
+html body #homeScreen .quick-mutation-option:focus-visible{outline:2px solid #326c83;outline-offset:2px}
+
+/* The press belongs to the painted gel face, never its rectangular hit area. */
+html body #homeScreen .world-terminal-arrow,
+html body #homeScreen .world-terminal-arrow:not(:disabled):active{
+  border:0!important;border-radius:26%!important;background:none!important;
+  box-shadow:none!important;filter:none!important;transform:none!important;
+  -webkit-tap-highlight-color:transparent;
+}
+html body #homeScreen .world-terminal-arrow::after{border-radius:26%;background-color:transparent!important;box-shadow:none!important}
+html body #homeScreen .world-terminal-arrow.next:not(:disabled):active::after{transform:translateY(1px) scale(.96)}
+html body #homeScreen .world-terminal-arrow.previous:not(:disabled):active::after{transform:translateY(1px) scaleX(-1) scale(.96)}
+
+/* Keep Play's fitted outline, using the warm gel material of the tutorial gift. */
+html body #homeScreen .world-terminal-shell .terminal-launch:not(.hungry)::before{
+  border-color:#d99922!important;
+  background:linear-gradient(#fff695 0%,#ffdc48 32%,#ffbe24 68%,#f09b16 100%)!important;
+  box-shadow:inset 0 2px #fffce0,inset 0 -3px #c07b1b!important;
+}
+html body #homeScreen .world-terminal-shell .terminal-launch{border-radius:calc(var(--terminal-play-width) * .13) / 48%!important}
+html body #homeScreen .world-terminal-shell .terminal-launch.hungry{color:#416372!important;text-shadow:0 1px #e6f6fb!important}
+html body #homeScreen .world-terminal-shell .terminal-launch.hungry::before{
+  border-color:#6d95a5!important;background:linear-gradient(#c4dce5,#9dbdca 60%,#82a8ba)!important;
+  box-shadow:inset 0 2px #e5f5fb,inset 0 -3px #668fa2!important;
+}
+html body #homeScreen .terminal-launch.hungry>.terminal-play-icon{opacity:.6}
+html body #homeScreen .world-terminal-shell .terminal-launch.ready:not(:disabled){box-shadow:0 0 8px #ffdf5070!important}
+html body #homeScreen .world-terminal-shell .terminal-launch.ready:active{
+  transform:none!important;box-shadow:0 0 5px #ffdf5050!important;filter:none!important;
+}
+html body #homeScreen .world-terminal-shell .terminal-launch.ready:active::before{box-shadow:inset 0 3px 4px #b86d2160,inset 0 -1px #fff2a0!important}
+
+/* Move both portal layers together, keeping their shared centre. */
+html body #homeScreen .lab-portal-frame{top:var(--portal-frame-top);width:var(--portal-frame-width);height:var(--portal-frame-height)}
+html body #homeScreen .lab-portal-frame{opacity:.68;filter:none!important}
+html body #homeScreen .slime-stage.portal-ready .lab-portal-frame{opacity:.76;filter:none!important}
+html body #homeScreen .slime-stage:is(.launch-charging,.launch-opening) .lab-portal-frame{opacity:1;filter:none!important}
+html body #homeScreen .lab-portal-frame::after{content:none!important;display:none!important}
+/* Opening measured from frame alpha: x=121..477, y=70..408 in 600 x 499.
+   Both live layers use the same ellipse, entirely inside the painted rim. */
+html body #homeScreen .slime-playground{
+  --portal-frame-width:232px;--portal-frame-height:196px;--portal-frame-top:-24px;
+  --portal-size:calc(var(--portal-frame-width) * .593333);
+  --portal-height:calc(var(--portal-frame-width) * .563333);
+  --portal-top:calc(var(--portal-frame-top) + (var(--portal-frame-height) - var(--portal-frame-width) * .831667) / 2 + var(--portal-frame-width) * .116667);
+}
+html body #homeScreen .launch-portal,
+html body #homeScreen .launch-portal-front{height:var(--portal-height)!important;left:calc(50% - var(--portal-frame-width) * .001667)}
+html body #homeScreen .launch-portal-rim::before{inset:0;animation:none}
+html body #homeScreen .launch-portal-front{border-color:var(--launch-glow);box-shadow:0 0 6px color-mix(in srgb,var(--launch-glow) 55%,transparent)}
+@media(max-width:370px){html body #homeScreen .slime-playground{--portal-frame-width:208px;--portal-frame-height:178px;--portal-frame-top:-21px}}
+
+/* Calm, aligned utility row; only the star and XP fill carry bright colour. */
+html body[data-screen="home"] .world-summary-head{align-items:center!important;gap:5px!important}
+html body[data-screen="home"] .player-level-content{margin-right:8px}
+html body[data-screen="home"] .player-level-track{height:30px;border-color:#83b5c6;box-shadow:inset 0 1px 2px #052b3b66,0 1px #dffaff88;background:linear-gradient(#24596c,#19465b)}
+html body[data-screen="home"] .player-level-track>small{background:#103b50dd;padding:3px 5px;border-radius:7px;text-shadow:0 1px #072536}
+html body[data-screen="home"] .player-level-track>small>span{font-size:10px}
+html body[data-screen="home"] .world-summary :is(.research-wallet,.header-rewards-btn,.header-admin-btn){border-radius:12px!important}
+@media(max-width:370px){html body[data-screen="home"] #app{--lab-scene-height:480px}}
+
+/* Image controls already have painted depth. No rectangular CSS shadow on
+   their hit areas, including the shared global :active rule and synthesis. */
+html body #app #homeScreen button,
+html body #app #homeScreen button::before,
+html body #app #homeScreen button::after,
+html body #app .world-summary :is(.header-rewards-btn,.header-admin-btn),
+html body #panelOverlay .mutation-lab-v2 button,
+html body #panelOverlay .mutation-lab-v2 button::before,
+html body #panelOverlay .mutation-lab-v2 button::after{
+  box-shadow:none!important;
+}

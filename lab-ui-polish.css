@@ -64,7 +64,7 @@ html body #homeScreen #conveyorChoiceCount .conveyor-choice-label{
 body[data-screen="home"] #homeScreen.active::before{display:none!important;content:none!important}
 body[data-screen="home"] #homeScreen>.synth-terminal-art{
   grid-column:1;grid-row:2 / 4;position:relative;z-index:1;min-width:0;min-height:0;
-  margin:-5px;background:url("assets/ui/synth-terminal-base-v1.webp?v=20261008-optimized-v1") center/100% 100% no-repeat;pointer-events:none;
+  margin:-5px;background:url("assets/ui/synth-terminal-soft-v2.webp?v=569") center/100% 100% no-repeat;pointer-events:none;
 }
 /* A native gel insert fills the measured recess; no image padding or stretching. */
 html body #homeScreen .synthesizer .conveyor-pipe-socket{
@@ -194,7 +194,7 @@ html body #homeScreen>#slimeStage::after{display:none!important}
 #panelOverlay .mutation-lab-v2{--lab-pane-height:clamp(325px,calc(100dvh - 350px),430px);gap:9px!important}
 .lab-view-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:4px;border:1px solid #82adbd;border-radius:16px;background:#c7dfe9;box-shadow:inset 0 1px 3px #174c5c22}
 .lab-view-tabs button{height:40px;border:2px solid #76a9bb;border-radius:12px;background:linear-gradient(#f7ffff,#d0e8f0);box-shadow:inset 0 1px #fff,0 2px #64859444;color:#38687c;font:1000 15px/1 ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;cursor:pointer}
-.lab-view-tabs button[aria-selected="true"]{border-color:#468392;background:linear-gradient(#ccfff4,#77dbcd 55%,#4ab9be);color:#123e52;box-shadow:inset 0 2px #f2ffff,0 2px #28596c66}
+.lab-view-tabs button[aria-selected="true"]{border-color:#468392;background:linear-gradient(#d5fff8,#6be7dc 55%,#29c5cf);color:#123e52;box-shadow:inset 0 2px #f2ffff,0 2px #28596c66}
 .lab-view-tabs button:focus-visible{outline:3px solid #edb82e;outline-offset:2px}
 .lab-view-tabs button:disabled{cursor:wait}
 #panelOverlay .mutation-main-grid{position:relative;display:block;height:var(--lab-pane-height);min-width:0}
@@ -211,7 +211,7 @@ html body #homeScreen>#slimeStage::after{display:none!important}
 #panelOverlay .mutation-synth-balance img{width:36px;height:36px}
 #panelOverlay .mutation-synth-balance small{font-size:9px;letter-spacing:0}
 #panelOverlay .mutation-synth-balance b{font-size:20px}
-#panelOverlay .mutation-lab-v2 .mutation-synthesize-btn,#panelOverlay .mutation-lab-v2 .mutation-choose-btn{height:48px!important;min-height:48px!important;margin:0!important;padding:5px 9px!important;border:2px solid #468392!important;border-radius:15px!important;background:linear-gradient(#ccfff4,#77dbcd 55%,#4ab9be)!important;box-shadow:inset 0 2px #f2ffff,0 3px #28596c66!important;color:#123e52!important;text-shadow:0 1px #f2ffff!important;animation:none!important}
+#panelOverlay .mutation-lab-v2 .mutation-synthesize-btn,#panelOverlay .mutation-lab-v2 .mutation-choose-btn{height:48px!important;min-height:48px!important;margin:0!important;padding:5px 9px!important;border:2px solid #468392!important;border-radius:15px!important;background:linear-gradient(#d5fff8,#6be7dc 55%,#29c5cf)!important;box-shadow:inset 0 2px #f2ffff,0 3px #28596c66!important;color:#123e52!important;text-shadow:0 1px #f2ffff!important;animation:none!important}
 #panelOverlay .mutation-synthesize-btn span,#panelOverlay .mutation-choose-btn span{font-size:15px!important;letter-spacing:.03em!important;color:inherit!important;text-shadow:inherit!important}
 #panelOverlay .mutation-synthesize-btn:disabled,#panelOverlay .mutation-choose-btn:disabled{filter:none!important;background:linear-gradient(#e4edf2,#bdd1dc)!important;color:#718a97!important;border-color:#91aeba!important;box-shadow:inset 0 1px #fff!important}
 #panelOverlay .mutation-lab-v2 .mutation-info-pane{height:100%;box-sizing:border-box;padding:14px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:40px 36px minmax(0,1fr) 50px;gap:9px;border:2px solid #76a9bb;border-radius:20px;box-shadow:inset 0 1px #a7cbd2,0 2px #17435022}
@@ -254,7 +254,7 @@ html body #homeScreen>#slimeStage::after{display:none!important}
 #runMenuOverlay .run-menu-action b{font-size:15px;letter-spacing:.015em}
 #runMenuOverlay .run-menu-icon{width:34px;height:34px;flex-basis:34px}
 #runMenuOverlay .run-menu-icon img{width:34px;height:34px;filter:none}
-#runMenuOverlay .run-menu-resume{border-color:#468392;background:linear-gradient(#ccfff4,#77dbcd 55%,#4ab9be);color:#123e52}
+#runMenuOverlay .run-menu-resume{border-color:#468392;background:linear-gradient(#d5fff8,#6be7dc 55%,#29c5cf);color:#123e52}
 #runMenuOverlay .run-menu-danger-zone{margin-top:14px;padding-top:12px;grid-template-columns:1fr;border-color:#9dc0cd}
 #runMenuOverlay .run-menu-danger-zone .run-menu-action{min-height:48px;margin:0 0 7px}
 #runMenuOverlay .run-menu-finish{border-color:#c8938b;background:linear-gradient(#fff4ee,#f5d8cb);color:#834d47}
