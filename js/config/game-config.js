@@ -115,8 +115,9 @@
   };
 
   const DEFAULT_SAVE = {
-    schemaVersion: 28,
-    playerExperience: 0,
+    schemaVersion: 29,
+    mutationExperience: {},
+    selectedMutation: 'fire',
     researchUnits: 0,
     researchProgress: 0,
     mutationProgress: 0,

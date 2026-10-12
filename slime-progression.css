@@ -1,0 +1,62 @@
+/* One character per run. The laboratory casing and artwork retain their geometry. */
+html body[data-screen="home"] .world-summary .currency.coin-wallet.player-level-wallet{height:48px!important;min-height:48px!important;padding:2px 3px!important;border:1px solid #83b5c6!important;border-radius:13px!important;background:linear-gradient(#f7ffff,#d6eef5)!important}
+html body[data-screen="home"] .world-summary .player-level-wallet .player-level-badge{width:42px!important;height:42px!important}
+html body[data-screen="home"] .player-level-wallet .currency-icon{width:42px!important;height:42px!important}
+.player-level-wallet .player-level-content{display:flex;flex-direction:column;align-items:stretch;gap:3px;margin:0 4px 0 3px!important;min-width:0}
+.slime-progress-heading{display:flex;justify-content:space-between;align-items:center;gap:4px;color:#133f54;white-space:nowrap;line-height:1}
+.slime-progress-heading strong{font-size:13px;font-weight:1000;overflow:hidden;text-overflow:ellipsis}
+.slime-progress-heading>span{font-size:8px;font-weight:900;color:#346677}
+html body[data-screen="home"] .world-summary .slime-progress-heading>span{position:static!important;display:block!important;width:auto!important;height:auto!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;transform:none!important;white-space:nowrap!important;font-size:9px!important;flex:none}
+html body[data-screen="home"] .world-summary .slime-progress-heading>span::after{display:none!important}
+html body[data-screen="home"] .world-summary .slime-progress-heading #coinsLabel{position:static!important;display:inline!important;font-size:12px!important;font-weight:1000!important;color:#124a60!important;text-shadow:none!important;margin:0!important;padding:0!important;line-height:1!important;background:none!important;border:0!important;transform:none!important}
+.player-level-wallet .player-level-track{height:21px;min-height:21px;flex:none;border-width:1px;box-shadow:none}
+.player-level-wallet .player-level-track>small{font-size:10px;margin:0;padding:2px 4px;font-weight:900;background:#07324b99}
+.player-level-wallet.evolution-ready .player-level-track>i{background:linear-gradient(#aeffbe,#39d99a)}
+.player-level-wallet.evolution-ready .slime-progress-heading>span{color:#126653}
+html body #homeScreen #slimeFeedCount,html body #homeScreen #stomachQuickSlots{display:none!important}
+#worldTerminalLock>span{padding:5px 9px;font-size:12px}
+#worldTerminalLock>span>b{font-size:12px!important;line-height:1.15;text-align:center}
+
+#panelOverlay .mutation-lab-v2 .mutation-info-pane{display:grid!important;grid-template-columns:62px minmax(0,1fr)!important;grid-template-rows:auto!important;grid-auto-rows:auto!important;height:auto!important;min-height:0!important;gap:10px!important;padding:14px!important;align-content:start!important}
+#panelOverlay .mutation-lab-v2[data-view="mutations"] .mutation-main-grid{height:auto!important}
+#panelOverlay .mutation-lab-v2 .mutation-info-pane:not(.is-locked){background:linear-gradient(#f3ffff,#dbedf3)!important;border-color:#83b5c6!important;box-shadow:none!important;color:#153e54!important}
+#panelOverlay .mutation-info-pane>h3{color:#163f54!important;text-shadow:none!important}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem{width:58px!important;height:58px!important;grid-column:1!important;grid-row:1!important}
+#panelOverlay .mutation-info-pane>.mutation-info-emblem>img{width:56px!important;height:56px!important}
+#panelOverlay .mutation-info-pane>h3{grid-column:2!important;grid-row:1!important;align-self:center!important;margin:0!important;font-size:23px!important;justify-content:flex-start!important;text-align:left!important}
+#panelOverlay .mutation-info-pane .mutation-level-badge{display:inline-flex!important;padding:3px 8px;border-radius:9px;background:#d0fff0;color:#16665c;font-size:16px;font-style:normal}
+#panelOverlay .mutation-info-pane>.slime-base-kit,#panelOverlay .mutation-info-pane>.slime-ultimate-kit,#panelOverlay .mutation-info-pane>.slime-evolution-track,#panelOverlay .mutation-info-pane>.slime-personal-progress,#panelOverlay .mutation-info-pane>.slime-evolution-heading,#panelOverlay .mutation-info-pane>.slime-evolution-hint{grid-column:1/-1!important;grid-row:auto!important;min-width:0}
+.slime-base-kit{padding:11px 12px;border:1px solid #b5d4df;border-radius:14px;background:#f6ffff}
+.slime-base-kit h4,.slime-evolution-heading{margin:0 0 7px;color:#15506a;font-size:12px;font-weight:1000;letter-spacing:.02em}
+.slime-base-kit p{margin:4px 0;color:#254c61;font-size:14px;line-height:1.35;font-weight:800}
+.slime-ultimate-kit{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #94c8d6;border-radius:14px;background:linear-gradient(#e5fffa,#cdeef4)}
+.slime-ultimate-kit>img{width:45px;height:45px;object-fit:contain;flex:none}
+.slime-ultimate-kit small{display:block;margin-bottom:5px;color:#286779;font-size:9px;font-weight:1000}
+.slime-ultimate-kit b{color:#123e56;font-size:17px;font-weight:1000}
+.slime-ultimate-kit p{margin:4px 0 0;color:#254c61;font-size:13px;line-height:1.3;font-weight:750}
+#panelOverlay .slime-evolution-heading{margin:4px 0 -3px}
+.slime-evolution-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.slime-evolution-card{display:flex;align-items:center;flex-direction:column;min-width:0;padding:7px 3px;border:1px solid #bad0d9;border-radius:14px;background:#edf6f9}
+.slime-evolution-card.is-current{border:2px solid #258a8c;padding:6px 2px;background:linear-gradient(#e3fff5,#a7ede2)}
+.slime-evolution-card>b{font-size:10px;color:#205369;font-weight:1000}
+.slime-evolution-card canvas{display:block;width:100%;height:auto;max-width:110px;aspect-ratio:168/144}
+.slime-evolution-card.is-closed canvas{opacity:.7}
+.slime-evolution-food{height:34px;display:grid;place-items:center;width:100%}
+.slime-evolution-food .food-mini-model{width:44px!important;height:34px!important;object-fit:contain}
+.slime-evolution-card>small{margin-top:4px;color:#255c70;font-size:9px;font-weight:1000}
+.slime-personal-progress{position:relative;display:grid;place-items:center;height:28px;border:2px solid #77bccb;border-radius:999px;background:#123f55;overflow:hidden}
+.slime-personal-progress>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#9affd8,#39ccaa);border-radius:999px;transition:width .2s}
+.slime-personal-progress>b{position:relative;color:#fff;font-size:12px;font-weight:1000;text-shadow:0 1px 2px #053147,1px 0 #053147,-1px 0 #053147}
+#panelOverlay .slime-evolution-hint{margin:0;color:#27596b;font-size:13px;line-height:1.3;font-weight:800;text-align:center}
+#panelOverlay .mutation-info-pane>.mutation-level-action,#panelOverlay .mutation-info-pane>.mutation-choose-btn{grid-column:1/-1!important;grid-row:auto!important;width:100%!important;margin:0!important}
+#panelOverlay .mutation-upgrade-btn{font-size:14px!important;min-height:47px;padding:7px 12px!important;border-radius:15px!important;background:linear-gradient(#a5ffd7,#51eeb1 55%,#24c58e)!important;color:#105542!important;text-shadow:0 1px #d7ffeb!important;border:2px solid #249a78!important;box-shadow:none!important}
+#panelOverlay .mutation-upgrade-btn:disabled{background:linear-gradient(#e2eef1,#bdced6)!important;border-color:#91aebc!important;color:#506e7e!important;text-shadow:none!important;opacity:1!important;filter:none!important;cursor:default}
+.result-slime-progress{display:flex;gap:10px;align-items:center;padding:10px 12px;margin:10px 0;border:2px solid #83bdcd;border-radius:17px;background:linear-gradient(#edfffd,#cdebf2);text-align:left}
+.result-slime-progress>img{width:48px;height:48px;object-fit:contain;flex:none}
+.result-slime-progress>div{min-width:0;flex:1}
+.result-slime-progress h3{display:flex;justify-content:space-between;gap:7px;margin:0 0 5px;color:#163f54;font-size:15px;font-weight:1000}
+.result-slime-progress h3 span{font-size:12px;color:#2a6873}
+.result-slime-progress .slime-personal-progress{height:25px}
+.result-slime-progress p{margin:5px 0 0;color:#205970;font-size:11px;font-weight:850;line-height:1.25}
+@media(max-width:360px){.slime-progress-heading strong{font-size:11px}.slime-progress-heading>span{font-size:7px}.player-level-wallet .player-level-track>small{font-size:8px}#panelOverlay .mutation-lab-v2 .mutation-info-pane{padding:10px!important}.slime-base-kit p{font-size:13px}.slime-evolution-card>b{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.slime-personal-progress>i{transition:none}}

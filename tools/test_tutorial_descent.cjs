@@ -41,8 +41,9 @@ const nodes = new Map();
 const node=id=>{if(!nodes.has(id))nodes.set(id,{hidden:true,dataset:{},classList:classes,style:{setProperty(){},removeProperty(){}},textContent:'',innerHTML:'',querySelector(){return node('action')},getBoundingClientRect(){return {left:0,top:0,bottom:840,width:440,height:840}}});return nodes.get(id)};
 let now=100;
 const context={console,JSON,Set,Math,performance:{now:()=>now},setTimeout:()=>1,clearTimeout(){},
-  ONBOARDING_QUESTS:new Set(['','unlock-frost','try-mix','mix-run','upgrade-fire-3','feed-form','open-forms']),
-  save:{tutorialStep:'run-wait',onboarding:{enabled:true},unlockedMutations:[],activeMutationPool:[],discoveredForms:[]},
+  ONBOARDING_QUESTS:new Set(['','unlock-frost','try-frost','play-frost','evolve-slime']),
+  session:{foods:[]},foodRecipeFamily:food=>food.family,
+  save:{mutationLevels:{fire:1,frost:1},tutorialStep:'run-wait',onboarding:{enabled:true},unlockedMutations:[],activeMutationPool:[],discoveredForms:[]},
   run:{tutorialPhase:1,worldId:1,health:3,slime:{x:256,y:510,radius:30,vx:0,vy:200},cameraY:0,blocks:[{row:5,col:3,y:650}],cellSize:440/6,gridOffsetX:0},
   els:{tutorialDodge:node('dodge'),tutorialMemo:node('memo'),shaft:node('shaft'),panelOverlay:node('panel')},
   $:node,menuReducedMotion:false,tutorialMemoState:null,tutorialSwipeOrigin:null,onboardingMemoTimer:0,
@@ -88,17 +89,15 @@ context.finishOnboardingRun(true);
 assert.equal(context.save.tutorialStep,'done','Inputs are free after the second resource lesson');
 assert.equal(context.save.onboarding.quest,'unlock-frost');
 context.save.unlockedMutations=['fire','frost'];context.checkOnboardingProgress();
-assert.equal(context.save.onboarding.quest,'mix-run');
-assert.equal(context.save.onboarding.pendingMemo,'crossing','Opening Frost schedules crossing without forcing selection');
-context.checkOnboardingProgress({event:'frost-selected'});
-assert.equal(context.save.onboarding.quest,'mix-run');
-context.run={tutorialPhase:0,categoryVisuals:{fire:2,frost:1}};context.finishOnboardingRun(true);
-assert.equal(context.save.onboarding.quest,'upgrade-fire-3');
-context.fireLevel=3;context.checkOnboardingProgress();
-assert.equal(context.save.onboarding.quest,'feed-form');
-context.save.discoveredForms=['fire'];context.checkOnboardingProgress();
-assert.equal(context.save.onboarding.quest,'','Discovering the form finishes the home quests');
-assert.equal(context.save.onboarding.pendingMemo,'form');
+assert.equal(context.save.onboarding.quest,'try-frost');
+assert.equal(context.save.onboarding.pendingMemo,'new-mutation','Opening Frost teaches one food and personal experience');
+context.session.foods=[{family:'ice'}];context.checkOnboardingProgress();
+assert.equal(context.save.onboarding.quest,'play-frost');
+context.run={tutorialPhase:0,mutationId:'frost'};context.finishOnboardingRun(true);
+assert.equal(context.save.onboarding.quest,'evolve-slime');
+context.save.mutationLevels.fire=2;context.checkOnboardingProgress();
+assert.equal(context.save.onboarding.quest,'','A paid evolution finishes the optional goal');
+assert.equal(context.save.onboarding.pendingMemo,'evolution');
 for(const phase of [1,2]) assert.equal(context.runCompletionRewards({tutorialPhase:phase},true).research,0);
 for(const phase of [1,2]) assert.equal(context.runCompletionRewards({tutorialPhase:phase},true).experience,0);
 assert.equal(context.runCompletionRewards({tutorialPhase:0},true).research,25);
@@ -121,5 +120,5 @@ assert.ok(Number.isFinite(context.run.damageInvulnerableUntil));
 assert.equal(context.updateTutorialRun(now),false,'The ability lesson only appears once');
 context.run={elementalAbilityType:'',shieldCharges:1};
 context.activateAbility();
-assert.equal(context.activations,1,'No shield ability is available without an ultra form');
+assert.equal(context.activations,1,'No shield ability is available without a selected mutation');
 console.log('Tutorial terrain, collision, resource lesson, optional recipe quests, save migration and one-click ultra ability lesson passed');

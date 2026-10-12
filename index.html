@@ -40,6 +40,7 @@
   <link rel="stylesheet" href="psionic-wave.css?v=2" />
   <link rel="stylesheet" href="home-soft-ui.css?v=8" />
   <link rel="stylesheet" href="lab-synth-soft.css?v=15" />
+  <link rel="stylesheet" href="slime-progression.css?v=592" />
 </head>
 <body>
   <section id="bootScreen" class="boot-screen" role="progressbar" aria-label="Загрузка игры" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -68,9 +69,9 @@
         <button id="adminMenuBtn" class="header-admin-btn" type="button" aria-label="Открыть админ-меню" aria-controls="adminToolsOverlay" aria-expanded="false">
           <img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
         </button>
-        <div class="currency coin-wallet player-level-wallet" aria-label="Уровень 1, опыт 0 из 100">
-          <span class="player-level-badge"><img class="currency-icon" src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><b id="coinsLabel">1</b></span>
-          <div class="player-level-content"><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience"><b>0</b><span> / 100 XP</span></small></div></div>
+        <div class="currency coin-wallet player-level-wallet" aria-label="Личный опыт слайма">
+          <span class="player-level-badge"><img id="slimeProgressEmblem" class="currency-icon" src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"></span>
+          <div class="player-level-content"><div class="slime-progress-heading"><strong id="slimeProgressName">Огонь</strong><span>СТАДИЯ <b id="coinsLabel">I</b></span></div><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience"><b>0</b><span> / 500 XP</span></small></div></div>
         </div>
         <div class="research-wallet" aria-label="Колбы исследования: 0">
           <span class="research-wallet-flask" aria-hidden="true">
@@ -125,7 +126,7 @@
                 <div id="recipeCategorySlots" class="recipe-category-slots" aria-label="Мутации выбранной еды"></div>
                 <div id="stomachQuickSlots" class="stomach-quick-slots stomach-slots-hidden" aria-hidden="true"></div>
               </div>
-              <div id="slimeFeedCount" class="slime-feed-count" aria-live="polite">СЪЕДЕНО 0 ИЗ 3</div>
+              <div id="slimeFeedCount" class="slime-feed-count" hidden></div>
             </div>
             <button id="formIndexBtn" class="form-index-button" data-panel="form-index" type="button" aria-label="Открыть индекс форм">
               <span class="form-index-silhouette" aria-hidden="true"><img src="assets/ui/slime/forms/slime-body-frost-v1.webp?v=20261008-optimized-v1" alt=""><i>?</i></span>
@@ -140,10 +141,6 @@
         <div id="quickMutationPicker" class="quick-mutation-picker" role="group" aria-label="Быстрый выбор мутации" hidden></div>
         <button id="tutorialQuest" class="tutorial-quest" type="button" hidden></button>
 
-        <div id="conveyorChoiceCount" class="conveyor-choice-count" aria-live="polite" aria-label="Съедено 0 из 3">
-                <span class="conveyor-choice-label" aria-hidden="true">СЪЕДЕНО</span>
-                <span class="food-count-slots" aria-hidden="true"><i class="food-count-slot"></i><i class="food-count-slot"></i><i class="food-count-slot"></i></span>
-        </div>
         <div id="conveyor" class="conveyor synthesizer card" aria-label="Три синтезатора еды">
           <div class="conveyor-workbench">
             <div class="conveyor-machine synthesis-machine" aria-label="Выбор еды для слайма">
@@ -163,7 +160,7 @@
                 <div class="world-terminal-screen-shade" aria-hidden="true"></div>
                 <div class="world-terminal-title"><b id="worldTerminalName">ЗЕЛЁНЫЕ ГЛУБИНЫ</b><small id="worldTerminalNumber">500 М</small></div>
                 <span id="worldTerminalNew" class="world-terminal-new" hidden>НОВЫЙ МИР</span>
-                <div id="worldTerminalLock" class="world-terminal-lock" hidden><img src="assets/ui/lock.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span>Нужен <b id="worldTerminalTrophies">10</b><img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="уровень"></span></div>
+                <div id="worldTerminalLock" class="world-terminal-lock" hidden><img src="assets/ui/lock.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b id="worldTerminalTrophies">ПРОЙДИ ШАХТУ 1</b></span></div>
                 <div id="worldTerminalStats" class="world-terminal-stats" hidden><span><small>ЛУЧШИЙ СЧЁТ</small><b id="terminalBestScore">0</b></span><span><small>МАКС. ГЛУБИНА</small><b id="terminalBestDepth">0 М</b></span><span><small>КРУГОВ</small><b id="terminalBestLaps">0</b></span><span><small>ЗАБЕГОВ</small><b id="terminalRuns">0</b></span></div>
                 <div id="worldCarouselDots" class="world-carousel-dots" aria-label="Страницы шахт"></div>
               </div>
@@ -411,7 +408,7 @@
     <div class="tutorial-dialog-card tutorial-controls-card"><strong>УПРАВЛЕНИЕ</strong><p id="tutorialControlsText"></p><button id="tutorialControlsCloseBtn" class="tutorial-next" type="button" hidden>ДАЛЕЕ</button></div>
   </div>
   <div id="tutorialUpgradeSummary" class="tutorial-dialog tutorial-note-dialog" role="dialog" aria-modal="true" aria-label="Огонь усилен" hidden>
-    <div class="tutorial-dialog-card tutorial-summary-card"><strong>ОГОНЬ УСИЛЕН!</strong><div class="tutorial-fire-unlock"><img src="assets/ui/recipe-categories/emblem-v2-fire.webp?v=20261008-optimized-v1" alt="Огонь"><b>2</b><span>огненных блюда</span></div><p>Съешь оба: огонь начнёт прыгать на соседние блоки!</p><button id="tutorialUpgradeSummaryCloseBtn" class="tutorial-next" type="button">ДАЛЕЕ</button></div>
+    <div class="tutorial-dialog-card tutorial-summary-card"><strong>ОГОНЬ УСИЛЕН!</strong><div class="tutorial-fire-unlock"><img src="assets/ui/recipe-categories/emblem-v2-fire.webp?v=20261008-optimized-v1" alt="Огонь"><b>2</b><span>стадия слайма</span></div><p>Слайм изменился. Перед забегом съешь одно новое блюдо.</p><button id="tutorialUpgradeSummaryCloseBtn" class="tutorial-next" type="button">ДАЛЕЕ</button></div>
   </div>
   <div id="tutorialMemo" class="tutorial-dialog tutorial-note-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialMemoTitle" hidden>
     <div class="tutorial-dialog-card tutorial-memo-card"><header class="tutorial-memo-heading"><strong id="tutorialMemoTitle"></strong><img class="tutorial-narrator" src="assets/ui/tutorial/narrator-explain-v1.webp" alt="" aria-hidden="true"></header><div id="tutorialMemoContent"></div><button id="tutorialMemoNext" class="tutorial-next" type="button" hidden>ДАЛЕЕ</button></div>
@@ -447,9 +444,11 @@
         </div>
         <div class="result-stat result-coins-stat">
           <img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
-          <span class="result-experience-copy"><small>ВСЕГО<br>ОПЫТА</small><b id="resultCoins">+0 XP</b></span>
+          <span class="result-experience-copy"><small>ОПЫТ<br>СЛАЙМА</small><b id="resultCoins">+0 XP</b></span>
         </div>
       </div>
+
+      <div id="resultSlimeProgress" class="result-slime-progress"></div>
 
       <section id="resultCompletionBonus" class="result-completion-bonus" aria-label="Бонус за прохождение, включён в итоговую награду" hidden>
         <h3>БОНУС ЗА ПРОХОЖДЕНИЕ</h3>
@@ -537,8 +536,9 @@
   <script src="js/generation/world1-descent.js?v=8"></script>
   <script src="js/generation/tutorial-descent.js?v=2"></script>
   <script src="js/config/gameplay-balance.js?v=3"></script>
-  <script src="js/config/game-config.js?v=96"></script>
+  <script src="js/config/game-config.js?v=592-96"></script>
   <script src="js/config/experience.js?v=3"></script>
+  <script src="js/config/slime-progression.js?v=592"></script>
   <script src="js/platform/yandex-platform.js?v=4"></script>
   <script src="js/core/game-assets.js?v=42"></script>
   <script src="js/config/food-ground-bounds.js?v=1"></script>
@@ -558,6 +558,6 @@
   <script src="effects-lab/workbench-effects.js?v=83"></script>
   <script src="effects-lab/block-effects-workbench.js?v=21"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=591"></script>
+  <script src="game.js?v=592"></script>
 </body>
 </html>

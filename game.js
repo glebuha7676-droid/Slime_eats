@@ -4,7 +4,8 @@
   const CONFIG = window.SlimeGameConfig;
   const ASSETS = window.SlimeGameAssets;
   const EXPERIENCE = window.SlimeExperience;
-  if (!CONFIG || !ASSETS || !EXPERIENCE || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
+  const PROGRESSION = window.SlimeProgression;
+  if (!CONFIG || !ASSETS || !EXPERIENCE || !PROGRESSION || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
     throw new Error('Game modules must be loaded before game.js');
   }
 
@@ -45,7 +46,7 @@
   const BASE_DAMAGE = 10;
   const BASE_SHIELD = 25;
   const BASE_SHIELD_CHARGES = 2;
-  const STOMACH_CAPACITY = 3;
+  const STOMACH_CAPACITY = 1;
   const FREEZE_ZONE_CHARGE_MS = 1000;
   const FREEZE_ZONE_DURATION_MS = 3000;
   const PHANTOM_MARK_INTERVAL_MS = 5000;
@@ -236,8 +237,8 @@
   ]);
   const MUTATION_DETAILS = Object.freeze({
     fire: { stage1: 'Поджигает блоки.', stage2: 'Огонь прыгает на соседние блоки.' },
-    electric: { stage1: 'Копит заряд от ударов.', stage2: 'Разряд бьёт больше блоков.' },
-    frost: { stage1: 'Охлаждает блоки и смягчает удары.', stage2: 'Ледяной щит становится крепче.' },
+    electric: { stage1: 'Удар выпускает молнию.', stage2: 'Молния перескакивает между блоками.' },
+    frost: { stage1: 'Касание превращает блоки в снег.', stage2: 'Из снега разлетаются ледяные осколки.' },
     cosmos: { stage1: 'Планета на орбите бьёт блоки.', stage2: 'Вторая планета помогает разбивать блоки.' },
     nano: { stage1: 'Луч дрона сразу разбивает блок.', stage2: 'Глаз выпускает три мины по очереди.' },
     telekinesis: { stage1: 'Бросает блок вниз.', stage2: 'Бросает сразу два блока.' },
@@ -299,8 +300,6 @@
   const menuReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let menuMutationReveal = null;
   let formDiscoverySequence = null;
-  let displayedPlayerLevel = null;
-  let playerLevelCelebration = null;
   let playerExperiencePresentation = null;
   const menuCategoryVisual = {
     fire: 0, fireFrom: 0, fireTarget: 0, fireStartedAt: 0,
@@ -337,7 +336,7 @@
   let tutorialCountTimer = 0;
   let tutorialRunTimer = 0;
   let tutorialPointerFlight = null;
-  const ONBOARDING_QUESTS = new Set(['','unlock-frost','try-mix','mix-run','upgrade-fire-3','feed-form','open-forms']);
+  const ONBOARDING_QUESTS = new Set(['','unlock-frost','try-frost','play-frost','evolve-slime']);
   let save = loadSave();
   const { sound, stopAllSounds } = window.SlimeAudio.createAudioSystem({
     isEnabled: () => save.sound && !platformSuspended && !windowSuspended && !adInFlight
@@ -439,14 +438,24 @@
         ? clamp(Math.floor(previousLevel), 1, 3)
         : 1;
     }
+    merged.mutationExperience = PROGRESSION.migrateExperience(value.mutationExperience, merged.unlockedMutations, merged.mutationLevels);
+    merged.selectedMutation = merged.unlockedMutations.includes(value.selectedMutation) ? value.selectedMutation : merged.unlockedMutations[0] || 'fire';
     merged.tutorialStep = legacySave ? 'done' : (TUTORIAL_STEPS.has(value.tutorialStep) ? value.tutorialStep : 'home-mutations');
     merged.onboarding = normalizeOnboarding(value.onboarding, merged.tutorialStep);
+    if ((+value.schemaVersion || 0) < 29) {
+      const obsoleteSteps = ['second-gift','second-gift-credit','upgrade-home-mutations','upgrade-fire','upgrade-close-lab','upgrade-summary'];
+      if (obsoleteSteps.includes(merged.tutorialStep)) merged.tutorialStep = 'second-feed';
+      if (merged.onboarding.secondRunFinished) merged.tutorialStep = 'done';
+      if (['try-mix','mix-run','upgrade-fire-3','feed-form','open-forms'].includes(value.onboarding?.quest)) merged.onboarding.quest = 'evolve-slime';
+      merged.onboarding.pendingMemo = '';
+    }
     merged.tutorialGiftClaimed = legacySave || value.tutorialGiftClaimed === true;
     merged.tutorialSecondGiftClaimed = legacySave || value.tutorialSecondGiftClaimed === true;
     const validFormIds = new Set(FORM_INDEX.map(form => form.id));
     merged.discoveredForms = Array.isArray(value.discoveredForms)
       ? [...new Set(value.discoveredForms.filter(id => validFormIds.has(id)))]
       : [];
+    for (const id of merged.unlockedMutations) if (merged.mutationLevels[id] === 3 && !merged.discoveredForms.includes(id)) merged.discoveredForms.push(id);
     merged.unseenForms = Array.isArray(value.unseenForms)
       ? [...new Set(value.unseenForms.filter(id => merged.discoveredForms.includes(id)))]
       : [];
@@ -486,24 +495,22 @@
       (index > 0 && +(value.worldBest?.[ACTIVE_WORLDS[index - 1].id] || 0) >= ACTIVE_WORLDS[index - 1].targetDepth)).map(world => world.id);
     merged.unlockedWorlds = [...new Set([ACTIVE_WORLD_IDS[0], ...(Array.isArray(value.unlockedWorlds) ? value.unlockedWorlds : legacyUnlockedWorlds)])]
       .filter(id => ACTIVE_WORLD_IDS.includes(Number(id))).map(Number);
-    const oldWorldIndex = Math.max(0, ACTIVE_WORLD_IDS.indexOf(merged.world),
-      ...merged.unlockedWorlds.map(id => ACTIVE_WORLD_IDS.indexOf(id)),
-      ...ACTIVE_WORLDS.slice(1).map((world, index) =>
-        +(value.worldTrophies?.[ACTIVE_WORLDS[index].id] || 0) >= 10 ? index + 1 : 0));
-    const legacyTrophyExperience = ACTIVE_WORLDS.reduce((best, world, index) => {
-      const trophies = clamp(Math.floor(+(value.worldTrophies?.[world.id] || 0)), 0, 10);
-      if (!trophies) return best;
-      const start = EXPERIENCE.experienceForLevel(EXPERIENCE.requiredLevelForWorldIndex(index));
-      const end = EXPERIENCE.experienceForLevel(EXPERIENCE.requiredLevelForWorldIndex(index + 1));
-      return Math.max(best, Math.round(start + (end - start) * trophies / 10));
-    }, 0);
-    merged.playerExperience = Number.isFinite(+value.playerExperience)
-      ? Math.max(0, Math.floor(+value.playerExperience))
-      : Math.max(EXPERIENCE.experienceForLevel(EXPERIENCE.requiredLevelForWorldIndex(oldWorldIndex)), legacyTrophyExperience);
+    // Archive old global XP as history, without assigning it to an unrelated slime.
+    merged.legacyPlayerExperience = Math.max(0, Math.floor(+(value.legacyPlayerExperience ?? value.playerExperience) || 0));
+    if ((+value.schemaVersion || 0) < 29 && Number.isFinite(+value.playerExperience)) {
+      for (const [index, world] of ACTIVE_WORLDS.entries()) {
+        if (EXPERIENCE.levelForExperience(+value.playerExperience) >= EXPERIENCE.requiredLevelForWorldIndex(index)
+            && !merged.unlockedWorlds.includes(world.id)) merged.unlockedWorlds.push(world.id);
+      }
+    }
+    delete merged.playerExperience;
     delete merged.worldTrophies;
-    merged.unseenWorlds=(Array.isArray(value.unseenWorlds)?value.unseenWorlds:[])
-      .map(Number).filter(id=>ACTIVE_WORLD_IDS.includes(id)&&id!==ACTIVE_WORLD_IDS[0]
-        && EXPERIENCE.levelForExperience(merged.playerExperience)>=EXPERIENCE.requiredLevelForWorldIndex(ACTIVE_WORLD_IDS.indexOf(id)));
+    for (let index = 1; index < ACTIVE_WORLDS.length; index += 1) {
+      const previous = ACTIVE_WORLDS[index - 1];
+      if (merged.worldBest[previous.id] >= previous.targetDepth && !merged.unlockedWorlds.includes(ACTIVE_WORLDS[index].id)) merged.unlockedWorlds.push(ACTIVE_WORLDS[index].id);
+    }
+    merged.unseenWorlds = [...new Set((Array.isArray(value.unseenWorlds) ? value.unseenWorlds : []).map(Number))]
+      .filter(id => id !== ACTIVE_WORLD_IDS[0] && merged.unlockedWorlds.includes(id));
     const finalWorld = ACTIVE_WORLDS[ACTIVE_WORLDS.length - 1];
     merged.gameCompleted = Boolean(value.gameCompleted || (finalWorld && merged.worldBest[finalWorld.id] >= (finalWorld.targetDepth || 500)));
     merged.lastRunDepth = {};
@@ -568,7 +575,8 @@
     const foods = [];
     for (const id of raw.foods) {
       const food = foodById(id);
-      if (canAddToStomach(food, foods)) foods.push(food);
+      const stagedFood = food && foodForMutation(mutationIdForFamily(foodRecipeFamily(food)));
+      if (canAddToStomach(stagedFood, foods)) foods.push(stagedFood);
     }
     const offer = raw.offer.slice(0, 3).map(id => id ? foodById(id) || null : null);
     while (offer.length < 3) offer.push(null);
@@ -588,7 +596,7 @@
     session.offer = Array.from({ length: 3 }, (_, index) => {
       const family = activeFamilies[index];
       if (!family) return null;
-      const stage = foods.filter(food => foodRecipeFamily(food) === family).length + 1;
+      const stage = mutationLevelForFamily(family);
       if (stage > 3) return null;
       const current = offer[index];
       const valid = current && foodRecipeFamily(current) === family && current.stage === stage
@@ -678,7 +686,7 @@
       case 'close-lab': return ['#closePanelBtn', 'Вернись к слайму'];
       case 'feed': return ['.conveyor-food-pick:not(.locked)', 'Перетащи еду к слайму'];
 
-      case 'second-feed': return ['.conveyor-food-pick:not(.locked)', 'Съешь два огненных блюда'];
+      case 'second-feed': return ['.conveyor-food-pick:not(.locked)', 'Накорми слайма перед забегом'];
       case 'second-play': return ['#worldStartBtn', 'Попробуй усиленный Огонь'];
       case 'shield-use': return ['#abilityBtn', 'Щит заряжен! Нажми на него'];
       case 'play': return ['#worldStartBtn', 'Нажми «Играть»'];
@@ -937,7 +945,7 @@
         if (index === 4 && save.tutorialStep === creditStep) {
           if (!secondGift) renderRecipesPanel();
           updatePersistentUI();
-          setTutorialStep(secondGift ? 'upgrade-home-mutations' : 'reactor');
+          setTutorialStep(secondGift ? 'second-feed' : 'reactor');
         }
       });
     }
@@ -954,9 +962,9 @@
     mutationAnimating = false;
     pendingMutationReveal = null;
     save.unlockedMutations = [...new Set([...(save.unlockedMutations || []), 'fire', 'frost'])];
-    save.mutationLevels = { ...(save.mutationLevels || {}), fire: 3, frost: Math.max(1, save.mutationLevels?.frost || 0) };
+    save.mutationLevels = { ...(save.mutationLevels || {}), fire: Math.max(1, save.mutationLevels?.fire || 0), frost: Math.max(1, save.mutationLevels?.frost || 0) };
+    save.mutationExperience = PROGRESSION.migrateExperience(save.mutationExperience, save.unlockedMutations, save.mutationLevels);
     save.activeMutationPool = ['fire', 'frost'];
-    save.discoveredForms = [...new Set([...(save.discoveredForms || []), 'fire'])];
     save.mutationProgress = 0;
     save.mutationInvestTapCount = 0;
     save.tutorialGiftClaimed = true;
@@ -988,7 +996,7 @@
     const enabled = value ? value.enabled === true : step !== 'done';
     const result = { version: 2, enabled, quest: ONBOARDING_QUESTS.has(value?.quest) ? value.quest : '', pendingMemo: '' };
     for (const key of ['firstRunFinished','secondRunFinished','controlsLearned','shieldLearned','veinsLearned','dominanceSeen','crossingSeen','formSeen','abilityLearned']) result[key] = value?.[key] === true;
-    if (['crossing','form'].includes(value?.pendingMemo)) result.pendingMemo = value.pendingMemo;
+    if (['new-mutation','evolution'].includes(value?.pendingMemo)) result.pendingMemo = value.pendingMemo;
     if (result.quest === 'open-forms') result.quest = '';
     return result;
   }
@@ -1045,7 +1053,8 @@
 
   function showFoodCounterMemo() {
     if (save.tutorialStep !== 'feed-count') return;
-    showOnboardingMemo('Это твой желудок', `<div class="tutorial-meal-link"><span class="tutorial-lamp-example" role="img" aria-label="Лампочка"></span><span>=</span><img src="${versionedAsset('assets/food/01-berries.webp')}" alt="Еда"></div><p><b>1 лампочка</b> — <b>1 еда</b>.</p><p class="tutorial-memo-small">Слайм может съесть <b>максимум 3</b>.</p>`, () => setTutorialStep('play'), { kind: 'food-counter' });
+    const id = selectedSlimeMutationId();
+    showOnboardingMemo('Одна еда — новая сила!', `<div class="tutorial-meal-link">${tutorialRecipeIcon(id)}</div><p>Слайм получил <b>мутацию</b>.</p><p class="tutorial-memo-small"><b>Способности уже доступны!</b><br>Теперь отправляйся в шахту.</p>`, () => setTutorialStep('play'), { kind: 'meal' });
   }
 
   function showTutorialControls() {
@@ -1086,11 +1095,6 @@
 
   function finishUpgradeTutorial() {
     if (save.tutorialStep === 'upgrade-summary') setTutorialStep('upgrade-close-lab');
-  }
-
-  function showFireDominanceMemo() {
-    const emblem = tutorialRecipeIcon('fire');
-    showOnboardingMemo('Два огня — сильнее!', `<div class="tutorial-fire-pair">${emblem}<b>+</b>${emblem}<span>→</span><strong>ОГОНЬ II</strong></div><div class="tutorial-fire-spread" role="img" aria-label="Горящий блок ломается, затем огонь переходит на соседний"><span class="fire-demo-cell is-source"><i class="fire-demo-rock"></i><i class="fire-demo-flame"></i><span class="fire-demo-fragments"><i></i><i></i><i></i><i></i></span></span><i class="fire-demo-ember"></i><span class="fire-demo-cell is-next"><i class="fire-demo-rock"></i><i class="fire-demo-flame"></i></span></div><p><b>Огонь теперь распространяется!</b></p><p class="tutorial-memo-small">Сломай горящий блок —<br>он подожжёт соседний.</p>`, () => { save.onboarding.dominanceSeen = true; persist({ refreshUI: false }); }, { kind: 'fire' });
   }
 
   function updateTutorialRun(timestamp) {
@@ -1137,8 +1141,8 @@
       save.onboarding.quest = 'unlock-frost';
       save.onboarding.pendingMemo = '';
       setTutorialStep('done');
-    } else if (save.onboarding.quest === 'mix-run' && run.categoryVisuals.fire >= 2 && run.categoryVisuals.frost >= 1) {
-      save.onboarding.quest = 'upgrade-fire-3';
+    } else if (save.onboarding.quest === 'play-frost' && run.mutationId === 'frost') {
+      save.onboarding.quest = 'evolve-slime';
     }
     renderTutorial();
   }
@@ -1150,10 +1154,9 @@
     const fire = tutorialRecipeIcon('fire'), frost = tutorialRecipeIcon('frost');
     const labels = {
       'unlock-frost': ['Открой Мороз', `<div class="tutorial-quest-emblem">${frost}</div>`],
-      'try-mix': ['Выбери Мороз', `<div class="tutorial-quest-emblem">${frost}</div>`],
-      'mix-run': ['Съешь', `<div class="tutorial-quest-recipe"><span class="tutorial-quest-meal">${fire}<b>2</b></span><i>+</i>${frost}</div>`],
-      'upgrade-fire-3': ['Развивай Огонь', `<div class="tutorial-quest-emblem">${fire}<b>III</b></div>`],
-      'feed-form': ['Съешь три огня', `<div class="tutorial-quest-emblem">${fire}<b>3</b></div>`]
+      'try-frost': ['Попробуй Мороз', `<div class="tutorial-quest-emblem">${frost}</div>`],
+      'play-frost': ['Пройди забег Морозом', `<div class="tutorial-quest-emblem">${frost}</div>`],
+      'evolve-slime': ['Развивай своего слайма', `<div class="tutorial-quest-emblem">${tutorialRecipeIcon(selectedSlimeMutationId())}<b>II</b></div>`]
     };
     button.hidden = !save.onboarding?.enabled || !labels[quest] || document.body.dataset.screen !== 'home';
     if (!button.hidden) {
@@ -1168,7 +1171,7 @@
     if (!quest || quest.hidden || !els.homeScreen.offsetHeight) return;
     const home = els.homeScreen.getBoundingClientRect();
     const form = els.formIndexBtn.getBoundingClientRect();
-    const counter = els.conveyorChoiceCount.getBoundingClientRect();
+    const counter = els.conveyor.getBoundingClientRect();
     const scale = home.height / els.homeScreen.offsetHeight;
     const height = quest.offsetHeight * scale;
     const top = Math.max(form.bottom + 9 * scale, Math.min(form.bottom + 15 * scale, counter.top - height - 22 * scale));
@@ -1180,18 +1183,9 @@
 
   function openOnboardingQuest() {
     const quest = save.onboarding.quest;
-    if (quest === 'mix-run' && !save.activeMutationPool.includes('frost')) {
-      renderPanel('recipes');
-      selectedLaboratoryMutationId = 'frost'; laboratoryView = 'mutations'; renderRecipesPanel();
-      return;
-    }
-    if (['mix-run','feed-form'].includes(quest)) {
-      showToast(quest === 'mix-run' ? 'Съешь два огненных блюда и одно морозное' : 'Съешь три огненных блюда');
-      return;
-    }
     renderPanel('recipes');
     if (quest !== 'unlock-frost') {
-      selectedLaboratoryMutationId = quest === 'try-mix' ? 'frost' : 'fire';
+      selectedLaboratoryMutationId = ['try-frost','play-frost'].includes(quest) ? 'frost' : selectedSlimeMutationId();
       laboratoryView = 'mutations'; renderRecipesPanel();
     }
   }
@@ -1201,21 +1195,14 @@
     if (!state?.enabled || !state.secondRunFinished) return;
     const before = JSON.stringify(state);
     if (state.quest === 'unlock-frost' && save.unlockedMutations.includes('frost')) {
-      state.quest = 'mix-run';
-      if (!state.crossingSeen) state.pendingMemo = 'crossing';
+      state.quest = 'try-frost'; state.pendingMemo = 'new-mutation';
     }
-    if (state.quest === 'try-mix' && (event === 'frost-selected' || save.activeMutationPool.includes('frost'))) {
-      state.quest = 'mix-run';
-      if (!state.crossingSeen) state.pendingMemo = 'crossing';
-    }
-    if (state.quest === 'upgrade-fire-3' && mutationLevel('fire') >= 3) state.quest = 'feed-form';
-    if (state.quest === 'feed-form' && save.discoveredForms.includes('fire')) {
-      state.quest = '';
-      if (!state.formSeen) state.pendingMemo = 'form';
+    if (state.quest === 'try-frost' && session?.foods?.some(food => foodRecipeFamily(food) === 'ice')) state.quest = 'play-frost';
+    if (state.quest === 'evolve-slime' && Object.values(save.mutationLevels).some(stage => stage >= 2)) {
+      state.quest = ''; if (!state.formSeen) state.pendingMemo = 'evolution';
     }
     if (before !== JSON.stringify(state)) persist({ refreshUI: false });
-    renderOnboardingQuest();
-    queueOnboardingMemo();
+    renderOnboardingQuest(); queueOnboardingMemo();
   }
 
   function queueOnboardingMemo() {
@@ -1225,12 +1212,15 @@
       if (document.body.dataset.screen !== 'home' || !els.panelOverlay.classList.contains('hidden') || tutorialMemoState) return;
       if (homeRewardFlight || playerExperiencePresentation?.frame || menuMutationReveal || formDiscoverySequence) { queueOnboardingMemo(); return; }
       const kind = save.onboarding.pendingMemo;
-      const shown = kind === 'crossing' ? showOnboardingMemo('СИНЕРГИИ', `<p>Мутации могут <b>улучшать друг друга</b>.</p><div class="tutorial-synergy-examples" aria-label="Примеры сочетаний мутаций"><div>${tutorialRecipeIcon('frost')}<b>+</b>${tutorialRecipeIcon('fire')}</div><div>${tutorialRecipeIcon('fire')}<b>+</b>${tutorialRecipeIcon('frost')}<b>+</b>${tutorialRecipeIcon('electric')}</div></div><p class="tutorial-memo-small">Экспериментируй!<br>Ищи <b>интересные сочетания</b>.</p>`, () => { save.onboarding.crossingSeen = true; persist({ refreshUI: false }); }, {kind:'crossing'})
-        : kind === 'form' ? showOnboardingMemo('Три одинаковых — форма!', `<div class="tutorial-form-recipe">${tutorialRecipeIcon('fire')}${tutorialRecipeIcon('fire')}${tutorialRecipeIcon('fire')}<span>→</span><span class="tutorial-unknown-form" role="img" aria-label="Неизвестная особая форма"><img src="${versionedAsset('assets/ui/slime/slime-body-reference-v1.webp')}" alt=""><b>?</b></span></div><p>Особая форма —<br><b>мощная суперспособность!</b></p>`, () => { save.onboarding.formSeen = true; persist({ refreshUI: false }); }) : false;
-      if (shown) {
-        const next = tutorialMemoState.next;
-        tutorialMemoState.next = () => { save.onboarding.pendingMemo = ''; next?.(); persist({ refreshUI: false }); };
-      }
+      const evolution = kind === 'evolution';
+      const shown = showOnboardingMemo(evolution ? 'Новая стадия!' : 'Попробуй другую силу!', evolution
+        ? '<p>Твой слайм <b>изменился</b>!</p><p class="tutorial-memo-small">Новая внешность<br>и <b>новое блюдо</b>.</p>'
+        : `<div class="tutorial-meal-link">${tutorialRecipeIcon('frost')}</div><p>Съешь <b>одно морозное блюдо</b>.</p><p class="tutorial-memo-small">Играй этим слаймом —<br>он получит <b>свой опыт</b>.</p>`, () => {
+          save.onboarding.pendingMemo = '';
+          if (evolution) save.onboarding.formSeen = true;
+          persist({ refreshUI: false });
+        }, { kind: 'evolution' });
+      if (!shown) queueOnboardingMemo();
     }, 200);
   }
 
@@ -1245,22 +1235,22 @@
       setTutorialStep(stomachCanLaunch() ? 'play' : 'feed'); return;
     }
     if (step === 'second-run') {
-      setTutorialStep(stomachFoodCount() >= 2 ? 'second-play' : 'second-feed');
-      if (save.tutorialStep === 'second-play' && !save.onboarding.dominanceSeen) showFireDominanceMemo();
+      setTutorialStep(stomachFoodCount() >= 1 ? 'second-play' : 'second-feed');
+
       return;
     }
     if (step === 'post-run' && !run) {
-      setTutorialStep(save.onboarding.firstRunFinished ? 'second-gift' : stomachCanLaunch() ? 'play' : 'feed');
+      setTutorialStep(save.onboarding.firstRunFinished ? 'second-feed' : stomachCanLaunch() ? 'play' : 'feed');
     }
     if (step === 'feed-count') { showFoodCounterMemo(); return; }
     if (step === 'upgrade-summary') { setTutorialStep('upgrade-close-lab'); return; }
-    if (step === 'second-gift-credit') setTutorialStep('upgrade-home-mutations');
+    if (step === 'second-gift-credit') setTutorialStep('second-feed');
     else if (step === 'gift-credit') setTutorialStep('reactor');
     else if (['wait-synthesis','core','prize'].includes(step)) setTutorialStep('synthesize');
-    else if (step === 'second-gift' && save.tutorialSecondGiftClaimed) setTutorialStep('upgrade-home-mutations');
+    else if (step === 'second-gift' && save.tutorialSecondGiftClaimed) setTutorialStep('second-feed');
     else if (step === 'gift' && save.tutorialGiftClaimed) setTutorialStep('reactor');
-    if (step === 'second-feed' && stomachFoodCount() >= 2) setTutorialStep('second-play');
-    if (save.tutorialStep === 'second-play' && !save.onboarding.dominanceSeen) showFireDominanceMemo();
+    if (step === 'second-feed' && stomachFoodCount() >= 1) setTutorialStep('second-play');
+
     if (['home-mutations','feed','play','second-feed','second-play','post-run','upgrade-home-mutations','second-gift'].includes(save.tutorialStep)) { queueTutorialRender(); return; }
     renderPanel('recipes');
     if (save.tutorialStep === 'gift-delay') {
@@ -1582,8 +1572,7 @@
     const family = foodRecipeFamily(food);
     const mutationId = (save.activeMutationPool || []).find(id => mutationFoodFamily(id) === family);
     if (!mutationId) return false;
-    const eatenOfFamily = foods.filter(item => foodRecipeFamily(item) === family).length;
-    return eatenOfFamily < mutationLevel(mutationId) && (!food.stage || food.stage === eatenOfFamily + 1);
+    return mutationLevel(mutationId) > 0 && (!food.stage || food.stage === mutationLevel(mutationId));
   }
   function stomachIsFull(foods = session?.foods || []) {
     return stomachFoodCount(foods) >= STOMACH_CAPACITY;
@@ -1642,9 +1631,12 @@
   function worldIsUnlocked(worldId) {
     const index = ACTIVE_WORLD_IDS.indexOf(Number(worldId));
     if (index < 0) return false;
-    return EXPERIENCE.levelForExperience(save.playerExperience) >= EXPERIENCE.requiredLevelForWorldIndex(index);
+    if (index === 0 || save.unlockedWorlds.includes(Number(worldId))) return true;
+    const previous = ACTIVE_WORLDS[index - 1];
+    return (save.worldBest[previous.id] || 0) >= previous.targetDepth;
   }
   let carouselWorldId = null;
+
   function carouselWorld() {
     return ACTIVE_WORLDS.find(world => world.id === carouselWorldId) || currentWorld();
   }
@@ -1716,7 +1708,7 @@
     const world = carouselWorld();
     const index = ACTIVE_WORLD_IDS.indexOf(world.id);
     const locked = !worldIsUnlocked(world.id);
-    const requiredLevel = EXPERIENCE.requiredLevelForWorldIndex(index);
+    const requiredLevel = index;
     const previews = {
       1: 'assets/ui/world-terminal/mine-blue-essence-calm-v2.webp',
       3: 'assets/ui/world-terminal/mine-candy.webp',
@@ -1736,11 +1728,11 @@
     }
     els.worldPrevBtn?.classList.toggle('has-new-world',(save.unseenWorlds||[]).some(id=>ACTIVE_WORLD_IDS.indexOf(id)<index));
     els.worldNextBtn?.classList.toggle('has-new-world',(save.unseenWorlds||[]).some(id=>ACTIVE_WORLD_IDS.indexOf(id)>index));
-    if (els.worldTerminalTrophies) els.worldTerminalTrophies.textContent = String(requiredLevel);
+    if (els.worldTerminalTrophies) els.worldTerminalTrophies.textContent = `ПРОЙДИ ШАХТУ ${requiredLevel}`;
     if (els.worldTerminalLock) els.worldTerminalLock.hidden = !locked && worldUnlockId !== world.id;
     els.worldCarousel.classList.toggle('locked', locked);
     els.worldCarousel.setAttribute('aria-label', locked
-      ? `Шахта закрыта до уровня ${requiredLevel}`
+      ? `Пройди шахту ${requiredLevel}, чтобы открыть этот мир`
       : `Шахта ${worldDisplayNumber(world.id)}, ${world.name}, ${levelTargetDepth(world, selectedLevelForWorld(world.id))} метров`);
     if (els.worldPrevBtn) els.worldPrevBtn.disabled = index <= 0;
     if (els.worldNextBtn) els.worldNextBtn.disabled = index >= ACTIVE_WORLDS.length - 1;
@@ -1986,135 +1978,39 @@
     renderLevelPicker();
   }
 
-  function clearPlayerLevelCelebration() {
-    const celebration = playerLevelCelebration;
-    playerLevelCelebration = null;
-    if (!celebration) return;
-    clearTimeout(celebration.swapTimer);
-    clearTimeout(celebration.endTimer);
-    celebration.animations.forEach(animation => animation.cancel());
-    celebration.nodes.forEach(node => node.remove());
-    celebration.badge.classList.remove('level-up-flash');
-    displayedPlayerLevel = celebration.target;
-    els.coinsLabel.textContent = String(displayedPlayerLevel);
-  }
-
-  function renderPlayerLevelValue(level) {
-    if (displayedPlayerLevel === null || level < displayedPlayerLevel || menuReducedMotion
-      || document.body.dataset.screen !== 'home' || !Element.prototype.animate) {
-      clearPlayerLevelCelebration();
-      displayedPlayerLevel = level;
-      els.coinsLabel.textContent = String(level);
-      return;
-    }
-    if (playerLevelCelebration) {
-      playerLevelCelebration.target = Math.max(level, playerLevelCelebration.target);
-      return;
-    }
-    if (level === displayedPlayerLevel) return;
-    const badge = els.coinsLabel.closest('.player-level-badge');
-    const celebration = { badge, target: level, animations: [], nodes: [], swapTimer: 0, endTimer: 0 };
-    playerLevelCelebration = celebration;
-    celebration.animations.push(badge.animate([
-      { transform: 'scale(1)' },
-      { transform: 'scale(1.32) rotate(-5deg)', offset: .32 },
-      { transform: 'scale(1)', offset: .65 },
-      { transform: 'scale(1.035)', offset: .8 },
-      { transform: 'scale(1)' }
-    ], { duration: 540, easing: 'ease-in-out' }));
-    celebration.swapTimer = setTimeout(() => {
-      if (playerLevelCelebration !== celebration) return;
-      displayedPlayerLevel = celebration.target;
-      els.coinsLabel.textContent = String(displayedPlayerLevel);
-      badge.classList.add('level-up-flash');
-      sound('coin'); feedback([5, 16, 7]);
-      const colors = ['#ffe770', '#83edff', '#ffa8ce', '#b2f59b'];
-      for (let index = 0; index < 10; index += 1) {
-        const piece = document.createElement('i');
-        piece.className = 'level-up-confetti';
-        piece.style.background = colors[index % colors.length];
-        badge.appendChild(piece);
-        celebration.nodes.push(piece);
-        const angle = index * Math.PI * 2 / 10;
-        const reach = rand(32, 44);
-        const x = Math.cos(angle) * reach;
-        const y = Math.sin(angle) * reach - 8;
-        const at = (dx, dy, rotation) => `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) rotate(${rotation}deg)`;
-        const animation = piece.animate([
-          { transform: at(0, 0, 0), opacity: 1 },
-          { transform: at(x, y, index * 43), opacity: 1, offset: .65 },
-          { transform: at(x * 1.16, y + 16, index * 71), opacity: 0 }
-        ], { duration: 520, easing: 'cubic-bezier(.16,.65,.3,1)', fill: 'forwards' });
-        celebration.animations.push(animation);
-        animation.finished.catch(() => {}).finally(() => piece.remove());
-      }
-    }, 210);
-    celebration.endTimer = setTimeout(() => {
-      if (playerLevelCelebration !== celebration) return;
-      playerLevelCelebration = null;
-      badge.classList.remove('level-up-flash');
-      celebration.nodes.forEach(node => node.remove());
-      renderPlayerLevelValue(celebration.target);
-    }, 740);
-  }
-
-  function paintPlayerExperience(experience, heldLevel = null) {
-    const level = heldLevel ?? EXPERIENCE.levelForExperience(experience);
-    const progress = Math.max(0, experience - EXPERIENCE.experienceForLevel(level));
-    const cost = level < EXPERIENCE.MAX_LEVEL ? EXPERIENCE.nextLevelCost(level) : 0;
-    if (heldLevel === null) renderPlayerLevelValue(level);
-    if (els.playerLevelProgress) els.playerLevelProgress.style.width = `${cost ? Math.min(100, progress / cost * 100) : 100}%`;
-    if (els.playerLevelExperience) {
-      if (cost) {
-        if (!els.playerLevelExperience.querySelector('b')) els.playerLevelExperience.innerHTML = '<b></b><span></span>';
-        els.playerLevelExperience.querySelector('b').textContent = String(Math.min(progress, cost));
-        els.playerLevelExperience.querySelector('span').textContent = ` / ${cost} XP`;
-      } else els.playerLevelExperience.textContent = 'МАКСИМУМ';
-    }
-    els.coinsLabel.closest('.player-level-wallet')?.setAttribute('aria-label', cost
-      ? `Уровень ${level}, опыт ${Math.min(progress, cost)} из ${cost}` : `Максимальный уровень ${level}`);
+  function paintPlayerExperience(experience) {
+    const id = homeRewardFlight?.mutationId || selectedSlimeMutationId();
+    const mutation = mutationById(id);
+    const state = PROGRESSION.progress(mutationLevel(id), experience);
+    const emblem = document.getElementById('slimeProgressEmblem');
+    if (emblem && mutation && emblem.getAttribute('src') !== versionedAsset(mutation.image)) emblem.src = versionedAsset(mutation.image);
+    document.getElementById('slimeProgressName').textContent = mutation?.name || 'Выбери слайма';
+    els.coinsLabel.textContent = ['I','II','III'][state.stage - 1];
+    if (els.playerLevelProgress) els.playerLevelProgress.style.width = `${state.percent}%`;
+    if (els.playerLevelExperience) els.playerLevelExperience.textContent = !mutationLevel(id) ? 'Накорми слайма' : state.max ? `${formatCompactNumber(state.xp)} XP · МАКСИМУМ` : state.ready ? 'ГОТОВ К ЭВОЛЮЦИИ' : `${state.xp} / ${state.target} XP`;
+    els.coinsLabel.closest('.player-level-wallet')?.setAttribute('aria-label', `${mutation?.name || 'Слайм'}, стадия ${state.stage}, ${state.xp} личного опыта${state.ready ? ', готов к эволюции' : ''}`);
+    els.coinsLabel.closest('.player-level-wallet')?.classList.toggle('evolution-ready', state.ready);
   }
 
   function renderPlayerExperience(experience) {
-    const track = els.playerLevelProgress?.parentElement;
-    const state = playerExperiencePresentation;
-    if (!state || experience < state.shown || menuReducedMotion || document.body.dataset.screen !== 'home') {
+    const id = homeRewardFlight?.mutationId || selectedSlimeMutationId();
+    let state = playerExperiencePresentation;
+    if (!state || state.id !== id || experience < state.shown || menuReducedMotion || document.body.dataset.screen !== 'home') {
       if (state) cancelAnimationFrame(state.frame);
-      playerExperiencePresentation = { shown: experience, target: experience, frame: 0, heldUntil: 0 };
-      track?.classList.remove('is-xp-counting');
+      state = playerExperiencePresentation = { id, shown: experience, target: experience, frame: 0 };
       paintPlayerExperience(experience);
       return;
     }
     state.target = experience;
-    if (state.frame || state.shown === experience) return;
-    state.from = state.shown;
-    state.started = performance.now();
-    track?.classList.add('is-xp-counting');
+    if (state.frame || state.shown === experience) { paintPlayerExperience(state.shown); return; }
+    state.from = state.shown; state.started = performance.now();
     const step = now => {
       if (playerExperiencePresentation !== state) return;
-      if (state.heldUntil) {
-        if (now < state.heldUntil) { state.frame = requestAnimationFrame(step); return; }
-        state.heldUntil = 0;
-        state.from = state.shown;
-        state.started = now;
-        paintPlayerExperience(state.shown);
-      }
-      const duration = clamp(280 + (state.target - state.from) * .5, 280, 650);
-      const ratio = clamp((now - state.started) / duration, 0, 1);
-      const next = Math.round(state.from + (state.target - state.from) * (1 - Math.pow(1 - ratio, 2)));
-      const previousLevel = EXPERIENCE.levelForExperience(state.shown);
-      const boundary = EXPERIENCE.experienceForLevel(previousLevel + 1);
-      if (previousLevel < EXPERIENCE.MAX_LEVEL && state.shown < boundary && next >= boundary) {
-        state.shown = boundary;
-        paintPlayerExperience(boundary, previousLevel);
-        renderPlayerLevelValue(previousLevel + 1);
-        state.heldUntil = now + 330;
-      } else {
-        state.shown = next;
-        paintPlayerExperience(next);
-      }
-      if (state.shown < state.target || state.heldUntil) state.frame = requestAnimationFrame(step);
-      else { state.frame = 0; track?.classList.remove('is-xp-counting'); }
+      const ratio = clamp((now - state.started) / 550, 0, 1);
+      state.shown = Math.round(state.from + (state.target - state.from) * (1 - Math.pow(1 - ratio, 3)));
+      paintPlayerExperience(state.shown);
+      if (ratio < 1) state.frame = requestAnimationFrame(step);
+      else state.frame = 0;
     };
     state.frame = requestAnimationFrame(step);
   }
@@ -2122,7 +2018,7 @@
   function renderWalletBalances() {
     const experience = homeRewardFlight
       ? homeRewardFlight.experienceStart + homeRewardFlight.experienceShown
-      : save.playerExperience;
+      : slimeExperience();
     const researchUnits = homeRewardFlight
       ? homeRewardFlight.flaskStart + homeRewardFlight.flaskShown
       : save.researchUnits;
@@ -2157,7 +2053,8 @@
     homeRewardFlight = {
       flaskStart: Math.max(0, save.researchUnits - flaskGain),
       flaskGain, flaskShown: 0,
-      experienceStart: Math.max(0, save.playerExperience - experienceGain),
+      mutationId: completedRun.mutationId,
+      experienceStart: completedRun.experienceBefore || 0,
       experienceGain, experienceShown: 0,
       animations: [], timeout: 0, started: false
     };
@@ -2421,11 +2318,10 @@
     if (name !== 'home') {
       clearMenuSlimeInteraction();
       clearMenuMutationPresentation();
-      clearPlayerLevelCelebration();
     }
     if (name !== 'home') settleHomeRewardFlight();
     document.body.dataset.screen = name;
-    if (name !== 'home') renderPlayerExperience(save.playerExperience);
+    if (name !== 'home') renderPlayerExperience(slimeExperience());
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
     updateWorldHeader(name);
@@ -2536,7 +2432,7 @@
         save.lastRunDepth[`${world.id}:${level}`] = levelTargetDepth(world, level);
       }
     }
-    save.playerExperience = EXPERIENCE.experienceForLevel(EXPERIENCE.MAX_LEVEL);
+    save.mutationExperience = Object.fromEntries(allMutations().map(mutation => [mutation.id, 2000]));
     save.activeDraft = null;
     session = null;
     persist();
@@ -2544,12 +2440,14 @@
     feedback([20, 35, 20]);
     newDraft();
     updatePersistentUI();
-    showToast('Все миры открыты · уровень 30 и исследование выданы');
+    showToast('Все миры открыты · опыт слаймов и колбы выданы');
   }
 
   function unlockMutationsFromAdmin() {
     save.unlockedMutations = allMutations().map(mutation => mutation.id);
     save.mutationLevels = Object.fromEntries(save.unlockedMutations.map(id => [id, 3]));
+    save.mutationExperience = PROGRESSION.migrateExperience(save.mutationExperience, save.unlockedMutations, save.mutationLevels);
+    save.discoveredForms = [...save.unlockedMutations];
     save.mutationProgress = 0;
     save.mutationInvestTapCount = 0;
     pendingMutationReveal = null;
@@ -2622,6 +2520,23 @@
     return clamp(Math.floor(Number(save.mutationLevels?.[id]) || 1), 1, 3);
   }
 
+  function mutationIdForFamily(family) {
+    return allMutations().find(mutation => mutationFoodFamily(mutation.id) === family)?.id || '';
+  }
+
+  function selectedSlimeMutationId() {
+    const fed = session?.foods?.[0];
+    return fed ? mutationIdForFamily(foodRecipeFamily(fed)) : save.selectedMutation || save.activeMutationPool?.[0] || 'fire';
+  }
+
+  function slimeExperience(id = selectedSlimeMutationId()) {
+    return Math.max(0, Math.floor(Number(save.mutationExperience?.[id]) || 0));
+  }
+
+  function foodForMutation(id, stage = mutationLevel(id)) {
+    return FOODS.find(food => foodRecipeFamily(food) === mutationFoodFamily(id) && food.stage === stage) || null;
+  }
+
   function mutationLevelForFamily(family) {
     const id = (save.activeMutationPool || []).find(mutationId => mutationFoodFamily(mutationId) === family);
     return id ? mutationLevel(id) : 0;
@@ -2651,7 +2566,7 @@
     for (let i = 0; i < 3; i += 1) {
       const family = activeFamilies[i];
       if (!family) continue;
-      const stage = (session?.foods || []).filter(food => foodRecipeFamily(food) === family).length + 1;
+      const stage = mutationLevelForFamily(family);
       const food = randomFood(used, family, stage);
       offer[i] = food;
       if (food) used.push(food.id);
@@ -2787,7 +2702,7 @@
       els.stomachQuickSlots?.appendChild(createStomachSlot(session.foods[index], index));
     }
     els.stomachQuickSlots?.classList.toggle('is-full', stomachIsFull());
-    if (els.slimeFeedCount) els.slimeFeedCount.textContent = `СЪЕДЕНО ${stomachFoodCount()} ИЗ ${STOMACH_CAPACITY}`;
+    if (els.slimeFeedCount) els.slimeFeedCount.hidden = true;
     renderRecipeWorkbench();
   }
 
@@ -2969,7 +2884,7 @@
       <div class="quick-mutation-list">${choices.map(mutation => `<button class="quick-mutation-option" data-quick-mutation="${mutation.id}" type="button" aria-label="Заменить на ${mutation.name}" title="${mutation.name}"><img src="${versionedAsset(mutation.image)}" alt=""></button>`).join('')}</div>`;
     els.quickMutationPicker.style.removeProperty('top');
     const homeBounds = els.homeScreen.getBoundingClientRect();
-    const countBounds = els.conveyorChoiceCount.getBoundingClientRect();
+    const countBounds = els.conveyor.getBoundingClientRect();
     const homeScale = homeBounds.height / els.homeScreen.offsetHeight || 1;
     els.quickMutationPicker.hidden = false;
     const slotBounds = els.conveyorDispensers?.querySelector('[data-quick-mutation-slot]')?.getBoundingClientRect() || countBounds;
@@ -2993,6 +2908,8 @@
     closeQuickMutationPicker();
     const changedSlots = [slot];
     pool[slot] = id;
+    settleHomeRewardFlight();
+    save.selectedMutation = id;
     save.activeMutationPool = pool;
     sound('tap');
     feedback(6);
@@ -3005,7 +2922,7 @@
     const used = [...session.foods, ...session.offer.filter((food, index) => food && !changedSlots.includes(index))].map(food => food.id);
     changedSlots.forEach(index => {
       const family = mutationFoodFamily(pool[index]);
-      const stage = session.foods.filter(food => foodRecipeFamily(food) === family).length + 1;
+      const stage = mutationLevelForFamily(family);
       session.offer[index] = randomFood(used, family, stage);
       if (session.offer[index]) used.push(session.offer[index].id);
     });
@@ -3075,8 +2992,8 @@
     els.worldStartBtn.disabled = !ready;
     els.worldStartBtn.classList.toggle('hungry', !ready);
     els.worldStartBtn.classList.toggle('ready', ready);
-    const requiredLevel = EXPERIENCE.requiredLevelForWorldIndex(ACTIVE_WORLD_IDS.indexOf(carouselWorld().id));
-    els.worldStartBtn.setAttribute('aria-label', locked ? `Шахта закрыта до уровня ${requiredLevel}` : ready ? 'Отправиться в шахту' : 'Сначала покормите слайма');
+    const requiredLevel = ACTIVE_WORLD_IDS.indexOf(carouselWorld().id);
+    els.worldStartBtn.setAttribute('aria-label', locked ? `Пройди шахту ${requiredLevel}, чтобы открыть этот мир` : ready ? 'Отправиться в шахту' : 'Сначала покормите слайма');
     if (els.worldStartText) els.worldStartText.textContent = 'ИГРАТЬ';
   }
 
@@ -3087,29 +3004,6 @@
     const canLaunch = stomachCanLaunch();
     if (full) session.offer = [null, null, null];
     els.slimeStage?.classList.toggle('portal-ready', canLaunch);
-    if (els.conveyorChoiceCount) {
-      const eatenCount = stomachFoodCount();
-      els.conveyorFoodSlots.forEach((slot,index)=>{
-        const family=foodRecipeFamily(session.foods[index]);
-        const color=FORM_INDEX.find(form=>form.id===(family==='ice'?'frost':family))?.color || '#79f2b5';
-        slot.style.setProperty('--food-slot-color',color);
-        const filled=index<eatenCount;
-        if(filled && !slot.classList.contains('is-filled') && !menuReducedMotion)slot.animate?.([
-          {transform:'scale(.75)'},{transform:'scale(1.16)',offset:.6},{transform:'scale(1)'}
-        ],{duration:260,easing:'ease-out'});
-        slot.classList.toggle('is-filled',filled);
-      });
-      els.conveyorChoiceCount.setAttribute('aria-label', `Съедено ${eatenCount} из ${STOMACH_CAPACITY}`);
-      els.conveyorChoiceCount.classList.toggle('is-full', full);
-      const levels = menuCategoryLevels();
-      const dominant = FORM_INDEX.find(form => (levels[form.id] || 0) >= 2);
-      const mode = dominant ? levels[dominant.id] >= 3 ? 'ultra' : 'dominant' : 'normal';
-      els.conveyorChoiceCount.dataset.mode = mode;
-      els.conveyorChoiceCount.style.setProperty('--dominant-color', dominant?.color || '#a5fff0');
-      els.conveyorChoiceCount.querySelector('.conveyor-choice-label').textContent = mode === 'ultra' ? 'ФОРМА' : mode === 'dominant' ? 'УСИЛЕНИЕ' : 'СЪЕДЕНО';
-      els.conveyorFoodSlots.forEach((slot,index) => slot.classList.toggle('is-dominant', Boolean(dominant && mutationFoodFamily(dominant.id) === foodRecipeFamily(session.foods[index]))));
-    }
-
     if (els.startDropLabel) els.startDropLabel.textContent = 'СТАРТ';
     if (els.startDropBtn) {
       els.startDropBtn.disabled = !canLaunch;
@@ -3160,7 +3054,7 @@
     els.rerollBtn.setAttribute('aria-label', readyToStart ? 'Выбор готов. Начать падение' : 'Обновить еду на конвейере');
     if (readyToStart) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'ВЫБОР ГОТОВ';
-      if (els.rerollText) els.rerollText.textContent = `${stomachFoodCount()} ИЗ ${STOMACH_CAPACITY} СЪЕДЕНО`;
+      if (els.rerollText) els.rerollText.textContent = 'СЛАЙМ ГОТОВ';
       els.rerollBtn.classList.remove('ad-mode');
     } else if (UNLIMITED_FREE_REROLLS) {
       if (els.rerollTitle) els.rerollTitle.textContent = 'РЕРОЛЛ';
@@ -3292,6 +3186,8 @@
     clearMenuSlimeInteraction();
     animateFoodToMouth(food, source);
     session.foods.push(food);
+    settleHomeRewardFlight();
+    save.selectedMutation = mutationIdForFamily(foodRecipeFamily(food));
     session.offer[offerIndex] = null;
     const mealReaction = { catchMs: 250, chewMs: 630, chewTime: '.21s', chews: 3, happyMs: 380 };
     sound('eat', {
@@ -3323,9 +3219,9 @@
             setTutorialStep('feed-count');
             clearTimeout(tutorialCountTimer);
             showFoodCounterMemo();
-          } else if (save.tutorialStep === 'second-feed' && stomachFoodCount() >= 2) {
+          } else if (save.tutorialStep === 'second-feed' && stomachFoodCount() >= 1) {
             setTutorialStep('second-play');
-            showFireDominanceMemo();
+
           } else queueTutorialRender();
           checkOnboardingProgress();
           menuEmotionTimer = setTimeout(() => {
@@ -3737,7 +3633,8 @@
     const finishY = 285 + rowCount * cellSize + cellSize * 1.5;
     const gridOffsetX = 0;
     const categoryVisuals = menuCategoryLevels();
-    const elementalAbilityType = FORM_INDEX.map(form => form.id).find(key => categoryVisuals[key] >= 3) || '';
+    const mutationId = mutationIdForFamily(foodRecipeFamily(session.foods[0]));
+    const elementalAbilityType = mutationId;
     const slimeRadius = massRadiusForLevel(categoryVisuals.mass, cellSize);
     const startLane = tutorialPhase ? 3 : fromPortal
       ? Math.floor(columns / 2)
@@ -3782,7 +3679,7 @@
         radius: slimeRadius,
         wobble: 0
       },
-      categoryVisuals,
+      categoryVisuals, mutationId, passiveLevels: { [mutationId]: 2 },
       nanoNextShotAt: [launchEntryStartedAt + 2000],
       nanoShots: [],
       nanoNextMineAt: launchEntryStartedAt + 5000,
@@ -6262,7 +6159,7 @@
   }
 
   function elementalLevel(type) {
-    return clamp(Math.round(run?.categoryVisuals?.[type] || 0), 0, 3);
+    return clamp(Math.round((run?.passiveLevels || run?.categoryVisuals)?.[type] || 0), 0, 3);
   }
 
   function shieldDominant() {
@@ -11244,23 +11141,11 @@
 
   function menuCategoryLevels() {
     const levels = { fire: 0, frost: 0, electric: 0, cosmos: 0, nano: 0, telekinesis: 0, cloning: 0, phantom: 0, glitch: 0, mass: 0 };
-    const familyToCategory = {
-      fire: 'fire', damage: 'fire',
-      frost: 'frost', ice: 'frost',
-      electric: 'electric', electricity: 'electric',
-      cosmos: 'cosmos', space: 'cosmos', gravity: 'cosmos',
-      nano: 'nano',
-      telekinesis: 'telekinesis',
-      cloning: 'cloning',
-      phantom: 'phantom',
-      glitch: 'glitch',
-    };
-    for (const food of session?.foods || []) {
-      const family = foodRecipeFamily(food);
-      const category = familyToCategory[family];
-      if (category) levels[category] += 1;
+    const food = session?.foods?.[0];
+    if (food) {
+      const id = mutationIdForFamily(foodRecipeFamily(food));
+      if (Object.hasOwn(levels, id)) levels[id] = mutationLevel(id);
     }
-    for (const key of Object.keys(levels)) levels[key] = Math.min(3, levels[key]);
     return levels;
   }
 
@@ -11990,7 +11875,7 @@
       menuSlimeCtx.scale(petPose.scaleX, petPose.scaleY);
       menuSlimeCtx.translate(-130, -restingBottom);
       if(!captureSilhouette && categoryVisual.phantom>=.5){
-        for(let i=0;i<Math.min(2,Math.round(categoryVisual.phantom));i++){
+        for(let i=0;i<2;i++){
           const p=window.SlimePhantomEffects.idle(130,slimeY,radius,i,timestamp);
           if(!p.front)window.SlimePhantomEffects.spirit(menuSlimeCtx,p,radius*.5,i,timestamp,Math.min(1,categoryVisual.phantom));
         }
@@ -12018,7 +11903,7 @@
       menuSlimeCtx.rotate(petPose.tilt);
       menuSlimeCtx.scale(petPose.scaleX, petPose.scaleY);
       menuSlimeCtx.translate(-130, -restingBottom);
-      const orbitState = {x:130,y:slimeY,radius,level:Math.round(categoryVisual.cosmos),
+      const orbitState = {x:130,y:slimeY,radius,level:2,
         clock:timestamp,compact:true,alpha:Math.min(1,categoryVisual.cosmos)};
       window.SlimeCosmosOrbits.draw(menuSlimeCtx, orbitState, false);
       window.SlimeCosmosOrbits.draw(menuSlimeCtx, orbitState, true);
@@ -12026,7 +11911,7 @@
     }
     if(showAvatar && !captureSilhouette && categoryVisual.phantom >= .5){
       ensurePhantomExpressSprites();
-      for(let i=0;i<Math.min(2,Math.round(categoryVisual.phantom));i++){
+      for(let i=0;i<2;i++){
         const p=window.SlimePhantomEffects.idle(130+petPose.shakeX,slimeY+petPose.shakeY,radius,i,timestamp);
         if(p.front)window.SlimePhantomEffects.spirit(menuSlimeCtx,p,radius*.5,i,timestamp,Math.min(1,categoryVisual.phantom));
       }
@@ -13465,16 +13350,18 @@
   function finalizeWorldCompletion() {
     if (!run || run.ended) return;
     const world = run.world;
-    save.worldBest[world.id] = Math.max(save.worldBest[world.id] || 0, world.targetDepth);
+    if (!run.tutorialPhase) save.worldBest[world.id] = Math.max(save.worldBest[world.id] || 0, world.targetDepth);
     save.unlockedLevels[world.id] = LEVEL_COUNT;
     const activeIndex = ACTIVE_WORLD_IDS.indexOf(world.id);
     const nextWorldId = ACTIVE_WORLD_IDS[activeIndex + 1];
-    const nextLevel = EXPERIENCE.levelForExperience(save.playerExperience + run.experienceEarned + 150);
-    const unlockedNextWorld = Boolean(nextWorldId && nextLevel >= EXPERIENCE.requiredLevelForWorldIndex(activeIndex + 1)
-      && !worldIsUnlocked(nextWorldId));
+    const unlockedNextWorld = Boolean(nextWorldId && !run.tutorialPhase && !save.unlockedWorlds.includes(nextWorldId));
+    if (unlockedNextWorld) {
+      save.unlockedWorlds.push(nextWorldId);
+      save.unseenWorlds = [...new Set([...(save.unseenWorlds || []), nextWorldId])];
+    }
     const unlockedSkin = { 1: 'cat', 3: 'dumpling' }[world.id];
     if (unlockedSkin && !save.unlockedSkins.includes(unlockedSkin)) save.unlockedSkins.push(unlockedSkin);
-    run.isFinalCompletion = world.id === ACTIVE_WORLD_IDS[ACTIVE_WORLD_IDS.length - 1];
+    run.isFinalCompletion = !run.tutorialPhase && world.id === ACTIVE_WORLD_IDS[ACTIVE_WORLD_IDS.length - 1];
     if (run.isFinalCompletion) save.gameCompleted = true;
     sound('win');
     endRun(true, unlockedNextWorld
@@ -13747,12 +13634,10 @@
     const completionBonus = completionRewards.research;
     const researchData = Math.max(0, Math.floor(run.researchData || 0)) + completionBonus;
     run.experienceEarned = Math.max(0, Math.floor(run.experienceEarned || 0)) + completionRewards.experience;
-    run.experienceBefore = save.playerExperience;
-    const previouslyUnlocked=new Set(ACTIVE_WORLD_IDS.filter(id=>worldIsUnlocked(id)));
-    save.playerExperience += run.experienceEarned;
-    save.unlockedWorlds = ACTIVE_WORLD_IDS.filter((id, index) =>
-      EXPERIENCE.levelForExperience(save.playerExperience) >= EXPERIENCE.requiredLevelForWorldIndex(index));
-    save.unseenWorlds=[...new Set([...(save.unseenWorlds||[]),...save.unlockedWorlds.filter(id=>!previouslyUnlocked.has(id))])];
+    const credited = PROGRESSION.credit(save, run.mutationId, run.experienceEarned);
+    run.experienceBefore = credited?.before || 0;
+    run.experienceAfter = credited?.after || 0;
+    save.selectedMutation = run.mutationId;
     run.researchUnitsBefore = Math.max(0, save.researchUnits - Math.max(0, Math.floor(run.researchData || 0)));
     save.researchUnits += completionBonus;
     run.researchUnitsAfter = save.researchUnits;
@@ -13785,6 +13670,7 @@
     if (bonusLabel) bonusLabel.textContent = completionBonus ? `+${completionBonus}` : '';
     els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsBefore);
     els.resultCoins.textContent = '+0 XP';
+    renderResultSlimeProgress(run.experienceBefore);
     const experienceBonusLabel = document.getElementById('resultExperienceBonus');
     if (experienceBonusLabel) experienceBonusLabel.textContent = completionBonus ? '+150 XP' : '';
     els.resultMultiplierLabel.textContent = formatResultMultiplier(RESULT_MULTIPLIERS[0]);
@@ -13799,9 +13685,12 @@
     els.resultOverlay.classList.remove('hidden');
     syncInteractionLayers();
     const revealToken = ++resultRevealToken;
+    const completedRun = run;
     requestAnimationFrame(() => {
+      if (run !== completedRun || revealToken !== resultRevealToken) return;
       els.resultOverlay.querySelector('.modal')?.focus();
-      revealResultSummary(researchData - completionBonus, run.experienceEarned - (completionBonus ? 150 : 0), revealToken);
+      void revealResultSummary(researchData - completionBonus, run.experienceEarned - (completionBonus ? 150 : 0), revealToken);
+      animateResultSlimeProgress(revealToken);
     });
     if (!completed) sound('fail');
   }
@@ -13883,7 +13772,8 @@
     const waitForRewards = () => {
       if (save.tutorialStep !== 'post-run' || document.body.dataset.screen !== 'home') return;
       if (homeRewardFlight || playerExperiencePresentation?.frame) return setTimeout(waitForRewards, 150);
-      setTutorialStep('second-gift');
+      save.tutorialSecondGiftClaimed = true;
+      setTutorialStep('second-feed');
     };
     setTimeout(waitForRewards, 100);
   }
@@ -13988,7 +13878,7 @@
         const open = discovered.has(form.id);
         const recipeMutation = mutationById(form.id);
         return `<article class="form-index-card ${open ? 'is-open' : 'is-locked'} ${open && unseen.has(form.id) ? 'is-unseen' : ''}" data-form="${form.id}" style="--form-accent:${form.color}" aria-label="${open ? form.name : `Форма ${index + 1}: неизвестна`}">
-          <div class="form-index-recipe" aria-label="${open ? `Три мутации ${form.mutation}` : 'Рецепт пока скрыт'}">${open ? Array.from({ length: 3 }, () => mutationEmblemMarkup(recipeMutation, { effects: false })).join('') : '<img class="form-recipe-lock" src="assets/ui/lock.webp" alt="">'}</div>
+          <div class="form-index-recipe" aria-label="${open ? `Стадия III: ${form.mutation}` : 'Рецепт пока скрыт'}">${open ? mutationEmblemMarkup(recipeMutation, { effects: false }) + '<b>III</b>' : '<img class="form-recipe-lock" src="assets/ui/lock.webp" alt="">'}</div>
           <div class="form-index-art"><img src="${versionedAsset(form.art)}" alt="" loading="lazy"><i aria-hidden="true">?</i></div>
           <div class="form-index-card-copy">
             <h3>${open ? form.name : 'НЕИЗВЕСТНО'}</h3>
@@ -14138,6 +14028,8 @@
     if (occupiedSlot === selectedConveyorSlot) return;
     if (occupiedSlot >= 0) [pool[selectedConveyorSlot], pool[occupiedSlot]] = [pool[occupiedSlot], pool[selectedConveyorSlot]];
     else pool[selectedConveyorSlot] = id;
+    settleHomeRewardFlight();
+    save.selectedMutation = id;
     save.activeMutationPool = pool;
     if (id === 'frost') checkOnboardingProgress({ event: 'frost-selected' });
     laboratoryReplaceMode = false;
@@ -14178,6 +14070,8 @@
   }
 
   function renderRecipesPanel() {
+    const previousMutationId = els.panelContent.querySelector('.mutation-info-pane')?.dataset.mutationId;
+    const previousView = els.panelContent.querySelector('.mutation-lab-v2')?.dataset.view;
     stopMutationFeedHold();
     mutationAnimationToken += 1;
     mutationAnimating = false;
@@ -14193,6 +14087,8 @@
       ? MUTATION_DETAILS[selectedMutation.id] || { stage1: 'Открывает базовый эффект мутации.', stage2: 'Усиливает эффект после второй порции.' }
       : { stage1: 'Синтезируй мутацию, чтобы узнать её эффект.', stage2: 'Сначала открой эмблему в реакторе.' };
     const selectedLevel = selectedAvailable ? mutationLevel(selectedMutation.id) : 0;
+    const evolution = PROGRESSION.progress(selectedLevel, slimeExperience(selectedMutation.id));
+    const ultimate = FORM_INDEX.find(form => form.id === selectedMutation.id);
     const levelName = ['', 'I', 'II', 'III'][selectedLevel];
     const nextLevelName = ['', 'II', 'III'][selectedLevel] || '';
     const upgradeCost = MUTATION_UPGRADE_COSTS[selectedLevel] || 0;
@@ -14234,7 +14130,14 @@
       return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#08bce9" stop-opacity="0"></stop><stop offset=".28" stop-color="#15cdf4" stop-opacity=".62"></stop><stop offset=".62" stop-color="#08b5e8"></stop><stop offset="1" stop-color="#88eaff"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dafaff" stop-opacity="0"></stop><stop offset=".34" stop-color="#dafaff" stop-opacity=".72"></stop><stop offset="1" stop-color="#f0fdff"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
     }).join('');
 
-    const stageTrack = [1, 2, 3].map((stage, index) => `<span class="${stage <= selectedLevel ? 'is-open' : 'is-closed'} ${stage === selectedLevel ? 'is-current' : ''}" ${stage === selectedLevel ? 'aria-current="step"' : ''} aria-label="Стадия ${stage}: ${stage} ${stage === 1 ? 'еда' : 'еды'}; ${stage <= selectedLevel ? 'открыта' : 'закрыта'}"><b>${['I', 'II', 'III'][index]}</b>${stage <= selectedLevel ? `<small>${stage === selectedLevel ? 'СЕЙЧАС' : 'ОТКРЫТО'}</small>` : '<img src="assets/ui/lock.webp" alt="" aria-hidden="true">'}</span>`).join('');
+    const stageTrack = [1, 2, 3].map(stage => {
+      const dish = foodForMutation(selectedMutation.id, stage);
+      return `<article class="slime-evolution-card ${stage <= selectedLevel ? 'is-open' : 'is-closed'} ${stage === selectedLevel ? 'is-current' : ''}" ${stage === selectedLevel ? 'aria-current="step"' : ''}>
+        <b>СТАДИЯ ${['I','II','III'][stage - 1]}</b><canvas width="168" height="144" data-slime-stage="${stage}" aria-label="Внешность ${selectedMutation.name}, стадия ${stage}"></canvas>
+        <span class="slime-evolution-food">${dish ? foodArtMarkup(dish, 'food-mini-model') : ''}</span>
+        <small>${stage === selectedLevel ? 'СЕЙЧАС' : stage < selectedLevel ? 'ОТКРЫТО' : `${PROGRESSION.THRESHOLDS[stage]} XP`}</small>
+      </article>`;
+    }).join('');
     const machineHint = allUnlocked
       ? 'ВСЕ МУТАЦИИ ОТКРЫТЫ'
       : readyToReveal
@@ -14274,20 +14177,16 @@
           </div>
         </section>
 
-        <section id="labMutationsPane" class="mutation-info-pane mutation-family-${selectedMutation.id} ${selectedAvailable ? '' : 'is-locked'}" data-lab-pane="mutations" role="tabpanel" aria-labelledby="labMutationsTab" aria-label="${selectedAvailable ? `Информация о мутации ${selectedMutation.name}` : 'Неизвестная мутация'}">
+        <section id="labMutationsPane" class="mutation-info-pane mutation-family-${selectedMutation.id} ${selectedAvailable ? '' : 'is-locked'}" data-mutation-id="${selectedMutation.id}" data-lab-pane="mutations" role="tabpanel" aria-labelledby="labMutationsTab" aria-label="${selectedAvailable ? `Информация о мутации ${selectedMutation.name}` : 'Неизвестная мутация'}">
           ${selectedAvailable ? mutationEmblemMarkup(selectedMutation) : '<span class="mutation-info-emblem"><i class="mutation-locked-symbol">?</i></span>'}
           <h3>${selectedAvailable ? selectedMutation.name : 'НЕИЗВЕСТНО'}${selectedAvailable ? ` <em class="mutation-level-badge">${levelName}</em>` : ''}</h3>
-          <div class="mutation-level-track" aria-label="Открытые стадии мутации">${stageTrack}</div>
-          <div class="mutation-stage-list mutation-level-list">
-            <article class="${selectedLevel >= 1 ? 'is-open' : 'is-hidden'} ${selectedLevel === 1 ? 'is-current' : ''}" aria-label="Стадия I"><b>I</b><p>${selectedLevel >= 1 ? selectedDetails.stage1 : 'Сначала открой мутацию.'}</p></article>
-            <article class="${selectedLevel >= 2 ? 'is-open' : 'is-hidden'} ${selectedLevel === 2 ? 'is-current' : ''}" aria-label="Стадия II"><b>II</b><p>${selectedLevel >= 2 ? selectedDetails.stage2 : 'Открой стадию II.'}</p></article>
-            <article class="${selectedLevel >= 3 ? 'is-open' : 'is-hidden'} ${selectedLevel === 3 ? 'is-current' : ''}" aria-label="Стадия III"><b>III</b><p>${selectedLevel >= 3 ? 'Особая форма' : 'Открой стадию III.'}</p></article>
-          </div>
-          <div class="mutation-level-action">
-            ${selectedLevel > 0 && selectedLevel < 3
-              ? `<button id="mutationUpgradeBtn" class="mutation-upgrade-btn ${save.researchUnits < upgradeCost && !adminInfiniteResearch ? 'needs-flasks' : ''}" type="button" ${mutationUpgrading ? 'disabled' : ''} aria-label="Открыть стадию ${nextLevelName} за ${upgradeCost} колб"><span>ОТКРЫТЬ ${nextLevelName}</span><span class="mutation-upgrade-price"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt="">${upgradeCost}</span></button>`
-              : `<span class="mutation-level-note">${selectedLevel === 3 ? 'МАКСИМУМ' : 'ОТКРОЙ МУТАЦИЮ'}</span>`}
-          </div>
+          ${selectedAvailable ? `<section class="slime-base-kit"><h4>БАЗОВЫЕ СПОСОБНОСТИ</h4><p>${selectedDetails.stage1}</p><p>${selectedDetails.stage2}</p></section>
+          <section class="slime-ultimate-kit"><img src="${versionedAsset(selectedMutation.image)}" alt=""><div><small>СУПЕРСПОСОБНОСТЬ · ДОСТУПНА С I</small><b>${ultimate.ultra[0]}</b><p>${ultimate.ultra[1]}</p></div></section>
+          <h4 class="slime-evolution-heading">РАЗВИТИЕ СЛАЙМА</h4><div class="slime-evolution-track">${stageTrack}</div>
+          <div class="slime-personal-progress" role="progressbar" aria-label="Личный опыт ${selectedMutation.name}" aria-valuemin="${evolution.start}" aria-valuemax="${evolution.max ? Math.max(evolution.start, evolution.xp) : evolution.target}" aria-valuenow="${Math.min(evolution.xp, evolution.max ? evolution.xp : evolution.target)}"><i style="width:${evolution.percent}%"></i><b>${evolution.max ? `${evolution.xp} XP · МАКСИМУМ` : `${evolution.xp} / ${evolution.target} XP`}</b></div>
+          <p class="slime-evolution-hint">${evolution.max ? 'Все три стадии открыты!' : evolution.ready ? 'Опыт накоплен! Добавь колбы для эволюции.' : `Играй этим слаймом. До эволюции ещё ${evolution.remaining} XP.`}</p>
+          <div class="mutation-level-action">${!evolution.max ? `<button id="mutationUpgradeBtn" class="mutation-upgrade-btn" type="button" ${mutationUpgrading || !PROGRESSION.canEvolve(selectedLevel, evolution.xp, save.researchUnits, adminInfiniteResearch) ? 'disabled' : ''}><span>ЭВОЛЮЦИЯ ${nextLevelName}</span><span class="mutation-upgrade-price"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt="колб">${upgradeCost}</span></button>` : '<span class="mutation-level-note">МАКСИМУМ</span>'}</div>
+          ${!evolution.max && evolution.ready && save.researchUnits < upgradeCost && !adminInfiniteResearch ? `<p class="slime-evolution-hint">Нужно ещё ${upgradeCost - save.researchUnits} колб.</p>` : ''}` : '<p class="slime-evolution-hint">Синтезируй мутацию, чтобы открыть слайма и его способности.</p>'}
           <button id="mutationChooseBtn" class="mutation-choose-btn ${laboratoryReplaceMode ? 'is-cancel' : ''}" type="button" aria-pressed="${laboratoryReplaceMode}" ${!selectedAvailable || selectedIsActive ? 'disabled' : ''}><span>${!selectedAvailable ? 'ЗАКРЫТО' : selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</span></button>
         </section>
       </div>
@@ -14296,6 +14195,7 @@
     </div>`;
 
     setLaboratoryView(laboratoryView, { animate: false });
+    if (previousMutationId !== selectedMutation.id || previousView !== laboratoryView) els.panelContent.scrollTop = 0;
     $$('[data-lab-view]').forEach(button => {
       button.addEventListener('click', () => { if (laboratoryView !== button.dataset.labView) { sound('tap'); setLaboratoryView(button.dataset.labView); } });
       button.addEventListener('keydown', event => {
@@ -14344,7 +14244,56 @@
       setLaboratoryView('mutations');
       if (save.tutorialStep === 'fire-slot' && id === 'fire') setTutorialStep('choose');
     }));
+    if (selectedAvailable) void renderEvolutionPreviews(selectedMutation.id);
     queueTutorialRender();
+  }
+
+  async function renderEvolutionPreviews(id) {
+    const canvases = [...document.querySelectorAll('[data-slime-stage]')];
+    const jobs = canvases.map(async canvas => {
+      const levels = { [id]: Number(canvas.dataset.slimeStage) };
+      await preloadMenuAppearance(levels);
+      if (!canvas.isConnected || selectedLaboratoryMutationId !== id) return;
+      const target = canvas.getContext('2d');
+      target.clearRect(0, 0, canvas.width, canvas.height);
+      drawElementalSlimeAvatar(target, { x: 84, y: 79, radius: 44, emotion: 'happy',
+        colors: SKINS[0].colors, skin: 'classic', timestamp: 2200 }, levels, 2200);
+    });
+    await Promise.all(jobs);
+  }
+
+  function renderResultSlimeProgress(experience) {
+    const host = document.getElementById('resultSlimeProgress');
+    if (!host || !run) return;
+    const mutation = mutationById(run.mutationId);
+    const progress = PROGRESSION.progress(mutationLevel(run.mutationId), experience);
+    if (host.dataset.runId !== String(resultRevealToken) || !host.querySelector('.slime-personal-progress')) {
+      host.dataset.runId = String(resultRevealToken);
+      host.innerHTML = `<img src="${versionedAsset(mutation.image)}" alt=""><div><h3>${mutation.name}<span>СТАДИЯ ${['I','II','III'][progress.stage - 1]}</span></h3><div class="slime-personal-progress" role="progressbar" aria-label="Личный опыт ${mutation.name}"><i></i><b></b></div><p></p></div>`;
+      const resultIcon = els.resultCoins.closest('.result-stat')?.querySelector('img');
+      if (resultIcon) resultIcon.src = versionedAsset(mutation.image);
+    }
+    const bar = host.querySelector('.slime-personal-progress');
+    bar.querySelector('i').style.width = `${progress.percent}%`;
+    bar.querySelector('b').textContent = progress.max ? `${experience} XP · МАКСИМУМ` : `${experience} / ${progress.target} XP`;
+    bar.setAttribute('aria-valuemin', String(progress.start));
+    bar.setAttribute('aria-valuemax', String(progress.max ? Math.max(progress.start, experience) : progress.target));
+    bar.setAttribute('aria-valuenow', String(Math.min(experience, progress.max ? experience : progress.target)));
+    host.querySelector('p').textContent = progress.max ? 'Все стадии открыты!' : progress.ready ? 'Опыт накоплен! Для эволюции нужны колбы.' : 'Этот опыт получил только сыгранный слайм.';
+  }
+
+  function animateResultSlimeProgress(token) {
+    if (!run) return;
+    const currentRun = run, started = performance.now();
+    const reduced = menuReducedMotion;
+    const step = now => {
+      if (run !== currentRun || token !== resultRevealToken) return;
+      const ratio = reduced ? 1 : clamp((now - started - 600) / 1400, 0, 1);
+      const experience = Math.round(currentRun.experienceBefore + (currentRun.experienceAfter - currentRun.experienceBefore) * (1 - Math.pow(1 - ratio, 2)));
+      renderResultSlimeProgress(experience);
+      if (ratio < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   async function upgradeMutation(id, button) {
@@ -14356,6 +14305,8 @@
       feedback(7);
       return;
     }
+    const evolution = PROGRESSION.progress(level, slimeExperience(id));
+    if (!evolution.ready) { showToast(`До эволюции ещё ${evolution.remaining} XP`); return; }
     mutationUpgrading = true;
     button.disabled = true;
     button.classList.add('is-upgrading');
@@ -14364,6 +14315,14 @@
     const initialBalance = save.researchUnits;
     if (!adminInfiniteResearch) save.researchUnits -= cost;
     save.mutationLevels = { ...(save.mutationLevels || {}), [id]: level + 1 };
+    if (level + 1 === 3 && !save.discoveredForms.includes(id)) {
+      save.discoveredForms.push(id); save.unseenForms.push(id);
+    }
+    if (session?.foods?.some(food => foodRecipeFamily(food) === mutationFoodFamily(id))) {
+      session.foods = [foodForMutation(id)];
+      void preloadMenuAppearance(menuCategoryLevels());
+      revealMenuMutation();
+    }
     persist({ refreshUI: false });
     const flights = Array.from({ length: 5 }, (_, index) => {
       const flask = document.createElement('img');
@@ -14403,7 +14362,7 @@
     if (!els.panelOverlay.classList.contains('hidden') && activeLaboratoryTab === 'mutations') renderRecipesPanel();
     if (!menuReducedMotion && !els.panelOverlay.classList.contains('hidden')) {
       const pane = document.getElementById('labMutationsPane');
-      pane?.querySelector('.mutation-level-track .is-current')?.animate([
+      pane?.querySelector('.slime-evolution-card.is-current')?.animate([
         { transform: 'scale(.9)' }, { transform: 'scale(1.12)', offset: .5 }, { transform: 'scale(1)' }
       ], { duration: 430, easing: 'ease-out' });
       pane?.querySelector('.mutation-level-list .is-current>b')?.animate([
@@ -14833,6 +14792,8 @@
     if (token !== mutationAnimationToken || els.panelOverlay.classList.contains('hidden')) return;
     save.unlockedMutations = [...new Set([...(save.unlockedMutations || []), mutation.id])];
     save.mutationLevels = { ...(save.mutationLevels || {}), [mutation.id]: 1 };
+    save.mutationExperience[mutation.id] = 0;
+    save.selectedMutation = mutation.id;
     save.mutationProgress = 0;
     save.mutationInvestTapCount = 0;
     pendingMutationReveal = null;
@@ -15244,7 +15205,7 @@
     run.steer.touchX = clamp(dx / maxDistance, -1, 1);
     const vertical = clamp(dy / maxDistance, -1, 1);
     run.steer.touchRawY = vertical;
-    run.steer.touchDown = elementalLevel('mobility') >= 1 ? clamp(vertical, 0, 1) : 0;
+    run.steer.touchDown = clamp(vertical, 0, 1);
     run.steer.touchY = run.mechSuit || speedDrillActive() || jellyZoneForSlime(run.slime) || phantomActive() ? vertical : 0;
     els.touchJoystick?.style.setProperty('--stick-x', `${round1(dx)}px`);
     els.touchJoystick?.style.setProperty('--stick-y', `${round1(dy)}px`);
@@ -15629,7 +15590,7 @@
       elementalLevels: (levels = {}) => {
         if (!run || run.ended) return null;
         for (const key of ['fire', 'frost', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch']) {
-          if (Object.hasOwn(levels, key)) run.categoryVisuals[key] = clamp(Math.round(levels[key]), 0, 3);
+          if (Object.hasOwn(levels, key)) { run.categoryVisuals[key] = clamp(Math.round(levels[key]), 0, 3); run.passiveLevels[key] = run.categoryVisuals[key]; }
         }
         run.elementalAbilityType = ['frost', 'electric', 'fire', 'cosmos', 'cloning', 'glitch'].find(key => run.categoryVisuals[key] >= 3) || '';
         run.elementalAbilityCharges = 0;
