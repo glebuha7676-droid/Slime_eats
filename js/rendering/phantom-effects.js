@@ -163,29 +163,30 @@
   function expressGeometry(e,time,cell) {
     const age=Math.max(0,time-e.startedAt),fade=unit((2800-age)/380);
     const rail=unit((age-380)/240),travel=unit((age-640)/1600);
-    const height=cell*2.05*1200/291;
-    return {age,fade,rail,travel,height,frontY:mix(e.portalY,e.endY+height,travel),portalWidth:cell*4*unit(age/450)};
+    const scale=(e.width || 4)/4,height=cell*2.05*scale*1200/291;
+    return {age,fade,rail,travel,height,frontY:mix(e.portalY,e.endY+height,travel),portalWidth:cell*(e.width || 4)*unit(age/450)};
   }
   function express(ctx,e,camera,cell,time,train,rails) {
     const g=expressGeometry(e,time,cell);if(g.age>=2800)return;
-    const left=e.centerX-cell*2,top=e.portalY-camera,end=e.endY-camera;
+    const width=e.width || 4,scale=width/4;
+    const left=e.centerX-cell*width/2,top=e.portalY-camera,end=e.endY-camera;
     ctx.save();ctx.globalAlpha=g.fade;
-    ctx.beginPath();ctx.rect(left-4,top,cell*4+8,Math.max(0,(end-top)*g.rail));ctx.clip();
-    ctx.fillStyle='rgba(44,208,173,.16)';ctx.fillRect(left,top,cell*4,end-top);
-    const tileH=cell*2.2,trackW=cell*2.35;
+    ctx.beginPath();ctx.rect(left-4,top,cell*width+8,Math.max(0,(end-top)*g.rail));ctx.clip();
+    ctx.fillStyle='rgba(44,208,173,.16)';ctx.fillRect(left,top,cell*width,end-top);
+    const tileH=cell*2.2*scale,trackW=cell*2.35*scale;
     if(rails?.complete&&rails.naturalWidth)for(let y=top;y<Math.min(end,top+(end-top)*g.rail);y+=tileH){
       ctx.globalAlpha=g.fade*.62;ctx.drawImage(rails,e.centerX-trackW/2,y,trackW,tileH);
       window.SlimeSpectralGlow.draw(ctx,rails,[e.centerX-trackW/2,y,trackW,tileH],time,.9);}
     ctx.globalAlpha=g.fade*.75;ctx.strokeStyle='#6bffe1';ctx.lineWidth=2;
-    for(const x of [e.centerX-cell*.84,e.centerX+cell*.84]){ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,end);ctx.stroke();}ctx.restore();
+    for(const x of [e.centerX-cell*.84*scale,e.centerX+cell*.84*scale]){ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,end);ctx.stroke();}ctx.restore();
     // Hole and back rim are behind the train. Only the near rim crosses it;
     // the locomotive first becomes visible at the actual portal centre.
     portal(ctx,e.centerX,top,g.portalWidth,time,g.fade,'back');
     if(g.age>=640){
-      ctx.save();ctx.globalAlpha=g.fade;ctx.beginPath();ctx.rect(left-20,top,cell*4+40,Math.max(0,end-top+g.height));ctx.clip();
+      ctx.save();ctx.globalAlpha=g.fade;ctx.beginPath();ctx.rect(left-20,top,cell*width+40,Math.max(0,end-top+g.height));ctx.clip();
       const front=g.frontY-camera;
       if(train?.complete&&train.naturalWidth){
-        const w=cell*2.05,tx=e.centerX-w/2,ty=front-g.height;
+        const w=cell*2.05*scale,tx=e.centerX-w/2,ty=front-g.height;
         const aura=window.SlimeSpectralGlow.layers(train).outer,px=w/6,py=g.height/6;
         // Three fading silhouettes form a bounded spectral wake; all blur is cached.
         for(let i=3;i>=1;i--){ctx.globalAlpha=g.fade*(4-i)*.045;
@@ -193,7 +194,7 @@
         ctx.globalAlpha=g.fade*.72;ctx.drawImage(train,tx,ty,w,g.height);
         window.SlimeSpectralGlow.draw(ctx,train,[tx,ty,w,g.height],time,1);
       }
-      ctx.globalAlpha=g.fade*.76;ctx.drawImage(glowSprite(0),left,front-cell*.65,cell*4,cell*1.2);
+      ctx.globalAlpha=g.fade*.76;ctx.drawImage(glowSprite(0),left,front-cell*.65,cell*width,cell*1.2);
       ctx.restore();
     }
     portal(ctx,e.centerX,top,g.portalWidth,time,g.fade,'front');

@@ -1,5 +1,7 @@
 /* One character per run. The laboratory casing and artwork retain their geometry. */
 html body[data-screen="home"] .world-summary .currency.coin-wallet.player-level-wallet{height:48px!important;min-height:48px!important;padding:2px 3px!important;border:1px solid #83b5c6!important;border-radius:13px!important;background:linear-gradient(#f7ffff,#d6eef5)!important}
+html body[data-screen="home"] .world-summary .currency.coin-wallet.player-level-wallet[hidden]{display:none!important}
+html body[data-screen="home"] .world-summary-head:has(.player-level-wallet[hidden]){grid-template-columns:100px 40px 40px!important;justify-content:end!important}
 html body[data-screen="home"] .world-summary .player-level-wallet .player-level-badge{width:42px!important;height:42px!important}
 html body[data-screen="home"] .player-level-wallet .currency-icon{width:42px!important;height:42px!important}
 .player-level-wallet .player-level-content{display:flex;flex-direction:column;align-items:stretch;gap:3px;margin:0 4px 0 3px!important;min-width:0}
@@ -44,6 +46,9 @@ html body #homeScreen #slimeFeedCount,html body #homeScreen #stomachQuickSlots{d
 .slime-evolution-food{height:34px;display:grid;place-items:center;width:100%}
 .slime-evolution-food .food-mini-model{width:44px!important;height:34px!important;object-fit:contain}
 .slime-evolution-card>small{margin-top:4px;color:#255c70;font-size:9px;font-weight:1000}
+.ultimate-stage-summary{display:block;min-height:25px;margin:4px 0 0;color:#174e64;font-size:10px;line-height:1.2;font-weight:900;text-align:center}
+html body #homeScreen .accessories-at-form-slot>img{width:47px!important;height:47px!important;object-fit:contain!important}
+html body #homeScreen .accessories-at-form-slot>span{font-size:8px!important;letter-spacing:0!important}
 .slime-personal-progress{position:relative;display:grid;place-items:center;height:28px;border:2px solid #77bccb;border-radius:999px;background:#123f55;overflow:hidden}
 .slime-personal-progress>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#9affd8,#39ccaa);border-radius:999px;transition:width .2s}
 .slime-personal-progress>b{position:relative;color:#fff;font-size:12px;font-weight:1000;text-shadow:0 1px 2px #053147,1px 0 #053147,-1px 0 #053147}

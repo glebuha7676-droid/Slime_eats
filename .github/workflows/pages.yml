@@ -42,6 +42,7 @@ jobs:
           node tools/test_mass_effects.cjs
           node tools/test_block_break_feedback.cjs
           node tools/test_slime_progression.cjs
+          node tools/test_ultimate_stages.cjs
           node tools/test_home_reward_flight.cjs
           node tools/test_tutorial_descent.cjs
           node --check dist/yandex/game-runtime.js

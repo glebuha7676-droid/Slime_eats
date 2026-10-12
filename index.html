@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="psionic-wave.css?v=2" />
   <link rel="stylesheet" href="home-soft-ui.css?v=8" />
   <link rel="stylesheet" href="lab-synth-soft.css?v=15" />
-  <link rel="stylesheet" href="slime-progression.css?v=592" />
+  <link rel="stylesheet" href="slime-progression.css?v=593" />
 </head>
 <body>
   <section id="bootScreen" class="boot-screen" role="progressbar" aria-label="Загрузка игры" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -69,7 +69,7 @@
         <button id="adminMenuBtn" class="header-admin-btn" type="button" aria-label="Открыть админ-меню" aria-controls="adminToolsOverlay" aria-expanded="false">
           <img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
         </button>
-        <div class="currency coin-wallet player-level-wallet" aria-label="Личный опыт слайма">
+        <div class="currency coin-wallet player-level-wallet" aria-label="Личный опыт слайма" hidden>
           <span class="player-level-badge"><img id="slimeProgressEmblem" class="currency-icon" src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"></span>
           <div class="player-level-content"><div class="slime-progress-heading"><strong id="slimeProgressName">Огонь</strong><span>СТАДИЯ <b id="coinsLabel">I</b></span></div><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience"><b>0</b><span> / 500 XP</span></small></div></div>
         </div>
@@ -100,10 +100,6 @@
                 <span>МУТАЦИИ</span>
                 <i id="mutationLabBadge" class="mutation-lab-badge" aria-label="Доступен синтез мутации" hidden></i>
               </button>
-              <button id="wardrobeBtn" class="recipe-accessories-button" data-panel="shop" type="button" aria-label="Открыть гардероб">
-                <img src="assets/ui/accessories-cap.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
-                <span>ГАРДЕРОБ</span>
-              </button>
             </div>
             <div class="slime-center-stage">
               <div class="slime-playground">
@@ -128,10 +124,9 @@
               </div>
               <div id="slimeFeedCount" class="slime-feed-count" hidden></div>
             </div>
-            <button id="formIndexBtn" class="form-index-button" data-panel="form-index" type="button" aria-label="Открыть индекс форм">
-              <span class="form-index-silhouette" aria-hidden="true"><img src="assets/ui/slime/forms/slime-body-frost-v1.webp?v=20261008-optimized-v1" alt=""><i>?</i></span>
-              <span>ФОРМЫ</span>
-              <i id="formIndexBadge" class="form-index-badge" aria-label="Есть новые формы" hidden></i>
+            <button id="wardrobeBtn" class="form-index-button recipe-accessories-button accessories-at-form-slot" data-panel="shop" type="button" aria-label="Аксессуары">
+              <img src="assets/ui/accessories-cap.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
+              <span>АКСЕССУАРЫ</span>
             </button>
           </div>
           <span class="stage-foliage stage-foliage-left" aria-hidden="true"></span>
@@ -539,6 +534,7 @@
   <script src="js/config/game-config.js?v=592-96"></script>
   <script src="js/config/experience.js?v=3"></script>
   <script src="js/config/slime-progression.js?v=592"></script>
+  <script src="js/config/ultimate-stages.js?v=593"></script>
   <script src="js/platform/yandex-platform.js?v=4"></script>
   <script src="js/core/game-assets.js?v=42"></script>
   <script src="js/config/food-ground-bounds.js?v=1"></script>
@@ -553,11 +549,11 @@
   <script src="js/rendering/dominant-shield.js?v=3"></script>
   <script src="js/rendering/cosmos-orbits.js?v=5"></script>
   <script src="js/rendering/techno-feedback.js?v=2"></script>
-  <script src="js/rendering/phantom-effects.js?v=9"></script>
+  <script src="js/rendering/phantom-effects.js?v=10"></script>
   <script src="js/rendering/block-break-feedback.js?v=4"></script>
   <script src="effects-lab/workbench-effects.js?v=83"></script>
   <script src="effects-lab/block-effects-workbench.js?v=21"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=592"></script>
+  <script src="game.js?v=593"></script>
 </body>
 </html>
