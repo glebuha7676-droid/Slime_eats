@@ -20,7 +20,7 @@
   <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.webp?v=20261008-optimized-v1" />
   <link rel="stylesheet" href="loading.css?v=1" />
   <link rel="stylesheet" href="styles.css?v=90" />
-  <link rel="stylesheet" href="home-layout.css?v=184" />
+  <link rel="stylesheet" href="home-layout.css?v=627" />
   <link rel="stylesheet" href="home-mode-fix.css?v=130" />
   <link rel="stylesheet" href="home-visual-refresh.css?v=56" />
   <link rel="stylesheet" href="drop-visual-refresh.css?v=7" />
@@ -40,7 +40,10 @@
   <link rel="stylesheet" href="psionic-wave.css?v=2" />
   <link rel="stylesheet" href="home-soft-ui.css?v=8" />
   <link rel="stylesheet" href="lab-synth-soft.css?v=15" />
-  <link rel="stylesheet" href="slime-progression.css?v=593" />
+  <link rel="stylesheet" href="slime-progression.css?v=599" />
+  <link rel="stylesheet" href="home-buttons-soft.css?v=627" />
+  <link rel="stylesheet" href="laboratory-metal.css?v=627" />
+  <link rel="stylesheet" href="game-buttons-clean.css?v=627" />
 </head>
 <body>
   <section id="bootScreen" class="boot-screen" role="progressbar" aria-label="Загрузка игры" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -71,7 +74,7 @@
         </button>
         <div class="currency coin-wallet player-level-wallet" aria-label="Личный опыт слайма" hidden>
           <span class="player-level-badge"><img id="slimeProgressEmblem" class="currency-icon" src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"></span>
-          <div class="player-level-content"><div class="slime-progress-heading"><strong id="slimeProgressName">Огонь</strong><span>СТАДИЯ <b id="coinsLabel">I</b></span></div><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience"><b>0</b><span> / 500 XP</span></small></div></div>
+          <div class="player-level-content"><div class="slime-progress-heading"><strong id="slimeProgressName">Огонь</strong><span>СТАДИЯ <b id="coinsLabel">I</b></span></div><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience">Задание для развития</small></div></div>
         </div>
         <div class="research-wallet" aria-label="Колбы исследования: 0">
           <span class="research-wallet-flask" aria-hidden="true">
@@ -275,9 +278,9 @@
               <span><small>КОЛБЫ</small><b id="runResearchScore">0</b></span>
               <i id="runResearchGain" aria-hidden="true">+1</i>
             </div>
-            <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><img src="assets/ui/pause-button-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span>ПАУЗА</span></button>
+            <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><svg class="pause-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/></svg></button>
           </div>
-          <div id="runExperienceHud" class="run-experience-hud" data-stage="0" aria-live="off" aria-label="Опыт за забег: 0"><span id="runExperienceScore">0</span><small>XP</small><i id="runExperienceGain">+1</i></div>
+          <div id="runExperienceHud" class="run-experience-hud" data-stage="0" aria-live="off" aria-label="Устаревший счётчик" hidden><span id="runExperienceScore">0</span><small></small><i id="runExperienceGain">+1</i></div>
           <div id="tutorialRunGoal" class="tutorial-run-goal" hidden>Дойди до конца!</div>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div class="barrier-control" aria-label="Суперспособность" hidden>
@@ -337,9 +340,14 @@
         <button id="adminInfiniteUltimateBtn" class="admin-infinite-flasks admin-infinite-ultimate" type="button" aria-pressed="false" aria-label="Включить бесконечную суперспособность">
           <img src="assets/ui/recipe-categories/emblem-v2-electric.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНАЯ УЛЬТА</b><small id="adminInfiniteUltimateState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
         </button>
-        <button id="adminUnlockMutationsBtn" class="admin-unlock-mutations" type="button" aria-label="Открыть все мутации">
-          <img id="adminUnlockMutationsIcon" src="assets/ui/recipe-categories/emblem-v4-glitch.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><b>ОТКРЫТЬ ВСЕ МУТАЦИИ</b>
-        </button>
+        <section class="admin-mutation-stages" aria-labelledby="adminMutationStagesTitle">
+          <span id="adminMutationStagesTitle"><img id="adminUnlockMutationsIcon" src="assets/ui/recipe-categories/emblem-v4-glitch.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><b>ВСЕ МУТАЦИИ</b></span>
+          <div role="group" aria-label="Открыть все мутации на выбранной стадии">
+            <button id="adminUnlockMutations1Btn" data-admin-mutation-stage="1" type="button" aria-label="Открыть все мутации на стадии 1"><b>I</b><small>СТАДИЯ</small></button>
+            <button id="adminUnlockMutations2Btn" data-admin-mutation-stage="2" type="button" aria-label="Открыть все мутации на стадии 2"><b>II</b><small>СТАДИЯ</small></button>
+            <button id="adminUnlockMutations3Btn" data-admin-mutation-stage="3" type="button" aria-label="Открыть все мутации на стадии 3"><b>III</b><small>СТАДИЯ</small></button>
+          </div>
+        </section>
         <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
         <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
         <button id="tutorialSkipBtn" class="admin-tutorial-skip" type="button" hidden>ПРОПУСТИТЬ ОБУЧЕНИЕ</button>
@@ -395,7 +403,7 @@
     <div id="tutorialCaption" class="tutorial-caption"></div>
   </div>
   <button id="tutorialAdminBtn" class="tutorial-admin-access" type="button" aria-label="Админ-меню" hidden><img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt=""></button>
-  <button id="tutorialPauseBtn" class="tutorial-pause-access" type="button" aria-label="Пауза" hidden><img src="assets/ui/pause-button-v2.webp?v=20261008-optimized-v1" alt=""></button>
+  <button id="tutorialPauseBtn" class="tutorial-pause-access" type="button" aria-label="Пауза" hidden><svg class="pause-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/></svg></button>
   <div id="tutorialGift" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Подарок: 10 колб" hidden>
     <div class="tutorial-dialog-card"><img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 КОЛБ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
   </div>
@@ -439,7 +447,7 @@
         </div>
         <div class="result-stat result-coins-stat">
           <img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
-          <span class="result-experience-copy"><small>ОПЫТ<br>СЛАЙМА</small><b id="resultCoins">+0 XP</b></span>
+          <span class="result-experience-copy"><small>ПРОГРЕСС<br>ЗАДАНИЯ</small><b id="resultCoins">+0</b></span>
         </div>
       </div>
 
@@ -449,7 +457,7 @@
         <h3>БОНУС ЗА ПРОХОЖДЕНИЕ</h3>
         <div class="result-completion-values">
           <span><img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="Колбы"><b id="resultResearchBonus">+25</b></span>
-          <span><img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="Опыт"><b id="resultExperienceBonus">+150 XP</b></span>
+          <span hidden><b id="resultExperienceBonus"></b></span>
         </div>
       </section>
 
@@ -521,9 +529,9 @@
       window.SlimeSdkScriptReady.catch(error => window.SlimeBootLoader.fail(error));
     }
   </script>
-  <script src="js/config/image-paths.js?v=4"></script>
+  <script src="js/config/image-paths.js?v=627"></script>
   <script src="food-catalog.js?v=39"></script>
-  <script src="world-catalog.js?v=32"></script>
+  <script src="world-catalog.js?v=627"></script>
   <script src="js/generation/generated-data.js?v=1"></script>
   <script src="js/generation/section-catalog.js?v=13"></script>
   <script src="js/generation/section-catalog-v4.js?v=3"></script>
@@ -531,12 +539,13 @@
   <script src="js/generation/world1-descent.js?v=8"></script>
   <script src="js/generation/tutorial-descent.js?v=2"></script>
   <script src="js/config/gameplay-balance.js?v=3"></script>
-  <script src="js/config/game-config.js?v=592-96"></script>
+  <script src="js/config/game-config.js?v=627"></script>
   <script src="js/config/experience.js?v=3"></script>
   <script src="js/config/slime-progression.js?v=592"></script>
-  <script src="js/config/ultimate-stages.js?v=593"></script>
+  <script src="js/config/mutation-mastery.js?v=627"></script>
+  <script src="js/config/ultimate-stages.js?v=627"></script>
   <script src="js/platform/yandex-platform.js?v=4"></script>
-  <script src="js/core/game-assets.js?v=42"></script>
+  <script src="js/core/game-assets.js?v=627"></script>
   <script src="js/config/food-ground-bounds.js?v=1"></script>
   <script src="js/rendering/food-grounding.js?v=3"></script>
   <script src="js/core/audio.js?v=4"></script>
@@ -547,13 +556,20 @@
   <script src="js/rendering/menu-mutation-reveal.js?v=6"></script>
   <script src="js/rendering/menu-petpet.js?v=12"></script>
   <script src="js/rendering/dominant-shield.js?v=3"></script>
-  <script src="js/rendering/cosmos-orbits.js?v=5"></script>
+  <script src="js/rendering/cosmos-orbits.js?v=607"></script>
+  <script src="js/rendering/psionic-effects.js?v=613"></script>
+  <script src="js/rendering/glitch-feedback.js?v=611"></script>
   <script src="js/rendering/techno-feedback.js?v=2"></script>
-  <script src="js/rendering/phantom-effects.js?v=10"></script>
-  <script src="js/rendering/block-break-feedback.js?v=4"></script>
+  <script src="js/rendering/phantom-effects.js?v=612"></script>
+  <script src="js/rendering/mutation-impact-effects.js?v=613"></script>
+  <script src="js/rendering/block-break-feedback.js?v=613"></script>
   <script src="effects-lab/workbench-effects.js?v=83"></script>
   <script src="effects-lab/block-effects-workbench.js?v=21"></script>
   <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="game.js?v=593"></script>
+  <script src="js/abilities/elemental-ultimates.js?v=606"></script>
+  <script src="js/abilities/techno-ultimates.js?v=603"></script>
+  <script src="js/abilities/spore-colossus.js?v=605"></script>
+  <script src="js/abilities/cosmos-ultimates.js?v=613"></script>
+  <script src="game.js?v=627"></script>
 </body>
 </html>

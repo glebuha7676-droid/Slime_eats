@@ -15,16 +15,9 @@
     'portal': 'assets/ui/portals/world-1.webp'
   };
   const WORLD2_ASSETS = {
-    'ice-light': 'assets/Мир 2/Непрочный блок.webp',
-    'snow-packed': 'assets/Мир 2/Непрочный блок.webp',
-    'glacier': 'assets/Мир 2/Обычный блок.webp',
-    'ice-reinforced': 'assets/Мир 2/Прочный блок.webp',
-    'ice-shards': 'assets/Мир 2/Опасный блок.webp',
-    'ice-spikes': 'assets/Мир 2/Опасный блок.webp',
-    'cryo': 'assets/Мир 2/Крио блок.webp',
-    'snowflake': 'assets/Мир 2/Заморозка.webp',
-    'heal': 'assets/Мир 2/Аптечка.webp',
-    'portal': 'assets/ui/portals/world-2.webp'
+    // Legacy slot 2 supplies frost transformation sprites, not a playable world.
+    'snow-packed': 'assets/world2/snow-soft-v2.webp',
+    'snowflake': 'assets/Мир 2/Заморозка.webp'
   };
   const WORLD3_ASSETS = {
     'candy-light': 'assets/Мир 3/Непрочный блок.webp',
@@ -77,8 +70,7 @@
       ] : !ice && id !== 1 ? [
         block('bomb', 'Динамит', 'bomb', 'dynamite', { hp: .68, explosionRadius: 125 })
       ] : !ice ? [] : [
-        block('cryo', 'Крио-блок', 'cryo', 'cryo', { hp: 1 }),
-        block('snowflake', 'Блок снежинки', 'snowflake', 'snowflake', { hp: 1 })
+        block('cryo', 'Крио-блок', 'cryo', 'cryo', { hp: 1 })
       ]),
       block('heal', 'Лечебный блок', 'gel', 'heal', { hp: .44 }),
     ];
@@ -86,10 +78,7 @@
   const enabledForLevel = (worldId, index) => {
     if (worldId === 1) return ['soft', 'dense', 'hard', 'reinforced', 'hazard', 'heal'];
     if (worldId === 2) {
-      const enabled = ['dense', 'hazard', 'cryo', 'snowflake', 'heal'];
-      if (index >= 1) enabled.push('hard');
-      if (index >= 2) enabled.push('reinforced');
-      return enabled;
+      return ['dense', 'hard', 'reinforced', 'hazard', 'cryo', 'freezeZone', 'heal'];
     }
     if (worldId === 3) {
       const enabled = ['soft','dense','hazard','jelly','heal'];
@@ -108,7 +97,7 @@
     return ['soft','dense','hard','reinforced','bomb','heal','hazard'];
   };
   const world = (id, name, accent, top, bottom, depths) => ({ id, name, accent, background: { top, bottom, image: '', x: 0, y: 0, scale: 1 }, levels: depths.map((depth, index) => level(depth, enabledForLevel(id, index))), blocks: blocksFor(id) });
-  const builtInDefaults = () => ({ version: 13, worlds: [world(1,'Зелёные глубины','#54d7b0','#63825b','#171c20',[750,750,750,750,750]), world(2,'Ледяная пещера','#67e8f9','#4b7f97','#10232d',[150,250,350,450,1000]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,1000]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,1000])] });
+  const builtInDefaults = () => ({ version: 13, worlds: [world(1,'Каменные глубины','#54d7b0','#63825b','#171c20',[750,750,750,750,750]), world(3,'Конфетная фабрика','#f472b6','#8f4b82','#21142d',[200,300,400,500,1000]), world(4,'Магмовое ядро','#fb7185','#7d3426','#1b1112',[250,350,450,1000])] });
   const defaults = () => builtInDefaults();
   const load = () => defaults();
   window.SlimeWorldCatalog = Object.freeze({ defaults, load, assetSource });

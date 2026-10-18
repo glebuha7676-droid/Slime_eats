@@ -23,11 +23,20 @@ const walk = dir => fs.readdirSync(path.join(root, dir), {withFileTypes:true}).f
 const files = [...walk('assets'), ...walk('effects-lab/assets')];
 const dynamicFolders = ['assets/audio/', 'assets/backgrounds/', 'assets/collectibles/flasks/', 'assets/ui/world-icons/', 'assets/ui/portals/', 'assets/ui/icons/', 'assets/ui/combo/', 'assets/vfx/geyser-compact/', 'assets/world2/', 'assets/world3/', 'assets/world4/'];
 const included = files.filter(file => {
+  if (file === 'assets/backgrounds/world-2-ice-v2.webp' || file === 'assets/ui/launch-card-worlds/world-2-cave-v2.webp') return false;
   if (resolve(file) !== file) return false; // Keep only the current runtime variant.
+  if (file.startsWith('assets/Мир 2/') && !explicit.has(file) && !sources.includes(file)) return false;
+  if (file.startsWith('assets/world2/') && !explicit.has(file) && !sources.includes(file)) return false;
   const name = path.posix.basename(file), stem = name.replace(/\.[^.]+$/, '');
   return explicit.has(file) || sources.includes(file) || sources.includes(name)
     || sources.includes(`'${stem}'`) || dynamicFolders.some(dir => file.startsWith(dir));
 });
+// Ship the matching license when a locally hosted font enters the runtime.
+for (const file of [...included]) {
+  if (!/\.(ttf|woff2?)$/.test(file)) continue;
+  const license = path.posix.join(path.posix.dirname(file), 'OFL.txt');
+  if (fs.existsSync(path.join(root, license)) && !included.includes(license)) included.push(license);
+}
 for (const file of explicit) if (!fs.existsSync(path.join(root, file))) throw new Error(`Missing catalog asset: ${file}`);
 const assets = included.map(file => ({url:file, bytes:fs.statSync(path.join(root, file)).size}));
 const revision = context.window.SlimeGameConfig.ASSET_REVISION;

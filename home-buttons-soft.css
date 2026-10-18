@@ -1,0 +1,140 @@
+/* Clean light home surfaces; action highlights are defined separately. */
+html body[data-screen="home"] #app .world-summary :is(.header-rewards-btn,.header-admin-btn),
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot){
+  border:2px solid #627f88!important;
+  border-radius:17px!important;
+  background:#e9f6fa!important;
+  box-shadow:none!important;
+  color:#184c63!important;
+  filter:none!important;
+  text-shadow:none!important;
+  -webkit-tap-highlight-color:transparent;
+  transition:filter .12s ease;
+}
+html body[data-screen="home"] #app .world-summary .header-admin-btn::before{display:none!important}
+/* Wallet at the left corner; utilities keep matching height on the right. */
+html body[data-screen="home"] #app .topbar.world-summary{padding:1px 8px!important}
+html body[data-screen="home"] #app .world-summary-head{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:7px!important;
+}
+html body[data-screen="home"] #app .world-summary :is(.header-rewards-btn,.header-admin-btn){
+  flex:0 0 46px!important;width:46px!important;height:46px!important;
+  min-width:46px!important;min-height:46px!important;
+  border-radius:14px!important;padding:4px!important;margin:0!important;
+  display:grid!important;place-items:center!important;
+}
+html body[data-screen="home"] #app .world-summary :is(.header-rewards-btn,.header-admin-btn)>img{width:35px!important;height:35px!important;filter:none!important}
+html body[data-screen="home"] #app .world-summary .research-wallet{
+  flex:0 0 116px!important;width:116px!important;height:46px!important;min-height:46px!important;
+  margin:0 auto 0 0!important;padding:0 8px 0 2px!important;
+  border:2px solid #627f88!important;border-radius:14px!important;
+  background:#e9f6fa!important;
+  box-shadow:none!important;
+}
+html body[data-screen="home"] #app .world-summary .research-wallet-flask{gap:4px!important}
+html body[data-screen="home"] #app .world-summary .research-wallet-flask>img{width:36px!important;height:36px!important}
+html body[data-screen="home"] #app .world-summary .research-wallet-flask>b{
+  font-size:19px!important;font-weight:900!important;color:#12455c!important;letter-spacing:0!important;text-shadow:none!important;
+}
+html body[data-screen="home"] #app .world-summary .research-wallet:is([data-balance-length="5"],[data-reward-digits="5"]) .research-wallet-flask>b{font-size:17px!important}
+html body[data-screen="home"] #app .world-summary .research-wallet:is([data-balance-length="6"],[data-balance-length="7"],[data-reward-digits="6"],[data-reward-digits="7"]) .research-wallet-flask>b{font-size:14px!important}
+/* Both tools share the same grid, top edge and touch target. */
+html body[data-screen="home"] #app #homeScreen .slime-hero-layout{
+  --home-tool-size:82px;
+  grid-template-columns:var(--home-tool-size) minmax(0,1fr) var(--home-tool-size)!important;
+}
+html body[data-screen="home"] #app #homeScreen .recipe-rail{
+  width:var(--home-tool-size)!important;height:var(--home-tool-size)!important;
+  align-self:start!important;justify-content:flex-start!important;
+  margin:16px 0 0!important;padding:0!important;gap:0!important;transform:none!important;
+}
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot){
+  width:var(--home-tool-size)!important;height:var(--home-tool-size)!important;
+  min-width:var(--home-tool-size)!important;min-height:var(--home-tool-size)!important;
+  grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) 12px!important;
+  padding:5px 3px 8px!important;gap:2px!important;place-items:center!important;
+  align-self:start!important;justify-self:center!important;margin:0!important;
+}
+html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot{margin-top:16px!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button>.mutation-trio-icon{
+  width:58px!important;height:48px!important;transform:none!important;
+}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button .mutation-trio-icon img{width:34px!important;height:34px!important;max-width:34px!important;max-height:34px!important;filter:none!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button .mutation-trio-frost{left:24px!important;top:0!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button .mutation-trio-electric{top:18px!important;left:12px!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button>span:not(.mutation-trio-icon),
+html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot>span{
+  display:block!important;grid-row:2!important;align-self:center!important;
+  font-size:10px!important;font-weight:900!important;line-height:1!important;letter-spacing:0!important;color:#12455c!important;text-shadow:none!important;
+}
+html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot>img{width:50px!important;height:50px!important;grid-row:1!important;filter:none!important}
+html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot:disabled{
+  opacity:1!important;
+}
+html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot:disabled>img{filter:none!important;opacity:1!important}
+html body[data-screen="home"] #app :is(.header-rewards-btn,.header-admin-btn):not(:disabled):active,
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button:not(:disabled):active{
+  background:#d0e8f1!important;
+  filter:none!important;transform:translateY(1px)!important;box-shadow:none!important;
+}
+
+/* A ready action is green, matching the reference's Upgrade and Plus. */
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch{
+  color:#fff!important;text-shadow:0 1px 1px #305c23!important;
+  font-size:clamp(20px,calc(var(--terminal-play-width) * .092),29px)!important;
+  font-weight:900!important;letter-spacing:.025em!important;
+  filter:none!important;box-shadow:none!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch::before{
+  border-image:none!important;border:2px solid #3c772d!important;
+  border-radius:inherit!important;
+  background:#579b34!important;
+  box-shadow:none!important;filter:none!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch.hungry{
+  color:#547480!important;text-shadow:0 1px #d9edf2!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch.hungry::before{
+  border-color:#6b96a8!important;
+  background:#c7dfe9!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch.ready:not(:disabled):active{
+  transform:none!important;box-shadow:none!important;filter:none!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch.ready:not(:disabled):active::before{
+  background:#46882b!important;box-shadow:none!important;
+}
+html body[data-screen="home"] #app #homeScreen .terminal-launch>.terminal-play-icon{filter:none!important;opacity:1!important}
+html body[data-screen="home"] #app #homeScreen .terminal-launch>.terminal-play-icon path:first-of-type{fill:#f1ffe2!important;stroke:#508235!important;stroke-width:2!important}
+html body[data-screen="home"] #app #homeScreen .terminal-launch>.terminal-play-icon path:last-of-type{stroke:#fff!important;stroke-opacity:.6!important}
+html body[data-screen="home"] #app #homeScreen .terminal-launch.hungry>.terminal-play-icon{opacity:.6!important}
+html body[data-screen="home"] #app #homeScreen .terminal-launch.hungry>.terminal-play-icon path:first-of-type{fill:#739aaa!important;stroke:#567e90!important}
+
+/* Flat vector faces preserve the rounded triangle and its narrowed width.
+   Both light arrows retain their bevels without a corner highlight. */
+html body[data-screen="home"] #app #homeScreen .world-terminal-arrow::after,
+html body[data-screen="home"] #app #homeScreen .world-terminal-arrow:disabled::after{
+  background-image:url("assets/ui/world-terminal/arrow-clean-right-v1.svg")!important;
+  inset:-8%!important;filter:none!important;transform:scaleX(.86)!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-arrow.previous::after{background-image:url("assets/ui/world-terminal/arrow-clean-left-v1.svg")!important;transform:scaleX(.86)!important}
+html body[data-screen="home"] #app #homeScreen .world-terminal-arrow.next:not(:disabled):active::after{transform:scale(.93) scaleX(.86)!important}
+html body[data-screen="home"] #app #homeScreen .world-terminal-arrow.previous:not(:disabled):active::after{transform:scale(.93) scaleX(.86)!important}
+html body[data-screen="home"] #app #homeScreen .world-terminal-arrow:disabled::after{opacity:.65!important}
+html body[data-screen="home"] #app #homeScreen .quick-mutation-option{
+  border:2px solid #627f88!important;border-radius:13px!important;
+  background:#e9f6fa!important;box-shadow:none!important;
+}
+html body[data-screen="home"] #app #homeScreen .quick-mutation-option:not(:disabled):active{background:#d0e8f1!important;transform:translateY(1px)!important}
+html body[data-screen="home"] #app :is(.header-rewards-btn,.header-admin-btn):focus-visible,
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.world-terminal-arrow,.terminal-launch,.quick-mutation-option):focus-visible{
+  outline:3px solid #b6f7ee!important;outline-offset:3px!important;
+}
+@media(max-width:370px){
+  html body[data-screen="home"] #app #homeScreen .slime-hero-layout{--home-tool-size:74px}
+  html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot){padding:4px 3px 6px!important;grid-template-rows:minmax(0,1fr) 11px!important}
+  html body[data-screen="home"] #app #homeScreen .mutation-lab-button>span:not(.mutation-trio-icon),html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot>span{font-size:9px!important}
+  html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot>img{width:46px!important;height:46px!important}
+  html body[data-screen="home"] #app #homeScreen .mutation-lab-button>.mutation-trio-icon{transform:scale(.9)!important}
+}
+@media(prefers-reduced-motion:reduce){html body[data-screen="home"] #app button{transition:none!important}}

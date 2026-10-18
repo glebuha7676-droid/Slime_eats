@@ -1,5 +1,20 @@
 # Third-party assets
 
+## UI font library
+
+Original variable TrueType fonts in `assets/fonts/ui-kit/`, downloaded from
+the official Google Fonts repository for the separate UI style laboratory:
+
+- [Nunito](https://github.com/google/fonts/tree/main/ofl/nunito) — The Nunito Project Authors.
+- [Rubik](https://github.com/google/fonts/tree/main/ofl/rubik) — The Rubik Project Authors.
+- [Comfortaa](https://github.com/google/fonts/tree/main/ofl/comfortaa) — The Comfortaa Project Authors.
+
+Each family is distributed under SIL Open Font License 1.1. Its complete
+copyright and license are included in its `OFL.txt`. Fonts are unmodified;
+`sources.json` records download URLs, sizes and SHA-256 hashes. These fonts
+are compared in `editors/ui-style-lab.html`. Nunito is also used by the game's
+laboratory interface; its matching license is included in the game release.
+
 ## Audio
 
 The sound effects in `assets/audio/` are selected and renamed from these Kenney packs:

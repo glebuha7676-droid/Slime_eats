@@ -6,7 +6,11 @@
   const EXPERIENCE = window.SlimeExperience;
   const PROGRESSION = window.SlimeProgression;
   const ULTIMATE_STAGES = window.SlimeUltimateStages;
-  if (!CONFIG || !ASSETS || !EXPERIENCE || !PROGRESSION || !ULTIMATE_STAGES || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
+  const ELEMENTAL_ULTIMATES = window.SlimeElementalUltimates;
+  const TECHNO_ULTIMATES = window.SlimeTechnoUltimates;
+  const SPORE_COLOSSUS = window.SlimeSporeColossus;
+  const COSMOS_ULTIMATES = window.SlimeCosmosUltimates;
+  if (!CONFIG || !ASSETS || !EXPERIENCE || !PROGRESSION || !window.SlimeMutationMastery || !ULTIMATE_STAGES || !ELEMENTAL_ULTIMATES || !TECHNO_ULTIMATES || !SPORE_COLOSSUS || !COSMOS_ULTIMATES || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
     throw new Error('Game modules must be loaded before game.js');
   }
 
@@ -43,6 +47,17 @@
     uiIconMarkup
   } = ASSETS;
   const { drawSlimeAvatar } = window.SlimeAvatarRenderer;
+  const stagedUltimateServices = Object.freeze({
+    blocksNearY, elementalDamageable, frostFreezable,
+    igniteBlock, turnBlockToSnow, damageBlockByElement
+  });
+  const technoUltimateServices = Object.freeze({
+    blocksNearY, elementalDamageable, nanoEyePosition, damageBlockByElement,
+    disintegrate: disintegrateTechnoUltimateBlock, sound: name => sound(name)
+  });
+  const sporeColossusServices = Object.freeze({blocksNearY,elementalDamageable,damageBlockByElement,spawnMiniSlime,
+    sound:name=>sound(name),feedback:value=>feedback(value),lowPower:()=>isLowPowerDevice(),reducedMotion:()=>menuReducedMotion});
+  const cosmosUltimateServices = Object.freeze({blocksNearY,elementalDamageable,damageBlockByElement,sound:name=>sound(name)});
   const BASE_HEALTH = 100;
   const BASE_DAMAGE = 10;
   const BASE_SHIELD = 25;
@@ -50,12 +65,18 @@
   const STOMACH_CAPACITY = 1;
   const FREEZE_ZONE_CHARGE_MS = 1000;
   const FREEZE_ZONE_DURATION_MS = 3000;
-  const PHANTOM_MARK_INTERVAL_MS = 5000;
+  const PHANTOM_MARK_INTERVAL_MS = 3500;
+  const FIRE_BURN_HITS = 3;
+  const FIRE_BURN_INTERVAL_MS = 1200;
+  const FIRE_TRANSFER_MS = 220;
+  const ELECTRIC_CHAIN_LENGTH = 2;
+  const ELECTRIC_IMPACT_WINDOW_MS = 72;
   const PHANTOM_PORTAL_INTERVAL_MS = 10000;
   const PHANTOM_DURATION_MS = 3000;
   const PHANTOM_BURST_MS = 850;
-  const GLITCH_INFECTION_INTERVAL_MS = 11500;
-  const GLITCH_NEUTRALIZE_INTERVAL_MS = 17500;
+  const GLITCH_INFECTION_INTERVAL_MS = 4200;
+  const GLITCH_PASSIVE_LIMIT = 16;
+  const GLITCH_SPAWN_GAP_CELLS = 2.5;
   const GLITCH_TITLE_MS = 1500;
   const glitchTileCache = new Map();
   let glitchTileCacheRun = null;
@@ -137,7 +158,7 @@
     startDropLabel: $('#startDropLabel'), adminMenuBtn: $('#adminMenuBtn'), adminToolsOverlay: $('#adminToolsOverlay'),
     closeAdminToolsBtn: $('#closeAdminToolsBtn'), adminRestartBtn: $('#adminRestartBtn'),
     adminPrevWorldBtn: $('#adminPrevWorldBtn'), adminNextWorldBtn: $('#adminNextWorldBtn'),
-    adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'), adminUnlockMutationsBtn: $('#adminUnlockMutationsBtn'),
+    adminWorldValue: $('#adminWorldValue'), adminUnlockAllBtn: $('#adminUnlockAllBtn'),
     adminUnlockMutationsIcon: $('#adminUnlockMutationsIcon'), adminResetProgressBtn: $('#adminResetProgressBtn'),
     adminInfiniteFlasksBtn: $('#adminInfiniteFlasksBtn'), adminInfiniteFlasksState: $('#adminInfiniteFlasksState'),
     adminInfiniteUltimateBtn: $('#adminInfiniteUltimateBtn'), adminInfiniteUltimateState: $('#adminInfiniteUltimateState'),
@@ -205,6 +226,7 @@
   let selectedConveyorSlot = 0;
   let quickMutationPickerTimer = null;
   let selectedLaboratoryMutationId = 'fire';
+  let laboratoryCollectionObserver = null;
   let laboratoryReplaceMode = false;
   const RESULT_MULTIPLIERS = [.5, 1, 1.5, 2, 1.5, 1, .5];
   const RESULT_SWEEP_MS = 900;
@@ -220,8 +242,8 @@
   const ULTIMATE_BLOCKS_REQUIRED = 65;
   const ULTIMATE_POST_USE_CHARGE = Math.round(ULTIMATE_BLOCKS_REQUIRED * .15);
   const ULTIMATE_BREAK_CAUSES = new Set([
-    'cosmos', 'cosmosUltimate', 'electricStorm', 'fireUltimate', 'sporeUltimate',
-    'telekinesisPress', 'mech', 'glitchHack', 'glitchDelete', 'phantomExpress'
+    'cosmos', 'cosmosUltimate', 'cosmosPlanetUltimate', 'cosmosStarfall', 'electricStorm', 'fireUltimate', 'sporeUltimate',
+    'telekinesisPress', 'telekinesisStorm', 'psionicBarrier', 'mech', 'glitchHack', 'glitchDelete', 'phantomExpress', 'phantomSalvo', 'phantomRealm', 'phantomUltimateBurst', 'nanoUltimate', 'nanoDisintegrate', 'sporeGiant'
   ]);
   const STARTER_MUTATIONS = Object.freeze([
     { id: 'fire', name: 'ОГОНЬ', image: 'assets/ui/recipe-categories/emblem-v2-fire.webp' },
@@ -237,33 +259,33 @@
     { id: 'glitch', name: 'ГЛИТЧ', image: 'assets/ui/recipe-categories/emblem-v4-glitch.webp' }
   ]);
   const MUTATION_DETAILS = Object.freeze({
-    fire: { stage1: 'Поджигает блоки.', stage2: 'Огонь прыгает на соседние блоки.' },
-    electric: { stage1: 'Удар выпускает молнию.', stage2: 'Молния перескакивает между блоками.' },
-    frost: { stage1: 'Касание превращает блоки в снег.', stage2: 'Из снега разлетаются ледяные осколки.' },
-    cosmos: { stage1: 'Планета на орбите бьёт блоки.', stage2: 'Вторая планета помогает разбивать блоки.' },
-    nano: { stage1: 'Луч дрона сразу разбивает блок.', stage2: 'Глаз выпускает три мины по очереди.' },
-    telekinesis: { stage1: 'Бросает блок вниз.', stage2: 'Бросает сразу два блока.' },
-    cloning: { stage1: 'Спора взрывает блок.', stage2: 'Из взрыва летят грибочки.' },
-    phantom: { stage1: 'Дух ослабляет камни. Удар — 2 урона.', stage2: 'Войди в портал: 3 секунды сквозь камни.' },
-    glitch: { stage1: 'Заражает блоки.', stage2: 'Обезвреживает колючки. Коснись — рассыплются.' }
+    fire: { stage1: 'Поджигает блоки.', stage2: 'Огонь переходит на соседний, когда блок ломается.' },
+    electric: { stage1: 'Бьёт цепной молнией.', stage2: 'Разряд задевает до 3 блоков.' },
+    frost: { stage1: 'Превращает блоки в снег.', stage2: 'При разрушении вылетают 2 осколка.' },
+    cosmos: { stage1: 'Планета кружится рядом.', stage2: 'При касании бьёт блоки.' },
+    nano: { stage1: 'Дрон стреляет вниз.', stage2: 'Луч сразу разбивает целый блок.' },
+    telekinesis: { stage1: 'Вырывает блок и бросает вниз.', stage2: 'Попадание бьёт блоки рядом.' },
+    cloning: { stage1: 'Споры взрываются на блоках.', stage2: 'Из взрыва вылетают грибочки.' },
+    phantom: { stage1: 'Духи помечают блоки.', stage2: 'Метки взрываются и задевают соседние блоки.' },
+    glitch: { stage1: 'Заражает блоки впереди.', stage2: 'Удар по одному передаётся остальным.' }
   });
   const MUTATION_REVEAL_DESCRIPTIONS = Object.freeze({
     fire: 'Поджигает блоки и распространяет огонь.',
     electric: 'Копит заряд и поражает блоки разрядом.',
     frost: 'Охлаждает блоки и смягчает удары.',
     cosmos: 'Планеты кружатся вокруг слайма и бьют блоки.',
-    nano: 'Дрон разбивает блок лучом. Глаз выпускает три мини-мины.',
+    nano: 'Дрон быстро разбивает целые блоки лучом.',
     telekinesis: 'Двигает и разбивает блоки силой мысли.',
     cloning: 'Выращивает взрывные споры на блоках; из них вылетают грибочки.',
-    phantom: 'Духи ослабляют камни и открывают путь в мир призраков.',
+    phantom: 'Духи превращают камни в хрупкие и разрушают их с задержкой.',
     glitch: 'Заражает блоки и передаёт урон между ними.'
   });
   const FORM_INDEX = Object.freeze([
-    { id: 'fire', name: 'Феникс', mutation: 'ОГОНЬ', ultra: ['Полёт феникса', 'Поджигает блоки на 100 м вниз.'], art: 'effects-lab/assets/fire-ultra-phoenix-body-v4-lossless.webp', color: '#ff8741' },
-    { id: 'frost', name: 'Ледяная форма', mutation: 'МОРОЗ', ultra: ['Снегопад', '6 секунд превращает блоки в снег.'], art: 'effects-lab/assets/frost-ultra-body-v1.webp', color: '#83eaff' },
-    { id: 'electric', name: 'Грозовая форма', mutation: 'ЭЛЕКТРО', ultra: ['Грозовой шквал', '5 молний разбивают блоки цепями.'], art: 'effects-lab/assets/electric-ultra-body-v7-lossless.webp', color: '#ffe46a' },
+    { id: 'fire', name: 'Феникс', mutation: 'ОГОНЬ', ultra: ['Феникс', ''], art: 'effects-lab/assets/fire-ultra-phoenix-body-v4-lossless.webp', color: '#ff8741' },
+    { id: 'frost', name: 'Ледяная форма', mutation: 'МОРОЗ', ultra: ['Вьюга', ''], art: 'effects-lab/assets/frost-ultra-body-v1.webp', color: '#83eaff' },
+    { id: 'electric', name: 'Грозовая форма', mutation: 'ЭЛЕКТРО', ultra: ['Громовержец', ''], art: 'effects-lab/assets/electric-ultra-body-v7-lossless.webp', color: '#ffe46a' },
     { id: 'cosmos', name: 'Космическая форма', mutation: 'КОСМОС', ultra: ['Кометный прорыв', 'Летит и пробивает блоки на пути.'], art: 'effects-lab/assets/cosmos-ultra-body-v2-lossless.webp', color: '#b998ff' },
-    { id: 'nano', name: 'Киборг', mutation: 'ТЕХНО', ultra: ['Меха-слайм', '10 секунд летает и стреляет по блокам.'], art: 'effects-lab/assets/techno-ultra-body-v2-lossless.webp', color: '#ff8088' },
+    { id: 'nano', name: 'Титан', mutation: 'ТЕХНО', ultra: ['Титан', ''], art: 'effects-lab/assets/techno-ultra-body-v2-lossless.webp', color: '#ff8088' },
     { id: 'telekinesis', name: 'Псионическая форма', mutation: 'ПСИОНИКА', ultra: ['Псионический пресс', 'Сжимает и ломает 80 м шахты.'], art: 'effects-lab/assets/psionics-ultra-body-v1-lossless.webp', color: '#dbadff' },
     { id: 'cloning', name: 'Грибница', mutation: 'СПОРЫ', ultra: ['Споровый посев', '8 спор взрывают блоки по очереди.'], art: 'effects-lab/assets/spores-ultra-body-v5-lossless.webp', color: '#b8f879' },
     { id: 'phantom', name: 'Призрачная форма', mutation: 'ФАНТОМ', ultra: ['Призрачный экспресс', 'Поезд сносит 4 клетки в ширину и 12 рядов вперёд.'], art: 'effects-lab/assets/phantom-ultra-body-v7-lossless.webp', color: '#8dffe0' },
@@ -440,6 +462,7 @@
         : 1;
     }
     merged.mutationExperience = PROGRESSION.migrateExperience(value.mutationExperience, merged.unlockedMutations, merged.mutationLevels);
+    merged.mutationMastery = window.SlimeMutationMastery.migrate(value.mutationMastery, merged.unlockedMutations);
     merged.selectedMutation = merged.unlockedMutations.includes(value.selectedMutation) ? value.selectedMutation : merged.unlockedMutations[0] || 'fire';
     merged.tutorialStep = legacySave ? 'done' : (TUTORIAL_STEPS.has(value.tutorialStep) ? value.tutorialStep : 'home-mutations');
     merged.onboarding = normalizeOnboarding(value.onboarding, merged.tutorialStep);
@@ -692,7 +715,7 @@
       case 'shield-use': return ['#abilityBtn', 'Щит заряжен! Нажми на него'];
       case 'play': return ['#worldStartBtn', 'Нажми «Играть»'];
       case 'upgrade-home-mutations': return ['.mutation-lab-button', 'Открой мутации'];
-      case 'upgrade-fire': return ['#mutationUpgradeBtn', 'Открой 2 стадию Огня'];
+      case 'upgrade-fire': return [els.panelOverlay.querySelector('.slime-evolution-dialog') ? '#mutationEvolutionConfirmBtn' : '#mutationUpgradeBtn', 'Открой 2 стадию Огня'];
       case 'upgrade-close-lab': return ['#closePanelBtn', 'Вернись к слайму'];
       default: return null;
     }
@@ -702,7 +725,7 @@
 
   function renderTutorialOutline(target) {
     // Measure the painted sprite, rather than its larger invisible hit area.
-    const artwork = target.id === 'mutationCapsuleBtn' ? target.querySelector('.mutation-machine-art')
+    const artwork = target.id === 'mutationCapsuleBtn' ? [...target.querySelectorAll('.mutation-machine-art')].find(img => getComputedStyle(img).display !== 'none')
       : target.id === 'mutationMystery' ? target.querySelector('img')
       : target.matches('.conveyor-food-pick') ? target.querySelector('.food-model-wrap img') : null;
     const source = artwork || target;
@@ -858,6 +881,7 @@
     if (run?.ended && target.closest('#resultOverlay,#gameCompleteOverlay')) return true;
     if (tutorialMemoState) return Boolean(target.closest(tutorialMemoState.kind === 'ability' ? '#abilityBtn' : '#tutorialMemoNext'));
     const step = save.tutorialStep;
+    if (step === 'upgrade-fire' && els.panelOverlay.querySelector('.slime-evolution-dialog')) return Boolean(target.closest('.slime-evolution-dialog'));
     if (step === 'dodge') return Boolean(target.closest('#shaft'));
     if (step === 'gift' || step === 'second-gift') return Boolean(target.closest('#tutorialGiftClaimBtn'));
     if (step === 'controls') return Boolean(target.closest('#tutorialControlsCloseBtn:not([hidden])'));
@@ -888,6 +912,7 @@
 
   function blockTutorialKey(event) {
     if (!tutorialActive() && !tutorialMemoState) return;
+    if (!tutorialMemoState && save.tutorialStep === 'upgrade-fire' && els.panelOverlay.querySelector('.slime-evolution-dialog')) return;
     if (tutorialMemoState && ['Enter',' '].includes(event.key)) {
       if (tutorialMemoState.kind === 'ability' && document.activeElement === els.abilityBtn) return;
       event.preventDefault(); if (tutorialMemoState.kind !== 'ability') closeOnboardingMemo(); return;
@@ -1216,7 +1241,7 @@
       const evolution = kind === 'evolution';
       const shown = showOnboardingMemo(evolution ? 'Новая стадия!' : 'Попробуй другую силу!', evolution
         ? '<p>Твой слайм <b>изменился</b>!</p><p class="tutorial-memo-small">Новая внешность<br>и <b>новое блюдо</b>.</p>'
-        : `<div class="tutorial-meal-link">${tutorialRecipeIcon('frost')}</div><p>Съешь <b>одно морозное блюдо</b>.</p><p class="tutorial-memo-small">Играй этим слаймом —<br>он получит <b>свой опыт</b>.</p>`, () => {
+        : `<div class="tutorial-meal-link">${tutorialRecipeIcon('frost')}</div><p>Съешь <b>одно морозное блюдо</b>.</p><p class="tutorial-memo-small">Играй этим слаймом —<br>выполняй <b>задание развития</b>.</p>`, () => {
           save.onboarding.pendingMemo = '';
           if (evolution) save.onboarding.formSeen = true;
           persist({ refreshUI: false });
@@ -1982,14 +2007,14 @@
   function paintPlayerExperience(experience) {
     const id = homeRewardFlight?.mutationId || selectedSlimeMutationId();
     const mutation = mutationById(id);
-    const state = PROGRESSION.progress(mutationLevel(id), experience);
+    const state = slimeDevelopment(id, undefined, experience);
     const emblem = document.getElementById('slimeProgressEmblem');
     if (emblem && mutation && emblem.getAttribute('src') !== versionedAsset(mutation.image)) emblem.src = versionedAsset(mutation.image);
     document.getElementById('slimeProgressName').textContent = mutation?.name || 'Выбери слайма';
     els.coinsLabel.textContent = ['I','II','III'][state.stage - 1];
     if (els.playerLevelProgress) els.playerLevelProgress.style.width = `${state.percent}%`;
-    if (els.playerLevelExperience) els.playerLevelExperience.textContent = !mutationLevel(id) ? 'Накорми слайма' : state.max ? `${formatCompactNumber(state.xp)} XP · МАКСИМУМ` : state.ready ? 'ГОТОВ К ЭВОЛЮЦИИ' : `${state.xp} / ${state.target} XP`;
-    els.coinsLabel.closest('.player-level-wallet')?.setAttribute('aria-label', `${mutation?.name || 'Слайм'}, стадия ${state.stage}, ${state.xp} личного опыта${state.ready ? ', готов к эволюции' : ''}`);
+    if (els.playerLevelExperience) els.playerLevelExperience.textContent = !mutationLevel(id) ? 'Накорми слайма' : state.max ? 'ВСЕ СТАДИИ ОТКРЫТЫ' : state.ready ? 'ГОТОВ К РАЗВИТИЮ' : `${state.label}: ${Math.min(state.current, state.target)}/${state.target}`;
+    els.coinsLabel.closest('.player-level-wallet')?.setAttribute('aria-label', `${mutation?.name || 'Слайм'}, стадия ${state.stage}, ${state.label}: ${state.current} из ${state.target}${state.ready ? ', готов к эволюции' : ''}`);
     els.coinsLabel.closest('.player-level-wallet')?.classList.toggle('evolution-ready', state.ready);
   }
 
@@ -2019,7 +2044,7 @@
   function renderWalletBalances() {
     const experience = homeRewardFlight
       ? homeRewardFlight.experienceStart + homeRewardFlight.experienceShown
-      : slimeExperience();
+      : slimeTaskCount();
     const researchUnits = homeRewardFlight
       ? homeRewardFlight.flaskStart + homeRewardFlight.flaskShown
       : save.researchUnits;
@@ -2049,7 +2074,7 @@
     if (!completedRun) return;
     const flaskGain = adminInfiniteResearch ? 0 : Math.max(0,
       (completedRun.researchUnitsAfter || 0) - (completedRun.researchUnitsBefore || 0));
-    const experienceGain = Math.max(0, Math.floor(completedRun.experienceEarned || 0));
+    const experienceGain = Math.max(0, Math.floor(completedRun.masteryGain || 0));
     if (!flaskGain && !experienceGain) return;
     homeRewardFlight = {
       flaskStart: Math.max(0, save.researchUnits - flaskGain),
@@ -2323,7 +2348,7 @@
     }
     if (name !== 'home') settleHomeRewardFlight();
     document.body.dataset.screen = name;
-    if (name !== 'home') renderPlayerExperience(slimeExperience());
+    if (name !== 'home') renderPlayerExperience(slimeTaskCount());
     els.homeScreen.classList.toggle('active', name === 'home');
     els.dropScreen.classList.toggle('active', name === 'drop');
     updateWorldHeader(name);
@@ -2442,23 +2467,31 @@
     feedback([20, 35, 20]);
     newDraft();
     updatePersistentUI();
-    showToast('Все миры открыты · опыт слаймов и колбы выданы');
+    showToast('Все миры открыты · колбы выданы');
   }
 
-  function unlockMutationsFromAdmin() {
+  function unlockMutationsFromAdmin(requestedStage = 3) {
+    const stage = clamp(Math.floor(Number(requestedStage) || 1), 1, 3);
     save.unlockedMutations = allMutations().map(mutation => mutation.id);
-    save.mutationLevels = Object.fromEntries(save.unlockedMutations.map(id => [id, 3]));
+    save.mutationLevels = Object.fromEntries(save.unlockedMutations.map(id => [id, stage]));
     save.mutationExperience = PROGRESSION.migrateExperience(save.mutationExperience, save.unlockedMutations, save.mutationLevels);
     save.discoveredForms = [...save.unlockedMutations];
     save.mutationProgress = 0;
     save.mutationInvestTapCount = 0;
     pendingMutationReveal = null;
+    if (session) {
+      session.foods = session.foods.map(food => foodForMutation(foodRecipeFamily(food)) || food);
+      session.offer = session.offer.map(food => food ? foodForMutation(foodRecipeFamily(food)) || food : null);
+      recalcStats();
+      syncMenuCategoryVisuals({ instant: true });
+      renderDraft();
+    }
     persist();
     updatePersistentUI();
     closeAdminTools();
     sound('coin');
     feedback([8, 14, 8]);
-    showToast('Все мутации открыты');
+    showToast(`Все мутации · стадия ${['I', 'II', 'III'][stage - 1]}`);
   }
 
   function syncAdminInfiniteFlasksUI() {
@@ -2531,9 +2564,20 @@
     return fed ? mutationIdForFamily(foodRecipeFamily(fed)) : save.selectedMutation || save.activeMutationPool?.[0] || 'fire';
   }
 
-  function slimeExperience(id = selectedSlimeMutationId()) {
-    return Math.max(0, Math.floor(Number(save.mutationExperience?.[id]) || 0));
+  function slimeTaskCount(id = selectedSlimeMutationId()) {
+    return Math.max(0, Math.floor(Number(save.mutationMastery?.[id]) || 0));
   }
+
+  function slimeDevelopment(id, viewedStage, value = slimeTaskCount(id)) {
+    return window.SlimeMutationMastery.state(id, mutationLevel(id), value, viewedStage);
+  }
+
+  function recordMutationAction(id, entity) {
+    if (!run || run.ended || run.mutationId !== id || !entity || entity.masteryCredited) return;
+    entity.masteryCredited = true;
+    run.masteryGain = (run.masteryGain || 0) + 1;
+  }
+
 
   function foodForMutation(id, stage = mutationLevel(id)) {
     return FOODS.find(food => foodRecipeFamily(food) === mutationFoodFamily(id) && food.stage === stage) || null;
@@ -3403,10 +3447,12 @@
 
   function shiftRunClock(delta) {
     if (!run || delta <= 0) return;
+    ELEMENTAL_ULTIMATES.shiftClock(run, delta);
+    COSMOS_ULTIMATES.shiftClock(run, delta);
     const timestampKeys = [
       'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'freezeUntil',
       'lastFrozenImpactAt', 'emotionUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
-      'breakImpactAt', 'breakImpactUntil',
+      'breakImpactAt', 'breakImpactUntil', 'electricImpactAt',
       'lastTrailSampleAt', 'lastUiUpdateAt',
       'hurtSlowUntil', 'lastHeartLossAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt',
       'mechExitZoneGraceUntil',
@@ -3418,6 +3464,7 @@
     if (run.tutorialDodge) { run.tutorialDodge.startedAt += delta; if (run.tutorialDodge.acceptedAt) run.tutorialDodge.acceptedAt += delta; }
     if (run.ultimateIntro) run.ultimateIntro.startedAt += delta;
     if (run.phoenixUltimate) run.phoenixUltimate.startedAt += delta;
+    for (const effect of run.specialEffects || []) if (effect.type === 'fireTransfer' && Number.isFinite(effect.startedAt)) effect.startedAt += delta;
     if (run.cosmosUltimate) {
       for (const key of ['startedAt', 'chargeUntil', 'fadeStartedAt', 'launchUntil', 'fadeUntil', 'lastSampleAt', 'ignitedAt', 'finishedAt', 'invulnerableBefore']) {
         if (run.cosmosUltimate[key] > 0) run.cosmosUltimate[key] += delta;
@@ -3434,17 +3481,27 @@
     }
     for (const bolt of run.electricStormBolts || []) { bolt.startedAt += delta; bolt.until += delta; }
     for (const hit of run.electricStormHits || []) hit.at += delta;
-    for (const key of ['phantomMarkNextAt', 'phantomPortalNextAt', 'phantomEnteredAt', 'phantomUntil', 'glitchNextInfectionAt', 'glitchNextNeutralizeAt']) if (run[key] > 0) run[key] += delta;
+    for (const key of ['phantomMarkNextAt', 'phantomPortalNextAt', 'phantomEnteredAt', 'phantomUntil', 'glitchNextInfectionAt']) if (run[key] > 0) run[key] += delta;
     for(const f of run.phantomFlights || []) if(f)f.startedAt += delta;
+    for(const f of run.phantomSalvoFlights || []) f.startedAt += delta;
+    for (const key of ['phantomVolleyNextAt', 'glitchPassiveInfectAt']) if (run[key] > 0) run[key] += delta;
+    if (run.phantomPhase) run.phantomPhase.startedAt += delta;
+    for (const sample of run.phantomPhase?.trail || []) sample.at += delta;
+    for (const block of run.phantomMarkedBlocks || []) {
+      if (block.phantomDetonateAt > 0) block.phantomDetonateAt += delta;
+      if (block.phantomMarkedAt > 0) block.phantomMarkedAt += delta;
+    }
     for(const p of run.phantomPortals || []){p.createdAt+=delta;p.expiresAt+=delta;}
     if(run.phantomExpress)run.phantomExpress.startedAt+=delta;
     if (run.glitchScreen) for (const key of ['startedAt', 'until']) run.glitchScreen[key] += delta;
     if (run.glitchShock) run.glitchShock.startedAt += delta;
+    for (const burst of run.glitchBreakBursts || []) burst.startedAt += delta;
+    if (run.glitchDisarm) { run.glitchDisarm.startedAt += delta; run.glitchDisarm.finishAt += delta; if (run.glitchDisarm.completedAt) run.glitchDisarm.completedAt += delta; }
     if (run.glitchDeleteQueue) for (const item of run.glitchDeleteQueue) item.at += delta;
     if (run.glitchHackQueue) for (const item of run.glitchHackQueue) item.at += delta;
     if (run.glitchSpreadQueue) for (const item of run.glitchSpreadQueue) item.at += delta;
     if (run.glitchChange) run.glitchChange.at += delta;
-    for (const block of run.blocks || []) for (const key of ['glitchDeleteAt', 'glitchHackingUntil', 'glitchRewriteUntil', 'glitchTransformUntil', 'glitchFlashUntil', 'glitchDisperseUntil']) {
+    for (const block of run.blocks || []) for (const key of ['glitchDeleteAt', 'glitchHackingUntil', 'glitchRewriteUntil', 'glitchTransformUntil', 'glitchFlashUntil', 'glitchDisperseUntil', 'glitchHitUntil']) {
       if (block[key] > 0) block[key] += delta;
     }
     for (const flask of run.flasks || []) if (flask.collectAfter > 0) flask.collectAfter += delta;
@@ -3456,6 +3513,7 @@
         shot.target.nanoLaserUntil+=delta;shot.target.nanoLaserStartedAt+=delta;shiftedLaserTargets.add(shot.target);
       }
     }
+    TECHNO_ULTIMATES.shiftClock(run, delta, shiftedLaserTargets);
     if (run.nanoNextMineAt > 0) run.nanoNextMineAt += delta;
     if (run.nanoSalvoNextLaunchAt > 0) run.nanoSalvoNextLaunchAt += delta;
     if (run.nanoEyeOpenedAt > 0) run.nanoEyeOpenedAt += delta;
@@ -3468,11 +3526,14 @@
     if (run.mechExplosion) run.mechExplosion.startedAt += delta;
     if (run.telekinesisNextAt > 0) run.telekinesisNextAt += delta;
     if (run.telekinesisCycle) run.telekinesisCycle.startedAt += delta;
+    if (run.psionicBarrier) { run.psionicBarrier.startedAt += delta; run.psionicBarrier.until += delta; if(Number.isFinite(run.psionicBarrier.lastPulseAt))run.psionicBarrier.lastPulseAt += delta; }
+    for(const burst of run.psionicBarrierBursts || [])burst.startedAt += delta;
     if (run.telekinesisPress) run.telekinesisPress.startedAt += delta;
     if (run.telekinesisMarks) for (const mark of run.telekinesisMarks) mark.startedAt += delta;
     if (run.telekinesisBursts) for (const burst of run.telekinesisBursts) burst.startedAt += delta;
     if (run.phantomBursts) for (const burst of run.phantomBursts) burst.startedAt += delta;
     if (run.cloneUltimate) run.cloneUltimate.startedAt += delta;
+    SPORE_COLOSSUS.shiftClock(run, delta);
     if (run.nextSporeAt > 0) run.nextSporeAt += delta;
     for (const projectile of run.sporeProjectiles || []) { projectile.launchedAt += delta; projectile.landsAt += delta; }
     for (const pod of run.sporePods || []) {
@@ -3683,7 +3744,7 @@
       },
       categoryVisuals, mutationId, passiveLevels: { [mutationId]: 2 },
       ultimateStage: mutationLevel(mutationId), ultimateProfile: ULTIMATE_STAGES.get(mutationId, mutationLevel(mutationId)),
-      nanoNextShotAt: [launchEntryStartedAt + 2000],
+      nanoNextShotAt: [launchEntryStartedAt + NANO_SHOT_INTERVAL_MS],
       nanoShots: [],
       nanoNextMineAt: launchEntryStartedAt + 5000,
       nanoEyeOpenedAt: 0,
@@ -3702,19 +3763,25 @@
       telekinesisThrowIndex: 0,
       telekinesisUltimatePending: false,
       telekinesisPress: null,
+      psionicBarrier: null,
+      psionicBarrierBursts: [],
       phantomMarkNextAt: launchEntryStartedAt + PHANTOM_MARK_INTERVAL_MS,
       phantomPortalNextAt: launchEntryStartedAt + PHANTOM_PORTAL_INTERVAL_MS,
       phantomFlights: [null,null],
+      phantomSalvoFlights: [],
+      phantomVolleyRemaining: 0, phantomVolleyNextAt: 0, phantomSpiritSequence: 0, phantomPhase: null,
       phantomPortals: [],
       phantomExpress: null,
       phantomEnteredAt: 0,
       phantomUntil: 0,
       phantomMarkedBlocks: new Set(),
       phantomBursts: [],
-      glitchNextInfectionAt: launchEntryStartedAt + 4500,
-      glitchNextNeutralizeAt: launchEntryStartedAt + 8500,
+      glitchNextInfectionAt: launchEntryStartedAt + 1500,
+      glitchPassiveInfectAt: 0,
       glitchInfectedBlocks: new Set(),
       glitchShock: null,
+      glitchBreakBursts: [],
+      glitchDisarm: null,
       glitchChoice: null,
       glitchScreen: null,
       glitchDeleteQueue: [],
@@ -3727,11 +3794,17 @@
       sporeBursts: [],
       nextSporeAt: 0,
       cloneUltimate: null,
+      sporePop: null,
+      giantMushroom: null,
+      viewHeight: VIEW_H,
+      viewWidth: VIEW_W,
       elementalAbilityType,
       elementalAbilityCharges: 0,
       ultimateCharge: 0,
       ultimateRechargePending: '',
       elementalAbilityActive: '',
+      stagedUltimate: null,
+      technoUltimate: null,
       elementalAbilityUntil: 0,
       elementalAbilityNextTickAt: 0,
       elementalAuraId: 0,
@@ -3754,6 +3827,7 @@
       speedBurstUntil: 0,
       cosmosCometIgnitedAt: 0,
       cosmosUltimate: null,
+      cosmosStagedUltimate: null,
       cosmosOrbitClock: 0,
       cosmosOrbitAlpha: 0,
       cosmosOrbitPrevious: null,
@@ -3814,6 +3888,7 @@
       maxShieldCharges: 1,
       coins: 0,
       researchData: 0,
+      masteryGain: 0,
       experienceEarned: 0,
       experiencePendingGain: 0,
       experienceHudFrame: 0,
@@ -3837,6 +3912,7 @@
       animationId: 0,
       shake: fromPortal ? 4.5 : 0,
       hitCooldowns: new Map(),
+      electricImpactAt: -Infinity,
       damageInvulnerableUntil: fromPortal ? launchEntryStartedAt + 620 : 0,
       bounceGraceUntil: 0,
       impactGroupId: 0,
@@ -3949,7 +4025,7 @@
     return weak;
   }
 
-  function generateFirstWorldDescent(runState) {
+  function generatePlannedDescent(runState) {
     const normal = window.SlimeWorld1Descent.build({ columns: runState.columns });
     const layout = runState.tutorialPhase ? window.SlimeTutorialDescent.build({ phase: runState.tutorialPhase, normal, columns: runState.columns }) : normal;
     runState.tutorialVeinRow = layout.firstVeinRow ?? null;
@@ -3972,8 +4048,8 @@
               : chooseMaterial(runState.world, row / layout.rows, planned.special, planned.tier),
           dead: planned.dead, path: planned.path, segment: 'descent',
           hazard: planned.hazard, unbreakable: planned.hazard,
-          hazardVariant: null, frozen: false, visualId: '', environmentRemoved: '',
-          flaskTier: planned.flaskTier, topGrass: row === 0, coins: 0
+          hazardVariant: null, frozen: false, visualId: '', environmentRemoved: planned.environment || '',
+          flaskTier: planned.flaskTier, topGrass: runState.worldId === 1 && row === 0, coins: 0
         };
         if (planned.motion) {
           block.motion = {
@@ -4008,7 +4084,7 @@
   }
 
   function generateBlockField(runState) {
-    if (runState.worldId === 1) return generateFirstWorldDescent(runState);
+    if (runState.worldId === 1) return generatePlannedDescent(runState);
     const { world, finishY } = runState;
     const blocks = [];
     const cell = runState.cellSize || BALANCE.gridCell;
@@ -4125,7 +4201,7 @@
   }
 
   function generateFlasks(runState) {
-    if (runState.worldId === 1) return [];
+    if (runState.worldId === 1 || runState.worldId === 2) return [];
     const blocks = runState.blocks || [];
     if (!blocks.some(block => block.flaskTier) && runState.worldId !== 1) {
       // Later worlds use sparse temporary placements until their own sections are authored.
@@ -4270,7 +4346,7 @@
   function generateFreezeZones(runState) {
     // The old snowflake tile is replaced by a readable environmental hazard:
     // the same feature slot now creates shallow icy-water pockets.
-    if (runState.worldId !== 2 || !levelAllows(runState.world, runState.level, 'snowflake')) return [];
+    if (runState.worldId !== 2 || (!levelAllows(runState.world, runState.level, 'snowflake') && !levelAllows(runState.world, runState.level, 'freezeZone'))) return [];
     const authoredZones = authoredEnvironmentZones(runState, 'freeze');
     if (authoredZones.length) return authoredZones;
     const blocks = runState.blocks || [];
@@ -4514,7 +4590,7 @@
     updateMeteorShowers(timestamp);
     updateSlimeTrail(simulationDt, timestamp);
     updateParticles(simulationDt);
-    updateSpecialEffects(simulationDt);
+    updateSpecialEffects(simulationDt, timestamp);
     renderCanvas(timestamp);
     trackGraphicsCost(performance.now() - workStartedAt);
     if (!run.lastUiUpdateAt || timestamp - run.lastUiUpdateAt >= (isMobileDevice() ? 90 : 70)) {
@@ -4705,90 +4781,160 @@
   }
 
   function phantomActive(timestamp = performance.now()) {
-    return Boolean(run && elementalLevel('phantom') >= 2 && run.phantomUntil > timestamp);
+    return Boolean(run && elementalLevel('phantom') >= 1 && run.phantomUntil > timestamp);
   }
 
   function phantomCanMark(block) {
     return Boolean(block && !block.dead && !block.special && !block.hazard && !block.unbreakable);
   }
 
-  function markPhantomBlock(block, timestamp) {
+  function markPhantomBlock(block, timestamp, fragile = false, cause = 'phantomSpirit') {
     if (!phantomCanMark(block) || block.phantomMarked) return false;
     block.phantomMarked = true;
     block.phantomMarkedAt = timestamp;
+    block.phantomDetonateAt = timestamp + 1450;
+    block.phantomMarkCause = cause;
+    if (fragile) {
+      block.tier = run.worldId === 1 ? 'dense' : 'soft';
+      block.material = chooseMaterial(run.world, .15, null, block.tier);
+      block.hp = block.maxHp = 1;block.visualId = '';block.topGrass = false;
+      if (block.flaskTier) block.flaskValue = block.flaskValue || FLASK_VALUES[block.flaskTier];
+    }
     run.phantomMarkedBlocks.add(block);
     return true;
   }
 
-  function phantomClusterTargets() {
-    const s=run.slime,cell=run.cellSize;
-    const candidates=blocksNearY(s.y+cell*3.5,cell*3)
-      .filter(b=>phantomCanMark(b)&&!b.phantomMarked&&b.hp>1&&b.y>s.y+cell*.7);
-    let best=[] ,score=-Infinity;
-    for(const anchor of candidates){
-      const group=candidates.filter(b=>Math.abs(b.col-anchor.col)<=1&&Math.abs(b.row-anchor.row)<=1)
-        .sort((a,b)=>Math.abs(a.row-anchor.row)+Math.abs(a.col-anchor.col)-Math.abs(b.row-anchor.row)-Math.abs(b.col-anchor.col));
-      const rank=group.length*12+(anchor.tier==='reinforced'?2:0)-Math.abs(blockCenter(anchor).x-s.x)/cell-(anchor.y-s.y)/cell*.5;
-      if(group.length>=2&&rank>score){best=group.slice(0,4);score=rank;}
-    }
-    return best;
-  }
-
-  function phantomPortalTarget() {
-    const s=run.slime,cell=run.cellSize;
-    const nearby=blocksNearY(s.y+cell*6.5,cell*2.5);
-    return nearby.filter(b=>phantomCanMark(b)&&b.y>s.y+cell*5&&b.y<s.y+cell*8)
-      .map(block=>({block,score:Math.abs(blockCenter(block).x-s.x)/cell+Math.abs((block.y-s.y)/cell-6.5)*.5
-        +nearby.filter(h=>!h.dead&&(h.hazard||h.unbreakable)&&Math.abs(h.row-block.row)<=1&&Math.abs(h.col-block.col)<=1).length*4}))
-      .sort((a,b)=>a.score-b.score)[0]?.block;
+  function phantomSpiritTarget(sequence) {
+    const s = run.slime, cell = run.cellSize;
+    const directions = [[-1,.55],[1,.55],[.3,1],[-.3,-1]], direction = directions[sequence % 4];
+    const candidates = blocksNearY(s.y, cell * 4)
+      .filter(b => phantomCanMark(b) && !b.phantomMarked && b.hp > 1
+        && b.y >= run.cameraY + 80 && b.y + b.h < run.cameraY + VIEW_H - 55
+        && Math.hypot(b.x + b.w / 2 - s.x, b.y + b.h / 2 - s.y) <= cell * 4.2);
+    const score = b => {
+      const dx = b.x + b.w / 2 - s.x, dy = b.y + b.h / 2 - s.y, distance = Math.hypot(dx,dy) || 1;
+      return (dx * direction[0] + dy * direction[1]) / distance * 4 - Math.abs(distance / cell - 2.5);
+    };
+    return candidates.sort((a,b) => score(b) - score(a))[0] || null;
   }
 
   function phantomSpiritFlight(index, targets, timestamp, duration = 0) {
-    const s=run.slime,from=window.SlimePhantomEffects.idle(s.x,s.y,s.radius,index,timestamp);
-    const points=targets.map(blockCenter);
-    let length=0,previous=from;
-    for(const point of [...points,{x:s.x,y:s.y}]){length+=Math.hypot(point.x-previous.x,point.y-previous.y);previous=point;}
-    return {startedAt:timestamp,duration:duration||clamp(length/(run.cellSize*3)*1000,1800,3000),from,
-      targets,points,marked:0};
+    const s = run.slime, from = {x:s.x,y:s.y - s.radius * .15};
+    return {startedAt:timestamp,duration:duration || clamp(Math.hypot(targets[0].x-s.x,targets[0].y-s.y) / run.cellSize * 190,650,950),
+      from,targets,points:targets.map(blockCenter),marked:0,emission:true,index};
+  }
+
+  function updatePhantomDetonations(timestamp) {
+    let bursts = 0;
+    for (const block of run.phantomMarkedBlocks) {
+      if (block.dead) { run.phantomMarkedBlocks.delete(block); continue; }
+      if (!block.phantomDetonateAt || timestamp < block.phantomDetonateAt) continue;
+      block.phantomDetonateAt = 0;
+      if (!phantomCanMark(block)) { block.phantomMarked = false; run.phantomMarkedBlocks.delete(block); continue; }
+      const cause = block.phantomMarkCause || 'phantomSpirit';
+      if (destroyBlock(block,cause,timestamp)) {
+        const blastCause = cause === 'phantomSpirit' ? 'phantomBurst' : 'phantomUltimateBurst';
+        for (const neighbor of nearbyGridBlocks(block, elementalDamageable)) {
+          if (Math.abs(neighbor.row-block.row)+Math.abs(neighbor.col-block.col)!==1) continue;
+          damageBlockByElement(neighbor,1,blastCause,timestamp);
+        }
+        if (bursts++ < 8 && block.y + block.h >= run.cameraY && block.y <= run.cameraY + VIEW_H) {
+          run.phantomBursts.push({x:block.x+block.w/2,y:block.y+block.h/2,startedAt:timestamp,scale:.8,cross:true});
+        }
+      }
+    }
+    if (run.phantomBursts.length > 12) run.phantomBursts.splice(0,run.phantomBursts.length-12);
+    if (bursts) run.shake = Math.max(run.shake, Math.min(3, 1 + bursts * .25));
   }
 
   function updatePhantomCompanions(timestamp) {
-    if(!run||elementalLevel('phantom')<1||run.portalEntry||run.ended)return;
+    if (!run || elementalLevel('phantom') < 1 || run.portalEntry || run.ended) return;
+    updatePhantomDetonations(timestamp);
     updatePhantomExpress(timestamp);
-    run.phantomPortals=run.phantomPortals.filter(p=>!p.used&&timestamp<p.expiresAt&&p.y>run.cameraY-run.cellSize);
-    for(const b of run.phantomMarkedBlocks)if(b.dead)run.phantomMarkedBlocks.delete(b);
-    if(run.phantomExpress)return;
-    const flight=run.phantomFlights[0];
-    if(flight){
-      const progress=window.SlimePhantomEffects.flightPoint(flight,timestamp,flight.from);
-      while(flight.marked<flight.targets.length&&progress.route>=flight.marked+1){
-        markPhantomBlock(flight.targets[flight.marked++],timestamp);
+    updatePhantomSalvo(timestamp);
+    if (run.phantomSalvoFlights?.length) return;
+    if (run.phantomExpress || phantomActive(timestamp)) return;
+    for (let index=0;index<2;index++) {
+      const flight=run.phantomFlights[index];if(!flight)continue;
+      if(timestamp-flight.startedAt>=flight.duration){
+        markPhantomBlock(flight.targets[0],timestamp,true);
+        run.phantomFlights[index]=null;run.phantomVolleyNextAt=timestamp+180;
       }
-      if(progress.p>=1)run.phantomFlights[0]=null;
-    }else if(timestamp>=run.phantomMarkNextAt&&!run.phantomFlights[1]
-      &&!(elementalLevel('phantom')>=2&&timestamp>=run.phantomPortalNextAt&&!phantomActive(timestamp))){
-      const targets=phantomClusterTargets();
-      run.phantomMarkNextAt=timestamp+(targets.length>=2?PHANTOM_MARK_INTERVAL_MS:800);
-      if(targets.length>=2)run.phantomFlights[0]=phantomSpiritFlight(0,targets,timestamp);
+      return;
     }
-    if(elementalLevel('phantom')<2)return;
-    const portalFlight=run.phantomFlights[1];
-    if(portalFlight){
-      const progress=window.SlimePhantomEffects.flightPoint(portalFlight,timestamp,portalFlight.from);
-      if(!portalFlight.opened&&progress.route>=1){
-        portalFlight.opened=true;const target=portalFlight.targets[0];
-        if(phantomCanMark(target))destroyBlock(target,'phantomPortal',timestamp);
-        // Opening remains valid if another ability already broke the chosen rock.
-        if(!target.hazard&&!target.unbreakable){const p=blockCenter(target);
-          run.phantomPortals.push({...p,createdAt:timestamp,expiresAt:timestamp+7000,radius:run.cellSize*.42,used:false});
-          if(run.phantomPortals.length>2)run.phantomPortals.shift();}
+    if (!(run.phantomVolleyRemaining > 0) && timestamp >= run.phantomMarkNextAt) {
+      run.phantomVolleyRemaining=2;run.phantomVolleyNextAt=timestamp;
+      run.phantomMarkNextAt=timestamp+PHANTOM_MARK_INTERVAL_MS;
+    }
+    if(run.phantomVolleyRemaining>0 && timestamp>=run.phantomVolleyNextAt){
+      const sequence=run.phantomSpiritSequence || 0,target=phantomSpiritTarget(sequence);
+      run.phantomSpiritSequence=sequence+1;run.phantomVolleyRemaining--;
+      if(target)run.phantomFlights[sequence%2]=phantomSpiritFlight(sequence%2,[target],timestamp);
+      else run.phantomVolleyNextAt=timestamp+500;
+    }
+  }
+
+  function startPhantomSalvo(timestamp) {
+    const s=run.slime,cell=run.cellSize,chosen=new Set();
+    const candidates=blocksNearY(s.y,cell*6).filter(b=>phantomCanMark(b)&&!b.phantomMarked
+      && b.y>=run.cameraY+80&&b.y+b.h<=run.cameraY+VIEW_H-55
+      && Math.hypot(b.x+b.w/2-s.x,b.y+b.h/2-s.y)<=cell*6);
+    run.phantomFlights=[null,null];run.phantomVolleyRemaining=0;run.phantomSalvoFlights=[];
+    const count=run.ultimateProfile?.spiritCount || 8;
+    for(let i=0;i<count;i++){
+      const angle=-Math.PI/2+i*Math.PI*2/count,dx=Math.cos(angle),dy=Math.sin(angle);
+      const score=b=>{const x=b.x+b.w/2-s.x,y=b.y+b.h/2-s.y,d=Math.hypot(x,y)||1;
+        return (x*dx+y*dy)/d*4-Math.abs(d/cell-3)*.35;};
+      const target=candidates.filter(b=>!chosen.has(b)).sort((a,b)=>score(b)-score(a))[0];
+      if(target)chosen.add(target);
+      const point=target?blockCenter(target):{x:clamp(s.x+dx*cell*2.6,20,VIEW_W-20),
+        y:clamp(s.y+dy*cell*2.6,run.cameraY+95,run.cameraY+VIEW_H-70)};
+      run.phantomSalvoFlights.push({startedAt:timestamp,from:{x:s.x,y:s.y-s.radius*.15},
+        points:[point],targets:target?[target]:[],duration:clamp(Math.hypot(point.x-s.x,point.y-s.y)/cell*170,650,1100),
+        emission:true,index:i%2});
+    }
+    run.phantomMarkNextAt=timestamp+PHANTOM_MARK_INTERVAL_MS;
+    run.phantomBursts.push({x:s.x,y:s.y,startedAt:timestamp,scale:.65});
+  }
+
+  function updatePhantomSalvo(timestamp) {
+    if(!run.phantomSalvoFlights?.length)return;
+    run.phantomSalvoFlights=run.phantomSalvoFlights.filter(flight=>{
+      if(timestamp-flight.startedAt<flight.duration)return true;
+      if(flight.targets[0])markPhantomBlock(flight.targets[0],timestamp,false,'phantomSalvo');
+      return false;
+    });
+  }
+
+  function markPhantomPath(fromX, fromY, toX, toY, timestamp) {
+    if(!run.phantomPhase)return;
+    const radius=run.slime.radius*.85,dx=toX-fromX,dy=toY-fromY;
+    const crosses=block=>{
+      let low=0,high=1;
+      for(const [start,delta,min,max] of [[fromX,dx,block.x-radius,block.x+block.w+radius],
+        [fromY,dy,block.y-radius,block.y+block.h+radius]]){
+        if(Math.abs(delta)<.0001){if(start<min||start>max)return false;continue;}
+        const a=(min-start)/delta,b=(max-start)/delta;
+        low=Math.max(low,Math.min(a,b));high=Math.min(high,Math.max(a,b));if(low>high)return false;
       }
-      if(timestamp-portalFlight.startedAt>=portalFlight.duration)run.phantomFlights[1]=null;
-    }else if(timestamp>=run.phantomPortalNextAt&&!phantomActive(timestamp)&&!run.phantomFlights[0]){
-      const target=phantomPortalTarget();
-      run.phantomPortalNextAt=timestamp+(target?PHANTOM_PORTAL_INTERVAL_MS:1000);
-      if(target)run.phantomFlights[1]=phantomSpiritFlight(1,[target],timestamp);
+      return true;
+    };
+    for(const block of blocksNearY((fromY+toY)/2,Math.abs(dy)/2+radius)){
+      if(phantomCanMark(block)&&crosses(block))markPhantomBlock(block,timestamp,false,run.phantomPhase.kind);
     }
+  }
+
+  function startPhantomPhase(timestamp) {
+    const profile=run.ultimateProfile || {},s=run.slime;
+    run.phantomFlights=[null,null];run.phantomVolleyRemaining=0;
+    run.phantomPhase={kind:'phantomRealm',startedAt:timestamp,trail:[]};
+    run.phantomEnteredAt=timestamp;
+    run.phantomUntil=timestamp+(profile.durationMs || 5000);
+    run.phantomEntryPoint={x:s.x,y:s.y};run.steer.touchY=run.steer.touchRawY||0;
+    run.freezeUntil=0;run.wallPushSide=0;run.bounceControlLockUntil=run.bounceControlRestoreUntil=0;
+    s.vy=clamp(s.vy,-100,160);
+    markPhantomPath(s.x,s.y,s.x,s.y,timestamp);
+    run.phantomBursts.push({x:s.x,y:s.y,startedAt:timestamp,scale:.65});
   }
 
   function movePhantomOutOfDanger(timestamp) {
@@ -4823,10 +4969,8 @@
     for(const block of blocksNearY(slime.y,slime.radius)){
       if(phantomCanMark(block)&&circleRectCollision(slime,block,slime.radius))destroyBlock(block,'phantom',timestamp);
     }
-    const row=Math.floor((slime.y-run.blockRowOrigin)/cell),col=Math.floor((slime.x-run.gridOffsetX)/cell);
-    for(let offset=1;offset<=2;offset++)for(const block of run.blocksByRow.get(row+offset)||[]){
-      if(Math.abs(block.col-col)<=1&&block.hp>1)markPhantomBlock(block,timestamp);
-    }
+    run.phantomPhase = null;
+    slime.vx=clamp(slime.vx,-145,145);slime.vy=clamp(slime.vy,-120,180);
     run.damageInvulnerableUntil=Math.max(run.damageInvulnerableUntil,timestamp+450);
     run.phantomBursts.push({x:slime.x,y:slime.y,startedAt:timestamp});
     run.shake=Math.max(run.shake,4);run.emotion='power';run.emotionUntil=timestamp+360;
@@ -4834,21 +4978,12 @@
   }
 
   function updatePhantomCycle(timestamp) {
-    if(elementalLevel('phantom')<2)return false;
+    if(elementalLevel('phantom')<1)return false;
     if(run.phantomUntil>0){
       if(timestamp<run.phantomUntil)return true;
-      materializePhantom(timestamp);return false;
+      materializePhantom(timestamp);
     }
-    if(run.phantomExpress)return false;
-    const s=run.slime;
-    const portal=run.phantomPortals.find(p=>!p.used&&timestamp<p.expiresAt&&Math.hypot(s.x-p.x,s.y-p.y)<s.radius*.8+p.radius);
-    if(!portal)return false;
-    portal.used=true;run.phantomEnteredAt=timestamp;run.phantomUntil=timestamp+PHANTOM_DURATION_MS;
-    run.phantomEntryPoint={x:portal.x,y:portal.y};
-    run.steer.touchY=run.steer.touchRawY||0;run.wallPushSide=0;
-    run.bounceControlLockUntil=run.bounceControlRestoreUntil=0;s.vy=clamp(s.vy,-120,135);
-    run.emotion='surprised';run.emotionUntil=timestamp+420;sound('tap');feedback(8);
-    return true;
+    return false;
   }
 
   let phantomExpressTrain=null,phantomExpressRails=null;
@@ -4902,20 +5037,27 @@
       const alpha=Math.min(1,(timestamp-p.createdAt)/220,(p.expiresAt-timestamp)/500);
       window.SlimePhantomEffects.gate(ctx,p.x,p.y-run.cameraY,p.radius*2,timestamp,Math.max(0,alpha));
     }
+    window.SlimePhantomEffects.phaseTrail(ctx,run,timestamp);
     if(run.phantomExpress)window.SlimePhantomEffects.express(ctx,run.phantomExpress,run.cameraY,run.cellSize,timestamp,phantomExpressTrain,phantomExpressRails);
   }
 
   function drawPhantomCompanions(timestamp,front=true) {
     const level=elementalLevel('phantom');if(!level||run.portalEntry)return;
     const s=run.slime,e=run.phantomExpress;
-    for(let i=0;i<Math.min(2,level);i++){
+    if(front)for(const flight of run.phantomSalvoFlights || []){
+      const p=window.SlimePhantomEffects.flightPoint(flight,timestamp,flight.from);
+      const alpha=clamp((timestamp-flight.startedAt)/80,0,1)*clamp((1-p.p)/.13,0,1);
+      window.SlimePhantomEffects.spirit(ctx,{x:p.x,y:p.y-run.cameraY},s.radius*.98,flight.index,timestamp,alpha,true,flight);
+    }
+    for(let i=0;i<2;i++){
+      if(!e&&!run.phantomFlights[i])continue;
       let p=window.SlimePhantomEffects.idle(s.x,s.y,s.radius,i,timestamp),inFront=p.front;
       if(e){
         const t=clamp((timestamp-e.startedAt)/380,0,1),spread=run.cellSize*.9*clamp((timestamp-e.startedAt-250)/220,0,1);
         p={x:lerp(p.x,e.centerX+(i?-spread:spread),t),y:lerp(p.y,e.portalY,t)};inFront=true;
       }else if(run.phantomFlights[i]){p=window.SlimePhantomEffects.flightPoint(run.phantomFlights[i],timestamp,p);inFront=true;}
       if(inFront!==front)continue;
-      window.SlimePhantomEffects.spirit(ctx,{x:p.x,y:p.y-run.cameraY},s.radius*.98,i,timestamp,e?clamp((800-(timestamp-e.startedAt))/250,0,1):1);
+      window.SlimePhantomEffects.spirit(ctx,{x:p.x,y:p.y-run.cameraY},s.radius*.98,i,timestamp,e?clamp((800-(timestamp-e.startedAt))/250,0,1):1,!e);
     }
   }
 
@@ -4931,16 +5073,31 @@
     return Boolean(block && !block.dead && !block.special && !block.hazard && !block.unbreakable);
   }
 
-  function glitchFutureBlocks(predicate, rows = 8) {
-    const firstUnseenRow = Math.ceil((run.cameraY + VIEW_H - run.blockRowOrigin) / run.cellSize) + 1;
-    return run.blocks.filter(block => block.row >= firstUnseenRow && block.row < firstUnseenRow + rows && predicate(block));
+  function glitchBlockVisible(block) {
+    return Boolean(block && block.x >= 0 && block.x + block.w <= VIEW_W + 1
+      && block.y >= run.cameraY + 90 && block.y + block.h <= run.cameraY + VIEW_H - 40);
   }
 
-  function infectGlitchGroup(blocks, timestamp) {
+  function glitchSpawnCandidate(block) {
+    return glitchBlockVisible(block) && glitchEligibleBlock(block) && !block.glitchInfected
+      && block.y >= run.slime.y + run.cellSize * GLITCH_SPAWN_GAP_CELLS;
+  }
+
+  function prunePassiveGlitch() {
+    for (const block of run.glitchInfectedBlocks) {
+      if (block.dead || (block.glitchPassiveInfection && !glitchBlockVisible(block))) {
+        run.glitchInfectedBlocks.delete(block);
+        block.glitchInfected = block.glitchPassiveInfection = false;
+      }
+    }
+  }
+
+  function infectGlitchGroup(blocks, timestamp, passive = false) {
     const chosen = blocks.filter(block => glitchEligibleBlock(block) && !block.glitchInfected);
     if (!chosen.length) return 0;
     for (const block of chosen) {
       block.glitchInfected = true;
+      block.glitchPassiveInfection = passive;
       block.glitchInfectedAt = timestamp;
       block.glitchFlashUntil = timestamp + 620;
       run.glitchInfectedBlocks.add(block);
@@ -4948,13 +5105,20 @@
     return chosen.length;
   }
 
-  function infectGlitchAhead(timestamp, count = 3 + Math.floor(Math.random() * 3)) {
-    const choices = glitchFutureBlocks(block => glitchEligibleBlock(block) && !block.glitchInfected, 7)
-      .sort(() => Math.random() - .5);
-    return infectGlitchGroup(choices.slice(0, count), timestamp);
+  function infectGlitchAhead(timestamp, count = 6 + Math.floor(Math.random() * 3)) {
+    prunePassiveGlitch();
+    const marked = [...run.glitchInfectedBlocks].filter(block => block.glitchPassiveInfection).length;
+    const choices = blocksNearY(run.cameraY + VIEW_H / 2, VIEW_H / 2)
+      .filter(glitchSpawnCandidate);
+    for (let i = choices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [choices[i], choices[j]] = [choices[j], choices[i]];
+    }
+    return infectGlitchGroup(choices.slice(0, Math.max(0, Math.min(count, GLITCH_PASSIVE_LIMIT - marked))), timestamp, true);
   }
 
   function shareGlitchHit(block, amount, timestamp, effect = '') {
+    prunePassiveGlitch();
     if (!block?.glitchInfected || (amount <= 0 && !effect)) return;
     const infectedBlocks = [...run.glitchInfectedBlocks];
     const linkedBlocks = infectedBlocks.filter(glitchEligibleBlock);
@@ -4962,8 +5126,10 @@
     run.glitchInfectedBlocks.clear();
     for (const linked of infectedBlocks) {
       linked.glitchInfected = false;
+      linked.glitchPassiveInfection = false;
       linked.glitchDisperseUntil = timestamp + 420;
       linked.glitchFlashUntil = timestamp + 450;
+      linked.glitchHitUntil = timestamp + 520;
     }
     run.glitchShock = { source: block, targets: linkedBlocks, startedAt: timestamp };
     for (const linked of linkedBlocks) {
@@ -4978,6 +5144,7 @@
 
   function markGlitchHazard(block, timestamp, ultimate = false) {
     if (!block || block.dead || !block.hazard || block.glitchNeutralized) return false;
+    recordMutationAction('glitch', block);
     block.glitchNeutralized = true;
     block.glitchHackedByUltimate = ultimate;
     block.glitchInfectedAt = timestamp;
@@ -4985,14 +5152,54 @@
     return true;
   }
 
-  function neutralizeGlitchHazard(timestamp) {
-    const choices = glitchFutureBlocks(block => !block.dead && block.hazard && !block.glitchNeutralized, 10)
-      .sort((a, b) => a.row - b.row);
-    const target = choices[Math.floor(Math.random() * Math.min(5, choices.length))];
-    return markGlitchHazard(target, timestamp);
+  function findGlitchDisarmTarget() {
+    return blocksNearY(run.cameraY + VIEW_H / 2, VIEW_H / 2)
+      .filter(block => !block.dead && block.hazard && !block.glitchNeutralized && glitchBlockVisible(block)
+        && block.y + block.h <= run.cameraY + VIEW_H - 130
+        && block.y + block.h / 2 >= run.slime.y + run.cellSize * 2.5)
+      .sort((a, b) => b.y - a.y || Math.abs(a.x + a.w / 2 - run.slime.x) - Math.abs(b.x + b.w / 2 - run.slime.x))[0] || null;
+  }
+
+  function startGlitchDisarm(timestamp) {
+    const block = findGlitchDisarmTarget();
+    if (!block) return false;
+    // Immediately safe; the reward only appears after the visible decoding.
+    block.glitchNeutralized = block.glitchDisarming = true;
+    block.glitchHackingUntil = timestamp + 850;
+    const roll = Math.random();
+    const reward = roll < .2 ? 'heal' : roll < .45 ? 1 : roll < .8 ? 2 : 3;
+    run.glitchDisarm = { block, reward, startedAt: timestamp, finishAt: timestamp + 850,
+      fromX: block.x, fromY: block.y, fromSlimeX: run.slime.x, fromSlimeY: run.slime.y };
+    ensureWorldSprites(1);
+    impact('ОБЕЗОРУЖИВАНИЕ');
+    return true;
+  }
+
+  function completeGlitchDisarm(timestamp) {
+    const effect = run.glitchDisarm, block = effect?.block;
+    if (!block || !block.glitchDisarming) return;
+    block.glitchDisarming = block.glitchNeutralized = block.glitchHackedByUltimate = false;
+    if (block.dead) { run.glitchDisarm = null; return; }
+    recordMutationAction('glitch', block);
+    Object.assign(block, { hazard: false, unbreakable: false, hazardVariant: null, motion: null,
+      x: (run.gridOffsetX || 0) + block.col * run.cellSize, y: run.blockRowOrigin + block.row * run.cellSize,
+      tier: effect.reward === 'heal' ? 'special' : run.worldId === 1 ? 'dense' : 'soft',
+      special: effect.reward === 'heal' ? 'gel' : null, visualId: '', maxHp: 1, hp: 1, path: true,
+      flaskTier: effect.reward === 'heal' ? 0 : effect.reward,
+      flaskValue: effect.reward === 'heal' ? 0 : FLASK_VALUES[effect.reward], flaskGranted: false,
+      topGrass: false, frozen: false, frozenOre: false, elementalSnow: false, elementalSnowflake: false,
+      elementalGolden: false, fireDamageAt: 0, sporePod: null, glitchHackingUntil: 0,
+      glitchReward: true, glitchTransformUntil: 0 });
+    block.material = chooseMaterial(run.world, .15, null, block.tier);
+    run.movingHazards = (run.movingHazards || []).filter(item => item !== block);
+    effect.completedAt = timestamp;
+    effect.finishAt = timestamp + 750;
+    sound('epic'); feedback(9);
+    impact(effect.reward === 'heal' ? 'ЛЕЧЕБНЫЙ БЛОК' : `ЖИЛА +${block.flaskValue}`);
   }
 
   function transformGlitchHazard(block, collision, timestamp) {
+    if (block?.glitchDisarming) { completeGlitchDisarm(timestamp); return false; }
     if (!block || block.dead || !block.hazard || !block.glitchNeutralized) return false;
     if (destroyBlock(block, block.glitchHackedByUltimate ? 'glitchHack' : 'glitchNeutralize', timestamp)) {
       block.hp = 0;
@@ -5064,6 +5271,7 @@
       block.glitchInfected = false;
       block.glitchNeutralized = false;
       block.glitchHackedByUltimate = false;
+      if (block.hazard) recordMutationAction('glitch', block);
       block.hazard = false;
       block.unbreakable = false;
       block.hazardVariant = null;
@@ -5137,6 +5345,9 @@
 
   function createGlitchDebris(block, timestamp, safe = false) {
     if (block.y + block.h < run.cameraY || block.y > run.cameraY + VIEW_H) return;
+    const bursts = run.glitchBreakBursts || (run.glitchBreakBursts = []);
+    bursts.push({ x:block.x, y:block.y, w:block.w, h:block.h, startedAt:timestamp, safe });
+    if (bursts.length > 12) bursts.splice(0, bursts.length - 12);
     const colors = safe ? ['#69ff99', '#baffd0', '#35edc8'] : ['#68faff', '#ff59df', '#e0ffff'];
     const count = takeDecorativeParticles(scaledEffectCount(14, 4));
     for (let i = 0; i < count; i++) {
@@ -5153,13 +5364,31 @@
   function updateGlitchEffects(timestamp) {
     if (!run || run.ended || run.portalEntry) return;
     const level = elementalLevel('glitch');
+    if (level >= 1) prunePassiveGlitch();
     if (level >= 1 && timestamp >= run.glitchNextInfectionAt) {
-      const infected = infectGlitchAhead(timestamp);
-      run.glitchNextInfectionAt = timestamp + (infected ? GLITCH_INFECTION_INTERVAL_MS : 1800);
+      const hasRoom = [...run.glitchInfectedBlocks].filter(block => block.glitchPassiveInfection).length < GLITCH_PASSIVE_LIMIT;
+      const hasTarget = hasRoom && blocksNearY(run.cameraY + VIEW_H / 2, VIEW_H / 2)
+        .some(glitchSpawnCandidate);
+      if (!hasTarget) run.glitchNextInfectionAt = timestamp + 1000;
+      else if (!run.glitchScreen || run.glitchScreen.kind === 'passive' || timestamp >= run.glitchScreen.until) {
+        run.glitchScreen = {kind:'passive',startedAt:timestamp,until:timestamp+360};
+        run.glitchPassiveInfectAt = timestamp + 160;
+        run.glitchNextInfectionAt = timestamp + GLITCH_INFECTION_INTERVAL_MS;
+      } else run.glitchNextInfectionAt = timestamp + 600;
     }
-    if (level >= 2 && timestamp >= run.glitchNextNeutralizeAt) {
-      const neutralized = neutralizeGlitchHazard(timestamp);
-      run.glitchNextNeutralizeAt = timestamp + (neutralized ? GLITCH_NEUTRALIZE_INTERVAL_MS : 1800);
+    if (run.glitchPassiveInfectAt > 0 && timestamp >= run.glitchPassiveInfectAt) {
+      infectGlitchAhead(timestamp);run.glitchPassiveInfectAt=0;
+    }
+    const disarm = run.glitchDisarm;
+    if (disarm) {
+      if (disarm.completedAt) {
+        if (timestamp >= disarm.finishAt) run.glitchDisarm = null;
+      } else if (timestamp >= disarm.finishAt || disarm.block.dead) completeGlitchDisarm(timestamp);
+      else {
+        const t = clamp((timestamp - disarm.startedAt) / 850, 0, 1), smooth = t * t * (3 - 2 * t);
+        disarm.block.x = disarm.fromX + ((run.gridOffsetX || 0) + disarm.block.col * run.cellSize - disarm.fromX) * smooth;
+        disarm.block.y = disarm.fromY + (run.blockRowOrigin + disarm.block.row * run.cellSize - disarm.fromY) * smooth;
+      }
     }
     for (const item of run.glitchSpreadQueue) {
       if (timestamp >= item.at) infectGlitchGroup(item.blocks, timestamp);
@@ -5260,6 +5489,12 @@
     }
     s.x += s.vx * dt;
     s.y += s.vy * dt;
+    if (ghost && run.phantomPhase) {
+      markPhantomPath(previousX, previousY, s.x, s.y, timestamp);
+      const trail = run.phantomPhase.trail;
+      if (!trail.length || timestamp - trail[trail.length - 1].at >= 40) trail.push({x:s.x,y:s.y,at:timestamp});
+      while (trail.length > 6 || (trail.length && timestamp - trail[0].at > 240)) trail.shift();
+    }
     if (!ghost) {
       updateHoneyState(s, timestamp);
       updateJellyState(s, timestamp, previousX, previousY);
@@ -5308,6 +5543,7 @@
       Math.floor((s.y - 285) / (run.rowCount * run.cellSize) * run.world.targetDepth)));
     run.maxDepth = Math.max(run.maxDepth, run.depth);
 
+    if(run.psionicBarrier || run.psionicBarrierBursts?.length)updatePsionicBarrier(timestamp);
     if (!ghost) {
       const mechHull = mechSuitActive() ? mechCollisionHull(s) : null;
       const collisionReach = mechHull ? run.cellSize * MECH_VISUAL_CELLS * .5 : s.radius;
@@ -5600,7 +5836,7 @@
 
   function cosmosOrbitsEnabled(timestamp = performance.now()) {
     return Boolean(run && !run.ended && !run.portalEntry && elementalLevel('cosmos') >= 1
-      && run.ultimateIntro?.type !== 'cosmos' && run.elementalAbilityActive !== 'cosmos'
+      && run.ultimateIntro?.type !== 'cosmos' && !(run.elementalAbilityActive === 'cosmos' && (run.ultimateStage || 3) >= 3)
       && !(run.cosmosUltimate && timestamp < run.cosmosUltimate.fadeUntil));
   }
 
@@ -5615,7 +5851,8 @@
     if (!(dt > 0)) return;
     run.cosmosOrbitClock += dt * 1000;
     run.cosmosOrbitAlpha = Math.min(1, run.cosmosOrbitAlpha + dt * 5);
-    const planets = window.SlimeCosmosOrbits.samples({ ...run.slime, cellSize: run.cellSize, level: elementalLevel('cosmos'), clock: run.cosmosOrbitClock });
+    const boost = COSMOS_ULTIMATES.orbitBoost(run, timestamp);
+    const planets = window.SlimeCosmosOrbits.samples({ ...run.slime, cellSize: run.cellSize, level: elementalLevel('cosmos'), clock: run.cosmosOrbitClock, planetScale: boost.scale });
     for (const planet of planets) {
       const previous = run.cosmosOrbitPrevious?.[planet.index] || planet;
       const travel = Math.hypot(planet.x - previous.x, planet.y - previous.y);
@@ -5637,7 +5874,7 @@
         }
         if (!hit) continue;
         run.cosmosOrbitCooldowns.set(block, run.cosmosOrbitClock + 2000);
-        damageBlockByElement(block, 1, 'cosmosOrbit', timestamp);
+        damageBlockByElement(block, boost.damage, boost.active ? 'cosmosPlanetUltimate' : 'cosmosOrbit', timestamp);
         run.cosmosOrbitHitUntil[planet.index] = timestamp + 150;
         if (timestamp - run.cosmosOrbitSoundAt >= 90) {
           run.cosmosOrbitSoundAt = timestamp;
@@ -5651,11 +5888,12 @@
 
   function drawRunCosmosOrbits(timestamp, front = false) {
     if (!cosmosOrbitsEnabled(timestamp)) return;
+    const boost = COSMOS_ULTIMATES.orbitBoost(run, timestamp);
     window.SlimeCosmosOrbits.draw(ctx, {
       x: run.slime.x, y: run.slime.y - run.cameraY, radius: run.slime.radius,
       cellSize: run.cellSize,
       level: elementalLevel('cosmos'), clock: run.cosmosOrbitClock,
-      alpha: run.cosmosOrbitAlpha, timestamp, hitUntil: run.cosmosOrbitHitUntil
+      alpha: run.cosmosOrbitAlpha, timestamp, hitUntil: run.cosmosOrbitHitUntil, planetScale: boost.scale, boostStrength: boost.strength
     }, front);
   }
 
@@ -6078,6 +6316,7 @@
 
   function resolveHazardHit(block, collision, timestamp) {
     const slime = run.slime;
+    if (run.psionicBarrier && psionicBarrierActive(timestamp)) { explodePsionicHazard(block, timestamp); return false; }
     const mech = mechSuitActive() ? run.mechSuit : null;
     if (mech || (run.cosmosUltimate && !run.cosmosUltimate.finishedAt && timestamp < run.cosmosUltimate.fadeUntil)) {
       block.hp = 0;
@@ -6295,7 +6534,7 @@
     return Boolean(block && !block.dead && !block.unbreakable && !block.hazard);
   }
 
-  const NANO_SHOT_INTERVAL_MS = 2000;
+  const NANO_SHOT_INTERVAL_MS = 1200;
   const NANO_MINE_INTERVAL_MS = 9000;
   const NANO_MINE_TRAVEL_MS = 600;
   const NANO_MINE_STAGGER_MS = 300;
@@ -6475,6 +6714,15 @@
     });
   }
 
+  function disintegrateTechnoUltimateBlock(block, timestamp) {
+    if (!elementalDamageable(block) || block.special) return false;
+    run.nanoDisintegrations.push({x:block.x,y:block.y,w:block.w,h:block.h,at:timestamp});
+    if (run.nanoDisintegrations.length > 12) run.nanoDisintegrations.splice(0, run.nanoDisintegrations.length - 12);
+    const result = damageBlockByElement(block, Math.max(1, block.hp), 'nanoDisintegrate', timestamp);
+    sound('break');
+    return result;
+  }
+
   function updateNanoDrones(timestamp) {
     if (!run || run.ended) return;
     updateShieldMines(timestamp);
@@ -6528,7 +6776,7 @@
     const origin = nanoDronePosition(0, timestamp);
     if (timestamp >= run.nanoNextShotAt[0]) {
       run.nanoNextShotAt[0] = timestamp + NANO_SHOT_INTERVAL_MS;
-      const target = nanoMineTargets(new Set(run.nanoMines.map(mine=>mine.target)))
+      const target = nanoMineTargets(new Set())
         .filter(block => block.hp >= block.maxHp && !block.phantomMarked).sort((a, b) => {
         const score = block => blockCenter(block).y - run.slime.y - Math.abs(blockCenter(block).x - origin.x) * .3;
         return score(b) - score(a);
@@ -6540,26 +6788,64 @@
           target, startedAt: timestamp, hit: false });
       }
     }
-    if (level < 2) return;
-    updateNanoMines(timestamp);
-    if(!run.nanoMines.length&&timestamp>=run.nanoNextMineAt)
-      run.nanoNextMineAt=timestamp+(queueNanoMines(timestamp)?NANO_MINE_INTERVAL_MS:800);
   }
 
   const TELEKINESIS_INTERVAL_MS = 1500;
-  const TELEKINESIS_THROW_INTERVAL_MS = 2700;
   const TELEKINESIS_PULL_START_MS = 180;
   const TELEKINESIS_RECOIL_START_MS = 720;
   const TELEKINESIS_THROW_START_MS = 930;
   const TELEKINESIS_IMPACT_MS = 1450;
   const TELEKINESIS_THROW_OFFSETS = [0, -.82, .88, -.42, .5];
-  const TELEKINESIS_ULTIMATE_COUNT = 10;
+  const TELEKINESIS_ULTIMATE_COUNT = 8;
   const TELEKINESIS_ULTIMATE_ORBIT_MS = 1450;
   const TELEKINESIS_ULTIMATE_STAGGER_MS = 185;
   const TELEKINESIS_PRESS_DISTANCE_CELLS = 7 * 80 / 50; // Seven mine rows are 50 m.
   const TELEKINESIS_PRESS_WINDUP_MS = 320;
   const TELEKINESIS_PRESS_COLLIDE_MS = 1280;
   const TELEKINESIS_PRESS_FADE_MS = 1050;
+
+  function psionicBarrierActive(timestamp) {
+    return Boolean(run?.psionicBarrier && timestamp >= run.psionicBarrier.startedAt && timestamp < run.psionicBarrier.until);
+  }
+
+  function psionicBarrierRadius() {
+    return run.slime.radius + run.cellSize * .55;
+  }
+
+  function startPsionicBarrier(timestamp) {
+    run.psionicBarrier = { startedAt:timestamp, until:timestamp+(run.ultimateProfile?.durationMs||3000), lastPulseAt:-Infinity };
+    run.psionicBarrierBursts ||= [];
+    updatePsionicBarrier(timestamp);
+  }
+
+  function explodePsionicHazard(block, timestamp) {
+    if (!block?.hazard || block.dead || !psionicBarrierActive(timestamp)) return false;
+    const center=blockCenter(block),cell=run.cellSize;
+    if (!destroyBlock(block,'psionicBarrier',timestamp)) return false;
+    block.hp=0;
+    for(const target of blocksNearY(center.y,cell*1.7)) {
+      if(!elementalDamageable(target)||target.special)continue;
+      const dx=center.x-clamp(center.x,target.x,target.x+target.w),dy=center.y-clamp(center.y,target.y,target.y+target.h);
+      if(dx*dx+dy*dy<=(cell*1.15)**2)damageBlockByElement(target,1,'psionicBarrier',timestamp);
+    }
+    run.psionicBarrier.lastPulseAt=timestamp;
+    run.psionicBarrierBursts.push({...center,startedAt:timestamp});
+    if(run.psionicBarrierBursts.length>8)run.psionicBarrierBursts.shift();
+    run.shake=Math.max(run.shake,3);sound('break');feedback(7);
+    return true;
+  }
+
+  function updatePsionicBarrier(timestamp) {
+    if(run.psionicBarrierBursts?.length)run.psionicBarrierBursts=run.psionicBarrierBursts.filter(b=>timestamp-b.startedAt<420);
+    if(!run.psionicBarrier)return;
+    if(timestamp>=run.psionicBarrier.until){run.psionicBarrier=null;return;}
+    if(!psionicBarrierActive(timestamp)||run.portalEntry||run.ended)return;
+    const s=run.slime,radius=psionicBarrierRadius();
+    for(const block of blocksNearY(s.y,radius+run.cellSize)) {
+      if(block.dead||!block.hazard)continue;
+      if(circleRectCollision({x:s.x,y:s.y,radius},block,radius))explodePsionicHazard(block,timestamp);
+    }
+  }
 
   function telekinesisPressProgress(press, timestamp) {
     const t = clamp((timestamp - press.startedAt - TELEKINESIS_PRESS_WINDUP_MS)
@@ -6618,7 +6904,7 @@
   function telekinesisCandidates() {
     const minY = run.slime.y + run.slime.radius * .75;
     const maxY = run.cameraY + VIEW_H - 18;
-    return run.blocks.filter(block => {
+    return blocksNearY((minY+maxY)/2,Math.max(0,(maxY-minY)/2)+run.cellSize).filter(block => {
       if (!elementalDamageable(block) || block.special) return false;
       const centerY = block.y + block.h / 2;
       return centerY > minY && centerY < maxY && block.x + block.w > 0 && block.x < VIEW_W;
@@ -6626,31 +6912,29 @@
   }
 
   function telekinesisOrbitPosition(projectile, elapsed) {
-    const angle = elapsed * .0023 + projectile.index * Math.PI * 2 / TELEKINESIS_ULTIMATE_COUNT;
+    const count=run.telekinesisCycle?.projectiles.length || TELEKINESIS_ULTIMATE_COUNT;
+    const angle = elapsed * .0028 + projectile.index * Math.PI * 2 / count;
     const radius = run.slime.radius * 1.5 + run.cellSize * .5;
+    const centerX=clamp(run.slime.x,radius+18,VIEW_W-radius-18);
+    let centerY=run.slime.y-run.slime.radius*1.8-20,vertical=radius*.42;
+    const ceiling=run.cameraY+105+run.cellSize*.22,floor=run.slime.y-run.slime.radius*.9-run.cellSize*.22;
+    if(floor>ceiling){vertical=Math.min(vertical,(floor-ceiling)/2);centerY=clamp(centerY,ceiling+vertical,floor-vertical);}
     return {
-      x: clamp(run.slime.x + Math.cos(angle) * radius, 18, VIEW_W - 18),
-      y: run.slime.y - run.slime.radius * 1.8 - 20 + Math.sin(angle) * radius * .32
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * vertical
     };
   }
 
   function startTelekinesisCycle(timestamp, level, ultimate = false) {
     const candidates = telekinesisCandidates();
     const selected = [];
-    const count = ultimate ? TELEKINESIS_ULTIMATE_COUNT : level >= 2 ? 2 : 1;
-    if (level >= 2 && !ultimate) {
-      const left = candidates.filter(block => blockCenter(block).x < run.slime.x);
-      const right = candidates.filter(block => blockCenter(block).x >= run.slime.x);
-      if (left.length && right.length) {
-        selected.push(left[Math.floor(Math.random() * left.length)], right[Math.floor(Math.random() * right.length)]);
-      }
-    }
+    const count = ultimate ? run.ultimateProfile?.blockCount || TELEKINESIS_ULTIMATE_COUNT : 1;
     while (selected.length < count && candidates.length) {
       const index = Math.floor(Math.random() * candidates.length);
       const block = candidates.splice(index, 1)[0];
       if (!selected.includes(block)) selected.push(block);
     }
-    run.telekinesisNextAt = timestamp + (ultimate ? 6000 : level >= 2 ? TELEKINESIS_THROW_INTERVAL_MS : TELEKINESIS_INTERVAL_MS);
+    run.telekinesisNextAt = timestamp + (ultimate ? 4400 : TELEKINESIS_INTERVAL_MS);
     if (!selected.length) return false;
     run.telekinesisMarks = selected.map(block => ({
       x: block.x, y: block.y, w: block.w, h: block.h, startedAt: timestamp,
@@ -6658,16 +6942,17 @@
     }));
     run.telekinesisCycle = {
       startedAt: timestamp,
-      mode: ultimate ? 'ultimate' : level >= 2 ? 'cross' : 'single',
+      mode: ultimate ? 'ultimate' : 'single', uncaptured:selected.length,
       projectiles: selected.map((block, index) => ({
         block,
         visual: { ...block },
         source: blockCenter(block),
         side: blockCenter(block).x < run.slime.x ? -1 : 1,
         index,
-        delay: ultimate ? index * 42 : index * 90,
-        throwAt: ultimate ? TELEKINESIS_ULTIMATE_ORBIT_MS + index * TELEKINESIS_ULTIMATE_STAGGER_MS : TELEKINESIS_THROW_START_MS + index * 90,
-        impactAt: ultimate ? TELEKINESIS_ULTIMATE_ORBIT_MS + index * TELEKINESIS_ULTIMATE_STAGGER_MS + 470 : TELEKINESIS_IMPACT_MS + index * 90,
+        delay: 0,
+        throwAt: ultimate ? (run.ultimateProfile?.orbitMs||TELEKINESIS_ULTIMATE_ORBIT_MS) + index * (run.ultimateProfile?.staggerMs||TELEKINESIS_ULTIMATE_STAGGER_MS) : TELEKINESIS_THROW_START_MS,
+        impactAt: ultimate ? (run.ultimateProfile?.orbitMs||TELEKINESIS_ULTIMATE_ORBIT_MS) + index * (run.ultimateProfile?.staggerMs||TELEKINESIS_ULTIMATE_STAGGER_MS) + 470 : TELEKINESIS_IMPACT_MS,
+        ultimate,
         detached: false,
         launched: false,
         impacted: false,
@@ -6675,7 +6960,7 @@
         launchFrom: null
       }))
     };
-    if (ultimate) run.elementalAbilityUntil = Math.max(run.elementalAbilityUntil, timestamp + 4550);
+    if (ultimate) run.elementalAbilityUntil = Math.max(run.elementalAbilityUntil, timestamp + run.telekinesisCycle.projectiles.at(-1).impactAt + 450);
     return true;
   }
 
@@ -6685,12 +6970,13 @@
     run.telekinesisThrowIndex += 1;
     const desiredX = cycle.mode === 'cross'
       ? projectile.side < 0 ? VIEW_W * .78 : VIEW_W * .22
-      : cycle.mode === 'ultimate' ? run.cellSize * (.5 + (projectile.index * 3) % Math.max(1, Math.floor(VIEW_W / run.cellSize)))
+      : cycle.mode === 'ultimate' ? run.gridOffsetX + run.cellSize * (.5 + (projectile.index * 3 + Math.floor(projectile.index/2)) % run.columns)
         : slime.x + offset * run.cellSize;
     const aimedX = clamp(desiredX, run.cellSize / 2, VIEW_W - run.cellSize / 2);
     let impactBlock = null;
     let bestScore = Infinity;
-    for (const block of run.blocks) {
+    const lowY=slime.y+slime.radius,highY=run.cameraY+VIEW_H-10;
+    for (const block of blocksNearY((lowY+highY)/2,Math.max(0,(highY-lowY)/2)+run.cellSize)) {
       if (!elementalDamageable(block) || block.special) continue;
       const center = blockCenter(block);
       if (center.y <= slime.y + slime.radius || center.y >= run.cameraY + VIEW_H - 10) continue;
@@ -6715,8 +7001,8 @@
       for (let row = target.row - 1; row <= target.row + 1; row += 1) {
         for (const block of run.blocksByRow?.get(row) || run.blocks) {
           if (elementalDamageable(block) && !block.special
-            && Math.abs(block.row - target.row) + Math.abs(block.col - target.col) <= 1) {
-            damageBlockByElement(block, 1, 'telekinesisBlast', timestamp);
+            && Math.abs(block.row - target.row) <= 1 && Math.abs(block.col - target.col) <= 1) {
+            damageBlockByElement(block, 1, projectile.ultimate ? 'telekinesisStorm' : 'telekinesisBlast', timestamp);
           }
         }
       }
@@ -6736,7 +7022,7 @@
         const elapsed = timestamp - cycle.startedAt;
         if (elapsed >= TELEKINESIS_PULL_START_MS + projectile.delay && !projectile.detached) {
           if (!projectile.block.dead) {
-            destroyBlock(projectile.block, 'telekinesisLift', timestamp);
+            destroyBlock(projectile.block, projectile.ultimate ? 'telekinesisStorm' : 'telekinesisLift', timestamp);
           }
           projectile.detached = true;
         }
@@ -6850,6 +7136,7 @@
   function detonateSporePod(pod, timestamp) {
     if (!pod || pod.detonated) return;
     pod.detonated = true;
+    recordMutationAction('cloning', pod);
     if (pod.block.sporePod === pod) pod.block.sporePod = null;
     const center = blockCenter(pod.block);
     const cause = pod.automatic ? 'sporeUltimate' : 'sporeExplosion';
@@ -6911,7 +7198,7 @@
       }
     }
     if (run.sporePods.length) run.sporePods = run.sporePods.filter(pod => !pod.detonated && !pod.block.dead);
-    if (run.sporeBursts.length) run.sporeBursts = run.sporeBursts.filter(burst => timestamp - burst.startedAt < 520);
+    if (run.sporeBursts.length) run.sporeBursts = run.sporeBursts.filter(burst => timestamp - burst.startedAt < 700);
   }
 
   function updateCloningUltimate(timestamp) {
@@ -6923,9 +7210,9 @@
       const slimeRow = Math.floor((ultimate.y - run.blockRowOrigin) / run.cellSize);
       for (let index = 0; index < (ultimate.count || 8); index += 1) {
         const target = findSporeTarget(slimeRow + 3 + index * 2,
-          (index * 3 + Math.floor(index / 2)) % run.columns);
+          [1, run.columns - 2, 2, run.columns - 3][index % 4]);
         if (target) launchSpore(target, timestamp, { x: ultimate.x, y: ultimate.y,
-          delay: index * 145, automatic: true, order: index });
+          delay: index * 180, automatic: true, order: index });
       }
       sporeBurst(ultimate.x, ultimate.y, 18, 1.4);
       run.shake = Math.max(run.shake, 5);
@@ -7047,12 +7334,13 @@
     if (!run?.specialEffects) return;
     const life = type === 'electricArc' ? .42
       : type === 'firePulse' ? .5
+        : type === 'fireTransfer' ? .52
         : type === 'frostTouch' ? .38
           : type === 'snowShard' ? .72
             : type === 'snowballKnockback' ? .62
           : type === 'coinArc' ? .72
             : .58;
-    appendTransientEffect({ type, x, y, life, maxLife: life, ...extra });
+    appendTransientEffect({ type, x, y, life, maxLife: life, ...extra }, 36, type === 'fireTransfer' ? 6 : 0);
   }
 
   function markFrostTransformation(block, timestamp, kind, quiet = false) {
@@ -7069,6 +7357,7 @@
     if (!frostFreezable(block) || block.elementalSnow || block.elementalSnowflake) return false;
     shareGlitchHit(block, 0, timestamp, 'snow');
     ensureWorldSprites(2);
+    recordMutationAction('frost', block);
     block.elementalSnow = true;
     if (block.flaskTier) block.flaskValue = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
     block.elementalFrozen = false;
@@ -7086,6 +7375,7 @@
     shareGlitchHit(block, 0, timestamp, 'snowflake');
     ensureWorldSprites(2);
     block.elementalSnow = false;
+    recordMutationAction('frost', block);
     block.elementalSnowflake = true;
     if (block.flaskTier) block.flaskValue = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
     block.elementalFrozen = false;
@@ -7134,8 +7424,8 @@
   }
 
   function scatterSnowShards(source, timestamp = performance.now()) {
-    if (elementalLevel('frost') < 2 || Math.random() >= .35) return 0;
-    const count = 2 + Math.floor(Math.random() * 4);
+    if (elementalLevel('frost') < 1 || Math.random() >= .35) return 0;
+    const count = 2;
     const maxY = run.cameraY + VIEW_H + run.cellSize * 4;
     const ranked = run.blocks
       .filter(block => frostTargetAvailable(block, timestamp) && block.row >= source.row + 2 && blockCenter(block).y <= maxY)
@@ -7232,12 +7522,14 @@
     if (!elementalDamageable(block)) return false;
     if (auraId && block.lastFireAuraId === auraId) return false;
     if (auraId) block.lastFireAuraId = auraId;
-    if (block.fireDamageAt > timestamp) return false;
+    if (block.fireDamageAt > 0) return false;
     shareGlitchHit(block, 0, timestamp, 'fire');
+    recordMutationAction('fire', block);
     block.fireIgnitedAt = timestamp;
-    block.fireDamageAt = timestamp + 1000;
+    block.fireTicksLeft = FIRE_BURN_HITS;
+    block.fireDamageAt = timestamp + FIRE_BURN_INTERVAL_MS;
     (run.burningBlocks ||= new Set()).add(block);
-    block.fireFlashUntil = block.fireDamageAt + 360;
+    block.fireFlashUntil = timestamp + FIRE_BURN_HITS * FIRE_BURN_INTERVAL_MS + 330;
     block.fireUltimateAuraId = auraId || 0;
     return true;
   }
@@ -7260,22 +7552,37 @@
   }
 
   function spreadFireFrom(source, timestamp) {
-    if (elementalLevel('fire') < 2) return;
+    if (elementalLevel('fire') < 1) return;
     const candidates = nearbyGridBlocks(source, elementalDamageable)
-      .filter(block => !(block.fireDamageAt > timestamp))
-      .sort(() => Math.random() - .5);
-    const target = candidates[0];
+      .filter(block => Math.abs(block.row - source.row) + Math.abs(block.col - source.col) === 1
+        && !(block.fireDamageAt > 0))
+      .map(block => ({ block, score: (block.row > source.row ? 2 : block.row === source.row ? 1 : 0) + Math.random() * .5 }))
+      .sort((a, b) => b.score - a.score);
+    const target = candidates[0]?.block;
     if (!target) return;
-    igniteBlock(target, timestamp, source.fireUltimateAuraId || 0);
+    if (!igniteBlock(target, timestamp + FIRE_TRANSFER_MS, source.fireUltimateAuraId || 0)) return;
     const from = blockCenter(source);
     const to = blockCenter(target);
-    pushElementalEffect('firePulse', to.x, to.y, { fromX: from.x, fromY: from.y });
+    pushElementalEffect('fireTransfer', to.x, to.y, { fromX: from.x, fromY: from.y, travelMs: FIRE_TRANSFER_MS, startedAt: timestamp });
   }
 
   function spreadFireFromBrokenBlock(block, timestamp, cause = '') {
     if (cause !== 'fire' && cause !== 'fireUltimate'
-      && !(block.fireDamageAt > timestamp || block.fireFlashUntil > timestamp)) return;
+      && !(block.fireDamageAt > 0 && block.fireTicksLeft > 0)) return;
     spreadFireFrom(block, timestamp);
+  }
+
+  function updateBurningBlocks(timestamp) {
+    for (const block of run.burningBlocks || []) {
+      if (block.dead || !block.fireDamageAt) { run.burningBlocks.delete(block); continue; }
+      // At most three scheduled ticks, including when a frame crosses several deadlines.
+      while (!block.dead && block.fireDamageAt > 0 && timestamp >= block.fireDamageAt) {
+        block.fireTicksLeft = Math.max(0, (block.fireTicksLeft || 1) - 1);
+        block.fireDamageAt = block.fireTicksLeft ? block.fireDamageAt + FIRE_BURN_INTERVAL_MS : 0;
+        damageBlockByElement(block, 1, block.fireUltimateAuraId ? 'fireUltimate' : 'fire', timestamp);
+      }
+      if (block.dead || !block.fireDamageAt) run.burningBlocks.delete(block);
+    }
   }
 
   function damageBlockByElement(block, amount, cause, timestamp = performance.now()) {
@@ -7286,10 +7593,12 @@
     if (!elementalDamageable(block)) return false;
     if (block.sporePod && cause !== 'sporeExplosion') detonateSporePod(block.sporePod, timestamp);
     if (block.dead) return false;
-    const damage = Math.max(0, block.phantomMarked && amount > 0 ? Math.max(2,amount) : amount);
+    const phantomBlast = cause === 'phantomBurst' || cause === 'phantomUltimateBurst';
+    const damage = Math.max(0, block.phantomMarked && amount > 0 && !phantomBlast ? Math.max(2,amount) : amount);
     if (cause !== 'glitchEcho') shareGlitchHit(block, damage, timestamp);
     block.hp = Math.max(0, block.hp - damage);
     if (cause === 'electric' || cause === 'electricStorm') {
+      recordMutationAction('electric', block);
       block.electricFlashStartedAt = timestamp;
       block.electricFlashUntil = timestamp + 620;
     }
@@ -7302,10 +7611,11 @@
     return Boolean(block.dead);
   }
 
-  function electricChainTargets(first, count) {
+  function electricChainTargets(first, count, excluded = null) {
     if (!first || count <= 0) return [];
     const targets = [first];
     const visited = new Set([first.id]);
+    if (excluded) visited.add(excluded.id);
     let current = first;
     while (targets.length < count) {
       const preferSideStep = targets.length % 4 === 3 && Math.random() < .72;
@@ -7328,13 +7638,13 @@
     return targets;
   }
 
-  function strikeElectricChain(first, count, origin, timestamp = performance.now()) {
-    const targets = electricChainTargets(first, count);
+  function strikeElectricChain(first, count, origin, timestamp = performance.now(), excluded = null) {
+    const targets = electricChainTargets(first, count, excluded);
     if (!targets.length) return 0;
     const points = [origin, ...targets.map(blockCenter)];
     targets.forEach((block, index) => {
       damageBlockByElement(block, 1, 'electric', timestamp);
-      block.electricFlashStartedAt = timestamp + index * 155;
+      block.electricFlashStartedAt = timestamp + index * 80;
       block.electricFlashUntil = block.electricFlashStartedAt + 620;
     });
     const life = .68 + targets.length * .155;
@@ -7452,12 +7762,14 @@
   }
 
   function dischargeFromImpact(source, count, timestamp) {
+    if (!elementalDamageable(source) || timestamp - (run.electricImpactAt ?? -Infinity) < ELECTRIC_IMPACT_WINDOW_MS) return 0;
+    run.electricImpactAt = timestamp;
     const candidates = nearbyGridBlocks(source, elementalDamageable).sort((a, b) => {
       const score = block => (block.row > source.row ? 80 : block.row === source.row ? 24 : -45) + block.row * 1.4 + rand(-18, 18);
       return score(b) - score(a);
     });
     const first = candidates[0];
-    return first ? strikeElectricChain(first, count, blockCenter(source), timestamp) : 0;
+    return first ? strikeElectricChain(first, count, blockCenter(source), timestamp, source) : 0;
   }
 
   function updateElementalEffects(timestamp = performance.now()) {
@@ -7483,6 +7795,11 @@
       return false;
     });
 
+    ELEMENTAL_ULTIMATES.update(run, timestamp, stagedUltimateServices);
+    TECHNO_ULTIMATES.update(run, timestamp, technoUltimateServices);
+    SPORE_COLOSSUS.update(run, timestamp, sporeColossusServices);
+    COSMOS_ULTIMATES.update(run, timestamp, cosmosUltimateServices);
+    updatePsionicBarrier(timestamp);
     updateFrostStorm(timestamp);
     updateNanoDrones(timestamp);
     updatePhantomCompanions(timestamp);
@@ -7491,22 +7808,22 @@
     updateCloningUltimate(timestamp);
     updateSpores(timestamp);
 
-    for (const block of run.burningBlocks || []) {
-      if (block.dead || !block.fireDamageAt) { run.burningBlocks.delete(block); continue; }
-      if (timestamp < block.fireDamageAt) continue;
-      run.burningBlocks.delete(block);
-      block.fireDamageAt = 0;
-      damageBlockByElement(block, 1, block.fireUltimateAuraId ? 'fireUltimate' : 'fire', timestamp);
-    }
+    updateBurningBlocks(timestamp);
 
     const active = run.elementalAbilityActive;
     if (!active) return;
-    if (active === 'fire') updatePhoenixUltimate(timestamp);
-    if (active === 'electric') updateElectricStorm(timestamp);
+    if (active === 'fire' && run.ultimateStage >= 3) updatePhoenixUltimate(timestamp);
+    if (active === 'electric' && run.ultimateStage >= 3) updateElectricStorm(timestamp);
     if (timestamp >= run.elementalAbilityUntil) {
       run.elementalAbilityActive = '';
       run.elementalAbilityNextTickAt = 0;
       finishUltimateRecharge();
+      run.stagedUltimate = null;
+      run.technoUltimate = null;
+      run.giantMushroom = null;
+      run.sporePop = null;
+      run.cosmosStagedUltimate = null;
+      if(active === 'telekinesis')run.psionicBarrier=null;
       if (active === 'cosmos') run.cosmosUltimate = null;
       if (active === 'electric' && run.electricStorm && !run.electricStorm.endedAt) {
         run.electricStorm.endedAt = timestamp;
@@ -7577,7 +7894,7 @@
     const fireLevel = elementalLevel('fire');
     const electricLevel = elementalLevel('electric');
     if (fireLevel >= 1) igniteBlock(block, timestamp);
-    if (electricLevel >= 1) dischargeFromImpact(block, electricLevel >= 2 ? 1 + Math.floor(Math.random() * 4) : 1, timestamp);
+    if (electricLevel >= 1) dischargeFromImpact(block, ELECTRIC_CHAIN_LENGTH, timestamp);
     if (block.dead) {
       if (!drillActive) applyBreakResistance(block, timestamp);
       return false;
@@ -7844,10 +8161,11 @@
     if (typeof cause !== 'string') cause = 'impact';
     const glitchRemoval = cause === 'glitchDelete' || (block.glitchNeutralized && (cause === 'glitchNeutralize' || cause === 'glitchHack'));
     // Only explicit ultimate removal or disarmed contact can bypass spike protection.
-    if (block.hazard && !glitchRemoval && cause !== 'cosmosUltimate' && cause !== 'mech' && cause !== 'phantomExpress'
+    if (block.hazard && !glitchRemoval && cause !== 'cosmosUltimate' && cause !== 'mech' && cause !== 'phantomExpress' && cause !== 'psionicBarrier'
       && (run?.worldId === 1 || cause !== 'telekinesisPress')) return false;
     if (block.sporePod) {
       if (cause === 'sporeExplosion') {
+        recordMutationAction('cloning', block.sporePod);
         block.sporePod.detonated = true;
         block.sporePod = null;
       } else detonateSporePod(block.sporePod, timestamp);
@@ -7857,15 +8175,21 @@
       shareGlitchHit(block, Math.max(1, block.hp || block.maxHp || 1), timestamp);
       if (block.dead) return false;
     }
+    if (glitchRemoval && block.hazard) recordMutationAction('glitch', block);
     const wasGolden = blockIsGolden(block, timestamp);
     const wasSnow = Boolean(block.elementalSnow);
     const wasSnowflake = Boolean(block.elementalSnowflake);
+    const glitchBreak = block.glitchInfected || block.glitchHitUntil > timestamp || cause === 'glitchEcho';
     block.dead = true;
     run.phantomMarkedBlocks?.delete(block);
     if (cause !== 'telekinesisPress') spreadFireFromBrokenBlock(block, timestamp, cause);
     run.glitchInfectedBlocks?.delete(block);
     block.glitchInfected = false;
     run.blocksDestroyed += 1;
+    if (!block.hazard) recordMutationAction('cosmos', block);
+    if (['nano', 'nanoDisintegrate', 'mech'].includes(cause)) recordMutationAction('nano', block);
+    if (['telekinesisLift', 'telekinesisStorm'].includes(cause)) recordMutationAction('telekinesis', block);
+    if (['phantomSpirit', 'phantomSalvo', 'phantomRealm', 'phantomBurst', 'phantomUltimateBurst'].includes(cause)) recordMutationAction('phantom', block);
     awardRunExperience(block);
     if (run.elementalAbilityType && !ultimateChargeBlocked(cause) && run.elementalAbilityCharges < 1) {
       run.ultimateCharge = Math.min(ULTIMATE_BLOCKS_REQUIRED, (run.ultimateCharge || 0) + 1);
@@ -7879,8 +8203,8 @@
       if (block.special === 'boss') impact('СТРАЖ НЕДР ПОБЕЖДЁН!');
       return true;
     }
-    if (cause === 'glitchDelete' || cause === 'glitchNeutralize' || cause === 'glitchHack') createGlitchDebris(block, timestamp, cause !== 'glitchDelete');
-    else if (cause !== 'telekinesisLift' && cause !== 'electricStorm') createDebris(block, block.special === 'geyser' ? 0 : cause === 'mech' ? 5 : block.special === 'bomb' ? 8 : 9, true);
+    if (glitchBreak || cause === 'glitchDelete' || cause === 'glitchNeutralize' || cause === 'glitchHack') createGlitchDebris(block, timestamp, !glitchBreak && cause !== 'glitchDelete');
+    else if (cause !== 'telekinesisLift' && cause !== 'electricStorm' && cause !== 'nanoDisintegrate') createDebris(block, block.special === 'geyser' ? 0 : ['sporeGiant','telekinesisStorm','psionicBarrier'].includes(cause) ? 3 : cause === 'mech' ? 5 : block.special === 'bomb' ? 8 : 9, true);
 
     if (block.special === 'coin') {
       impact('БЛОК РАЗРУШЕН');
@@ -7911,8 +8235,9 @@
   }
 
   function registerBrokenBlock(block) {
+    if (block?.dead && !block.hazard) recordMutationAction('cosmos', block);
     awardRunExperience(block);
-    if (run?.worldId === 1 && block?.flaskTier && !block.flaskGranted) {
+    if ((run?.worldId === 1 || run?.worldId === 2 || block?.glitchReward) && block?.flaskTier && !block.flaskGranted) {
       block.flaskGranted = true;
       const value = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
       awardFlaskData(value);
@@ -7933,56 +8258,7 @@
   }
 
   function awardRunExperience(block) {
-    if (!run || run.ended || !block || block.experienceGranted || block.hazard || block.unbreakable) return;
-    block.experienceGranted = true;
-    const amount = EXPERIENCE.experienceForBlock(block);
-    run.experienceEarned += amount;
-    run.experiencePendingGain += amount;
-    if (run.experienceHudFrame) return;
-    const currentRun = run;
-    run.experienceHudFrame = requestAnimationFrame(() => {
-      currentRun.experienceHudFrame = 0;
-      if (run !== currentRun || run.ended || !els.runExperienceHud) return;
-      const gain = currentRun.experiencePendingGain;
-      currentRun.experiencePendingGain = 0;
-      const stage = EXPERIENCE.stageForRunExperience(currentRun.experienceEarned);
-      const tierUp = stage > Number(els.runExperienceHud.dataset.stage || 0);
-      if (els.runExperienceScore) els.runExperienceScore.textContent = currentRun.experienceEarned.toLocaleString('ru-RU');
-      if (els.runExperienceGain) els.runExperienceGain.textContent = `+${gain}`;
-      els.runExperienceHud.dataset.stage = String(stage);
-      els.runExperienceHud.setAttribute('aria-label', `Опыт за забег: ${currentRun.experienceEarned}`);
-      els.runExperienceHud.classList.remove('is-hit');
-      const score = els.runExperienceScore;
-      const tierAnimating=!tierUp && els.runExperienceHud.classList.contains?.('is-tier-up')
-        && currentRun.experienceHitAnimation?.playState==='running';
-      if (!tierAnimating) currentRun.experienceHitAnimation?.cancel();
-      if (!menuReducedMotion && !tierAnimating && score?.animate) currentRun.experienceHitAnimation = score.animate([
-        {transform:'scale(.94) translateY(1px)'},
-        {transform:`scale(${tierUp ? 1.38 : 1.14}) translateY(-3px)`,offset:.38},
-        {transform:'scale(1.04)',offset:.76},{transform:'scale(1)'}
-      ], {duration:tierUp?580:240,easing:'cubic-bezier(.18,.75,.22,1)'});
-      if (!menuReducedMotion && els.runExperienceGain?.animate) {
-        currentRun.experienceGainAnimation?.cancel();
-        currentRun.experienceGainAnimation=els.runExperienceGain.animate([
-          {opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'translateY(-3px)',offset:.25},
-          {opacity:0,transform:'translateY(-20px)'}
-        ],{duration:460,easing:'ease-out'});
-      }
-      els.runExperienceHud.classList.add('is-hit');
-      if (tierUp) {
-        els.runExperienceHud.classList.remove('is-tier-up');
-        void els.runExperienceHud.offsetWidth;
-        els.runExperienceHud.classList.add('is-tier-up');
-        clearTimeout(currentRun.experienceTierTimer);
-        currentRun.experienceTierTimer=setTimeout(()=>{
-          if(run===currentRun)els.runExperienceHud?.classList.remove('is-tier-up');
-        },720);
-      }
-      clearTimeout(currentRun.experiencePulseTimer);
-      currentRun.experiencePulseTimer = setTimeout(() => {
-        if (run === currentRun) els.runExperienceHud?.classList.remove('is-hit');
-      }, 620);
-    });
+    // Legacy call sites remain harmless; development counts mutation actions.
   }
 
   function awardFlaskData(value) {
@@ -8400,15 +8676,16 @@
     trimParticles(240);
   }
 
-  function updateSpecialEffects(dt) {
+  function updateSpecialEffects(dt, timestamp = performance.now()) {
     if (!run?.specialEffects) return;
-    const timestamp = performance.now();
     for (const effect of run.specialEffects) {
       if ((effect.delay || 0) > 0) {
         effect.delay = Math.max(0, effect.delay - dt);
         continue;
       }
-      effect.life -= dt;
+      if (effect.type === 'fireTransfer' && Number.isFinite(effect.startedAt)) {
+        effect.life = Math.max(0, effect.maxLife - (timestamp - effect.startedAt) / 1000);
+      } else effect.life -= dt;
       if (effect.life > 0 || effect.resolved || !effect.targetBlockId) continue;
       effect.resolved = true;
       const target = run.blocks.find(block => block.id === effect.targetBlockId);
@@ -8462,6 +8739,10 @@
     if (!type || run.ultimateIntro || !ELEMENTAL_ABILITY_DURATION_MS[type]) return false;
     if (type === 'nano' && run.mechSuit) return false;
     if (!adminInfiniteUltimate && (run.elementalAbilityCharges <= 0 || run.elementalAbilityActive)) return false;
+    if (type === 'glitch' && run.ultimateProfile?.kind === 'glitchDisarm' && !findGlitchDisarmTarget()) {
+      impact('НЕТ КОЛЮЧЕК ВПЕРЕДИ');
+      return false;
+    }
     if (!adminInfiniteUltimate) {
       run.elementalAbilityCharges -= 1;
       run.ultimateCharge = 0;
@@ -8486,16 +8767,34 @@
     run.elementalAbilityNextTickAt = timestamp;
     run.elementalAuraId += 1;
 
+    if (['fire', 'frost', 'electric'].includes(type) && ELEMENTAL_ULTIMATES.start(run, type, timestamp, originX, originY, stagedUltimateServices)) {
+      impact(profile.name.toUpperCase());
+      updateRunUI();
+      return true;
+    }
+    if (type === 'cosmos' && COSMOS_ULTIMATES.start(run, timestamp)) {
+      run.cosmosUltimate = null;
+      run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+      impact(profile.name.toUpperCase());
+      updateRunUI();
+      return true;
+    }
+    if (type === 'nano' && TECHNO_ULTIMATES.start(run, type, timestamp, originX, originY, technoUltimateServices)) {
+      impact(profile.name.toUpperCase());
+      updateRunUI();
+      return true;
+    }
+
     if (type === 'frost') {
       startFrostStorm(timestamp);
-      impact(`СНЕГОПАД · ${duration / 1000} СЕКУНД`);
+      impact('ВЬЮГА');
     } else if (type === 'electric') {
       run.electricStorm = {
         startedAt: timestamp, nextStrikeAt: timestamp + 580,
         strikeLimit: profile.strikes || ELECTRIC_STORM_STRIKES, branchLength: profile.branchLength || ELECTRIC_STORM_BRANCH_LENGTH,
         strikes: 0, usedTargets: new Set(), flashUntil: 0, endedAt: 0
       };
-      impact(`ГРОЗОВОЙ ШКВАЛ · ${run.electricStorm.strikeLimit} УДАРОВ`);
+      impact('ГРОМОВЕРЖЕЦ');
     } else if (type === 'fire') {
       const startRow = Math.max(0, Math.floor((originY - run.blockRowOrigin - run.cellSize * .5) / run.cellSize) + 1);
       const endRow = Math.floor((originY + (profile.rows || PHOENIX_FIRE_ROWS) * run.cellSize - run.blockRowOrigin - run.cellSize * .5) / run.cellSize);
@@ -8503,7 +8802,7 @@
         startedAt: timestamp, duration, rows: profile.rows || PHOENIX_FIRE_ROWS, visualScale: [.72, .86, 1][(profile.stage || 3) - 1], startRow, endRow, lastRow: startRow - 1,
         originY, x: originX, auraId: run.elementalAuraId
       };
-      impact(`ФЕНИКС · ${profile.meters || 100} М`);
+      impact('ФЕНИКС');
     } else if (type === 'cosmos') {
       const chargeUntil = timestamp + COSMOS_ULTIMATE_CHARGE_MS;
       run.cosmosUltimate = {
@@ -8523,15 +8822,33 @@
       pushElementalEffect('coinArc', run.slime.x, run.slime.y, { toX: run.slime.x, toY: run.slime.y + run.cellSize * 1.8 });
       impact('ЗОЛОТАЯ ЛИХОРАДКА · 3с');
     } else if (type === 'cloning') {
+      if (profile.kind === 'sporePop') {
+        run.cloneUltimate = null;
+        ensureSporeSprites();
+        SPORE_COLOSSUS.startPop(run, timestamp);
+        run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+        impact('СПОРОВОЙ ХЛОПОК');
+        updateRunUI();
+        return true;
+      }
+      if (profile.kind === 'giantMushroom') {
+        run.cloneUltimate = null;
+        SPORE_COLOSSUS.start(run, timestamp, originX, originY);
+        run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
+        impact('ГРИБНОЙ ВЕЛИКАН');
+        updateRunUI();
+        return true;
+      }
       run.cloneUltimate = { startedAt: timestamp, fired: false, count: profile.sporeCount || 8, x: originX, y: originY };
       run.emotion = 'power';
       run.emotionUntil = timestamp + CLONE_ULTIMATE_BURST_MS;
       run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
-      impact('СПОРЫ · ПОСЕВ');
+      impact('ГРИБНАЯ ДОРОЖКА');
     } else if (type === 'glitch') {
       run.emotion = 'surprised';
       run.emotionUntil = timestamp + GLITCH_TITLE_MS;
-      startGlitchChoice(timestamp);
+      if (profile.kind === 'glitchDisarm') startGlitchDisarm(timestamp);
+      else startGlitchChoice(timestamp);
       run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
     } else if (type === 'nano') {
       const landAt = timestamp + MECH_LAND_MS;
@@ -8549,20 +8866,24 @@
       run.freezeUntil = 0;
       run.slime.vx = 0;
       run.slime.vy = 0;
-      impact(`МЕХА-СЛАЙМ · ${activeMs / 1000} СЕКУНД`);
+      impact('ТИТАН');
     } else if (type === 'telekinesis') {
       run.telekinesisUltimatePending = false;
       run.telekinesisCycle = null;
       run.telekinesisMarks = [];
       run.telekinesisBursts = [];
-      startTelekinesisPress(timestamp, originY);
+      if(profile.kind === 'psionicBarrier')startPsionicBarrier(timestamp);
+      else if(profile.kind === 'psionicStorm')startTelekinesisCycle(timestamp, elementalLevel('telekinesis'), true);
+      else startTelekinesisPress(timestamp, originY);
       run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
-      impact('ПСИОНИЧЕСКИЙ ПРЕСС');
+      impact(profile.name || 'ПСИОНИЧЕСКИЙ ПРЕСС');
     } else if (type === 'phantom') {
-      startPhantomExpress(timestamp);
-      run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, run.elementalAbilityUntil);
+      if (profile.kind === 'phantomSalvo') startPhantomSalvo(timestamp);
+      else if (profile.kind === 'phantomRealm') startPhantomPhase(timestamp);
+      else startPhantomExpress(timestamp);
+      if (profile.kind !== 'phantomSalvo') run.damageInvulnerableUntil = Math.max(run.damageInvulnerableUntil, run.elementalAbilityUntil);
       run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
-      impact('ПРИЗРАЧНЫЙ ЭКСПРЕСС');
+      impact(profile.name?.toUpperCase() || 'ПРИЗРАЧНЫЙ ЭКСПРЕСС');
     } else if (type === 'mass') {
       resetMassPierce();
       run.massPierceTriggered = true;
@@ -8656,14 +8977,14 @@
       const type = run.elementalAbilityType;
       els.abilityBtn.style.setProperty('--ultimate-accent', FORM_INDEX.find(form => form.id === type)?.color || '#52d9f2');
       const labels = {
-        frost: 'СНЕГОПАД',
-        electric: 'ГРОЗОВОЙ ШКВАЛ',
-        fire: 'ПОЛЁТ ФЕНИКСА',
+        frost: ULTIMATE_STAGES.get('frost', run.ultimateStage).name.toUpperCase(),
+        electric: ULTIMATE_STAGES.get('electric', run.ultimateStage).name.toUpperCase(),
+        fire: ULTIMATE_STAGES.get('fire', run.ultimateStage).name.toUpperCase(),
         cosmos: 'КОМЕТНЫЙ ПРОРЫВ',
-        nano: 'МЕХА-СЛАЙМ',
+        nano: ULTIMATE_STAGES.get('nano', run.ultimateStage).name.toUpperCase(),
         telekinesis: 'ПСИОНИЧЕСКИЙ ПРЕСС',
-        phantom: 'ПРИЗРАЧНЫЙ ЭКСПРЕСС',
-        cloning: 'СПОРОВЫЙ ПОСЕВ',
+        phantom: run.ultimateProfile?.name?.toUpperCase() || 'ПРИЗРАЧНЫЙ ЭКСПРЕСС',
+        cloning: run.ultimateProfile?.name?.toUpperCase() || 'СПОРОВЫЙ ПОСЕВ',
         gold: 'ЗОЛОТАЯ ЛИХОРАДКА',
         mass: 'ТЯЖЁЛЫЙ РЫВОК',
         mobility: 'СКОРОСТНОЙ БУР',
@@ -8696,8 +9017,8 @@
       els.abilityBtn.classList.toggle('is-ready', ready);
       els.abilityBtn.classList.toggle('is-active', Boolean(elementalActive) && !adminInfiniteUltimate);
       els.abilityBtn.setAttribute('aria-label', ready ? `Активировать: ${labels[type]}, степень ${run.ultimateStage || 3}` : elementalActive ? `${labels[type]} действует` : `${labels[type]} заряжается: ${Math.floor(run.ultimateCharge || 0)} из ${ULTIMATE_BLOCKS_REQUIRED} блоков`);
-      els.abilityText.textContent = run.mechSuit ? run.mechSuit.phase === 'descending' ? 'МЕХ · СТЫКОВКА'
-        : `МЕХ · ${(Math.max(0, run.mechSuit.expireAt - now) / 1000).toFixed(1)}с`
+      els.abilityText.textContent = run.mechSuit ? run.mechSuit.phase === 'descending' ? 'ТИТАН · СТЫКОВКА'
+        : `ТИТАН · ${(Math.max(0, run.mechSuit.expireAt - now) / 1000).toFixed(1)}с`
         : adminInfiniteUltimate ? `${labels[type]} · ∞ ГОТОВО`
           : elementalActive ? `${labels[type]} · ${(remaining / 1000).toFixed(1)}с`
             : ready ? `${labels[type]} · ГОТОВО` : `${labels[type]} · ${Math.floor(run.ultimateCharge || 0)}/${ULTIMATE_BLOCKS_REQUIRED}`;
@@ -8795,13 +9116,21 @@
           ctx.translate((VIEW_W / 2 - centerX) * squeeze, 0);
           ctx.globalAlpha = 1 - squeeze * .3;
         } else if (!block.motion) visibleBlocks.push(block);
+        const spectralShake = block.phantomDetonateAt > timestamp && block.phantomDetonateAt - timestamp < 650;
+        if (spectralShake) {
+          const force = 1 + (1 - (block.phantomDetonateAt - timestamp) / 650) * 1.4;
+          ctx.save();ctx.translate(Math.sin(timestamp / 23 + block.row * 7 + block.col) * force,
+            Math.cos(timestamp / 29 + block.col * 3) * force * .55);
+        }
         drawBlock(block, sy, timestamp);
+        if(run.telekinesisCycle?.uncaptured>0)captureTelekinesisBlockArt(block,sy);
         window.SlimeTechnoFeedback.laserTint(ctx,block,sy,timestamp);
         if (block.phantomMarked) drawPhantomMarkedBlock(block, sy, timestamp);
         if (block.glitchInfected || block.glitchDisperseUntil > timestamp || block.glitchNeutralized || block.glitchDeleteAt > timestamp || block.glitchHackingUntil > timestamp
           || block.glitchRewriteUntil > timestamp || block.glitchTransformUntil > timestamp) {
           drawGlitchBlockOverlay(block, sy, timestamp);
         }
+        if (spectralShake) ctx.restore();
         if (movingWithPress) ctx.restore();
       }
     }
@@ -8814,7 +9143,10 @@
       window.SlimeTechnoFeedback.mineBlast(ctx,effect,run.cameraY,timestamp);
     drawTelekinesisPressScene(timestamp);
     drawSporeEffects(timestamp);
+    SPORE_COLOSSUS.draw(ctx, run, timestamp);
     drawGlitchShock(timestamp);
+    window.SlimeGlitchFeedback.breaks(ctx, run, timestamp, menuReducedMotion || isLowPowerDevice());
+    window.SlimeGlitchFeedback.disarm(ctx, run, timestamp);
     drawFlasks(timestamp);
     drawGeyserCapture(timestamp);
     drawMeteorShowers(timestamp);
@@ -8823,7 +9155,9 @@
     drawPhantomScene(timestamp);
     drawPhantomBursts(timestamp);
     drawTelekinesis(timestamp);
+    for(const burst of run.psionicBarrierBursts || [])window.SlimePsionicEffects.blast(ctx,burst,run.cameraY,run.cellSize,timestamp);
 
+    const sporeParticleSprite = ASSETS.projectSprite('assets/vfx/spores-giant-seed-v1.webp');
     for (const p of run.particles) {
       const sy = p.y - run.cameraY;
       if (sy < -30 || sy > VIEW_H + 30) continue;
@@ -8833,7 +9167,7 @@
         window.SlimeBlockBreakFeedback.drawParticle(ctx,p,sy);
       } else if (p.kind === 'portal' || p.kind === 'special') {
         ctx.shadowColor = p.color;
-        ctx.shadowBlur = isLowPowerDevice() || p.shape === 'smoke' ? 0 : p.kind === 'portal' ? 9 : 6;
+        ctx.shadowBlur = isLowPowerDevice() || p.shape === 'smoke' || p.shape === 'spore' ? 0 : p.kind === 'portal' ? 9 : 6;
         if (p.shape === 'smoke') {
           ctx.globalAlpha *= .38;
           ctx.beginPath();
@@ -8857,7 +9191,9 @@
           ctx.globalAlpha *= .78;
           ctx.translate(p.x, sy);
           ctx.rotate(Math.atan2(p.vy, p.vx) + Math.PI / 2);
-          drawSporeShape(p.size, p.color);
+          if (sporeParticleSprite.complete && sporeParticleSprite.naturalWidth) {
+            ctx.drawImage(sporeParticleSprite, -p.size, -p.size * .86, p.size * 2, p.size * 1.72);
+          }
           ctx.restore();
         } else if (p.shape === 'leaf') {
           ctx.save();
@@ -8908,6 +9244,9 @@
     drawSpecialEffects(true);
     drawPhoenixUltimate(timestamp);
     drawElectricStormScene(timestamp);
+    ELEMENTAL_ULTIMATES.draw(ctx, run, timestamp);
+    COSMOS_ULTIMATES.draw(ctx, run, timestamp, isLowPowerDevice());
+    TECHNO_ULTIMATES.draw(ctx, run, timestamp);
     drawGlitchScreenEffect(timestamp);
     ctx.restore();
   }
@@ -9425,7 +9764,7 @@
       const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
       const alpha = Math.pow(1 - progress, .94);
       const y = effect.y - run.cameraY;
-      if (['blockBreak','essenceCollect','frostTouch','frostPulse','firePulse','freeze','cryo','heal','bomb'].includes(effect.type)
+      if (['blockBreak','essenceCollect','frostTouch','frostPulse','firePulse','fireTransfer','freeze','cryo','heal','bomb'].includes(effect.type)
           && (y < -200 || y > VIEW_H + 200)) continue;
       ctx.save();
       if (effect.type === 'blockBreak' || effect.type==='essenceCollect') {
@@ -9443,138 +9782,17 @@
         ctx.fillRect(-(effect.width || 56) / 2, -(effect.height || 56) / 2, effect.width || 56, effect.height || 56);
         ctx.strokeRect(-(effect.width || 56) / 2 + 2, -(effect.height || 56) / 2 + 2, (effect.width || 56) - 4, (effect.height || 56) - 4);
       } else if (effect.type === 'frostTouch') {
-        const radius = (effect.compact ? 8 : 11) + progress * (effect.compact ? 25 : 34);
-        ctx.translate(effect.x, y);
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = alpha * .92;
-        const flash = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-        flash.addColorStop(0, 'rgba(255,255,255,.96)');
-        flash.addColorStop(.28, 'rgba(177,241,255,.78)');
-        flash.addColorStop(1, 'rgba(69,176,235,0)');
-        ctx.fillStyle = flash;
-        ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#f3feff';
-        ctx.lineWidth = 2.5 - progress * 1.2;
-        ctx.shadowColor = '#46c6ff';
-        ctx.shadowBlur = 11;
-        for (let ray = 0; ray < 8; ray += 1) {
-          const angle = ray * Math.PI / 4 + effect.x * .003;
-          const inner = radius * (.2 + progress * .08);
-          const outer = radius * (.58 + (ray % 2) * .2);
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
-          ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
-          ctx.stroke();
-        }
+        window.SlimeMutationImpacts.frostTouch(ctx,effect,run.cameraY,run.cellSize,isLowPowerDevice());
       } else if (effect.type === 'snowShard') {
-        const toX = Number.isFinite(effect.toX) ? effect.toX : effect.x;
-        const toY = Number.isFinite(effect.toY) ? effect.toY : effect.y;
-        const flight = 1 - Math.pow(1 - progress, 1.48);
-        const shardX = lerp(effect.x, toX, flight);
-        const shardY = lerp(effect.y, toY, flight) - run.cameraY - Math.sin(flight * Math.PI) * 34;
-        const previousFlight = Math.max(0, flight - .065);
-        const trailX = lerp(effect.x, toX, previousFlight);
-        const trailY = lerp(effect.y, toY, previousFlight) - run.cameraY - Math.sin(previousFlight * Math.PI) * 34;
-        const size = 6.5;
-        ctx.globalAlpha = alpha * .68;
-        ctx.strokeStyle = '#6fd7ff';
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
-        ctx.shadowColor = '#25baff';
-        ctx.shadowBlur = 12;
-        ctx.beginPath(); ctx.moveTo(trailX, trailY); ctx.lineTo(shardX, shardY); ctx.stroke();
-        ctx.translate(shardX, shardY);
-        ctx.rotate(progress * Math.PI * 5);
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = '#ecfcff';
-        ctx.strokeStyle = '#147cae';
-        ctx.lineWidth = 2;
-        ctx.shadowColor = '#4bd1ff';
-        ctx.shadowBlur = 11;
-        ctx.beginPath();
-        ctx.moveTo(size * 1.25, 0);
-        ctx.lineTo(-size * .35, size * .72);
-        ctx.lineTo(-size, 0);
-        ctx.lineTo(-size * .25, -size * .68);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
+        window.SlimeMutationImpacts.frostShard(ctx,effect,run.cameraY,run.cellSize);
       } else if (effect.type === 'electricArc') {
-        const points = Array.isArray(effect.points) ? effect.points : [];
-        const elapsed = (effect.maxLife - effect.life) * 1000;
-        for (let index = 1; index < points.length; index += 1) {
-          const from = points[index - 1];
-          const to = points[index];
-          window.BlockEffectDraft.drawElectricLink(ctx, from.x, from.y - run.cameraY,
-            to.x, to.y - run.cameraY, elapsed - index * 155 + 125,
-            Math.floor(effect.seed || 0) + index);
-        }
+        window.SlimeMutationImpacts.electricChain(ctx,effect,run.cameraY,run.cellSize);
       } else if (effect.type === 'frostPulse') {
-        const ultimateScale = effect.ultimate ? 1.45 : 1;
-        const radius = (16 + progress * 70) * ultimateScale;
-        if (effect.ultimate) {
-          const burstAlpha = Math.max(0, 1 - progress * 1.85);
-          const glow = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, radius * 1.25);
-          glow.addColorStop(0, `rgba(255,255,255,${burstAlpha * .92})`);
-          glow.addColorStop(.22, `rgba(193,246,255,${burstAlpha * .68})`);
-          glow.addColorStop(1, 'rgba(55,181,238,0)');
-          ctx.globalCompositeOperation = 'screen';
-          ctx.fillStyle = glow;
-          ctx.beginPath(); ctx.arc(effect.x, y, radius * 1.25, 0, Math.PI * 2); ctx.fill();
-        }
-        ctx.globalAlpha = alpha * (effect.ultimate ? 1 : .9);
-        ctx.strokeStyle = '#dffcff';
-        ctx.lineWidth = (effect.ultimate ? 5.5 : 4) - progress * 2;
-        ctx.shadowColor = '#55cfff';
-        ctx.shadowBlur = effect.ultimate ? 19 : 12;
-        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
-        const rayCount = effect.ultimate ? 12 : 6;
-        for (let ray = 0; ray < rayCount; ray += 1) {
-          const angle = ray * Math.PI * 2 / rayCount + progress * .24;
-          ctx.beginPath();
-          ctx.moveTo(effect.x + Math.cos(angle) * radius * .58, y + Math.sin(angle) * radius * .58);
-          ctx.lineTo(effect.x + Math.cos(angle) * radius * (1 + (ray % 3) * .12), y + Math.sin(angle) * radius * (1 + (ray % 3) * .12));
-          ctx.stroke();
-        }
+        window.SlimeMutationImpacts.frostTouch(ctx,effect,run.cameraY,run.cellSize,isLowPowerDevice());
+      } else if (effect.type === 'fireTransfer') {
+        ELEMENTAL_ULTIMATES.drawFireTransfer(ctx, effect, run.cameraY, run.cellSize, isLowPowerDevice());
       } else if (effect.type === 'firePulse') {
-        const radius = 18 + progress * 78;
-        const activationFlash = !Number.isFinite(effect.fromX) && !Number.isFinite(effect.fromY)
-          ? Math.max(0, 1 - progress * 2.35)
-          : 0;
-        if (activationFlash > .01) {
-          const flashRadius = 28 + progress * 145;
-          const flash = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, flashRadius);
-          flash.addColorStop(0, `rgba(255,255,221,${activationFlash * .92})`);
-          flash.addColorStop(.2, `rgba(255,224,92,${activationFlash * .72})`);
-          flash.addColorStop(.58, `rgba(255,105,26,${activationFlash * .3})`);
-          flash.addColorStop(1, 'rgba(255,57,18,0)');
-          ctx.globalCompositeOperation = 'screen';
-          ctx.fillStyle = flash;
-          ctx.beginPath(); ctx.arc(effect.x, y, flashRadius, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = activationFlash * .88;
-          ctx.strokeStyle = '#fff3a0';
-          ctx.lineWidth = 3.4 - progress * 1.8;
-          for (let ray = 0; ray < 10; ray += 1) {
-            const angle = ray * Math.PI / 5 + progress * .22;
-            const inner = 22 + progress * 28;
-            const outer = inner + 28 + progress * 34;
-            ctx.beginPath();
-            ctx.moveTo(effect.x + Math.cos(angle) * inner, y + Math.sin(angle) * inner);
-            ctx.lineTo(effect.x + Math.cos(angle) * outer, y + Math.sin(angle) * outer);
-            ctx.stroke();
-          }
-          ctx.globalCompositeOperation = 'source-over';
-        }
-        ctx.globalAlpha = alpha * .82;
-        ctx.strokeStyle = '#ffb52e';
-        ctx.lineWidth = 5 - progress * 2.5;
-        ctx.shadowColor = '#ff4a1f';
-        ctx.shadowBlur = 14;
-        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
-        if (Number.isFinite(effect.fromX) && Number.isFinite(effect.fromY)) {
-          ctx.beginPath();
-          ctx.moveTo(effect.fromX, effect.fromY - run.cameraY);
-          ctx.quadraticCurveTo((effect.fromX + effect.x) / 2, (effect.fromY + effect.y) / 2 - run.cameraY - 18, effect.x, y);
-          ctx.stroke();
-        }
+        window.SlimeMutationImpacts.burst(ctx,'fire',effect.x,y,run.cellSize*2.4,progress,isLowPowerDevice());
       } else if (effect.type === 'coinArc') {
         const toX = Number.isFinite(effect.toX) ? effect.toX : effect.x;
         const toY = Number.isFinite(effect.toY) ? effect.toY : effect.y;
@@ -9590,31 +9808,7 @@
         ctx.shadowBlur = 12;
         ctx.beginPath(); ctx.ellipse(0, 0, 10 * Math.abs(Math.cos(progress * Math.PI * 5)) + 2, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       } else if (effect.type === 'cosmosBoost') {
-        const burst = Math.max(0, 1 - progress * 1.35);
-        const radius = 12 + progress * run.cellSize * 2.15;
-        ctx.globalCompositeOperation = 'lighter';
-        const flash = ctx.createRadialGradient(effect.x, y, 0, effect.x, y, radius * 1.18);
-        flash.addColorStop(0, `rgba(255,255,255,${burst * .95})`);
-        flash.addColorStop(.18, `rgba(225,181,255,${burst * .82})`);
-        flash.addColorStop(.52, `rgba(123,45,255,${burst * .46})`);
-        flash.addColorStop(1, 'rgba(44,15,124,0)');
-        ctx.fillStyle = flash;
-        ctx.beginPath(); ctx.arc(effect.x, y, radius * 1.18, 0, Math.PI * 2); ctx.fill();
-        ctx.globalAlpha = alpha;
-        ctx.strokeStyle = '#d8b6ff';
-        ctx.lineWidth = 6 - progress * 4;
-        ctx.shadowColor = '#8b35ff';
-        ctx.shadowBlur = 22;
-        ctx.beginPath(); ctx.arc(effect.x, y, radius, 0, Math.PI * 2); ctx.stroke();
-        for (let ray = 0; ray < 11; ray += 1) {
-          const angle = ray * Math.PI * 2 / 11 + progress * .18;
-          ctx.strokeStyle = ray % 3 ? '#b66cff' : '#f7ebff';
-          ctx.lineWidth = ray % 3 ? 2.6 : 4;
-          ctx.beginPath();
-          ctx.moveTo(effect.x + Math.cos(angle) * radius * .38, y + Math.sin(angle) * radius * .38);
-          ctx.lineTo(effect.x + Math.cos(angle) * radius * (1.05 + ray % 2 * .22), y + Math.sin(angle) * radius * (1.05 + ray % 2 * .22));
-          ctx.stroke();
-        }
+        window.SlimeMutationImpacts.burst(ctx,'cosmos',effect.x,y,run.cellSize*3,progress,isLowPowerDevice());
       } else if (effect.type === 'windBounce' || effect.type === 'windDash' || effect.type === 'windTornadoStart') {
         const dash = effect.type === 'windDash';
         const tornado = effect.type === 'windTornadoStart';
@@ -9714,41 +9908,9 @@
           ctx.stroke();
         }
       } else if (effect.type === 'chargedHit') {
-        const radius = 14 + progress * 42;
-        ctx.globalAlpha = alpha * .92;
-        ctx.strokeStyle = '#ffd45a';
-        ctx.lineWidth = 4.2 - progress * 2;
-        ctx.shadowColor = '#ff8d45';
-        ctx.shadowBlur = 13;
-        ctx.beginPath();
-        ctx.arc(effect.x, y, radius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = alpha * .85;
-        ctx.fillStyle = '#fff3bd';
-        for (let ray = 0; ray < 8; ray += 1) {
-          const angle = ray * Math.PI / 4 + progress * .24;
-          const inner = radius * .45;
-          const outer = radius + 13 + progress * 12;
-          ctx.beginPath();
-          ctx.moveTo(effect.x + Math.cos(angle) * inner, y + Math.sin(angle) * inner);
-          ctx.lineTo(effect.x + Math.cos(angle) * outer, y + Math.sin(angle) * outer);
-          ctx.stroke();
-        }
+        window.SlimeMutationImpacts.burst(ctx,'electric',effect.x,y,run.cellSize*1.2,progress,isLowPowerDevice());
       } else if (effect.type === 'shieldBurst') {
-        const radius = 20 + progress * 88;
-        ctx.globalAlpha = alpha * .9;
-        ctx.strokeStyle = '#b8f5ff';
-        ctx.lineWidth = 5 - progress * 2.5;
-        ctx.shadowColor = '#609dff';
-        ctx.shadowBlur = 16;
-        ctx.beginPath();
-        ctx.arc(effect.x, y, radius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = alpha * .52;
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.arc(effect.x, y, radius * .67, progress * 2.4, progress * 2.4 + Math.PI * 1.55);
-        ctx.stroke();
+        window.SlimeMutationImpacts.burst(ctx,'electric',effect.x,y,run.cellSize*2.8,progress,isLowPowerDevice());
       } else if (effect.type === 'cryo') {
         const frame = progress < .14 ? 1 : progress < .34 ? 2 : progress < .72 ? 3 : 4;
         const frameSize = frame === 1 ? 138 : frame === 2 ? 188 : frame === 3 ? 244 : 256;
@@ -9764,32 +9926,7 @@
           ctx.beginPath(); ctx.arc(effect.x, y, spread, 0, Math.PI * 2); ctx.fill();
         }
       } else if (effect.type === 'freeze') {
-        const targetX = run.slime.x;
-        const targetY = run.slime.y - run.cameraY;
-        const radius = 24 + progress * 88;
-        const frost = ctx.createRadialGradient(targetX, targetY, 4, targetX, targetY, radius);
-        frost.addColorStop(0, `rgba(238,253,255,${alpha * .34})`);
-        frost.addColorStop(.55, `rgba(125,222,250,${alpha * .18})`);
-        frost.addColorStop(1, 'rgba(77,183,228,0)');
-        ctx.save();
-        ctx.fillStyle = frost;
-        ctx.beginPath();
-        ctx.arc(targetX, targetY, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = alpha * .82;
-        ctx.fillStyle = '#edfdff';
-        for (let shard = 0; shard < 6; shard += 1) {
-          const angle = shard * Math.PI / 3 + progress * .7;
-          const orbit = 27 + progress * 50;
-          const x = targetX + Math.cos(angle) * orbit;
-          const y = targetY + Math.sin(angle) * orbit;
-          const size = 3.4 + (shard % 2) * 1.6;
-          ctx.beginPath();
-          ctx.moveTo(x, y - size); ctx.lineTo(x + size, y); ctx.lineTo(x, y + size); ctx.lineTo(x - size, y);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.restore();
+        window.SlimeMutationImpacts.frostTouch(ctx,{...effect,x:run.slime.x,y:run.slime.y},run.cameraY,run.cellSize,isLowPowerDevice());
       } else if (effect.type === 'jelly') {
         const direction = Math.atan2(effect.ny, effect.nx);
         ctx.save();
@@ -10477,13 +10614,14 @@
   function drawGlitchBlockOverlay(block, sy, timestamp) {
     const { x, w, h } = block;
     const deleting = block.glitchDeleteAt > timestamp;
-    const neutralized = block.glitchNeutralized;
+    const neutralized = block.glitchNeutralized && !block.glitchDisarming;
     const dispersing = !block.glitchInfected && block.glitchDisperseUntil > timestamp;
     ctx.save();
     ctx.globalAlpha = dispersing ? clamp((block.glitchDisperseUntil - timestamp) / 420, 0, 1) : 1;
     if (!neutralized) {
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(glitchPixelTile(block, sy, timestamp), x, sy, w, h);
+      if (block.glitchInfected) window.SlimeGlitchFeedback.infected(ctx, block, sy, timestamp, menuReducedMotion || isLowPowerDevice());
       if (block.glitchHackingUntil > timestamp) {
         ctx.fillStyle = 'rgba(79,255,142,.22)';
         ctx.fillRect(x + 4, sy + 4, w - 8, h - 8);
@@ -10518,42 +10656,19 @@
   }
 
   function drawGlitchShock(timestamp) {
-    const shock = run.glitchShock;
-    if (!shock) return;
-    const progress = (timestamp - shock.startedAt) / 390;
-    if (progress >= 1) { run.glitchShock = null; return; }
-    const source = shock.source;
-    const fromX = source.x + source.w / 2;
-    const fromY = source.y + source.h / 2 - run.cameraY;
-    if (fromY < -40 || fromY > VIEW_H + 40) return;
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, 1 - progress);
-    ctx.lineWidth = 2.5 + (1 - progress) * 2;
-    ctx.shadowColor = '#65fff6';
-    ctx.shadowBlur = isLowPowerDevice() ? 0 : 8;
-    for (const target of shock.targets) {
-      if (target === source) continue;
-      const toX = target.x + target.w / 2;
-      const toY = target.y + target.h / 2 - run.cameraY;
-      if (toY < -40 || toY > VIEW_H + 40) continue;
-      ctx.strokeStyle = (target.id || 0) % 2 ? '#5ffff2' : '#ff68ef';
-      ctx.beginPath();
-      ctx.moveTo(fromX, fromY);
-      for (let step = 1; step < 5; step += 1) {
-        const t = step / 5;
-        const jitter = ((Math.floor(timestamp / 45) * 13 + (target.id || 0) * 17 + step * 23) % 17 - 8) * 1.2;
-        ctx.lineTo(lerp(fromX, toX, t) + jitter, lerp(fromY, toY, t) - jitter);
-      }
-      ctx.lineTo(toX, toY);
-      ctx.stroke();
-    }
-    ctx.restore();
+    if (!run.glitchShock) return;
+    if (timestamp - run.glitchShock.startedAt >= 440) { run.glitchShock = null; return; }
+    window.SlimeGlitchFeedback.shock(ctx, run, timestamp, menuReducedMotion || isLowPowerDevice());
   }
 
   function drawGlitchScreenEffect(timestamp) {
     const effect = run.glitchScreen;
     if (!effect) return;
     if (timestamp >= effect.until) { run.glitchScreen = null; return; }
+    if (effect.kind === 'passive') {
+      window.SlimeGlitchFeedback.screen(ctx, VIEW_W, VIEW_H, timestamp, effect, menuReducedMotion || isLowPowerDevice());
+      return;
+    }
     const age = timestamp - effect.startedAt;
     const fade = Math.min(1, age / 120) * clamp((effect.until - timestamp) / 450, 0, 1);
     const hack = effect.kind === 'hack';
@@ -10817,11 +10932,7 @@
     }
 
     if (timestamp >= (block.electricFlashStartedAt || 0) && timestamp < (block.electricFlashUntil || 0)) {
-      prepareElementalBlockCanvas(w);
-      const dpr = ctx.canvas.width / VIEW_W;
-      elementalBlockSpriteCtx.drawImage(ctx.canvas, x * dpr, sy * dpr, w * dpr, h * dpr, 0, 0, w, w);
-      window.BlockEffectDraft.drawElectricShockBlock(ctx, elementalBlockSprite,
-        x, sy, w, timestamp - block.electricFlashStartedAt, block.id);
+      window.SlimeMutationImpacts.electricHit(ctx,block,sy,timestamp);
     }
     ctx.restore();
   }
@@ -10917,7 +11028,7 @@
     const firstWorldSpikeEnemy = block.hazard && run.worldId === 1 && !frostTransformed;
     if (frostIsPrimary && block.elementalSnowflake) spriteName = 'snowflake';
     else if (frostIsPrimary && block.elementalSnow) spriteName = 'snow-packed';
-    else if (block.hazard && run.worldId === 2) spriteName = block.hazardVariant === 'spikes' ? 'ice-spikes' : 'ice-shards';
+    else if (block.hazard && run.worldId === 2) spriteName = 'ice-spikes';
     else if (block.hazard && run.worldId === 3) spriteName = 'candy-hazard';
     else if (block.hazard && run.worldId === 4) spriteName = 'lava-hazard';
     else if (block.hazard) spriteName = 'stone-hazard';
@@ -10956,7 +11067,7 @@
     else spriteName = 'stone';
 
     // Keep the original stone pixels; only the resource veins are layered on top.
-    const liquidVeinName = run.worldId === 1 && block.flaskTier && !block.special && !block.hazard
+    const liquidVeinName = (run.worldId === 1 || run.worldId === 2 || block.glitchReward) && block.flaskTier && !block.special && !block.hazard
       ? block.flaskTier >= 3 ? 'stone-reinforced-liquid'
         : block.flaskTier === 2 ? 'stone-liquid' : 'ground-weak-liquid'
       : null;
@@ -11052,10 +11163,11 @@
         ctx.restore();
       }
     }
+    if(frostTransformed)window.SlimeMutationImpacts.freezeBlock(ctx,block,sy,timestamp);
     // Resource identity survives snow/snowflake transformations. Draw the
     // original vein layer after the frost reveal, without changing its reward.
     ctx.globalAlpha = 1;
-    const liquidVeins = liquidVeinName && WORLD_SPRITES[1]?.[liquidVeinName];
+    const liquidVeins = liquidVeinName && (WORLD_SPRITES[run.worldId]?.[liquidVeinName] || WORLD_SPRITES[1]?.[liquidVeinName]);
     if (liquidVeins?.complete && liquidVeins.naturalWidth) {
       ctx.drawImage(liquidVeins, drawX, drawY, width, height);
     }
@@ -12501,6 +12613,17 @@
     ctx.restore();
   }
 
+  function captureTelekinesisBlockArt(block,sy) {
+    const cycle=run.telekinesisCycle;
+    const projectile=cycle?.projectiles.find(p=>p.block===block&&!p.art);
+    if(!projectile||sy<0||sy+block.h>VIEW_H)return;
+    const image=document.createElement('canvas');image.width=Math.ceil(block.w);image.height=Math.ceil(block.h);
+    const transform=ctx.getTransform();
+    image.getContext('2d').drawImage(ctx.canvas,block.x*transform.a+transform.e,sy*transform.d+transform.f,
+      block.w*transform.a,block.h*transform.d,0,0,image.width,image.height);
+    projectile.art=image;cycle.uncaptured--;
+  }
+
   function drawTelekinesis(timestamp) {
     if (!run.telekinesisMarks.length && !run.telekinesisCycle && !run.telekinesisBursts.length) return;
     ctx.save();
@@ -12508,8 +12631,7 @@
       const progress = clamp((timestamp - mark.startedAt) / mark.duration, 0, 1);
       const sy = mark.y - run.cameraY;
       ctx.globalAlpha = (1 - progress) * .88;
-      ctx.shadowColor = '#65bfff';
-      ctx.shadowBlur = 10;
+      window.SlimePsionicEffects.halo(ctx,mark.x+mark.w/2,sy+mark.h/2,mark.w*1.6,(1-progress)*.25);
       ctx.strokeStyle = '#b5dcff';
       ctx.lineWidth = 2.5;
       ctx.strokeRect(mark.x + 4, sy + 4, mark.w - 8, mark.h - 8);
@@ -12550,41 +12672,23 @@
       const screenY = y - run.cameraY;
       ctx.save();
       ctx.globalAlpha = .9;
-      ctx.fillStyle = 'rgba(65,173,255,.25)';
-      ctx.fillRect(x - projectile.visual.w * scale * .62, screenY - projectile.visual.h * scale * .62,
-        projectile.visual.w * scale * 1.24, projectile.visual.h * scale * 1.24);
+      window.SlimePsionicEffects.halo(ctx,x,screenY,projectile.visual.w*scale*1.8,.38);
       ctx.translate(x, screenY);
       ctx.rotate(Math.sin(elapsed / 165 + projectile.index) * .09);
       ctx.scale(scale, scale);
-      ctx.translate(-source.x, -(source.y - run.cameraY));
       ctx.globalAlpha = 1;
-      ctx.shadowColor = '#63bfff';
-      ctx.shadowBlur = 13;
-      drawBlock(projectile.visual, projectile.visual.y - run.cameraY, timestamp);
-      ctx.shadowBlur = 0;
+      if(projectile.art)ctx.drawImage(projectile.art,-projectile.visual.w/2,-projectile.visual.h/2,projectile.visual.w,projectile.visual.h);
+      else {
+        ctx.save();ctx.translate(-source.x,-(source.y-run.cameraY));
+        drawBlock(projectile.visual,projectile.visual.y-run.cameraY,timestamp);ctx.restore();
+      }
       ctx.strokeStyle = '#9ed9ff';
       ctx.lineWidth = 2.4;
-      ctx.strokeRect(projectile.visual.x + 1, projectile.visual.y - run.cameraY + 1,
+      ctx.strokeRect(-projectile.visual.w/2+1,-projectile.visual.h/2+1,
         projectile.visual.w - 2, projectile.visual.h - 2);
       ctx.restore();
     }
-    for (const burst of run.telekinesisBursts) {
-      const t = clamp((timestamp - burst.startedAt) / 330, 0, 1);
-      const sy = burst.y - run.cameraY;
-      const radius = run.cellSize * (0.38 + t * 1.1);
-      ctx.globalAlpha = (1 - t) * .8;
-      ctx.strokeStyle = '#99d4ff';
-      ctx.lineWidth = 4 - t * 2.5;
-      ctx.shadowColor = '#58aaff';
-      ctx.shadowBlur = 11;
-      ctx.beginPath(); ctx.arc(burst.x, sy, radius, 0, Math.PI * 2); ctx.stroke();
-      ctx.globalAlpha = (1 - t) * .13;
-      ctx.fillStyle = '#62b4ff';
-      const cell = run.cellSize;
-      for (const [col, row] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) {
-        ctx.fillRect(burst.x + (col - .5) * cell, sy + (row - .5) * cell, cell, cell);
-      }
-    }
+    for (const burst of run.telekinesisBursts)window.SlimePsionicEffects.blast(ctx,burst,run.cameraY,run.cellSize,timestamp,330);
     ctx.restore();
   }
 
@@ -12767,23 +12871,8 @@
     if (progress >= 1) { run.mechExplosion = null; return; }
     const x = burst.x;
     const y = burst.y - run.cameraY;
-    const radius = run.cellSize * (burst.expired ? .5 + progress * .85 : .65 + progress * 1.7);
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, (1 - progress) * (burst.expired ? .7 : 1));
-    ctx.strokeStyle = burst.expired ? '#9df5fb' : '#ff6a49';
-    ctx.lineWidth = Math.max(2, run.cellSize * (burst.expired ? .07 - progress * .04 : .10 - progress * .06));
-    ctx.shadowColor = burst.expired ? '#54ddea' : '#ff3e42'; ctx.shadowBlur = burst.expired ? 11 : 20;
-    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.stroke();
-    for (let i = 0; i < (burst.expired ? 6 : 8); i += 1) {
-      const angle = i * Math.PI / 4 + .12;
-      const distance = radius * (.65 + (i % 3) * .1);
-      ctx.fillStyle = i % 2 ? '#ffb766' : '#d4faff';
-      ctx.beginPath();
-      ctx.arc(x + Math.cos(angle) * distance, y + Math.sin(angle) * distance,
-        run.cellSize * .06 * (1 - progress), 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
+    window.SlimeMutationImpacts.burst(ctx, burst.expired ? 'electric' : 'fire', x, y,
+      run.cellSize * (burst.expired ? 1.8 : 3), progress, isLowPowerDevice());
   }
 
   function drawNanoDrones(timestamp) {
@@ -12811,12 +12900,8 @@
       ctx.beginPath(); ctx.moveTo(shot.fromX, shot.fromY - run.cameraY); ctx.lineTo(endX, endY); ctx.stroke();
       ctx.restore();
       if (age >= travelMs) {
-        ctx.save();
-        ctx.globalAlpha = fade;
-        ctx.strokeStyle = '#ff5360'; ctx.lineWidth = 3;
-        ctx.shadowColor = '#ff253b'; ctx.shadowBlur = shot.mech ? 14 : 0;
-        ctx.beginPath(); ctx.arc(shot.toX, shot.toY - run.cameraY, 6 + (age - travelMs) * .13, 0, Math.PI * 2); ctx.stroke();
-        ctx.restore();
+        window.SlimeMutationImpacts.burst(ctx, 'fire', shot.toX, shot.toY - run.cameraY,
+          run.cellSize * .75, clamp((age - travelMs) / (fadeEnd - travelMs), 0, 1), isLowPowerDevice());
       }
     }
     for (const mine of [...run.nanoMines, ...(run.shieldMines || [])]) {
@@ -12855,27 +12940,17 @@
   function ensureSporeSprites() {
     if (sporeSpritesRequested) return;
     sporeSpritesRequested = true;
+    ASSETS.projectSprite('assets/vfx/spores-impact-cloud-v1.webp');
     sporeSeedSprite.src = versionedAsset('assets/vfx/spores-seed-v1.webp');
     sporePodSprite.src = versionedAsset('assets/vfx/spores-pod-v5.webp');
     sporeBurstSprite.src = versionedAsset('assets/vfx/spores-burst-v1.webp');
   }
 
-  function drawSporeShape(size, color) {
-    ctx.fillStyle = 'rgba(185,255,109,.24)';
-    ctx.beginPath(); ctx.ellipse(0, 0, size * 1.35, size * 1.75, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#397e2f';
-    ctx.beginPath(); ctx.ellipse(0, 0, size * .7, size * 1.02, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.ellipse(0, 0, size * .52, size * .84, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,239,.85)';
-    ctx.beginPath(); ctx.ellipse(-size * .17, -size * .3, size * .14, size * .23, -.3, 0, Math.PI * 2); ctx.fill();
-  }
-
   function drawSporeEffects(timestamp) {
     if (!run.sporeProjectiles.length && !run.sporePods.length && !run.sporeBursts.length) return;
-    const lowPower = isLowPowerDevice();
     const cell = run.cellSize;
     const seedReady = sporeSeedSprite.complete && sporeSeedSprite.naturalWidth > 0;
+    const flightSprite = ASSETS.projectSprite('assets/vfx/spores-giant-seed-v1.webp');
     const podReady = sporePodSprite.complete && sporePodSprite.naturalWidth > 0;
     const burstReady = sporeBurstSprite.complete && sporeBurstSprite.naturalWidth > 0;
     for (const projectile of run.sporeProjectiles) {
@@ -12888,8 +12963,10 @@
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(Math.sin(flight.progress * Math.PI * 2) * .25);
-      if (!lowPower) { ctx.shadowColor = '#b5ff79'; ctx.shadowBlur = 6; }
-      drawSporeShape(size, '#bbff6b');
+      if (flightSprite.complete && flightSprite.naturalWidth) {
+        const width = size * 2.3;
+        ctx.drawImage(flightSprite, -width / 2, -width * .43, width, width * .86);
+      }
       ctx.restore();
     }
     for (const pod of run.sporePods) {
@@ -12905,7 +12982,6 @@
       const matureSize = cell * 1.05 * (.48 + .52 * (1 - Math.pow(1 - growth, 2))) * pulse;
       ctx.save();
       ctx.translate(center.x, y);
-      if (!lowPower) { ctx.shadowColor = '#afff60'; ctx.shadowBlur = 6; }
       if (seedReady && matureBlend < 1) {
         ctx.globalAlpha = 1 - matureBlend;
         ctx.drawImage(sporeSeedSprite, -seedSize / 2, -seedSize / 2, seedSize, seedSize);
@@ -12920,44 +12996,25 @@
       ctx.restore();
     }
     for (const burst of run.sporeBursts) {
-      const y = burst.y - run.cameraY;
-      if (y < -cell * 2 || y > VIEW_H + cell * 2) continue;
-      const t = clamp((timestamp - burst.startedAt) / 520, 0, 1);
-      const size = cell * (1.1 + t * 2.1);
-      ctx.save();
-      ctx.globalAlpha = (1 - t) * (1 - t);
-      if (burstReady) ctx.drawImage(sporeBurstSprite, burst.x - size / 2, y - size / 2, size, size);
-      else { ctx.fillStyle = '#c9ff6e'; ctx.beginPath(); ctx.arc(burst.x, y, size * .35, 0, Math.PI * 2); ctx.fill(); }
-      ctx.restore();
+      const y=burst.y-run.cameraY;
+      if(y < -cell*2 || y > VIEW_H+cell*2)continue;
+      window.SlimeMutationImpacts.spores(ctx,burst,run.cameraY,cell,timestamp,isLowPowerDevice());
     }
   }
 
   function drawCloningCharge(timestamp) {
     const ultimate = run.cloneUltimate;
     if (!ultimate) return;
+    const cloud = ASSETS.projectSprite('assets/vfx/spores-impact-cloud-v1.webp');
+    if (!cloud.complete || !cloud.naturalWidth) return;
     const age = timestamp - ultimate.startedAt;
-    const slime = run.slime;
-    const sy = slime.y - run.cameraY;
+    const charging = age < CLONE_ULTIMATE_BURST_MS;
+    const t = clamp(charging ? age / CLONE_ULTIMATE_BURST_MS : (age - CLONE_ULTIMATE_BURST_MS) / 390, 0, 1);
+    const width = run.cellSize * (charging ? 1.2 + t * .9 : 2.1 + t * 1.7);
+    const height = width * cloud.naturalHeight / cloud.naturalWidth;
     ctx.save();
-    if (age < CLONE_ULTIMATE_BURST_MS) {
-      const t = clamp(age / CLONE_ULTIMATE_BURST_MS, 0, 1);
-      const radius = slime.radius * (1.25 + t * .55);
-      const glow = ctx.createRadialGradient(slime.x, sy, slime.radius * .4, slime.x, sy, radius);
-      glow.addColorStop(0, `rgba(202,255,162,${.08 + t * .15})`);
-      glow.addColorStop(.65, `rgba(87,236,112,${.13 + t * .2})`);
-      glow.addColorStop(1, 'rgba(69,216,102,0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(slime.x, sy, radius, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = `rgba(173,255,182,${.25 + t * .4})`;
-      ctx.lineWidth = 2.2;
-      ctx.beginPath(); ctx.arc(slime.x, sy, slime.radius * (1.12 + t * .28), 0, Math.PI * 2); ctx.stroke();
-    } else {
-      const t = clamp((age - CLONE_ULTIMATE_BURST_MS) / 390, 0, 1);
-      ctx.globalAlpha = (1 - t) * .72;
-      ctx.strokeStyle = '#adffac';
-      ctx.lineWidth = 4 - t * 2;
-      ctx.beginPath(); ctx.arc(slime.x, sy, slime.radius * (.8 + t * 2.2), 0, Math.PI * 2); ctx.stroke();
-    }
+    ctx.globalAlpha = charging ? .12 + t * .22 : (1 - t) * .65;
+    ctx.drawImage(cloud, run.slime.x - width / 2, run.slime.y - run.cameraY + run.slime.radius * .6 - height / 2, width, height);
     ctx.restore();
   }
 
@@ -12972,8 +13029,6 @@
       ctx.save();
       ctx.translate(mini.x, sy);
       ctx.rotate(clamp(mini.vx / 1300, -.3, .3));
-      ctx.shadowColor = '#75f795';
-      ctx.shadowBlur = 5;
       if (spriteReady) ctx.drawImage(miniMushroomSprite, -size / 2, -size / 2, size, size);
       else {
         ctx.fillStyle = '#72ec75';
@@ -13048,11 +13103,13 @@
     const bounceSquash = clamp(Math.sin(s.wobble) * .025 + Math.abs(s.vx) / 1700, 0, .12);
     const scaleX = frozen ? 1 : 1 - stretch * .42 + bounceSquash;
     const scaleY = frozen ? 1 : 1 + stretch - bounceSquash * .55;
-    const cloneChargeAge = run.cloneUltimate ? timestamp - run.cloneUltimate.startedAt : 0;
-    const cloneCharge = run.cloneUltimate && !run.cloneUltimate.fired
-      ? clamp(cloneChargeAge / CLONE_ULTIMATE_BURST_MS, 0, 1) : 0;
-    const cloneRelease = run.cloneUltimate?.fired
-      ? 1 - clamp((cloneChargeAge - CLONE_ULTIMATE_BURST_MS) / 240, 0, 1) : 0;
+    const cloneCast = run.sporePop || run.cloneUltimate;
+    const cloneChargeMs = run.sporePop ? run.ultimateProfile.chargeMs : CLONE_ULTIMATE_BURST_MS;
+    const cloneChargeAge = cloneCast ? timestamp - cloneCast.startedAt : 0;
+    const cloneCharge = cloneCast && !cloneCast.fired
+      ? clamp(cloneChargeAge / cloneChargeMs, 0, 1) : 0;
+    const cloneRelease = cloneCast?.fired
+      ? 1 - clamp((cloneChargeAge - cloneChargeMs) / 240, 0, 1) : 0;
     const hitAge = timestamp - (run.lastHeartLossAt || 0);
     const hitSquash = hurtActive ? Math.sin(Math.PI * clamp(hitAge / 240, 0, 1)) : 0;
     const radius = s.radius;
@@ -13157,11 +13214,11 @@
       y:eyeX*Math.sin(eyeAngle)+eyeY*Math.cos(eyeAngle)};
     const fireLevel = run.categoryVisuals?.fire || 0;
     const fireRadius = radius * portalScale * launchScale;
-    const fireAbilityActive = run.elementalAbilityActive === 'fire' && timestamp < run.elementalAbilityUntil;
+    const fireAbilityActive = run.elementalAbilityActive === 'fire' && run.ultimateStage >= 3 && timestamp < run.elementalAbilityUntil;
     const fireAbilityDuration = ELEMENTAL_ABILITY_DURATION_MS.fire || 5000;
     const fireAbilityRemaining = fireAbilityActive ? Math.max(0, run.elementalAbilityUntil - timestamp) : 0;
     const fireAbilityElapsed = fireAbilityActive ? fireAbilityDuration - fireAbilityRemaining : fireAbilityDuration;
-    const electricAbilityActive = run.elementalAbilityActive === 'electric' && timestamp < run.elementalAbilityUntil;
+    const electricAbilityActive = run.elementalAbilityActive === 'electric' && run.ultimateStage >= 3 && timestamp < run.elementalAbilityUntil;
     const electricAbilityDuration = run.ultimateProfile?.durationMs || ELEMENTAL_ABILITY_DURATION_MS.electric || 3000;
     const electricAbilityRemaining = electricAbilityActive ? Math.max(0, run.elementalAbilityUntil - timestamp) : 0;
     const electricAbilityElapsed = electricAbilityActive ? electricAbilityDuration - electricAbilityRemaining : electricAbilityDuration;
@@ -13194,6 +13251,7 @@
       window.DominantShield.bubble(ctx, s.x, screenY, radius, shieldDominant(),
         timestamp, timestamp - (run.barrierStartedAt || 0));
     }
+    if (!run.portalEntry && run.psionicBarrier && psionicBarrierActive(timestamp))window.SlimePsionicEffects.bubble(ctx,run,timestamp,psionicBarrierRadius());
     if (run.shieldPop) {
       if (timestamp - run.shieldPop.at < 520) window.DominantShield.pop(ctx, run.shieldPop, timestamp, run.cameraY);
       else run.shieldPop = null;
@@ -13303,6 +13361,12 @@
     run.mechExplosion = null;
     run.mechExitZoneGraceUntil = 0;
     run.frostStorm = null;
+    run.stagedUltimate = null;
+    run.technoUltimate = null;
+    run.giantMushroom = null;
+    run.sporePop = null;
+    run.cosmosStagedUltimate = null;
+    run.psionicBarrier = null;run.psionicBarrierBursts=[];
     run.telekinesisPress = null;
     run.telekinesisUltimatePending = false;
     if (run.ultimateRechargePending === 'elemental') finishUltimateRecharge();
@@ -13338,12 +13402,16 @@
     run.phantomMarkNextAt=performance.now()+PHANTOM_MARK_INTERVAL_MS;
     run.phantomPortalNextAt=performance.now()+PHANTOM_PORTAL_INTERVAL_MS;
     run.phantomFlights=[null,null];run.phantomPortals=[];run.phantomExpress=null;
+    run.phantomSalvoFlights=[];
+    run.phantomPhase=null;run.phantomVolleyRemaining=0;run.phantomVolleyNextAt=0;run.phantomSpiritSequence=0;
     run.phantomMarkedBlocks?.clear();
     run.phantomBursts = [];
-    run.glitchNextInfectionAt = performance.now() + 4500;
-    run.glitchNextNeutralizeAt = performance.now() + 8500;
+    run.glitchNextInfectionAt = performance.now() + 1500;
+    run.glitchPassiveInfectAt = 0;
     run.glitchInfectedBlocks.clear();
     run.glitchShock = null;
+    run.glitchBreakBursts = [];
+    run.glitchDisarm = null;
     run.glitchChoice = null;
     run.glitchScreen = null;
     glitchTileCache.clear();
@@ -13359,6 +13427,7 @@
     run.glitchChange = null;
     hideGlitchChoice();
     run.hitCooldowns.clear();
+    run.electricImpactAt = -Infinity;
     run.geyserCapture = null;
     run.slime.x = run.startX;
     run.slime.y = 78;
@@ -13509,7 +13578,7 @@
   function animateResultCoins(from, to) {
     const stat = els.resultCoins.closest('.result-stat');
     stat?.classList.add('is-counting');
-    animateResultNumber(els.resultCoins, from, to, 520, value => `+${formatCompactNumber(value)} XP`).then(() => {
+    animateResultNumber(els.resultCoins, from, to, 520, value => `+${formatCompactNumber(value)}`).then(() => {
       stat?.classList.remove('is-counting');
       stat?.classList.add('is-complete');
       setTimeout(() => stat?.classList.remove('is-complete'), 420);
@@ -13585,8 +13654,8 @@
     researchStat?.classList.remove('is-complete');
     coinsStat?.classList.add('is-counting');
     sound('coin');
-    if (reducedMotion) els.resultCoins.textContent = `+${formatCompactNumber(coins)} XP`;
-    else await animateResultNumber(els.resultCoins, 0, coins, 620, value => `+${formatCompactNumber(value)} XP`);
+    if (reducedMotion) els.resultCoins.textContent = `+${formatCompactNumber(coins)}`;
+    else await animateResultNumber(els.resultCoins, 0, coins, 620, value => `+${formatCompactNumber(value)}`);
     if (token !== resultRevealToken || !run) return;
     coinsStat?.classList.remove('is-counting');
     coinsStat?.classList.add('is-complete');
@@ -13605,12 +13674,9 @@
       if (reducedMotion) {
         els.resultResearchData.textContent = `+${(researchData + 25).toLocaleString('ru-RU')}`;
         els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsAfter);
-        els.resultCoins.textContent = `+${formatCompactNumber(coins + 150)} XP`;
+        els.resultCoins.textContent = `+${formatCompactNumber(coins)}`;
       } else {
-        await Promise.all([
-          animateResultResearch(25, run.researchUnitsBefore + researchData, token, researchData),
-          animateResultNumber(els.resultCoins, coins, coins + 150, 650, value => `+${formatCompactNumber(value)} XP`)
-        ]);
+        await animateResultResearch(25, run.researchUnitsBefore + researchData, token, researchData);
       }
       if (token !== resultRevealToken || !run) return;
     }
@@ -13668,9 +13734,12 @@
     const completionBonus = completionRewards.research;
     const researchData = Math.max(0, Math.floor(run.researchData || 0)) + completionBonus;
     run.experienceEarned = Math.max(0, Math.floor(run.experienceEarned || 0)) + completionRewards.experience;
-    const credited = PROGRESSION.credit(save, run.mutationId, run.experienceEarned);
-    run.experienceBefore = credited?.before || 0;
-    run.experienceAfter = credited?.after || 0;
+    run.masteryBefore = slimeTaskCount(run.mutationId);
+    run.masteryAfter = run.masteryBefore + (run.masteryGain || 0);
+    save.mutationMastery ||= {};
+    save.mutationMastery[run.mutationId] = run.masteryAfter;
+    run.experienceBefore = run.masteryBefore;
+    run.experienceAfter = run.masteryAfter;
     save.selectedMutation = run.mutationId;
     run.researchUnitsBefore = Math.max(0, save.researchUnits - Math.max(0, Math.floor(run.researchData || 0)));
     save.researchUnits += completionBonus;
@@ -13703,10 +13772,10 @@
     const bonusLabel = document.getElementById('resultResearchBonus');
     if (bonusLabel) bonusLabel.textContent = completionBonus ? `+${completionBonus}` : '';
     els.resultResearchUnits.textContent = formatCompactNumber(run.researchUnitsBefore);
-    els.resultCoins.textContent = '+0 XP';
+    els.resultCoins.textContent = '+0';
     renderResultSlimeProgress(run.experienceBefore);
     const experienceBonusLabel = document.getElementById('resultExperienceBonus');
-    if (experienceBonusLabel) experienceBonusLabel.textContent = completionBonus ? '+150 XP' : '';
+    if (experienceBonusLabel) experienceBonusLabel.textContent = '';
     els.resultMultiplierLabel.textContent = formatResultMultiplier(RESULT_MULTIPLIERS[0]);
     els.resultMultiplierHint.textContent = 'Нажми, чтобы остановить стрелку';
     els.resultMultiplierBtn.disabled = true;
@@ -13723,7 +13792,7 @@
     requestAnimationFrame(() => {
       if (run !== completedRun || revealToken !== resultRevealToken) return;
       els.resultOverlay.querySelector('.modal')?.focus();
-      void revealResultSummary(researchData - completionBonus, run.experienceEarned - (completionBonus ? 150 : 0), revealToken);
+      void revealResultSummary(researchData - completionBonus, run.masteryGain || 0, revealToken);
       animateResultSlimeProgress(revealToken);
     });
     if (!completed) sound('fail');
@@ -14040,8 +14109,12 @@
   }
 
   function renderRecipesPanel() {
+    laboratoryCollectionObserver?.disconnect();
     const previousMutationId = els.panelContent.querySelector('.mutation-info-pane')?.dataset.mutationId;
+    const previousMutationLevel = Number(els.panelContent.querySelector('.mutation-info-pane')?.dataset.mutationLevel);
+    const previousPreviewStage = Number(els.panelContent.querySelector('[data-preview-stage][aria-selected="true"]')?.dataset.previewStage);
     const previousView = els.panelContent.querySelector('.mutation-lab-v2')?.dataset.view;
+    const previousCollectionScroll = $('#mutationCollection')?.scrollLeft || 0;
     stopMutationFeedHold();
     mutationAnimationToken += 1;
     mutationAnimating = false;
@@ -14057,12 +14130,9 @@
       ? MUTATION_DETAILS[selectedMutation.id] || { stage1: 'Открывает базовый эффект мутации.', stage2: 'Усиливает эффект после второй порции.' }
       : { stage1: 'Синтезируй мутацию, чтобы узнать её эффект.', stage2: 'Сначала открой эмблему в реакторе.' };
     const selectedLevel = selectedAvailable ? mutationLevel(selectedMutation.id) : 0;
-    const evolution = PROGRESSION.progress(selectedLevel, slimeExperience(selectedMutation.id));
     const ultimate = FORM_INDEX.find(form => form.id === selectedMutation.id);
-    const ultimatePower = ULTIMATE_STAGES.get(selectedMutation.id, selectedLevel || 1);
-    const levelName = ['', 'I', 'II', 'III'][selectedLevel];
-    const nextLevelName = ['', 'II', 'III'][selectedLevel] || '';
-    const upgradeCost = MUTATION_UPGRADE_COSTS[selectedLevel] || 0;
+    const previewStage = previousMutationId === selectedMutation.id && previousMutationLevel === selectedLevel && previousPreviewStage >= 1 && previousPreviewStage <= 3 ? previousPreviewStage : Math.min(3, selectedLevel + 1) || 1;
+    const ultimateTitle = stage => ULTIMATE_STAGES.get(selectedMutation.id, stage).name || ultimate.ultra[0];
     const activePool = save.activeMutationPool || [];
     const selectedIsActive = activePool.includes(selectedMutation.id);
     const allUnlocked = allSynthesesUnlocked();
@@ -14083,7 +14153,7 @@
       const equipped = activePool.includes(mutation.id);
       const replaceTarget = laboratoryReplaceMode && equipped;
       const canSelect = available && (!laboratoryReplaceMode || replaceTarget);
-      return `<button class="mutation-collection-slot ${available ? 'unlocked' : 'locked'} ${selectedMutation.id === mutation.id ? 'selected' : ''} ${equipped ? 'equipped' : ''} ${replaceTarget ? 'replace-target' : ''}${mutation.name.length > 9 ? ' long-name' : ''}" type="button" data-mutation-slot="${mutation.id}" ${canSelect ? `data-lab-mutation="${mutation.id}"` : 'disabled'} aria-label="${available ? `${mutation.name}${equipped ? '. Активная мутация' : ''}` : 'Неизвестная мутация'}">
+      return `<button class="mutation-collection-slot ${available ? 'unlocked' : 'locked'} ${selectedMutation.id === mutation.id ? 'selected' : ''} ${equipped ? 'equipped' : ''} ${replaceTarget ? 'replace-target' : ''}${mutation.name.length > 9 ? ' long-name' : ''}" type="button" aria-pressed="${selectedMutation.id === mutation.id}" data-mutation-slot="${mutation.id}" ${canSelect ? `data-lab-mutation="${mutation.id}"` : 'disabled'} aria-label="${available ? `${mutation.name}${equipped ? '. Активная мутация' : ''}` : 'Неизвестная мутация'}">
         ${available ? `${mutationEmblemMarkup(mutation, { effects: false })}${equipped ? '<span class="mutation-equipped-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : ''}` : '<i aria-hidden="true">?</i>'}
       </button>`;
     }).join('');
@@ -14101,18 +14171,34 @@
       return `<i><svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${glowId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#08bce9" stop-opacity="0"></stop><stop offset=".28" stop-color="#15cdf4" stop-opacity=".62"></stop><stop offset=".62" stop-color="#08b5e8"></stop><stop offset="1" stop-color="#88eaff"></stop></linearGradient><linearGradient id="${coreId}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dafaff" stop-opacity="0"></stop><stop offset=".34" stop-color="#dafaff" stop-opacity=".72"></stop><stop offset="1" stop-color="#f0fdff"></stop></linearGradient></defs><polyline class="reactor-bolt-glow" pathLength="100" points="${points}" style="stroke:url(#${glowId})"></polyline><polyline class="reactor-bolt-core" pathLength="100" points="${points}" style="stroke:url(#${coreId})"></polyline></svg></i>`;
     }).join('');
 
+    const taskStage = Math.min(3, selectedLevel + 1);
+    const task = slimeDevelopment(selectedMutation.id, taskStage);
+    const headerTaskMarkup = () => `<div class="slime-header-task ${task.max ? 'is-complete' : ''}" role="progressbar" aria-label="${task.max ? 'Все стадии открыты' : `${task.label}, для стадии ${['I','II','III'][taskStage - 1]}`}" aria-valuemin="0" aria-valuemax="${task.max ? 1 : task.target}" aria-valuenow="${task.max ? 1 : Math.min(task.current, task.target)}">
+      <span class="slime-task-kicker">${task.max ? 'РАЗВИТИЕ' : `РАЗВИТИЕ · ${['I','II','III'][taskStage - 1]}`}</span><i style="width:${task.max ? 100 : task.percent}%"></i><strong>${task.max ? 'Все стадии открыты' : task.label}</strong><b>${task.max ? '✓' : `${Math.min(task.current, task.target)}<small> / ${task.target}</small>`}</b>
+    </div>`;
     const stageTrack = [1, 2, 3].map(stage => {
+      const owned = stage <= selectedLevel;
+      const ready = slimeDevelopment(selectedMutation.id, stage).ready;
       const dish = foodForMutation(selectedMutation.id, stage);
-      return `<article class="slime-evolution-card ${stage <= selectedLevel ? 'is-open' : 'is-closed'} ${stage === selectedLevel ? 'is-current' : ''}" ${stage === selectedLevel ? 'aria-current="step"' : ''}>
-        <b>СТАДИЯ ${['I','II','III'][stage - 1]}</b><canvas width="168" height="144" data-slime-stage="${stage}" aria-label="Внешность ${selectedMutation.name}, стадия ${stage}"></canvas>
-        <span class="slime-evolution-food">${dish ? foodArtMarkup(dish, 'food-mini-model') : ''}</span>
-        <span class="ultimate-stage-summary">${ULTIMATE_STAGES.get(selectedMutation.id, stage).summary}</span><small>${stage === selectedLevel ? 'СЕЙЧАС' : stage < selectedLevel ? 'ОТКРЫТО' : `${PROGRESSION.THRESHOLDS[stage]} XP`}</small>
+      return `<article class="slime-development-card ${owned ? 'is-owned' : 'is-locked'} ${ready ? 'is-ready' : ''} ${stage === previewStage ? 'is-current' : ''}" data-development-stage="${stage}">
+        <button id="mutationStage${stage}" class="slime-stage-preview" type="button" role="tab" data-preview-stage="${stage}" aria-selected="${stage === previewStage}" aria-controls="slimeUltimateDetails" tabindex="${stage === previewStage ? 0 : -1}" aria-label="Посмотреть стадию ${stage}${owned ? '. Открыто' : ready ? '. Можно открыть' : '. Пока закрыта'}">
+          <b class="slime-stage-caption">СТАДИЯ <em>${['I','II','III'][stage - 1]}</em></b>
+          <span class="slime-evolution-food" aria-hidden="true">${dish ? foodArtMarkup(dish, 'food-mini-model') : ''}${!owned && !ready ? `<img class="slime-stage-lock" src="${versionedAsset('assets/ui/lock.webp')}" alt="">` : ''}</span>
+        </button>
+        ${ready ? `<button id="mutationUpgradeBtn" class="slime-stage-open slime-stage-ready" data-open-stage="${stage}" type="button" aria-label="Открыть стадию ${stage} за ${task.cost} колб">ОТКРЫТЬ</button>` : ''}
       </article>`;
     }).join('');
+    const ultimateMarkup = stage => {
+      const info = ULTIMATE_STAGES.presentation(selectedMutation.id, stage);
+      const turret = selectedMutation.id === 'nano' && stage === 2;
+      const icon = turret ? `<img class="ultimate-turret-base" src="${versionedAsset('assets/vfx/techno-turret-base-v1.webp')}" alt=""><img class="ultimate-turret-head" src="${versionedAsset(info.image)}" alt="">` : `<img src="${versionedAsset(info.image || selectedMutation.image)}" alt="">`;
+      return `<span class="slime-ultimate-picture ${turret ? 'is-turret' : ''}" aria-hidden="true">${icon}</span><div class="slime-ultimate-copy"><h4><span>${ultimateTitle(stage)}</span></h4><p>${info.description}</p></div>`;
+    };
+    const bindTaskButton = () => $('#mutationUpgradeBtn')?.addEventListener('click', event => requestMutationEvolution(selectedMutation.id, Number(event.currentTarget.dataset.openStage), event.currentTarget));
     const machineHint = allUnlocked
       ? 'ВСЕ МУТАЦИИ ОТКРЫТЫ'
       : readyToReveal
-        ? 'РЕАКТОР ГОТОВ · НАЖМИ СИНТЕЗ'
+        ? 'РЕАКТОР ГОТОВ\nНАЖМИ СИНТЕЗ'
         : mutationInvestmentHint();
 
     if (['reactor','synthesize','wait-synthesis','core','prize','gift','gift-delay'].includes(save.tutorialStep)) laboratoryView = 'synthesis';
@@ -14125,7 +14211,8 @@
         <section id="labSynthesisPane" class="mutation-synth-pane" data-lab-pane="synthesis" role="tabpanel" aria-labelledby="labSynthesisTab">
           <button id="mutationCapsuleBtn" class="mutation-capsule mutation-capsule-v2 ${allUnlocked ? 'is-complete' : ''} ${readyToReveal ? 'is-ready-to-synthesize' : ''}" type="button" ${allUnlocked || readyToReveal ? 'disabled' : ''} aria-label="${allUnlocked ? 'Все мутации открыты' : readyToReveal ? 'Реактор заполнен' : `Добавить ${nextMutationInvestmentAmount()} колб. Осталось ${remaining}`}">
             <span class="mutation-machine-visual" aria-hidden="true">
-              <img class="mutation-machine-art" src="${versionedAsset('assets/ui/lab-synth-machine-soft-v2.webp')}" alt="">
+              <img class="mutation-machine-art machine-tall" src="${versionedAsset('assets/ui/lab-synth-machine-stocky-portrait-v1.webp')}" alt="">
+              <img class="mutation-machine-art machine-wide" src="${versionedAsset('assets/ui/lab-synth-machine-stocky-v1.webp')}" alt="">
               <span class="mutation-glass">
                 <span id="mutationLiquid" class="mutation-liquid-chamber" style="--liquid-fill:${liquidFillPercent}%"><span class="mutation-liquid-sprite"></span><span class="mutation-liquid-bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
                 <span class="mutation-reactor-energy">${reactorEnergyArcs}</span>
@@ -14148,25 +14235,64 @@
           </div>
         </section>
 
-        <section id="labMutationsPane" class="mutation-info-pane mutation-family-${selectedMutation.id} ${selectedAvailable ? '' : 'is-locked'}" data-mutation-id="${selectedMutation.id}" data-lab-pane="mutations" role="tabpanel" aria-labelledby="labMutationsTab" aria-label="${selectedAvailable ? `Информация о мутации ${selectedMutation.name}` : 'Неизвестная мутация'}">
-          ${selectedAvailable ? mutationEmblemMarkup(selectedMutation) : '<span class="mutation-info-emblem"><i class="mutation-locked-symbol">?</i></span>'}
-          <h3>${selectedAvailable ? selectedMutation.name : 'НЕИЗВЕСТНО'}${selectedAvailable ? ` <em class="mutation-level-badge">${levelName}</em>` : ''}</h3>
-          ${selectedAvailable ? `<section class="slime-base-kit"><h4>БАЗОВЫЕ СПОСОБНОСТИ</h4><p>${selectedDetails.stage1}</p><p>${selectedDetails.stage2}</p></section>
-          <section class="slime-ultimate-kit"><img src="${versionedAsset(selectedMutation.image)}" alt=""><div><small>СУПЕРСПОСОБНОСТЬ · СТЕПЕНЬ ${levelName}</small><b>${ultimate.ultra[0]}</b><p>${ultimatePower.description}</p></div></section>
-          <h4 class="slime-evolution-heading">РАЗВИТИЕ СЛАЙМА</h4><div class="slime-evolution-track">${stageTrack}</div>
-          <div class="slime-personal-progress" role="progressbar" aria-label="Личный опыт ${selectedMutation.name}" aria-valuemin="${evolution.start}" aria-valuemax="${evolution.max ? Math.max(evolution.start, evolution.xp) : evolution.target}" aria-valuenow="${Math.min(evolution.xp, evolution.max ? evolution.xp : evolution.target)}"><i style="width:${evolution.percent}%"></i><b>${evolution.max ? `${evolution.xp} XP · МАКСИМУМ` : `${evolution.xp} / ${evolution.target} XP`}</b></div>
-          <p class="slime-evolution-hint">${evolution.max ? 'Все три стадии открыты!' : evolution.ready ? 'Опыт накоплен! Добавь колбы для эволюции.' : `Играй этим слаймом. До эволюции ещё ${evolution.remaining} XP.`}</p>
-          <div class="mutation-level-action">${!evolution.max ? `<button id="mutationUpgradeBtn" class="mutation-upgrade-btn" type="button" ${mutationUpgrading || !PROGRESSION.canEvolve(selectedLevel, evolution.xp, save.researchUnits, adminInfiniteResearch) ? 'disabled' : ''}><span>ЭВОЛЮЦИЯ ${nextLevelName}</span><span class="mutation-upgrade-price"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt="колб">${upgradeCost}</span></button>` : '<span class="mutation-level-note">МАКСИМУМ</span>'}</div>
-          ${!evolution.max && evolution.ready && save.researchUnits < upgradeCost && !adminInfiniteResearch ? `<p class="slime-evolution-hint">Нужно ещё ${upgradeCost - save.researchUnits} колб.</p>` : ''}` : '<p class="slime-evolution-hint">Синтезируй мутацию, чтобы открыть слайма и его способности.</p>'}
+        <section id="labMutationsPane" class="mutation-info-pane mutation-family-${selectedMutation.id} ${selectedAvailable ? '' : 'is-locked'}" data-mutation-id="${selectedMutation.id}" data-mutation-level="${selectedLevel}" style="--mutation-task-color:${ultimate.color}" data-lab-pane="mutations" role="tabpanel" aria-labelledby="labMutationsTab" aria-label="${selectedAvailable ? `Информация о мутации ${selectedMutation.name}` : 'Неизвестная мутация'}">
+          <header class="slime-mutation-header">
+            ${selectedAvailable ? mutationEmblemMarkup(selectedMutation) : '<span class="mutation-info-emblem"><i class="mutation-locked-symbol">?</i></span>'}
+            <div class="slime-mutation-heading"><h3><span>${selectedAvailable ? ultimate.mutation : 'НЕИЗВЕСТНО'}</span>${selectedAvailable ? `<em class="slime-current-stage" aria-label="Текущая стадия ${selectedLevel}"><small>СТ.</small><b>${['I','II','III'][selectedLevel - 1]}</b></em>` : ''}</h3>
+              ${selectedAvailable ? headerTaskMarkup() : ''}
+            </div>
+          </header>
+          ${selectedAvailable ? `<section class="slime-base-kit" aria-label="Базовый эффект"><p><strong>${selectedDetails.stage1}</strong> <span>${selectedDetails.stage2}</span></p></section>
+          <h4 class="slime-evolution-heading" id="mutationStagesLabel">Развитие</h4><div class="slime-evolution-track" role="tablist" aria-labelledby="mutationStagesLabel">${stageTrack}</div>
+          <section id="slimeUltimateDetails" class="slime-ultimate-kit" role="tabpanel" aria-labelledby="mutationStage${previewStage}">${ultimateMarkup(previewStage)}</section>
+          ` : '<p class="slime-evolution-hint">Синтезируй мутацию, чтобы открыть слайма и его способности.</p>'}
           <button id="mutationChooseBtn" class="mutation-choose-btn ${laboratoryReplaceMode ? 'is-cancel' : ''}" type="button" aria-pressed="${laboratoryReplaceMode}" ${!selectedAvailable || selectedIsActive ? 'disabled' : ''}><span>${!selectedAvailable ? 'ЗАКРЫТО' : selectedIsActive ? 'УЖЕ ВЫБРАНО' : laboratoryReplaceMode ? 'ОТМЕНИТЬ' : 'ВЫБРАТЬ'}</span></button>
         </section>
       </div>
-      <div class="mutation-collection-head"><b>МУТАЦИИ</b><span aria-label="Открыто ${visibleUnlockedCount} из ${collectionCapacity} мутаций"><strong>${visibleUnlockedCount}</strong><small>/ ${collectionCapacity}</small></span></div>
-      <div id="mutationCollection" class="mutation-collection mutation-collection-v2 ${laboratoryReplaceMode ? 'is-replacing' : ''}">${collection}</div>
+      <div class="mutation-collection-head"><b>МУТАЦИИ</b><small class="mutation-collection-hint">ЛИСТАЙ ↔</small><span aria-label="Открыто ${visibleUnlockedCount} из ${collectionCapacity} мутаций"><strong>${visibleUnlockedCount}</strong><small>/ ${collectionCapacity}</small></span></div>
+      <div id="mutationCollection" role="group" aria-label="Выбор мутации" class="mutation-collection mutation-collection-v2 ${laboratoryReplaceMode ? 'is-replacing' : ''}">${collection}</div>
     </div>`;
 
     setLaboratoryView(laboratoryView, { animate: false });
+    const collectionHost = $('#mutationCollection');
+    if (collectionHost) {
+      const updateCollectionOverflow = () => collectionHost.classList.toggle('has-overflow', collectionHost.scrollWidth > collectionHost.clientWidth + 1);
+      laboratoryCollectionObserver = new ResizeObserver(updateCollectionOverflow);
+      laboratoryCollectionObserver.observe(collectionHost);
+      updateCollectionOverflow();
+      collectionHost.scrollLeft = previousCollectionScroll;
+      const selectedSlot = collectionHost.querySelector('.selected');
+      if (selectedSlot) {
+        const frame = collectionHost.getBoundingClientRect(), item = selectedSlot.getBoundingClientRect();
+        if (item.left < frame.left) collectionHost.scrollLeft -= frame.left - item.left;
+        else if (item.right > frame.right) collectionHost.scrollLeft += item.right - frame.right;
+      }
+    }
     if (previousMutationId !== selectedMutation.id || previousView !== laboratoryView) els.panelContent.scrollTop = 0;
+    const stageButtons = [...els.panelContent.querySelectorAll('[data-preview-stage]')];
+    const selectPreviewStage = button => {
+      const stage = Number(button.dataset.previewStage);
+      stageButtons.forEach(tab => {
+        const selected = tab === button;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        tab.closest('.slime-development-card').classList.toggle('is-current', selected);
+      });
+      const details = $('#slimeUltimateDetails');
+      details.setAttribute('aria-labelledby', button.id);
+      details.innerHTML = ultimateMarkup(stage);
+      sound('tap');
+    };
+    stageButtons.forEach((button, index) => {
+      button.addEventListener('click', () => selectPreviewStage(button));
+      button.addEventListener('keydown', event => {
+        if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+        event.preventDefault();
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : (index + (event.key === 'ArrowLeft' ? 2 : 1)) % 3;
+        selectPreviewStage(stageButtons[next]);
+        stageButtons[next].focus();
+      });
+    });
     $$('[data-lab-view]').forEach(button => {
       button.addEventListener('click', () => { if (laboratoryView !== button.dataset.labView) { sound('tap'); setLaboratoryView(button.dataset.labView); } });
       button.addEventListener('keydown', event => {
@@ -14183,7 +14309,7 @@
     capsuleButton?.addEventListener('pointercancel', stopMutationFeedHold);
     capsuleButton?.addEventListener('lostpointercapture', stopMutationFeedHold);
     $('#mutationSynthesizeBtn')?.addEventListener('click', () => startMutationSynthesis(capsuleButton));
-    $('#mutationUpgradeBtn')?.addEventListener('click', event => { void upgradeMutation(selectedMutation.id, event.currentTarget); });
+    bindTaskButton();
     $('#mutationChooseBtn')?.addEventListener('click', () => {
       if (!selectedIsActive && activePool.length < 3) {
         selectedConveyorSlot = activePool.length;
@@ -14215,42 +14341,27 @@
       setLaboratoryView('mutations');
       if (save.tutorialStep === 'fire-slot' && id === 'fire') setTutorialStep('choose');
     }));
-    if (selectedAvailable) void renderEvolutionPreviews(selectedMutation.id);
     queueTutorialRender();
-  }
-
-  async function renderEvolutionPreviews(id) {
-    const canvases = [...document.querySelectorAll('[data-slime-stage]')];
-    const jobs = canvases.map(async canvas => {
-      const levels = { [id]: Number(canvas.dataset.slimeStage) };
-      await preloadMenuAppearance(levels);
-      if (!canvas.isConnected || selectedLaboratoryMutationId !== id) return;
-      const target = canvas.getContext('2d');
-      target.clearRect(0, 0, canvas.width, canvas.height);
-      drawElementalSlimeAvatar(target, { x: 84, y: 79, radius: 44, emotion: 'happy',
-        colors: SKINS[0].colors, skin: 'classic', timestamp: 2200 }, levels, 2200);
-    });
-    await Promise.all(jobs);
   }
 
   function renderResultSlimeProgress(experience) {
     const host = document.getElementById('resultSlimeProgress');
     if (!host || !run) return;
     const mutation = mutationById(run.mutationId);
-    const progress = PROGRESSION.progress(mutationLevel(run.mutationId), experience);
+    const progress = slimeDevelopment(run.mutationId, undefined, experience);
     if (host.dataset.runId !== String(resultRevealToken) || !host.querySelector('.slime-personal-progress')) {
       host.dataset.runId = String(resultRevealToken);
-      host.innerHTML = `<img src="${versionedAsset(mutation.image)}" alt=""><div><h3>${mutation.name}<span>СТАДИЯ ${['I','II','III'][progress.stage - 1]}</span></h3><div class="slime-personal-progress" role="progressbar" aria-label="Личный опыт ${mutation.name}"><i></i><b></b></div><p></p></div>`;
+      host.innerHTML = `<img src="${versionedAsset(mutation.image)}" alt=""><div><h3>${mutation.name}<span>СТАДИЯ ${['I','II','III'][progress.stage - 1]}</span></h3><div class="slime-personal-progress" role="progressbar" aria-label="Прогресс задания ${mutation.name}"><i></i><b></b></div><p></p></div>`;
       const resultIcon = els.resultCoins.closest('.result-stat')?.querySelector('img');
       if (resultIcon) resultIcon.src = versionedAsset(mutation.image);
     }
     const bar = host.querySelector('.slime-personal-progress');
     bar.querySelector('i').style.width = `${progress.percent}%`;
-    bar.querySelector('b').textContent = progress.max ? `${experience} XP · МАКСИМУМ` : `${experience} / ${progress.target} XP`;
-    bar.setAttribute('aria-valuemin', String(progress.start));
-    bar.setAttribute('aria-valuemax', String(progress.max ? Math.max(progress.start, experience) : progress.target));
-    bar.setAttribute('aria-valuenow', String(Math.min(experience, progress.max ? experience : progress.target)));
-    host.querySelector('p').textContent = progress.max ? 'Все стадии открыты!' : progress.ready ? 'Опыт накоплен! Для эволюции нужны колбы.' : 'Этот опыт получил только сыгранный слайм.';
+    bar.querySelector('b').textContent = progress.max ? 'ВСЕ СТАДИИ ОТКРЫТЫ' : `${Math.min(experience, progress.target)} / ${progress.target}`;
+    bar.setAttribute('aria-valuemin', '0');
+    bar.setAttribute('aria-valuemax', String(progress.target));
+    bar.setAttribute('aria-valuenow', String(Math.min(experience, progress.target)));
+    host.querySelector('p').textContent = progress.max ? 'Все стадии открыты!' : progress.ready ? 'Задание выполнено! Открой стадию в лаборатории.' : progress.label;
   }
 
   function animateResultSlimeProgress(token) {
@@ -14267,6 +14378,55 @@
     requestAnimationFrame(step);
   }
 
+  function dismissMutationEvolution({ restoreFocus = true } = {}) {
+    const prompt = els.panelOverlay.querySelector('.slime-evolution-dialog');
+    if (!prompt) return;
+    prompt.remove();
+    els.panelOverlay.querySelector('.panel-modal').inert = false;
+    if (restoreFocus) $('#mutationUpgradeBtn')?.focus({ preventScroll: true });
+    queueTutorialRender();
+  }
+
+  function requestMutationEvolution(id, stage, sourceButton) {
+    const level = mutationLevel(id);
+    if (stage !== level + 1 || mutationUpgrading || !slimeDevelopment(id, stage).ready) return;
+    dismissMutationEvolution({ restoreFocus: false });
+    const cost = MUTATION_UPGRADE_COSTS[level];
+    const canPay = (slimeDevelopment(id, stage).ready && (adminInfiniteResearch || save.researchUnits >= cost));
+    const prompt = document.createElement('div');
+    prompt.className = 'slime-evolution-dialog';
+    prompt.innerHTML = `<section class="slime-evolution-prompt" role="alertdialog" aria-modal="true" aria-labelledby="evolutionPromptTitle" aria-describedby="evolutionPromptPrice">
+      <h3 id="evolutionPromptTitle">Открыть стадию ${['I','II','III'][stage - 1]}?</h3>
+      <p class="evolution-prompt-name">${mutationById(id).name}</p>
+      <div id="evolutionPromptPrice" class="evolution-prompt-price"><img src="${versionedAsset('assets/ui/research-flask-blue-v1.webp')}" alt="колб"><b>${cost}</b></div>
+      ${!canPay ? `<p class="evolution-prompt-missing">Нужно ещё ${Math.max(0, cost - save.researchUnits)} колб</p>` : ''}
+      <div class="evolution-prompt-actions"><button type="button" data-evolution-cancel>ПОЗЖЕ</button><button id="mutationEvolutionConfirmBtn" type="button" ${canPay ? '' : 'disabled'}>ОТКРЫТЬ</button></div>
+    </section>`;
+    els.panelOverlay.appendChild(prompt);
+    els.panelOverlay.querySelector('.panel-modal').inert = true;
+    const cancel = prompt.querySelector('[data-evolution-cancel]');
+    const confirm = prompt.querySelector('#mutationEvolutionConfirmBtn');
+    cancel.addEventListener('click', () => dismissMutationEvolution());
+    prompt.addEventListener('click', event => { if (event.target === prompt) dismissMutationEvolution(); });
+    confirm.addEventListener('click', () => {
+      if (mutationLevel(id) !== level || !(slimeDevelopment(id, stage).ready && (adminInfiniteResearch || save.researchUnits >= cost))) return;
+      dismissMutationEvolution({ restoreFocus: false });
+      void upgradeMutation(id, sourceButton);
+    });
+    prompt.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault(); event.stopPropagation(); dismissMutationEvolution();
+      } else if (event.key === 'Tab') {
+        const buttons = canPay ? [cancel, confirm] : [cancel];
+        const next = (buttons.indexOf(document.activeElement) + (event.shiftKey ? buttons.length - 1 : 1)) % buttons.length;
+        event.preventDefault(); buttons[next].focus();
+      }
+    });
+    (canPay ? confirm : cancel).focus({ preventScroll: true });
+    sound('tap');
+    queueTutorialRender();
+  }
+
   async function upgradeMutation(id, button) {
     const level = mutationLevel(id);
     const cost = MUTATION_UPGRADE_COSTS[level];
@@ -14276,8 +14436,8 @@
       feedback(7);
       return;
     }
-    const evolution = PROGRESSION.progress(level, slimeExperience(id));
-    if (!evolution.ready) { showToast(`До эволюции ещё ${evolution.remaining} XP`); return; }
+    const evolution = slimeDevelopment(id);
+    if (!evolution.ready) { showToast(`${evolution.label}: ${Math.min(evolution.current, evolution.target)}/${evolution.target}`); return; }
     mutationUpgrading = true;
     button.disabled = true;
     button.classList.add('is-upgrading');
@@ -14330,10 +14490,13 @@
       renderDraft({ offerMotion: 'enter' });
       void settleConveyorArrival(menuReducedMotion);
     } else updatePersistentUI();
-    if (!els.panelOverlay.classList.contains('hidden') && activeLaboratoryTab === 'mutations') renderRecipesPanel();
+    if (!els.panelOverlay.classList.contains('hidden') && activeLaboratoryTab === 'mutations') {
+      renderRecipesPanel();
+      if (selectedLaboratoryMutationId === id) $(`#mutationStage${level + 1}`)?.focus({ preventScroll: true });
+    }
     if (!menuReducedMotion && !els.panelOverlay.classList.contains('hidden')) {
       const pane = document.getElementById('labMutationsPane');
-      pane?.querySelector('.slime-evolution-card.is-current')?.animate([
+      pane?.querySelector('.slime-development-card.is-current')?.animate([
         { transform: 'scale(.9)' }, { transform: 'scale(1.12)', offset: .5 }, { transform: 'scale(1)' }
       ], { duration: 430, easing: 'ease-out' });
       pane?.querySelector('.mutation-level-list .is-current>b')?.animate([
@@ -14610,7 +14773,7 @@
         synthButton.classList.add('ready');
       }
       const hint = $('#mutationCapsuleHint');
-      if (hint) hint.textContent = 'РЕАКТОР ГОТОВ · НАЖМИ СИНТЕЗ';
+      if (hint) hint.textContent = 'РЕАКТОР ГОТОВ\nНАЖМИ СИНТЕЗ';
       sound('happy');
       feedback([5, 9, 5]);
       if (save.tutorialStep === 'reactor') setTutorialStep('synthesize');
@@ -15141,6 +15304,9 @@
   }
 
   function closePanel() {
+    laboratoryCollectionObserver?.disconnect();
+    laboratoryCollectionObserver = null;
+    dismissMutationEvolution({ restoreFocus: false });
     stopMutationFeedHold();
     mutationAnimationToken += 1;
     mutationAnimating = false;
@@ -15329,7 +15495,7 @@
     els.adminPrevWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(-1));
     els.adminNextWorldBtn?.addEventListener('click', () => switchWorldFromAdmin(1));
     els.adminUnlockAllBtn?.addEventListener('click', unlockEverythingFromAdmin);
-    els.adminUnlockMutationsBtn?.addEventListener('click', unlockMutationsFromAdmin);
+    $$('[data-admin-mutation-stage]').forEach(button => button.addEventListener('click', () => unlockMutationsFromAdmin(Number(button.dataset.adminMutationStage))));
     els.adminInfiniteFlasksBtn?.addEventListener('click', toggleAdminInfiniteFlasks);
     els.adminInfiniteUltimateBtn?.addEventListener('click', toggleAdminInfiniteUltimate);
     els.adminResetProgressBtn?.addEventListener('click', resetProgressFromAdmin);
@@ -15571,7 +15737,14 @@
         run.elementalAbilityCharges = 0;
         run.ultimateCharge = 0;
         run.ultimateRechargePending = '';
+        run.electricImpactAt = -Infinity;
         run.elementalAbilityActive = '';
+        run.stagedUltimate = null;
+        run.technoUltimate = null;
+        run.giantMushroom = null;
+        run.sporePop = null;
+        run.cosmosStagedUltimate = null;
+        run.psionicBarrier = null;run.psionicBarrierBursts=[];
         run.elementalAbilityUntil = 0;
         run.goldRushUntil = 0;
         run.speedPressure = 0;
@@ -15590,6 +15763,11 @@
           telekinesis: elementalLevel('telekinesis'), cloning: elementalLevel('cloning'), phantom: elementalLevel('phantom'), glitch: elementalLevel('glitch')
         },
         ability: run.elementalAbilityType, stage: run.ultimateStage, profile: run.ultimateProfile,
+        stagedUltimate: run.stagedUltimate ? { kind: run.stagedUltimate.kind, rocks: run.stagedUltimate.rocks.length, y: run.stagedUltimate.y, endY: run.stagedUltimate.endY } : null,
+        technoUltimate: run.technoUltimate ? { kind:run.technoUltimate.kind,phase:run.technoUltimate.phase,mines:run.technoUltimate.mines.length,bullets:run.technoUltimate.bullets.length,shots:run.technoUltimate.shotsFired } : null,
+        cosmosStagedUltimate: run.cosmosStagedUltimate ? {kind:run.cosmosStagedUltimate.kind,launched:run.cosmosStagedUltimate.launched,impacts:run.cosmosStagedUltimate.impacts} : null,
+        psionicBarrier: run.psionicBarrier ? {until:run.psionicBarrier.until,radius:psionicBarrierRadius()} : null,
+        giantMushroom: run.giantMushroom ? {impacts:run.giantMushroom.impacts,phase:SPORE_COLOSSUS.pose(run,performance.now())?.phase,clouds:run.giantMushroom.clouds.length,motePool:run.giantMushroom.motes.length} : null,
         charges: run.elementalAbilityCharges,
           active: run.elementalAbilityActive,
           massPierceRowsLeft: run.massPierceRowsLeft,

@@ -2392,7 +2392,6 @@ body[data-world="4"]{--route-top:#ed865b;--route-bottom:#b8443e;--route-deep:#71
 
 /* V69: world scene launch card and a truly centred slime stage. */
 body[data-world="1"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-1-cave.webp?v=20261008-optimized-v1")}
-body[data-world="2"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-2-cave.webp?v=20261008-optimized-v1")}
 body[data-world="3"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-3-cave.webp?v=20261008-optimized-v1")}
 body[data-world="4"]{--launch-card-cave:url("assets/ui/launch-card-worlds/world-4-cave.webp?v=20261008-optimized-v1")}
 

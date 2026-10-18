@@ -17,7 +17,7 @@ const blocksByRow = new Map(Array.from({ length: 9 }, (_, row) => [row + 3, bloc
 const at = (row, col) => blocksByRow.get(row).find(block => block.col === col);
 const run = {
   slime: { x: 144, y: 60, vx: 0, vy: 0, radius: 16 }, cameraY: 0, cellSize, blocks, blocksByRow,
-  blockRowOrigin: 0, portalY: 1000, damageInvulnerableUntil: 0,
+  gridOffsetX:0,columns:9,blockRowOrigin: 0, portalY: 1000, damageInvulnerableUntil: 0,
   telekinesisNextAt: 0, telekinesisMarks: [], telekinesisBursts: [], telekinesisCycle: null,
   telekinesisThrowIndex: 0, telekinesisUltimatePending: false, elementalAbilityUntil: 0,
   elementalAbilityActive: '', shake: 0
@@ -28,6 +28,7 @@ const context = {
   performance: { now: () => 0 }, sound: () => {}, feedback: () => {}, impact: () => {},
   clamp: (value, min, max) => Math.max(min, Math.min(max, value)),
   blockCenter: block => ({ x: block.x + block.w / 2, y: block.y + block.h / 2 }),
+  blocksNearY:(y,radius)=>blocks.filter(b=>Math.abs(b.y+b.h/2-y)<=radius+32),
   elementalLevel: () => level,
   elementalDamageable: block => Boolean(block && !block.dead && !block.unbreakable && !block.hazard),
   awardRunExperience: () => {},
@@ -47,39 +48,23 @@ assert.ok(run.telekinesisCycle.projectiles[0].target.y > run.slime.y, 'throw aim
 context.updateTelekinesis(2450);
 assert.equal(run.telekinesisBursts.length, 1);
 
-level = 2;
-context.startTelekinesisCycle(3000, 2);
-assert.equal(run.telekinesisCycle.mode, 'cross');
-assert.equal(run.telekinesisCycle.projectiles.length, 2, 'second stage lifts two blocks');
-const [left, right] = run.telekinesisCycle.projectiles;
-assert.equal(left.side, -1);
-assert.equal(right.side, 1);
-context.updateTelekinesis(4020);
-assert.ok(left.target.x > right.target.x, 'left and right throws cross like scissors');
-context.updateTelekinesis(4540);
-
-// The impact damages only the centre and its four orthogonal neighbours, once each.
-for (const block of blocks) { block.dead = false; block.hp = 4; }
-context.impactTelekinesisProjectile({ target: { row: 6, col: 4, x: 144, y: 208 } }, 5000);
-for (const [row, col] of [[6, 4], [5, 4], [7, 4], [6, 3], [6, 5]]) {
-  assert.equal(at(row, col).hp, 3, `${row}:${col} takes one cross damage`);
+for(level=2;level<=3;level++){
+ context.startTelekinesisCycle(3000,level);assert.equal(run.telekinesisCycle.mode,'single');assert.equal(run.telekinesisCycle.projectiles.length,1,'Every stage has one base projectile');
 }
-assert.equal(at(5, 3).hp, 4, 'diagonal block is untouched');
-
-level = 3;
-run.telekinesisUltimatePending = true;
-run.elementalAbilityActive = 'telekinesis';
-run.elementalAbilityUntil = 11200;
-context.updateTelekinesis(6000);
-assert.equal(run.telekinesisUltimatePending, false);
-assert.equal(run.telekinesisCycle.mode, 'ultimate');
-assert.equal(run.telekinesisCycle.projectiles.length, 10, 'ultimate gathers ten blocks');
-assert.ok(run.telekinesisCycle.projectiles[9].throwAt > run.telekinesisCycle.projectiles[0].throwAt);
-assert.ok(context.telekinesisOrbitPosition(run.telekinesisCycle.projectiles[0], 1000).y < run.slime.y);
-for (let time = 6200; time <= 9700; time += 100) context.updateTelekinesis(time);
-assert.equal(run.telekinesisCycle, null, 'all ten blocks fly and impact in sequence');
-assert.ok(run.elementalAbilityUntil >= 10550, 'ultimate stays active until the volley finishes');
-
+// Impact now includes all eight neighbours around the centre.
+for(const block of blocks){block.dead=false;block.hp=4;}
+context.impactTelekinesisProjectile({target:{row:6,col:4,x:144,y:208}},5000);
+for(let row=5;row<=7;row++)for(let col=3;col<=5;col++)assert.equal(at(row,col).hp,3,'3×3 area receives one hit');
+assert.equal(at(4,4).hp,4);assert.equal(at(6,2).hp,4);
+level=2;run.ultimateProfile={blockCount:8,orbitMs:1450,staggerMs:185};run.elementalAbilityUntil=10000;
+context.startTelekinesisCycle(6000,2,true);let storm=run.telekinesisCycle;
+assert.equal(storm.mode,'ultimate');assert.equal(storm.projectiles.length,8);assert(storm.projectiles.every(p=>p.delay===0),'All eight blocks are pulled together');
+context.updateTelekinesis(6179);assert(storm.projectiles.every(p=>!p.detached));
+context.updateTelekinesis(6180);assert(storm.projectiles.every(p=>p.detached&&p.block.dead));
+assert(context.telekinesisOrbitPosition(storm.projectiles[0],1000).y<run.slime.y);
+context.updateTelekinesis(7450);assert.equal(storm.projectiles.filter(p=>p.launched).length,1);
+context.updateTelekinesis(7635);assert.equal(storm.projectiles.filter(p=>p.launched).length,2);
+for(let t=7700;t<=9800;t+=25)context.updateTelekinesis(t);assert.equal(run.telekinesisCycle,null,'Eight throws finish in order');
 // The new press replaces the volley in play, while the old volley logic stays available for tuning.
 for (const block of blocks) { block.dead = false; block.hp = 4; }
 at(3, 0).hazard = true;
@@ -140,4 +125,4 @@ assert.equal(context.destroyBlock(hazard, 'telekinesisBlast', 17000), false, 'or
 assert.equal(context.destroyBlock(hazard, 'telekinesisPress', 17000), true, 'the press can clear hazards');
 assert.equal(hazard.dead, true);
 
-console.log('Psionics: one block, crossing pair, old volley, 80 m press and one-damage cross OK');
+console.log('Psionics: one base block on all stages, 3×3 impact, eight simultaneous pulls and staggered storm throws, indexed targets and original 80m press passed');

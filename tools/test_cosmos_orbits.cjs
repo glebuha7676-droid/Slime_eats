@@ -8,6 +8,9 @@ const context = { window: {}, Math, performance: { now: () => 1000 },
   sound() {}, lerp: (a,b,t) => a + (b-a)*t, clamp: (n,a,b) => Math.min(b, Math.max(a,n)) };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/rendering/cosmos-orbits.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync('js/config/ultimate-stages.js','utf8'),context);
+vm.runInContext(fs.readFileSync('js/abilities/cosmos-ultimates.js','utf8'),context);
+context.COSMOS_ULTIMATES=context.window.SlimeCosmosUltimates;
 const model = context.window.SlimeCosmosOrbits;
 const take = name => {
   const start = source.indexOf(`  function ${name}(`), end = source.indexOf('\n  function ', start + 20);
@@ -35,14 +38,12 @@ function placeAt(p, hp = 20, extra = {}) {
 let run = fresh();
 assert.equal(model.samples({...run.slime, level:0}).length, 0);
 assert.equal(model.samples({...run.slime, level:1}).length, 1);
-const two = model.samples({...run.slime,level:2,clock:0});
+const one = model.samples({...run.slime,level:2,clock:0});
 const moved = model.samples({...run.slime,level:2,clock:100});
-assert.equal(two.length,2); assert.ok(two[0].orbit > two[1].orbit);
-assert.ok(moved[0].angle > two[0].angle && moved[1].angle < two[1].angle);
-assert.equal(two[0].orbit,80); assert.equal(two[1].orbit,40);
-assert.ok(moved[0].angle-two[0].angle > two[1].angle-moved[1].angle,'outer planet rotates faster');
-assert.ok(moved[0].angle-two[0].angle<.13&&two[1].angle-moved[1].angle<.08,'both orbits use relaxed angular speeds');
-assert.ok(two[0].radius > two[1].radius, 'the outer planet is medium, the inner is small');
+for(const level of [1,2,3])assert.equal(model.samples({...run.slime,level}).length,1);
+assert.equal(one[0].orbit,46);assert(moved[0].angle>one[0].angle);assert(moved[0].angle-one[0].angle<.13);
+assert.equal(model.samples({...run.slime,level:3,compact:true}).length,1,'Menu/previews also have one planet');
+assert.equal(model.samples({...run.slime,level:2,planetScale:1.85})[0].radius,one[0].radius*1.85);
 const first = model.samples({...run.slime,level:1,clock:16})[0];
 const block = placeAt(first), hazard = placeAt(first, Infinity, {hazard:true,unbreakable:true}), medkit = placeAt(first,1,{special:'gel'});
 context.updateCosmosOrbits(.016,1000);
@@ -66,13 +67,13 @@ run.paused=false; context.updateCosmosOrbits(.008,1110); assert.equal(run.cosmos
 
 run = fresh(2);
 const p = model.samples({...run.slime,level:2,clock:16});
-const outer = placeAt(p[0]), inner = placeAt(p[1]);
+const outer = placeAt(p[0]);
 context.updateCosmosOrbits(.016,1000);
-assert.equal(outer.hp,19); assert.equal(inner.hp,19,'stage II enables both colliders');
+assert.equal(outer.hp,19,'Every stage has the same single passive collider');
 const shared=fresh(2), wide={x:0,y:0,w:1000,h:1000,hp:5};
 for(let row=0;row<20;row++) shared.blocksByRow.set(row,[wide]);
 context.updateCosmosOrbits(.016,1000);
-assert.equal(wide.hp,4,'both planets share the two-second cooldown of each block');
+assert.equal(wide.hp,4,'One sustained contact never repeats damage');
 context.run=run;
 run.ultimateIntro={type:'cosmos'};
 context.updateCosmosOrbits(.016,1016);
@@ -86,7 +87,7 @@ run.cosmosUltimate=null;
 assert.equal(context.cosmosOrbitsEnabled(1201),true);
 run.slime.y+=400; context.updateCosmosOrbits(.016,1201);
 assert.equal(run.cosmosOrbitAlpha,.08,'return fades in rather than popping');
-assert.equal(outer.hp,19); assert.equal(inner.hp,19,'return cannot sweep through the entire ultimate path');
+assert.equal(outer.hp,19,'return cannot sweep through the entire ultimate path');
 
 // Fast falls still hit a small block crossed between rendered frames.
 run=fresh(); const initial=model.samples({...run.slime,level:1,clock:16})[0];
@@ -106,4 +107,14 @@ run.cosmosUltimate={startedAt:1000,chargeUntil:1500,fadeStartedAt:5000,fadeUntil
 assert.equal(context.cosmosCometVisualStrength(2000),1,'ultimate comet visuals remain');
 assert.doesNotMatch(source,/gravitySwitch|setGravityDirection|cosmosBoostActive|updateCosmosCometEntry/);
 assert.ok(html.indexOf('js/rendering/cosmos-orbits.js') < html.indexOf('game.js?v='));
-console.log('Cosmos: I/II orbit geometry, opposite rotation, one damage per contact, row-index queries, safe hazards, swept collisions, pause/slow motion, hidden ultimate and smooth return, normal steering passed.');
+// The first ultimate keeps the orbit and applies two damage through the same collider.
+run=fresh(1);run.ultimateStage=1;run.ultimateProfile=context.window.SlimeUltimateStages.get('cosmos',1);run.elementalAbilityActive='cosmos';
+context.COSMOS_ULTIMATES.start(run,1000);assert(context.cosmosOrbitsEnabled(1300));
+const boosted=context.COSMOS_ULTIMATES.orbitBoost(run,1300);assert.equal(boosted.scale,1.85);assert.equal(boosted.damage,2);
+const planet=model.samples({...run.slime,level:1,clock:16,planetScale:boosted.scale})[0],rock=placeAt(planet,6);
+context.damageBlockByElement=(b,amount,cause)=>{assert.equal(amount,2);assert.equal(cause,'cosmosPlanetUltimate');b.hp-=amount;};
+context.updateCosmosOrbits(.016,1300);assert.equal(rock.hp,4);context.updateCosmosOrbits(.016,1316);assert.equal(rock.hp,4);
+assert(context.COSMOS_ULTIMATES.orbitBoost(run,5999).active);assert(!context.COSMOS_ULTIMATES.orbitBoost(run,6000).active);
+run.ultimateStage=2;assert(context.cosmosOrbitsEnabled(2000),'Starfall keeps the passive planet visible');
+run.ultimateStage=3;assert(!context.cosmosOrbitsEnabled(2000),'Comet still hides the planet');
+console.log('Cosmos: one close planet on all stages/previews, boosted geometry and 2 damage for five seconds, one damage per contact, row-index queries, safe hazards, swept collisions, pause/slow motion, hidden ultimate and smooth return, normal steering passed.');

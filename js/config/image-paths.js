@@ -1,6 +1,11 @@
 (() => {
   'use strict';
   const paths = {
+  "assets/Мир 2/Непрочный блок.webp": "assets/world2/snow-soft-v2.webp",
+  "assets/Мир 2/Обычный блок.webp": "assets/world2/ice-normal-v2.webp",
+  "assets/Мир 2/Прочный блок.webp": "assets/world2/glacier-strong-v2.webp",
+  "assets/backgrounds/world-2-ice.webp": "assets/backgrounds/world-2-ice-v2.webp",
+  "assets/ui/launch-card-worlds/world-2-cave.webp": "assets/ui/launch-card-worlds/world-2-cave-v2.webp",
   "assets/ui/ability-shield-v1.png": "assets/ui/ability-shield-v1-lossless.webp",
   "assets/ui/mutation-reveal/cloning-scene-v2.png": "assets/ui/mutation-reveal/cloning-scene-v2-lossless.webp",
   "assets/ui/mutation-reveal/cosmos-scene-v2.png": "assets/ui/mutation-reveal/cosmos-scene-v2-lossless.webp",

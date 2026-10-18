@@ -7,13 +7,13 @@
     [.62,-1.10],[1.12,-.28],[1.06,.52],[-.16,1.10]];
 
   // The game uses these same positions for both drawing and collision checks.
-  function samples({ x, y, radius, level, clock = 0, compact = false, cellSize = radius * 2 }) {
-    const count = level >= 2 ? 2 : level >= 1 ? 1 : 0;
+  function samples({ x, y, radius, level, clock = 0, compact = false, cellSize = radius * 2, planetScale = 1 }) {
+    const count = level >= 1 ? 1 : 0;
     const planets = [];
     for (let index = 0; index < count; index++) {
-      const orbit = compact ? radius * (index ? 1.18 : 1.48) : cellSize * (index ? 1 : 2);
-      const angle = index ? 2.2 - clock * .00072 : -.45 + clock * .00115;
-      const planetRadius = Math.max(compact ? 4 : 5, radius * (compact ? (index ? .18 : .25) : (index ? .28 : .44)));
+      const orbit = compact ? radius * 1.4 : cellSize * 1.15;
+      const angle = -.45 + clock * .00115;
+      const planetRadius = Math.max(compact ? 4 : 5, radius * (compact ? .25 : .44)) * planetScale;
       planets.push({ index, orbit, angle, radius: planetRadius,
         x: x + Math.cos(angle) * orbit, y: y + Math.sin(angle) * orbit });
     }
@@ -95,8 +95,8 @@
       if ((Math.sin(planet.angle) >= 0) !== front) continue;
       const pulse = state.hitUntil?.[planet.index] > (state.timestamp || 0) ? 1.18 : 1;
       const size = planet.radius * 128 / 37 * pulse;
-      const aura=planet.radius*(pulse>1?5.4:4.5);
-      ctx.globalAlpha=(state.alpha??1)*.65;
+      const aura=planet.radius*(pulse>1?5.4:4.5)+(state.boostStrength||0)*state.radius*.45;
+      ctx.globalAlpha=(state.alpha??1)*(.65+(state.boostStrength||0)*.2);
       ctx.drawImage(halo(planet.index),planet.x-aura/2,planet.y-aura/2,aura,aura);
       ctx.globalAlpha=state.alpha??1;
       ctx.drawImage(sprite(planet.index), planet.x - size / 2, planet.y - size / 2, size, size);

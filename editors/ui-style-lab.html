@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Копай глубже — шрифты и кнопки</title>
+  <style>
+    @font-face{font-family:Nunito;src:url('../assets/fonts/ui-kit/nunito/Nunito-variable.ttf') format('truetype');font-weight:200 1000;font-style:normal;font-display:swap}
+    @font-face{font-family:Rubik;src:url('../assets/fonts/ui-kit/rubik/Rubik-variable.ttf') format('truetype');font-weight:300 900;font-style:normal;font-display:swap}
+    @font-face{font-family:Comfortaa;src:url('../assets/fonts/ui-kit/comfortaa/Comfortaa-variable.ttf') format('truetype');font-weight:300 700;font-style:normal;font-display:swap}
+    *{box-sizing:border-box}
+    :root{color-scheme:dark;--surface:#19465b;--ink:#f4fdff;--muted:#b7dce8;--cyan:#89dfef;--green:#579b34}
+    body{margin:0;background:#102f41;color:var(--ink);font:600 16px/1.45 Nunito,sans-serif}
+    main{max-width:1280px;margin:auto;padding:32px 24px 40px}
+    h1{font-size:clamp(25px,4vw,36px);line-height:1.12;font-weight:900;margin:0 0 8px}
+    .intro{color:var(--muted);max-width:780px;margin:0 0 20px}
+    .tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:24px}
+    .tools label{display:flex;gap:8px;align-items:center;cursor:pointer}
+    .tools input{accent-color:var(--cyan);width:18px;height:18px}
+    a{color:#9eefff;text-underline-offset:3px}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+    .sample{min-width:0;font-family:var(--font);--heavy:900}
+    .sample h2{font:900 22px/1.2 Nunito,sans-serif;margin:0 0 3px}
+    .sample>p{font:600 14px/1.35 Nunito,sans-serif;color:var(--muted);margin:0 0 12px;min-height:38px}
+    .device{border:3px solid #72aabe;border-radius:24px;padding:14px;background:linear-gradient(#28647e,#20546c);overflow:hidden}
+    .level{text-align:center;font-size:22px;line-height:1.1;font-weight:var(--heavy);margin:3px 0 14px;color:var(--ink)}
+    .upgrade-row{display:flex;align-items:center;gap:7px}
+    .xp{position:relative;flex:1;min-width:0;height:32px;border:2px solid #83c7dc;border-radius:11px;background:#103b50;overflow:hidden}
+    .xp i{position:absolute;inset:0 auto 0 0;width:47%;background:linear-gradient(#9ff5ff 0 9%,#2ed8fb 12%,#0ca7d7 85%)}
+    .xp b{position:relative;display:grid;place-items:center;height:100%;font-size:16px;font-weight:var(--heavy);color:#fff;text-shadow:0 1px 2px #062c41}
+    button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .1s ease,filter .1s ease}
+    .soft{position:relative;display:inline-grid;place-items:center;min-height:44px;padding:7px 13px;border:2px solid #274e23;border-radius:13px;background:radial-gradient(ellipse at 30% 0%,#ffffff80,transparent 55%),linear-gradient(#d1ff9e 0 4%,#92d956 7%,#579b34 32% 84%,#477e2b 85% 94%,#315923 95%);color:#fff;font-size:20px;font-weight:var(--heavy);line-height:1.05;text-shadow:0 1px 1px #1b461d}
+    .soft.plus{width:44px;min-width:44px;padding:0;font-size:32px}
+    .soft.upgrade{font-size:15px;padding-inline:9px;background:linear-gradient(#d1ff9e 0 4%,#8fd454 8% 14%,#427b29 24% 84%,#335d20 85% 94%,#26491a 95%)}
+    .soft.blue{border-color:#337f9b;background:radial-gradient(ellipse at 30% 0%,#ffffffa3,transparent 57%),linear-gradient(#f3ffff 0 3%,#b9f5ff 8%,#89dfef 55%,#6ccde3 94%,#409bb9 95%);color:#12455c;text-shadow:none}
+    .soft:active{transform:translateY(2px) scale(.98);filter:brightness(.95)}
+    button:focus-visible{outline:3px solid #ffe894;outline-offset:4px}
+    .food-row{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:5px;min-height:182px}
+    .arrow{width:44px;height:52px;padding:0;border:0;background:transparent url('../assets/ui/world-terminal/arrow-soft-v12.webp') center/contain no-repeat}
+    .arrow.prev{transform:scaleX(-1)}
+    .arrow:active{transform:scale(.94)}
+    .arrow.prev:active{transform:scaleX(-1) scale(.94)}
+    .dish{width:min(100%,154px);height:154px;object-fit:contain;justify-self:center}
+    .stage{text-align:center;color:var(--muted);font-size:14px;font-weight:700;margin:0 0 14px}
+    .stage strong{color:#b7f5ff;font-weight:var(--heavy)}
+    .info{display:flex;gap:10px;align-items:center;min-height:104px;padding:12px 10px;border:1px solid #6099af;border-radius:17px;background:var(--surface)}
+    .info img{width:54px;height:54px;flex:none}
+    .info h3{font-size:21px;line-height:1.1;font-weight:var(--heavy);margin:0 0 6px;color:var(--ink)}
+    .info p{font-size:15px;line-height:1.35;font-weight:600;margin:0;color:var(--muted)}
+    .info strong{font-weight:var(--heavy);color:#ffe894}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+    .actions .soft{font-size:17px;padding:9px 7px}
+    .letters{margin:14px 1px 0;font-size:15px;line-height:1.5;font-weight:700;color:var(--muted);overflow-wrap:anywhere}
+    .contrast{margin-top:28px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .pair{padding:16px;border:1px solid #52899e;border-radius:16px;font-size:15px}
+    .pair strong{display:block;font-size:20px;font-weight:900;line-height:1.2;margin-bottom:4px}
+    .pair small{display:block;margin-top:6px;font:700 13px/1.4 Nunito,sans-serif}
+    .note{color:var(--muted);font-size:14px;max-width:850px;margin:16px 0 0}
+    #feedback{display:block;min-height:24px;margin-top:18px;color:#d9ffbb;font-weight:800}
+    body.mono main{filter:grayscale(1)}
+    body.small .sample .level{font-size:19px}body.small .sample .info h3{font-size:18px}body.small .sample .info p{font-size:13px}
+    @media(max-width:950px){.grid{grid-template-columns:1fr;max-width:400px;margin:auto}.sample>p{min-height:0}.contrast{grid-template-columns:1fr}.device{padding:16px}.soft.upgrade{font-size:16px}}
+    @media(max-width:370px){main{padding:22px 12px}.device{padding:10px}.soft.upgrade{font-size:14px}.info h3{font-size:19px}.info img{width:46px;height:46px}}
+    @media(prefers-reduced-motion:reduce){button{transition:none}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Мягкие кнопки и читаемый текст</h1>
+  <p class="intro">Три шрифта на одинаковых элементах. Чистые голубые инструменты, зелёное действие, спокойная подложка. Все шрифты загружены локально и поддерживают кириллицу.</p>
+  <div class="tools">
+    <label><input id="mono" type="checkbox"> Без цвета</label>
+    <label><input id="small" type="checkbox"> Мелкий текст</label>
+    <a href="../docs/ui-style-guide.md">Памятка по стилю</a>
+  </div>
+  <div class="grid" id="samples"></div>
+  <section class="contrast" aria-label="Контраст текста и фона" id="contrast"></section>
+  <p class="note">Контраст измерен для указанных сплошных цветов. Для градиентной кнопки проверяется поверхность за буквами. Примеры ниже — заготовки стиля; точный шрифт картинки-референса неизвестен.</p>
+  <output id="feedback" aria-live="polite"></output>
+</main>
+<script>
+  const families=[['Nunito','Основной кандидат: округлый и выразительный.'],['Rubik','Плотнее и собраннее, мягкие углы.'],['Comfortaa','Самый круглый; менее плотный заголовок.']];
+  document.getElementById('samples').innerHTML=families.map(([font,note])=>`<article class="sample" style="--font:${font};${font==='Comfortaa'?'--heavy:700':''}">
+    <h2>${font}</h2><p>${note}</p><div class="device">
+      <div class="level">УРОВЕНЬ 2</div>
+      <div class="upgrade-row"><div class="xp"><i></i><b>140/300 XP</b></div><button class="soft plus" aria-label="Добавить опыт">+</button><button class="soft upgrade">АПГРЕЙД</button></div>
+      <div class="food-row"><button class="arrow prev" aria-label="Предыдущая мутация"></button><img class="dish" src="../assets/food/03-ramen.webp" alt="Огненный рамен"><button class="arrow" aria-label="Следующая мутация"></button></div>
+      <p class="stage"><strong>★ ★</strong> ☆ &nbsp; СТАДИЯ 2/3</p>
+      <div class="info"><img src="../assets/ui/recipe-categories/emblem-v2-fire.webp" alt=""><div><h3>ОГНЕННЫЙ РАМЕН</h3><p><strong>Огонь:</strong> поджигает блоки и распространяется.</p></div></div>
+      <div class="actions"><button class="soft blue">МУТАЦИИ</button><button class="soft blue">АКСЕССУАРЫ</button></div>
+    </div><p class="letters">Съешь блюдо — отправляйся в шахту!<br>Ёё Йй Жж Щщ Ъъ Ыы · 0123456789</p>
+  </article>`).join('');
+  function luminance(hex){const rgb=hex.replace('#','').match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722}
+  function contrast(a,b){const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
+  const pairs=[['#12455C','#EAFBFF','Тёмный на светлом'],['#F4FDFF','#19465B','Светлый на тёмном'],['#FFFFFF','#579B34','Белый на зелёном']];
+  document.getElementById('contrast').innerHTML=pairs.map(([fg,bg,label])=>{const ratio=contrast(fg,bg);return `<div class="pair" style="color:${fg};background:${bg}"><strong>${label}</strong>Пример текста и кнопки<small>${ratio.toFixed(2)}:1 · ${ratio>=4.5?'подходит для обычного текста':ratio>=3?'для крупного жирного текста':'требует изменения цвета'}</small></div>`}).join('');
+  document.getElementById('mono').addEventListener('change',e=>document.body.classList.toggle('mono',e.target.checked));
+  document.getElementById('small').addEventListener('change',e=>document.body.classList.toggle('small',e.target.checked));
+  document.querySelectorAll('.sample button').forEach(b=>b.addEventListener('click',()=>{document.getElementById('feedback').textContent='Отклик: '+b.closest('.sample').querySelector('h2').textContent+' · '+(b.textContent.trim()||b.getAttribute('aria-label'))}));
+</script>
+</body>
+</html>

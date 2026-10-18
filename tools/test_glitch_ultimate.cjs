@@ -19,12 +19,12 @@ const announcement = { children: [], dataset: {}, replaceChildren() { this.child
   appendChild(child) { this.children.push(child); }, setAttribute(name, value) { this[name] = value; } };
 const context = {
   run, Math: Object.assign(Object.create(Math), { random }), performance: { now: () => 1000 }, graphicsBudget:1,
-  VIEW_W: 240, VIEW_H: 480, GLITCH_INFECTION_INTERVAL_MS: 11500, GLITCH_NEUTRALIZE_INTERVAL_MS: 17500,
+  VIEW_W: 240, VIEW_H: 480, GLITCH_INFECTION_INTERVAL_MS: 4200, GLITCH_PASSIVE_LIMIT:16, GLITCH_SPAWN_GAP_CELLS:2.5,
   ULTIMATE_BLOCKS_REQUIRED: 65, FLASK_VALUES: { 1: 1, 2: 3, 3: 5 },
   EXPERIENCE: { experienceForBlock: b => ({ dense: 1, hard: 3, reinforced: 5 }[b.tier] || 1) },
   clamp: (n, min, max) => Math.min(max, Math.max(min, n)), chooseMaterial: () => 'fragile-earth',
-  elementalLevel: () => 0, blockIsGolden: () => false, ultimateChargeBlocked: c => ['glitchDelete', 'glitchHack'].includes(c),
-  spreadFireFromBrokenBlock() {}, createDebris() {}, sound() {}, feedback() {}, impact() {}, trimParticles() {},
+  blocksNearY: () => run.blocks, ensureWorldSprites() {}, elementalLevel: () => 0, blockIsGolden: () => false, ultimateChargeBlocked: c => ['glitchDelete', 'glitchHack'].includes(c),
+  spreadFireFromBrokenBlock() {}, createDebris() {}, sound() {}, feedback() {}, impact() {}, trimParticles() {}, spawnSpecialBurst() {}, healRun() {},
   effectDensity: () => 1, isMobileDevice: () => false, isLowPowerDevice: () => false,
   awardFlaskData: n => { plasma += n; },
   window: { SlimeBlockBreakFeedback: { emitEssence: () => ({ particles: [], impact: { type: 'essenceCollect' } }) } },
@@ -164,6 +164,54 @@ assert.equal((html.match(/data-glitch-bug="(hack|delete|infect|change)"/g) || []
 assert.match(source, /block\.flaskTier >= 3 \? 'stone-reinforced-liquid'/, 'rich vein artwork survives in fragile rock');
 assert.doesNotMatch(source, /glitchClone|GLITCH_CLONE_MS/);
 assert.match(source, /if \(run\.glitchChoice\)[\s\S]*?shiftRunClock\(timestamp - choice\.startedAt\);[\s\S]*?executeGlitchBug\(choice\.kind, timestamp\)/);
+// The passive network is frequent and strictly visible; no passive disarming remains.
+reset();context.elementalLevel=()=>2;run.glitchNextInfectionAt=1000;
+const visibleSpike=spike(cell(15,2)),offscreenSpike=spike(cell(22,2));
+context.updateGlitchEffects(1000);
+assert.equal(run.glitchScreen.kind,'passive');assert.equal(run.glitchInfectedBlocks.size,0,'screen glitch precedes infection');
+context.updateGlitchEffects(1160);
+assert.ok(run.glitchInfectedBlocks.size>=6&&run.glitchInfectedBlocks.size<=8);
+assert.ok([...run.glitchInfectedBlocks].every(b=>context.glitchBlockVisible(b)&&b.glitchPassiveInfection));
+assert.ok([...run.glitchInfectedBlocks].every(b=>b.y>=run.slime.y+run.cellSize*2.5),'new marks appear well below the slime');
+context.updateGlitchEffects(18000);
+assert(!visibleSpike.glitchNeutralized&&!offscreenSpike.glitchNeutralized,'base never disarms spikes');
+for(let i=0;i<5;i++)context.infectGlitchAhead(19000+i*4200);
+assert(run.glitchInfectedBlocks.size<=16,'bounded passive network');
+const old=[...run.glitchInfectedBlocks];run.cameraY=600;context.prunePassiveGlitch();
+assert(old.every(b=>!b.glitchInfected));assert.equal(run.glitchInfectedBlocks.size,0);
+reset();const on=cell(12,2),off=cell(24,2);
+context.infectGlitchGroup([on,off],1000,true);context.shareGlitchHit(on,1,1100);
+assert.equal(off.hp,3,'offscreen passive marks cannot receive an echo');assert(!off.glitchInfected);
+// Existing marks stay usable when the slime approaches them.
+reset();const approaching=cell(14,2);context.infectGlitchGroup([approaching],1000,true);run.slime.y=approaching.y-10;
+context.prunePassiveGlitch();assert(approaching.glitchInfected,'spawn distance does not remove existing marks on approach');
+reset();
+// Stage III may intentionally infect outside the viewport, as before.
+const ultOn=cell(12,2),ultOff=cell(24,2);context.infectGlitchGroup([ultOn,ultOff],1200);context.shareGlitchHit(ultOn,1,1300);assert.equal(ultOff.hp,2);
+
+for(const [roll,reward,value]of [[.1,'heal',0],[.3,1,1],[.6,2,3],[.9,3,5]]){
+ reset();run.cameraY=300;context.elementalLevel=()=>0;context.Math.random=()=>roll;
+ spike(cell(11,2));const target=spike(cell(15,2));spike(cell(24,2));
+ target.motion={axis:'x',min:0,max:160,period:1000};run.movingHazards=[target];target.x=100;
+ assert.equal(context.findGlitchDisarmTarget(),target,'selects deep visible spike, not nearby/offscreen ones');
+ assert(context.startGlitchDisarm(1000));assert(target.glitchNeutralized&&target.glitchDisarming);
+ assert.equal(run.glitchDisarm.reward,reward);context.updateMovingHazards(1200);assert.equal(target.x,100,'decoding patrol is safe and stationary');
+ context.updateGlitchEffects(1425);assert.equal(target.x,90);assert(target.hazard,'conversion is visible over time');
+ assert.equal(plasma,0);assert.equal(run.experienceEarned,0);
+ context.updateGlitchEffects(1850);assert(!target.hazard&&!target.unbreakable&&!target.motion);assert.equal(target.hp,1);
+ assert.equal(target.special,reward==='heal'?'gel':null);assert.equal(target.flaskValue,value);assert.equal(target.x,80);
+ assert.equal(plasma,0);assert.equal(run.experienceEarned,0,'conversion itself gives no XP');
+ assert.equal(run.movingHazards.length,0);context.destroyBlock(target,'impact',1900);assert.equal(plasma,value);
+ context.destroyBlock(target,'impact',1950);assert.equal(plasma,value,'replacement reward collected once');
+ context.updateGlitchEffects(2700);assert.equal(run.glitchDisarm,null);
+}
+context.Math.random=random;
+reset();run.worldId=2;run.cameraY=300;context.Math.random=()=>.9;
+const otherWorld=spike(cell(15,2));context.startGlitchDisarm(1000);context.updateGlitchEffects(1850);
+context.destroyBlock(otherWorld,'impact',1900);assert.equal(plasma,5,'useful replacement vein also rewards plasma in other worlds');
+context.Math.random=random;
+reset();assert.equal(context.findGlitchDisarmTarget(),null);
+
 // Pixelation must keep the old renderer while reusing artwork and 90ms frames.
 let captures = 0, pixelFrames = 0;
 context.glitchTileCache = new Map(); context.glitchTileCacheRun = null;

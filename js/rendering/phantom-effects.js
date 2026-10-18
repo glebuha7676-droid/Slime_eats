@@ -7,6 +7,7 @@
   const tintedGhosts = new Map();
   let gateImage = null, gateSwirl = null, realmTexture = null;
   const trails = new WeakMap();
+  const flightTrails = new WeakMap();
   function ensureGhosts() {
     if(ghostImages.length)return;
     const version=window.SlimeGameAssets?.versionedAsset || (p=>p);
@@ -39,6 +40,10 @@
   }
   function flightPoint(flight,time,idlePoint) {
     const p=unit((time-flight.startedAt)/flight.duration);
+    if(flight.emission){
+      const point=flight.points[0],t=p*p*(3-2*p),bend=Math.sin(p*Math.PI)*14*(flight.index?-1:1);
+      return {x:mix(flight.from.x,point.x,t)+bend,y:mix(flight.from.y,point.y,t),p,route:p};
+    }
     const points=[flight.from,...flight.points,idlePoint];
     const route=(1-Math.cos(p*Math.PI))/2*(points.length-1);
     const i=Math.min(points.length-2,Math.floor(route)),t=route-i;
@@ -49,11 +54,13 @@
     // each rock keep the spirit gliding rather than stopping at every waypoint.
     return {x:curve('x'),y:curve('y'),p,route};
   }
-  function spirit(ctx,p,size,index,time,alpha=1) {
+  function spirit(ctx,p,size,index,time,alpha=1,emission=false,flight=null) {
     ensureGhosts();const image=spiritBody(index);
     if(!image||alpha<=0)return;
     let histories=trails.get(ctx);if(!histories){histories=[[],[]];trails.set(ctx,histories);}
-    const history=histories[index],last=history[history.length-1];
+    let history=histories[index];
+    if(flight){history=flightTrails.get(flight);if(!history){history=[];flightTrails.set(flight,history);}}
+    const last=history[history.length-1];
     if(last&&(time<last.time||time-last.time>280||Math.hypot(p.x-last.x,p.y-last.y)>size*4))history.length=0;
     while(history.length&&(time-history[0].time>240||history.length>6))history.shift();
     if(!history.length||time-history[history.length-1].time>=32)history.push({x:p.x,y:p.y,time});
@@ -70,15 +77,19 @@
       ctx.beginPath();ctx.moveTo(tail[i-1].x,tail[i-1].y);ctx.lineTo(tail[i].x,tail[i].y);ctx.stroke();
     }
     ctx.globalAlpha=alpha*(.67+.08*Math.sin(time/370+index));
+    if(emission){ctx.globalCompositeOperation='lighter';ctx.drawImage(glowSprite(index),p.x-size,p.y-size,size*2,size*2);ctx.globalCompositeOperation='source-over';}
     ctx.drawImage(glowSprite(index),p.x-size*.68,p.y-size*.72,size*1.36,size*1.44);
     const w=size*(index===1?.8:.98),h=w*image.height/image.width*(index===1?1.12:1);
-    ctx.globalAlpha=alpha*(index===1?.76:.86);ctx.drawImage(image,p.x-w/2,p.y-h*.52,w,h);
+    ctx.globalAlpha=alpha*(emission?.95:index===1?.76:.86);ctx.drawImage(image,p.x-w/2,p.y-h*.52,w,h);
     window.SlimeSpectralGlow.draw(ctx,image,[p.x-w/2,p.y-h*.52,w,h],time,.82);ctx.restore();
   }
   function cracks(ctx,block,y,time) {
     const w=block.w,h=block.h,seed=(block.row*17+block.col*11)%7;
     const flash=unit(1-(time-(block.phantomMarkedAt||0))/360);
     ctx.save();ctx.translate(block.x,y);ctx.lineJoin='round';ctx.lineCap='round';
+    const urgency=block.phantomDetonateAt?unit(1-(block.phantomDetonateAt-time)/650):0;
+    ctx.fillStyle='#5ce9d4';ctx.globalAlpha=.23+urgency*.16;ctx.fillRect(1,1,w-2,h-2);
+    ctx.globalCompositeOperation='screen';ctx.globalAlpha=.3+urgency*.2;ctx.drawImage(glowSprite(0),0,0,w,h);ctx.globalCompositeOperation='source-over';
     const path=()=>{ctx.beginPath();ctx.moveTo(w*.16,h*.06);ctx.lineTo(w*.43,h*.28);ctx.lineTo(w*.36,h*.46);ctx.lineTo(w*.60,h*.58);ctx.lineTo(w*.48,h*.92);
       ctx.moveTo(w*.43,h*.28);ctx.lineTo(w*.68,h*.22);ctx.lineTo(w*.88,h*.34);
       ctx.moveTo(w*.36,h*.46);ctx.lineTo(w*.17,h*.60);ctx.lineTo(w*.08,h*.82);
@@ -127,19 +138,29 @@
     ctx.restore();
   }
   function burst(ctx,effect,camera,cell,time) {
+    cell*=effect.scale || 1;
     const t=unit((time-effect.startedAt)/850);if(t>=1)return;
     const spread=1-(1-t)**3,fade=(1-t)**1.6;
     ctx.save();ctx.translate(effect.x,effect.y-camera);ctx.globalCompositeOperation='lighter';
     const size=cell*(.8+spread*3.8);
     ctx.globalAlpha=fade*.85;ctx.drawImage(glowSprite(0),-size/2,-size/2,size,size);
     // Soft raster wisps, no drawn ring or geometric rays.
-    for(let i=0;i<8;i++){
-      const a=i*Math.PI/4+.2,d=cell*spread*(.75+(i%3)*.14),w=cell*(.65+.45*t);
+    for(let i=0;i<(effect.cross?4:8);i++){
+      const a=effect.cross?i*Math.PI/2:i*Math.PI/4+.2,d=cell*spread*(effect.cross?1.2:.75+(i%3)*.14),w=cell*(.65+.45*t);
       ctx.globalAlpha=fade*(i%2?.55:.75);
       ctx.drawImage(glowSprite(i%2),Math.cos(a)*d-w/2,Math.sin(a)*d-w/2,w,w);
     }
     const flash=unit(1-t/.25),core=cell*(.45+t*2.4);
     ctx.globalAlpha=flash;ctx.drawImage(glowSprite(0),-core/2,-core/2,core,core);ctx.restore();
+  }
+  function phaseTrail(ctx,run,time){
+    const phase=run.phantomPhase;if(!phase)return;
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    for(const p of phase.trail){
+      const fade=unit(1-(time-p.at)/240),size=run.slime.radius*(2.6+fade*.6);
+      ctx.globalAlpha=fade*.4;ctx.drawImage(glowSprite(0),p.x-size/2,p.y-run.cameraY-size/2,size,size);
+    }
+    ctx.restore();
   }
   function realm(ctx,width,height,time,strength,entry={}) {
     if(!realmTexture){
@@ -210,5 +231,5 @@
       }ctx.restore();
     }
   }
-  window.SlimePhantomEffects=Object.freeze({ensureGhosts,idle,flightPoint,spirit,cracks,portal,gate,burst,realm,express,expressGeometry});
+  window.SlimePhantomEffects=Object.freeze({ensureGhosts,idle,flightPoint,spirit,cracks,portal,gate,burst,realm,express,expressGeometry,phaseTrail});
 })();

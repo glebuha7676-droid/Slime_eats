@@ -1,0 +1,129 @@
+/* Shared rounded UI buttons. Artwork-shaped controls keep their silhouettes. */
+html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-dialog,#adOverlay,#resultOverlay,#gameCompleteOverlay,.boot-screen) button:is(
+  .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
+  .ad-btn,.secondary,.tutorial-next,.boot-retry,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
+  .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
+  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]){
+  --button-face:#10bff1;--button-edge:#075b83;--button-top:#9af1ff;--button-bottom:#058dcb;
+  border:2px solid var(--button-edge)!important;border-radius:13px!important;
+  background:var(--button-face)!important;
+  box-shadow:inset 0 2px var(--button-top),inset 0 -4px var(--button-bottom),0 2px #12364d!important;
+  color:#fff!important;font-family:"Slime Nunito",sans-serif!important;font-weight:900!important;
+  text-shadow:0 1px var(--button-edge)!important;-webkit-text-stroke:2px var(--button-edge);paint-order:stroke fill;
+  filter:none!important;transition:transform .12s!important;-webkit-tap-highlight-color:transparent;
+}
+html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-dialog,#adOverlay,#resultOverlay,#gameCompleteOverlay,.boot-screen) button:is(
+  .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
+  .ad-btn,.secondary,.tutorial-next,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
+  .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
+  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]) :is(b,span){
+  color:inherit!important;text-shadow:inherit!important;paint-order:stroke fill;
+}
+html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-dialog,#adOverlay,#resultOverlay,#gameCompleteOverlay,.boot-screen) button:is(
+  .secondary,.shop-tab:not(.active),.home-mode-tab:not(.active),.home-world-picker,
+  #adCancelBtn,#toggleRunSoundBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]){
+  --button-face:#d9eff5;--button-edge:#527d92;--button-top:#fff;--button-bottom:#adcfdc;
+  color:#24536a!important;text-shadow:none!important;-webkit-text-stroke:0;
+}
+html body :is(#app,#runMenuOverlay,#resultOverlay,#gameCompleteOverlay,.tutorial-dialog) button:is(
+  .result-continue-btn,.run-menu-resume,#tutorialGiftClaimBtn,.game-complete-endless){
+  --button-face:#75cd54;--button-edge:#316a34;--button-top:#c6f8a9;--button-bottom:#4ca342;
+}
+html body :is(#app,#runMenuOverlay,#adminToolsOverlay) button:is(
+  .run-menu-finish,.admin-reset-progress){
+  --button-face:#f67f83!important;--button-edge:#984457!important;--button-top:#ffc4bc!important;--button-bottom:#d85b6a!important;
+}
+html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-dialog,#adOverlay,#resultOverlay,#gameCompleteOverlay,.boot-screen) button:is(
+  .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
+  .ad-btn,.secondary,.tutorial-next,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
+  .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
+  #tutorialGiftClaimBtn,#adCancelBtn,[data-admin-mutation-stage]):disabled{
+  --button-face:#52768a;--button-edge:#6e94a5;--button-top:#789aa9;--button-bottom:#3f6176;
+  background:var(--button-face)!important;color:#bdd5df!important;text-shadow:none!important;-webkit-text-stroke:0;
+  box-shadow:inset 0 2px var(--button-top),inset 0 -3px var(--button-bottom)!important;opacity:1!important;
+}
+html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-dialog,#adOverlay,#resultOverlay,#gameCompleteOverlay,.boot-screen) button:is(
+  .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
+  .ad-btn,.secondary,.tutorial-next,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
+  .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
+  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]):active:not(:disabled){transform:translateY(2px)!important}
+
+/* Service tiles on the home screen retain the light metal colour. */
+html body[data-screen="home"] #app .world-summary :is(.header-rewards-btn,.header-admin-btn),
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot){
+  box-shadow:inset 0 2px #fff,inset 0 -4px #bad7e2!important;border-color:#527d92!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch::before{
+  border-color:#316a34!important;background:#75cd54!important;
+  box-shadow:inset 0 2px #c6f8a9,inset 0 -4px #4ca342!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch{
+  text-shadow:0 1px #316a34!important;-webkit-text-stroke:2.5px #316a34;paint-order:stroke fill;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch.hungry::before{
+  border-color:#6b96a8!important;background:#c7dfe9!important;box-shadow:inset 0 2px #effbff,inset 0 -4px #a5c7d7!important;
+}
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch.hungry{-webkit-text-stroke:0;text-shadow:none!important}
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2) #closePanelBtn{background:#f67f83!important}
+html body #panelOverlay .buy-btn{font-size:13px!important;min-height:34px!important}
+html body #panelOverlay .reward-buttons button{font-size:15px!important;min-height:44px!important}
+html body #panelOverlay #closePanelBtn,html body #adminToolsOverlay #closeAdminToolsBtn{
+  display:grid!important;place-items:center!important;font-size:22px!important;line-height:1!important;
+  color:#fff!important;text-indent:0!important;overflow:hidden!important;
+}
+html body :is(#app,#panelOverlay) .shop-tab{font-size:14px!important}
+/* Compact pause control; the tutorial copy must respect its hidden state. */
+html body #app #endRunBtn,html body #tutorialPauseBtn{
+  display:grid!important;place-items:center!important;width:44px!important;height:44px!important;
+  min-width:44px!important;min-height:44px!important;padding:0!important;gap:0!important;
+  border:2px solid #075b83!important;border-radius:12px!important;background:#10bff1!important;
+  box-shadow:inset 0 2px #9af1ff,inset 0 -4px #058dcb,0 2px #12364d!important;
+  filter:none!important;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+html body #app #endRunBtn[hidden],html body #tutorialPauseBtn[hidden]{display:none!important}
+html body #app #endRunBtn::before,html body #app #endRunBtn::after,
+html body #tutorialPauseBtn::before,html body #tutorialPauseBtn::after{display:none!important}
+html body #app #endRunBtn>.pause-glyph,html body #tutorialPauseBtn>.pause-glyph{
+  display:block!important;width:24px!important;height:24px!important;margin:0!important;place-self:center!important;transform:none!important;pointer-events:none;
+}
+html body #app #endRunBtn:active,html body #tutorialPauseBtn:active{
+  transform:translateY(2px)!important;box-shadow:inset 0 2px #9af1ff,inset 0 -2px #058dcb!important;
+}
+html body #app #endRunBtn:focus-visible,html body #tutorialPauseBtn:focus-visible{
+  outline:3px solid #ffe894!important;outline-offset:3px!important;
+}
+@media(prefers-reduced-motion:reduce){html body button{transition:none!important}}
+
+/* Highlights belong to action surfaces only. Height-relative artwork follows
+   the button size; border-box anchors stay at the corner during resize/press. */
+html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-dialog,#adOverlay,#resultOverlay,#gameCompleteOverlay,.boot-screen) button:is(
+  .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
+  .ad-btn,.secondary,.tutorial-next,.boot-retry,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
+  .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
+  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]):is(:enabled,:disabled),
+html body #panelOverlay button:is(#mutationChooseBtn,#mutationSynthesizeBtn,.slime-stage-open,.evolution-prompt-actions button):is(:enabled,:disabled),
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2) #closePanelBtn,
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch:is(.ready,.hungry)::before{
+  background-image:var(--button-shine,url("assets/ui/button-oval-highlight-v4.svg"))!important;
+  background-origin:border-box!important;
+  background-position:left 4px top 9%!important;
+  background-size:auto 20%!important;
+  background-repeat:no-repeat!important;
+}
+/* Disabled actions have no corner highlight. */
+html body button:is(:disabled,[aria-disabled="true"]),
+html body[data-screen="home"] #app #homeScreen .terminal-launch.hungry::before{
+  --button-shine:none!important;
+}
+/* Light home tools, mutation selectors and informational balances are quiet. */
+html body[data-screen="home"] #app button:is(.header-rewards-btn,.header-admin-btn,
+ .mutation-lab-button,.accessories-at-form-slot,.quick-mutation-option,
+ .secondary,.home-world-picker,.home-mode-tab:not(.active)),
+html body #panelOverlay .mutation-lab-v2 :is(.mutation-collection-slot,.lab-view-tabs button){
+  --button-shine:none!important;
+}
+/* The launch capsule has a larger corner: follow its own curved silhouette. */
+html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch:is(.ready,.hungry)::before{
+  background-position:left 8% top 12%!important;
+  background-size:auto 13%!important;
+}

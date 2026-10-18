@@ -12,10 +12,12 @@ const context={performance:{now:()=>2000},clamp:(n,a,b)=>Math.max(a,Math.min(b,n
  markFrostTransformation(){},createDebris(){},drawSpecialBlockAura(){},drawCrackStage(){},
  awardRunExperience(){},awardFlaskData:n=>{context.reward+=n;},sound(){},effectDensity:()=>1,
  isMobileDevice:()=>false,trimParticles(){},reward:0,
- window:{SlimeBlockBreakFeedback:{emitEssence:()=>({particles:[],impact:{type:'essenceCollect'}})}}};
+ window:{SlimeMutationImpacts:{freezeBlock(){}},SlimeBlockBreakFeedback:{emitEssence:()=>({particles:[],impact:{type:'essenceCollect'}})}}};
 vm.createContext(context);
 vm.runInContext(['turnBlockToSnow','turnBlockToSnowflake','drawWorldSprite','registerBrokenBlock'].map(take).join('\n'),context);
-for(const [tier,value] of [[1,1],[2,3],[3,5]]) for(const transform of ['turnBlockToSnow','turnBlockToSnowflake']){
+context.WORLD_SPRITES[2]={...context.WORLD_SPRITES[1],'ice-reinforced':sprite('ice-strong')};
+for(const world of [1,2]) for(const [tier,value] of [[1,1],[2,3],[3,5]]) for(const transform of ['turnBlockToSnow','turnBlockToSnowflake']){
+ context.run.worldId=world;
  const b={id:tier,tier:'reinforced',flaskTier:tier,hp:5,maxHp:5,x:0,y:0,w:64,h:64};
  assert.equal(context[transform](b,1000),true);
  assert.equal(b.flaskTier,tier);assert.equal(b.flaskValue,value);

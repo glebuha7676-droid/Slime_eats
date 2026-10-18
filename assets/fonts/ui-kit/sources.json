@@ -1,0 +1,60 @@
+{
+  "downloaded": "2026-10-16",
+  "unmodifiedUpstreamFonts": true,
+  "families": [
+    {
+      "family": "Nunito",
+      "license": "SIL Open Font License 1.1",
+      "files": [
+        {
+          "file": "nunito/Nunito-variable.ttf",
+          "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/nunito/Nunito%5Bwght%5D.ttf",
+          "bytes": 276932,
+          "sha256": "bb55a5ca5c2042335b3991af27c4d0705d0ef41cac6164ac737fd8f2a1e85207"
+        },
+        {
+          "file": "nunito/OFL.txt",
+          "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/nunito/OFL.txt",
+          "bytes": 4385,
+          "sha256": "580df76c95a1ec5ab878ceb25bb3d85c6a076804e9c970c8c6972aea775fdf65"
+        }
+      ]
+    },
+    {
+      "family": "Rubik",
+      "license": "SIL Open Font License 1.1",
+      "files": [
+        {
+          "file": "rubik/Rubik-variable.ttf",
+          "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/Rubik%5Bwght%5D.ttf",
+          "bytes": 359804,
+          "sha256": "1b3a7437ba2af80e465e773ed60c5036d1ba6ace492d89046dbcf18fb31e4e88"
+        },
+        {
+          "file": "rubik/OFL.txt",
+          "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/OFL.txt",
+          "bytes": 4384,
+          "sha256": "472cbe7c25441df63e9c7864b43eb3c0f4b3df950c66a76224e6cfe1eae843fb"
+        }
+      ]
+    },
+    {
+      "family": "Comfortaa",
+      "license": "SIL Open Font License 1.1",
+      "files": [
+        {
+          "file": "comfortaa/Comfortaa-variable.ttf",
+          "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/comfortaa/Comfortaa%5Bwght%5D.ttf",
+          "bytes": 201756,
+          "sha256": "0fc3f45dc48b614db9c39181502544b37217ecbf8bee2fb35886992bc96c5bd3"
+        },
+        {
+          "file": "comfortaa/OFL.txt",
+          "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/comfortaa/OFL.txt",
+          "bytes": 4519,
+          "sha256": "bc85bae0b512b799bbfb2b916e4d0a34cfd963d09778cd783e248b479e67760a"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+const source=fs.readFileSync('game.js','utf8');
+const hook=`window.__psiQA={
+ prepare(stage){if(run)cancelAnimationFrame(run.animationId);run=null;els.resultOverlay.classList.add('hidden');els.panelOverlay.classList.add('hidden');tutorialMemoState=null;syncInteractionLayers();clearMenuSlimeInteraction();clearMenuMutationPresentation();
+ save=normalizeSave({schemaVersion:29,unlockedMutations:FORM_INDEX.map(f=>f.id),mutationLevels:{telekinesis:stage},activeMutationPool:['telekinesis'],selectedMutation:'telekinesis',researchUnits:400,tutorialStep:'done',onboarding:{enabled:false},sound:false});save.tutorialStep='done';save.onboarding.enabled=false;session=null;newDraft();session.foods=[foodForMutation('telekinesis')];session.offer=[null,null,null];recalcStats();syncMenuCategoryVisuals({instant:true});renderDraft();startDrop();cancelAnimationFrame(run.animationId);
+ const cell=run.cellSize,origin=run.blockRowOrigin,template=run.blocks.find(b=>!b.hazard&&!b.special&&!b.unbreakable);run.blocks=[];
+ for(let row=0;row<22;row++)for(let col=0;col<6;col++)run.blocks.push({...template,id:'qa-'+row+'-'+col,row,col,x:run.gridOffsetX+col*cell,y:origin+row*cell,w:cell,h:cell,tier:'hard',hp:4,maxHp:4,flaskTier:col%3+1,flaskValue:[1,3,5][col%3],dead:false,hazard:false,unbreakable:false,special:'',fireDamageAt:0,electricFlashUntil:0});
+ for(const b of run.blocks)if(b.row>=1&&b.row<=3&&b.col>=2&&b.col<=4)b.dead=true;
+ indexRunBlocks();run.slime.x=run.gridOffsetX+3.5*cell;run.slime.y=run.blockRowOrigin+2.5*cell;run.slime.vx=run.slime.vy=0;run.cameraY=run.slime.y-200;run.elementalAbilityCharges=1;run.ultimateCharge=65;run.telekinesisNextAt=performance.now()+100000;
+ if(stage===1){for(const col of [2,4]){const b=run.blocks.find(b=>b.row===2&&b.col===col);Object.assign(b,{dead:false,hazard:true,unbreakable:true,hp:Infinity,maxHp:Infinity,flaskTier:0,flaskValue:0});}}
+ updateRunUI();renderCanvas(performance.now());this.elapsed=0;this.at=0;this.storm=null;},
+ captureStart(){this.at=run.psionicBarrier?.startedAt||run.telekinesisCycle?.startedAt||performance.now();this.storm=run.telekinesisCycle;renderCanvas(this.at);},
+ step(ms){for(let age=this.elapsed+16;age<=ms;age+=16){const at=this.at+age;updateElementalEffects(at);updateParticles(.016);updateSpecialEffects(.016,at);}updateElementalEffects(this.at+ms);this.elapsed=ms;renderCanvas(this.at+ms);return this.state();},
+ state(){const cycle=this.storm||run.telekinesisCycle;return {barrier:!!run.psionicBarrier,until:run.psionicBarrier?.until,health:run.health,ordinaryShield:run.barrier,spikes:run.blocks.filter(b=>b.hazard&&!b.dead).length,bursts:run.psionicBarrierBursts.length,storm:run.telekinesisCycle?.mode,projectiles:cycle?.projectiles.length,detached:cycle?.projectiles.filter(p=>p.detached).length,thrown:cycle?.projectiles.filter(p=>p.launched).length,impacted:cycle?.projectiles.filter(p=>p.impacted).length,cached:cycle?.projectiles.filter(p=>p.art).length,active:run.elementalAbilityActive,charges:run.elementalAbilityCharges,particles:run.particles.length,dead:run.blocks.filter(b=>b.dead).length,flasks:run.researchData,intro:!!run.ultimateIntro,press:!!run.telekinesisPress};},
+ pause(ms){const before={barrier:run.psionicBarrier?.until,cycle:run.telekinesisCycle?.startedAt};shiftRunClock(ms);this.at+=ms;return {before,after:{barrier:run.psionicBarrier?.until,cycle:run.telekinesisCycle?.startedAt}};},
+ commitPress(){const intro=run.ultimateIntro;run.ultimateIntro=null;this.at=performance.now();commitElementalAbility('telekinesis',this.at,intro.originX,intro.originY);return {rows:(run.telekinesisPress.bottomY-run.telekinesisPress.topY)/run.cellSize};},
+ base(){run.elementalAbilityActive='';run.telekinesisCycle=null;startTelekinesisCycle(performance.now(),2);return run.telekinesisCycle.projectiles.length;},
+ open(){run=null;showScreen('home');selectedLaboratoryMutationId='telekinesis';renderPanel('recipes');laboratoryView='mutations';renderRecipesPanel();},
+ live(){run.lastTime=0;run.animationId=requestAnimationFrame(gameFrame);},stop(){if(run)cancelAnimationFrame(run.animationId);}
+};`;
+(async()=>{
+ const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+ const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.stack));
+ await page.route('**/game.js*',r=>r.fulfill({contentType:'application/javascript',body:source.replace('  init().catch(error => {',hook+'  init().catch(error => {')}));
+ await page.addInitScript(()=>localStorage.setItem('slime_feed_and_fall_save',JSON.stringify({schemaVersion:29,tutorialStep:'done',onboarding:{enabled:false},unlockedMutations:['telekinesis'],mutationLevels:{telekinesis:1},activeMutationPool:['telekinesis'],sound:false})));
+ await page.goto('http://127.0.0.1:8765/?v=608');await page.waitForFunction(()=>window.SlimeGameDebug&&window.__psiQA);fs.mkdirSync('tmp/psionics-608',{recursive:true});
+ await page.evaluate(()=>window.__psiQA.prepare(1));await page.waitForTimeout(700);let data=await page.evaluate(()=>window.__psiQA.state());assert.equal(data.spikes,2);const hp=data.health;
+ await page.locator('#abilityBtn').click({force:true});await page.evaluate(()=>window.__psiQA.captureStart());data=await page.evaluate(()=>window.__psiQA.step(600));assert(data.barrier);assert.equal(data.spikes,0);assert.equal(data.health,hp);assert.equal(data.charges,0);await page.screenshot({path:'tmp/psionics-608/barrier.png'});
+ const pause=await page.evaluate(()=>window.__psiQA.pause(10000));assert.equal(pause.after.barrier-pause.before.barrier,10000);
+ data=await page.evaluate(()=>window.__psiQA.step(2999));assert(data.barrier);data=await page.evaluate(()=>window.__psiQA.step(3001));assert(!data.barrier);
+ await page.evaluate(()=>window.__psiQA.prepare(2));await page.waitForTimeout(700);await page.locator('#abilityBtn').click({force:true});await page.evaluate(()=>window.__psiQA.captureStart());data=await page.evaluate(()=>window.__psiQA.step(179));assert.equal(data.projectiles,8);assert.equal(data.detached,0);assert.equal(data.cached,8);
+ data=await page.evaluate(()=>window.__psiQA.step(180));assert.equal(data.detached,8);assert.equal(data.thrown,0);
+ data=await page.evaluate(()=>window.__psiQA.step(1000));await page.screenshot({path:'tmp/psionics-608/storm-orbit.png'});
+ const sp=await page.evaluate(()=>window.__psiQA.pause(10000));assert.equal(sp.after.cycle-sp.before.cycle,10000);
+ data=await page.evaluate(()=>window.__psiQA.step(1450));assert.equal(data.thrown,1);data=await page.evaluate(()=>window.__psiQA.step(1635));assert.equal(data.thrown,2);
+ await page.screenshot({path:'tmp/psionics-608/storm-throws.png'});data=await page.evaluate(()=>window.__psiQA.step(3500));assert.equal(data.impacted,8);assert.equal(data.storm,undefined);assert(data.flasks>0);assert(data.particles<=250);
+ assert.equal(await page.evaluate(()=>window.__psiQA.base()),1);
+ await page.evaluate(()=>window.__psiQA.prepare(3));await page.waitForTimeout(700);await page.locator('#abilityBtn').click({force:true});assert((await page.evaluate(()=>window.__psiQA.state())).intro);const press=await page.evaluate(()=>window.__psiQA.commitPress());assert(Math.abs(press.rows-11.2)<1e-6);assert((await page.evaluate(()=>window.__psiQA.state())).press);
+ await page.evaluate(()=>window.__psiQA.open());for(const [stage,name]of [[1,'Псионический барьер'],[2,'Псионический шторм'],[3,'Псионический пресс']]){await page.locator('[data-preview-stage="'+stage+'"]').click();assert.equal(await page.locator('#slimeUltimateDetails h4').textContent(),name);assert.equal(await page.locator('#slimeUltimateDetails p').count(),1);}
+ await page.evaluate(()=>window.__psiQA.prepare(2));await page.waitForTimeout(700);await page.locator('#abilityBtn').click({force:true});await page.evaluate(()=>window.__psiQA.live());await page.waitForTimeout(2200);await page.evaluate(()=>window.__psiQA.stop());await page.screenshot({path:'tmp/psionics-608/storm-live.png'});
+ assert.deepEqual(errors,[]);console.log('Browser psionics: large barrier/cyan timer, two pre-contact spike explosions, no lost hearts, exact expiry, pause, eight cached simultaneous pulls, orbit and ordered throws, rewards, bounds, one-block base, 80m press, preview names and live loop passed');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -17,7 +17,7 @@
   const thumbnailFitCache = new Map();
 
   const worldBackgroundNames = Object.freeze({
-    1: 'world-1-depths', 2: 'world-2-ice', 3: 'world-3-factory', 4: 'world-4-magma'
+    1: 'world-1-depths', 3: 'world-3-factory', 4: 'world-4-magma'
   });
   const worldBackgrounds = {};
 
