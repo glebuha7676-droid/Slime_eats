@@ -1,0 +1,6 @@
+# fire-warm
+
+Mode: built-in imagegen, transparent background.
+Reference: assets/ui/slime/slime-body-reference-v1.webp
+
+Use case: precise-object-edit. Edit target: the attached exact green pear-shaped slime BODY sprite. Create a subtle first-stage fire coloration while preserving its EXACT silhouette, dimensions, alignment, pointed tip, broad rounded bottom and familiar smooth cartoon highlights. It is still the ordinary slime, slightly warmed by fire: a soft warm golden-yellow center and light amber-orange body, orange at the lower edges, restrained warm yellow highlights. Keep it noticeably lighter and gentler than the fully orange-red volcano form; no intense lava red, pink or all-over blazing glow. Preserve the same thick smooth outline in a suitable deep warm brown-red. No shape transformation, no crater, volcanic cap, horns, flames or wings. Body sprite only, NO face, eyes, mouth, nose or cheeks because these are animated separately. No baked particles, smoke, fire effects, text, pedestal, ground or cast shadow. Same simple cute polished 2D children's game art, not realistic metal or texture. Actual transparent background, same square canvas composition and same body position as reference.

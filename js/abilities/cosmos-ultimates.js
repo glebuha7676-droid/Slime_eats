@@ -73,7 +73,7 @@
     if(!target)return;
     const q=center(target);
     // Exactly one target and one damage call per star. No area query for damage.
-    s.damageBlockByElement(target,1,'cosmosStarfall',at);e.hits.set(target,(e.hits.get(target)||0)+1);e.impacts++;
+    s.damageBlockByElement(target,run.ultimateProfile.damage||1,'cosmosStarfall',at);e.hits.set(target,(e.hits.get(target)||0)+1);e.impacts++;
     e.bursts.push({...q,at,index:star.index});if(e.bursts.length>8)e.bursts.shift();
     s.sound?.(target.dead?'break':'hit');
   }

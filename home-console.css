@@ -1,0 +1,164 @@
+/* Final artwork: circles and corners retain their proportions at every height. */
+html body.home-console[data-screen="home"] #app{display:block!important;width:min(100%,calc(var(--app-height,100dvh)*.563702))!important;margin:0 auto!important;padding:0!important;background:#739fb2!important;isolation:isolate;overflow:hidden!important}
+html body.home-console[data-screen="home"] .phone-viewport{background:#527f91!important}
+html body.home-console[data-screen="home"] #app .game-shell{position:static!important;height:100%!important;overflow:visible!important}
+#homeConsoleArt{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#homeConsoleArt i,#homeConsoleBody{display:block;position:absolute;pointer-events:none}
+#homeRoomBackdrop{inset:0;background:#659eb3 url('assets/ui/home-modular/generated-v8/room-extended-floor.webp') center top/100% auto no-repeat}
+#homeConsoleTop{background:url('assets/ui/home-modular/live/console-top.webp') center/100% 100% no-repeat}
+#homeConsoleMiddle{background:url('assets/ui/home-modular/live/console-middle.webp') center/100% 100% no-repeat}
+#homeConsoleBottom{background:url('assets/ui/home-modular/live/console-bottom.webp') center/100% 100% no-repeat}
+#homeConsoleBody{clip-path:inset(calc(var(--console-unit)*8) 0 0 round calc(var(--console-unit)*22) calc(var(--console-unit)*22) 0 0)}
+body:not([data-screen="home"]) #homeConsoleArt{display:none}
+html body.home-console[data-screen="home"] #app #homeScreen.active{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;padding:0!important;margin:0!important;transform:none!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;animation:none!important;z-index:1}
+html body.home-console[data-screen="home"] #app .topbar.world-summary{position:absolute!important;inset:0 0 auto!important;height:54px!important;z-index:80!important;padding:4px 9px!important;border:0!important;background:none!important;box-shadow:none!important}
+html body.home-console[data-screen="home"] #app .world-summary-head{display:flex!important;align-items:center!important;gap:7px!important;width:100%!important}
+html body.home-console[data-screen="home"] #app .research-wallet{order:0!important;margin-right:auto!important}
+html body.home-console[data-screen="home"] #app .header-rewards-btn{order:1!important}
+html body.home-console[data-screen="home"] #app .header-admin-btn{order:2!important}
+html body.home-console[data-screen="home"] #app .topbar::before,html body.home-console[data-screen="home"] #app .topbar::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen::before,html body.home-console[data-screen="home"] #app #homeScreen::after,html body.home-console[data-screen="home"] #app .synth-terminal-art{display:none!important}
+html body.home-console[data-screen="home"] #app #slimeStage{position:absolute!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;pointer-events:none!important;z-index:10}
+html body.home-console[data-screen="home"] #app #slimeStage::before,html body.home-console[data-screen="home"] #app #slimeStage::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.slime-hero-layout,.slime-center-stage,.slime-playground,.recipe-rail){display:block!important;position:static!important;width:auto!important;height:auto!important;min-height:0!important;padding:0!important;margin:0!important;transform:none!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;pointer-events:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.slime-playground,.recipe-rail)::before,html body.home-console[data-screen="home"] #app #homeScreen :is(.slime-playground,.recipe-rail)::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen #slime{position:absolute!important;max-width:none!important;min-width:0!important;min-height:0!important;right:auto!important;bottom:auto!important;margin:0!important;pointer-events:auto!important}
+html body.home-console[data-screen="home"] #app .slime-ground-shadow{display:none!important}
+html body.home-console[data-screen="home"] #app #menuSlimeCanvas{width:100%!important;height:100%!important;filter:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen #slime{pointer-events:none!important}
+.console-slime-hit{position:absolute;inset:22% 23% 23%;pointer-events:auto;border-radius:48% 48% 42% 42%;background:none}
+html body.home-console[data-screen="home"] #app #launchPortal{right:auto!important;bottom:auto!important;transform:none!important;filter:none!important;box-shadow:none!important;border:0!important;animation:none!important;transition:opacity .4s ease;opacity:0}
+html body.home-console[data-screen="home"] #app .portal-ready #launchPortal{opacity:1}
+html body.home-console[data-screen="home"] #app .launch-portal-front{display:none!important}
+html body.home-console[data-screen="home"] #app #launchPortal .launch-portal-rim{display:none!important}
+html body.home-console[data-screen="home"] #app #launchPortal .launch-portal-core{box-shadow:inset 0 0 14px 4px #02070c73!important}
+html body.home-console[data-screen="home"] #app #launchPortal .launch-portal-rim::before{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.lab-portal-frame,.stage-foliage,.slime-mutation-summary,.legacy-home-stats){display:none!important}
+html body.home-console[data-screen="home"] #app #launchPortal{clip-path:ellipse(50% 50% at 50% 50%);border-radius:50%;overflow:hidden}
+html body.home-console[data-screen="home"] #app #launchPortal .launch-portal-core{inset:0!important;border-radius:inherit;box-shadow:inset 0 0 7px 2px #0a354966!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn){position:absolute!important;display:grid!important;grid-template-columns:1fr!important;grid-template-rows:minmax(0,1fr) 14px!important;place-items:center!important;gap:0!important;padding:10px 6px 12px!important;right:auto!important;bottom:auto!important;min-width:0!important;min-height:0!important;margin:0!important;transform:none!important;border:0!important;border-radius:50%!important;background:transparent url('assets/ui/home-modular/round-button-base.webp') center/100% 100% no-repeat!important;box-shadow:none!important;pointer-events:auto!important;z-index:15}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn)::before,html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn)::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn)>span:not(.mutation-trio-icon){font:900 calc(var(--console-unit)*12)/1 'Slime Nunito',Nunito,sans-serif!important;color:#f3fcff!important;text-shadow:0 1px #17485d!important;white-space:nowrap!important;letter-spacing:0!important}
+html body.home-console[data-screen="home"] #app .mutation-lab-button .mutation-trio-icon{width:58%!important;height:100%!important;min-height:35px!important;position:relative!important;transform:none!important}
+html body.home-console[data-screen="home"] #app .mutation-lab-button .mutation-trio-icon img{width:62%!important;height:auto!important;max-width:none!important;max-height:none!important}
+html body.home-console[data-screen="home"] #app .mutation-lab-button .mutation-trio-fire{left:0!important;top:0!important}
+html body.home-console[data-screen="home"] #app .mutation-lab-button .mutation-trio-frost{left:43%!important;top:0!important}
+html body.home-console[data-screen="home"] #app .mutation-lab-button .mutation-trio-electric{left:23%!important;top:34%!important}
+html body.home-console[data-screen="home"] #app #wardrobeBtn>img{width:62%!important;height:100%!important;object-fit:contain!important;filter:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(#conveyor,#playSetupCard){position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;transform:none!important;overflow:visible!important;pointer-events:none!important}
+html body.home-console[data-screen="home"] #app #conveyor{z-index:30!important}
+html body.home-console[data-screen="home"] #app #playSetupCard{z-index:20!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(#conveyor,#playSetupCard)::before,html body.home-console[data-screen="home"] #app #homeScreen :is(#conveyor,#playSetupCard)::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.conveyor-workbench,.synthesis-machine,.world-picker-v2,.world-terminal-shell){position:static!important;inset:auto!important;display:block!important;min-height:0!important;width:auto!important;height:auto!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;transform:none!important;pointer-events:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.conveyor-workbench,.synthesis-machine,.world-terminal-shell)::before,html body.home-console[data-screen="home"] #app #homeScreen :is(.conveyor-workbench,.synthesis-machine,.world-terminal-shell)::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.conveyor-gap,.conveyor-plate,.synthesis-floor-light,.synthesis-birth-blob,.food-ground-shadow,.world-terminal-corner-rock,.conveyor-choice-count){display:none!important}
+html body.home-console[data-screen="home"] #app #foodChoices{position:absolute!important;display:block!important;right:auto!important;bottom:auto!important;transform:none!important;margin:0!important;padding:0!important;overflow:visible!important;clip-path:none!important;pointer-events:auto!important}
+html body.home-console[data-screen="home"] #app #foodChoices .conveyor-food-pick{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;transform:none!important;filter:none!important;opacity:1!important;overflow:visible!important}
+html body.home-console[data-screen="home"] #app #foodChoices .conveyor-food-pick::before,html body.home-console[data-screen="home"] #app #foodChoices .conveyor-food-pick::after{display:none!important}
+html body.home-console[data-screen="home"] #app #foodChoices :is(.synthesis-food-visual,.food-model-wrap){position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;transform:none!important;animation:none!important;opacity:1!important;pointer-events:none!important}
+html body.home-console[data-screen="home"] #app #foodChoices .food-model{position:absolute!important;width:var(--console-food-width)!important;height:var(--console-food-height)!important;left:var(--console-food-left)!important;top:var(--console-food-top)!important;max-width:none!important;max-height:none!important;object-fit:contain!important;transform:none!important;animation:none!important;filter:none!important}
+html body.home-console[data-screen="home"] #app #homeFoodHeading{position:absolute;display:grid;place-items:center;color:#f4fdff;font:900 calc(var(--console-unit)*21)/1 'Slime Nunito',Nunito,sans-serif;pointer-events:none}
+html body.home-console[data-screen="home"] #app #conveyorDispensers{display:block!important;position:absolute!important;margin:0!important;padding:0!important;transform:none!important;background:none!important;border:0!important;box-shadow:none!important;pointer-events:auto!important}
+html body.home-console[data-screen="home"] #app #conveyorDispensers::before,html body.home-console[data-screen="home"] #app #conveyorDispensers::after{display:none!important}
+#homeMutationSelector{position:absolute;inset:0;display:grid;place-items:start center;min-height:44px;padding:0;border:0;background:none!important;box-shadow:none!important;transform:none!important;pointer-events:auto;color:#16495e;font-family:'Slime Nunito',Nunito,sans-serif}
+.console-selector-face{position:absolute;left:14%;top:14%;width:72%;height:72%;border-radius:50%;overflow:hidden;pointer-events:none;transition:transform .12s ease,filter .12s ease}
+.console-selector-face>img{position:absolute;display:block;left:var(--medal-left,0%);top:var(--medal-top,0%);width:var(--medal-width,100%);height:var(--medal-height,100%);max-width:none;max-height:none;pointer-events:none}
+#homeMutationSelector:not(:disabled):active .console-selector-face{transform:translateY(2px) scale(.92);filter:brightness(.92)}
+#homeMutationSelector>b{position:absolute;top:calc(100% + var(--console-unit)*4);font-size:calc(var(--console-unit)*12);font-weight:900;white-space:nowrap}
+.console-empty-medal{display:grid;place-items:center;height:75%;font-size:34px;color:#c0e2e9}
+#homeMutationSelector::before,#homeMutationSelector::after{display:none!important}
+#homeMutationSelector:disabled{opacity:1!important;filter:none!important}
+html body.home-console[data-screen="home"] #app #homeMutationInfo{position:absolute;display:grid;grid-template-rows:calc(var(--console-unit)*29) calc(var(--console-unit)*13) minmax(0,1fr) calc(var(--console-unit)*12) calc(var(--console-unit)*22);align-items:stretch;gap:calc(var(--console-unit)*2.5);padding:0 0 calc(var(--console-unit)*2);border:0;background:none!important;box-shadow:none!important;transform:none!important;color:#f4fdff;pointer-events:auto;filter:none!important;opacity:1!important;text-align:left;font-family:'Slime Nunito',Nunito,sans-serif}
+#homeMutationInfo::before,#homeMutationInfo::after{display:none!important}
+.console-mutation-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:calc(var(--console-unit)*5);font-size:calc(var(--console-unit)*23);line-height:1.1;font-weight:1000}
+.console-mutation-name{min-width:0;align-self:center;overflow-wrap:anywhere}
+.is-long-name .console-mutation-name{font-size:calc(var(--console-unit)*17)}
+.console-stage{display:grid;place-items:center;min-width:calc(var(--console-unit)*26);height:calc(var(--console-unit)*29);padding:calc(var(--console-unit)*3);border:1px solid #8fb5c4;border-radius:6px;background:#c7e6ed;color:#21576c;font-size:calc(var(--console-unit)*21);font-weight:900}
+.console-task-kicker{align-self:end;color:#b1d5e0;font-size:calc(var(--console-unit)*11);font-weight:900;line-height:1.1}
+.console-task-label{align-self:start;font-size:calc(var(--console-unit)*16);font-weight:800;line-height:1.15}
+.console-task-track{position:relative;display:block;height:100%;min-height:8px;overflow:hidden;border:1px solid #91c8d8;border-radius:calc(var(--console-unit)*4);background:#183f55;box-shadow:none}
+.console-task-track>i{display:block;height:100%;border-radius:0;background:var(--console-mutation-color,#51d9e7);max-width:100%;box-shadow:none}
+.console-task-counter{align-self:center;font-size:calc(var(--console-unit)*18);font-weight:900;line-height:1.15;text-align:center;font-variant-numeric:tabular-nums}
+html body.home-console[data-screen="home"] #app #homeMutationInfo.is-ready{grid-template-rows:calc(var(--console-unit)*29) minmax(0,1fr);gap:calc(var(--console-unit)*5)}
+.console-evolution-callout{display:grid;grid-template-rows:auto minmax(0,1fr) calc(var(--console-unit)*27);gap:calc(var(--console-unit)*3);min-height:0;text-align:center}
+.console-evolution-stage{align-self:center;color:#c2dfe7;font-size:calc(var(--console-unit)*11);font-weight:900;line-height:1.1;letter-spacing:.04em}
+.console-evolution-title{align-self:center;color:#fff06a;font-size:calc(var(--console-unit)*19);font-weight:1000;line-height:1.03;text-shadow:0 1px #123e56}
+.console-evolution-action{display:flex;align-items:center;justify-content:center;gap:calc(var(--console-unit)*8);min-width:0;border:1px solid #d2ff9a;border-radius:calc(var(--console-unit)*6);background:linear-gradient(#a2f46b,#6fd83f);box-shadow:inset 0 1px #e0ffb8,0 calc(var(--console-unit)*2) 0 #286b38;color:#123f46;font-size:calc(var(--console-unit)*14);font-weight:1000;line-height:1}
+.console-evolution-action>span{display:flex;align-items:center;width:calc(var(--console-unit)*20);height:calc(var(--console-unit)*20);animation:console-evolution-nudge 1.8s ease-in-out infinite}
+.console-evolution-action svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+#homeMutationInfo.is-ready:active .console-evolution-action{translate:0 1px;box-shadow:none}
+@keyframes console-evolution-nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(2px)}}
+@media(prefers-reduced-motion:reduce){.console-evolution-action>span{animation:none}}
+#homeMonitorPicker{position:absolute;display:flex;flex-direction:column;gap:3px;pointer-events:auto;color:#eafaff;font-family:'Slime Nunito',Nunito,sans-serif}
+#homeMonitorPicker[hidden],#homeMutationInfo[hidden],#homeMutationInfo>[hidden],#homeMutationSelector>[hidden]{display:none!important}
+.console-picker-heading{display:flex;align-items:center;justify-content:space-between;gap:3px;flex:0 0 19px;font-size:calc(var(--console-unit)*13)}
+.console-picker-heading button{background:none!important;border:0;padding:0;box-shadow:none!important;color:#eafaff;font:900 23px/1 'Slime Nunito',Nunito,sans-serif;width:25px;height:23px;pointer-events:auto}
+.console-mutation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));grid-auto-rows:minmax(44px,calc(var(--console-unit)*50));align-content:start;gap:3px;min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#98c8d4 #204d6333;padding:1px 3px 1px 1px}
+.console-mutation-grid button{position:relative;display:grid;place-items:center;min-height:0;min-width:0;padding:0;border:1px solid transparent;border-radius:7px;background:none!important;box-shadow:none!important;transform:none!important;pointer-events:auto}
+.console-mutation-grid button img{width:100%;height:100%;object-fit:contain;min-width:0;min-height:0;pointer-events:none}
+.console-mutation-grid button[aria-pressed="true"]{border-color:#b5edf4;background:#8bbdcc33!important}
+.console-mutation-grid button span{display:none;position:absolute;inset:0;place-items:center;color:#b3d3df;font-weight:900}
+.console-mutation-grid button.is-locked img{opacity:1;filter:brightness(0)}
+.console-mutation-grid button.is-locked span{display:grid}
+html body.home-console[data-screen="home"] #app #homeScreen .world-terminal-heading{position:absolute!important;display:grid!important;place-items:center!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:#f2fdff!important;font:900 calc(var(--console-unit)*19)/1 'Slime Nunito',Nunito,sans-serif!important;white-space:nowrap;transform:none!important;pointer-events:none;z-index:5}
+html body.home-console[data-screen="home"] #app .world-terminal-heading::before,html body.home-console[data-screen="home"] #app .world-terminal-heading::after{display:none!important}
+html body.home-console[data-screen="home"] #app #worldCarousel{position:absolute!important;right:auto!important;bottom:auto!important;border:0!important;border-radius:0!important;background:#24576b!important;box-shadow:none!important;transform:none!important;overflow:hidden!important;clip-path:polygon(0 14px,14px 0,26.2% 0,29.3% calc(var(--console-unit)*11),70.7% calc(var(--console-unit)*11),73.5% 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px));pointer-events:auto!important}
+html body.home-console[data-screen="home"] #app .world-terminal-title{position:absolute!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;right:auto!important;bottom:auto!important;gap:calc(var(--console-unit)*8)!important;padding:0!important;margin:0!important;background:none!important;box-shadow:none!important;filter:none!important;transform:none!important}
+html body.home-console[data-screen="home"] #app .world-terminal-title b{font:1000 calc(var(--console-unit)*25)/1.05 'Slime Nunito',Nunito,sans-serif!important;color:#f3fdff!important;text-shadow:0 2px 2px #124254!important;max-width:100%}
+html body.home-console[data-screen="home"] #app .world-terminal-title small{display:block!important;padding:4px 14px;border:1px solid #7ca3b2;border-radius:12px;background:#ddf3f7;color:#174b60!important;text-shadow:none!important;font:900 calc(var(--console-unit)*19)/1 'Slime Nunito',Nunito,sans-serif!important;letter-spacing:0!important}
+html body.home-console[data-screen="home"] #app .world-terminal-screen-shade{background:linear-gradient(90deg,transparent,#0c334768 45%,#0c334768 55%,transparent)!important}
+html body.home-console[data-screen="home"] #app .world-carousel-dots{bottom:4%!important;gap:7px!important}
+html body.home-console[data-screen="home"] #app .world-carousel-dot.active{box-shadow:none!important;background:#f4feff!important}
+html body.home-console[data-screen="home"] #app .world-terminal-lock{max-width:85%;padding:7px 10px!important;box-shadow:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(#worldPrevBtn,#worldNextBtn){position:absolute!important;display:block!important;right:auto!important;bottom:auto!important;padding:0!important;min-height:44px!important;min-width:44px!important;border:0!important;border-radius:0!important;background:transparent url('assets/ui/home-modular/generated-v3/world-arrow-right.webp') center/contain no-repeat!important;box-shadow:none!important;filter:none!important;opacity:1!important;pointer-events:auto!important;z-index:10!important;transform:none!important;transition:transform .1s!important}
+html body.home-console[data-screen="home"] #app #homeScreen #worldPrevBtn{transform:scaleX(-1)!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(#worldPrevBtn,#worldNextBtn)::before,html body.home-console[data-screen="home"] #app #homeScreen :is(#worldPrevBtn,#worldNextBtn)::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(#worldPrevBtn,#worldNextBtn):disabled{opacity:.45!important}
+html body.home-console[data-screen="home"] #app #homeScreen #worldNextBtn:not(:disabled):active{transform:translateY(2px) scale(.96)!important}
+html body.home-console[data-screen="home"] #app #homeScreen #worldPrevBtn:not(:disabled):active{transform:translateY(2px) scaleX(-1) scale(.96)!important}
+html body.home-console[data-screen="home"] #app #homeScreen #worldStartBtn{position:absolute!important;display:flex!important;align-items:center!important;justify-content:center!important;right:auto!important;bottom:auto!important;gap:15px!important;padding:0 20px 5px!important;min-height:44px!important;margin:0!important;border:0!important;border-radius:999px!important;background:transparent url('assets/ui/home-modular/generated-v3/play-active.webp') center/100% 100% no-repeat!important;box-shadow:none!important;filter:none!important;transform:none!important;animation:none!important;opacity:1!important;pointer-events:auto!important;z-index:5!important;transition:transform .1s!important;color:#fff!important;font:1000 calc(var(--console-unit)*34)/1 'Slime Nunito',Nunito,sans-serif!important;text-shadow:0 1px #296c25!important;-webkit-text-stroke:2px #367b2b;paint-order:stroke fill;letter-spacing:0!important}
+html body.home-console[data-screen="home"] #app #homeScreen #worldStartBtn::before,html body.home-console[data-screen="home"] #app #homeScreen #worldStartBtn::after{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen #worldStartBtn:disabled{background-image:url('assets/ui/home-modular/generated-v3/play-inactive.webp')!important;color:#537989!important;text-shadow:none!important;-webkit-text-stroke:0;cursor:default}
+html body.home-console[data-screen="home"] #app #homeScreen #worldStartBtn:not(:disabled):active{transform:translateY(3px) scale(.985)!important}
+html body.home-console[data-screen="home"] #app #homeScreen .terminal-play-icon{width:calc(var(--console-unit)*40)!important;height:calc(var(--console-unit)*40)!important;flex:0 0 auto;filter:none!important;opacity:1!important}
+html body.home-console[data-screen="home"] #app #homeScreen .terminal-play-icon path:first-of-type{fill:#f6fff2!important;stroke:#377a2c!important;stroke-width:1.5!important}
+html body.home-console[data-screen="home"] #app #homeScreen .terminal-play-icon path:last-of-type{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen #worldStartBtn:disabled .terminal-play-icon path:first-of-type{fill:#7097a8!important;stroke:#557d8c!important}
+html body.home-console[data-screen="home"] #app #abyssModeV2{position:absolute!important;padding:0!important;border:0!important;background:#c8e3ea!important;border-radius:8px!important;box-shadow:none!important;transform:none!important;pointer-events:auto!important;z-index:6}
+html body.home-console[data-screen="home"] #app #abyssModeV2 b{font-size:26px!important;color:#2b657b!important;text-shadow:none!important;animation:none!important}
+html body.home-console[data-screen="home"] #app #abyssModeV2 small{display:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(#homeMutationSelector,#homeMutationInfo,#foodChoices button,.console-mutation-grid button,#worldStartBtn,#worldPrevBtn,#worldNextBtn):focus-visible{outline:2px solid #fff2a7!important;outline-offset:2px!important}
+@media(prefers-reduced-motion:reduce){html body.home-console[data-screen="home"] #app #homeScreen *{transition:none!important}}
+
+/* Food lives in one measured window. Its effect follows the same visible body. */
+.console-food-content{position:absolute;inset:0;display:block;pointer-events:none;transform-origin:50% 85%}
+html body.home-console[data-screen="home"] #app #foodChoices .food-mutation-fx{display:block!important;position:absolute!important;left:50%!important;bottom:0!important;width:100%!important;height:100%!important;transform:translateX(-50%)!important;pointer-events:none!important}
+html body.home-console[data-screen="home"] #app #foodChoices .conveyor-food-pick:is(.drag-source,.food-picked){opacity:0!important}
+body.home-console .console-food-drag .food-drag-art{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;transform:none!important}
+body.home-console .console-food-drag .food-drag-model{position:absolute!important;left:var(--console-food-left)!important;top:var(--console-food-top)!important;width:var(--console-food-width)!important;height:var(--console-food-height)!important;max-width:none!important;max-height:none!important;transform:none!important;object-fit:contain!important}
+body.home-console .console-food-drag .food-drag-mutation-fx{width:100%!important;height:100%!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;pointer-events:none}
+#homeSynthesisFx{position:absolute;pointer-events:none;z-index:7;opacity:0}
+#homeSynthesisFx.is-active{opacity:1}
+#homeSynthesisFx i{position:absolute;display:block;pointer-events:none}
+.console-scanner-field{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;opacity:0;pointer-events:none}
+.console-scanner-flash{top:18.3%;height:24.4%;width:4%;border-radius:3px;background:#d6ffff;box-shadow:0 0 4px #b8fcff;opacity:0}
+.console-scanner-flash.left{left:-2%}.console-scanner-flash.right{right:-2%}
+.console-scan-line{left:8%;right:8%;top:100%;height:2px;background:#d6ffff;box-shadow:0 0 5px #7be5f4;opacity:0}
+#homeSynthesisFx.is-active .console-scanner-flash{animation:consoleScannerFlash .76s ease-in-out both}
+#homeSynthesisFx.is-active .console-scanner-field{animation:consoleScannerField .76s ease-in-out both}
+#homeSynthesisFx.is-active .console-scan-line{animation:consoleScannerLine .76s linear both}
+@keyframes consoleScannerFlash{0%,100%{opacity:0}12%,76%{opacity:.9}90%{opacity:.3}}
+@keyframes consoleScannerField{0%,100%{opacity:0}16%,70%{opacity:.8}88%{opacity:.25}}
+@keyframes consoleScannerLine{0%,10.526%{opacity:0;top:100%}11%{opacity:.9;top:99.47%}99%{opacity:.8;top:1.12%}100%{opacity:0;top:0}}
+html body.home-console[data-screen="home"] #app #worldCarousel.locked .world-terminal-title{display:none!important}
+html body.home-console[data-screen="home"] #app #worldTerminalNumber:empty{display:none!important}
+html body.home-console[data-screen="home"] #app #worldStartText{margin:0!important}
+
+/* Segmented round menu buttons: shared artwork, live icons and crisp labels. */
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn){display:block!important;padding:0!important;background:none!important;overflow:visible!important;opacity:1!important;filter:none!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn)::before{content:""!important;display:block!important;position:absolute!important;inset:0!important;border:0!important;border-radius:0!important;background:transparent url('assets/ui/home-modular/generated-v9/round-menu-button-clean.webp') center/108% 108% no-repeat!important;clip-path:circle(49% at 50% 50%);filter:saturate(.82) brightness(.94);box-shadow:none!important;z-index:0!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn)>span:not(.mutation-trio-icon){position:absolute!important;left:-10%!important;bottom:3%!important;width:120%!important;height:auto!important;z-index:2!important;font:900 calc(var(--console-unit)*17)/1.15 'Slime Nunito',Nunito,sans-serif!important;text-align:center!important;text-transform:none!important;color:#f3fcff!important;-webkit-text-stroke:calc(var(--console-unit)*3) #17658b;paint-order:stroke fill;text-shadow:none!important;pointer-events:none}
+html body.home-console[data-screen="home"] #app .mutation-lab-button .mutation-trio-icon{position:absolute!important;left:18%!important;top:13%!important;width:64%!important;height:60%!important;min-height:0!important;z-index:1!important}
+html body.home-console[data-screen="home"] #app #wardrobeBtn>img{position:absolute!important;left:18%!important;top:12%!important;width:64%!important;height:60%!important;z-index:1!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn):not(:disabled):active{transform:translateY(2px) scale(.96)!important}
+html body.home-console[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,#wardrobeBtn)::before{mask-image:radial-gradient(circle closest-side,#000 87%,transparent 88%),conic-gradient(#000 0deg 43deg,transparent 43deg 55deg,#000 55deg 137deg,transparent 137deg 149deg,#000 149deg 211deg,transparent 211deg 223deg,#000 223deg 305deg,transparent 305deg 317deg,#000 317deg 360deg);mask-composite:add}

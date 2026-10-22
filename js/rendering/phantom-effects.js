@@ -54,6 +54,19 @@
     // each rock keep the spirit gliding rather than stopping at every waypoint.
     return {x:curve('x'),y:curve('y'),p,route};
   }
+  function mote(ctx,p,size,index,time,alpha=1) {
+    // Early Phantom stages keep the attack route, expressed as faceless light.
+    if(alpha<=0)return;
+    const core=size*.15;
+    ctx.save();ctx.translate(p.x,p.y);
+    ctx.globalAlpha*=alpha;
+    ctx.drawImage(glowSprite(index%2),-core*3,-core*3,core*6,core*6);
+    ctx.fillStyle=index%2?'#c4f2ff':'#dcfff1';
+    ctx.beginPath();ctx.moveTo(0,-core);
+    ctx.bezierCurveTo(core*1.4,-core*.7,core*1.2,core*.6,0,core*2);
+    ctx.bezierCurveTo(-core,core*.7,-core*1.3,-core*.5,0,-core);ctx.fill();
+    ctx.restore();
+  }
   function spirit(ctx,p,size,index,time,alpha=1,emission=false,flight=null) {
     ensureGhosts();const image=spiritBody(index);
     if(!image||alpha<=0)return;
@@ -231,5 +244,5 @@
       }ctx.restore();
     }
   }
-  window.SlimePhantomEffects=Object.freeze({ensureGhosts,idle,flightPoint,spirit,cracks,portal,gate,burst,realm,express,expressGeometry,phaseTrail});
+  window.SlimePhantomEffects=Object.freeze({ensureGhosts,idle,flightPoint,spirit,mote,cracks,portal,gate,burst,realm,express,expressGeometry,phaseTrail});
 })();

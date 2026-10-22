@@ -17,6 +17,7 @@ Thumbs.db
 # Dependency/build output (not used by the current prototype)
 node_modules/
 coverage/
+outputs/
 dist/
 
 # Editor settings

@@ -22,7 +22,7 @@
   }
   function wake(){
     if(frame||document.hidden)return;
-    for(const entry of entries.values())if(entry.visible){frame=requestAnimationFrame(draw);break;}
+    for(const entry of entries.values())if(entry.visible&&window.SlimeUIActivity.isActive(entry.host)){frame=requestAnimationFrame(draw);break;}
   }
   function draw(time){
     frame=0;
@@ -30,7 +30,7 @@
     if(reduced.matches||time-last>=40){
       last=time;
       for(const entry of entries.values()){
-        if(!entry.visible)continue;
+        if(!entry.visible||!window.SlimeUIActivity.isActive(entry.host))continue;
         if(entry.dirty)geometry(entry);
         const source=sprite(entry.image.currentSrc||entry.image.src);
         if(!entry.rect||!source.complete||!source.naturalWidth)continue;
@@ -72,5 +72,5 @@
   });
   observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','src']});
   document.querySelectorAll('.mutation-phantom-fx').forEach(attach);
-  document.addEventListener('visibilitychange',wake);reduced.addEventListener('change',wake);
+  document.addEventListener('visibilitychange',wake);document.addEventListener('slime:ui-visibility',wake);reduced.addEventListener('change',wake);
 })();

@@ -7,17 +7,33 @@
     frost: 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1',
     cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.webp?v=1',
     electric: 'assets/ui/slime/forms/slime-body-electric-v1.webp?v=1',
+    electricSparks: 'assets/ui/slime/forms/slime-body-electric-sparks-v1.webp?v=1',
+    electricCharged: 'assets/ui/slime/forms/slime-body-electric-charged-v2.webp?v=671',
     fire: 'assets/ui/slime/forms/slime-body-fire-v1.webp?v=1',
+    fireVolcano: 'assets/ui/slime/forms/slime-body-fire-volcano-v2.webp?v=2',
+    fireWarm: 'assets/ui/slime/forms/slime-body-fire-warm-v1.webp?v=1',
+    frostChilled: 'assets/ui/slime/forms/slime-body-frost-chilled-v1.webp?v=1',
+    frostFreezing: 'assets/ui/slime/forms/slime-body-frost-freezing-v1.webp?v=673',
     frostUltra: 'effects-lab/assets/frost-ultra-body-v1.webp',
     cosmosUltra: 'effects-lab/assets/cosmos-ultra-body-v2-lossless.webp',
+    cosmosPetrifying: 'assets/ui/slime/forms/slime-body-cosmos-petrifying-v2.webp?v=2',
     technoUltra: 'effects-lab/assets/techno-ultra-body-v2-lossless.webp',
-    psionicsUltra: 'effects-lab/assets/psionics-ultra-body-v1-lossless.webp',
+    technoImplants: 'assets/ui/slime/forms/slime-body-techno-implants-v1.webp?v=1',
+    technoUpgraded: 'assets/ui/slime/forms/slime-body-techno-upgraded-v2.webp?v=2',
+    psionicsBudding: 'assets/ui/slime/forms/slime-body-psionics-budding-v1.webp?v=1',
+    psionicsCrowned: 'assets/ui/slime/forms/slime-body-psionics-crowned-v2.webp?v=2',
+    psionicsUltra: 'assets/ui/slime/forms/slime-body-psionics-ultra-v2.webp?v=2',
+    phantomAwakening: 'assets/ui/slime/forms/slime-body-phantom-awakening-v1.webp?v=1',
+    phantomShifting: 'assets/ui/slime/forms/slime-body-phantom-shifting-v2.webp?v=2',
     phantomUltra: 'effects-lab/assets/phantom-ultra-body-v7-lossless.webp',
     sporesStage1: 'effects-lab/assets/spores-stage1-body-v1-lossless.webp',
+    sporesStage2: 'assets/ui/slime/forms/slime-body-spores-growing-v2.webp?v=2',
     sporesUltra: 'effects-lab/assets/spores-ultra-body-v5-lossless.webp',
-    electricUltra: 'effects-lab/assets/electric-ultra-body-v7-lossless.webp',
+    electricUltra: 'assets/ui/slime/forms/slime-body-electric-storm-v1.webp?v=670',
     fireUltra: 'effects-lab/assets/fire-ultra-phoenix-body-v4-lossless.webp',
-    glitchUltra: 'effects-lab/assets/glitch-ultra-body-v3-lossless.webp'
+    glitchUltra: 'effects-lab/assets/glitch-ultra-body-v3-lossless.webp',
+    glitchFragments: 'assets/ui/slime/forms/slime-body-glitch-fragments-v1.webp?v=1',
+    glitchArcade: 'assets/ui/slime/forms/slime-body-glitch-arcade-v2.webp?v=2'
   });
   const formBodyImages = Object.create(null);
   const formBodyReady = Object.create(null);
@@ -36,8 +52,8 @@
   const frostPupilImage = new Image();
   const cosmosEyeBaseImage = new Image();
   const cosmosPupilImage = new Image();
-  const nanoCyborgEyeClosedImage = new Image();
-  const nanoCyborgEyeTunnelImage = new Image();
+  const nanoCyborgEyeBaseImage = new Image();
+  const nanoCyborgPupilImage = new Image();
   const psionicsEyeBaseImage = new Image();
   const psionicsPupilImage = new Image();
   const phantomPupilsImage = new Image();
@@ -62,8 +78,8 @@
   let frostPupilReady = false;
   let cosmosEyeBaseReady = false;
   let cosmosPupilReady = false;
-  let nanoCyborgEyeClosedReady = false;
-  let nanoCyborgEyeTunnelReady = false;
+  let nanoCyborgEyeBaseReady = false;
+  let nanoCyborgPupilReady = false;
   let psionicsEyeBaseReady = false;
   let psionicsPupilReady = false;
   let phantomPupilsReady = false;
@@ -94,8 +110,8 @@
   frostPupilImage.onload = () => { frostPupilReady = true; };
   cosmosEyeBaseImage.onload = () => { cosmosEyeBaseReady = true; };
   cosmosPupilImage.onload = () => { cosmosPupilReady = true; };
-  nanoCyborgEyeClosedImage.onload = () => { nanoCyborgEyeClosedReady = true; };
-  nanoCyborgEyeTunnelImage.onload = () => { nanoCyborgEyeTunnelReady = true; };
+  nanoCyborgEyeBaseImage.onload = () => { nanoCyborgEyeBaseReady = true; };
+  nanoCyborgPupilImage.onload = () => { nanoCyborgPupilReady = true; };
   psionicsEyeBaseImage.onload = () => { psionicsEyeBaseReady = true; };
   psionicsPupilImage.onload = () => { psionicsPupilReady = true; };
   phantomPupilsImage.onload = () => { phantomPupilsReady = true; };
@@ -122,8 +138,8 @@
     [frostPupilImage, 'effects-lab/assets/frost-pupil-v1-lossless.webp'],
     [cosmosEyeBaseImage, 'effects-lab/assets/cosmos-eye-base-v1-lossless.webp'],
     [cosmosPupilImage, 'effects-lab/assets/cosmos-pupil-v1-lossless.webp'],
-    [nanoCyborgEyeClosedImage, 'effects-lab/assets/nano-eye-closed-v11.webp'],
-    [nanoCyborgEyeTunnelImage, 'effects-lab/assets/nano-eye-tunnel-v11.webp'],
+    [nanoCyborgEyeBaseImage, 'effects-lab/assets/nano-eye-base-v12.webp'],
+    [nanoCyborgPupilImage, 'effects-lab/assets/nano-eye-pupil-v12.webp'],
     [psionicsEyeBaseImage, 'effects-lab/assets/psionics-eye-base-v2-lossless.webp'],
     [psionicsPupilImage, 'effects-lab/assets/psionics-pupil-v2-lossless.webp'],
     [phantomPupilsImage, 'effects-lab/assets/phantom-pupils-v3-lossless.webp'],
@@ -176,7 +192,7 @@
       [options.psionicsEyes, psionicsEyeBaseImage, psionicsPupilImage],
       [options.phantomEyes, phantomPupilsImage],
       [options.sporesEyes, sporesEyeBaseImage, sporesPupilImage],
-      [options.nanoEyeOpenness != null, nanoCyborgEyeClosedImage, nanoCyborgEyeTunnelImage],
+      [options.nanoEyeOpenness != null || options.bodyVariant === 'technoUltra', nanoCyborgEyeBaseImage, nanoCyborgPupilImage],
       [options.glitchEyes || options.glitchFaceLevel, glitchEyeBaseImage, glitchPupilImage, glitchXImage, glitchOImage, glitchMouthImage]
     ];
     for (const [needed, ...images] of groups) if (needed) for (const image of images) tasks.push(loadImage(image));
@@ -195,7 +211,10 @@
     const bodyLeft = glitchUltra ? -bodySize * .5 : -bodyWidth * .5;
     const heightScale = glitchUltra ? .925 / .886
       : fireUltra ? image.naturalHeight / image.naturalWidth
-      : image === formBodyImages.electricUltra ? 1.11 : 1;
+      : image === formBodyImages.psionicsBudding || image === formBodyImages.psionicsCrowned || image === formBodyImages.psionicsUltra
+        || image === formBodyImages.sporesStage2
+        ? image.naturalHeight / image.naturalWidth
+      : 1;
     const bodyTop = phantomUltra ? -bodySize * .5 : glitchUltra ? -radius * 1.168
       : -radius * 1.18 - bodySize * (fireUltra ? 58 / 512 : heightScale - 1);
     return [bodyLeft, bodyTop, bodyWidth, bodySize * heightScale];
@@ -207,8 +226,9 @@
 
   function drawReferenceBody(targetCtx, radius, tint = '', image = referenceBodyImage, filter = '') {
     const [bodyLeft, bodyTop, bodyWidth, bodyHeight] = referenceBodyRect(radius, image);
+    const raster=image;
     if (!tint && !filter) {
-      targetCtx.drawImage(image, bodyLeft, bodyTop, bodyWidth, bodyHeight);
+      targetCtx.drawImage(raster, bodyLeft, bodyTop, bodyWidth, bodyHeight);
       return;
     }
     const key = `${image.src}|${tint}|${filter}`;
@@ -218,7 +238,7 @@
       layer.width = layer.height = 512;
       const context = layer.getContext('2d');
       context.filter = filter || 'none';
-      context.drawImage(image, 0, 0, 512, 512);
+      context.drawImage(raster, 0, 0, 512, 512);
       context.filter = 'none';
       if (tint) {
         context.globalCompositeOperation = 'source-atop';
@@ -403,9 +423,9 @@
   function drawCuteFaceV2(targetCtx, {
     radius, emotion, faceInk, alpha, gazeX, gazeY, blink, timestamp, emotionTime = 0,
     useReferenceFace = false, irisTint = '', cheekFilter = '', mouthStyle = '', nanoEyeOpenness = null,
-    psionicsEyes = false, phantomEyes = false, sporesEyes = false,
+    nanoEyeCount = 0, psionicsEyes = false, phantomEyes = false, sporesEyes = false,
     fireEyes = false, electricEyes = false, frostEyes = false, cosmosEyes = false, glitchEyes = false,
-    glitchFaceLevel = 0
+    glitchFaceLevel = 0, hideEyes = false, hideMouth = false, eyeMagnification = 1, hiddenEyeSide = 0
   }) {
     const referenceEyeScale = .74;
     const drawReferenceFaceLayer = (image, offsetX = 0, offsetY = 0, scale = referenceEyeScale) => {
@@ -474,7 +494,7 @@
     const glitchRightActive = glitchXReady && glitchOReady && glitchChannels[1];
     const glitchMouthActive = glitchMouthReady && glitchChannels[2];
     const hasPsionicsEyes = psionicsEyes && psionicsEyeBaseReady && psionicsPupilReady;
-    const hasNanoEye = nanoEyeOpenness !== null && nanoCyborgEyeClosedReady && nanoCyborgEyeTunnelReady;
+    const hasNanoEye = nanoEyeCount > 0 && nanoCyborgEyeBaseReady && nanoCyborgPupilReady;
     const hasPhantomEyes = phantomEyes && phantomPupilsReady;
     const hasSporesEyes = sporesEyes && sporesPupilReady;
     const referencePixel = radius * 2.36 * referenceEyeScale / 512;
@@ -515,7 +535,10 @@
     targetCtx.lineCap = 'round';
     targetCtx.lineJoin = 'round';
 
-    if (useReferenceFace && (closedJoyEyes || blink || emotion === 'anticipating')) {
+    const drawEyes = () => {
+    if (hideEyes) {
+      // An opaque wearable covers the eyes, including their wide-expression outlines.
+    } else if (useReferenceFace && (closedJoyEyes || blink || emotion === 'anticipating')) {
       targetCtx.strokeStyle = hasPsionicsEyes ? '#31227c' : faceInk;
       targetCtx.lineWidth = Math.max(4.2, radius * .078);
       targetCtx.lineCap = 'round';
@@ -600,23 +623,28 @@
               pw * referencePixel, ph * referencePixel);
           }
         } else if (hasNanoEye) {
-          targetCtx.save();
-          targetCtx.beginPath();
-          targetCtx.rect(-radius * 2, -radius * 2, radius * 2, radius * 4);
-          targetCtx.clip();
-          drawReferenceFaceLayer(referenceEyeSocketsImage);
-          drawReferenceFaceLayer(tintedPupilLayer(irisTint), gazeX * radius * .034, gazeY * radius * .034);
-          targetCtx.restore();
-          const [sx, sy, sw, sh] = eyeRects[1].socket;
-          const socketX = (sx - 256) * referencePixel;
-          const socketY = (sy - 256) * referencePixel;
-          const socketW = sw * referencePixel;
-          const socketH = sh * referencePixel;
-          targetCtx.drawImage(nanoCyborgEyeClosedImage, socketX, socketY, socketW, socketH);
-          if (nanoEyeOpenness > 0) {
-            targetCtx.globalAlpha = alpha * Math.max(0, Math.min(1, nanoEyeOpenness));
-            targetCtx.drawImage(nanoCyborgEyeTunnelImage, socketX, socketY, socketW, socketH);
-            targetCtx.globalAlpha = alpha;
+          if (nanoEyeCount < 2) {
+            targetCtx.save();
+            targetCtx.beginPath();
+            targetCtx.rect(-radius * 2, -radius * 2, radius * 2, radius * 4);
+            targetCtx.clip();
+            drawReferenceFaceLayer(referenceEyeSocketsImage);
+            drawReferenceFaceLayer(tintedPupilLayer(''), gazeX * radius * .034, gazeY * radius * .034);
+            targetCtx.restore();
+          }
+          for (const side of nanoEyeCount >= 2 ? [-1, 1] : [1]) {
+            const [sx, sy, sw, sh] = eyeRects[side].socket;
+            const socketX = (sx - 256) * referencePixel;
+            const socketY = (sy - 256) * referencePixel;
+            const socketW = sw * referencePixel;
+            const socketH = sh * referencePixel;
+            drawVariantEyePart(nanoCyborgEyeBaseImage, side, eyeRects[side].socket,
+              [0, 0, nanoCyborgEyeBaseImage.naturalWidth, nanoCyborgEyeBaseImage.naturalHeight]);
+            const pupilW = socketW * .57, pupilH = socketH * .59;
+            const pupilX = socketX + socketW * (side < 0 ? .57 : .43) - pupilW * .5;
+            const pupilY = socketY + socketH * .5 - pupilH * .5;
+            targetCtx.drawImage(nanoCyborgPupilImage,
+              pupilX + gazeX * radius * .034, pupilY + gazeY * radius * .034, pupilW, pupilH);
           }
         } else if (hasElectricEyes || hasFireEyes || hasFrostEyes || hasCosmosEyes || hasGlitchEyes) {
           const base = hasGlitchEyes ? glitchEyeBaseImage : hasFrostEyes ? frostEyeBaseImage : hasCosmosEyes ? cosmosEyeBaseImage
@@ -745,6 +773,23 @@
       }
     }
 
+    };
+    // Fit each moving eye to its lens, without moving the bridge or mouth.
+    if (eyeMagnification !== 1 && !hideEyes) {
+      for (const side of [-1, 1]) {
+        const cx = side * radius * .3248214, cy = radius * .0231437;
+        targetCtx.save();
+        targetCtx.beginPath();targetCtx.rect(side < 0 ? -radius * 2 : 0, -radius * 2, radius * 2, radius * 4);targetCtx.clip();
+        targetCtx.translate(cx,cy);targetCtx.scale(eyeMagnification,eyeMagnification);targetCtx.translate(-cx,-cy);
+        drawEyes();targetCtx.restore();
+      }
+    } else if (hiddenEyeSide) {
+      // A pirate patch hides one eye; the other keeps its own gaze and blink.
+      targetCtx.save();targetCtx.beginPath();
+      targetCtx.rect(hiddenEyeSide < 0 ? 0 : -radius * 2, -radius * 2, radius * 2, radius * 4);targetCtx.clip();
+      drawEyes();targetCtx.restore();
+    } else drawEyes();
+
     targetCtx.globalAlpha = alpha * .82;
     if (useReferenceFace) {
       targetCtx.globalAlpha = alpha;
@@ -767,7 +812,9 @@
     targetCtx.strokeStyle = faceInk;
     targetCtx.fillStyle = faceInk;
     targetCtx.lineWidth = Math.max(3.2, radius * .068);
-    if (mouthStyle === 'pursed') {
+    if (hideMouth) {
+      // Keep the canvas save/restore balanced while a moustache covers the mouth.
+    } else if (mouthStyle === 'pursed') {
       const mouthY = radius * .39;
       targetCtx.save();
       targetCtx.globalAlpha = alpha;
@@ -853,7 +900,7 @@
 
   function drawSlimeAvatar(targetCtx, {
     x, y, radius, emotion = 'focused', colors = defaultColors,
-    skin = 'classic',
+    skin = 'classic', accessory = 'none',
     scaleX = 1, scaleY = 1, rotation = 0, alpha = 1,
     gazeX = 0, gazeY = 0, blink = false, aura = '', petPoint = null, tipSway = 0,
     timestamp = performance.now(), emotionTime = 0,
@@ -1222,15 +1269,20 @@
       drawCuteFaceV2(targetCtx, {
         radius, emotion, faceInk, alpha, gazeX, gazeY, blink, timestamp, emotionTime,
         useReferenceFace, irisTint, cheekFilter, mouthStyle, nanoEyeOpenness,
+        nanoEyeCount: bodyVariant === 'technoUltra' || nanoEyeOpenness != null ? 1 : 0,
         psionicsEyes, phantomEyes, sporesEyes, fireEyes, electricEyes, frostEyes, cosmosEyes, glitchEyes,
-        glitchFaceLevel
+        glitchFaceLevel,hideEyes:window.SlimeAccessories?.coversEyes(accessory),hideMouth:window.SlimeAccessories?.coversMouth(accessory),
+        eyeMagnification:window.SlimeAccessories?.info(accessory)?.magnification || 1,
+        hiddenEyeSide:window.SlimeAccessories?.info(accessory)?.hiddenEyeSide || 0
       });
       if (typeof afterLayer === 'function') afterLayer(targetCtx, layerState);
+      window.SlimeAccessories?.draw(targetCtx,accessory,{radius,cuteV2,blink,emotion});
       targetCtx.restore();
       return;
     }
     const eyeY = -radius * .12;
     const eyeX = radius * .245;
+    const hiddenEyeSide = window.SlimeAccessories?.info(accessory)?.hiddenEyeSide || 0;
     const chewPulse = (1 - Math.cos(Math.max(0, emotionTime) * Math.PI * 2 / 210)) / 2;
     const chewSquint = emotion === 'chewing';
     const anticipationSquint = emotion === 'anticipating' || emotion === 'savoring';
@@ -1249,22 +1301,29 @@
       targetCtx.strokeStyle = faceInk;
       targetCtx.lineWidth = Math.max(2.5, radius * .085);
       for (const side of [-1, 1]) {
+        if (hiddenEyeSide === side || window.SlimeAccessories?.coversEyes(accessory)) continue;
         const eyeCenter = eyeX * side;
         targetCtx.beginPath(); targetCtx.moveTo(eyeCenter - radius * .09, eyeY - radius * .08); targetCtx.lineTo(eyeCenter + radius * .09, eyeY + radius * .08); targetCtx.stroke();
         targetCtx.beginPath(); targetCtx.moveTo(eyeCenter + radius * .09, eyeY - radius * .08); targetCtx.lineTo(eyeCenter - radius * .09, eyeY + radius * .08); targetCtx.stroke();
       }
-      targetCtx.beginPath(); targetCtx.arc(0, radius * .29, radius * .17, Math.PI + .18, Math.PI * 2 - .18); targetCtx.stroke();
+      if(!window.SlimeAccessories?.coversMouth(accessory)){targetCtx.beginPath(); targetCtx.arc(0, radius * .29, radius * .17, Math.PI + .18, Math.PI * 2 - .18); targetCtx.stroke()}
     } else {
       const squint = emotion === 'impact' || emotion === 'power';
-      if (squint) {
+      if (window.SlimeAccessories?.coversEyes(accessory)) {
+        // The opaque visor or blindfold replaces this face region.
+      } else if (squint) {
         targetCtx.strokeStyle = faceInk;
         targetCtx.lineWidth = Math.max(2.5, radius * .08);
-        targetCtx.beginPath(); targetCtx.moveTo(-eyeX - radius * .11, eyeY - radius * .03); targetCtx.lineTo(-eyeX + radius * .11, eyeY + radius * .06); targetCtx.stroke();
-        targetCtx.beginPath(); targetCtx.moveTo(eyeX + radius * .11, eyeY - radius * .03); targetCtx.lineTo(eyeX - radius * .11, eyeY + radius * .06); targetCtx.stroke();
+        for (const side of [-1, 1]) {
+          if (hiddenEyeSide === side) continue;
+          targetCtx.beginPath(); targetCtx.moveTo(side * (eyeX + radius * .11), eyeY - radius * .03);
+          targetCtx.lineTo(side * (eyeX - radius * .11), eyeY + radius * .06); targetCtx.stroke();
+        }
       } else if (blink || closedHappy || chewSquint || anticipationSquint) {
         targetCtx.strokeStyle = faceInk;
         targetCtx.lineWidth = Math.max(2.5, radius * .075);
         for (const side of [-1, 1]) {
+          if (hiddenEyeSide === side) continue;
           targetCtx.beginPath();
           targetCtx.arc(eyeX * side, eyeY + radius * .05, radius * .14, Math.PI + .12, Math.PI * 2 - .12);
           targetCtx.stroke();
@@ -1276,6 +1335,7 @@
         targetCtx.strokeStyle = faceInk;
         targetCtx.lineWidth = Math.max(2.2, radius * .07);
         for (const side of [-1, 1]) {
+          if (hiddenEyeSide === side) continue;
           const eyeCenter = eyeX * side;
           targetCtx.fillStyle = '#fff';
           targetCtx.beginPath(); targetCtx.ellipse(eyeCenter, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
@@ -1291,7 +1351,9 @@
       targetCtx.strokeStyle = faceInk;
       targetCtx.fillStyle = faceInk;
       targetCtx.lineWidth = Math.max(2.3, radius * .075);
-      if (emotion === 'surprised' || emotion === 'hungry') {
+      if (window.SlimeAccessories?.coversMouth(accessory)) {
+        // Covered by the wearable, not an additional mouth sprite.
+      } else if (emotion === 'surprised' || emotion === 'hungry') {
         targetCtx.beginPath(); targetCtx.ellipse(0, radius * .27, radius * .115, radius * (emotion === 'hungry' ? .18 : .16), 0, 0, Math.PI * 2); targetCtx.fill();
         if (emotion === 'hungry') {
           targetCtx.fillStyle = '#f78591';
@@ -1339,6 +1401,7 @@
       targetCtx.globalAlpha = alpha;
     }
     if (typeof afterLayer === 'function') afterLayer(targetCtx, layerState);
+    window.SlimeAccessories?.draw(targetCtx,accessory,{radius,cuteV2,blink,emotion});
     targetCtx.restore();
   }
 
@@ -1347,6 +1410,7 @@
       referenceCheeksImage, referenceEyeExpressionsImage, referenceMouthExpressionsImage]
       .map(image => loadImage(image, image.src)));
     const variants = await Promise.all(appearanceLoads.values());
+    await window.SlimeAccessories?.whenReady();
     if (base.includes(false) || variants.some(results => results.includes(false))) throw new Error('Slime artwork unavailable');
   }
   window.SlimeAvatarRenderer = Object.freeze({ drawSlimeAvatar, preloadAppearance, whenReady });

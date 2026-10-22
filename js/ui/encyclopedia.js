@@ -62,7 +62,7 @@
         const isUnlocked = unlocked.has(world.id);
         const active = world.id === activeWorld;
         return `<button class="encyclopedia-world-tab ${active ? 'active' : ''} ${isUnlocked ? '' : 'locked'}" data-encyclopedia-world="${world.id}" role="tab" aria-selected="${active}" ${isUnlocked ? '' : 'disabled'} aria-label="${isUnlocked ? escapeHtml(world.name) : `Мир ${world.id} закрыт`}">
-          ${isUnlocked ? `<img src="${versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`)}" alt="" aria-hidden="true">` : '<span aria-hidden="true">🔒</span>'}
+          ${isUnlocked ? `<img src="${versionedAsset(`assets/ui/world-icons/world-${world.id}.webp`)}" alt="" aria-hidden="true">` : `<span aria-hidden="true">${world.comingSoon?'Скоро':'🔒'}</span>`}
         </button>`;
       }).join('')}
     </div>`;

@@ -1,0 +1,7 @@
+# Фантом II, мягкая переходная форма
+
+Mode: built-in imagegen, transparent background.
+Edit target: generated phantom I.
+Evolution reference: effects-lab/assets/phantom-ultra-body-v7-lossless.webp.
+
+Use case: precise-object-edit. Edit ONLY the first reference, the normal-shaped mint-cyan phantom stage I slime body. Second reference is FINAL stage III only to show destination. Make a VERY RESTRAINED intermediate STAGE II. Keep at least 90 percent of stage I's rounded pear silhouette and body shape. The only silhouette changes: lean the very top point gently to one side, and make two tiny soft scallops/undulations along the rounded bottom sides, each less than 4 percent of total body width. ABSOLUTELY NO broad outward flared skirt, no side wings or wide ghost arms, no sweeping tail corners like final stage III; stage II must remain plainly rounded. Keep mint-cyan colors, soft yellow-green center, blue-turquoise bottom, gentle pale mint inner edge and thick dark teal outline of stage I. Add only two faint broad ectoplasm streaks INSIDE the lower sides. The difference should be subtle and read as beginning to become ghostly, halfway to stage III. Large central face area blank: no eyes, mouth, nose, cheeks, face. No companion ghosts, particles, baked outer halo, background, floor or cast shadow. Exact same clean polished 2D children's game style, restrained highlights and square framing as image 1. True transparent alpha background.

@@ -20,13 +20,13 @@ const first=e.stars[0];assert(first.fromY<r.cameraY);assert(first.toY>r.slime.y)
 C.shiftClock(r,10000);C.update(r,11220,s);assert.equal(e.launched,2);assert.equal(hits.length,0);assert.equal(first.launchAt,11000);
 function simulate(step){const e=fresh();for(let at=1000;at<=5800;at+=step)C.update(r,at,s);C.update(r,5800,s);return {e,count:hits.length,loss:r.terrain.reduce((sum,b)=>sum+4-b.hp,0)};}
 for(const step of [16,100,4800]){
- const result=simulate(step);assert.equal(result.e.launched,16);assert.equal(result.e.impacts,16);assert.equal(result.count,16);assert.equal(result.loss,16,'Exactly 16 total damage, no splash');
- assert(result.e.stars.every(star=>star.impacted));assert(hits.every(h=>h.n===1&&h.cause==='cosmosStarfall'));assert(result.e.bursts.length<=8);
+ const result=simulate(step);assert.equal(result.e.launched,16);assert.equal(result.e.impacts,16);assert.equal(result.count,16);assert.equal(result.loss,32,'Exactly 32 total damage, no splash');
+ assert(result.e.stars.every(star=>star.impacted));assert(hits.every(h=>h.n===2&&h.cause==='cosmosStarfall'));assert(result.e.bursts.length<=8);
  const count=hits.length;C.update(r,5900,s);assert.equal(hits.length,count,'No repeated impacts');C.update(r,6000,s);assert.equal(r.cosmosStagedUltimate,null);
 }
 e=fresh();r.terrain=[];C.update(r,5900,s);assert.equal(e.launched,16);assert.equal(e.impacts,0,'Empty terrain still gets 16 visual stars');
 // One destroyed target may redirect to one block below, never explode an area.
-fresh();r.ultimateProfile={...r.ultimateProfile,starCount:1};C.start(r,1000);C.update(r,1000,s);e=r.cosmosStagedUltimate;e.stars[0].target.dead=true;C.update(r,2200,s);assert.equal(hits.length,1);assert.equal(hits[0].n,1);
+fresh();r.ultimateProfile={...r.ultimateProfile,starCount:1};C.start(r,1000);C.update(r,1000,s);e=r.cosmosStagedUltimate;e.stars[0].target.dead=true;C.update(r,2200,s);assert.equal(hits.length,1);assert.equal(hits[0].n,2);
 // A single cached halo and bounded analytical trails; no live blur or particle arrays.
 const ctx={save(){},restore(){},translate(){},rotate(){},drawImage(){draws++;}};
 e=fresh();for(let at=1000;at<6000;at+=16){C.update(r,at,s);draws=0;C.draw(ctx,r,at);assert(draws<=80,`Draw budget: ${draws}`);}

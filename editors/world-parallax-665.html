@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8"><base href="../">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Глубина миров — параллакс</title>
+<style>
+@font-face{font-family:Nunito;src:url('assets/fonts/ui-kit/nunito/Nunito-variable.ttf')}*{box-sizing:border-box}body{margin:0;padding:24px;background:#102c3e;color:#ecfaff;font:700 17px Nunito,system-ui}h1{font-size:25px;margin:0 0 7px}p{margin:0 0 18px;color:#adccdb}button{font:800 15px Nunito,system-ui;border:2px solid #43869b;border-radius:10px;padding:9px 17px;color:#153f53;background:#d1edf3;cursor:pointer}header{max-width:1100px;margin:auto}main{display:flex;gap:18px;max-width:1100px;margin:20px auto}article{flex:1;min-width:0}h2{font-size:18px;text-align:center;margin:0 0 10px}canvas{display:block;width:100%;border-radius:15px;border:3px solid #498b9f;background:#102333}footer{max-width:1100px;margin:auto;color:#adccdb;font-size:14px}@media(max-width:650px){main{flex-direction:column;max-width:340px}}
+</style>
+<header><h1>Глубина трёх миров</h1><p>Дальняя шахта движется медленно, ближние уступы — быстрее. В игре блоки проходят на переднем плане.</p><button id="toggle">Пауза</button> <button id="reset">Сначала</button></header>
+<main><article><h2>Каменные глубины</h2><canvas width="440" height="800" data-world="1"></canvas></article><article><h2>Конфетная фабрика</h2><canvas width="440" height="800" data-world="3"></canvas></article><article><h2>Магмовое ядро</h2><canvas width="440" height="800" data-world="4"></canvas></article></main>
+<footer>Два отдельных растровых плана на мир. Скорость движения относительно камеры: 8% и 26%.</footer>
+<script src="js/config/game-config.js"></script><script src="js/core/game-assets.js"></script><script src="js/rendering/world-background.js"></script>
+<script>
+const canvases=[...document.querySelectorAll('canvas')];
+const layers=canvases.map(c=>SlimeGameAssets.ensureWorldBackgroundLayers(+c.dataset.world));
+let camera=0,playing=true,last=0;
+window.drawParallaxPreview=(y)=>{camera=y;canvases.forEach((c,i)=>{const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);SlimeWorldBackground.draw(ctx,{layers:layers[i],width:c.width,height:c.height,cameraY:y});});};
+window.parallaxReady=Promise.all(layers.flat().map(l=>l.image.decode())).then(()=>drawParallaxPreview(0));
+document.getElementById('toggle').onclick=()=>{playing=!playing;document.getElementById('toggle').textContent=playing?'Пауза':'Продолжить';};
+document.getElementById('reset').onclick=()=>drawParallaxPreview(0);
+function frame(time){if(last&&playing)drawParallaxPreview(camera+Math.min(time-last,50)*.32);last=time;requestAnimationFrame(frame);}parallaxReady.then(()=>requestAnimationFrame(frame));
+</script>
+</html>

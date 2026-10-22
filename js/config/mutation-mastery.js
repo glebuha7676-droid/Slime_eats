@@ -2,7 +2,7 @@
   'use strict';
   // Initial targets for UI/playtesting. Count successful actions, never old XP.
   const definitions = Object.freeze({
-    fire: { label: 'Подожги блоки', unit: 'поджогов', goals: [50, 200] },
+    fire: { label: 'Подожги блоки', unit: 'поджогов', goals: [250, 750] },
     frost: { label: 'Заморозь блоки', unit: 'заморозок', goals: [50, 200] },
     electric: { label: 'Порази блоки током', unit: 'поражений', goals: [50, 200] },
     cosmos: { label: 'Разрушь блоки', unit: 'разрушений', goals: [100, 400] },

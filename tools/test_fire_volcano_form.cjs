@@ -1,0 +1,13 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+const source=fs.readFileSync('game.js','utf8');
+const hook=`window.__fireFormsQA={async stage(stage){closeOnboardingMemo(true);closePanel();clearMenuMutationPresentation();save=normalizeSave({schemaVersion:29,tutorialStep:'done',onboarding:{enabled:false},unlockedMutations:['fire'],mutationLevels:{fire:stage},activeMutationPool:['fire'],selectedMutation:'fire',sound:false});session=null;newDraft();session.foods=[foodForMutation('fire')];session.offer=[null,null,null];recalcStats();syncMenuCategoryVisuals({instant:true});renderDraft();await preloadMenuAppearance({fire:stage});await window.SlimeAvatarRenderer.whenReady();drawMenuSlime(performance.now());return {level:mutationLevel('fire'),food:session.foods[0].stage,ultimate:selectedUltimateStage('fire')};}};`;
+(async()=>{
+ const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+ const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/game.js*',route=>route.fulfill({contentType:'application/javascript',body:source.replace('  init().catch(error => {',()=>hook+'  init().catch(error => {')}));
+ await page.goto('http://127.0.0.1:8766/');await page.waitForFunction(()=>window.SlimeGameDebug&&window.__fireFormsQA,null,{timeout:60000});
+ fs.mkdirSync('outputs/fire-forms-653',{recursive:true});
+ for(const stage of [1,2,3]){const state=await page.evaluate(stage=>window.__fireFormsQA.stage(stage),stage);assert.equal(state.food,stage);assert.equal(state.ultimate,stage);await page.waitForTimeout(250);await page.screenshot({path:`outputs/fire-forms-653/live-fire-${stage}.png`});}
+ await page.goto('http://127.0.0.1:8766/editors/fire-forms-653.html');await page.waitForFunction(()=>window.previewReady,null,{timeout:20000});await page.evaluate(()=>document.fonts.ready);await page.setViewportSize({width:1100,height:560});await page.evaluate(()=>window.previewPaused=true);await page.waitForTimeout(30);await page.evaluate(()=>window.fireFormsPreview.draw(2400));await page.screenshot({path:'outputs/fire-forms-653/fire-three-stages.png'});await page.locator('article').nth(1).screenshot({path:'outputs/fire-forms-653/volcano-with-face.png'});
+ assert.deepEqual(errors,[]);await browser.close();console.log('Fire forms passed: I ordinary slime, II generated volcano, III phoenix, live home rendering and independent stage choices.');
+})().catch(e=>{console.error(e);process.exitCode=1});

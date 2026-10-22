@@ -1,0 +1,2 @@
+/* Layered !important wins over existing unlayered animation shorthands. */
+@layer ui-activity{.ui-animation-paused,.ui-animation-paused *,.ui-animation-paused::before,.ui-animation-paused::after,.ui-animation-paused *::before,.ui-animation-paused *::after{animation-play-state:paused!important}}

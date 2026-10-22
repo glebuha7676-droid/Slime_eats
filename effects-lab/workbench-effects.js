@@ -5,16 +5,10 @@
   const assets = {};
   const sources = new Map();
   const loads = new WeakMap();
-  for (const [key, file] of Object.entries({
-    psionicsAntennae: 'psionics-antennae-v1-lossless.webp',
-    psionicsAntennaeUltra: 'psionics-antennae-ultra-v1-lossless.webp'
-  })) {
-    const image = new Image();
-    sources.set(image, `effects-lab/assets/${file}`);
-    assets[key] = image;
-  }
   assets.nanoDrone = new Image();
   sources.set(assets.nanoDrone, 'effects-lab/assets/techno-drone-red-v1.webp');
+  assets.volcanoRock = new Image();
+  sources.set(assets.volcanoRock, 'assets/vfx/fire-volcano-rock-v1.webp');
   const glitchPixelCanvas = document.createElement('canvas');
   const glitchPixelCtx = glitchPixelCanvas.getContext('2d');
   let frostBottomLayer = null;
@@ -50,12 +44,12 @@
   }
   const preloads = new Map();
   function preload(levels) {
-    const key = `${levels.telekinesis || 0}|${levels.frost || 0}|${levels.nano || 0}`;
+    const key = `${levels.telekinesis || 0}|${levels.frost || 0}|${levels.nano || 0}|${levels.fire === 2 ? 1 : 0}`;
     if (preloads.has(key)) return preloads.get(key);
     const tasks = [];
-    if (levels.telekinesis) tasks.push(load(levels.telekinesis >= 3 ? assets.psionicsAntennaeUltra : assets.psionicsAntennae));
     if (levels.frost === 2) tasks.push(load(frostBodyImage));
     if (levels.nano) tasks.push(load(assets.nanoDrone));
+    if (levels.fire === 2) tasks.push(load(assets.volcanoRock));
     const promise = Promise.all(tasks);
     preloads.set(key, promise);
     return promise;
@@ -123,6 +117,35 @@
         radius * (.026 + index * .004), radius * (.046 + index * .006), 0, 0, Math.PI * 2
       );
       ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function volcanoVent(ctx, {radius, timestamp, effectDetail = 1, volcanoPreview = false}) {
+    const ventX = -radius * .015, ventY = -radius * .89;
+    ctx.save();
+    const count = effectDetail < .8 ? 3 : 5;
+    for (let index = 0; index < count; index++) {
+      const phase = (timestamp / 2200 + index / count) % 1;
+      const size = radius * (.055 + phase * .11);
+      const x = ventX + Math.sin(phase * 3 + index * 2.2) * radius * phase * .1;
+      const y = ventY - phase * radius * .72;
+      ctx.globalAlpha = Math.sin(phase * Math.PI) * .42;
+      ctx.fillStyle = '#978c91';
+      ctx.beginPath(); ctx.ellipse(x, y, size * 1.15, size * .8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c6b8b7';
+      ctx.beginPath(); ctx.ellipse(x - size * .3, y - size * .22, size * .65, size * .5, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    // The home/asset preview suggests the eruption; real run projectiles are
+    // emitted by the ultimate controller and retain their collision behaviour.
+    if (volcanoPreview && ready(assets.volcanoRock)) for (let index = 0; index < 2; index++) {
+      const phase = (timestamp / 1700 + index * .5) % 1;
+      const x = ventX + (index ? 1 : -1) * radius * .38 * phase;
+      const y = ventY - radius * .74 * 4 * phase * (1 - phase);
+      const size = radius * (.16 + index * .015);
+      ctx.globalAlpha = Math.sin(phase * Math.PI) * .9;
+      ctx.save(); ctx.translate(x, y); ctx.rotate((index ? -1 : 1) * phase * 1.8);
+      ctx.drawImage(assets.volcanoRock, -size / 2, -size / 2, size, size); ctx.restore();
     }
     ctx.restore();
   }
@@ -372,9 +395,8 @@
 
   function psionicsMotion(timestamp, radius) {
     const phase = timestamp / 620;
-    const lift = (1 - Math.cos(phase)) * .5;
     return {
-      offset: -radius * .11 * lift,
+      offset: 0,
       energy: Math.max(0, Math.min(1, .42 + Math.sin(phase) * .78))
     };
   }
@@ -397,62 +419,52 @@
     ctx.restore();
   }
 
-  function psionicsAura(ctx, {x, y, baseY, radius, psionicsEnergy = .4}) {
-    const anchorY = (baseY ?? y) + radius * .96;
-    const strength = .10 + psionicsEnergy * .90;
-    psionicsGlow(ctx, x, anchorY, radius * 1.23, radius * .43, [
-      [0, 'rgba(12,107,151,.77)'],
-      [.44, 'rgba(16,150,196,.50)'],
-      [1, 'rgba(5,98,160,0)']
-    ], strength);
-    psionicsGlow(ctx, x, anchorY - radius * .05, radius * .84, radius * .28, [
-      [0, 'rgba(244,255,255,.91)'],
-      [.36, 'rgba(98,246,255,.75)'],
-      [1, 'rgba(28,187,231,0)']
-    ], strength);
-  }
-
-  function psionicsMist(ctx, {x, y, radius, psionicsEnergy = .4}) {
-    psionicsGlow(ctx, x, y + radius * .89, radius * .88, radius * .26, [
-      [0, 'rgba(229,255,255,.64)'],
-      [.42, 'rgba(81,236,255,.42)'],
-      [1, 'rgba(23,160,215,0)']
-    ], .08 + psionicsEnergy * .55);
-  }
-
-  function psionicsAntennae(ctx, {x, y, radius, timestamp, levels, psionicsEnergy = .4}) {
-    const antennae = levels.telekinesis >= 3 && ready(assets.psionicsAntennaeUltra)
-      ? assets.psionicsAntennaeUltra : assets.psionicsAntennae;
-    if (!ready(antennae)) return;
-    const glowing = levels.telekinesis >= 2;
-    const sway = Math.sin(timestamp / 1250) * radius * .012;
-    const width = radius * 1.48;
-    const height = radius * .99;
+  function psionicsHornTips(ctx, {x, y, radius, timestamp, bodyTransform}, inner = false) {
+    const tipPulse = .055 + .945 * Math.pow((1 + Math.sin(timestamp / 185)) * .5, 2.4);
     ctx.save();
-    // The transparent roots sit inside the slime silhouette; only the stalks emerge.
-    ctx.translate(x, y - radius * 1.33);
-    ctx.rotate(sway / radius);
-    if (glowing) {
-      for (const side of [-1, 1]) {
-        psionicsGlow(ctx, side * radius * .55, radius * .20,
-          radius * .32, radius * .32, [
+    ctx.translate(x, y);
+    ctx.rotate(bodyTransform?.rotation || 0);
+    ctx.scale(bodyTransform?.scaleX ?? 1, bodyTransform?.scaleY ?? 1);
+    // Tip centers belong to the integrated horns in the 512 x 640 sprite.
+    for (const [tipX, tipY] of [[-.72, -.88], [.73, -.88]]) {
+      if (!inner) {
+        psionicsGlow(ctx, tipX * radius, tipY * radius,
+          radius * .44, radius * .44, [
             [0, 'rgba(238,255,255,.94)'],
             [.25, 'rgba(76,244,255,.75)'],
             [1, 'rgba(17,176,255,0)']
-          ], psionicsEnergy * .88);
-      }
-    }
-    ctx.drawImage(antennae, -width / 2, 0, width, height);
-    if (glowing) {
-      ctx.globalCompositeOperation = 'screen';
-      for (const side of [-1, 1]) {
-        psionicsGlow(ctx, side * radius * .55, radius * .20,
-          radius * .145, radius * .145, [
+          ], tipPulse * .96);
+      } else {
+        ctx.globalCompositeOperation = 'screen';
+        psionicsGlow(ctx, tipX * radius, tipY * radius,
+          radius * .29, radius * .29, [
             [0, 'rgba(255,255,255,.97)'],
             [.44, 'rgba(109,249,255,.74)'],
             [1, 'rgba(45,211,255,0)']
-          ], psionicsEnergy * .78);
+          ], tipPulse);
       }
+    }
+    ctx.restore();
+  }
+
+  function phantomParticles(ctx, {x, y, radius, timestamp, effectDetail = 1, bodyTransform}) {
+    ctx.save();ctx.translate(x,y);
+    ctx.rotate(bodyTransform?.rotation || 0);
+    ctx.scale(bodyTransform?.scaleX ?? 1,bodyTransform?.scaleY ?? 1);
+    const count=effectDetail<.7?4:7;
+    for(let index=0;index<count;index++){
+      const side=index%2?-1:1,phase=(timestamp/(2300+index*83)+index*.173)%1;
+      const px=side*radius*(.87+phase*.40)+Math.sin(phase*Math.PI*2+index)*radius*.035;
+      const py=radius*(-.45+(index%4)*.24-phase*.55);
+      const opacity=Math.sin(phase*Math.PI)*.64,size=radius*(.024+index%3*.007);
+      psionicsGlow(ctx,px,py,size*2.8,size*3.3,[
+        [0,'rgba(195,255,237,.65)'],[.35,'rgba(107,238,239,.35)'],[1,'rgba(77,211,230,0)']
+      ],opacity);
+      ctx.save();ctx.translate(px,py);ctx.rotate(side*.35);
+      ctx.globalAlpha*=opacity;ctx.fillStyle=index%2?'#b9f6ff':'#d6fff0';
+      ctx.beginPath();ctx.moveTo(0,-size);
+      ctx.bezierCurveTo(size*1.25,-size*.3,size*.8,size*.8,0,size*1.6);
+      ctx.bezierCurveTo(-size*.8,size*.8,-size,-size*.4,0,-size);ctx.fill();ctx.restore();
     }
     ctx.restore();
   }
@@ -585,26 +597,28 @@
   function drawBehind(ctx, state) {
     preload(state.levels);
     if (state.levels.cloning >= 2) flyingSpores(ctx, state);
-    if (state.levels.telekinesis >= 2) psionicsAura(ctx, state);
-    if (state.levels.telekinesis) psionicsAntennae(ctx, state);
+    if (state.levels.telekinesis >= 3) psionicsHornTips(ctx, state);
 
   }
   function drawInside(ctx, state) {
     if (state.levels.frost === 2) frostBottom(ctx, state);
   }
   function drawFront(ctx, state) {
-    if (state.levels.telekinesis >= 2) psionicsMist(ctx, state);
+    if (state.levels.telekinesis >= 3) psionicsHornTips(ctx, state, true);
+    if (state.levels.phantom >= 2) phantomParticles(ctx, state);
     if (state.levels.frost >= 2) frostSnowflakes(ctx, state);
     if (state.levels.frost) frostFace(ctx, state);
     if (state.levels.electric >= 2) electricBodyBolts(ctx, state);
     if (state.levels.electric && state.levels.electric < 3) electricMark(ctx, state);
-    if (state.levels.fire >= 2) fireBodyParticles(ctx, state);
+    if (state.levels.fire >= 3) fireBodyParticles(ctx, state);
     if (state.levels.fire && state.levels.fire < 3) {
       // The flame root shares the body's pose; only its tip sways independently.
       ctx.save();ctx.translate(state.x,state.y);
       ctx.rotate(state.bodyTransform?.rotation||0);
       ctx.scale(state.bodyTransform?.scaleX??1,state.bodyTransform?.scaleY??1);
-      flame(ctx,{...state,x:0,y:0});ctx.restore();
+      if (state.levels.fire === 2) volcanoVent(ctx, state);
+      else flame(ctx,{...state,x:0,y:0});
+      ctx.restore();
     }
     if (state.levels.nano) nanoDrone(ctx, state);
     if (state.levels.glitch) glitchBodyFragments(ctx, state);

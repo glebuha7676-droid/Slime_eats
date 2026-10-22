@@ -23,6 +23,8 @@ const walk = dir => fs.readdirSync(path.join(root, dir), {withFileTypes:true}).f
 const files = [...walk('assets'), ...walk('effects-lab/assets')];
 const dynamicFolders = ['assets/audio/', 'assets/backgrounds/', 'assets/collectibles/flasks/', 'assets/ui/world-icons/', 'assets/ui/portals/', 'assets/ui/icons/', 'assets/ui/combo/', 'assets/vfx/geyser-compact/', 'assets/world2/', 'assets/world3/', 'assets/world4/'];
 const included = files.filter(file => {
+  if (/^assets\/audio\/ui-69[56]\//.test(file)) return false; // Reverted audio experiments stay out of the game build.
+  if (file.startsWith('assets/backgrounds/parallax-v3/') && !file.endsWith('.webp')) return false;
   if (file === 'assets/backgrounds/world-2-ice-v2.webp' || file === 'assets/ui/launch-card-worlds/world-2-cave-v2.webp') return false;
   if (resolve(file) !== file) return false; // Keep only the current runtime variant.
   if (file.startsWith('assets/Мир 2/') && !explicit.has(file) && !sources.includes(file)) return false;

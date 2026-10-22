@@ -8,7 +8,7 @@ vm.runInNewContext(fs.readFileSync(require.resolve('../js/abilities/spore-coloss
 vm.runInNewContext(fs.readFileSync(require.resolve('../js/abilities/cosmos-ultimates.js'),'utf8'),moduleContext);
 const U=moduleContext.window.SlimeUltimateStages;
 function take(name){const a=source.indexOf(`  function ${name}(`);let b=source.indexOf('\n  function ',a+20);const async=source.indexOf('\n  async function ',a+20);if(async>=0&&async<b)b=async;assert.ok(a>=0&&b>a,name);return source.slice(a,b);}
-const c={Math,Set,performance:{now:()=>1000},adminInfiniteUltimate:false,
+const c={window:{SlimePsionicFeedback:{preload:()=>Promise.resolve()}},Math,Set,performance:{now:()=>1000},adminInfiniteUltimate:false,
  ELEMENTAL_ULTIMATES:moduleContext.window.SlimeElementalUltimates,
  TECHNO_ULTIMATES:moduleContext.window.SlimeTechnoUltimates,
  SPORE_COLOSSUS:moduleContext.window.SlimeSporeColossus,

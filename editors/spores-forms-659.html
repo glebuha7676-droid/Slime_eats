@@ -1,0 +1,25 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><base href="../"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Споры — три стадии</title>
+<style>
+@font-face{font-family:Nunito;src:url('assets/fonts/ui-kit/nunito/Nunito-variable.ttf')}*{box-sizing:border-box}body{margin:0;padding:24px;background:#20566c;color:#f2fcff;font-family:Nunito,sans-serif}main{max-width:1050px;margin:auto}h1{font-size:27px;margin:0 0 16px}section{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}article{border:3px solid #84b4c2;border-radius:22px;background:#c9e6e9;overflow:hidden;color:#17475b;text-align:center}h2{font-size:20px;margin:12px 0 0}canvas{width:100%;display:block}p{font-size:15px;font-weight:800;margin:0 12px 16px;min-height:42px}@media(max-width:650px){body{padding:12px}section{grid-template-columns:1fr}article{max-width:360px;width:100%;margin:auto}}
+</style></head><body><main><h1>Споры · формы I, II и III</h1><section>
+<article><h2>I · Первые грибы</h2><canvas width="640" height="720" data-stage="1"></canvas><p>Прежняя первая стадия</p></article>
+<article><h2>II · Разрастание</h2><canvas width="640" height="720" data-stage="2"></canvas><p>Два маленьких гриба и лёгкая текстура</p></article>
+<article><h2>III · Грибница</h2><canvas width="640" height="720" data-stage="3"></canvas><p>Прежняя третья стадия</p></article>
+</section></main>
+<script src="js/config/game-config.js?v=648"></script><script src="js/core/game-assets.js?v=627"></script><script src="js/rendering/slime-avatar.js?v=661"></script><script src="effects-lab/workbench-effects.js?v=661"></script>
+<script>
+(async()=>{
+ const variants=['sporesStage1','sporesStage2','sporesUltra'];
+ await Promise.all(variants.map((bodyVariant,i)=>Promise.all([SlimeAvatarRenderer.preloadAppearance({bodyVariant,sporesEyes:i===2}),MutationEffectDraft.preload({cloning:i+1})])));
+ await SlimeAvatarRenderer.whenReady();
+ function draw(timestamp){for(const canvas of document.querySelectorAll('canvas')){
+  const stage=Number(canvas.dataset.stage),ctx=canvas.getContext('2d');ctx.setTransform(2,0,0,2,0,0);ctx.clearRect(0,0,320,360);
+  const state={x:160,y:220,radius:95,timestamp,levels:{cloning:stage},effectDetail:1,bodyTransform:{rotation:0,scaleX:1,scaleY:1}};
+  MutationEffectDraft.drawBehind(ctx,state);
+  SlimeAvatarRenderer.drawSlimeAvatar(ctx,{x:160,y:220,radius:95,timestamp,appearance:'cute-v2',emotion:'focused',bodyVariant:variants[stage-1],sporesEyes:stage===3,irisTint:stage===3?'#ce782f':''});
+  MutationEffectDraft.drawFront(ctx,state);
+ }}
+ window.cloningFormsPreview={draw};window.previewReady=true;
+ function frame(t){draw(t);if(!window.previewPaused)requestAnimationFrame(frame)}requestAnimationFrame(frame);
+})();
+</script></body></html>

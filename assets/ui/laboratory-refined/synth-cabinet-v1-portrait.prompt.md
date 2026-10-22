@@ -1,0 +1,11 @@
+# Высокая адаптация цельного синтезатора · 675
+
+Встроенный ImageGen, precise-object-edit. Референс — выбранный квадратный корпус `synth-cabinet-v1-master.png`. Экспорт сохраняет пропорции и прозрачность: `synth-cabinet-v1-portrait.webp`, 1024×1365. Эффекты выполнены кодом.
+
+Use case: precise-object-edit. Responsive production variant of this exact game interface cabinet.
+Preserve this SINGLE integrated rectangular front-panel synthesizer, its blue-gray satin metal frame, straight cylindrical reservoir on the left, right output recess, short blue pipe, mint shelf, lower blank text panel, colors, small bolts and clean painted children's game UI style.
+Change the layout for a TALL phone panel: portrait canvas WIDTH:HEIGHT=3:4, approximately 1200 wide by 1600 tall. The entire solid cabinet fills almost all canvas with only 1% transparent outer margin. The cabinet's OUTER RECTANGULAR FRAME extends to all four edges; there are no open gaps or background between parts.
+Make the left reactor window taller and more generous vertically. Place the upper reservoir bracket and input collar close to the top frame, so the increased height belongs to the usable reservoir rather than empty space above. Keep the reservoir upright, cylindrical, empty dark teal glass, no liquid/bubbles. Usable window roughly x=11%..51%, y=22%..68%.
+Enlarge the right output chamber vertically enough for a circular mutation emblem, preserve a roughly square opening in actual pixels, front view. Right opening roughly x=58%..92%, y=39%..65%, with empty dark-teal recess and flat mint shelf. It stays mechanically joined into the same solid front panel. No door or emblem.
+Wide BLANK dark-teal text inset near the bottom spans x=10%..90%, y=83%..94%, surrounded by the same substantial metal bezel. Keep this caption panel generously readable for 2 lines. All front-panel space is solid blue cabinet backplate.
+Do not add a bottle neck, funnel outside the silhouette, separate feet, floating components, new controls, letters, text, symbols, contents, effects, floor, cast shadow or scene. Same design with a taller coherent front panel that efficiently fills the phone UI. Preserve gentle highlights, no increase in shine. Genuine transparent background ONLY outside the outer rounded corners.

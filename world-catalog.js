@@ -11,12 +11,12 @@
     'stone-hazard': 'assets/Мир 1/Колючий враг-v1-lossless.webp',
     'dynamite': 'assets/Мир 1/Динамит.webp',
     'spring': 'assets/Мир 1/Пружина.webp',
-    'heal': 'assets/Мир 1/Аптечка.webp',
+    'heal': 'assets/ui/blocks/heart-stone-v1.webp',
     'portal': 'assets/ui/portals/world-1.webp'
   };
   const WORLD2_ASSETS = {
     // Legacy slot 2 supplies frost transformation sprites, not a playable world.
-    'snow-packed': 'assets/world2/snow-soft-v2.webp',
+    'snow-packed': 'assets/ui/blocks/frost-snow-front-v1.webp',
     'snowflake': 'assets/Мир 2/Заморозка.webp'
   };
   const WORLD3_ASSETS = {
@@ -26,7 +26,7 @@
     'candy-reinforced': 'assets/Мир 3/Прочный блок.webp',
     'candy-hazard': 'assets/Мир 3/опасный блок.webp',
     'jelly-bounce': 'assets/Мир 3/Желейка.webp',
-    'heal': 'assets/Мир 3/Хилка.webp',
+    'heal': 'assets/ui/blocks/heart-stone-v1.webp',
     'portal': 'assets/ui/portals/world-3.webp'
   };
   const WORLD4_ASSETS = {
@@ -36,7 +36,7 @@
     'lava-hazard': 'assets/Мир 4/Опасный блок.webp',
     'geyser': 'assets/Мир 4/Гейзер-заметный.webp',
     'meteor': 'assets/Мир 4/Метеорит.webp',
-    'heal': 'assets/Мир 4/Аптечка.webp',
+    'heal': 'assets/ui/blocks/heart-stone-v1.webp',
     'portal': 'assets/ui/portals/world-4.webp'
   };
   const assetSource = (worldId, sprite) => {

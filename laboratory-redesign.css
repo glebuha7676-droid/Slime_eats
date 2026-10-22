@@ -1,0 +1,211 @@
+/* Approved laboratory concept v3: live controls over the game's matte metal. */
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot{display:grid!important;place-items:center!important;grid-template:none!important;position:relative!important;padding:2px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot .mutation-info-emblem{display:block!important;position:relative!important;inset:auto!important;margin:0!important;place-self:center!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-v2{max-width:calc(var(--collection-cell)*5 + 32px)!important;width:100%!important;justify-self:center!important;margin:0 auto!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task{text-align:left!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-food[data-thumbnail-fit]{container-type:size}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-food[data-thumbnail-fit] .food-mini-model{inset:auto!important;left:50%!important;top:50%!important;width:var(--lab-food-width)!important;height:var(--lab-food-height)!important;max-width:none!important;max-height:none!important;transform:translate(var(--lab-food-x),var(--lab-food-y))!important}
+html body #panelOverlay:has(.mutation-lab-v2.lab-redesign){padding:4px!important}
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign){max-width:480px!important;margin:0 auto!important;border-width:24px!important;border-image-width:48px!important;padding:5px!important;background:#205d79!important;border-radius:20px!important}
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign) .modal-head{height:42px!important;min-height:42px!important;margin:0 0 7px!important;padding:0 2px!important}
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign) #panelTitle{font-size:clamp(20px,6.8cqw,28px)!important;gap:7px!important}
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign) #closePanelBtn{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:12px!important}
+html body #panelOverlay #panelTitle>.mutation-panel-balance{height:37px!important;border-color:#7ca8b8!important;background:#e0f4f8!important;box-shadow:inset 0 2px #f5fdff,inset 0 -2px #b0d1dc!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign{--collection-cell:clamp(44px,calc((100cqw - 32px)/5),64px);--collection-height:calc(var(--collection-cell)*2 + 8px);grid-template-rows:36px minmax(0,1fr) 24px var(--collection-height)!important;gap:8px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .lab-view-tabs{height:36px!important;gap:8px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .lab-view-tabs button{height:35px!important;border-radius:12px!important;border-color:#7daaba!important;background:#c9e9f2!important;color:#235569!important;box-shadow:inset 0 2px #effbff,inset 0 -3px #a7cdda!important;font-size:14px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .lab-view-tabs button[aria-selected="true"]{background:#19b9df!important;border-color:#2987a2!important;box-shadow:inset 0 2px #92e2f1,inset 0 -3px #1193b6!important;color:#fff!important;-webkit-text-stroke:1.5px #23657d}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-info-pane{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(82px,auto) 78px minmax(0,1fr) 46px!important;gap:8px!important;padding:0!important;justify-content:stretch!important;align-content:stretch!important;overflow:hidden!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header{grid-row:1;display:grid;grid-template-columns:68px minmax(0,1fr);align-items:center;gap:8px;min-height:0!important;height:100%;padding:6px!important;border:1.5px solid #5d92a7!important;border-radius:16px;background:#194a63;overflow:hidden}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header>.mutation-info-emblem{position:relative!important;width:68px!important;height:68px!important;max-width:100%!important;place-self:center!important;transform:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header>.mutation-info-emblem>img{width:100%!important;height:100%!important;object-fit:contain!important;filter:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-emblem-halo{display:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-heading{display:grid;min-width:0;gap:5px}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-heading h3{min-height:0!important;margin:0!important;font-size:22px!important;line-height:1.08!important;letter-spacing:0!important;color:#f3fcff!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header .slime-base-kit{margin:0!important;padding:0!important;min-height:0!important;background:none!important;border:0!important;box-shadow:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header .slime-base-kit p{margin:0!important;font-size:14px!important;line-height:1.3!important;font-weight:650!important;color:#c5e1ed!important;overflow-wrap:anywhere}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task{grid-row:2;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto 15px;gap:3px 10px;align-items:center;min-height:0!important;height:100%;padding:7px 11px;border:2px solid #94c9d9;border-radius:14px;background:#c4e6f0;box-shadow:inset 0 2px #eefdff,inset 0 -2px #9bc7d8;overflow:hidden;color:#14445b}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-task-kicker{position:static!important;grid-column:1/-1;padding:0!important;background:none!important;color:#16465e!important;font-size:20px!important;line-height:1.05!important;font-weight:1000!important;letter-spacing:0!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task>strong{grid-column:1/-1;min-width:0;font-size:14px!important;line-height:1.15!important;font-weight:800!important;color:#17475d!important;text-shadow:none!important;-webkit-text-stroke:0!important;white-space:normal}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-task-meter{grid-column:1;grid-row:3;position:relative;display:block;height:14px;overflow:hidden;border:1px solid #5e94a8;border-radius:99px;background:#16475e;box-shadow:inset 0 1px #0c374c}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-task-meter>i{display:block;height:100%;max-width:100%;border-radius:inherit;background:var(--mutation-task-color,#ff8741);box-shadow:none}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task>b{grid-column:2;grid-row:3;display:block;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:none!important;color:#143e55!important;box-shadow:none!important;font-size:17px!important;line-height:1!important;font-weight:1000!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task>b small{font-size:inherit!important;color:inherit!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task.is-complete .slime-task-meter>i{background:var(--mutation-task-color,#ff8741)}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-heading{grid-row:3;align-self:center;margin:0 2px!important;font-size:21px!important;line-height:1.2!important;letter-spacing:0!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-heading::after{display:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-track{grid-row:4;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;align-self:stretch!important;min-height:0!important;height:100%!important;width:100%!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card{position:relative;min-height:0;height:100%;display:block;overflow:visible}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card::after{display:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-preview{display:grid!important;grid-template-rows:15px minmax(0,1fr) 18px!important;align-items:center;justify-items:center;gap:3px;height:100%!important;min-height:0!important;aspect-ratio:auto!important;padding:7px 4px 5px!important;border:1.5px solid #56869b!important;border-radius:15px!important;background:#17435b!important;color:#b2d3e2!important;box-shadow:inset 0 1px #315e73!important;text-shadow:none!important;overflow:hidden}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-caption{margin:0!important;font-size:11px!important;line-height:1!important;letter-spacing:0!important;white-space:nowrap}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-caption em{font-style:normal!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-food{position:relative!important;height:100%!important;width:100%!important;min-height:0!important;display:block!important;overflow:hidden!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-food .food-mini-model{position:absolute!important;inset:0!important;margin:auto!important;width:88%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;transform:none!important;opacity:1!important;filter:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-locked:not(.is-ready) .food-mini-model{opacity:.055!important;filter:grayscale(1) blur(2px)!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-ready .food-mini-model{opacity:.32!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-food .slime-stage-lock{position:absolute!important;left:50%!important;top:50%!important;width:28px!important;height:32px!important;max-height:90%!important;object-fit:contain!important;transform:translate(-50%,-50%)!important;filter:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-status{display:block;align-self:center;min-height:15px;max-width:100%;padding:1px 8px;font-size:12px;line-height:1.15;font-weight:850;color:#aecbd9;white-space:nowrap}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-owned-stage .slime-stage-preview{border:2px solid #76d2e3!important;background:#1c536d!important;box-shadow:inset 0 1px #6ba9be!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-owned-stage .slime-stage-status{border-radius:8px;background:#2b6983;color:#edfaff}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-current:not(.is-owned-stage) .slime-stage-preview{border-color:#8abaca!important;box-shadow:inset 0 1px #44798f!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-open.slime-stage-ready{left:6px!important;right:6px!important;top:auto!important;bottom:5px!important;width:calc(100% - 12px)!important;height:30px!important;min-height:30px!important;padding:0 2px!important;transform:none!important;font-size:11px!important;border-radius:10px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign #mutationUpgradeBtn.slime-stage-ready:is(:active,:focus,:hover){transform:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign #mutationUpgradeBtn.slime-stage-ready{transform:none!important;transition:background-color .12s!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-kit{grid-row:5;grid-template-columns:58px minmax(0,1fr)!important;gap:10px!important;align-items:center!important;min-height:0!important;height:100%;padding:9px!important;border:1.5px solid #568a9f!important;border-radius:15px!important;background:#153e55!important;overflow:hidden}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture{width:58px!important;height:58px!important;max-width:100%;border:1.5px solid #315c71!important;border-radius:50%;background:#10364b;overflow:hidden}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture>img{width:48px!important;height:48px!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture.is-turret img{width:43px!important;height:39px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy{min-width:0;gap:4px}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy h4{margin:0!important;color:#f5d68b!important;font-size:20px!important;line-height:1.1!important;font-weight:900!important;overflow-wrap:anywhere}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy p{margin:0!important;color:#bedbe8!important;font-size:14px!important;line-height:1.25!important;font-weight:650!important;overflow-wrap:anywhere}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-choose-btn{grid-row:6!important;align-self:stretch;height:46px!important;min-height:0!important;padding:0 10px!important;border-radius:14px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-choose-btn span{font-size:21px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-hint{grid-row:2/6;margin:0;align-self:center;line-height:1.4}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head{display:flex!important;align-items:center!important;justify-content:space-between!important;height:24px!important;padding:0 2px!important;gap:6px}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head>b{font-size:20px!important;line-height:1!important;color:#f2fcff!important;text-transform:none!important;letter-spacing:0!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head>span{display:flex!important;align-items:center;gap:4px;min-width:0!important;height:23px!important;padding:2px 8px!important;border:1px solid #4c7e95!important;border-radius:12px;background:#17455d!important;color:#cce5ef!important;font-size:12px!important;line-height:1.1}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head :is(strong,small){font-size:12px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-hint{display:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-v2{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;align-content:start!important;gap:8px!important;height:var(--collection-height)!important;min-height:0!important;padding:0!important;overflow:hidden!important;grid-auto-flow:unset!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot{flex:0 0 var(--collection-cell)!important;width:var(--collection-cell)!important;height:var(--collection-cell)!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;border-radius:13px!important;border:2px solid #87b7c8!important;background:#c9e9f2!important;box-shadow:inset 0 2px #f3fdff,inset 0 -3px #94bdce!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot.selected{border-color:#64d5ed!important;background:#9edfed!important;box-shadow:inset 0 2px #ddfbff,inset 0 -3px #69abc1!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot.equipped:not(.selected){background:#c1e7da!important;border-color:#81b7ac!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot .mutation-info-emblem{width:94%!important;height:94%!important;transform:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot .mutation-info-emblem>img{width:100%!important;height:100%!important;object-fit:contain!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-equipped-mark{width:18px!important;height:18px!important;top:-1px!important;right:-1px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign :is(.slime-stage-preview,.mutation-collection-slot):focus-visible{outline:2px solid #ffe19d!important;outline-offset:-4px!important}
+@container lab-window (max-height:740px){
+ html body #panelOverlay .mutation-lab-v2.lab-redesign{--collection-cell:clamp(44px,calc((100cqw - 32px)/5),56px);grid-template-rows:34px minmax(0,1fr) 20px var(--collection-height)!important;gap:6px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-info-pane{grid-template-rows:minmax(76px,auto) 70px minmax(0,1fr) 42px!important;gap:6px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header{grid-template-columns:64px minmax(0,1fr);padding:7px!important;gap:8px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header>.mutation-info-emblem{width:64px!important;height:64px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-heading h3{font-size:22px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header .slime-base-kit p{font-size:13px!important;line-height:1.25!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task{padding:6px 9px;grid-template-rows:auto auto 13px;gap:2px 8px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-task-kicker{font-size:18px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task>strong{font-size:13px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-task-meter{height:12px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task>b{font-size:15px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-heading{font-size:19px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-preview{grid-template-rows:12px minmax(0,1fr) 16px!important;padding:5px 3px 4px!important;gap:2px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-caption{font-size:10px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-status{font-size:11px;padding:1px 6px;min-height:13px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-kit{grid-template-columns:48px minmax(0,1fr)!important;padding:7px!important;gap:8px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture{width:48px!important;height:48px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture>img{width:40px!important;height:40px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy h4{font-size:17px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy p{font-size:13px!important;line-height:1.2!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-choose-btn{height:42px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-choose-btn span{font-size:19px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head{height:20px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head>b{font-size:18px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head>span{height:20px!important}
+}
+@container lab-window (max-height:600px){
+ html body #panelOverlay .mutation-lab-v2.lab-redesign{--collection-cell:44px;--collection-height:94px;grid-template-rows:30px minmax(0,1fr) 18px 94px!important;gap:4px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .lab-view-tabs{height:30px!important;gap:6px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .lab-view-tabs button{height:29px!important;font-size:12px!important;border-radius:10px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-info-pane{grid-template-rows:74px 54px minmax(0,1fr) 35px!important;gap:4px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header{grid-template-columns:48px minmax(0,1fr);gap:6px;padding:4px!important;border-radius:12px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header>.mutation-info-emblem{width:48px!important;height:48px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-heading{gap:3px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-heading h3{font-size:18px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header .slime-base-kit p{font-size:11.5px!important;line-height:1.15!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task{padding:3px 7px;grid-template-rows:auto auto 11px;gap:1px 7px;border-radius:11px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-task-kicker{font-size:16px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task>strong{font-size:12px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-task-meter{height:10px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task>b{font-size:14px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-heading{font-size:16px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-track{gap:6px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-preview{grid-template-rows:10px minmax(0,1fr) 14px!important;padding:4px 2px 3px!important;gap:1px;border-radius:11px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-caption{font-size:9px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-status{font-size:10px;min-height:12px;padding:0 5px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-food .slime-stage-lock{width:22px!important;height:25px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-open.slime-stage-ready{height:26px!important;min-height:26px!important;bottom:3px!important;font-size:10px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-kit{grid-template-columns:38px minmax(0,1fr)!important;gap:6px!important;padding:5px!important;border-radius:12px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture{width:38px!important;height:38px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture>img{width:32px!important;height:32px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy{gap:3px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy h4{font-size:15px!important;line-height:1.05!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy p{font-size:12px!important;line-height:1.15!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-choose-btn{height:35px!important;border-radius:11px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-choose-btn span{font-size:17px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head{height:18px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head>b{font-size:16px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head>span{height:18px!important;padding:1px 6px!important;font-size:10px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-head :is(strong,small){font-size:10px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-v2{gap:6px 8px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot{border-radius:10px!important}
+}
+@media(max-height:640px){
+ html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign){border-width:16px!important;border-image-width:36px!important;padding:4px!important}
+ html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign) .modal-head{height:34px!important;min-height:34px!important;margin-bottom:5px!important}
+ html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign) #panelTitle{font-size:20px!important}
+ html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign) #closePanelBtn{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important}
+ html body #panelOverlay #panelTitle>.mutation-panel-balance{height:30px!important;padding:1px 6px!important}
+ html body #panelOverlay #panelTitle>.mutation-panel-balance img{width:23px!important;height:23px!important}
+ html body #panelOverlay #panelTitle>.mutation-panel-balance b{font-size:15px!important}
+}
+
+/* Stages and the ability they equip form one control, with a single active frame. */
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign){max-height:880px!important;background:#1b637e!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header{background:#12465f;border-color:#689fb2!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header .slime-base-kit p{color:#d8eff6!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-header-task{background:#c4e9ed;border-color:#87c7d2}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-section{grid-row:3;display:grid;grid-template-rows:24px clamp(84px,30cqw,112px) minmax(0,1fr);gap:7px;min-height:0;padding:9px;border:1.5px solid #6da9bc;border-radius:16px;background:#1b526b;overflow:hidden}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-heading{grid-row:1;font-size:20px!important;color:#edfaff!important;margin:0!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-track{grid-row:2;gap:8px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-preview{border-radius:12px!important;border:2px solid #6698ae!important;background:#123e57!important;color:#c9e6ee!important;padding:6px 3px 4px!important;grid-template-rows:13px minmax(0,1fr) 18px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-owned-stage .slime-stage-preview{border:3px solid #b7f2f5!important;background:#267a94!important;box-shadow:inset 0 0 0 2px #14536c!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-owned-stage .slime-stage-status{background:#d6f3ef;color:#174b5c;border-radius:6px;padding:1px 5px}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-current:not(.is-owned-stage) .slime-stage-preview{border-color:#f2d992!important;box-shadow:inset 0 0 0 1px #a18b56!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-status{color:#bcdce6}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-kit{grid-row:3;grid-template-columns:76px minmax(0,1fr)!important;border:0!important;border-top:1px solid #55889e!important;border-radius:0!important;padding:6px 0 0!important;background:none!important;gap:8px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture{width:76px!important;height:76px!important;border:0!important;background:none!important;overflow:visible!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture>img{width:72px!important;height:72px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture.is-turret img{width:65px!important;height:60px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy h4{color:#ffdc87!important;font-size:21px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy p{color:#d7edf4!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-choose-btn{grid-row:4!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot{background:#d5edf1!important;border-color:#8ab8c6!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot.selected{background:#7ed1e0!important;border-color:#e5fbfc!important;box-shadow:inset 0 0 0 2px #2d869f,inset 0 -3px #4ba0b6!important}
+@container lab-window (max-height:740px){
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-section{grid-template-rows:22px clamp(76px,29cqw,102px) minmax(0,1fr);padding:7px;gap:5px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-heading{font-size:18px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-kit{grid-template-columns:64px minmax(0,1fr)!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture{width:64px!important;height:64px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture>img{width:60px!important;height:60px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture.is-turret img{width:53px!important;height:49px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy h4{font-size:18px!important}
+}
+@container lab-window (max-height:600px){
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-section{grid-template-rows:18px 72px minmax(0,1fr);padding:2px 3px;gap:3px;border-radius:12px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-heading{font-size:15px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-track{gap:6px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-preview{grid-template-rows:10px minmax(0,1fr) 14px!important;border-radius:9px!important;padding:3px 2px!important;gap:1px}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-caption{font-size:9px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-stage-status{font-size:10px!important;padding:0 3px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-kit{grid-template-columns:48px minmax(0,1fr)!important;gap:5px!important;padding:2px 0 0!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture{width:48px!important;height:48px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture>img{width:46px!important;height:46px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-picture.is-turret img{width:43px!important;height:39px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy h4{font-size:15px!important}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-ultimate-copy p{font-size:11.5px!important;line-height:1.15!important}
+}
+
+/* Keep the collection clear of the illustrated lower metal lip. */
+html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign){padding-bottom:17px!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-mutation-header{height:auto!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-development-card.is-current:not(.is-owned-stage) .slime-stage-preview{border-color:#f2d992!important;box-shadow:none!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot.selected:not(.equipped){background:#d5edf1!important;border-color:#f4d488!important;box-shadow:inset 0 2px #f3fdff,inset 0 -3px #94bdce!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-collection-slot.equipped{background:#a9deca!important;border:3px solid #7ce5bb!important;box-shadow:inset 0 0 0 1px #257c69,inset 0 -3px #74baa3!important}
+html body #panelOverlay .mutation-lab-v2.lab-redesign .mutation-equipped-mark{background:#1b9776!important;border:1.5px solid #effff8!important;width:20px!important;height:20px!important;top:0!important;right:0!important}
+@container lab-window (max-height:600px){
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-section{grid-template-rows:18px 64px minmax(0,1fr)}
+ html body #panelOverlay .mutation-lab-v2.lab-redesign .slime-evolution-track{grid-template-columns:repeat(3,minmax(0,64px))!important;justify-content:space-between!important}
+}
+@media(max-height:640px){
+ html body #panelOverlay .panel-modal:has(.mutation-lab-v2.lab-redesign){padding-bottom:12px!important}
+}

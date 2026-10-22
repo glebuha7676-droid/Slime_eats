@@ -1,0 +1,112 @@
+/* Separate illustrated components surround real, responsive game controls. */
+html body[data-screen="home"] #app{background:#55b7cf!important;isolation:isolate}
+#homeStationArt{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#homeStationArt>i,#stationWorldFrame,#stationPlayFrame{position:absolute;display:block;background-repeat:no-repeat;pointer-events:none}
+#stationRoom{background-image:url("assets/ui/home-modular/room.webp");background-size:cover;background-position:center top}
+#stationPedestal{background-image:url("assets/ui/home-modular/pedestal-portal.webp")}
+#stationConsole{background-image:url("assets/ui/home-modular/console-body.webp")}
+#stationBarrel{background-image:url("assets/ui/home-modular/food-barrel.webp")}
+#stationWorldFrame{background-image:url("assets/ui/home-modular/world-frame.webp");z-index:3}
+#stationPlayFrame{background-image:url("assets/ui/home-modular/play-frame.webp");z-index:3}
+#stationPortalCore{border-radius:50%;background:radial-gradient(circle,#96eee7 0,#51c6cb 68%,#146d85 100%);box-shadow:inset 0 0 12px #b8ffff}
+body:not([data-screen="home"]) #homeStationArt{display:none}
+html body[data-screen="home"] #app .topbar{z-index:80}
+html body[data-screen="home"] #homeScreen.active{display:block!important;position:relative!important;height:100%!important;min-height:0!important;padding:0!important;margin:0!important;transform:none!important;overflow:visible!important;animation:none!important}
+html body #homeScreen::before,html body #homeScreen::after,html body #homeScreen .synth-terminal-art{display:none!important}
+html body #homeScreen>#slimeStage{position:absolute!important;left:0;top:0;width:100%;height:244px;border:0!important;background:none!important;box-shadow:none!important;z-index:10;overflow:visible!important}
+html body #homeScreen .slime-playground{top:var(--station-slime-y,0px)!important;left:var(--station-slime-x,0px)!important}
+html body #homeScreen .recipe-rail{position:static!important}
+html body #homeScreen .slime-hero-layout{overflow:visible!important}
+html body #homeScreen :is(#slimeStage,.slime-hero-layout,.slime-center-stage,.slime-playground){pointer-events:none!important}
+html body #homeScreen :is(#slime,.mutation-lab-button,#wardrobeBtn){pointer-events:auto!important}
+html body #homeScreen #conveyor,html body #homeScreen #playSetupCard{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;border:0!important;border-image:none!important;border-radius:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;pointer-events:none}
+html body #homeScreen #conveyor{z-index:30!important}
+html body #homeScreen #conveyor::before,html body #homeScreen #conveyor::after,html body #homeScreen #playSetupCard::before,html body #homeScreen #playSetupCard::after{display:none!important}
+html body #homeScreen #conveyor .conveyor-workbench,html body #homeScreen #conveyor .synthesis-machine{position:static!important;inset:auto!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;transform:none!important;pointer-events:none}
+html body #homeScreen #conveyor .conveyor-workbench::before,html body #homeScreen #conveyor .conveyor-workbench::after,html body #homeScreen #conveyor .synthesis-machine::before,html body #homeScreen #conveyor .synthesis-machine::after{display:none!important}
+html body #homeScreen #conveyor #foodChoices{display:block!important;right:auto!important;bottom:auto!important;padding:0!important;margin:0!important;transform:none!important;pointer-events:auto;z-index:3!important}
+html body #homeScreen #conveyor .conveyor-gap{display:none!important}
+html body #homeScreen #conveyor .conveyor-food-pick{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;padding:0!important;margin:0!important;border:0!important;border-radius:12px!important;background:none!important;box-shadow:none!important;transform:none!important;overflow:visible!important;filter:none!important;opacity:1!important}
+html body #homeScreen #conveyor .conveyor-food-pick::before,html body #homeScreen #conveyor .conveyor-food-pick::after,html body #homeScreen #conveyor :is(.conveyor-plate,.synthesis-floor-light,.synthesis-birth-blob,.food-mutation-fx){display:none!important}
+html body #homeScreen #conveyor .synthesis-food-visual,html body #homeScreen #conveyor .food-model-wrap{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;transform:none!important;opacity:1!important;animation:none!important;pointer-events:none}
+html body #homeScreen #conveyor .food-model.is-grounded{position:absolute!important;width:var(--ground-width)!important;height:var(--ground-height)!important;left:var(--ground-left)!important;top:var(--ground-top)!important;max-width:none!important;max-height:none!important;transform:none!important;animation:none!important;object-fit:contain!important}
+html body #homeScreen #conveyor .food-ground-shadow{display:none!important}
+html body #homeScreen #conveyor .awaiting-dispense{opacity:0!important}
+html body #homeScreen #conveyor .food-synthesizing{animation:stationFoodAppear .24s ease-out!important}
+@keyframes stationFoodAppear{from{opacity:0;filter:brightness(1.3)}to{opacity:1;filter:none}}
+html body #homeScreen #playSetupCard{z-index:20!important}
+html body #homeScreen #playSetupCard .world-picker-v2,html body #homeScreen #playSetupCard .world-terminal-shell{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;transform:none!important;pointer-events:none}
+html body #homeScreen .world-terminal-heading{display:none!important}
+html body #homeScreen #playSetupCard :is(#worldCarousel,#worldPrevBtn,#worldNextBtn,#worldStartBtn){right:auto!important;bottom:auto!important;pointer-events:auto;transform:none!important}
+html body #homeScreen #worldCarousel{border-radius:calc(var(--station-unit) * 28)!important;overflow:hidden!important}
+html body #homeScreen #worldPrevBtn::after,html body #homeScreen #worldNextBtn::after{inset:0!important}
+html body #homeScreen #worldStartBtn{font-size:clamp(18px,5.6vw,26px)!important}
+html body #homeScreen #conveyor .home-mutation-carousel{position:absolute;display:block;overflow:clip;pointer-events:auto;touch-action:pan-y;z-index:5}
+html body #homeScreen .home-mutation-medal{--button-shine:none;position:absolute;left:calc(50% + var(--mutation-offset) * 33.333333%);top:50%;width:33.333333%;height:100%;min-height:40px;padding:0;border:0;border-radius:12px;background:none!important;box-shadow:none!important;transform:translate(-50%,-50%);opacity:1;transition:left .22s ease,opacity .16s ease;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);place-items:center;filter:none;pointer-events:auto}
+html body #homeScreen .home-mutation-medal::before,html body #homeScreen .home-mutation-medal::after{display:none!important}
+.home-mutation-medal>img{display:block;width:76%;height:76%;min-width:0;min-height:0;object-fit:contain;pointer-events:none;transition:width .22s ease,height .22s ease}
+.home-mutation-medal.is-current>img{width:98%;height:98%}
+#homeMutationFrame{position:absolute;display:block;box-sizing:border-box;z-index:10;pointer-events:none;border:5px solid #a7dcea;border-radius:20%;background:transparent;box-shadow:inset 0 0 0 2px #386a83,0 2px 0 2px #30647b,inset 0 3px 0 2px #e2fbff}
+.home-mutation-medal.is-outside{opacity:0!important;pointer-events:none!important}
+.home-mutation-medal.is-locked>img{visibility:hidden}
+.home-mutation-lock{display:none;color:#c1e3ed;font:900 28px/1 Nunito,sans-serif;position:absolute}
+.home-mutation-medal.is-locked .home-mutation-lock{display:block}
+.home-mutation-medal:focus-visible{outline:2px solid #efffff;outline-offset:-3px}
+html body #homeScreen .home-mutation-arrow{--button-shine:none;position:absolute;display:block;min-height:40px;min-width:32px;border:0;background:transparent url("assets/ui/world-terminal/arrow-soft-v10.svg") center/80% 85% no-repeat!important;box-shadow:none!important;border-radius:8px;pointer-events:auto;z-index:6;filter:none!important;padding:0}
+html body #homeScreen #homeMutationPrev{transform:scaleX(-1)!important}
+html body #homeScreen .home-mutation-arrow::before,html body #homeScreen .home-mutation-arrow::after{display:none!important}
+.home-mutation-arrow:disabled{opacity:.4}
+html body #homeScreen .home-mutation-info{--button-shine:none;position:absolute;display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:2px;padding:0;border:0;border-radius:6px;background:none!important;box-shadow:none!important;text-align:left;pointer-events:auto;color:#f4fdff;font-family:Nunito,sans-serif;transform:none!important;filter:none!important;z-index:5;cursor:pointer}
+html body #homeScreen .home-mutation-info::before,html body #homeScreen .home-mutation-info::after{display:none!important}
+.station-mutation-heading{display:flex;align-items:center;justify-content:space-between;gap:5px;font-size:clamp(16px,4.9vw,22px);line-height:1.05;font-weight:1000;text-shadow:0 2px #123d51}
+.station-mutation-name{min-width:0}
+.home-mutation-info.is-long-name .station-mutation-name{font-size:clamp(12px,3.5vw,16px)}
+.station-stage{display:grid;place-items:center;flex:0 0 auto;min-width:32px;height:25px;padding:0 8px;border:1.5px solid #608c9f;border-radius:8px;background:#caebf0;color:#164a61;font:1000 20px/1 Nunito,sans-serif;box-shadow:inset 0 2px #efffff,inset 0 -2px #9bc8d8;text-shadow:none}
+.station-task-kicker{font-size:clamp(8px,2.25vw,10px);line-height:1.1;letter-spacing:.04em;color:#a5d2df;font-weight:800}
+.station-task-label{font-size:clamp(10px,3.1vw,14px);font-weight:800;line-height:1.1}
+.station-task-progress{display:flex;align-items:center;position:relative;min-height:21px;border:1.5px solid #427d97;border-radius:7px;background:#102e45;overflow:hidden}
+.station-task-fill{position:absolute;inset:2px auto 2px 2px;border-radius:4px;background:var(--station-mutation-color);max-width:calc(100% - 4px)}
+.station-task-counter{position:relative;margin-left:auto;padding:2px 5px;background:#102e45;border-radius:4px;color:white;font-size:clamp(10px,3vw,13px);font-weight:1000;font-variant-numeric:tabular-nums;white-space:nowrap}
+.home-mutation-info.is-ready .station-task-kicker{color:#ffe68d}
+.home-mutation-info:focus-visible{outline:2px solid #fff3b0;outline-offset:4px}
+@media(max-width:350px){.station-stage{min-width:26px;height:20px;font-size:17px;padding:0 5px}.station-task-progress{min-height:17px}.home-mutation-info{gap:2px}.station-mutation-heading{font-size:16px}}
+@media(max-width:400px){html body #homeScreen .home-mutation-info{gap:2px}.station-stage{height:23px;font-size:18px}}
+@media(max-width:350px){html body #homeScreen .home-mutation-info{gap:1px}.station-stage{height:20px;font-size:17px}}
+@media(prefers-reduced-motion:reduce){html body #homeScreen .home-mutation-medal,html body #homeScreen .home-mutation-medal>img{transition:none}.food-synthesizing{animation:none!important}}
+
+/* These are illustrated button bases, shared by both home tools. */
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot),
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button:not(:disabled):active{
+ border:0!important;border-radius:50%!important;background:transparent url("assets/ui/home-modular/round-button-base.webp") center/100% 100% no-repeat!important;box-shadow:none!important;
+ grid-template-rows:minmax(0,1fr) 16px!important;padding:12% 8% 16%!important;gap:0!important;overflow:visible!important;
+}
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot){padding:12px 7px 16px!important}
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot)::before,
+html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot)::after{display:none!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button>span:not(.mutation-trio-icon),
+html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot>span{color:#f0fdff!important;font-size:clamp(8px,2.5vw,11px)!important;text-shadow:0 1px 2px #082c45!important;white-space:nowrap!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button>.mutation-trio-icon{width:55px!important;height:44px!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button .mutation-trio-icon img{width:30px!important;height:30px!important;max-width:30px!important;max-height:30px!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button .mutation-trio-frost{left:24px!important}
+html body[data-screen="home"] #app #homeScreen .mutation-lab-button .mutation-trio-electric{left:12px!important;top:16px!important}
+html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot>img{width:44px!important;height:44px!important}
+html body #homeScreen .lab-portal-frame{display:none!important}
+html body #homeScreen #worldCarousel{border:0!important;border-radius:999px!important;background:#133a50!important;box-shadow:none!important}
+html body #homeScreen #playSetupCard .world-terminal-heading{display:grid!important;place-items:center!important;z-index:8!important;margin:0!important;padding:0!important;border:0!important;background:transparent url("assets/ui/home-modular/world-plaque.webp") center/100% 180% no-repeat!important;box-shadow:none!important;color:#e3f7ff!important;font:900 clamp(10px,3vw,14px)/1 Nunito,sans-serif!important;white-space:nowrap!important}
+html body #homeScreen #playSetupCard .world-terminal-heading::before,html body #homeScreen #playSetupCard .world-terminal-heading::after{display:none!important}
+html body #homeScreen #conveyor .home-mutation-info{padding:8px!important;border:3px solid #a0d5e2!important;border-radius:14px!important;background:#164d65!important;box-shadow:inset 0 0 0 2px #357c95,0 2px 0 #376d86!important;gap:3px!important}
+html body #homeScreen .station-mutation-heading{font-size:clamp(17px,4.9vw,23px)}
+html body #homeScreen .station-task-label{font-size:clamp(11px,3.2vw,15px)}
+html body #homeScreen .station-task-kicker{font-size:clamp(9px,2.4vw,11px)}
+html body #homeScreen .station-task-progress{min-height:22px}
+html body[data-screen="home"] #app #homeScreen :is(.home-mutation-arrow,.world-terminal-arrow){background:transparent url("assets/ui/home-modular/arrow-base.webp") center/112% 100% no-repeat!important;border:0!important;border-radius:15px!important;box-shadow:none!important;filter:none!important;display:grid!important;place-items:center!important;padding:0!important;min-height:40px!important;z-index:8!important}
+html body[data-screen="home"] #app #homeScreen :is(.home-mutation-arrow,.world-terminal-arrow)::before,
+html body[data-screen="home"] #app #homeScreen :is(.home-mutation-arrow,.world-terminal-arrow)::after{display:none!important}
+html body[data-screen="home"] #app #homeScreen :is(#homeMutationPrev,#worldPrevBtn){transform:scaleX(-1)!important}
+html body[data-screen="home"] #app #homeScreen :is(.home-mutation-arrow,.world-terminal-arrow)>svg{width:45%!important;height:45%!important;overflow:visible!important;pointer-events:none}
+html body[data-screen="home"] #app #homeScreen :is(.home-mutation-arrow,.world-terminal-arrow)>svg path{fill:none;stroke:#c2f8ff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+html body[data-screen="home"] #app #homeScreen :is(.home-mutation-arrow,.world-terminal-arrow):disabled{opacity:.5!important}
+html body #homeScreen #conveyor #foodChoices:has(.conveyor-food-pick:not(.awaiting-dispense))::after{content:"СЪЕШЬ";position:absolute;left:0;right:0;top:100%;margin-top:2px;text-align:center;color:#e5fbff;font:900 clamp(9px,2.6vw,12px)/1 Nunito,sans-serif;pointer-events:none;text-shadow:0 1px 2px #12384e}
+html body[data-screen="home"] #app #homeScreen #worldStartBtn{z-index:4!important;border-radius:999px!important;gap:12px!important;font-size:clamp(20px,5.8vw,29px)!important}
+html body[data-screen="home"] #app #homeScreen #worldStartBtn .terminal-play-icon{width:calc(var(--terminal-play-height) * .57)!important;height:calc(var(--terminal-play-height) * .57)!important;flex:0 0 auto!important}
+@media(max-width:350px){html body #homeScreen #conveyor .home-mutation-info{padding:6px!important;gap:1px!important;border-width:2px!important}html body #homeScreen .station-task-progress{min-height:18px}html body #homeScreen .station-task-label{font-size:10px}.station-stage{min-width:23px!important;padding:0 4px!important}html body[data-screen="home"] #app #homeScreen :is(.mutation-lab-button,.accessories-at-form-slot){padding:9px 5px 13px!important}html body[data-screen="home"] #app #homeScreen .mutation-lab-button>.mutation-trio-icon{transform:scale(.85)!important}html body[data-screen="home"] #app #homeScreen .accessories-at-form-slot>img{width:35px!important;height:35px!important}}

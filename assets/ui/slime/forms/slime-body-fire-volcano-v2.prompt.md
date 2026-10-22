@@ -1,0 +1,6 @@
+# fireIIv2
+
+Mode: built-in imagegen, transparent background.
+References: assets/ui/slime/forms/slime-body-fire-volcano-v1.webp; assets/ui/slime/forms/slime-body-fire-warm-v1.webp
+
+Edit target IMAGE 1: current volcano slime BODY. Color reference IMAGE 2: the existing stage I warm golden-orange slime. Rework only stage II coloration so it is an intermediate warm powered-up form, not an intensely red lava creature. Preserve image 1's exact rounded chubby body, same open crater in place of the top tip, dark little volcanic cap, orange molten rim, same body dimensions and alignment. Recolor most body to the clean sunny GOLDEN YELLOW / AMBER ORANGE of image 2: lighter golden upper center, amber sides and soft orange lower edge. Remove the deep saturated red/magenta belly, crimson rim and red glow; only warm burnt-orange shading for depth. Crater cap remains simple small warm charcoal-brown with a few amber lava drips, not a giant rocky helmet. This should read as stage I gently upgraded into a volcano before the fiery phoenix stage III. Keep existing smooth thick outline, clear soft cartoon shading and restrained highlights. No face, eyes, mouth, nose or cheeks, no flames outside the body, no particles, smoke, separate rocks, background, cast shadow or pedestal. Clean 2D children's game body sprite, transparent background, square framing matching target.

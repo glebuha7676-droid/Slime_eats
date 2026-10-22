@@ -1,0 +1,6 @@
+# frost-chilled
+
+Mode: built-in imagegen, transparent background.
+Reference: assets/ui/slime/slime-body-reference-v1.webp
+
+Use case: precise-object-edit. Edit target: the attached exact green slime body sprite. Create its stage I frost variant. Preserve the EXACT pear-shaped outline, size, position, broad bottom, pointed top, simple smooth jelly shading and familiar highlights. Keep the upper 75–80 percent recognizably the same lime-green slime, with only a very gentle cooler mint tint. ONLY the bottom fifth is lightly frozen: smooth pale icy cyan and soft white frost hugging the existing rounded lower edge, fading naturally upward into the green. A few broad simple frosted patches, no granular noise, no intricate frost crystals, no icicles extending beyond the silhouette, no snow mound or floor. This is slightly chilled normal slime, not an ice monster and not a whole blue recolor. Cute polished 2D children's game art, consistent thick dark teal outline, soft restrained highlight. Body sprite only: the face is animated separately, NO eyes, mouth, nose, cheeks or face. No accessories, smoke, particles, text, shadow or background. True transparent background, same square framing and same alignment as reference.

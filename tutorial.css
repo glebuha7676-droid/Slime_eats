@@ -7,8 +7,8 @@ body:has(#tutorialLayer:not([hidden]),.tutorial-dialog:not([hidden])) #panelOver
 .tutorial-focus-edge-dark{stroke:#14618c;stroke-width:9px}
 .tutorial-focus-edge-gold{stroke:#ffdc24;stroke-width:4.5px;animation:tutorialFocusPulse 1.6s ease-in-out infinite}
 @keyframes tutorialFocusPulse{0%,100%{opacity:1}50%{opacity:.78}}
-:is(#homeScreen,#panelOverlay) .tutorial-outline-source,
-:is(#homeScreen,#panelOverlay) .tutorial-outline-source :is(.food-model-wrap,.synthesis-food-visual,img){animation:none!important;transition:none!important}
+:is(#homeScreen,#panelOverlay) .tutorial-outline-source:not(#slime),
+:is(#homeScreen,#panelOverlay) .tutorial-outline-source:not(#slime) :is(.food-model-wrap,.synthesis-food-visual,img){animation:none!important;transition:none!important}
 .tutorial-pointer{position:fixed;z-index:2;width:70px;height:70px;object-fit:contain;pointer-events:none;animation:tutorialTap 1.15s ease-in-out infinite;transform-origin:10% 18%}
 @keyframes tutorialTap{0%,100%{transform:scale(.92)}50%{transform:scale(1.09)}}
 .tutorial-caption{position:fixed;z-index:2;box-sizing:border-box;width:max-content;max-width:min(290px,calc(100vw - 24px));padding:10px 14px;border:2px solid #63a8c4;border-radius:15px;background:#fffcec;color:#123e5b;font:600 16px/1.3 ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;text-align:center;box-shadow:0 3px 0 #174254;pointer-events:none;text-wrap:pretty}
@@ -190,3 +190,137 @@ html body #homeScreen #conveyorChoiceCount[data-mode="ultra"]{border-color:#d9ff
 
 .tutorial-quest-meal{position:relative;display:inline-flex}.tutorial-quest-meal>b{position:absolute;bottom:-2px;right:-3px;display:grid;place-items:center;width:15px;height:15px;border:1px solid #aaffd2;border-radius:5px;background:#154f4d;color:#fff;font-size:11px;line-height:1}
 @media(prefers-reduced-motion:reduce){.tutorial-focus-edge-gold{animation:none}}
+
+/* Current single-meal curriculum: keep the established finger, rim and cards. */
+.tutorial-dialog-card,.tutorial-caption{font-family:"Slime Nunito",ui-rounded,system-ui,sans-serif}
+#tutorialMemo:is([data-kind="development"],[data-kind="hazard"],[data-kind="heal"],[data-kind="plasma"]) .tutorial-memo-card{position:fixed;width:min(350px,calc(100vw - 24px))}
+#tutorialMemo:not([data-kind="ability"]) #tutorialMemoNext[hidden]{display:block!important;visibility:hidden;pointer-events:none}
+#tutorialMemo:is([data-kind="development"],[data-kind="heal"],[data-kind="ability"]) .tutorial-memo-card{width:min(310px,calc(100vw - 24px));padding:12px 14px;gap:6px}
+#tutorialMemo:is([data-kind="development"],[data-kind="heal"],[data-kind="ability"]) .tutorial-memo-heading>strong{font-size:20px}
+#tutorialMemo:is([data-kind="development"],[data-kind="heal"],[data-kind="ability"]) .tutorial-narrator{width:36px;height:36px}
+#tutorialMemo[data-kind="heal"] .tutorial-heal-demo{margin:5px 0 8px}
+#tutorialMemoContent p{line-height:1.35}
+#tutorialMemo[data-kind="development"] .tutorial-narrator{display:none}
+#tutorialMemo[data-kind="development"] #tutorialMemoContent p{font-size:15px;line-height:1.25;margin:5px 0}
+#tutorialMemo[data-kind="development"] .tutorial-next{min-height:42px;font-size:17px}
+#tutorialMemo[data-kind="plasma"] .tutorial-narrator{display:none}
+#tutorialMemo[data-kind="plasma"] .tutorial-vein-blocks>div{flex-basis:64px;width:64px}
+#tutorialMemo[data-kind="plasma"] .tutorial-vein-blocks{margin-bottom:7px}
+@media(max-height:650px){#tutorialMemo .tutorial-memo-card{padding:10px 12px;gap:5px}#tutorialMemo .tutorial-memo-heading>strong{font-size:21px}#tutorialMemo .tutorial-narrator{width:36px;height:36px}.tutorial-steer-copy{font-size:14px}.tutorial-health-demo{margin-bottom:4px}.tutorial-boost-demo{font-size:13px;padding-top:5px}.tutorial-stick-demo{width:55px;height:55px}#tutorialMemoContent{max-height:calc(100dvh - 210px)}}
+
+/* 679: one live objective and short, non-blocking, contextual cards. */
+#dropScreen .tutorial-run-goal{position:absolute;top:calc(max(7px,var(--safe-top)) + 85px);left:50%;transform:translateX(-50%);width:min(342px,calc(100% - 30px));box-sizing:border-box;display:flex;align-items:center;gap:9px;min-height:64px;padding:8px 10px;border:2px solid #79becd;border-radius:15px;background:linear-gradient(145deg,#174f65,#103b50);box-shadow:inset 0 1px #c4e9ed,0 3px 0 #092d40;color:#fff;font-family:"Slime Nunito",system-ui,sans-serif;text-shadow:none;white-space:normal;pointer-events:none}
+#dropScreen .tutorial-run-goal[hidden],.tutorial-run-hint[hidden]{display:none!important}
+.tutorial-run-goal>img{width:36px;height:36px;object-fit:contain;flex:none}
+.tutorial-goal-copy{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.tutorial-goal-copy strong{font-size:15px;line-height:1.12;color:#fff;font-weight:1000}
+.tutorial-goal-copy small{font-size:11px;line-height:1.15;color:#b9dfe8;font-weight:800}
+.tutorial-goal-count{flex:none;align-self:center;min-width:53px;text-align:center;font-size:18px;line-height:1.2;color:#ffe28b;font-weight:1000;font-variant-numeric:tabular-nums}
+.tutorial-goal-track{display:block;height:6px;overflow:hidden;border:1px solid #77b4c0;border-radius:5px;background:#0b2939}
+.tutorial-goal-track>i{display:block;height:100%;border-radius:3px;background:#ffac46;transition:width .25s ease}
+.tutorial-run-goal[data-kind="frost"] .tutorial-goal-track>i{background:#62dcf3}
+#dropScreen .tutorial-run-goal.is-complete{border-color:#b9df87;background:linear-gradient(145deg,#245b54,#143e48)}
+.tutorial-run-goal.is-complete .tutorial-goal-count{color:#c9fa9b}
+.tutorial-run-goal.has-progress .tutorial-goal-count{animation:tutorialCountReceipt .3s ease-out}
+@keyframes tutorialCountReceipt{50%{transform:scale(1.12);color:#fff4c9}}
+.tutorial-run-hint{position:fixed;z-index:1250;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:300px;padding:12px;border:3px solid #70afc1;border-radius:18px;background:linear-gradient(#f6fffa,#d6efea);box-shadow:inset 0 2px #fff,0 4px 0 #164151;color:#163f50;pointer-events:none;font:700 15px/1.3 "Slime Nunito",system-ui,sans-serif}
+.tutorial-run-hint>img{width:44px;height:44px;object-fit:contain;flex:none}
+.tutorial-run-hint>span{min-width:0}
+.tutorial-run-hint strong{display:block;font-size:17px;font-weight:1000;line-height:1.15;color:#0d4a62}
+.tutorial-run-hint p{margin:5px 0 0}
+.tutorial-run-hint[data-kind="hazard"]{border-color:#dbac6c;background:linear-gradient(#fff9e8,#f1e3c7)}
+.tutorial-run-hint[data-kind="fire"]{border-color:#c99969}
+.tutorial-run-hint[data-kind="success"]{border-color:#84c38e}
+.tutorial-run-hint.is-entering{animation:tutorialHintArrive .25s ease-out}
+@keyframes tutorialHintArrive{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#tutorialMemo[data-kind="evolution"] .tutorial-memo-card{width:min(330px,calc(100vw - 24px));padding:16px;gap:7px}
+#tutorialMemo[data-kind="evolution"] .tutorial-memo-heading>strong{font-size:22px}
+#tutorialMemo[data-kind="evolution"] #tutorialMemoContent{font-size:17px}
+@media(max-width:350px){.tutorial-run-hint{padding:10px;gap:7px;font-size:14px}.tutorial-run-hint strong{font-size:16px}.tutorial-run-hint>img{width:35px;height:35px}.tutorial-goal-copy strong{font-size:13px}.tutorial-goal-copy small{font-size:10px}.tutorial-goal-count{font-size:16px;min-width:48px}.tutorial-run-goal>img{width:30px;height:30px}}
+@media(prefers-reduced-motion:reduce){.tutorial-run-hint.is-entering,.tutorial-run-goal.has-progress .tutorial-goal-count{animation:none}.tutorial-goal-track>i{transition:none}}
+
+/* 681: a compact HUD ribbon; its position is measured against the actual slime. */
+#dropScreen .tutorial-run-goal{position:fixed;transform:none;min-height:0;gap:7px;padding:5px 8px;border-radius:11px;box-shadow:inset 0 1px #b7dee5,0 2px #092d40}
+.tutorial-run-goal>img{width:25px;height:25px}
+.tutorial-goal-copy{gap:2px}
+.tutorial-goal-copy strong{font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tutorial-goal-copy small{font-size:10px;line-height:1.1}
+.tutorial-goal-count{font-size:14px;line-height:1.2;min-width:61px;white-space:nowrap}
+.tutorial-goal-track{height:4px}
+#dropScreen .tutorial-run-goal.is-mini{height:32px;min-height:32px;padding:3px 5px;justify-content:center}
+.tutorial-run-goal.is-mini>img,.tutorial-run-goal.is-mini .tutorial-goal-copy>strong,.tutorial-run-goal.is-mini .tutorial-goal-copy>small{display:none}
+.tutorial-run-goal.is-mini .tutorial-goal-count{font-size:12px;padding-bottom:4px}
+.tutorial-run-goal.is-mini .tutorial-goal-copy{position:absolute;left:5px;right:5px;bottom:3px}
+.tutorial-run-goal.is-mini .tutorial-goal-track{height:3px}
+@media(max-width:350px){.tutorial-run-goal>img{width:22px;height:22px}.tutorial-goal-copy strong{font-size:11px}.tutorial-goal-copy small{font-size:9px}.tutorial-goal-count{font-size:13px;min-width:57px}}
+
+/* 682: readable objective reveal, then a labelled side counter. */
+#dropScreen .tutorial-run-goal{pointer-events:auto;cursor:pointer}
+#dropScreen .tutorial-run-goal.is-expanded{padding:11px 12px;border-radius:15px;gap:9px;animation:tutorialHintArrive .25s ease-out}
+.tutorial-run-goal.is-expanded>img{width:32px;height:32px}
+.tutorial-run-goal.is-expanded .tutorial-goal-copy{gap:5px}
+.tutorial-run-goal.is-expanded .tutorial-goal-copy strong{font-size:17px;line-height:1.15;white-space:normal;overflow:visible}
+.tutorial-run-goal.is-expanded .tutorial-goal-copy small{font-size:13px;line-height:1.25}
+.tutorial-run-goal.is-expanded .tutorial-goal-count{font-size:18px;min-width:74px}
+#dropScreen .tutorial-run-goal.is-mini{height:45px;min-height:45px;display:flex;flex-direction:column;gap:1px;padding:4px 5px 7px}
+.tutorial-run-goal.is-mini::before{content:'Поджоги';font-size:10px;line-height:1.1;color:#c5e2e8;font-weight:900}
+.tutorial-run-goal.is-mini[data-kind="frost"]::before{content:'Колбы'}
+.tutorial-run-goal.is-mini .tutorial-goal-count{font-size:13px;padding:0;min-width:0}
+.tutorial-run-goal:focus-visible{outline:3px solid #ffdc63;outline-offset:3px}
+#tutorialMemo[data-kind="controls"] .tutorial-memo-card{width:min(330px,calc(100vw - 28px));padding:20px 17px;gap:12px}
+#tutorialMemo[data-kind="controls"] .tutorial-memo-heading>strong{font-size:23px}
+#tutorialMemo[data-kind="controls"] #tutorialMemoContent{font-size:18px;line-height:1.4}
+#tutorialMemo[data-kind="controls"] .tutorial-narrator{width:42px;height:42px}
+#tutorialMemo[data-kind="controls"] .tutorial-stick-demo{margin:5px auto;width:68px;height:68px}
+#tutorialMemo[data-kind="controls"] #tutorialMemoNext{min-height:48px;font-size:17px}
+#tutorialMemo[data-kind="controls"] #tutorialMemoNext:disabled{opacity:.5;filter:saturate(.4);cursor:default;transform:none}
+.tutorial-steering-demo{position:absolute;z-index:34;bottom:150px;left:24px;pointer-events:none;opacity:.8}
+.tutorial-steering-demo[hidden]{display:none!important}
+.tutorial-steering-demo .tutorial-stick-demo{display:none}
+.tutorial-steering-demo.is-touch .tutorial-stick-demo{display:block}
+.tutorial-steering-demo.is-touch .tutorial-control-keys{display:none}
+@media(max-width:350px){.tutorial-run-goal.is-expanded .tutorial-goal-copy strong{font-size:15px}.tutorial-run-goal.is-expanded .tutorial-goal-copy small{font-size:12px}.tutorial-run-goal.is-expanded .tutorial-goal-count{font-size:16px;min-width:68px}}
+@media(prefers-reduced-motion:reduce){#dropScreen .tutorial-run-goal.is-expanded{animation:none}}
+
+/* 683: quiet receipts, one readable card at a time and a soft exit. */
+.tutorial-run-hint.is-entering{animation:tutorialHintArrive .35s ease-out}
+.tutorial-run-hint.is-leaving{animation:none;opacity:0;transform:translateY(5px);transition:opacity .3s ease,transform .3s ease}
+#dropScreen .tutorial-run-goal.is-expanded{animation:none}
+.tutorial-run-goal.has-progress .tutorial-goal-count{animation:none}
+.tutorial-goal-track>i{transition:width .3s ease-out}
+@media(prefers-reduced-motion:reduce){.tutorial-run-hint.is-entering{animation:none}.tutorial-run-hint.is-leaving{transition:none}.tutorial-goal-track>i{transition:none}}
+
+/* 685: the player's first movement dismisses the guarded control lesson. */
+#tutorialMemo[data-kind='controls']{pointer-events:none}
+#tutorialMemo[data-kind='controls'] .tutorial-memo-card{pointer-events:none;padding:18px 17px;gap:9px}
+#tutorialMemo[data-kind='controls'] #tutorialMemoNext[hidden]{display:none!important}
+.tutorial-steering-demo{display:none!important}
+.tutorial-run-hint strong{font-size:21px;line-height:1.13}
+.tutorial-run-hint p{font-size:18px;line-height:1.25;margin-top:5px}
+.tutorial-run-hint>img{width:38px;height:38px}
+.tutorial-run-goal.is-mini.is-complete::before{content:'Готово';color:#ffe295}
+#dropScreen .tutorial-run-goal.is-complete{border-color:#edcf7f;background:#255b58}
+.tutorial-run-goal.is-complete .tutorial-goal-count{color:#ffe8a6}
+.tutorial-intro-note{position:fixed;z-index:1350;box-sizing:border-box;padding:13px 16px;border:3px solid #78adbb;border-radius:18px;background:#f1fbf1;box-shadow:0 3px 0 #164151;color:#164a60;text-align:center;font:900 20px/1.2 'Slime Nunito',sans-serif;pointer-events:none;text-wrap:balance}
+.tutorial-intro-note[hidden]{display:none!important}
+body:is([data-tutorial-intro='hello'],[data-tutorial-intro='greeting']) #homeMutationSelector .console-selector-face{visibility:hidden}
+body:is([data-tutorial-intro='hello'],[data-tutorial-intro='greeting'],[data-tutorial-intro='emblem']) #foodChoices .console-food-content{visibility:hidden}
+body[data-tutorial-intro] #homeMutationInfo{visibility:hidden}
+body[data-tutorial-intro] #homeFoodHeading{pointer-events:none}
+@media(max-width:350px){.tutorial-run-hint strong{font-size:20px}.tutorial-run-hint p{font-size:17px}.tutorial-run-hint>img{width:33px;height:33px}.tutorial-intro-note{font-size:18px;padding:11px 12px}}
+
+/* One clear voice for short lessons, matching the accepted first-meeting card. */
+.tutorial-caption{max-width:min(320px,calc(100vw - 24px));font:900 20px/1.2 'Slime Nunito',sans-serif;text-wrap:balance}
+.tutorial-caption b{font-weight:900;-webkit-text-stroke:0}
+.tutorial-run-hint{font-weight:900}
+.tutorial-run-hint p{font-weight:900;line-height:1.2}
+#tutorialMemoContent{font-family:'Slime Nunito',sans-serif;font-weight:900;line-height:1.25}
+.tutorial-intro-note strong,.tutorial-intro-note span{display:block;font:inherit}
+.tutorial-intro-note span{margin-top:8px;font-size:18px;color:#24566b}
+html body.home-console #app #slime.intro-friendly{animation:tutorialSlimeWelcome 2.8s ease-in-out infinite!important}
+html body.home-console #app #slime.intro-greeting{animation:tutorialSlimeGreeting 1.05s ease-out both!important}
+html body.home-console[data-screen='home'] #app #homeScreen :is(#slime,#homeMutationSelector).tutorial-outline-source:focus-visible{outline:none!important}
+@keyframes tutorialSlimeWelcome{0%,100%{transform:none}35%{transform:translateY(-4px) scale(.985,1.02)}55%{transform:translateY(1px) scale(1.025,.975)}75%{transform:translateY(-2px) scale(.995,1.01)}}
+@keyframes tutorialSlimeGreeting{0%,100%{transform:none}15%{transform:translateY(4px) scale(1.09,.91)}42%{transform:translateY(-11px) scale(.94,1.06)}65%{transform:translateY(2px) scale(1.055,.95)}82%{transform:translateY(-3px) scale(.985,1.015)}}
+@media(max-width:350px){.tutorial-caption{font-size:18px}.tutorial-intro-note span{font-size:17px}}
+@media(prefers-reduced-motion:reduce){html body.home-console #app #slime:is(.intro-friendly,.intro-greeting){animation:none!important}}

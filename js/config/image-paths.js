@@ -1,7 +1,11 @@
 (() => {
   'use strict';
   const paths = {
-  "assets/Мир 2/Непрочный блок.webp": "assets/world2/snow-soft-v2.webp",
+  "assets/Мир 1/Аптечка.webp": "assets/ui/blocks/heart-stone-v1.webp",
+  "assets/Мир 3/Хилка.webp": "assets/ui/blocks/heart-stone-v1.webp",
+  "assets/Мир 4/Аптечка.webp": "assets/ui/blocks/heart-stone-v1.webp",
+  "assets/Мир 2/Непрочный блок.webp": "assets/ui/blocks/frost-snow-front-v1.webp",
+  "assets/world2/snow-soft-v2.webp": "assets/ui/blocks/frost-snow-front-v1.webp",
   "assets/Мир 2/Обычный блок.webp": "assets/world2/ice-normal-v2.webp",
   "assets/Мир 2/Прочный блок.webp": "assets/world2/glacier-strong-v2.webp",
   "assets/backgrounds/world-2-ice.webp": "assets/backgrounds/world-2-ice-v2.webp",

@@ -5,8 +5,8 @@
   const profiles = Object.freeze({
     fire: rows(['Вспышка', 'Вулкан', 'Феникс'], (name, i) => ({ name, kind: ['fireFlash', 'volcano', 'phoenix'][i], durationMs: [800, 2350, 2000][i], ...(i === 2 ? { meters: 100, rows: 14 } : {}) })),
     frost: rows(['Морозная вспышка', 'Снежный ком', 'Вьюга'], (name, i) => ({ name, kind: ['frostFlash', 'snowball', 'blizzard'][i], durationMs: [850, 1600, 6000][i], ...(i === 1 ? { meters: 50, rows: 7, width: 3, travelMs: 1250 } : {}) })),
-    electric: rows(['Разряд', 'Шаровая молния', 'Громовержец'], (name, i) => ({ name, kind: ['discharge', 'ballLightning', 'thunderstorm'][i], durationMs: [700, 2800, 4600][i], ...(i === 0 ? { reachCells: 4, growMs: 260 } : {}), ...(i === 1 ? { meters: 50, rows: 7, travelMs: 2450, strikeIntervalMs: 350 } : {}), ...(i === 2 ? { strikes: 5, branchLength: 4 } : {}) })),
-    cosmos: rows(['Большая планета','Звездопад','Кометный прорыв'], (name,i) => ({name,kind:['planetBoost','starfall','comet'][i],durationMs:[5000,5000,5500][i],...(i===0?{planetScale:1.85,damage:2}:i===1?{starCount:16,starIntervalMs:220}:{orbitRows:20})})),
+    electric: rows(['Разряд', 'Шаровая молния', 'Громовержец'], (name, i) => ({ name, kind: ['discharge', 'ballLightning', 'thunderstorm'][i], durationMs: [700, 2800, 4600][i], ...(i === 0 ? { reachCells: 4, growMs: 260 } : {}), ...(i === 1 ? { meters: 50, rows: 7, travelMs: 2450, strikeIntervalMs: 220, damage:2, targetCooldownMs:440 } : {}), ...(i === 2 ? { strikes: 5, branchLength: 4 } : {}) })),
+    cosmos: rows(['Большая планета','Звездопад','Кометный прорыв'], (name,i) => ({name,kind:['planetBoost','starfall','comet'][i],durationMs:[5000,5000,5500][i],...(i===0?{planetScale:1.85,damage:2}:i===1?{starCount:16,starIntervalMs:220,damage:2}:{orbitRows:20})})),
     nano: rows(['Минный залп', 'Турель', 'Титан'], (name,i) => ({name,kind:['mineSalvo','turret','titan'][i],durationMs:[2000,6200,10000][i],...(i===0?{mineCount:5}:i===1?{landMs:700,activeMs:5000,shotIntervalMs:200}:{mechMs:10000})})),
     telekinesis: rows(['Псионический барьер','Псионический шторм','Псионический пресс'],(name,i)=>({name,kind:['psionicBarrier','psionicStorm','psionicPress'][i],durationMs:[3000,4000,2500][i],...(i===1?{blockCount:8,orbitMs:1450,staggerMs:185}:i===2?{pressRows:80*7/50}:{})})),
     cloning: rows(['Споровой хлопок','Грибная дорожка','Грибной великан'], (name,i) => ({name,...(i===0
@@ -25,8 +25,8 @@
   const summaries = Object.freeze({
     fire: ['Поджигает блоки вокруг слайма.', 'Выбрасывает 4 огненных камня. Они падают и поджигают блоки.', 'Превращается в феникса и поджигает путь.'],
     frost: ['Замораживает блоки вокруг слайма.', 'Катит снежный ком, замораживая блоки на пути.', 'Вызывает вьюгу и замораживает блоки впереди.'],
-    electric: ['Бьёт молниями в четыре стороны.', 'Выпускает шар, который бьёт блоки молниями.', 'Вызывает мощные удары молний по шахте.'],
-    cosmos: ['На время увеличивает планету и её урон.', 'Вызывает дождь из 16 звёзд.', 'Пролетает сквозь блоки космической кометой.'],
+    electric: ['Бьёт молниями в четыре стороны.', 'Выпускает шар. Частые разряды наносят по 2 урона.', 'Вызывает мощные удары молний по шахте.'],
+    cosmos: ['На время увеличивает планету и её урон.', 'Вызывает 16 звёзд. Каждая наносит 2 урона.', 'Пролетает сквозь блоки космической кометой.'],
     nano: ['Раскидывает 5 мин по блокам внизу.', 'Ставит турель: она быстро разбивает блоки внизу.', 'Садится в робота с двумя мощными бластерами.'],
     telekinesis: ['Защищает слайма и взрывает колючки при касании.', 'Поднимает 8 блоков и бросает их вниз.', 'Сжимает и разрушает большой участок шахты.'],
     cloning: ['Споровой взрыв выпускает 6 грибочков.', 'Бросает 4 споры, из которых вырастают грибочки.', 'Выращивает тяжёлого гриба. Его прыжки ломают блоки.'],
@@ -34,7 +34,7 @@
     glitch: ['Превращает колючку в полезный блок.', 'Даёт выбрать сбой и изменить блоки впереди.', 'Даёт выбрать усиленный сбой для большого участка.']
   });
   const previewImages = Object.freeze({
-    fire: [null, 'assets/vfx/fire-volcano-rock-v1.webp', null],
+    fire: [null, 'assets/vfx/fire-volcano-rock-v1.webp', 'assets/ui/laboratory-refined/phoenix-feather.webp'],
     frost: [null, 'assets/vfx/frost-snowball-v2.webp', 'assets/vfx/frost-storm-flake-v1-lossless.webp'],
     cosmos: [null, 'assets/vfx/cosmos-falling-star-v1.webp', null],
     nano: [null, 'assets/vfx/techno-turret-head-v1.webp', null],

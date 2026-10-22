@@ -45,6 +45,10 @@ jobs:
           node tools/test_ultimate_stages.cjs
           node tools/test_home_reward_flight.cjs
           node tools/test_tutorial_descent.cjs
+          node tools/test_elemental_ultimates.cjs
+          node tools/test_cosmos_ultimates.cjs
+          node tools/test_optimization.cjs
+          node tools/test_tap_effects_698.cjs
           node --check dist/yandex/game-runtime.js
       - name: Upload game
         uses: actions/upload-pages-artifact@v4

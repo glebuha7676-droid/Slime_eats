@@ -16,18 +16,30 @@
   const projectSprites = {};
   const thumbnailFitCache = new Map();
 
-  const worldBackgroundNames = Object.freeze({
-    1: 'world-1-depths', 3: 'world-3-factory', 4: 'world-4-magma'
-  });
+  const worldBackgroundNames = Object.freeze({ 1: 'stone', 3: 'candy', 4: 'magma' });
   const worldBackgrounds = {};
+  const worldBackgroundLayers = {};
+
+  function ensureWorldBackgroundLayers(worldId) {
+    const name = worldBackgroundNames[worldId];
+    if (!name) return [];
+    if (!worldBackgroundLayers[worldId]) {
+      worldBackgroundLayers[worldId] = [
+        { suffix: 'far', speed: .08, opacity: 1 },
+        { suffix: 'near', speed: .26, opacity: 1 }
+      ].map(({ suffix, ...settings }) => {
+        const image = new Image();
+        image.decoding = 'async';
+        image.src = versionedAsset(`assets/backgrounds/parallax-v3/${name}-${suffix}.webp`);
+        return Object.freeze({ image, ...settings });
+      });
+      worldBackgrounds[worldId] = worldBackgroundLayers[worldId][0].image;
+    }
+    return worldBackgroundLayers[worldId];
+  }
 
   function ensureWorldBackground(worldId) {
-    if (!worldBackgrounds[worldId] && worldBackgroundNames[worldId]) {
-      const image = new Image();
-      image.decoding = 'async';
-      image.src = versionedAsset(`assets/backgrounds/${worldBackgroundNames[worldId]}.webp`);
-      worldBackgrounds[worldId] = image;
-    }
+    ensureWorldBackgroundLayers(worldId);
     return worldBackgrounds[worldId] || null;
   }
 
@@ -223,6 +235,7 @@
     WORLD_SPRITES: worldSprites,
     WORLD_BACKGROUNDS: worldBackgrounds,
     ensureWorldBackground,
+    ensureWorldBackgroundLayers,
     VFX_SPRITES: vfxSprites,
     versionedAsset,
     ensureWorldSprites,

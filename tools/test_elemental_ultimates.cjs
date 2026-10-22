@@ -11,7 +11,7 @@ const services={
  turnBlockToSnow:b=>{b.elementalSnow=true;b.hp=1;hits.push(b)},
  damageBlockByElement:(b,n)=>{b.hp-=n;if(b.hp<=0)b.dead=true;hits.push(b)}
 };
-function fresh(id,stage){hits=[];r={ultimateProfile:U.get(id,stage),cellSize:60,columns:6,gridOffsetX:0,blockRowOrigin:0,elementalAuraId:1,slime:{x:210,y:150},blocks:[]};
+function fresh(id,stage){hits=[];r={ultimateProfile:U.get(id,stage),cellSize:60,columns:6,gridOffsetX:0,blockRowOrigin:0,elementalAuraId:1,slime:{x:210,y:150,radius:24},blocks:[]};
  for(let row=0;row<20;row++)for(let col=0;col<6;col++)r.blocks.push({row,col,x:col*60,y:row*60,w:60,h:60,hp:4,flaskTier:3,flaskValue:5});
  E.start(r,id,1000,210,150,services);return r.stagedUltimate;
 }
@@ -24,7 +24,9 @@ for(const id of ['fire','frost']){
  E.update(r,1851,services);assert.equal(r.stagedUltimate,null);
 }
 let e=fresh('fire',2);assert.equal(e.rocks.length,4);assert.equal(hits.length,0);
+assert.equal(e.rocks[0].fromY,150-24*.89,'Volcano rocks originate at the crater');
 E.update(r,1300,services);assert(e.rocks[0].y<150,'Rocks initially fly UP');assert.equal(hits.length,0);
+assert.equal(e.rocks[0].fromY,r.slime.y-r.slime.radius*.89,'Launch follows the actual head position');
 E.update(r,2750,services);assert(e.rocks.every(b=>b.landed),'Four impacts');assert.equal(e.bursts.length,4);assert(hits.length>0);
 assert.equal(new Set(e.rocks.map(b=>b.toX)).size,4);
 e=fresh('frost',2);E.update(r,2250,services);
@@ -47,8 +49,8 @@ const crossCount=hits.length;E.update(r,1500,services);assert.equal(hits.length,
 fresh('electric',1);E.update(r,1260,services);assert.equal(hits.length,crossCount,'A slow frame still crosses every target once');
 e=fresh('electric',1);E.update(r,1065,services);const nearHits=hits.length;E.shiftClock(r,10000);E.update(r,11065,services);assert.equal(hits.length,nearHits);E.update(r,11260,services);assert.equal(hits.length,crossCount,'Pause preserves the moving front');
 e=fresh('electric',2);for(let at=1000;at<=3400;at+=16)E.update(r,at,services);
-assert(hits.length>=8&&hits.length<=16,'Moderate pulse rate; two targets per pulse');assert(e.bolts.length<=2);assert(e.trail.length<=8);
-assert(e.hitAt.size<=16);assert(e.y<=e.endY);
+assert(hits.length>=18&&hits.length<=24,'Frequent bounded pulses; two targets per pulse');assert(e.bolts.length<=2);assert(e.trail.length<=8);
+assert(e.hitAt.size<=24);assert.equal(r.ultimateProfile.damage,2);assert.equal(r.ultimateProfile.strikeIntervalMs,220);assert(hits.every(b=>(4-b.hp)%2===0),'Every discharge deals two damage');assert(e.y<=e.endY);
 // A stalled frame never fires an accumulated barrage.
 fresh('electric',2);E.update(r,1000,services);const before=hits.length;E.update(r,3000,services);assert(hits.length-before<=2);
 e=fresh('electric',2);E.update(r,1350,services);const y=e.y;E.shiftClock(r,10000);E.update(r,11350,services);assert.equal(e.y,y,'Pause preserves travel');assert.equal(hits.length,2,'Pause preserves strike cadence');

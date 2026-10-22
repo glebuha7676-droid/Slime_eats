@@ -31,6 +31,6 @@ assert.equal(allocations,warm,'star and planet textures are cached, not allocate
 for(const compact of [false,true]){
   const planets=model.samples({...state,compact});
   assert.ok(planets[0].radius>=state.radius*(compact?.25:.44));
-  assert.ok(planets[1].radius>=state.radius*(compact?.18:.28));
+  assert.equal(planets.length,1,'Current Cosmos keeps one orbiting planet');
 }
 console.log('Cosmos visuals: larger planets, body stars, no orbit texture requests and stable caches passed.');

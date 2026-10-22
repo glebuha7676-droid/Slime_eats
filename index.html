@@ -33,17 +33,27 @@
   <link rel="stylesheet" href="world-picker-v2.css?v=29" />
   <link rel="stylesheet" href="home-synth-terminal.css?v=25" />
   <link rel="stylesheet" href="experience.css?v=10" />
-  <link rel="stylesheet" href="tutorial.css?v=21" />
+  <link rel="stylesheet" href="tutorial.css?v=700" />
+  <link rel="stylesheet" href="ui-activity.css?v=700" />
   <link rel="stylesheet" href="mutation-progression.css?v=3" />
   <link rel="stylesheet" href="lab-ui-polish.css?v=18" />
   <link rel="stylesheet" href="mutation-workspace.css?v=9" />
   <link rel="stylesheet" href="psionic-wave.css?v=2" />
   <link rel="stylesheet" href="home-soft-ui.css?v=8" />
   <link rel="stylesheet" href="lab-synth-soft.css?v=15" />
-  <link rel="stylesheet" href="slime-progression.css?v=599" />
+  <link rel="stylesheet" href="slime-progression.css?v=685" />
+  <link rel="stylesheet" href="rewards.css?v=684" />
   <link rel="stylesheet" href="home-buttons-soft.css?v=627" />
   <link rel="stylesheet" href="laboratory-metal.css?v=627" />
   <link rel="stylesheet" href="game-buttons-clean.css?v=627" />
+  <link rel="stylesheet" href="home-console.css?v=675" />
+  <link rel="stylesheet" href="laboratory-redesign.css?v=650" />
+  <link rel="stylesheet" href="synth-cabinet.css?v=678" />
+  <link rel="stylesheet" href="wardrobe.css?v=700" />
+  <link rel="preload" as="image" href="assets/ui/home-modular/generated-v8/room-extended-floor.webp" />
+  <link rel="preload" as="image" href="assets/ui/home-modular/live/console-top.webp" />
+  <link rel="preload" as="image" href="assets/ui/home-modular/live/console-middle.webp" />
+  <link rel="preload" as="image" href="assets/ui/home-modular/live/console-bottom.webp" />
 </head>
 <body>
   <section id="bootScreen" class="boot-screen" role="progressbar" aria-label="Загрузка игры" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -56,7 +66,7 @@
       </div>
     </div>
   </section>
-  <script src="js/core/boot-manifest.js?v=591"></script>
+  <script src="js/core/boot-manifest.js?v=700"></script>
   <script src="js/core/boot-loader.js?v=3"></script>
   <div id="phoneViewport" class="phone-viewport">
   <div id="app" class="app">
@@ -70,7 +80,7 @@
           </span>
         </div>
         <button id="adminMenuBtn" class="header-admin-btn" type="button" aria-label="Открыть админ-меню" aria-controls="adminToolsOverlay" aria-expanded="false">
-          <img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
+          <img src="assets/ui/game-menu-gear-grey-v1.webp?v=650" alt="" aria-hidden="true">
         </button>
         <div class="currency coin-wallet player-level-wallet" aria-label="Личный опыт слайма" hidden>
           <span class="player-level-badge"><img id="slimeProgressEmblem" class="currency-icon" src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"></span>
@@ -139,7 +149,7 @@
         <div id="quickMutationPicker" class="quick-mutation-picker" role="group" aria-label="Быстрый выбор мутации" hidden></div>
         <button id="tutorialQuest" class="tutorial-quest" type="button" hidden></button>
 
-        <div id="conveyor" class="conveyor synthesizer card" aria-label="Три синтезатора еды">
+        <div id="conveyor" class="conveyor synthesizer card" aria-label="Синтезатор еды и развитие мутации">
           <div class="conveyor-workbench">
             <div class="conveyor-machine synthesis-machine" aria-label="Выбор еды для слайма">
               <div id="conveyorDispensers" class="conveyor-dispensers"></div>
@@ -154,7 +164,7 @@
               <div class="world-terminal-heading">ВЫБОР МИРА</div>
               <button id="abyssModeV2" class="world-terminal-endless" type="button" aria-label="Бесконечный режим" aria-pressed="false" title="Бесконечный режим"><b aria-hidden="true">∞</b><small id="terminalEndlessLabel">БЕСКОНЕЧНО</small></button>
               <div id="worldCarousel" class="world-terminal-screen" aria-live="polite" aria-label="Шахты">
-                <img id="worldTerminalPreview" class="world-terminal-preview" src="assets/ui/world-terminal/mine-blue-essence-calm-v2.webp" alt="" aria-hidden="true">
+                <img id="worldTerminalPreview" class="world-terminal-preview" src="assets/ui/world-terminal/preview-stone-v4.webp" alt="" aria-hidden="true">
                 <div class="world-terminal-screen-shade" aria-hidden="true"></div>
                 <div class="world-terminal-title"><b id="worldTerminalName">ЗЕЛЁНЫЕ ГЛУБИНЫ</b><small id="worldTerminalNumber">500 М</small></div>
                 <span id="worldTerminalNew" class="world-terminal-new" hidden>НОВЫЙ МИР</span>
@@ -281,7 +291,9 @@
             <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><svg class="pause-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/></svg></button>
           </div>
           <div id="runExperienceHud" class="run-experience-hud" data-stage="0" aria-live="off" aria-label="Устаревший счётчик" hidden><span id="runExperienceScore">0</span><small></small><i id="runExperienceGain">+1</i></div>
-          <div id="tutorialRunGoal" class="tutorial-run-goal" hidden>Дойди до конца!</div>
+          <div id="tutorialRunGoal" class="tutorial-run-goal" role="button" tabindex="0" hidden></div>
+          <div id="tutorialSteeringDemo" class="tutorial-steering-demo" aria-hidden="true" hidden><span class="tutorial-stick-demo"><i></i></span><span class="tutorial-control-keys"><kbd>←</kbd><kbd>→</kbd></span></div>
+          <aside id="tutorialRunHint" class="tutorial-run-hint" role="status" hidden><img src="assets/ui/tutorial/narrator-explain-v1.webp" alt=""><span><strong></strong><p></p></span></aside>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div class="barrier-control" aria-label="Суперспособность" hidden>
             <button id="abilityBtn" class="ability-btn barrier-btn ultimate-control" type="button" aria-label="Активировать суперспособность" disabled>
@@ -402,7 +414,7 @@
     <img id="tutorialPointer" class="tutorial-pointer" src="assets/ui/tutorial-pointer-v3-lossless.webp?v=20261008-optimized-v1" alt="">
     <div id="tutorialCaption" class="tutorial-caption"></div>
   </div>
-  <button id="tutorialAdminBtn" class="tutorial-admin-access" type="button" aria-label="Админ-меню" hidden><img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt=""></button>
+  <button id="tutorialAdminBtn" class="tutorial-admin-access" type="button" aria-label="Админ-меню" hidden><img src="assets/ui/game-menu-gear-grey-v1.webp?v=650" alt=""></button>
   <button id="tutorialPauseBtn" class="tutorial-pause-access" type="button" aria-label="Пауза" hidden><svg class="pause-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/></svg></button>
   <div id="tutorialGift" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Подарок: 10 колб" hidden>
     <div class="tutorial-dialog-card"><img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 КОЛБ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
@@ -529,47 +541,60 @@
       window.SlimeSdkScriptReady.catch(error => window.SlimeBootLoader.fail(error));
     }
   </script>
-  <script src="js/config/image-paths.js?v=627"></script>
+  <script src="js/config/image-paths.js?v=683"></script>
   <script src="food-catalog.js?v=39"></script>
-  <script src="world-catalog.js?v=627"></script>
+  <script src="world-catalog.js?v=683"></script>
   <script src="js/generation/generated-data.js?v=1"></script>
   <script src="js/generation/section-catalog.js?v=13"></script>
   <script src="js/generation/section-catalog-v4.js?v=3"></script>
   <script src="js/generation/mine-plans.js?v=3"></script>
   <script src="js/generation/world1-descent.js?v=8"></script>
-  <script src="js/generation/tutorial-descent.js?v=2"></script>
+  <script src="js/generation/tutorial-descent.js?v=683"></script>
   <script src="js/config/gameplay-balance.js?v=3"></script>
-  <script src="js/config/game-config.js?v=627"></script>
+  <script src="js/config/daily-rewards.js?v=684"></script>
+  <script src="js/config/wardrobe.js?v=700"></script>
+  <script src="js/config/accessory-fit.js?v=700"></script>
+  <script src="js/config/game-config.js?v=700"></script>
   <script src="js/config/experience.js?v=3"></script>
   <script src="js/config/slime-progression.js?v=592"></script>
-  <script src="js/config/mutation-mastery.js?v=627"></script>
-  <script src="js/config/ultimate-stages.js?v=627"></script>
+  <script src="js/config/mutation-mastery.js?v=683"></script>
+  <script src="js/config/ultimate-stages.js?v=700"></script>
   <script src="js/platform/yandex-platform.js?v=4"></script>
-  <script src="js/core/game-assets.js?v=627"></script>
+  <script src="js/core/game-assets.js?v=665"></script>
+  <script src="js/rendering/world-background.js?v=665"></script>
   <script src="js/config/food-ground-bounds.js?v=1"></script>
   <script src="js/rendering/food-grounding.js?v=3"></script>
-  <script src="js/core/audio.js?v=4"></script>
+  <script src="js/core/audio.js?v=700"></script>
+  <script src="js/ui/animation-activity.js?v=700"></script>
   <script src="js/config/spectral-contours.js?v=2"></script>
   <script src="js/rendering/spectral-glow.js?v=4"></script>
-  <script src="js/rendering/spectral-dom-aura.js?v=3"></script>
-  <script src="js/rendering/slime-avatar.js?v=64"></script>
+  <script src="js/rendering/spectral-dom-aura.js?v=700"></script>
+  <script src="js/rendering/slime-avatar.js?v=700"></script>
+  <script src="js/rendering/slime-accessories.js?v=700"></script>
   <script src="js/rendering/menu-mutation-reveal.js?v=6"></script>
+  <script src="js/rendering/slime-emotions.js?v=700"></script>
   <script src="js/rendering/menu-petpet.js?v=12"></script>
   <script src="js/rendering/dominant-shield.js?v=3"></script>
   <script src="js/rendering/cosmos-orbits.js?v=607"></script>
   <script src="js/rendering/psionic-effects.js?v=613"></script>
+  <script src="js/rendering/psionic-ultimate-feedback.js?v=669"></script>
   <script src="js/rendering/glitch-feedback.js?v=611"></script>
   <script src="js/rendering/techno-feedback.js?v=2"></script>
-  <script src="js/rendering/phantom-effects.js?v=612"></script>
+  <script src="js/rendering/phantom-effects.js?v=661"></script>
   <script src="js/rendering/mutation-impact-effects.js?v=613"></script>
   <script src="js/rendering/block-break-feedback.js?v=613"></script>
-  <script src="effects-lab/workbench-effects.js?v=83"></script>
+  <script src="effects-lab/workbench-effects.js?v=666"></script>
   <script src="effects-lab/block-effects-workbench.js?v=21"></script>
-  <script src="js/ui/encyclopedia.js?v=19"></script>
-  <script src="js/abilities/elemental-ultimates.js?v=606"></script>
+  <script src="js/ui/encyclopedia.js?v=700"></script>
+  <script src="js/abilities/elemental-ultimates.js?v=700"></script>
   <script src="js/abilities/techno-ultimates.js?v=603"></script>
   <script src="js/abilities/spore-colossus.js?v=605"></script>
-  <script src="js/abilities/cosmos-ultimates.js?v=613"></script>
-  <script src="game.js?v=627"></script>
+  <script src="js/abilities/cosmos-ultimates.js?v=700"></script>
+  <script src="js/ui/home-console.js?v=700"></script>
+  <script src="js/ui/synth-reactor.js?v=700"></script>
+  <script src="js/ui/rewards-panel.js?v=684"></script>
+  <script src="js/ui/wardrobe-panel.js?v=700"></script>
+  <script src="js/ui/tutorial-introduction.js?v=700"></script>
+  <script src="game.js?v=700"></script>
 </body>
 </html>

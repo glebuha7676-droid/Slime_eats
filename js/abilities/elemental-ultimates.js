@@ -84,7 +84,7 @@
       // Staggered launches, four separate arcs; every rock starts at the slime.
       e.rocks = [-1.9, -.65, .65, 1.9].map((offset, i) => ({
         delay: i * 110, flightMs: 1220 + (i % 2) * 90,
-        fromX: x, fromY: y, toX: clamp(x + offset * cell, left, right),
+        fromX: x, fromY: y - run.slime.radius * (run.categoryVisuals?.fire >= 3 ? 1.65 : .89), toX: clamp(x + offset * cell, left, right),
         toY: y + (3.6 + (i % 2) * 1.25) * cell,
         x, y, launched: false, landed: false, trail: [], seed: i
       }));
@@ -120,7 +120,11 @@
       for (const rock of e.rocks) {
         const t = clamp((elapsed-rock.delay)/rock.flightMs, 0, 1);
         if (elapsed < rock.delay || rock.landed) continue;
-        if (!rock.launched) { rock.launched = true; rock.fromX = run.slime.x; rock.fromY = run.slime.y; }
+        if (!rock.launched) {
+          rock.launched = true;
+          rock.fromX = run.slime.x - run.slime.radius * .015;
+          rock.fromY = run.slime.y - run.slime.radius * (run.categoryVisuals?.fire >= 3 ? 1.65 : .89);
+        }
         rock.x = mix(rock.fromX, rock.toX, t);
         // Cubic controls send the stone vertically up first, then down from above.
         const a = 1-t;
@@ -149,15 +153,15 @@
         // One pulse per update, never an accumulated burst after a stall.
         e.nextStrikeAt = at + p.strikeIntervalMs;
         const candidates = s.blocksNearY(e.y, cell*2.15).filter(b => {
-          if (!s.elementalDamageable(b) || at-(e.hitAt.get(b) ?? -Infinity)<650) return false;
+          if (!s.elementalDamageable(b) || at-(e.hitAt.get(b) ?? -Infinity)<(p.targetCooldownMs||650)) return false;
           const q = center(b); return Math.hypot(q.x-e.x,q.y-e.y)<=cell*2.15;
         }).sort((a,b)=> {
           const ac=center(a),bc=center(b);
           return Math.hypot(ac.x-e.x,ac.y-e.y)-Math.hypot(bc.x-e.x,bc.y-e.y);
         });
         candidates.slice(0,2).forEach((b,i)=> {
-          e.bolts.push(bolt({x:e.x,y:e.y},center(b),at,i+elapsed));
-          e.hitAt.set(b,at); s.damageBlockByElement(b,1,'electric',at);
+          e.bolts.push({...bolt({x:e.x,y:e.y},center(b),at,i+elapsed),power:1.25});
+          e.hitAt.set(b,at); s.damageBlockByElement(b,p.damage||1,'electric',at);
         });
       }
       e.lastY=e.y;
@@ -193,7 +197,7 @@
     };
     c.lineJoin=c.lineCap='round';
     for(const [width,colour,a]of [[12,'#8878ff',.16],[5,'#76beff',.65],[1.7,'#f7ffff',1]]){
-      c.strokeStyle=colour;c.globalAlpha=alpha*a;c.lineWidth=width;path();c.stroke();
+      c.strokeStyle=colour;c.globalAlpha=alpha*a;c.lineWidth=width*(b.power||1);path();c.stroke();
     }
     if(b.growMs&&progress<1)light(c,'electric',b.from.x+dx*progress,b.from.y+dy*progress-camera,cell*.7,alpha);
   }
