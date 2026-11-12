@@ -64,9 +64,12 @@
   }
   async function prepare() {
     if (!total) throw new Error('Resource manifest unavailable');
-    // Local file previews need no network warm-up. They still decode the first
-    // screen below; avoiding mass Image creation prevents retaining every bitmap.
-    if (location.protocol === 'file:') { paint(98, 'Готовим лабораторию…'); return; }
+    // Previews decode the first screen and its current mine in finish().
+    // GitHub Pages should let players enter before warming the whole campaign.
+    if (location.protocol === 'file:' || location.hostname.endsWith('.github.io')) {
+      paint(90, 'Готовим лабораторию…');
+      return;
+    }
     let cursor = 0;
     const workers = Array.from({length:4}, async () => {
       while (cursor < startupAssets.length && !failed) await download(startupAssets[cursor++]);
