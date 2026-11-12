@@ -608,8 +608,8 @@
     if (state.levels.phantom >= 2) phantomParticles(ctx, state);
     if (state.levels.frost >= 2) frostSnowflakes(ctx, state);
     if (state.levels.frost) frostFace(ctx, state);
-    if (state.levels.electric >= 2) electricBodyBolts(ctx, state);
-    if (state.levels.electric && state.levels.electric < 3) electricMark(ctx, state);
+    if (!state.suppressElectricAccents && state.levels.electric >= 2) electricBodyBolts(ctx, state);
+    if (!state.suppressElectricAccents && state.levels.electric && state.levels.electric < 3) electricMark(ctx, state);
     if (state.levels.fire >= 3) fireBodyParticles(ctx, state);
     if (state.levels.fire && state.levels.fire < 3) {
       // The flame root shares the body's pose; only its tip sways independently.

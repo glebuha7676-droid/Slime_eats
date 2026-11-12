@@ -1,15 +1,13 @@
 (() => {
   'use strict';
 
-  const WORLD_LEVELS = {
-    1: [
+  const WORLD_LEVELS = Object.fromEntries([1, 3, 4, 5, 6].map(id => [id, [
       ...Array.from({ length: 5 }, () => ({
         depth: 500,
         features: { dynamite: false, medkit: true, hazards: true, boss: false },
         utilityCadence: 0, sections: ['descent']
       }))
-    ]
-  };
+    ] ]));
 
   const WORLDS = [
     {
@@ -31,7 +29,6 @@
     },
     {
       id: 3, name: 'Конфетная фабрика', targetDepth: 1000, reward: 1550,
-      comingSoon: true,
       pathWidth: 2, minPathWidth: 2, turnRate: .28,
       hardCap: .27, reinforcedCap: .07, oreChance: .075, specialChance: .095,
       sky: '#8f4b82', earth: '#4a244d', deep: '#21142d', accent: '#f472b6', icon: '🍬',
@@ -40,14 +37,27 @@
     },
     {
       id: 4, name: 'Магмовое ядро', targetDepth: 1000, reward: 3300,
-      comingSoon: true,
       pathWidth: 2, minPathWidth: 1, turnRate: .37,
       hardCap: .39, reinforcedCap: .15, oreChance: .09, specialChance: .082,
       sky: '#7d3426', earth: '#45221e', deep: '#1b1112', accent: '#fb7185', icon: '🌋',
       materials: ['basalt', 'lavaRock', 'metal'], palette: 'lava',
       cellSize: 72
+    },
+    {
+      id: 5, name: 'Небесный мир', targetDepth: 500, reward: 3300,
+      pathWidth: 3, minPathWidth: 2, turnRate: .18,
+      sky: '#686699', earth: '#363650', deep: '#24273d', accent: '#edcf78', icon: '☁️',
+      materials: ['sand', 'sandstone', 'desertBedrock'], palette: 'sky', cellSize: 72
     }
   ];
+
+  WORLDS.push({...WORLDS[0],id:6,name:'Очаг аномалии',earth:'#352044',deep:'#160e26',accent:'#b2ef44',icon:'🌀'});
+
+  // One temporary gameplay template; planets differ only in their presentation.
+  for (const world of WORLDS) if (world.active !== false) {
+    Object.assign(world, { sharedDescent: true, targetDepth: 500, cellSize: 72,
+      pathWidth: 3, minPathWidth: 3, turnRate: .08 });
+  }
 
   const PHYSICS = {
     gridCell: 55,
@@ -82,11 +92,13 @@
   };
 
   const WORLD_SPRITE_NAMES = {
+    6: ['ground-weak','stone','stone-reinforced','stone-hazard','ground-weak-liquid','stone-liquid','stone-reinforced-liquid','heal','portal'],
     1: ['dirt-grass', 'ground-weak', 'stone', 'stone-reinforced', 'ground-weak-liquid', 'stone-liquid', 'stone-reinforced-liquid', 'stone-hazard', 'heal', 'portal'],
     // These two sprites belong to the frost mutation; there is no playable ice world.
     2: ['snow-packed', 'snowflake'],
-    3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'candy-hazard', 'jelly-bounce', 'heal', 'portal'],
-    4: ['ash', 'volcanic-earth', 'basalt', 'lava-hazard', 'geyser', 'meteor', 'heal', 'portal']
+    3: ['candy-light', 'cookie-packed', 'candy-normal', 'candy-reinforced', 'stone-hazard', 'ground-weak-liquid', 'stone-liquid', 'stone-reinforced-liquid', 'heal', 'portal'],
+    4: ['ash', 'volcanic-earth', 'basalt', 'stone-hazard', 'ground-weak-liquid', 'stone-liquid', 'stone-reinforced-liquid', 'heal', 'portal'],
+    5: ['sand', 'sandstone', 'desert-bedrock', 'stone-hazard', 'ground-weak-liquid', 'stone-liquid', 'stone-reinforced-liquid', 'heal', 'portal']
   };
 
   const FOOD_ART_OFFSETS = {
@@ -104,9 +116,9 @@
     { id: 'classic', name: 'Классический', className: 'skin-classic', icon: '🟢', condition: 'Доступен сразу', colors: ['#e9ff9c', '#67d348', '#2fa345'] },
     { id: 'cat', name: 'Котик', className: 'skin-cat', icon: '🐱', world: 2, condition: 'Пройди первую шахту', colors: ['#ffe0e8', '#ff92ad', '#dc557b'] },
     { id: 'water', name: 'Капля воды', className: 'skin-water', icon: '💧', world: 3, condition: 'Открой шахту 2', colors: ['#e3fbff', '#50c9f2', '#1688c6'] },
-    { id: 'honey', name: 'Медовый', className: 'skin-honey', icon: '🍯', cost: 15, condition: 'Купить за 15 колб исследования', colors: ['#fff0a6', '#f4a629', '#c96b15'] },
+    { id: 'honey', name: 'Медовый', className: 'skin-honey', icon: '🍯', cost: 15, condition: 'Купить за 15 осколков Аномалии', colors: ['#fff0a6', '#f4a629', '#c96b15'] },
     { id: 'dumpling', name: 'Дамплинг', className: 'skin-dumpling', icon: '🥟', world: 4, condition: 'Открой шахту 3', colors: ['#fff9e8', '#ead9b7', '#ba8d62'] },
-    { id: 'ball', name: 'Футбольный мяч', className: 'skin-ball', icon: '⚽', cost: 12, condition: 'Купить за 12 колб исследования', colors: ['#ffffff', '#edf2f5', '#b9c7d1'] }
+    { id: 'ball', name: 'Футбольный мяч', className: 'skin-ball', icon: '⚽', cost: 12, condition: 'Купить за 12 осколков Аномалии', colors: ['#ffffff', '#edf2f5', '#b9c7d1'] }
   ];
 
   const UPGRADES = {

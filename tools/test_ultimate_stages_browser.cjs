@@ -22,7 +22,7 @@ const hook=`window.__ultimateQA={
   await page.evaluate(([id,stage])=>window.__ultimateQA.prepare(id,stage),[id,stage]);
   assert.equal(await page.locator('#abilityBtn').getAttribute('data-ultimate-stage'),String(stage));
   await page.locator('#abilityBtn').click({force:true});
-  const state=await page.evaluate(()=>window.__ultimateQA.status());assert.equal(state.stage,stage);assert.equal(state.charges,0);assert.equal(state.passives[id],2);
+  const state=await page.evaluate(()=>window.__ultimateQA.status());assert.equal(state.stage,stage);assert.equal(state.charges,0);assert.equal(state.passives[id],id==='fire'?stage:2);
   assert.equal(state.intro,stage===3);if(stage<3)assert.equal(state.active,id);
   if(id==='fire'){await page.evaluate(()=>window.__ultimateQA.render());await page.screenshot({path:path.join(root,`tmp/ultimate-fire-${stage}-mobile.png`)});}
  }

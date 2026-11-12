@@ -2,19 +2,12 @@
   'use strict';
   const unit = n => Math.max(0, Math.min(1, n));
   const mix = (a,b,t) => a+(b-a)*t;
-  const palette = ['#a0ffd0','#6dbbff'];
-  const ghostImages = [], glowSprites = new Map();
-  const tintedGhosts = new Map();
+  const palette = ['#d3fff6','#bcdaff'];
+  const glowSprites = new Map();
   let gateImage = null, gateSwirl = null, realmTexture = null;
   const trails = new WeakMap();
   const flightTrails = new WeakMap();
-  function ensureGhosts() {
-    if(ghostImages.length)return;
-    const version=window.SlimeGameAssets?.versionedAsset || (p=>p);
-    for(const path of ['assets/vfx/phantom-spirit-mint-v3-lossless.webp','assets/vfx/phantom-spirit-blue-v3-lossless.webp']){
-      const image=new Image();image.src=version(path);ghostImages.push(image);
-    }
-  }
+  function ensureGhosts(){window.SlimePhantomSoulVfx.prepare();}
   function glowSprite(index) {
     if(glowSprites.has(index))return glowSprites.get(index);
     const c=document.createElement('canvas');c.width=c.height=96;
@@ -22,17 +15,6 @@
     const halo=x.createRadialGradient(48,45,6,48,45,45);
     halo.addColorStop(0,color+'65');halo.addColorStop(.5,color+'35');halo.addColorStop(1,color+'00');
     x.fillStyle=halo;x.fillRect(0,0,96,96);glowSprites.set(index,c);return c;
-  }
-  function spiritBody(index) {
-    const image=ghostImages[index];
-    if(!image?.complete||!image.naturalWidth)return null;
-    if(tintedGhosts.has(index))return tintedGhosts.get(index);
-    const c=document.createElement('canvas');c.width=image.naturalWidth;c.height=image.naturalHeight;
-    const x=c.getContext('2d');x.drawImage(image,0,0);
-    x.globalCompositeOperation='source-atop';x.globalAlpha=index?.34:.22;
-    x.fillStyle=index?'#279bff':'#56ffad';x.fillRect(0,0,c.width,c.height);
-    window.SlimeSpectralGlow.useContour?.(c,image);
-    tintedGhosts.set(index,c);return c;
   }
   function idle(x,y,r,index,time) {
     const a=time/1100+index*Math.PI,depth=Math.sin(a);
@@ -54,47 +36,20 @@
     // each rock keep the spirit gliding rather than stopping at every waypoint.
     return {x:curve('x'),y:curve('y'),p,route};
   }
-  function mote(ctx,p,size,index,time,alpha=1) {
-    // Early Phantom stages keep the attack route, expressed as faceless light.
-    if(alpha<=0)return;
-    const core=size*.15;
-    ctx.save();ctx.translate(p.x,p.y);
-    ctx.globalAlpha*=alpha;
-    ctx.drawImage(glowSprite(index%2),-core*3,-core*3,core*6,core*6);
-    ctx.fillStyle=index%2?'#c4f2ff':'#dcfff1';
-    ctx.beginPath();ctx.moveTo(0,-core);
-    ctx.bezierCurveTo(core*1.4,-core*.7,core*1.2,core*.6,0,core*2);
-    ctx.bezierCurveTo(-core,core*.7,-core*1.3,-core*.5,0,-core);ctx.fill();
-    ctx.restore();
-  }
-  function spirit(ctx,p,size,index,time,alpha=1,emission=false,flight=null) {
-    ensureGhosts();const image=spiritBody(index);
-    if(!image||alpha<=0)return;
+  function mote(ctx,p,size,index,time,alpha=1){spirit(ctx,p,size*.72,index,time,alpha);}
+  function spirit(ctx,p,size,index,time,alpha=1,emission=false,flight=null){
+    if(alpha<=0)return;ensureGhosts();const fx=window.SlimePhantomSoulVfx;
     let histories=trails.get(ctx);if(!histories){histories=[[],[]];trails.set(ctx,histories);}
-    let history=histories[index];
+    let history=histories[index%2];
     if(flight){history=flightTrails.get(flight);if(!history){history=[];flightTrails.set(flight,history);}}
     const last=history[history.length-1];
-    if(last&&(time<last.time||time-last.time>280||Math.hypot(p.x-last.x,p.y-last.y)>size*4))history.length=0;
-    while(history.length&&(time-history[0].time>240||history.length>6))history.shift();
+    if(last&&(time<last.time||time-last.time>280||Math.hypot(p.x-last.x,p.y-last.y)>size*5))history.length=0;
+    while(history.length&&(time-history[0].time>260||history.length>6))history.shift();
     if(!history.length||time-history[history.length-1].time>=32)history.push({x:p.x,y:p.y,time});
-    ctx.save();ctx.lineCap='round';
-    // A short tapered wake, capped in distance as well as age, follows flights.
-    const tail=history.map(q=>{
-      const dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy),scale=d>size*1.45?size*1.45/d:1;
-      return {x:p.x+dx*scale,y:p.y+dy*scale,time:q.time};
-    });
-    tail.push({x:p.x,y:p.y,time});
-    for(let i=1;i<tail.length;i++){
-      const life=unit(1-(time-tail[i].time)/240);
-      ctx.globalAlpha=alpha*life*.22;ctx.strokeStyle=palette[index];ctx.lineWidth=size*(.055+life*.1);
-      ctx.beginPath();ctx.moveTo(tail[i-1].x,tail[i-1].y);ctx.lineTo(tail[i].x,tail[i].y);ctx.stroke();
-    }
-    ctx.globalAlpha=alpha*(.67+.08*Math.sin(time/370+index));
-    if(emission){ctx.globalCompositeOperation='lighter';ctx.drawImage(glowSprite(index),p.x-size,p.y-size,size*2,size*2);ctx.globalCompositeOperation='source-over';}
-    ctx.drawImage(glowSprite(index),p.x-size*.68,p.y-size*.72,size*1.36,size*1.44);
-    const w=size*(index===1?.8:.98),h=w*image.height/image.width*(index===1?1.12:1);
-    ctx.globalAlpha=alpha*(emission?.95:index===1?.76:.86);ctx.drawImage(image,p.x-w/2,p.y-h*.52,w,h);
-    window.SlimeSpectralGlow.draw(ctx,image,[p.x-w/2,p.y-h*.52,w,h],time,.82);ctx.restore();
+    const near=history[Math.max(0,history.length-2)]||p,old=history[0]||p,scale=size*1.65;
+    ctx.save();if(emission)ctx.globalCompositeOperation='lighter';
+    fx.trail(ctx,old,near,0,scale*.25,alpha*.32,index);fx.trail(ctx,near,p,0,scale*.40,alpha*.70,index);
+    fx.head(ctx,p,near,0,scale,alpha*.94,index);ctx.restore();
   }
   function cracks(ctx,block,y,time) {
     const w=block.w,h=block.h,seed=(block.row*17+block.col*11)%7;
@@ -126,7 +81,7 @@
   }
   function ensureGate() {
     if(gateImage)return;
-    gateImage=new Image();gateImage.src=(window.SlimeGameAssets?.versionedAsset|| (p=>p))('assets/vfx/phantom-portal-round-v2-lossless.webp');
+    gateImage=new Image();gateImage.decoding='async';gateImage.src=(window.SlimeGameAssets?.versionedAsset|| (p=>p))('assets/vfx/phantom-v4/portal.webp');
   }
   function gate(ctx,x,y,width,time,alpha=1) {
     if(alpha<=0)return;
@@ -145,8 +100,13 @@
         mask.addColorStop(0,'#fff');mask.addColorStop(1,'#ffffff00');
         c.globalCompositeOperation='destination-in';c.fillStyle=mask;c.fillRect(0,0,192,192);
       }
-      ctx.rotate(time/12000);ctx.globalAlpha=alpha*.48;
+      ctx.rotate(time/6000);ctx.globalAlpha=alpha*.48;
       ctx.drawImage(gateSwirl,-w*.26,-w*.26,w*.52,w*.52);
+      // Small drifting lights soften the rim without vector rings or sharp rays.
+      for(let i=0;i<6;i++){
+        const a=i*2.399+time/1900,r=w*(.39+.025*Math.sin(time/430+i)),s=w*(.045+.012*Math.sin(time/310+i));
+        ctx.globalAlpha=alpha*(.40+.20*Math.sin(a*2));ctx.drawImage(glowSprite(i%2),Math.cos(a)*r-s/2,Math.sin(a)*r-s/2,s,s);
+      }
     }
     ctx.restore();
   }

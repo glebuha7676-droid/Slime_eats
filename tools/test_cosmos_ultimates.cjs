@@ -30,5 +30,5 @@ fresh();r.ultimateProfile={...r.ultimateProfile,starCount:1};C.start(r,1000);C.u
 // A single cached halo and bounded analytical trails; no live blur or particle arrays.
 const ctx={save(){},restore(){},translate(){},rotate(){},drawImage(){draws++;}};
 e=fresh();for(let at=1000;at<6000;at+=16){C.update(r,at,s);draws=0;C.draw(ctx,r,at);assert(draws<=80,`Draw budget: ${draws}`);}
-assert.equal(gradients,1);assert.equal(U.get('cosmos',3).orbitRows,20);assert.equal(U.get('cosmos',3).durationMs,5500);
+assert.equal(gradients,1);assert.equal(U.get('cosmos',3).meters,60);assert.equal(U.get('cosmos',3).durationMs,5500);
 console.log('Cosmos I/II: five-second planet boost, sequential 16 stars, indexed targets, exact single-target damage, no splash, bounded VFX, low-FPS completion, pause, one cached halo, empty terrain and original III passed');

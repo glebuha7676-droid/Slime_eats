@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'..'),requests=[];
 class Image {set src(value){this.value=value;requests.push(value);}get src(){return this.value;}}
 const c={window:{},Image,URLSearchParams};
 for(const file of ['js/config/image-paths.js','food-catalog.js','world-catalog.js','js/config/game-config.js','js/core/game-assets.js','js/core/boot-manifest.js'])vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),c);
-for(let id=1;id<=4;id++){
+for(const id of c.window.SlimeWorldCatalog.defaults().worlds.map(world=>world.id)){
   c.window.SlimeGameAssets.ensureWorldSprites(id);
   c.window.SlimeGameAssets.ensureWorldBackground(id);
 }

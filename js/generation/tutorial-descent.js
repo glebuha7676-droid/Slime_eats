@@ -12,11 +12,11 @@
     const rock=(row,col,tier)=>{
       const source=cells[row][col];
       const ordinaryTier=['soft','dense','hard','reinforced'].includes(source.tier)?source.tier:'dense';
-      cells[row][col]={...source,tier:tier||ordinaryTier,dead:false,hazard:false,special:null,motion:null,flaskTier:0,depositId:-1};
+      cells[row][col]={...source,tier:tier||ordinaryTier,dead:false,hazard:false,special:null,motion:null,chase:false,bramble:null,flaskTier:0,depositId:-1};
     };
     for(let row=0;row<rows;row++)for(let col=0;col<columns;col++){
       const c=cells[row][col];
-      if(c.hazard||c.special||c.motion)rock(row,col);
+      if(c.hazard||c.special||c.motion||c.bramble)rock(row,col);
       cells[row][col].flaskTier=0;
     }
     // Removed moving encounters leave air channels; refill only those channels,

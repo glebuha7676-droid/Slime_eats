@@ -5,7 +5,6 @@
   const mix = (a, b, t) => a + (b - a) * t;
   const TAU = Math.PI * 2;
   const cache = new Map();
-  const ROCK = 'assets/vfx/fire-volcano-rock-v1.webp';
   const SNOW = 'assets/vfx/frost-snowball-v2.webp';
   const FLAKE = 'assets/vfx/frost-storm-flake-v1-lossless.webp';
 
@@ -57,6 +56,15 @@
     }
   }
   function bolt(from, to, at, seed = 0) { return { from, to, at, seed }; }
+  function updateFireWave(run,e,at,s){
+    const cell=run.cellSize,p=run.ultimateProfile;
+    const front=mix(e.y,e.endY,clamp((at-e.startedAt)/p.growMs,0,1));
+    for(const b of s.blocksNearY((e.y+e.endY)*.5,(e.endY-e.y)*.5+cell)){
+      if(!s.elementalDamageable(b)||e.hitAt.has(b))continue;
+      if(b.row<e.startRow||b.row>e.endRow||b.col<e.startCol||b.col>=e.startCol+p.width||b.y+b.h*.5>front+1e-5)continue;
+      e.hitAt.set(b,at);s.igniteBlock(b,at,run.elementalAuraId);
+    }
+  }
   function updateDischarge(run,e,at,s){
     const p=run.ultimateProfile,reach=run.cellSize*p.reachCells;
     const front=reach*clamp((at-e.startedAt)/p.growMs,0,1);
@@ -64,7 +72,7 @@
       if(target.distance>front+1e-5||e.hitAt.has(target.block))continue;
       e.hitAt.set(target.block,at);
       if(!s.elementalDamageable(target.block))continue;
-      s.damageBlockByElement(target.block,1,'electric',at);
+      s.damageBlockByElement(target.block,1,'electricStorm',at);
       e.bursts.push({...center(target.block),at});
     }
   }
@@ -75,20 +83,19 @@
     const e = run.stagedUltimate = {
       kind: p.kind, type, startedAt: at, lastAt: at, x, y, originY: y,
       lastY: y, endY: y + (p.rows || 0) * cell, bolts: [], bursts: [], trail: [], nextStrikeAt: at,
-      hitAt: new Map(), rocks: []
+      hitAt: new Map()
     };
-    if (p.kind === 'fireFlash' || p.kind === 'frostFlash') area(run, s, x, y, cell * 1.85, at, type === 'frost');
-    if (p.kind === 'volcano') {
-      sprite(ROCK);
-      const left = run.gridOffsetX + cell * .5, right = run.gridOffsetX + (run.columns - .5) * cell;
-      // Staggered launches, four separate arcs; every rock starts at the slime.
-      e.rocks = [-1.9, -.65, .65, 1.9].map((offset, i) => ({
-        delay: i * 110, flightMs: 1220 + (i % 2) * 90,
-        fromX: x, fromY: y - run.slime.radius * (run.categoryVisuals?.fire >= 3 ? 1.65 : .89), toX: clamp(x + offset * cell, left, right),
-        toY: y + (3.6 + (i % 2) * 1.25) * cell,
-        x, y, launched: false, landed: false, trail: [], seed: i
-      }));
+    if (p.kind === 'fireball' || p.kind === 'fireWave') {
+      // Whole grid lanes, clamped at walls: exactly 2×4 or 4×6, regardless of frame rate.
+      e.startCol=clamp(Math.round((x-run.gridOffsetX)/cell-p.width*.5),0,run.columns-p.width);
+      e.startRow=Math.max(0,Math.floor((y-run.blockRowOrigin)/cell-.5)+1);
+      e.endRow=e.startRow+p.rows-1;
+      e.endY=run.blockRowOrigin+(e.endRow+.5)*cell;
+      e.targetX=run.gridOffsetX+(e.startCol+p.width*.5)*cell;
+      if(typeof document!=='undefined')p.kind==='fireball'?fireballFrames():fireWaveFrames();
+      updateFireWave(run,e,at,s);
     }
+    if (p.kind === 'frostFlash') area(run, s, x, y, cell * 1.85, at, true);
     if (p.kind === 'snowball') {
       sprite(SNOW);
       e.col = clamp(Math.floor((x - run.gridOffsetX) / cell), 1, run.columns - 2);
@@ -114,28 +121,10 @@
     const p = run.ultimateProfile, cell = run.cellSize, elapsed = at - e.startedAt;
     e.bursts = e.bursts.filter(b => at - b.at < (e.kind === 'discharge' ? 220 : 600));
     e.bolts = e.bolts.filter(b => at - b.at < (e.kind === 'discharge' ? 600 : 190));
-    if (e.kind === 'discharge') {
+    if (e.kind === 'fireball' || e.kind === 'fireWave') {
+      updateFireWave(run,e,at,s);
+    } else if (e.kind === 'discharge') {
       updateDischarge(run,e,at,s);
-    } else if (e.kind === 'volcano') {
-      for (const rock of e.rocks) {
-        const t = clamp((elapsed-rock.delay)/rock.flightMs, 0, 1);
-        if (elapsed < rock.delay || rock.landed) continue;
-        if (!rock.launched) {
-          rock.launched = true;
-          rock.fromX = run.slime.x - run.slime.radius * .015;
-          rock.fromY = run.slime.y - run.slime.radius * (run.categoryVisuals?.fire >= 3 ? 1.65 : .89);
-        }
-        rock.x = mix(rock.fromX, rock.toX, t);
-        // Cubic controls send the stone vertically up first, then down from above.
-        const a = 1-t;
-        rock.y = a*a*a*rock.fromY + 3*a*a*t*(rock.fromY-cell*4.4) + 3*a*t*t*(rock.toY-cell*5.1) + t*t*t*rock.toY;
-        if (at-e.lastAt >= 24) { rock.trail.push({x:rock.x,y:rock.y}); if (rock.trail.length > 6) rock.trail.shift(); }
-        if (t >= 1) {
-          rock.landed = true;
-          area(run, s, rock.toX, rock.toY, cell*1.25, at, false);
-          e.bursts.push({x:rock.toX,y:rock.toY,at});
-        }
-      }
     } else if (e.kind === 'snowball' || e.kind === 'ballLightning') {
       const t = clamp(elapsed / p.travelMs, 0, 1);
       e.y = mix(e.originY, e.endY, t);
@@ -161,7 +150,7 @@
         });
         candidates.slice(0,2).forEach((b,i)=> {
           e.bolts.push({...bolt({x:e.x,y:e.y},center(b),at,i+elapsed),power:1.25});
-          e.hitAt.set(b,at); s.damageBlockByElement(b,p.damage||1,'electric',at);
+          e.hitAt.set(b,at); s.damageBlockByElement(b,p.damage||1,'electricStorm',at);
         });
       }
       e.lastY=e.y;
@@ -257,6 +246,64 @@
       }
     }
   }
+  function drawFireWave(c,e,run,at){
+    const cell=run.cellSize,p=run.ultimateProfile,age=at-e.startedAt;
+    const travel=clamp(age/p.growMs,0,1),t=clamp(age/p.durationMs,0,1);
+    const fade=clamp(age/75,0,1)*(1-clamp((age-p.growMs)/(p.durationMs-p.growMs),0,1))**1.4;
+    const x=mix(e.x,e.targetX,Math.min(1,travel*4)),y=mix(e.y,e.endY,travel)-run.cameraY;
+    const width=cell*p.width,halfWidth=width*.5;
+    const ball=e.kind==='fireball',height=ball?width*1.15:width*.5;
+    if(y+height<-cell||y-height>(run.viewHeight||c.canvas.height)+cell)return;
+    c.globalCompositeOperation='lighter';
+    light(c,'fire',x,y,width*1.6,fade*.65,ball?1:.5);
+    c.globalCompositeOperation='source-over';c.globalAlpha=fade;
+    const frames=ball?fireballFrames():fireWaveFrames(),image=frames[Math.floor(age/34)%frames.length];
+    c.drawImage(image,x-width/2,y-height*.60,width,height);c.globalCompositeOperation='lighter';
+    // Embers follow the projectile; all glows and silhouettes are cached once.
+    for(let j=0;j<(run.lowPower?4:8);j++){
+      const q=(t+j*.173)%1,u=Math.sin(j*4.7),px=x+u*halfWidth*q,py=y-cell*.15-q*cell*.7;
+      light(c,'fire',px,py,cell*.16,fade*(1-q)*.65);
+    }
+  }
+  function fireballFrames(){
+    if(cache.has('fireball'))return cache.get('fireball');
+    const frames=[];
+    for(let frame=0;frame<18;frame++){
+      const image=document.createElement('canvas');image.width=192;image.height=224;
+      const c=image.getContext('2d'),phase=frame/18*TAU;
+      // A single flowing silhouette per layer, without separate outlined lobes.
+      for(const [scale,colour,blur]of [[1,'#ff681a',12],[.82,'#ffc239',7],[.53,'#fff5c5',3]]){
+        c.save();c.translate(96,132);c.scale(scale,scale);c.fillStyle=colour;c.shadowColor='#ff8b26';c.shadowBlur=blur;
+        const flicker=Math.sin(phase)*7,side=Math.sin(phase+1.8)*5;
+        c.beginPath();c.moveTo(0,62);
+        c.bezierCurveTo(-61,62,-82,17,-57,-29);
+        c.bezierCurveTo(-48,-8,-38,-14,-40,-44);
+        c.bezierCurveTo(-43,-70,-22,-86,-16,-108+flicker);
+        c.bezierCurveTo(10,-91,5,-50,22,-35);
+        c.bezierCurveTo(38,-54,41,-66,44,-76+side);
+        c.bezierCurveTo(44,-41,83,-10,63,29);
+        c.bezierCurveTo(51,54,30,64,0,62);
+        c.closePath();c.fill();c.restore();
+      }frames.push(image);
+    }cache.set('fireball',frames);return frames;
+  }
+  function fireWaveFrames(){
+    if(cache.has('fireWave'))return cache.get('fireWave');
+    const frames=[];
+    for(let frame=0;frame<18;frame++){
+      const image=document.createElement('canvas');image.width=256;image.height=128;const x=image.getContext('2d'),points=[],a=frame/18*TAU;
+      for(let i=0;i<=16;i++){const u=i/8-1;points.push([128+u*108,42+22*(1-u*u)+Math.sin(u*9+a)*3]);}
+      for(let i=16;i>=0;i--){const u=i/8-1;points.push([128+u*108,58+32*(1-u*u)+Math.sin(u*12-a)*5]);}
+      const shape=(sx,sy,color,blur)=>{
+        x.save();x.translate(128,65);x.scale(sx,sy);x.translate(-128,-65);x.beginPath();x.moveTo(...points[0]);
+        for(let i=0;i<points.length;i++){
+          const p0=points[(i+points.length-1)%points.length],p1=points[i],p2=points[(i+1)%points.length],p3=points[(i+2)%points.length];
+          x.bezierCurveTo(p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6,p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6,p2[0],p2[1]);
+        }x.closePath();x.fillStyle=color;x.shadowColor='#ff7b16';x.shadowBlur=blur;x.fill();x.restore();
+      };
+      shape(1,1,'#f47b16',10);shape(.94,.78,'#ffc63c',4);shape(.82,.42,'#fff3b4',2);frames.push(image);
+    }cache.set('fireWave',frames);return frames;
+  }
   function drawSnow(c,e,run,at) {
     const p=run.ultimateProfile,alpha=clamp((p.durationMs-(at-e.startedAt))/250,0,1);
     if(!alpha)return;
@@ -275,22 +322,9 @@
     const e=run.stagedUltimate;if(!e)return;
     const cell=run.cellSize,camera=run.cameraY,elapsed=at-e.startedAt;
     c.save();
-    if(e.kind==='fireFlash'||e.kind==='frostFlash')drawFlash(c,e,run,at);
+    if(e.kind==='fireball'||e.kind==='fireWave')drawFireWave(c,e,run,at);
+    if(e.kind==='frostFlash')drawFlash(c,e,run,at);
     if(e.kind==='snowball')drawSnow(c,e,run,at);
-    if(e.kind==='volcano'){
-      const image=sprite(ROCK);
-      for(const rock of e.rocks){
-        if(elapsed<rock.delay||rock.landed)continue;
-        c.globalCompositeOperation='lighter';
-        rock.trail.forEach((q,i)=>light(c,'fire',q.x,q.y-camera,cell*.65,(i+1)/6*.48));
-        light(c,'fire',rock.x,rock.y-camera,cell*1.65,.65);
-        c.globalCompositeOperation='source-over';c.globalAlpha=1;
-        c.save();c.translate(rock.x,rock.y-camera);c.rotate(Math.sin((elapsed-rock.delay)/400+rock.seed)*.22);
-        if(image.complete&&image.naturalWidth)c.drawImage(image,-cell*.44,-cell*.5,cell*.88,cell*.88);c.restore();
-      }
-      c.globalCompositeOperation='lighter';
-      for(const burst of e.bursts){const t=(at-burst.at)/600;light(c,'fire',burst.x,burst.y-camera,cell*(1.3+3*t),(1-t)**2);}
-    }
     if(e.kind==='ballLightning'){
       const alpha=clamp((run.ultimateProfile.durationMs-elapsed)/350,0,1),x=e.x,y=e.y-camera;
       c.globalCompositeOperation='lighter';

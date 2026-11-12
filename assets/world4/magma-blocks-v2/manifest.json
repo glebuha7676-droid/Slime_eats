@@ -1,0 +1,29 @@
+[
+  {
+    "source": "output/concepts/magma-blocks-v1/ash-fragile.png",
+    "runtime": "ash-fragile.webp",
+    "size": 27082,
+    "dimensions": [
+      384,
+      384
+    ]
+  },
+  {
+    "source": "output/concepts/magma-blocks-v2/cooled-lava-normal.png",
+    "runtime": "cooled-lava-normal.webp",
+    "size": 35738,
+    "dimensions": [
+      384,
+      384
+    ]
+  },
+  {
+    "source": "output/concepts/magma-blocks-v2/columnar-basalt-strong.png",
+    "runtime": "columnar-basalt-strong.webp",
+    "size": 30484,
+    "dimensions": [
+      384,
+      384
+    ]
+  }
+]

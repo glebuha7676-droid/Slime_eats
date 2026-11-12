@@ -1,0 +1,162 @@
+/* Primary mutation strength and a quiet distance-to-core readout. */
+.anomaly-energy[data-mutation=fire]{--strength-hi:#ffe6a0;--strength-mid:#ffb34a;--strength-lo:#df5e2c}
+.anomaly-energy[data-mutation=frost]{--strength-hi:#efffff;--strength-mid:#9beaff;--strength-lo:#3f99c8}
+.anomaly-energy[data-mutation=electric]{--strength-hi:#f1ffff;--strength-mid:#8cccff;--strength-lo:#7276e0}
+.anomaly-energy[data-mutation=cosmos]{--strength-hi:#f3d5ff;--strength-mid:#c68af4;--strength-lo:#7544c0}
+.anomaly-energy[data-mutation=nano]{--strength-hi:#ffd4d4;--strength-mid:#fa758c;--strength-lo:#bf284c}
+.anomaly-energy[data-mutation=telekinesis]{--strength-hi:#d6ffff;--strength-mid:#52dbf5;--strength-lo:#168dcc}
+.anomaly-energy[data-mutation=cloning]{--strength-hi:#f2ffbb;--strength-mid:#b3e36d;--strength-lo:#63a044}
+.anomaly-energy[data-mutation=phantom]{--strength-hi:#eefff8;--strength-mid:#abebd3;--strength-lo:#5aa4b8}
+.anomaly-energy[data-mutation=glitch]{--strength-hi:#e3ffff;--strength-mid:#6ee5df;--strength-lo:#bd65c8}
+html body #dropScreen #shaft .run-top-hud{height:58px!important;display:grid!important;grid-template-columns:minmax(0,1fr) 70px 44px;grid-template-rows:44px;gap:0 6px;padding:5px 7px!important;align-items:center;border-radius:14px;background:linear-gradient(#e1f5fb,#aed5e2);box-shadow:inset 0 2px #f6ffff,0 3px #10384a77}
+html body #dropScreen #shaft #runDistanceReadout{position:absolute;z-index:29;left:50%;right:auto;top:calc(max(7px,var(--safe-top)) + 67px);width:max-content;max-width:90%;height:24px;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none!important;box-shadow:none!important;transform:translateX(-50%)!important;animation:none!important;opacity:1!important;pointer-events:none}
+html body #dropScreen #shaft .run-top-hud .run-research-hud{grid-column:2;grid-row:1;height:39px!important;min-height:39px!important}
+html body #dropScreen #shaft .run-top-hud .run-menu-btn{grid-column:3;grid-row:1;height:40px!important;min-height:40px!important}
+.run-distance{display:flex;align-items:baseline;justify-content:center;gap:5px;white-space:nowrap;color:#e1f5ff;font:1000 12px/1 'Slime Nunito',Nunito,sans-serif;text-shadow:0 1px 3px #052537,0 0 4px #052537;-webkit-text-stroke:2px #123c50;paint-order:stroke fill;pointer-events:none}
+#runDistanceValue{display:inline-block;min-width:3ch;text-align:right;color:#fff9dc;font-size:21px;font-weight:1000;font-variant-numeric:tabular-nums;animation:strength-distance-float 4.8s ease-in-out infinite}
+.run-distance-unit{font-size:12px;margin-left:-1px}
+.run-route.is-near-core #runDistanceValue{color:#fff0a2}
+.anomaly-energy{grid-column:1;grid-row:1;position:relative;isolation:isolate;min-width:0;height:44px;border:1.5px solid #79c2cf;border-radius:11px;background:linear-gradient(#16445d,#0b3148);box-shadow:inset 0 1px #82b8cc88,inset 0 -2px #05253888,0 1px #efffff99;overflow:visible;color:#f7ffeb;font:900 12px/1 'Slime Nunito',Nunito,sans-serif}
+.anomaly-energy::after{content:'';position:absolute;inset:1px;border-radius:9px;box-shadow:inset 0 1px #e4fbff2b;pointer-events:none}
+.anomaly-energy-track{position:absolute;left:37px;right:5px;top:22px;bottom:5px;isolation:isolate;border:1px solid #6c8eac;border-radius:7px;overflow:hidden;background:linear-gradient(#211535,#382454);box-shadow:inset 0 2px 3px #080e2777}
+.anomaly-energy-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;pointer-events:none;overflow:hidden;background:linear-gradient(#e2ffab,#aeef5f 35%,#71ca60 85%,#4fa77b);box-shadow:inset 0 1px #f6ffd9,0 0 4px #bdff8299}
+.anomaly-energy-fill::before{content:'';position:absolute;inset:-8px -12px;background:url('assets/ui/anomaly-fluid-v2/flow-strip-v3.webp') center 41% / 125% auto;mix-blend-mode:soft-light;opacity:.53;animation:strength-liquid-drift 8s ease-in-out infinite alternate}
+.anomaly-energy-track::after{content:'';position:absolute;inset:1px;border-radius:5px;background:linear-gradient(#efffff26,transparent 55%,#0a254121);box-shadow:inset 0 1px #f2fffb38;pointer-events:none}
+.anomaly-energy>img{position:absolute;z-index:2;left:-4px;top:0;width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 1px 2px #15283d66)}
+.anomaly-energy-label{position:absolute;z-index:2;left:38px;top:5px;max-width:calc(100% - 91px);font-size:10px;letter-spacing:.3px;white-space:nowrap;color:#daf2ef;font-weight:1000}
+.anomaly-energy-value{position:absolute;z-index:2;right:6px;top:1px;min-width:48px;text-align:right;font-size:23px;line-height:1;font-weight:1000;font-variant-numeric:tabular-nums;letter-spacing:-.6px;color:#f5ffdd;text-shadow:0 1px #092c3e;animation:strength-number-float 4.3s ease-in-out infinite}
+.anomaly-energy-delta{position:absolute;z-index:4;left:6px;right:auto;top:45px;padding:2px 5px;border-radius:6px;background:#123d51ed;color:#efffd5;font-size:14px;font-weight:1000;white-space:nowrap;pointer-events:none;opacity:0;text-shadow:0 1px #12384a}
+.anomaly-energy-wave{position:absolute;inset:-3px auto -3px -25%;width:24%;background:linear-gradient(90deg,transparent,#f1ffd9a6,transparent);transform:skewX(-15deg);opacity:0;pointer-events:none}
+.anomaly-energy.is-recover{animation:strength-refill .74s ease-out}
+.anomaly-energy.is-recover .anomaly-energy-wave{width:36%;background:linear-gradient(90deg,transparent,#adff813d 24%,#eaffcfd9 74%,transparent);animation:strength-refill-wave .58s ease-out both}
+.anomaly-energy.is-recover .anomaly-energy-value{animation:strength-number-gain .6s ease-out both}
+.anomaly-energy.is-recover .anomaly-energy-delta{color:#eeffbb;background:#164a43;animation:strength-delta-gain .9s ease-out both}
+.anomaly-energy.is-recover>img{animation:strength-icon-gain .6s ease-out both}
+.anomaly-energy.is-hazard{animation:strength-hurt .55s ease-out}
+.anomaly-energy.is-hazard .anomaly-energy-value{animation:strength-number-loss .5s ease-out both}
+.anomaly-energy.is-hazard .anomaly-energy-delta{color:#ffc7b6;animation:strength-delta .9s ease-out both}
+.anomaly-energy.is-spend .anomaly-energy-delta{color:#ffedb3;animation:strength-delta .9s ease-out both}
+@media(prefers-reduced-motion:reduce){.anomaly-energy.is-spend .anomaly-energy-delta{opacity:1;transform:none}}
+.anomaly-energy.is-low{border-color:#d5a471}
+.anomaly-energy.is-low .anomaly-energy-label{color:#ffe4b1;font-size:9px;letter-spacing:0}
+.anomaly-energy.is-critical{border-color:#e39286}
+.anomaly-energy.is-critical::before{content:'';position:absolute;inset:-2px;border:1px solid #ffac91;border-radius:12px;pointer-events:none;animation:strength-warning 1.7s ease-in-out infinite}
+.anomaly-energy.is-critical .anomaly-energy-value{color:#ffe0c4}
+.anomaly-energy.is-depleted{border-color:#88a7b8}
+.anomaly-energy.is-depleted>img{filter:grayscale(.8) brightness(.8)}
+.anomaly-energy.is-depleted .anomaly-energy-value,.anomaly-energy.is-depleted .anomaly-energy-label{color:#c5d6e2}
+.shaft.is-evacuating :is(.barrier-control,.fall-controls,#tutorialRunGoal,#tutorialRunHint){display:none!important}
+.shaft.is-evacuating{touch-action:none;cursor:default}
+.run-top-hud[data-paused=true] *,.run-top-hud[data-paused=true] *::before,.run-top-hud[data-paused=true] *::after{animation-play-state:paused!important}
+@keyframes strength-distance-float{50%{transform:translateY(-.45px)}}
+@keyframes strength-number-float{50%{transform:translateY(-.35px)}}
+@keyframes strength-liquid-drift{to{background-position:calc(50% + 9px) calc(41% + 7px)}}
+@keyframes strength-refill-wave{0%{left:-25%;opacity:0}15%{opacity:.8}100%{left:110%;opacity:0}}
+@keyframes strength-refill{18%{transform:translateY(-1px);box-shadow:inset 0 0 15px #deff9c9c,0 0 17px #b7fb7ab3}100%{transform:none}}
+@keyframes strength-hurt{16%{transform:translateX(-1.5px);box-shadow:inset 0 0 14px #ff7a7f99,0 0 10px #ef747c77}34%{transform:translateX(1px)}65%,100%{transform:none}}
+@keyframes strength-number-gain{22%{transform:translateY(-1px) scale(1.16);color:#f0ffbc;text-shadow:0 0 8px #b8ff7eaf}100%{transform:none}}
+@keyframes strength-number-loss{30%{transform:translateY(2px) scale(.94);color:#ffb4a5}100%{transform:none}}
+@keyframes strength-icon-gain{35%{transform:translateY(-1px) scale(1.08)}100%{transform:none}}
+@keyframes strength-delta{0%{opacity:0;transform:translateY(1px)}16%,68%{opacity:1;transform:translateY(3px)}100%{opacity:0;transform:translateY(7px)}}
+@keyframes strength-delta-gain{0%{opacity:0;transform:translateY(6px) scale(.78)}18%{opacity:1;transform:translateY(1px) scale(1.18)}36%,74%{opacity:1;transform:translateY(2px)}100%{opacity:0;transform:translateY(6px)}}
+@keyframes strength-warning{0%,100%{opacity:.25;box-shadow:0 0 1px #ffaf8133}50%{opacity:.85;box-shadow:0 0 6px #ff957d55}}
+@keyframes strength-arrival-cue{35%{transform:translateY(2px);color:#027d98}}
+@media(max-width:350px){html body #dropScreen #shaft .run-top-hud{grid-template-columns:minmax(0,1fr) 65px 44px;gap:2px 5px;padding-inline:5px!important}.anomaly-energy-label{font-size:9px;left:34px}.anomaly-energy.is-low .anomaly-energy-label{font-size:8px}.anomaly-energy-track{left:33px;right:4px}.anomaly-energy>img{left:-5px;width:38px;height:40px}.anomaly-energy-value{font-size:22px;right:4px}.run-distance{font-size:11px}#runDistanceValue{font-size:20px}}
+@media(prefers-reduced-motion:reduce){.anomaly-energy *,.anomaly-energy::before,.anomaly-energy *::before,.anomaly-energy *::after,#runDistanceValue,.run-distance-arrow{animation:none!important;transition:none!important}.anomaly-energy-wave{display:none}.anomaly-energy.is-recover .anomaly-energy-delta,.anomaly-energy.is-hazard .anomaly-energy-delta{opacity:1;transform:none}.anomaly-energy.is-recover{animation:none}.anomaly-energy.is-hazard{animation:none}}
+
+.anomaly-energy.is-transferring{border-color:#ffda88;box-shadow:inset 0 1px #ffe9bb77,0 0 7px #ffb54b38}
+.anomaly-energy.is-transferring .anomaly-energy-fill{background:linear-gradient(#fff1ad,#ffcc58 42%,#ed8e40)}
+.anomaly-energy.is-transferring .anomaly-energy-label,.anomaly-energy.is-transferring .anomaly-energy-value{color:#ffedb1}
+
+.anomaly-energy.is-electric-transfer{border-color:#b3eeff;box-shadow:inset 0 1px #d8f8ff77,0 0 7px #67baff38}
+.anomaly-energy.is-electric-transfer .anomaly-energy-fill{background:linear-gradient(#edffff,#95ddff 42%,#6c91ed)}
+.anomaly-energy.is-electric-transfer .anomaly-energy-label,.anomaly-energy.is-electric-transfer .anomaly-energy-value{color:#d5f7ff}
+.anomaly-energy.is-frost-transfer{border-color:#cefbff;box-shadow:inset 0 1px #efffff88,0 0 7px #8befff38}
+.anomaly-energy.is-frost-transfer .anomaly-energy-fill{background:linear-gradient(#fff,#b7f6ff 42%,#58b6df)}
+.anomaly-energy.is-frost-transfer .anomaly-energy-label,.anomaly-energy.is-frost-transfer .anomaly-energy-value{color:#e3fcff}
+.anomaly-energy.is-cosmos-transfer{border-color:#d9afff;box-shadow:inset 0 1px #f3ddff88,0 0 7px #a76cff42}
+.anomaly-energy.is-cosmos-transfer .anomaly-energy-fill{background:linear-gradient(#fff2ff,#db9dff 42%,#874beb)}
+.anomaly-energy.is-cosmos-transfer .anomaly-energy-label,.anomaly-energy.is-cosmos-transfer .anomaly-energy-value{color:#f1deff}
+.anomaly-energy.is-techno-transfer{border-color:#ffb4b7;box-shadow:inset 0 1px #ffe6df88,0 0 7px #ff3a5442}
+.anomaly-energy.is-techno-transfer .anomaly-energy-fill{background:linear-gradient(#fff0df,#ff919a 42%,#d9214b)}
+.anomaly-energy.is-techno-transfer .anomaly-energy-label,.anomaly-energy.is-techno-transfer .anomaly-energy-value{color:#ffe0da}
+.anomaly-energy.is-phantom-transfer{border-color:#b9ffe7;box-shadow:inset 0 1px #e4fff288,0 0 7px #71eec442}
+.anomaly-energy.is-phantom-transfer .anomaly-energy-fill{background:linear-gradient(#eafff4,#a0ffd0 42%,#42aebf)}
+.anomaly-energy.is-phantom-transfer .anomaly-energy-label,.anomaly-energy.is-phantom-transfer .anomaly-energy-value{color:#ddfff0}
+.anomaly-energy.is-psionic-transfer{border-color:#8eeaff;box-shadow:inset 0 1px #d7fcff88,0 0 7px #12cfff42}
+.anomaly-energy.is-psionic-transfer .anomaly-energy-fill{background:linear-gradient(#effcff,#66eaff 42%,#059bff)}
+.anomaly-energy.is-psionic-transfer .anomaly-energy-label,.anomaly-energy.is-psionic-transfer .anomaly-energy-value{color:#ddfaff}
+.anomaly-energy.is-glitch-transfer{border-color:#91fff0;box-shadow:inset 0 1px #e8ffff88,0 0 7px #d65de342}
+.anomaly-energy.is-glitch-transfer .anomaly-energy-fill{background:linear-gradient(110deg,#ddffff,#68f4e6 52%,#e17bdc)}
+.anomaly-energy.is-glitch-transfer .anomaly-energy-label,.anomaly-energy.is-glitch-transfer .anomaly-energy-value{color:#dffffa}
+.anomaly-energy.is-spores-transfer{border-color:#d1f392;box-shadow:inset 0 1px #f8ffd088,0 0 7px #a4d64642}
+.anomaly-energy.is-spores-transfer .anomaly-energy-fill{background:linear-gradient(#ffffdc,#d8f48e 44%,#82ba49)}
+.anomaly-energy.is-spores-transfer .anomaly-energy-label,.anomaly-energy.is-spores-transfer .anomaly-energy-value{color:#f2ffd3}
+.anomaly-energy[data-mutation] .anomaly-energy-fill{background:linear-gradient(var(--strength-hi,#e4ffc9),var(--strength-mid,#a2df81) 46%,var(--strength-lo,#528e79));box-shadow:inset 0 1px #ffffffb3,inset 0 -1px #102d4c55}
+.anomaly-energy.is-low {--strength-hi:#fff3a3;--strength-mid:#ffd647;--strength-lo:#bd751a}
+.anomaly-energy.is-critical {--strength-hi:#ffbaa3;--strength-mid:#ff554c;--strength-lo:#a01e40}
+
+.anomaly-energy-track {
+  background:linear-gradient(#0b1930,#172542 78%,#263957);
+  box-shadow:inset 0 2px 4px #050c21bf;
+  transition:border-color .2s ease,box-shadow .2s ease;
+}
+.anomaly-energy-track::after {
+  background:linear-gradient(#efffff14,transparent 50%,#07122439);
+}
+.anomaly-energy-drain {
+  position:absolute;
+  inset:1px 0 1px auto;
+  width:3px;
+  border-radius:3px;
+  background:linear-gradient(#ffe0b6,#fff9df 50%,#f09976);
+  box-shadow:-1px 0 4px #ec7c56aa;
+  opacity:0;
+}
+.anomaly-energy.is-burning .anomaly-energy-drain {opacity:1}
+.anomaly-energy.is-spend .anomaly-energy-track {border-color:#f7c677}
+.anomaly-energy.is-hazard .anomaly-energy-track {border-color:#ff958c}
+.anomaly-energy.is-spend .anomaly-energy-value {animation:strength-number-spend .42s ease-out}
+.anomaly-energy.is-critical .anomaly-energy-track {border-color:#f09987}
+.anomaly-energy.is-critical .anomaly-energy-label {color:#ffceba}
+.anomaly-energy.is-recover .anomaly-energy-track {
+  border-color:#d8ffa4;
+  animation:strength-refill-track .72s ease-out;
+}
+.anomaly-energy.is-last {
+  border-color:#ffac96;
+  background:linear-gradient(#533045,#252740);
+}
+.anomaly-energy.is-last::before {animation-duration:.92s}
+.anomaly-energy.is-last .anomaly-energy-value {
+  color:#fff0dc;
+  text-shadow:0 0 8px #ff846e9e,0 1px #421a32;
+}
+.anomaly-energy.is-exhausted {
+  border-color:#c57976;
+  background:linear-gradient(#412c43,#212338);
+}
+.anomaly-energy.is-exhausted .anomaly-energy-track {
+  border-color:#975b64;
+  background:linear-gradient(#160e21,#302034);
+}
+.anomaly-energy.is-exhausted .anomaly-energy-label {color:#ffd1bc}
+.anomaly-energy.is-exhausted .anomaly-energy-value {color:#fff0e1;animation:none}
+.anomaly-energy.is-exhaustion-flash {animation:strength-extinguish .62s ease-out}
+.anomaly-energy.is-exhaustion-flash .anomaly-energy-wave {
+  inset:0;
+  width:auto;
+  transform:none;
+  background:linear-gradient(90deg,#fa765d3a,#ffe1b1a6,#fa765d3a);
+  animation:strength-extinguish-track .5s ease-out;
+}
+@keyframes strength-refill-track {22%{box-shadow:inset 0 0 8px #ebffb1c7,0 0 10px #c3ff88cf}}
+@keyframes strength-number-spend {30%{transform:translateY(-1px) scale(1.07);color:#fff0b9}}
+@keyframes strength-extinguish {
+  15%{box-shadow:inset 0 0 14px #ff9e8f9c,0 0 13px #ff8b7594}
+  100%{box-shadow:inset 0 1px #82b8cc88,0 1px #efffff99}
+}
+@keyframes strength-extinguish-track {0%,100%{opacity:0}16%{opacity:.94}}
+@media(prefers-reduced-motion:reduce) {
+  .anomaly-energy {animation:none!important}
+}

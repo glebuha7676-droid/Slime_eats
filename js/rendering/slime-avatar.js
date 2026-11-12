@@ -425,7 +425,7 @@
     useReferenceFace = false, irisTint = '', cheekFilter = '', mouthStyle = '', nanoEyeOpenness = null,
     nanoEyeCount = 0, psionicsEyes = false, phantomEyes = false, sporesEyes = false,
     fireEyes = false, electricEyes = false, frostEyes = false, cosmosEyes = false, glitchEyes = false,
-    glitchFaceLevel = 0, hideEyes = false, hideMouth = false, eyeMagnification = 1, hiddenEyeSide = 0
+    glitchFaceLevel = 0, hideEyes = false, hideMouth = false, eyeMagnification = 1, hiddenEyeSide = 0, eyeClosure = 0
   }) {
     const referenceEyeScale = .74;
     const drawReferenceFaceLayer = (image, offsetX = 0, offsetY = 0, scale = referenceEyeScale) => {
@@ -774,6 +774,15 @@
     }
 
     };
+    const drawPreparedEyes = () => {
+      const closing=Math.max(0,Math.min(1,Number(eyeClosure)||0));
+      if(closing<.001){drawEyes();return;}
+      if(hideEyes)return;
+      if(closing<.96){targetCtx.save();targetCtx.translate(0,eyeY+radius*.02);targetCtx.scale(1,1-closing*.94);targetCtx.translate(0,-eyeY-radius*.02);drawEyes();targetCtx.restore();}
+      targetCtx.save();targetCtx.globalAlpha=alpha*Math.min(1,closing*1.6);targetCtx.strokeStyle=faceInk;targetCtx.lineWidth=Math.max(1.3,radius*.044);targetCtx.lineCap='round';
+      for(const side of [-1,1]){if(hiddenEyeSide===side)continue;const cx=side*eyeX,yy=eyeY-radius*.225*(1-closing)+radius*.025;targetCtx.beginPath();targetCtx.moveTo(cx-radius*.19,yy);targetCtx.quadraticCurveTo(cx,yy+radius*.026,cx+radius*.19,yy);targetCtx.stroke();}
+      targetCtx.restore();
+    };
     // Fit each moving eye to its lens, without moving the bridge or mouth.
     if (eyeMagnification !== 1 && !hideEyes) {
       for (const side of [-1, 1]) {
@@ -781,14 +790,14 @@
         targetCtx.save();
         targetCtx.beginPath();targetCtx.rect(side < 0 ? -radius * 2 : 0, -radius * 2, radius * 2, radius * 4);targetCtx.clip();
         targetCtx.translate(cx,cy);targetCtx.scale(eyeMagnification,eyeMagnification);targetCtx.translate(-cx,-cy);
-        drawEyes();targetCtx.restore();
+        drawPreparedEyes();targetCtx.restore();
       }
     } else if (hiddenEyeSide) {
       // A pirate patch hides one eye; the other keeps its own gaze and blink.
       targetCtx.save();targetCtx.beginPath();
       targetCtx.rect(hiddenEyeSide < 0 ? 0 : -radius * 2, -radius * 2, radius * 2, radius * 4);targetCtx.clip();
-      drawEyes();targetCtx.restore();
-    } else drawEyes();
+      drawPreparedEyes();targetCtx.restore();
+    } else drawPreparedEyes();
 
     targetCtx.globalAlpha = alpha * .82;
     if (useReferenceFace) {
@@ -814,6 +823,8 @@
     targetCtx.lineWidth = Math.max(3.2, radius * .068);
     if (hideMouth) {
       // Keep the canvas save/restore balanced while a moustache covers the mouth.
+    } else if (mouthStyle === 'concentrated') {
+      const y=radius*.37;targetCtx.lineWidth=Math.max(1.3,radius*.046);targetCtx.beginPath();targetCtx.moveTo(-radius*.12,y);targetCtx.bezierCurveTo(-radius*.04,y-radius*.015,radius*.04,y-radius*.015,radius*.12,y);targetCtx.stroke();
     } else if (mouthStyle === 'pursed') {
       const mouthY = radius * .39;
       targetCtx.save();
@@ -902,12 +913,12 @@
     x, y, radius, emotion = 'focused', colors = defaultColors,
     skin = 'classic', accessory = 'none',
     scaleX = 1, scaleY = 1, rotation = 0, alpha = 1,
-    gazeX = 0, gazeY = 0, blink = false, aura = '', petPoint = null, tipSway = 0,
+    gazeX = 0, gazeY = 0, blink = false, eyeClosure = 0, aura = '', petPoint = null, tipSway = 0,
     timestamp = performance.now(), emotionTime = 0,
     bodyPaint = null, backLayer = null, frontLayer = null, afterLayer = null,
     bodyHighlight = true, outlineColor = '#26334a', faceColor = null,
     faceScaleX = 1, faceScaleY = 1, faceOffsetY = 0, ghostAura = 0,
-    appearance = 'classic', bodyTint = '', bodyFilter = '',
+    appearance = 'classic', bodyTint = '', bodyFilter = '', poisoned = false,
     bodyVariant = '', irisTint = '', cheekFilter = '', mouthStyle = '', hideFace = false,
     nanoEyeOpenness = null, psionicsEyes = false, phantomEyes = false, sporesEyes = false,
     fireEyes = false, electricEyes = false, frostEyes = false, cosmosEyes = false, glitchEyes = false,
@@ -1023,7 +1034,11 @@
           : darkenHex(colors[2])
       : outlineColor;
     const faceInk = faceColor || (cuteV2 ? '#083f3b' : outline);
-    if (cuteV2 && colors.every((color, index) => color === defaultColors[index])) colors = ['#f7ff92', '#72f23e', '#0fc868'];
+    if (poisoned) {
+      colors = ['#e7ffc2', '#8bdf46', '#36782b'];
+      bodyFilter = 'grayscale(1) sepia(1) hue-rotate(47deg) saturate(3.2)';
+      bodyTint = '';
+    } else if (cuteV2 && colors.every((color, index) => color === defaultColors[index])) colors = ['#f7ff92', '#72f23e', '#0fc868'];
     const gradient = targetCtx.createRadialGradient(-radius * (cuteV2 ? .12 : .25), -radius * (cuteV2 ? .2 : .35), radius * (cuteV2 ? .04 : .12), 0, radius * .02, radius * 1.12);
     gradient.addColorStop(0, colors[0]);
     gradient.addColorStop(cuteV2 ? .42 : .58, colors[1]);
@@ -1267,7 +1282,7 @@
     targetCtx.scale(faceScaleX, faceScaleY);
     if (cuteV2) {
       drawCuteFaceV2(targetCtx, {
-        radius, emotion, faceInk, alpha, gazeX, gazeY, blink, timestamp, emotionTime,
+        radius, emotion, faceInk, alpha, gazeX, gazeY, blink, eyeClosure, timestamp, emotionTime,
         useReferenceFace, irisTint, cheekFilter, mouthStyle, nanoEyeOpenness,
         nanoEyeCount: bodyVariant === 'technoUltra' || nanoEyeOpenness != null ? 1 : 0,
         psionicsEyes, phantomEyes, sporesEyes, fireEyes, electricEyes, frostEyes, cosmosEyes, glitchEyes,
@@ -1276,7 +1291,7 @@
         hiddenEyeSide:window.SlimeAccessories?.info(accessory)?.hiddenEyeSide || 0
       });
       if (typeof afterLayer === 'function') afterLayer(targetCtx, layerState);
-      window.SlimeAccessories?.draw(targetCtx,accessory,{radius,cuteV2,blink,emotion});
+      window.SlimeAccessories?.draw(targetCtx,accessory,{radius,cuteV2,blink,eyeClosure,emotion});
       targetCtx.restore();
       return;
     }
@@ -1309,8 +1324,12 @@
       if(!window.SlimeAccessories?.coversMouth(accessory)){targetCtx.beginPath(); targetCtx.arc(0, radius * .29, radius * .17, Math.PI + .18, Math.PI * 2 - .18); targetCtx.stroke()}
     } else {
       const squint = emotion === 'impact' || emotion === 'power';
+      targetCtx.save();
+      if(eyeClosure>0&&eyeClosure<.96){targetCtx.translate(0,eyeY);targetCtx.scale(1,1-eyeClosure*.94);targetCtx.translate(0,-eyeY);}
       if (window.SlimeAccessories?.coversEyes(accessory)) {
         // The opaque visor or blindfold replaces this face region.
+      } else if (eyeClosure>=.96) {
+        targetCtx.strokeStyle=faceInk;targetCtx.lineWidth=Math.max(1.3,radius*.044);for(const side of [-1,1]){if(hiddenEyeSide===side)continue;targetCtx.beginPath();targetCtx.moveTo(eyeX*side-radius*.14,eyeY);targetCtx.lineTo(eyeX*side+radius*.14,eyeY);targetCtx.stroke();}
       } else if (squint) {
         targetCtx.strokeStyle = faceInk;
         targetCtx.lineWidth = Math.max(2.5, radius * .08);
@@ -1348,11 +1367,14 @@
         }
       }
 
+      targetCtx.restore();
       targetCtx.strokeStyle = faceInk;
       targetCtx.fillStyle = faceInk;
       targetCtx.lineWidth = Math.max(2.3, radius * .075);
       if (window.SlimeAccessories?.coversMouth(accessory)) {
         // Covered by the wearable, not an additional mouth sprite.
+      } else if (mouthStyle==='concentrated') {
+        targetCtx.lineWidth=Math.max(1.3,radius*.046);targetCtx.beginPath();targetCtx.moveTo(-radius*.12,radius*.27);targetCtx.quadraticCurveTo(0,radius*.255,radius*.12,radius*.27);targetCtx.stroke();
       } else if (emotion === 'surprised' || emotion === 'hungry') {
         targetCtx.beginPath(); targetCtx.ellipse(0, radius * .27, radius * .115, radius * (emotion === 'hungry' ? .18 : .16), 0, 0, Math.PI * 2); targetCtx.fill();
         if (emotion === 'hungry') {
@@ -1401,7 +1423,7 @@
       targetCtx.globalAlpha = alpha;
     }
     if (typeof afterLayer === 'function') afterLayer(targetCtx, layerState);
-    window.SlimeAccessories?.draw(targetCtx,accessory,{radius,cuteV2,blink,emotion});
+    window.SlimeAccessories?.draw(targetCtx,accessory,{radius,cuteV2,blink,eyeClosure,emotion});
     targetCtx.restore();
   }
 

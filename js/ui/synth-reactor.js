@@ -1,7 +1,39 @@
-/* Cylindrical reagent, blue bubbles and procedural plasma; no generated VFX. */
+/* Layered glass, translucent raster reagent and timed transfer/dispensing. */
 (() => {
   'use strict';
   let release = () => {};
+  const timings=Object.freeze({mix:3800,drain:880,door:780,prizeDelay:160});
+  function prepareLoopTexture(image) {
+    const width=256,height=1024,band=64;
+    const source=document.createElement('canvas');source.width=width;source.height=height;
+    source.getContext('2d').drawImage(image,0,0,width,height);
+    const soft=document.createElement('canvas');soft.width=width;soft.height=height;
+    const s=soft.getContext('2d');s.drawImage(source,0,0);
+    // Flatten the texture's end gradients before reflecting it. This gives
+    // matching color AND a gentle tangent, without a ghosted crossfade.
+    for(let y=0;y<band;y++){
+      const t=y/band,sample=t*t*(2-t)*band;
+      s.drawImage(source,0,sample,width,1,0,y,width,1);
+      s.drawImage(source,0,height-1-sample,width,1,0,height-1-y,width,1);
+    }
+    const loop=document.createElement('canvas');loop.width=width;loop.height=height*2;
+    const g=loop.getContext('2d');g.drawImage(soft,0,0);
+    g.save();g.translate(0,height*2);g.scale(1,-1);g.drawImage(soft,0,0);g.restore();
+    const edge=g.createLinearGradient(0,0,width,0);
+    edge.addColorStop(0,'#0000');edge.addColorStop(.19,'#000');edge.addColorStop(.81,'#000');edge.addColorStop(1,'#0000');
+    g.globalCompositeOperation='destination-in';g.fillStyle=edge;g.fillRect(0,0,width,loop.height);
+    g.globalCompositeOperation='source-over';
+    // Exact matching boundary rows, including alpha; no readback in gameplay.
+    g.clearRect(0,loop.height-1,width,1);g.drawImage(loop,0,0,width,1,0,loop.height-1,width,1);
+    return loop;
+  }
+  function paintLoop(target,texture,x,y,width,height,offset) {
+    const period=texture.height/texture.width*width;
+    const shift=((offset%period)+period)%period;
+    target.save();target.beginPath();target.rect(x,y,width,height);target.clip();
+    for(let top=y-shift;top<y+height;top+=period)target.drawImage(texture,x,top,width,period);
+    target.restore();
+  }
   // Traced in native artwork pixels, including both fixture cut-ins and the
   // bowed front edge. These are visible glass contours, not rounded boxes.
   const shapes=Object.freeze({
@@ -17,106 +49,153 @@
   function mount(capsule) {
     release();
     if (!capsule) return;
-    const holder = capsule.querySelector('.mutation-glass');
-    const liquid = capsule.querySelector('#mutationLiquid');
-    if (!holder || !liquid) return;
-    const canvas = document.createElement('canvas'); canvas.className = 'synth-reactor-canvas';
-    canvas.setAttribute('aria-hidden','true'); holder.append(canvas);
-    const c = canvas.getContext('2d');
-    const reduced = matchMedia('(prefers-reduced-motion:reduce)');
-    let frame = 0, closed = false, w = 1, h = 1, cssW=1,cssH=1,shape=shapes.wide,glassPath,fill = 0, target = 0;
-    let last = 0, drawn = 0, activity = 0, rippleAt = -10000;
-    let wasSplash = false;
-    const bubble = document.createElement('canvas'); bubble.width = bubble.height = 40;
-    const bc = bubble.getContext('2d');
-    const bg = bc.createRadialGradient(13,11,1,20,20,17);
-    bg.addColorStop(0,'#edfcff'); bg.addColorStop(.2,'#a4efff');
-    bg.addColorStop(.5,'#24bbef'); bg.addColorStop(.83,'#087ec5'); bg.addColorStop(1,'#44cfff00');
-    bc.fillStyle=bg;bc.beginPath();bc.arc(20,20,18,0,Math.PI*2);bc.fill();
-    bc.fillStyle='#e8fbff';bc.beginPath();bc.ellipse(14,12,4,2.5,-.5,0,Math.PI*2);bc.fill();
-    function visible() { return !closed && capsule.isConnected && !!holder.offsetParent && window.SlimeUIActivity.isActive(capsule); }
-    function wake() { if (visible() && !frame) frame=requestAnimationFrame(draw); }
-    function sync() {
-      target=Math.max(0,Math.min(1,(parseFloat(liquid.style.getPropertyValue('--liquid-fill'))||0)/100));
-      if (capsule.matches('.is-draining,.is-dispensing,.is-core-ready,.is-output-selected,.is-complete')) target=0;
-      if (capsule.matches('.is-dispensing,.is-core-ready,.is-output-selected,.is-complete')) fill=0;
-      const splash=liquid.classList.contains('is-splashing');
-      if (splash&&!wasSplash) rippleAt=performance.now();
-      wasSplash=splash;wake();
+    const holder=capsule.querySelector('.mutation-glass'),liquid=capsule.querySelector('#mutationLiquid');
+    if(!holder||!liquid)return;
+    const canvas=document.createElement('canvas');canvas.className='synth-reactor-canvas';
+    canvas.dataset.reagent='violet-green';canvas.dataset.layers='liquid-under-glass';
+    canvas.setAttribute('aria-hidden','true');holder.append(canvas);
+    const c=canvas.getContext('2d'),reduced=matchMedia('(prefers-reduced-motion:reduce)');
+    let frame=0,closed=false,cssW=1,cssH=1,w=1,h=1,shape=shapes.wide,glassPath,pipeMask;
+    let fill=0,target=0,last=0,drawn=0,clock=0,travel=0,bubbleClock=0,activity=0,depositAt=-10000;
+    let phase='',phaseAt=0,drainFill=0,coat=null,art=null,mixture=null;
+    const sample=new Image();sample.decoding='async';
+    sample.onload=()=>{
+      mixture=prepareLoopTexture(sample);
+      canvas.dataset.motion='upward-loop';
+      canvas.dataset.texture='ready';drawn=0;wake();
+    };
+    sample.src=window.SlimeGameAssets.versionedAsset('assets/ui/anomaly-fluid-v2/flow-strip-v3.webp');
+    const bubble=document.createElement('canvas');bubble.width=bubble.height=48;
+    const bc=bubble.getContext('2d'),bg=bc.createRadialGradient(17,14,1,24,24,21);
+    bg.addColorStop(0,'#f0ffcaaa');bg.addColorStop(.23,'#d3f58b80');bg.addColorStop(.62,'#87c26b44');bg.addColorStop(1,'#7ca98900');
+    bc.fillStyle=bg;bc.fillRect(0,0,48,48);
+    const plasma=document.createElement('canvas');plasma.width=plasma.height=64;
+    const pc=plasma.getContext('2d'),pg=pc.createRadialGradient(32,32,0,32,32,32);
+    pg.addColorStop(0,'#deffa9dd');pg.addColorStop(.2,'#b8ed5aaa');pg.addColorStop(.5,'#9864c966');pg.addColorStop(1,'#7851aa00');
+    pc.fillStyle=pg;pc.fillRect(0,0,64,64);
+    function visible(){return !closed&&capsule.isConnected&&!!holder.offsetParent&&window.SlimeUIActivity.isActive(capsule);}
+    function wake(){if(visible()&&!frame)frame=requestAnimationFrame(draw);}
+    function sync(){
+      const next=capsule.matches('.is-dispensing,.is-core-ready,.is-output-selected,.is-complete')?'output'
+        :capsule.classList.contains('is-draining')?'draining'
+        :capsule.classList.contains('is-processing')?'mixing'
+        :capsule.classList.contains('is-synthesis-ready')?'ready':'idle';
+      if(next!==phase){phase=next;phaseAt=performance.now();if(phase==='draining')drainFill=fill;drawn=0;}
+      let nextTarget=Math.max(0,Math.min(1,(parseFloat(liquid.style.getPropertyValue('--liquid-fill'))||0)/100));
+      if(['draining','output'].includes(phase))nextTarget=0;
+      if(nextTarget>target+.0001)depositAt=performance.now();
+      target=nextTarget;if(phase==='output')fill=0;
+      canvas.dataset.phase=phase;wake();
     }
-    function resize() {
+    function buildCoat(){
+      if(!art?.complete||!art.naturalWidth)return;
+      // Reuse the painted front reflections, so the reagent stays BEHIND glass.
+      coat=document.createElement('canvas');coat.width=w;coat.height=h;
+      const g=coat.getContext('2d');
+      g.drawImage(art,shape.box[0],shape.box[1],w,h,0,0,w,h);
+      const mask=g.createLinearGradient(0,0,w,0);
+      for(const [stop,alpha] of [[0,.72],[.06,.45],[.14,.85],[.23,.35],[.32,.07],[.68,.05],[.88,.24],[.97,.57],[1,.75]])mask.addColorStop(stop,`rgba(0,0,0,${alpha})`);
+      g.globalCompositeOperation='destination-in';g.fillStyle=mask;g.fillRect(0,0,w,h);
+      canvas.dataset.glass='ready';
+      drawn=0;wake();
+    }
+    function resize(){
       cssW=Math.max(1,holder.clientWidth);cssH=Math.max(1,holder.clientHeight);
-      shape=getComputedStyle(capsule.querySelector('.machine-tall')).display!=='none'?shapes.tall:shapes.wide;
+      art=[...capsule.querySelectorAll('.mutation-machine-art')].find(i=>getComputedStyle(i).display!=='none');
+      shape=art?.classList.contains('machine-tall')?shapes.tall:shapes.wide;
       w=shape.box[2];h=shape.box[3];
       glassPath=new Path2D();glassPath.addPath(new Path2D(shape.glass),new DOMMatrix().translate(-shape.box[0],-shape.box[1]));
-      canvas.dataset.shape=shape===shapes.tall?'tall':'wide';
-      const pipe=capsule.querySelector('.mutation-transfer-flow');
-      pipe?.setAttribute('viewBox',`0 0 ${shape.width} ${shape.height}`);
-      pipe?.querySelectorAll('g path').forEach(p=>p.setAttribute('d',shape.pipe));
-      pipe?.querySelector('.synth-pipe-mask')?.setAttribute('d',shape.pipeMask);
+      pipeMask=new Path2D(shape.pipeMask);canvas.dataset.shape=shape===shapes.tall?'tall':'wide';
       const dpr=Math.min(1.5,devicePixelRatio||1);
       canvas.width=Math.round(cssW*dpr);canvas.height=Math.round(cssH*dpr);
-      c.setTransform(dpr,0,0,dpr,0,0);drawn=0;wake();
+      c.setTransform(canvas.width/cssW,0,0,canvas.height/cssH,0,0);
+      coat=null;buildCoat();drawn=0;wake();
     }
-    function draw(at) {
-      frame=0;if(!visible())return;
-      const dt=Math.min(.08,last?(at-last)/1000:1/30);last=at;
-      const processing=capsule.classList.contains('is-processing');
-      fill=reduced.matches?target:fill+(target-fill)*(1-Math.exp(-dt*(target<fill?5.5:7)));
-      activity+=(Number(processing)-activity)*(1-Math.exp(-dt*7));
-      if(Math.abs(fill-target)<.0005)fill=target;
-      if(at-drawn>=32||reduced.matches||(fill===target&&canvas.dataset.fill!==fill.toFixed(3))){
-        drawn=at;c.clearRect(0,0,cssW,cssH);
-        if(fill>.001){
-          const cap=shape.cap,bottom=shape.bottom-shape.box[1];
-          const y=bottom-(bottom-(shape.top-shape.box[1]))*fill;
-          c.save();c.scale(cssW/shape.width,cssH/shape.height);c.translate(shape.box[0],shape.box[1]);c.clip(glassPath);
-          c.save();c.beginPath();c.moveTo(0,y);
-          c.bezierCurveTo(w*.2,y-cap*1.33,w*.8,y-cap*1.33,w,y);
-          c.lineTo(w,h);c.lineTo(0,h);c.closePath();
-          const body=c.createLinearGradient(0,0,w,0);
-          body.addColorStop(0,'#087bbdcc');body.addColorStop(.22,'#23bfe2c9');body.addColorStop(.52,'#37dbedc9');body.addColorStop(.84,'#159ed4d9');body.addColorStop(1,'#086ca7df');
-          c.fillStyle=body;c.fill();c.clip();
-          if(activity>.01){
-            const glow=c.createRadialGradient(w*.5,y+(bottom-y)*.52,0,w*.5,y+(bottom-y)*.52,w*.6);
-            glow.addColorStop(0,`rgba(180,249,255,${activity*.65})`);glow.addColorStop(.45,`rgba(38,208,255,${activity*.38})`);glow.addColorStop(1,'#06a5ef00');
-            c.fillStyle=glow;c.fillRect(0,y,w,bottom-y);
-            for(let strand=0;strand<3;strand++){
-              c.beginPath();for(let i=0;i<=64;i++){
-                const p=i/64,px=w*(.5+Math.sin(p*9-at*.004+strand*2.1)*(.12+.17*Math.sin(p*Math.PI))),py=y+(bottom-y)*p;
-                if(i)c.lineTo(px,py);else c.moveTo(px,py);
-              }
-              c.strokeStyle=`rgba(193,249,255,${activity*(strand===1?.72:.45)})`;c.lineWidth=Math.max(1,w*.014);c.shadowColor='#4fd8ff';c.shadowBlur=6;c.stroke();c.shadowBlur=0;
-            }
-          }
-          const time=reduced.matches?1.7:at/1000;
-          for(let i=0;i<(processing?12:7);i++){
-            const speed=processing?.38:.12,phase=(time*speed*(.7+(i%3)*.19)+i*.173)%1;
-            const bx=w*(.12+((i*.317)%1)*.76)+Math.sin(time*1.5+i)*w*.025;
-            const by=bottom-phase*Math.max(1,bottom-y),size=w*(.045+(i%4)*.012);
-            c.globalAlpha=.8*Math.min(1,phase*7,(1-phase)*6);c.drawImage(bubble,bx-size/2,by-size/2,size,size);
-          }
-          c.globalAlpha=1;c.restore();
-          const surface=c.createLinearGradient(0,y-cap,0,y+cap);
-          surface.addColorStop(0,'#c0faffd9');surface.addColorStop(.5,'#65e7f4db');surface.addColorStop(1,'#16a9d2d9');
-          c.fillStyle=surface;c.beginPath();c.ellipse(w/2,y,w*.494,cap,0,0,Math.PI*2);c.fill();
-          c.strokeStyle='#b5faffbc';c.lineWidth=2;c.stroke();
-          const ripple=(at-rippleAt)/700;
-          if(!reduced.matches&&ripple>=0&&ripple<1){c.strokeStyle=`rgba(225,255,255,${(1-ripple)*.8})`;c.beginPath();c.ellipse(w/2,y,w*(.12+.36*ripple),cap*(.2+.8*ripple),0,0,Math.PI*2);c.stroke();}
-          c.restore();
+    const artLoads=[...capsule.querySelectorAll('.mutation-machine-art')];
+    artLoads.forEach(image=>image.addEventListener('load',buildCoat));
+    function drawLiquid(at){
+      const bottom=shape.bottom-shape.box[1],top=shape.top-shape.box[1];
+      const deposit=Math.max(0,1-(at-depositAt)/650);
+      const bob=reduced.matches?0:Math.sin(clock*3.1)*activity*1.5+Math.sin((at-depositAt)/110)*deposit*2.5;
+      const y=bottom-(bottom-top)*fill+bob;
+      const cap=shape.cap*.64*Math.min(1,fill*15);
+      c.save();c.scale(cssW/shape.width,cssH/shape.height);c.translate(shape.box[0],shape.box[1]);c.clip(glassPath);
+      if(fill>.001){
+        c.save();c.beginPath();c.moveTo(0,y);
+        c.bezierCurveTo(w*.23,y-cap*1.3,w*.77,y-cap*1.3,w,y);c.lineTo(w,h);c.lineTo(0,h);c.closePath();
+        const body=c.createLinearGradient(0,0,w,0);
+        body.addColorStop(0,'#26123ec2');body.addColorStop(.3,'#56317aa6');body.addColorStop(.65,'#4d287cae');body.addColorStop(1,'#24113dba');
+        c.fillStyle=body;c.fill();c.clip();
+        if(mixture){
+          c.globalAlpha=.59;
+          paintLoop(c,mixture,w*.09,0,w*.82,h,reduced.matches?0:travel*w);
+          c.globalAlpha=1;
         }
-        canvas.dataset.fill=fill.toFixed(3);
+        const time=reduced.matches?1.7:clock;
+        for(let i=0;i<13;i++){
+          const appear=i<3?1:Math.max(0,Math.min(1,(activity-.15)/.65));
+          if(appear<.01)continue;
+          const p=((reduced.matches ? .0765 : bubbleClock)*(1+i*.075)+i*.173)%1;
+          const bx=w*(.16+(i*.257%1)*.68)+Math.sin(time+i)*w*.012;
+          const by=bottom-p*Math.max(1,bottom-y),size=w*(.034+i%4*.012);
+          c.globalAlpha=(.5+activity*.3)*appear*Math.min(1,p*6,(1-p)*7);c.drawImage(bubble,bx-size/2,by-size/2,size,size);
+        }
+        c.globalAlpha=1;c.restore();
+        const surface=c.createLinearGradient(0,y-cap,0,y+cap);
+        surface.addColorStop(0,'#b0a2c66e');surface.addColorStop(.48,'#714d9c8c');surface.addColorStop(1,'#34234888');
+        c.fillStyle=surface;c.beginPath();c.ellipse(w/2,y,w*.493,cap,0,0,Math.PI*2);c.fill();
+        // A soft patch of the reagent's color, without drawn arcs or rings.
+        const sheen=c.createRadialGradient(w*.38,y-cap*.18,0,w*.38,y-cap*.18,w*.28);
+        sheen.addColorStop(0,'#d0ef9580');sheen.addColorStop(1,'#b9df7e00');
+        c.save();c.beginPath();c.ellipse(w/2,y,w*.49,cap*.9,0,0,Math.PI*2);c.clip();c.fillStyle=sheen;c.fillRect(0,y-cap,w,cap*2);c.restore();
       }
-      if(!reduced.matches&&(fill>.001||Math.abs(fill-target)>.0005||activity>.01))wake();
+      if(coat){c.globalAlpha=.85;c.drawImage(coat,0,0,w,h);c.globalAlpha=1;}
+      c.restore();
+    }
+    function pipePoint(t){
+      const tall=shape===shapes.tall,start=tall?590:568,corner=tall?728:713,y=tall?195:168,end=tall?779:759,cy=tall?251:215,bottom=tall?313:248;
+      if(t<.5)return [start+(corner-start)*t*2,y];
+      if(t<.8){const q=(t-.5)/.3;return [(1-q)*(1-q)*corner+2*(1-q)*q*end+q*q*end,(1-q)*(1-q)*y+2*(1-q)*q*y+q*q*cy];}
+      return [end,cy+(bottom-cy)*(t-.8)/.2];
+    }
+    function drawTransfer(at){
+      canvas.dataset.transfer=phase==='draining'&&!reduced.matches?'1':'0';
+      if(canvas.dataset.transfer==='0')return;
+      const elapsed=(at-phaseAt)/timings.drain,envelope=Math.min(1,elapsed*6,(1-elapsed)*8);
+      if(envelope<=0)return;
+      c.save();c.scale(cssW/shape.width,cssH/shape.height);c.clip(pipeMask);
+      for(let i=0;i<4;i++){
+        const t=(((at-phaseAt)/550-i*.24)%1+1)%1,[x,y]=pipePoint(t);
+        c.globalAlpha=.75*envelope;c.drawImage(plasma,x-27,y-27,54,54);
+      }
+      c.restore();
+    }
+    function draw(at){
+      frame=0;if(!visible())return;
+      const dt=Math.min(.06,last?(at-last)/1000:1/30);last=at;
+      const phaseProgress=Math.max(0,Math.min(1,(at-phaseAt)/(phase==='mixing'?timings.mix:timings.drain)));
+      const requestedActivity=phase==='mixing' ? .3+.1*phaseProgress+.65*Math.sin(phaseProgress*Math.PI) : phase==='draining' ? .4*(1-phaseProgress) : 0;
+      activity+=(requestedActivity-activity)*(1-Math.exp(-dt*5));
+      // Integrate velocity rather than multiplying absolute time by activity:
+      // entering/leaving synthesis must never jump the fluid or bubble phase.
+      if(!reduced.matches){clock+=dt*(.65+activity*1.1);travel+=dt*(.035+activity*.30);bubbleClock+=dt*(.045+activity*.50);}
+      if(phase==='draining'){
+        const t=Math.min(1,(at-phaseAt)/(timings.drain-70)),ease=t*t*(3-2*t);
+        fill=reduced.matches?0:drainFill*(1-ease);
+      }else fill=reduced.matches?target:fill+(target-fill)*(1-Math.exp(-dt*9));
+      if(Math.abs(fill-target)<.0005)fill=target;
+      if(at-drawn>=32||reduced.matches||drawn===0){
+        drawn=at;c.clearRect(0,0,cssW,cssH);drawLiquid(at);drawTransfer(at);canvas.dataset.fill=fill.toFixed(3);
+      }
+      if(!reduced.matches&&(fill>.001||Math.abs(fill-target)>.0005||phase==='draining'||activity>.01))wake();
     }
     const observer=new MutationObserver(sync);
-    observer.observe(capsule,{attributes:true,attributeFilter:['class']});
-    observer.observe(liquid,{attributes:true,attributeFilter:['style','class']});
+    observer.observe(capsule,{attributes:true,attributeFilter:['class']});observer.observe(liquid,{attributes:true,attributeFilter:['style','class']});
     const panel=capsule.closest('.mutation-lab-v2');if(panel)observer.observe(panel,{attributes:true,attributeFilter:['data-view']});
     const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(holder);
     document.addEventListener('visibilitychange',wake);document.addEventListener('slime:ui-visibility',wake);reduced.addEventListener('change',sync);
-    release=()=>{closed=true;cancelAnimationFrame(frame);observer.disconnect();sizeObserver.disconnect();document.removeEventListener('visibilitychange',wake);document.removeEventListener('slime:ui-visibility',wake);reduced.removeEventListener('change',sync);canvas.remove();};
+    release=()=>{closed=true;cancelAnimationFrame(frame);observer.disconnect();sizeObserver.disconnect();sample.onload=null;artLoads.forEach(image=>image.removeEventListener('load',buildCoat));document.removeEventListener('visibilitychange',wake);document.removeEventListener('slime:ui-visibility',wake);reduced.removeEventListener('change',sync);canvas.remove();coat=null;};
     sync();resize();
   }
-  window.SlimeSynthReactor=Object.freeze({mount,shapes,stop:()=>release()});
+  window.SlimeSynthReactor=Object.freeze({mount,shapes,timings,prepareLoopTexture,paintLoop,stop:()=>release()});
 })();

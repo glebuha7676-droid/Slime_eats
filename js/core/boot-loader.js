@@ -7,7 +7,8 @@
   const retry = document.getElementById('bootRetry');
   let done = false, failed = false, loaded = 0, previous = -1;
   const manifest = window.SlimeBootManifest || {assets:[]};
-  const total = manifest.assets.reduce((sum, asset) => sum + asset.bytes, 0);
+  const startupAssets = manifest.assets.filter(asset => !asset.lazy);
+  const total = startupAssets.reduce((sum, asset) => sum + asset.bytes, 0);
   const startedAt = performance.now();
   function paint(value, message) {
     if (failed) return;
@@ -68,7 +69,7 @@
     if (location.protocol === 'file:') { paint(98, 'Готовим лабораторию…'); return; }
     let cursor = 0;
     const workers = Array.from({length:4}, async () => {
-      while (cursor < manifest.assets.length && !failed) await download(manifest.assets[cursor++]);
+      while (cursor < startupAssets.length && !failed) await download(startupAssets[cursor++]);
     });
     await Promise.all(workers);
     if (failed) throw new Error('Startup failed');

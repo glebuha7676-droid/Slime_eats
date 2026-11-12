@@ -3,7 +3,7 @@ html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-di
   .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
   .ad-btn,.secondary,.tutorial-next,.boot-retry,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
   .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
-  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]){
+  #tutorialGiftClaimBtn,#adCancelBtn){
   --button-face:#10bff1;--button-edge:#075b83;--button-top:#9af1ff;--button-bottom:#058dcb;
   border:2px solid var(--button-edge)!important;border-radius:13px!important;
   background:var(--button-face)!important;
@@ -16,12 +16,12 @@ html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-di
   .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
   .ad-btn,.secondary,.tutorial-next,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
   .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
-  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]) :is(b,span){
+  #tutorialGiftClaimBtn,#adCancelBtn) :is(b,span){
   color:inherit!important;text-shadow:inherit!important;paint-order:stroke fill;
 }
 html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-dialog,#adOverlay,#resultOverlay,#gameCompleteOverlay,.boot-screen) button:is(
   .secondary,.shop-tab:not(.active),.home-mode-tab:not(.active),.home-world-picker,
-  #adCancelBtn,#toggleRunSoundBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]){
+  #adCancelBtn,#toggleRunSoundBtn){
   --button-face:#d9eff5;--button-edge:#527d92;--button-top:#fff;--button-bottom:#adcfdc;
   color:#24536a!important;text-shadow:none!important;-webkit-text-stroke:0;
 }
@@ -37,7 +37,7 @@ html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-di
   .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
   .ad-btn,.secondary,.tutorial-next,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
   .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
-  #tutorialGiftClaimBtn,#adCancelBtn,[data-admin-mutation-stage]):disabled{
+  #tutorialGiftClaimBtn,#adCancelBtn):disabled{
   --button-face:#52768a;--button-edge:#6e94a5;--button-top:#789aa9;--button-bottom:#3f6176;
   background:var(--button-face)!important;color:#bdd5df!important;text-shadow:none!important;-webkit-text-stroke:0;
   box-shadow:inset 0 2px var(--button-top),inset 0 -3px var(--button-bottom)!important;opacity:1!important;
@@ -46,7 +46,7 @@ html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-di
   .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
   .ad-btn,.secondary,.tutorial-next,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
   .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
-  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]):active:not(:disabled){transform:translateY(2px)!important}
+  #tutorialGiftClaimBtn,#adCancelBtn):active:not(:disabled){transform:translateY(2px)!important}
 
 /* Service tiles on the home screen retain the light metal colour. */
 html body[data-screen="home"] #app .world-summary :is(.header-rewards-btn,.header-admin-btn),
@@ -67,7 +67,7 @@ html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-l
 html body #panelOverlay .panel-modal:has(.mutation-lab-v2) #closePanelBtn{background:#f67f83!important}
 html body #panelOverlay .buy-btn{font-size:13px!important;min-height:34px!important}
 html body #panelOverlay .reward-buttons button{font-size:15px!important;min-height:44px!important}
-html body #panelOverlay #closePanelBtn,html body #adminToolsOverlay #closeAdminToolsBtn{
+html body #panelOverlay #closePanelBtn{
   display:grid!important;place-items:center!important;font-size:22px!important;line-height:1!important;
   color:#fff!important;text-indent:0!important;overflow:hidden!important;
 }
@@ -100,7 +100,7 @@ html body :is(#app,#panelOverlay,#runMenuOverlay,#adminToolsOverlay,.tutorial-di
   .primary,.icon-btn,.encyclopedia-world-tab,.buy-btn,.shop-tab,.run-menu-action,.result-continue-btn,.result-multiplier-btn,.game-complete-action,
   .ad-btn,.secondary,.tutorial-next,.boot-retry,.admin-unlock-all,.admin-infinite-flasks,.admin-reset-progress,
   .admin-restart-btn,.admin-tutorial-skip,.glitch-choice-option,.home-mode-tab,.home-world-picker,
-  #tutorialGiftClaimBtn,#adCancelBtn,#adminPrevWorldBtn,#adminNextWorldBtn,[data-admin-mutation-stage]):is(:enabled,:disabled),
+  #tutorialGiftClaimBtn,#adCancelBtn):is(:enabled,:disabled),
 html body #panelOverlay button:is(#mutationChooseBtn,#mutationSynthesizeBtn,.slime-stage-open,.evolution-prompt-actions button):is(:enabled,:disabled),
 html body #panelOverlay .panel-modal:has(.mutation-lab-v2) #closePanelBtn,
 html body[data-screen="home"] #app #homeScreen .world-terminal-shell .terminal-launch:is(.ready,.hungry)::before{

@@ -97,7 +97,7 @@
     for(const [px,py,dx,dy]of [[l,top,1,1],[r,top,-1,1],[l,bottom,1,-1],[r,bottom,-1,-1]]){
       c.beginPath();c.moveTo(px+dx*len,py);c.lineTo(px,py);c.lineTo(px,py+dy*len);c.stroke();
     }
-    const label=completed?(effect.reward==='heal'?'ЛЕЧЕНИЕ':'+'+b.flaskValue+' КОЛБ'):'ВЗЛОМ '+Math.floor(t*100)+'%';
+    const label=completed?(effect.reward==='heal'?'ЛЕЧЕНИЕ':'+'+b.flaskValue+' ОСКОЛКОВ'):'ВЗЛОМ '+Math.floor(t*100)+'%';
     c.font='900 12px Nunito, sans-serif';c.textAlign='center';c.textBaseline='middle';
     const width=Math.max(cell+8,c.measureText(label).width+14),labelX=clamp(x,width/2+2,run.viewWidth-width/2-2);
     c.fillStyle='#123f40';c.fillRect(labelX-width/2,top-29,width,22);c.fillStyle='#a0ffcb';c.fillText(label,labelX,top-18);

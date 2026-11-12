@@ -39,13 +39,16 @@
           happy: [680, .13, 'sine'], reroll: [220, .08, 'triangle'],
           hit: [105, .075, 'square'], hitHard: [82, .11, 'square'], break: [145, .09, 'sawtooth'], bounce: [260, .055, 'sine'],
           epic: [760, .18, 'sine'], coin: [900, .06, 'sine'], fail: [110, .22, 'sawtooth'], win: [620, .32, 'triangle'],
-          shieldPop: [620, .095, 'sine']
+          shieldPop: [620, .095, 'sine'], mineBeep:[430,.055,'sine'], mineAlertBeep:[570,.045,'sine']
         };
         const [frequency, duration, type] = configs[kind] || configs.tap;
         oscillator.frequency.setValueAtTime(frequency, now);
         if (kind === 'shieldPop') oscillator.frequency.exponentialRampToValueAtTime(75, now + duration);
         oscillator.type = type;
-        gain.gain.setValueAtTime(.045, now);
+        if(kind==='mineBeep'||kind==='mineAlertBeep'){
+          gain.gain.setValueAtTime(.001,now);
+          gain.gain.exponentialRampToValueAtTime(kind==='mineBeep'?.014:.022,now+.006);
+        }else gain.gain.setValueAtTime(.045, now);
         gain.gain.exponentialRampToValueAtTime(.001, now + duration);
         oscillator.connect(gain).connect(audioContext.destination);
         oscillator.start(now);

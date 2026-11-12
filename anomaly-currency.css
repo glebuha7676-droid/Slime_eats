@@ -1,0 +1,61 @@
+/* Home balance is a single recessed laboratory display, without a split panel. */
+html body.home-console[data-screen="home"] #app .world-summary .research-wallet{
+  flex:0 0 140px!important;width:140px!important;height:44px!important;min-height:44px!important;
+  padding:0 9px 0 5px!important;overflow:visible!important;
+  border:2px solid #8199ae!important;border-radius:12px!important;
+  background:linear-gradient(180deg,#f6fcff,#d7e5ef)!important;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 #b6c9db,0 1px 0 #0e3b4b66!important;
+}
+html body.home-console[data-screen="home"] #app .world-summary .research-wallet-flask{
+  display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;
+  align-items:center!important;gap:6px!important;overflow:visible!important;
+}
+html body.home-console[data-screen="home"] #app .world-summary .research-wallet-flask>img{
+  width:54px!important;height:54px!important;max-width:none!important;flex:none!important;
+  margin:-6px!important;object-fit:contain!important;
+  filter:drop-shadow(0 1px 1px #071f2e66)!important;
+}
+html body.home-console[data-screen="home"] #app .world-summary .research-wallet-flask>b{
+  font:900 22px/1 'Slime Nunito',Nunito,sans-serif!important;color:#43265f!important;
+  flex:1!important;min-width:0!important;
+  letter-spacing:-.2px!important;text-align:center!important;text-shadow:0 1px #fff9!important;
+}
+html body.home-console[data-screen="home"] #app .world-summary .research-wallet:is([data-balance-length="5"],[data-reward-digits="5"]) .research-wallet-flask>b{font-size:20px!important}
+html body.home-console[data-screen="home"] #app .world-summary .research-wallet:is([data-balance-length="6"],[data-balance-length="7"],[data-reward-digits="6"],[data-reward-digits="7"]) .research-wallet-flask>b{font-size:17px!important}
+/* Modal balances share the same bezel; icon can overhang it vertically. */
+html body #panelOverlay #panelTitle>:is(.mutation-panel-balance,.wardrobe-balance,.rewards-balance){
+  display:flex!important;align-items:center!important;gap:5px!important;flex:none!important;
+  height:34px!important;padding:0 8px 0 2px!important;overflow:visible!important;
+  border:1px solid #73adc0!important;border-radius:10px!important;
+  background:linear-gradient(110deg,#c3eaf1,#edfaff 48%,#d8eef5)!important;
+  box-shadow:inset 0 1px #f6ffff,inset 0 -2px #acd3df!important;color:#123f55!important;
+}
+html body #panelOverlay #panelTitle>:is(.mutation-panel-balance,.wardrobe-balance,.rewards-balance)>img{
+  width:39px!important;height:41px!important;max-width:none!important;flex:none!important;object-fit:contain!important;margin:-4px 0!important;
+}
+html body #panelOverlay #panelTitle>:is(.mutation-panel-balance,.wardrobe-balance,.rewards-balance)>b{font-size:18px!important;font-weight:1000!important;font-variant-numeric:tabular-nums;color:#123f55!important}
+/* Reserve an actual icon slot beside prices, so the jar never covers digits. */
+html body #panelOverlay :is(.wardrobe-price,.mutation-feed-count,.mutation-synth-balance,.evolution-prompt-price,.rewards-claim-price,.shop-price){gap:4px!important;overflow:visible}
+html body #panelOverlay :is(.wardrobe-price,.mutation-feed-count,.mutation-synth-balance,.evolution-prompt-price,.shop-price)>img{
+  width:30px!important;height:33px!important;max-width:none!important;flex:none!important;object-fit:contain!important;
+}
+html body #resultOverlay .result-stat>.result-research-flask{width:44px!important;height:44px!important}
+html body #resultOverlay .result-stat>.result-research-flask>img{width:44px!important;height:44px!important;object-fit:contain!important}
+
+html body #dropScreen .run-top-hud .run-research-hud{width:70px!important;grid-template-columns:33px minmax(0,1fr)!important;gap:2px!important;padding-left:1px!important;padding-right:4px!important;overflow:visible!important}
+html body #dropScreen .run-top-hud .run-research-hud>img{width:33px!important;height:39px!important;flex:none!important;object-fit:contain!important}
+html body #panelOverlay .daily-amount>img{width:42px;height:45px;object-fit:contain}
+html body #panelOverlay .reward-day:not(.is-final)>img{width:38px;height:35px;object-fit:contain}
+html body #panelOverlay .wheel-prize>img{width:44px;height:46px;object-fit:contain}
+@media(max-width:370px){
+  html body.home-console[data-screen="home"] #app .world-summary .research-wallet{flex-basis:132px!important;width:132px!important}
+  html body.home-console[data-screen="home"] #app .world-summary .research-wallet-flask{grid-template-columns:38px minmax(0,1fr)!important;gap:5px!important}
+  html body.home-console[data-screen="home"] #app .world-summary .research-wallet-flask>img{width:50px!important;height:52px!important;margin:-6px!important}
+  html body #panelOverlay #panelTitle>:is(.mutation-panel-balance,.wardrobe-balance,.rewards-balance){gap:3px!important;padding-right:5px!important}
+  html body #panelOverlay #panelTitle>:is(.mutation-panel-balance,.wardrobe-balance,.rewards-balance)>img{width:34px!important;height:38px!important}
+  html body #panelOverlay #panelTitle>:is(.mutation-panel-balance,.wardrobe-balance,.rewards-balance)>b{font-size:16px!important}
+  html body #panelOverlay .wardrobe-price>img{width:24px!important;height:27px!important}
+  html body #dropScreen .run-top-hud .run-research-hud>img{width:28px!important;height:35px!important}
+
+  html body #dropScreen .run-top-hud .run-research-hud{width:65px!important;grid-template-columns:28px minmax(0,1fr)!important}
+}

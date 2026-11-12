@@ -15,20 +15,21 @@ function fresh(id,stage){hits=[];r={ultimateProfile:U.get(id,stage),cellSize:60,
  for(let row=0;row<20;row++)for(let col=0;col<6;col++)r.blocks.push({row,col,x:col*60,y:row*60,w:60,h:60,hp:4,flaskTier:3,flaskValue:5});
  E.start(r,id,1000,210,150,services);return r.stagedUltimate;
 }
-for(const id of ['fire','frost']){
- const e=fresh(id,1);
- assert(hits.length>8&&hits.length<36,'Flash affects local surrounding area');
- assert(hits.some(b=>b.row<2)&&hits.some(b=>b.row>2),'Flash surrounds the slime');
- assert(r.blocks.filter(b=>b.row>=5).every(b=>!b.fireDamageAt&&!b.elementalSnow));
- if(id==='frost')assert(hits.every(b=>b.flaskValue===5&&b.flaskTier===3));
- E.update(r,1851,services);assert.equal(r.stagedUltimate,null);
+// Frost remains radial; fire sweeps an exact forward rectangle with no rear damage.
+let flash=fresh('frost',1);assert(hits.length>8&&hits.length<36);assert(hits.some(b=>b.row<2)&&hits.some(b=>b.row>2));assert(hits.every(b=>b.flaskValue===5&&b.flaskTier===3));E.update(r,1851,services);assert.equal(r.stagedUltimate,null);
+flash=fresh('fire',1);assert.equal(hits.length,0);E.update(r,1200,services);const near=hits.length;assert(near>0);assert(hits.every(b=>b.y+b.h/2>150));
+E.update(r,1650,services);assert(hits.length>near);const waveHits=hits.length;assert.equal(waveHits,8);assert.equal(new Set(hits).size,waveHits);assert(hits.every(b=>b.row>=3&&b.row<=6));
+E.update(r,1800,services);assert.equal(hits.length,waveHits);E.update(r,1851,services);assert.equal(r.stagedUltimate,null);
+let e=fresh('fire',2);assert.equal(e.kind,'fireWave');assert.equal(hits.length,0);
+E.update(r,1900,services);assert.equal(hits.length,24,'Four columns × six rows');
+assert.equal(new Set(hits.map(b=>b.col)).size,4);assert.equal(new Set(hits.map(b=>b.row)).size,6);
+for(const stage of [1,2])for(const x of [1,30,180,330,359]){
+ fresh('fire',stage);r.slime.x=x;E.start(r,'fire',1000,x,150,services);
+ E.update(r,1000+r.ultimateProfile.growMs,services);
+ assert.equal(hits.length,r.ultimateProfile.width*r.ultimateProfile.rows,'A wall never crops the attack footprint');
+ assert.equal(new Set(hits).size,hits.length,'Each block is ignited once');
 }
-let e=fresh('fire',2);assert.equal(e.rocks.length,4);assert.equal(hits.length,0);
-assert.equal(e.rocks[0].fromY,150-24*.89,'Volcano rocks originate at the crater');
-E.update(r,1300,services);assert(e.rocks[0].y<150,'Rocks initially fly UP');assert.equal(hits.length,0);
-assert.equal(e.rocks[0].fromY,r.slime.y-r.slime.radius*.89,'Launch follows the actual head position');
-E.update(r,2750,services);assert(e.rocks.every(b=>b.landed),'Four impacts');assert.equal(e.bursts.length,4);assert(hits.length>0);
-assert.equal(new Set(e.rocks.map(b=>b.toX)).size,4);
+fresh('fire',2);E.update(r,1250,services);const beforePause=hits.length;E.shiftClock(r,10000);E.update(r,11250,services);assert.equal(hits.length,beforePause);E.update(r,11900,services);assert.equal(hits.length,24);
 e=fresh('frost',2);E.update(r,2250,services);
 const frozen=r.blocks.filter(b=>b.elementalSnow);
 assert.equal(frozen.length,21,'Seven rows, exactly three columns');
@@ -56,4 +57,4 @@ fresh('electric',2);E.update(r,1000,services);const before=hits.length;E.update(
 e=fresh('electric',2);E.update(r,1350,services);const y=e.y;E.shiftClock(r,10000);E.update(r,11350,services);assert.equal(e.y,y,'Pause preserves travel');assert.equal(hits.length,2,'Pause preserves strike cadence');
 E.update(r,13801,services);assert.equal(r.stagedUltimate,null);
 for(const id of ['fire','frost','electric']){fresh(id,3);assert.equal(r.stagedUltimate,undefined,'III still belongs to existing ultimate code');for(let stage=1;stage<=3;stage++){assert(U.get(id,stage).name);assert.equal(U.get(id,stage).description,undefined);}}
-console.log('Six elemental ultimates: local flashes, four ascending rocks, 3×7 swept snow, cross-only discharge, bounded lightning cadence, pause and original vein values passed');
+console.log('Elemental ultimates: exact 2×4 / 4×6 fire sweeps, wall clamps, pause, frost and electric behavior passed');

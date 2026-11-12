@@ -1,0 +1,67 @@
+#adminToolsOverlay {
+  align-items: center;
+  background: rgba(8, 25, 37, .7);
+}
+
+#adminToolsOverlay .admin-settings {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 368px);
+  max-height: min(90dvh, 100%);
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid #8faeba;
+  border-radius: 16px;
+  background: #f1f7fa;
+  box-shadow: 0 6px 24px #081d3444;
+  color: #153044;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.admin-settings-heading,
+.admin-settings-planet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#adminToolsTitle { margin: 0; color: inherit; font-size: 21px; }
+.admin-settings-planet { flex-wrap: wrap; padding: 2px 0 4px; }
+.admin-settings-planet output { color: #375568; font-variant-numeric: tabular-nums; }
+.admin-settings-group { display: grid; gap: 5px; }
+.admin-settings-group + .admin-settings-group { border-top: 1px solid #cedce3; padding-top: 9px; }
+.admin-settings-stages { display: grid; grid-template-columns: 1fr repeat(3, 42px); gap: 5px; align-items: center; }
+.admin-settings-stages span { padding-inline-start: 9px; }
+
+#adminToolsOverlay .admin-settings button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 9px;
+  border: 1px solid #b9ced9;
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow: none;
+  color: #153044;
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+}
+
+#adminToolsOverlay .admin-settings button[hidden] { display: none; }
+#adminToolsOverlay .admin-settings :is(#closeAdminToolsBtn, [data-admin-mutation-stage]) { justify-content: center; }
+#adminToolsOverlay .admin-settings #closeAdminToolsBtn { width: 36px; }
+#adminToolsOverlay .admin-settings :is(#adminUnlockInfectedBtn, #adminLowerInfectionBtn) { background: #d8eef6; border-color: #93bfce; }
+#adminToolsOverlay .admin-settings #adminResetProgressBtn { color: #8b3039; }
+#adminToolsOverlay .admin-settings button:not(:disabled):hover { background: #e4eff4; }
+#adminToolsOverlay .admin-settings button:not(:disabled):active { background: #c9e4ef; }
+#adminToolsOverlay .admin-settings :focus-visible { outline: 2px solid #215b76; outline-offset: 1px; }
+#adminToolsOverlay .admin-settings button:disabled { background: #e9eff2; color: #526775; opacity: .75; }
+.admin-settings button span { color: #526775; }
+.admin-settings button[aria-pressed="true"] span { color: #126446; }
+.admin-settings-group a { justify-self: start; padding: 4px 9px; color: #245670; }

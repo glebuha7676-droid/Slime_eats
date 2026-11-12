@@ -5,6 +5,9 @@
   const paused=new Set();
   function isActive(element){
     if(document.hidden||blocked||!element?.isConnected||element.closest('[hidden],.hidden,[inert]'))return false;
+    // The viewport's brief boot reveal belongs to the whole app. Pausing it
+    // when a menu opens can leave every screen permanently translucent.
+    if(element.id==='phoneViewport')return true;
     if(overlay)return overlay.contains(element);
     if(element.closest('#tutorialLayer,.tutorial-dialog,.tutorial-intro-note'))return true;
     const branch=element.closest('#homeScreen,#dropScreen');

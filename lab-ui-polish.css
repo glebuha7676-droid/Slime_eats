@@ -291,13 +291,13 @@ html:not([data-keyboard-navigation]) .mutation-lab-v2 .mutation-capsule:is(:focu
 html[data-keyboard-navigation] body button:focus{outline:3px solid #ffd95e!important;outline-offset:3px!important}
 
 /* Every page closes with the existing generated red X asset. */
-html body :is(#closePanelBtn,#closeAdminToolsBtn){
+html body #closePanelBtn{
   flex:none!important;box-sizing:border-box!important;width:43px!important;height:43px!important;min-width:43px!important;min-height:43px!important;
   margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;
   background:url("assets/ui/lab-close-button-v1.webp?v=20261008-optimized-v1") center/150% 150% no-repeat!important;
   box-shadow:none!important;color:transparent!important;font-size:0!important;text-shadow:none!important;
   display:grid;place-items:center;cursor:pointer;transition:transform .15s ease,filter .15s ease;
 }
-html body :is(#closePanelBtn,#closeAdminToolsBtn):active{transform:scale(.94)!important}
+html body #closePanelBtn:active{transform:scale(.94)!important}
 html body #tutorialControlsCloseBtn[hidden]{display:none!important}
 .food-dissolve-fragment{position:fixed;z-index:120;display:block;object-fit:fill;pointer-events:none;transform-origin:50% 50%;will-change:transform,opacity}

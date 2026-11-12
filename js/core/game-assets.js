@@ -16,26 +16,36 @@
   const projectSprites = {};
   const thumbnailFitCache = new Map();
 
-  const worldBackgroundNames = Object.freeze({ 1: 'stone', 3: 'candy', 4: 'magma' });
+  const worldBackgroundNames = Object.freeze({ 1: 'stone', 3: 'candy', 4: 'magma', 5: 'sky', 6: 'source' });
+  const worldCleansingFolders = Object.freeze({ 1: 'stone-red-cleansing-v2', 3: 'candy-cleansing-v2', 4: 'magma-cleansing-v2', 5: 'sky-cave-cleansing-v1', 6: 'anomaly-source-v2' });
   const worldBackgrounds = {};
   const worldBackgroundLayers = {};
 
-  function ensureWorldBackgroundLayers(worldId) {
+  function ensureWorldBackgroundLayers(worldId, stage = 0) {
     const name = worldBackgroundNames[worldId];
     if (!name) return [];
-    if (!worldBackgroundLayers[worldId]) {
-      worldBackgroundLayers[worldId] = [
-        { suffix: 'far', speed: .08, opacity: 1 },
-        { suffix: 'near', speed: .26, opacity: 1 }
+    const asteroid = Number(worldId) === 6;
+    const modernCave = [1, 3, 4, 5, 6].includes(Number(worldId));
+    const infectedCave = modernCave && Number(stage) > 0;
+    const caveName = Number(worldId) === 1 ? 'slime' : name;
+    const stageFolder = (stage || Number(worldId) === 1) ? worldCleansingFolders[worldId] : null;
+    const key = `${worldId}:${stage}`;
+    if (!worldBackgroundLayers[key]) {
+      worldBackgroundLayers[key] = [
+        { suffix: 'far', speed: .08, opacity: 1, scale: modernCave ? 1.65 : 1 },
+        { suffix: 'near', speed: .26, opacity: 1, scale: modernCave ? 1.25 : 1 }
       ].map(({ suffix, ...settings }) => {
         const image = new Image();
         image.decoding = 'async';
-        image.src = versionedAsset(`assets/backgrounds/parallax-v3/${name}-${suffix}.webp`);
-        return Object.freeze({ image, ...settings });
+        const path = asteroid ? `asteroid-cave-v34/source-${infectedCave ? 'infected' : 'clean'}-${suffix}`
+          : modernCave ? `${infectedCave ? 'infected-caves-v20' : 'caves-v14'}/${caveName}-${suffix}`
+          : stageFolder ? `${stageFolder}/${name}-${stage}-${suffix}` : `parallax-v4/${name}-${suffix}`;
+        image.src = versionedAsset(`assets/backgrounds/${path}.webp`);
+        return Object.freeze({ image, directRepeat: modernCave || Boolean(stageFolder) || Number(worldId) === 5, loopBlend: modernCave && !asteroid ? .16 : 0, opaque: suffix === 'far', solidEdges: modernCave && !asteroid && suffix === 'near' && (infectedCave || Number(worldId) === 5), ...settings });
       });
-      worldBackgrounds[worldId] = worldBackgroundLayers[worldId][0].image;
+      if (stage === 0) worldBackgrounds[worldId] = worldBackgroundLayers[key][0].image;
     }
-    return worldBackgroundLayers[worldId];
+    return worldBackgroundLayers[key];
   }
 
   function ensureWorldBackground(worldId) {

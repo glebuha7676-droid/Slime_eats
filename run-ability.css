@@ -1,0 +1,250 @@
+#dropScreen #shaft {
+  --run-button-size: clamp(64px, 20.5vw, 90px);
+  --run-button-gap: 8px;
+  --run-thumb-gap: clamp(18px, 6vw, 28px);
+  --run-button-inset: max(10px, var(--safe-left, 0px), var(--safe-right, 0px));
+  --run-button-bottom: max(20px, calc(var(--safe-bottom, 0px) + 10px));
+  --run-button-font: 'Slime Nunito', Nunito, sans-serif;
+}
+
+#dropScreen #shaft .fall-controls {
+  position: absolute;
+  z-index: 26;
+  left: 50%;
+  bottom: var(--run-button-bottom);
+  width: min(calc(4 * var(--run-button-size) + 2 * var(--run-button-gap) + var(--run-thumb-gap)), calc(100% - 2 * var(--run-button-inset)));
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) calc(var(--run-thumb-gap) - 2 * var(--run-button-gap)) repeat(2, minmax(0, 1fr));
+  gap: var(--run-button-gap);
+  pointer-events: none;
+}
+
+#dropScreen #shaft :is(.fall-controls, .barrier-control)[hidden] { display: none; }
+#dropScreen #shaft .fall-button-defense { grid-column: 4; }
+
+#dropScreen #shaft :is(.fall-button, #abilityBtn) {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#dropScreen #shaft .fall-button {
+  --button-rim: #a6d9f5bf;
+  --button-edge: #1a4c7799;
+  --button-top: #92dafa9c;
+  --button-mid: #419acf99;
+  --button-bottom: #2868a391;
+  --button-pressed: #276f9f;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: clamp(14px, 4vw, 20px);
+  background: none;
+  touch-action: none;
+}
+
+#dropScreen #shaft .fall-button-attack {
+  --button-rim: #ffdbc5cf;
+  --button-top: #f3b893ab;
+  --button-mid: #c87a74a1;
+  --button-bottom: #9950669e;
+  --button-pressed: #93506b;
+}
+
+#dropScreen #shaft .fall-button-defense {
+  --button-rim: #b4eff9cf;
+  --button-top: #98eee3a6;
+  --button-mid: #419cb5a6;
+  --button-bottom: #316d9ba1;
+  --button-pressed: #246e91;
+}
+
+#dropScreen #shaft .fall-button-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--button-rim);
+  border-radius: inherit;
+  background: linear-gradient(155deg, var(--button-top), var(--button-mid) 52%, var(--button-bottom));
+  box-shadow: inset 0 1px #e6f6ff83, inset 0 -2px #244e7b53,
+    0 0 0 1px #30517bad, 0 3px 5px #0b244755;
+  transition: transform .16s ease-out, filter .16s ease-out, box-shadow .16s ease-out, background-color .16s ease-out;
+  pointer-events: none;
+}
+
+#dropScreen #shaft .fall-button img {
+  width: 65%;
+  height: 65%;
+  object-fit: contain;
+  opacity: .94;
+  transition: opacity .16s ease-out;
+  pointer-events: none;
+}
+
+#dropScreen #shaft .fall-button-left img { transform: scaleX(-1); }
+
+#dropScreen #shaft .fall-button:is([data-pressed], :active) .fall-button-face,
+#dropScreen #shaft .barrier-control #abilityBtn:active:not(:disabled) {
+  transform: translateY(3px) scale(.94);
+  filter: brightness(1.18);
+  box-shadow: inset 0 3px 5px #14264a77, inset 0 -1px #eaffff55,
+    0 1px var(--button-edge), 0 0 10px color-mix(in srgb, var(--button-rim) 55%, transparent);
+  transition-duration: .055s;
+}
+
+#dropScreen #shaft .fall-button:is([data-pressed], :active) .fall-button-face { background-color: var(--button-pressed); }
+#dropScreen #shaft .fall-button:is([data-pressed], :active) img {
+  opacity: 1;
+  transition-duration: .055s;
+}
+
+#dropScreen #shaft :is(.fall-button, #abilityBtn):focus-visible {
+  outline: 3px solid #ffedb5;
+  outline-offset: 3px;
+}
+
+#dropScreen #shaft .barrier-control {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--run-button-bottom) + var(--run-button-size) + 9px);
+  z-index: 25;
+  width: max-content;
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+#dropScreen #shaft #abilityBtn {
+  --button-rim: #c7b7f2;
+  --button-light: #6a60a5;
+  --button-dark: #362a63;
+  --button-edge: #251e49;
+  width: clamp(54px, 15vw, 64px);
+  aspect-ratio: 1;
+  height: auto;
+  border: 2px solid var(--button-rim);
+  border-radius: 50%;
+  background: linear-gradient(155deg, var(--button-light), var(--button-dark) 78%);
+  box-shadow: inset 0 2px #eaffff75, inset 0 -3px #13203955, 0 4px var(--button-edge), 0 6px 10px #080e285c;
+  transition: transform .16s ease-out, filter .16s ease-out, box-shadow .16s ease-out;
+  isolation: isolate;
+  touch-action: manipulation;
+  animation: none;
+}
+
+#dropScreen #shaft #abilityBtn::before {
+  inset: 3px;
+  border: 0;
+  border-radius: 50%;
+  background: conic-gradient(#f5dba2 var(--ability, 0%), #1a1d3c77 0);
+  mask: radial-gradient(circle, transparent 64%, #000 66%);
+  pointer-events: none;
+}
+
+#dropScreen #shaft #abilityBtn img {
+  width: 64%;
+  height: 64%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+#dropScreen #shaft .barrier-control[data-state="ready"] #abilityBtn {
+  --button-rim: #ffe2a4;
+  box-shadow: inset 0 2px #ffeeb077, inset 0 -3px #30245f60, 0 4px var(--button-edge), 0 0 11px #ffdca45e;
+}
+
+#dropScreen #shaft #abilityBtn.ability-became-ready { animation: ability-ready-pop .4s ease-out; }
+#dropScreen #shaft .barrier-control[data-state="cooldown"] #abilityBtn img { opacity: .45; }
+#dropScreen #shaft .barrier-control[data-state="unavailable"] #abilityBtn img { opacity: .58; }
+#dropScreen #shaft #abilityBtn:disabled { cursor: default; }
+
+#dropScreen #shaft #abilityPercent {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 50%;
+  transform: translate(-50%, 50%);
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: #251c49e8;
+  color: #fff;
+  white-space: nowrap;
+  font: 1000 14px/1 var(--run-button-font);
+}
+
+#dropScreen #shaft #abilityPercent[hidden] { display: none; }
+
+#dropScreen #shaft .ability-state {
+  grid-row: 1;
+  padding: 3px 6px;
+  border: 1px solid #a8a1d77a;
+  border-radius: 7px;
+  background: #251c49ed;
+  color: #fff3d4;
+  font: 1000 10px/1 var(--run-button-font);
+  white-space: nowrap;
+}
+
+#dropScreen #shaft .ability-state[hidden] { display: none; }
+
+.ability-ready-cue {
+  position: absolute;
+  left: 50%;
+  top: calc(max(7px, var(--safe-top)) + 101px);
+  z-index: 28;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid #c7b7f2;
+  border-radius: 10px;
+  background: #2e2556ee;
+  transform: translateX(-50%);
+  color: #fff0c7;
+  font: 1000 14px/1 'Slime Nunito', Nunito, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: ability-first-cue 2.1s ease-out both;
+}
+
+.ability-ready-cue[hidden] { display: none; }
+.ability-ready-cue > img { width: 26px; height: 26px; object-fit: contain; }
+.ability-ready-cue > b { margin-left: 2px; font-size: 19px; }
+#dropScreen #shaft .barrier-control[data-paused="true"] #abilityBtn,
+.ability-ready-cue[data-paused="true"], #runDistanceReadout[data-paused="true"] * { animation-play-state: paused; }
+
+@keyframes ability-ready-pop {
+  0% { transform: scale(.94); }
+  48% { transform: translateY(-3px) scale(1.07); }
+  100% { transform: none; }
+}
+
+@keyframes ability-first-cue {
+  0% { opacity: 0; transform: translate(-50%, 3px); }
+  12%, 78% { opacity: 1; transform: translateX(-50%); }
+  100% { opacity: 0; transform: translate(-50%, -3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #dropScreen #shaft #abilityBtn,
+  #dropScreen #shaft .fall-button-face,
+  #dropScreen #shaft .fall-button img,
+  #dropScreen #shaft #abilityBtn.ability-became-ready { transition: none; animation: none; }
+  .ability-ready-cue { animation: ability-first-cue-still 2.1s step-end both; }
+}
+
+@keyframes ability-first-cue-still {
+  0%, 99% { opacity: 1; }
+  100% { opacity: 0; }
+}

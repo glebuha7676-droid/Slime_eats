@@ -23,7 +23,7 @@ def transform(text):
     return text
 
 html = (ROOT / 'index.html').read_text(encoding='utf-8')
-VERSION = re.search(r'<script src="game\.js\?v=(\d+)"', html).group(1)
+VERSION = re.search(r'<script src="game\.js\?v=([A-Za-z0-9._-]+)"', html).group(1)
 css_files = re.findall(r'<link rel="stylesheet" href="([^"?]+)[^"]*"\s*/>', html)
 css = '\n'.join((ROOT / file).read_text(encoding='utf-8') for file in css_files)
 css = re.sub(r'/\*.*?\*/', '', transform(css), flags=re.S)
@@ -32,10 +32,7 @@ html = re.sub(r'<link rel="stylesheet" href="[^"?]+[^"]*"\s*/>', '', html)
 html = html.replace('</head>', f'<link rel="stylesheet" href="game.css?v={VERSION}" />\n</head>')
 
 # Asset migration keys must retain their old spelling for saved legacy paths.
-source = (ROOT / 'js/config/image-paths.js').read_text(encoding='utf-8')
-start, end = source.index('{', source.index('const paths')), source.index('\n};') + 2
-aliases = json.loads(source[start:end])
-aliases = {old: renames.get(new, new) for old, new in aliases.items() if new in asset_files}
+aliases = {old: renames.get(new, new) for old, new in inventory['aliases'] if new in asset_files}
 aliases.update(renames)
 resolver = "(() => { const paths=" + json.dumps(aliases, ensure_ascii=False) + ";window.SlimeAssetPaths=Object.freeze({resolve(source){const match=String(source).match(/^([^?#]+)(.*)$/);return match?(paths[match[1]]||match[1])+match[2]:source;}});})();"
 

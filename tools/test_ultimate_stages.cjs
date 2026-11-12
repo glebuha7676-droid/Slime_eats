@@ -8,7 +8,9 @@ vm.runInNewContext(fs.readFileSync(require.resolve('../js/abilities/spore-coloss
 vm.runInNewContext(fs.readFileSync(require.resolve('../js/abilities/cosmos-ultimates.js'),'utf8'),moduleContext);
 const U=moduleContext.window.SlimeUltimateStages;
 function take(name){const a=source.indexOf(`  function ${name}(`);let b=source.indexOf('\n  function ',a+20);const async=source.indexOf('\n  async function ',a+20);if(async>=0&&async<b)b=async;assert.ok(a>=0&&b>a,name);return source.slice(a,b);}
-const c={window:{SlimePsionicFeedback:{preload:()=>Promise.resolve()}},Math,Set,performance:{now:()=>1000},adminInfiniteUltimate:false,
+const c={window:{SlimePsionicFeedback:{preload:()=>Promise.resolve()},SlimeIceHazards:{locked:()=>false}},Math,Set,
+ performance:{now:()=>1000},adminInfiniteUltimate:false,ULTIMATE_COOLDOWN:require('../js/gameplay/ultimate-cooldown.js'),
+ ENERGY:require('../js/gameplay/anomaly-energy.js'),
  ELEMENTAL_ULTIMATES:moduleContext.window.SlimeElementalUltimates,
  TECHNO_ULTIMATES:moduleContext.window.SlimeTechnoUltimates,
  SPORE_COLOSSUS:moduleContext.window.SlimeSporeColossus,
@@ -23,18 +25,18 @@ const c={window:{SlimePsionicFeedback:{preload:()=>Promise.resolve()}},Math,Set,
  clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),sound(){},feedback(){},updateRunUI(){},impact(){},startFrostStorm(){},startGlitchChoice(){},findGlitchDisarmTarget:()=>({}),startGlitchDisarm(){c.run.glitchDisarm={}},startTelekinesisPress(){},startPsionicBarrier(t){c.run.psionicBarrier={startedAt:t,until:t+c.run.ultimateProfile.durationMs}},elementalLevel:()=>2,startTelekinesisCycle(){c.run.telekinesisCycle={mode:'ultimate',projectiles:Array(c.run.ultimateProfile.blockCount).fill(null)}},startPhantomSalvo(){c.run.phantomSalvoFlights=Array(8).fill({})},startPhantomExpress(){},startPhantomPhase(){c.run.phantomPhase={kind:c.run.ultimateProfile.kind}},ensurePhantomExpressSprites(){},ensureSporeSprites(){},materializePhantom(){},
  playAbilityActivation(stage){c.tapStage=stage},startUltimateIntro(type){c.run.ultimateIntro={type};c.intros++},
 };vm.createContext(c);
-vm.runInContext(['activateElementalAbility','commitElementalAbility'].map(take).join('\n'),c);
-const fresh=(id,stage)=>({ultimateStage:stage,ultimateProfile:U.get(id,stage),elementalAbilityType:id,elementalAbilityCharges:1,ultimateCharge:65,elementalAuraId:0,
- slime:{x:180,y:700,radius:20,vx:30,vy:100},cellSize:60,columns:6,gridOffsetX:0,blockRowOrigin:190,rowCount:100,portalY:7000,damageInvulnerableUntil:0,shake:0,blocksByRow:new Map()});
+vm.runInContext(['canActivateElementalAbility','activateElementalAbility','commitElementalAbility'].map(take).join('\n'),c);
+const fresh=(id,stage)=>({ultimateStage:stage,ultimateProfile:U.get(id,stage),elementalAbilityType:id,energy:100,ultimateReadyAt:0,elementalAuraId:0,
+ slime:{x:180,y:700,radius:20,vx:30,vy:100},cellSize:60,columns:6,gridOffsetX:0,blockRowOrigin:190,rowCount:100,world:{targetDepth:500},portalY:7000,damageInvulnerableUntil:0,shake:0,blocksByRow:new Map()});
 for(const id of Object.keys(U.profiles)) for(const stage of [1,2,3]){
  c.run=fresh(id,stage);c.intros=0;c.tapStage=0;
  assert.equal(c.activateElementalAbility(1000),true);
- assert.equal(c.run.elementalAbilityCharges,0);assert.equal(c.run.ultimateCharge,0);
+ assert.equal(c.run.energy,80);assert.equal(c.run.ultimateReadyAt,11000);
  if(stage<3){assert.equal(c.intros,0,'Lower grades never run the flying button intro');assert.equal(c.tapStage,stage);assert.equal(c.run.elementalAbilityActive,id,'First and second grades commit immediately');}
  else{assert.equal(c.intros,1,'III keeps the full intro');assert.equal(c.run.elementalAbilityActive,undefined);c.run.ultimateIntro=null;c.commitElementalAbility(id,1000,180,700);}
  const p=U.get(id,stage);
  if(id==='cosmos'&&stage<3){assert.equal(c.run.cosmosStagedUltimate.kind,p.kind);assert.equal(c.run.cosmosUltimate,null);}
- if(id==='cosmos'&&stage===3)assert.equal(c.run.cosmosUltimate.endY,700+p.orbitRows*60);
+ if(id==='cosmos'&&stage===3)assert.equal(c.run.cosmosUltimate.endY,700+p.meters/500*100*60);
  if(['fire','frost','electric'].includes(id)&&stage<3)assert.equal(c.run.stagedUltimate.kind,p.kind);
  if(id==='electric'&&stage===3){assert.equal(c.run.electricStorm.strikeLimit,p.strikes);assert.equal(c.run.electricStorm.branchLength,p.branchLength)}
  if(id==='fire'&&stage===3)assert.equal(c.run.phoenixUltimate.rows,p.rows);
@@ -58,7 +60,7 @@ for(const stage of [1,2,3]){
  assert.equal(e.centerX,(e.startCol+p.trainWidth/2)*60);
  if(stage===3){c.run=fresh('telekinesis',stage);c.startTelekinesisPress(1000,700);assert.equal(c.run.telekinesisPress.bottomY-c.run.telekinesisPress.topY,U.get('telekinesis',stage).pressRows*60);}
 }
-assert.equal(U.get('fire',3).meters,100);assert.equal(U.get('frost',3).durationMs,6000);assert.equal(U.get('electric',3).strikes,5);assert.equal(U.get('cosmos',3).orbitRows,20);assert.equal(U.get('nano',3).mechMs,10000);assert.equal(U.get('phantom',3).trainWidth,4);assert.equal(U.get('phantom',3).trainRows,12);assert.equal(U.get('cloning',3).jumpCount,5);assert.equal(U.get('glitch',3).rewriteRows,10);
+assert.equal(U.get('fire',3).rows,10);assert.equal(U.get('frost',3).durationMs,6000);assert.equal(U.get('electric',3).strikes,5);assert.equal(U.get('cosmos',3).meters,60);assert.equal(U.get('nano',3).mechMs,10000);assert.equal(U.get('phantom',3).trainWidth,4);assert.equal(U.get('phantom',3).trainRows,12);assert.equal(U.get('cloning',3).jumpCount,5);assert.equal(U.get('glitch',3).rewriteRows,10);
 Object.assign(c,{glitchSlimeCell:()=>({row:8,col:3}),glitchDeletableBlock:b=>!b.dead,glitchEligibleBlock:b=>!b.dead&&!b.hazard});
 vm.runInContext(take('executeGlitchBug'),c);
 for(const stage of [2,3])for(const kind of ['delete','hack','infect','change']){

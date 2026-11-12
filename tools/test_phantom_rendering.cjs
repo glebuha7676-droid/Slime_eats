@@ -12,7 +12,7 @@ function context2d(){
       if(this.strokeStyle==='#dcfff3')this.log.push({kind:this.lastEllipse[5]===Math.PI?'back':'front'});
       else this.log.push({kind:'line',vertices:this.path.slice()});
     },
-    drawImage(image,...args){this.log.push({kind:image.src?.includes('phantom-portal')?'portal':image.kind||'sprite',args,blur:this.shadowBlur||0})},
+    drawImage(image,...args){this.log.push({kind:image.src?.includes('phantom-v4/portal')?'portal':image.kind||'sprite',args,blur:this.shadowBlur||0})},
     createRadialGradient(){return{addColorStop(){}}},createLinearGradient(){return{addColorStop(){}}},
   };return c;
 }
@@ -21,6 +21,8 @@ const environment={Math,window:{SlimeGameAssets:{versionedAsset:p=>p}},
   Image:function(){this.complete=true;this.naturalWidth=384;this.naturalHeight=360;images.push(this);},
 };vm.createContext(environment);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/rendering/spectral-glow.js'),'utf8'),environment);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/rendering/core-vfx.js'),'utf8'),environment);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/rendering/phantom-soul-vfx.js'),'utf8'),environment);
 vm.runInContext(source,environment);
 const model=environment.window.SlimePhantomEffects;
 const e={startedAt:1000,centerX:180,portalY:100,endY:820},cell=60;
@@ -43,15 +45,15 @@ for(let i=0;i<90;i++){
   for(const line of lines)for(const [x,y]of line.vertices)assert.ok(Math.hypot(x-point.x,y-point.y)<=29.001,'even fast flight has a short spectral trail');
 }
 model.spirit(ctx,point,20,1,13000,1);
-assert.equal(images.filter(i=>i.src.includes('phantom-spirit')).length,2,'generated raster companions');
-assert.equal(canvases,warmed+21,'two tinted bodies with cached edge frames plus one blue halo');
+assert.equal(images.filter(i=>i.src.includes('phantom-v4/soul')).length,0,'Old illustrated companions are not loaded');
+assert(canvases<=warmed+12,'Small bounded spectral VFX caches');
 const visualCaches=canvases;
 ctx=context2d();model.burst(ctx,{x:100,y:200,startedAt:1000},0,60,1200);
 assert.equal(ctx.log.filter(e=>e.kind==='line').length,0,'exit splash uses soft bitmap light, no vector rays or rings');
 model.realm(ctx,360,780,1400,1,{at:1000,x:100,y:200});
-assert.equal(canvases,visualCaches+1,'realm texture is built once');
+assert.equal(canvases,visualCaches+2,'realm texture and its second light tint are built once');
 for(let t=1500;t<2600;t+=16){model.realm(ctx,360,780,t,1,{at:1000,x:100,y:200});model.burst(ctx,{x:100,y:200,startedAt:2000},0,60,t);}
-assert.equal(canvases,visualCaches+1,'realm and splash never allocate per frame');
+assert.equal(canvases,visualCaches+2,'realm and splash never allocate per frame');
 assert.doesNotMatch(source,/function spiritSprite|body\.addColorStop|x\.ellipse\(37/,'old vector ghost removed');
 const t=1100*Math.PI/2,a=model.idle(0,0,20,0,t),b=model.idle(0,0,20,1,t);
 assert.equal(a.front,true);assert.equal(b.front,false,'companions orbit in front and behind the slime');
@@ -67,4 +69,4 @@ const gateDraw=ctx.log.find(e=>e.kind==='portal');assert.equal(gateDraw.args[2],
 const gateCaches=canvases;
 for(let t=1032;t<1900;t+=32)model.gate(context2d(),100,200,50,t,1);
 assert.equal(canvases,gateCaches,'animated inner vortex is cached once');
-console.log('Phantom visuals: generated raster ghosts, bounded trails, round animated gate with cached vortex and train emerging at portal centre passed.');
+console.log('Phantom visuals: spectral VFX wisps, bounded trails, cached regular gate and train emergence passed.');

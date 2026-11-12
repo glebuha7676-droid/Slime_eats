@@ -12,13 +12,14 @@
   });
   const ready=Promise.all(pending);ready.catch(()=>{});
   const closedLid=(id,{blink=false,emotion='focused'}={})=>id==='lashes'&&(blink||['petting','pleased','chewing','savoring','anticipating','impact','power'].includes(emotion));
-  function draw(ctx,id,{radius,cuteV2=true,blink=false,emotion='focused'}={}) {
+  function draw(ctx,id,{radius,cuteV2=true,blink=false,eyeClosure=0,emotion='focused'}={}) {
     const fit=fits[id],sprite=sprites.get(id);if(!fit||!Number.isFinite(radius)||radius<=0)return;
     const faceScale=cuteV2?1:.82;
     if(fit.kind==='lashes'){
       if(emotion==='hurt'&&!blink)return;
       const closed=closedLid(id,{blink,emotion});
-      const eyeX=cuteV2?(closed?.305:.325):.245,eyeY=cuteV2?.005:-.12;
+      const closing=Math.max(0,Math.min(1,eyeClosure));
+      const eyeX=cuteV2?(closed?.305:.325-.02*closing):.245,eyeY=cuteV2?.005:-.12;
       const openRoots=[[.055,-.223,.035,-.075],[.135,-.177,.070,-.082],[.195,-.116,.105,-.055]];
       ctx.save();ctx.fillStyle='#083b36';
       for(const side of [-1,1]){
@@ -29,7 +30,7 @@
             const u=[.59,.76,.91][i],v=1-u;
             x=v*v*v*(-.17)+3*v*v*u*(-.095)+3*v*u*u*.095+u*u*u*.17;
             y=eyeY+.035-.42*u*v;
-          } else y=cuteV2?y:eyeY+(y-.023)*faceScale;
+          } else {y=cuteV2?y:eyeY+(y-.023)*faceScale;if(closing>0)y=(eyeY+.02)+(y-eyeY-.02)*(1-closing*.94);}
           const px=side*radius*(eyeX+x*faceScale),py=radius*y;
           const tipX=px+side*radius*dx*faceScale,tipY=py+radius*dy*faceScale;
           const bendX=px+side*radius*dx*.18*faceScale,bendY=py+radius*dy*.78*faceScale;

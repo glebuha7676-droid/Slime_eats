@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <defs><linearGradient id="gel" x2="0" y2="1"><stop stop-color="#90eddf"/><stop offset=".45" stop-color="#35c3c8"/><stop offset="1" stop-color="#1588ab"/></linearGradient></defs>
-  <path d="M12 27 Q5 27 5 35 V65 Q5 73 12 73 H39 V84 Q39 93 48 87 L91 57 Q100 50 91 43 L48 13 Q39 7 39 16 V27Z" fill="url(#gel)" stroke="#20546c" stroke-width="4" stroke-linejoin="round"/>
-</svg>

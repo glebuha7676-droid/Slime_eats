@@ -20,13 +20,9 @@
   };
   const specialIdsForWorld = worldId => +worldId === 2
     ? ['heal', 'cryo', 'snowflake']
-    : +worldId === 3
-      ? ['heal', 'appleMint', 'appleRed']
-      : +worldId === 4
-        ? ['heal', 'geyser', 'meteor']
-      : ['heal', 'bomb', 'spring'];
+    : ['heal'];
   const secondaryDefaults = worldId => Object.fromEntries(SPECIAL_IDS.map(id => [id,
-    specialIdsForWorld(worldId).includes(id) ? (id === 'heal' ? 34 : 33) : 0
+    specialIdsForWorld(worldId).includes(id) ? (specialIdsForWorld(worldId).length === 1 ? 100 : id === 'heal' ? 34 : 33) : 0
   ]));
   const zoneDefaultsFor = (worldId, zoneId) => ({
     ...copy(zoneDefaults[zoneId]),
@@ -56,7 +52,7 @@
       geyser: { launch:1, wait:3 },
       meteor: { minCount:3, maxCount:4, delay:.42 }
     },
-    worlds: Array.from({ length:4 }, (_, worldIndex) => ({
+    worlds: Array.from({ length:5 }, (_, worldIndex) => ({
       id: worldIndex + 1,
       levels: Array.from({ length:5 }, (_, levelIndex) => ({
         level: levelIndex + 1,
@@ -110,15 +106,8 @@
             savedSecondary.appleRed = 0;
             savedSecondary.geyser = 0;
             savedSecondary.meteor = 0;
-          } else if (world.id === 3) {
-            savedSecondary.appleRed ??= savedSecondary.bomb;
-            savedSecondary.appleMint ??= savedSecondary.spring;
-            savedSecondary.bomb = 0;
-            savedSecondary.spring = 0;
-            savedSecondary.cryo = 0;
-            savedSecondary.snowflake = 0;
-            savedSecondary.geyser = 0;
-            savedSecondary.meteor = 0;
+          } else if ([1, 3, 4, 5].includes(world.id)) {
+            for (const id of SPECIAL_IDS) savedSecondary[id] = id === 'heal' ? 100 : 0;
           } else if (world.id === 4) {
             savedSecondary.geyser ??= savedSecondary.bomb;
             savedSecondary.meteor ??= savedSecondary.seismic ?? savedSecondary.spring;

@@ -1,6 +1,50 @@
 (() => {
   'use strict';
   const paths = {
+  "assets/ui/planets/sky-v3/sky-healthy.webp": "assets/ui/planets/sky-v4/sky-0.webp",
+  "assets/Мир 1/Колючий враг-v3.webp": "assets/hazards/thorns-red-v2/static-v3.webp",
+  "assets/hazards/thorns-red-v2/static.webp": "assets/hazards/thorns-red-v2/static-v3.webp",
+  "assets/hazards/thorns-v1/chaser.webp": "assets/hazards/thorns-red-v2/chaser.webp",
+  "assets/ui/planets/runtime-v1/home-100.webp": "assets/ui/planets/home-v2/home-100.webp",
+  "assets/ui/planets/runtime-v1/home-75.webp": "assets/ui/planets/home-v2/home-75.webp",
+  "assets/ui/planets/runtime-v1/home-50.webp": "assets/ui/planets/home-v2/home-50.webp",
+  "assets/ui/planets/runtime-v1/home-25.webp": "assets/ui/planets/home-v2/home-25.webp",
+  "assets/ui/planets/runtime-v1/home-0.webp": "assets/ui/planets/home-v2/home-0.webp",
+
+  "assets/ui/planets/sky-v2/sky-healthy.webp": "assets/ui/planets/sky-v4/sky-0.webp",
+  "assets/world5/desert-blocks-v1/sand-fragile.webp": "assets/world5/sky-v1/cloud-fragile.webp",
+  "assets/world5/desert-blocks-v1/sandstone-normal.webp": "assets/world5/sky-v1/sky-stone-normal.webp",
+  "assets/world5/desert-blocks-v1/bedrock-strong.webp": "assets/world5/sky-v1/goldstone-strong.webp",
+  "assets/backgrounds/parallax-v4/desert-far.webp": "assets/backgrounds/parallax-v4/sky-far.webp",
+  "assets/backgrounds/parallax-v4/desert-near.webp": "assets/backgrounds/parallax-v4/sky-near.webp",
+  "assets/ui/planets/runtime-v1/desert-0.webp": "assets/ui/planets/sky-v4/sky-0.webp",
+  "assets/ui/planets/runtime-v1/desert-25.webp": "assets/ui/planets/sky-v4/sky-25.webp",
+  "assets/ui/planets/runtime-v1/desert-50.webp": "assets/ui/planets/sky-v4/sky-50.webp",
+  "assets/ui/planets/runtime-v1/desert-75.webp": "assets/ui/planets/sky-v4/sky-75.webp",
+  "assets/ui/planets/runtime-v1/desert-100.webp": "assets/ui/planets/sky-v4/sky-100.webp",
+
+  "assets/Мир 1/Колючий враг-v2.webp": "assets/hazards/thorns-red-v2/static-v3.webp",
+  "assets/backgrounds/parallax-v3/stone-far.webp": "assets/backgrounds/parallax-v4/stone-far.webp",
+  "assets/backgrounds/parallax-v3/stone-near.webp": "assets/backgrounds/parallax-v4/stone-near.webp",
+  "assets/backgrounds/parallax-v3/candy-far.webp": "assets/backgrounds/parallax-v4/candy-far.webp",
+  "assets/backgrounds/parallax-v3/candy-near.webp": "assets/backgrounds/parallax-v4/candy-near.webp",
+  "assets/backgrounds/parallax-v3/magma-far.webp": "assets/backgrounds/parallax-v4/magma-far.webp",
+  "assets/backgrounds/parallax-v3/magma-near.webp": "assets/backgrounds/parallax-v4/magma-near.webp",
+  "assets/ui/portal-window-v1/laboratory.webp": "assets/ui/portal-window-v2/laboratory-return.webp",
+  "assets/Мир 4/Непрочный блок.webp": "assets/world4/magma-blocks-v2/ash-fragile.webp",
+  "assets/Мир 4/Непрочный блок.png": "assets/world4/magma-blocks-v2/ash-fragile.webp",
+  "assets/Мир 4/Обычный блок.webp": "assets/world4/magma-blocks-v2/cooled-lava-normal.webp",
+  "assets/Мир 4/Обычный блок.png": "assets/world4/magma-blocks-v2/cooled-lava-normal.webp",
+  "assets/Мир 4/Прочный блок.webp": "assets/world4/magma-blocks-v2/columnar-basalt-strong.webp",
+  "assets/Мир 4/Прочный блок.png": "assets/world4/magma-blocks-v2/columnar-basalt-strong.webp",
+  "assets/Мир 3/Непрочный блок.webp": "assets/world3/candy-blocks-v1/wafer-fragile.webp",
+  "assets/Мир 3/Непрочный блок.png": "assets/world3/candy-blocks-v1/wafer-fragile.webp",
+  "assets/Мир 3/обычный блок.webp": "assets/world3/candy-blocks-v1/chocolate-normal.webp",
+  "assets/Мир 3/обычный блок.png": "assets/world3/candy-blocks-v1/chocolate-normal.webp",
+  "assets/Мир 3/Прочный блок.webp": "assets/world3/candy-blocks-v1/berry-candy-strong-v2.webp",
+  "assets/Мир 3/Прочный блок.png": "assets/world3/candy-blocks-v1/berry-candy-strong-v2.webp",
+  "assets/ui/currency/anomaly-jar-v1.webp": "assets/ui/anomaly-fluid-v2/jar.webp",
+  "assets/ui/research-flask-blue-v1.webp": "assets/ui/anomaly-fluid-v2/jar.webp",
   "assets/Мир 1/Аптечка.webp": "assets/ui/blocks/heart-stone-v1.webp",
   "assets/Мир 3/Хилка.webp": "assets/ui/blocks/heart-stone-v1.webp",
   "assets/Мир 4/Аптечка.webp": "assets/ui/blocks/heart-stone-v1.webp",
@@ -64,7 +108,8 @@
   "assets/ЕДА/Новая/Электро/01-energy-can.png": "assets/food/01-energy-can.webp",
   "assets/ЕДА/Новая/Электро/02-candy.png": "assets/food/02-candy.webp",
   "assets/ЕДА/Новая/Электро/03-noodles.png": "assets/food/03-noodles.webp",
-  "assets/Мир 1/Колючий враг-v1.png": "assets/Мир 1/Колючий враг-v1-lossless.webp",
+  "assets/Мир 1/Колючий враг-v1.png": "assets/hazards/thorns-red-v2/static-v3.webp",
+  "assets/Мир 1/Колючий враг-v1-lossless.webp": "assets/hazards/thorns-red-v2/static-v3.webp",
   "effects-lab/assets/cloning-bud-left-v1.png": "effects-lab/assets/cloning-bud-left-v1-lossless.webp",
   "effects-lab/assets/cloning-bud-left-v2.png": "effects-lab/assets/cloning-bud-left-v2-lossless.webp",
   "effects-lab/assets/cloning-bud-left-v3.png": "effects-lab/assets/cloning-bud-left-v3-lossless.webp",
@@ -166,7 +211,74 @@
   "assets/ЕДА/Новая/Электро/02-candy-lossless.webp": "assets/food/02-candy.webp",
   "assets/ЕДА/Новая/Электро/03-noodles-lossless.webp": "assets/food/03-noodles.webp"
 };
-  window.SlimeAssetPaths = Object.freeze({ resolve(source) {
+  // Old editor saves may contain direct image paths, bypassing the catalog.
+  // Redirect those to the same current artwork as newly generated runs.
+  const terrainRefresh = {
+    'assets/Мир 1/Трава (непрочный блок).webp':'assets/world1/slime-blocks-v2/block-fragile.webp',
+    'assets/Мир 1/непрочный блок.webp':'assets/world1/slime-blocks-v2/block-fragile.webp',
+    'assets/Мир 1/Обычный блок.webp':'assets/world1/slime-blocks-v2/block-normal.webp',
+    'assets/Мир 1/Прочный блок.webp':'assets/world1/slime-blocks-v2/block-strong.webp',
+    'assets/world4/magma-blocks-v2/ash-fragile.webp':'assets/world4/rounded-blocks-v4/magma-fragile.webp',
+    'assets/world4/magma-blocks-v2/cooled-lava-normal.webp':'assets/world4/rounded-blocks-v4/magma-normal.webp',
+    'assets/world4/magma-blocks-v2/columnar-basalt-strong.webp':'assets/world4/rounded-blocks-v4/magma-strong.webp',
+    'assets/world5/sky-v1/cloud-fragile.webp':'assets/world5/rounded-blocks-v4/sky-fragile.webp',
+    'assets/world5/sky-v1/sky-stone-normal.webp':'assets/world5/rounded-blocks-v4/sky-normal.webp',
+    'assets/world5/sky-v1/goldstone-strong.webp':'assets/world5/rounded-blocks-v4/sky-strong.webp'
+  };
+  terrainRefresh['assets/vfx/core-encounter-v1/core.webp']='assets/vfx/hostile-cores-v27/shell-100.webp';
+  terrainRefresh['assets/vfx/anomaly-source-v3/living-core.webp']='assets/vfx/hostile-cores-v27/heart-100.webp';
+  for(const name of ['block-fragile','block-normal','block-strong'])terrainRefresh[`assets/world6/anomaly-blocks-v3/${name}.webp`]=`assets/world6/asteroid-blocks-v26/${name}.webp`;
+  const anomalyArt = 'assets/ui/anomaly-core-v56';
+  const anomalyVeins = 'assets/ui/anomaly-veins-v4';
+  const anomalyCurrency = `${anomalyVeins}/currency.webp`;
+  terrainRefresh[`${anomalyArt}/currency.webp`] = anomalyCurrency;
+  for(const value of [1,3,5]) {
+    const destination=`${anomalyVeins}/ore-plus-${value}-v3.webp`;
+    terrainRefresh[`${anomalyVeins}/ore-plus-${value}.webp`]=destination;
+    terrainRefresh[`${anomalyVeins}/ore-plus-${value}-v2.webp`]=destination;
+    terrainRefresh[`${anomalyArt}/ore-plus-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-organic-v29/infection-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-center-v28/infection-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-growth-v24/infection-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-readable-v22/infection-${value}.webp`]=destination;
+    if(value!==5)terrainRefresh[`assets/ui/mutation-contour-v23/infection-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-wrap-v21/infection-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-flowers-v19/infection-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-blooms-v16/infection-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/mutation-essence-v1/essence-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/anomaly-veins-v3/vein-${value}.webp`]=destination;
+    terrainRefresh[`assets/ui/anomaly-fluid-v2/block-plus-${value}.webp`]=destination;
+  }
+  for (const folder of ['mutation-wrap-v21', 'mutation-flowers-v19', 'anomaly-fluid-v2', 'mutation-blooms-v16', 'mutation-readable-v22']) {
+    terrainRefresh[`assets/ui/${folder}/jar.webp`] = anomalyCurrency;
+  }
+  const infectedMotherAsteroid = `${anomalyArt}/planet-compact-v57.webp`;
+  terrainRefresh['assets/ui/planets/mutation-flora-v1/source-100.webp'] = infectedMotherAsteroid;
+  terrainRefresh['assets/ui/planets/mother-substrate-v33/source-100.webp'] = infectedMotherAsteroid;
+  for(const stage of [100,75,50,25,0]) {
+    const destination=id=>`assets/ui/planets/mutation-flora-v1/${id}-${stage===0?0:100}.webp`;
+    for(const id of ['home','candy','magma'])terrainRefresh[`assets/ui/planets/runtime-v1/${id}-${stage}.webp`]=destination(id);
+    terrainRefresh[`assets/ui/planets/home-v2/home-${stage}.webp`]=destination('home');
+    terrainRefresh[`assets/ui/planets/sky-v4/sky-${stage}.webp`]=destination('sky');
+    terrainRefresh[`assets/ui/planets/runtime-v1/desert-${stage}.webp`]=destination('sky');
+    terrainRefresh[`assets/ui/planets/source-v3/planet-${stage}.webp`]=stage===0?destination('source'):infectedMotherAsteroid;
+  }
+  for(const tier of ['fragile','normal','strong']) {
+    const old=`assets/world1/slime-blocks-v2/block-${tier}.webp`;
+    const current=`assets/world1/slime-blocks-v6/block-${tier==='fragile'?'fragile-porous-v10':tier}.webp`;
+    for(const key of Object.keys(terrainRefresh))if(terrainRefresh[key]===old)terrainRefresh[key]=current;
+    terrainRefresh[old]=current;
+    terrainRefresh[`assets/world1/slime-blocks-v4/block-${tier}.webp`]=current;
+    terrainRefresh[`assets/world1/slime-blocks-v5/block-${tier}.webp`]=current;
+  }
+  for(const filename of ['block-fragile','block-fragile-soft-v7','block-fragile-soft-v8','block-fragile-bubbles-v9'])terrainRefresh[`assets/world1/slime-blocks-v6/${filename}.webp`]='assets/world1/slime-blocks-v6/block-fragile-porous-v10.webp';
+  for(const tier of ['fragile','normal','strong'])terrainRefresh[`assets/world5/planet-blocks-v3/sky-${tier}.webp`]=`assets/world5/rounded-blocks-v4/sky-${tier}.webp`;
+  for(const tier of ['fragile','normal','strong'])terrainRefresh[`assets/world4/planet-blocks-v3/magma-${tier}.webp`]=`assets/world4/rounded-blocks-v4/magma-${tier}.webp`;
+  terrainRefresh['assets/world3/candy-blocks-v1/wafer-fragile.webp']='assets/world3/candy-blocks-v2/cracker-fragile.webp';
+  terrainRefresh['assets/world3/candy-blocks-v1/berry-candy-strong-v2.webp']='assets/world3/candy-blocks-v2/caramel-strong.webp';
+  for(const key of Object.keys(paths))if(terrainRefresh[paths[key]])paths[key]=terrainRefresh[paths[key]];
+  Object.assign(paths,terrainRefresh);
+  window.SlimeAssetPaths = Object.freeze({ entries: () => Object.entries(paths), resolve(source) {
     const match = String(source).match(/^([^?#]+)(.*)$/);
     return match ? (paths[match[1]] || match[1]) + match[2] : source;
   } });

@@ -2,6 +2,8 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
+  const illustratedShell = document.body.classList.contains('home-shell-empty');
+  const emptyShell = illustratedShell && !document.body.classList.contains('home-shell-live');
   let state, frame = 0, pickerOpen = false;
   const roman = n => ['I', 'II', 'III'][Math.max(0, Math.min(2, n - 1))];
   document.body.classList.add('home-console');
@@ -54,6 +56,7 @@
     fit($('wardrobeBtn').querySelector('img'), [256,256,14,22,246,218], .50,.45,.64,.60);
   }
   async function animateFood(phase) {
+    if (emptyShell) return;
     layout();
     const content = document.querySelector('#foodChoices .console-food-content');
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -83,6 +86,45 @@
     if (!state || document.body.dataset.screen !== 'home') return;
     const app = $('app').getBoundingClientRect(), w = app.width, h = app.height, u = w / 455;
     if (!w || !h) return;
+    if (illustratedShell) {
+      // Both masters share one width scale; do not squash the round socket.
+      const edge = -2, width = w + 4, scale = width / 1176;
+      const topHeight = 600 * scale, bottomHeight = 400 * scale;
+      const start = Math.min(w * .75, h - topHeight - bottomHeight - 24);
+      const bottom = h + 4, height = bottom - start;
+      place($('homeConsoleBody'), edge, start, width, height);
+      place($('homeConsoleTop'), edge, start, width, topHeight);
+      place($('homeConsoleMiddle'), edge, start + topHeight, width, height - topHeight - bottomHeight);
+      place($('homeConsoleBottom'), edge, bottom - bottomHeight, width, bottomHeight);
+      place($('slimeStage'), 0, 0, w, h * .40);
+      place($('slime'), w * .13, w * .11, w * .74, w * .74);
+      // Inner opening in laboratory-soft-v2 (907px wide); the ring is already painted.
+      place($('launchPortal'), w * 296 / 907, w * 192 / 907, w * 312 / 907, w * 314 / 907);
+      const tool = w * .225;
+      place(document.querySelector('.mutation-lab-button'), w * .018, w * .225, tool, tool);
+      place($('wardrobeBtn'), w - tool - w * .018, w * .225, tool, tool);
+      $('homeScreen').style.setProperty('--console-unit', `${u}px`);
+      fitMenuIcons(tool);
+      if (!emptyShell) {
+        const native = (element, x, y, width, height) => place(element, edge + x * scale, start + y * scale, width * scale, height * scale);
+        native($('foodChoices'), 100, 92, 310, 234);
+        native($('homeSynthesisFx'), 80, 70, 350, 260);
+        // Register the face to the opening in the master, not a visual nudge.
+        native($('conveyorDispensers'), 544, 99, 192, 192);
+        native($('homeMutationInfo'), 788, 51, 317, 285);
+        place($('homeMonitorPicker'), edge + 20 * scale, start + 12 * scale, 1136 * scale, Math.max(144, 362 * scale));
+        native($('homeFoodHeading'), 0, 0, 1, 1);
+        const playWidth = width * 880 / 1176;
+        const playHeight = playWidth * 229 / 960;
+        place($('worldStartBtn'), (w - playWidth) / 2, bottom - 126 * scale - playHeight / 2, playWidth, playHeight);
+        window.SlimePlanetCarousel?.mount($('homeScreen'));
+        const planetsTop = start + 415 * scale;
+        place($('homePlanetsPanel'), edge + 64 * scale, planetsTop, 1048 * scale, bottom - 262 * scale - planetsTop);
+        window.SlimePlanetCarousel?.layout();
+        fitFood();
+      }
+      return;
+    }
     // Only the featureless middle strip stretches; circles and frame corners keep one scale.
     // Bleed the exterior rim beyond the viewport. Every device control uses
     // this same origin/scale, so the art never moves independently of its UI.
@@ -130,9 +172,13 @@
     pickerOpen = open;
     $('homeMonitorPicker').hidden = !open;
     $('homeMutationInfo').hidden = open;
+    $('conveyor').classList.toggle('is-picking-mutation', open);
     $('homeMutationSelector').setAttribute('aria-expanded', String(open));
     layout();
-    if (open) requestAnimationFrame(() => $('homeMonitorPicker').querySelector('[aria-pressed="true"]')?.focus());
+    if (open && illustratedShell && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      $('homeMonitorPicker').animate([{opacity:0,translate:'0 4px'},{opacity:1,translate:'0 0'}], {duration:160,easing:'ease-out'});
+    }
+    if (open) requestAnimationFrame(() => { if (pickerOpen) $('homeMonitorPicker').querySelector('[aria-pressed="true"]')?.focus(); });
     else if (restoreFocus) $('homeMutationSelector').focus();
   }
   function mount() {
@@ -141,6 +187,13 @@
     art.id = 'homeConsoleArt'; art.setAttribute('aria-hidden', 'true');
     art.innerHTML = '<i id="homeRoomBackdrop"></i><div id="homeConsoleBody"><i id="homeConsoleTop"></i><i id="homeConsoleMiddle"></i><i id="homeConsoleBottom"></i></div>';
     $('app').prepend(art);
+    if (emptyShell) {
+      // Keep obsolete hit targets out of keyboard, pointer and accessibility trees.
+      for (const id of ['conveyor', 'playSetupCard', 'quickMutationPicker']) {
+        $(id).inert = true;
+        $(id).setAttribute('aria-hidden', 'true');
+      }
+    }
     $('homeScreen').classList.add('home-console-screen');
     // The enlarged canvas has transparent particle margins. Keep those margins
     // from intercepting touches intended for the device directly beneath it.
@@ -151,17 +204,18 @@
     const synthesis = document.createElement('div'); synthesis.id = 'homeSynthesisFx'; synthesis.setAttribute('aria-hidden','true');
     synthesis.innerHTML = '<svg class="console-scanner-field" viewBox="0 0 140 82" preserveAspectRatio="none"><defs><linearGradient id="consoleScanLeft"><stop stop-color="#c2ffff" stop-opacity=".48"/><stop offset="1" stop-color="#c2ffff" stop-opacity=".04"/></linearGradient><linearGradient id="consoleScanRight" x1="1" x2="0"><stop stop-color="#c2ffff" stop-opacity=".48"/><stop offset="1" stop-color="#c2ffff" stop-opacity=".04"/></linearGradient></defs><path d="M0 15 L70 0 V82 L0 35 Z" fill="url(#consoleScanLeft)"/><path d="M140 15 L70 0 V82 L140 35 Z" fill="url(#consoleScanRight)"/></svg><i class="console-scanner-flash left"></i><i class="console-scanner-flash right"></i><i class="console-scan-line"></i>';
     $('conveyor').append(synthesis);
-    $('conveyorDispensers').innerHTML = '<button id="homeMutationSelector" type="button" aria-label="Сменить мутацию" aria-controls="homeMonitorPicker" aria-expanded="false"><span class="console-selector-face"><img alt=""></span><span class="console-empty-medal" aria-hidden="true">+</span><b>СМЕНИТЬ</b></button>';
+    $('conveyorDispensers').innerHTML = '<button id="homeMutationSelector" type="button" aria-label="Сменить мутацию" aria-controls="homeMonitorPicker" aria-expanded="false"><span class="console-selector-face"><img alt=""></span><span class="console-empty-medal" aria-hidden="true">+</span><b>СМЕНИТЬ</b></button><span id="homeMutationStage" class="console-selector-stage"><img alt=""></span>';
     const info = document.createElement('button'); info.id = 'homeMutationInfo'; info.type = 'button';
     info.innerHTML = '<span class="console-mutation-heading"><b class="console-mutation-name"></b><span class="console-stage"></span></span><span class="console-task-kicker"></span><span class="console-task-label"></span><span class="console-task-track" role="progressbar"><i></i></span><b class="console-task-counter"></b><span class="console-evolution-callout" hidden><span class="console-evolution-stage"></span><strong class="console-evolution-title">ГОТОВО<br>К РАЗВИТИЮ</strong><span class="console-evolution-action">РАЗВИТЬ <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 5l7 7-7 7"/></svg></span></span></span>';
     $('conveyor').append(info);
     const picker = document.createElement('section'); picker.id = 'homeMonitorPicker'; picker.hidden = true;
     picker.setAttribute('aria-label', 'Выбор мутации');
-    picker.innerHTML = '<div class="console-mutation-grid" role="group" aria-label="Мутации"></div>';
+    picker.innerHTML = '<div class="console-picker-heading"><b>ВЫБЕРИ МУТАЦИЮ</b><button type="button" aria-label="Закрыть выбор мутации">×</button></div><div class="console-mutation-grid" role="group" aria-label="Мутации"></div>';
     $('conveyor').append(picker);
+    picker.querySelector('.console-picker-heading button').addEventListener('click', () => setPicker(false, true));
     $('homeMutationSelector').addEventListener('click', () => !state.busy && setPicker(!pickerOpen));
-    document.addEventListener('pointerdown', event => { if (pickerOpen && !picker.contains(event.target) && !$('homeMutationSelector').contains(event.target)) setPicker(false); });
-    picker.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); setPicker(false, true); } });
+    document.addEventListener('pointerdown', event => { if (pickerOpen && !picker.contains(event.target) && !$('conveyorDispensers').contains(event.target)) setPicker(false); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && pickerOpen) { event.preventDefault(); setPicker(false, true); } });
     picker.querySelector('.console-mutation-grid').addEventListener('click', event => {
       const button = event.target.closest('[data-home-mutation]'); if (!button || state.busy) return;
       const mutation = state.mutations.find(item => item.id === button.dataset.homeMutation);
@@ -183,9 +237,18 @@
   }
   function render(next) {
     state = next; mount();
+    if (emptyShell) { schedule(); return; }
     const mutation = state.mutations.find(item => item.id === state.selected) || state.mutations[0];
     const selector = $('homeMutationSelector'), image = selector.querySelector('img');
     selector.disabled = state.busy;
+    const stageBadge = $('homeMutationStage');
+    stageBadge.hidden = !state.stage;
+    if (state.stage) {
+      const stageImage = stageBadge.querySelector('img');
+      const stageSource = ['assets/ui/home-planets/stages-round-v2/stage-i.webp','assets/ui/home-planets/stages-round-v2/stage-ii.webp','assets/ui/home-planets/stages-round-v2/stage-iii.webp'][Math.max(0, Math.min(2, state.stage - 1))];
+      if (stageImage.getAttribute('src') !== stageSource) stageImage.src = stageSource;
+      stageImage.alt = `${roman(state.stage)} стадия мутации`;
+    }
     selector.querySelector('.console-selector-face').hidden = !state.stage;
     selector.querySelector('.console-empty-medal').hidden = !!state.stage;
     if (mutation && image.getAttribute('src') !== mutation.image) {
@@ -197,8 +260,8 @@
         previous.classList.add('console-emblem-previous'); face.append(previous);
         const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
         const duration = reduced ? 70 : 300;
-        previous.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.82)'}],{duration,fill:'forwards',easing:'ease-out'}).finished.catch(()=>{}).finally(()=>previous.remove());
-        image.animate([{opacity:0,transform:'scale(.86)'},{opacity:1,transform:'scale(1)'}],{duration,fill:'backwards',easing:'ease-out'});
+        previous.animate([{opacity:1},{opacity:0}],{duration,fill:'forwards',easing:'ease-out'}).finished.catch(()=>{}).finally(()=>previous.remove());
+        image.animate([{opacity:0},{opacity:1}],{duration,fill:'backwards',easing:'ease-out'});
       }
     }
     if (mutation?.emblemStyle) image.setAttribute('style',mutation.emblemStyle);
@@ -237,5 +300,5 @@
     }
     schedule();
   }
-  window.SlimeHomeConsole = Object.freeze({render, layout, schedule, prepareFoodDrag, disintegrateFood:() => animateFood('out'), synthesizeFood:() => animateFood('in')});
+  window.SlimeHomeConsole = Object.freeze({emptyShell, tutorialSuspended:illustratedShell, render, layout, schedule, prepareFoodDrag, disintegrateFood:() => animateFood('out'), synthesizeFood:() => animateFood('in')});
 })();

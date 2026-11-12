@@ -4,7 +4,7 @@ function take(name){const a=source.indexOf(`  function ${name}(`),b=source.index
 const fixedMath=Object.create(Math);fixedMath.random=()=>.1;
 let hits=[],effects=[],stage=1;
 const c={Math:fixedMath,Set,Map,performance:{now:()=>1000},FIRE_BURN_HITS:3,FIRE_BURN_INTERVAL_MS:1200,FIRE_TRANSFER_MS:220,ELECTRIC_IMPACT_WINDOW_MS:72,VIEW_H:780,
- elementalLevel:()=>stage,shareGlitchHit(){},blockCenter:b=>({x:b.x+b.w/2,y:b.y+b.h/2}),rand:(a,b)=>(a+b)/2,
+ elementalLevel:()=>stage,shareGlitchHit(){},recordMutationAction(){},blockCenter:b=>({x:b.x+b.w/2,y:b.y+b.h/2}),rand:(a,b)=>(a+b)/2,
  pushElementalEffect:(...args)=>effects.push(args),frostTargetAvailable:b=>!b.dead&&!b.special&&!b.hazard&&!b.unbreakable,
  snowTargetScore:b=>b.row,chooseSpacedFrostTargets:(blocks,count)=>blocks.slice(0,count),reserveFrostProjectileTarget(){},
  damageBlockByElement(b,n,cause,at){hits.push({b,n,cause,at});b.hp-=n;if(b.hp<=0){b.dead=true;c.spreadFireFromBrokenBlock(b,at,cause);}}
@@ -16,18 +16,21 @@ fresh();let b=block(1,1,5);assert(c.igniteBlock(b,1000));assert.equal(b.fireTick
 assert(!c.igniteBlock(b,2100),'Touching again cannot reset or replenish an active burn');
 for(const [at,hp,left] of [[2199,5,3],[2200,4,2],[3399,4,2],[3400,3,1],[4600,2,0],[10000,2,0]]){c.updateBurningBlocks(at);assert.equal(b.hp,hp);assert.equal(b.fireTicksLeft,left);}
 assert.equal(hits.length,3);assert.equal(c.run.burningBlocks.size,0);assert.equal(effects.length,0,'A surviving block never transfers fire');
-// A touched 4-HP rock breaks after three ticks. Its untouched neighbour survives with 1 HP.
-fresh();b=block(1,1,3);const below=block(2,1,4),side=block(1,2,4),diagonal=block(2,2,4);c.igniteBlock(b,1000);
-c.updateBurningBlocks(3400);assert.equal(effects.length,0,'Burn damage alone never spreads before destruction');
-c.updateBurningBlocks(4600);assert(b.dead);assert.equal(below.fireTicksLeft,3);assert(!side.fireDamageAt&&!diagonal.fireDamageAt);
-assert.equal(effects.length,1);assert.equal(effects[0][0],'fireTransfer');assert.equal(below.fireIgnitedAt,4820);
-c.updateBurningBlocks(8420);assert.equal(below.hp,1);assert.equal(below.fireTicksLeft,0);assert.equal(effects.length,1,'No automatic chain through a surviving strong neighbour');
-// Empty cells, corner-only contact, hazards and unbreakables cannot bridge a fire chain.
-fresh();const dead=block(1,1);dead.dead=true;block(2,2);block(3,1);block(1,2).hazard=true;block(2,1).unbreakable=true;
-c.spreadFireFrom(dead,1000);assert.equal(effects.length,0);assert.equal(c.run.burningBlocks.size,0);
-fresh();b=block(1,1,6);c.igniteBlock(b,1000,9);c.updateBurningBlocks(5000);assert.equal(b.hp,3);assert.equal(hits.length,3);assert(hits.every(h=>h.cause==='fireUltimate'),'Ultimate ownership survives all delayed ticks');
-// The exact same passive burn works at each cosmetic/ultimate grade.
-for(stage=1;stage<=3;stage++){fresh();b=block(1,1,1);block(2,1);c.igniteBlock(b,1000);c.updateBurningBlocks(2200);assert.equal(effects.length,1);assert.equal(c.run.blocks[1].fireTicksLeft,3);}
+// Stage II: only the four touching cardinal neighbours; no second generation.
+stage=2;fresh();b=block(2,2,3);const below=block(3,2,4),side=block(2,3,4),above=block(1,2,4),left=block(2,1,4),diagonal=block(3,3,4),far=block(4,2,4);c.igniteBlock(b,1000);
+c.updateBurningBlocks(3400);assert.equal(effects.length,0);c.updateBurningBlocks(4600);assert(b.dead);assert.equal(effects.length,4);assert(!diagonal.fireDamageAt&&!far.fireDamageAt);
+for(const n of [below,side,above,left]){assert.equal(n.fireSpreadLeft,0);assert.equal(n.fireIgnitedAt,4820);}
+c.updateBurningBlocks(8420);assert.equal(below.hp,1);assert.equal(effects.length,4);c.spreadFireFromBrokenBlock(b,8500,'fire');assert.equal(effects.length,4,'A source transfers once');
+// Stage III: finite-HP blocks burn to destruction, but a whole grid cannot chain forever.
+stage=3;fresh();b=block(2,2,8);c.igniteBlock(b,1000);c.updateBurningBlocks(11000);assert(b.dead);assert.equal(hits.length,8);
+fresh();for(let row=0;row<5;row++)for(let col=0;col<5;col++)block(row,col,1);
+b=c.run.blocks.find(b=>b.row===2&&b.col===2);c.igniteBlock(b,1000);c.updateBurningBlocks(20000);c.updateBurningBlocks(23000);assert.equal(c.run.blocks.filter(b=>b.dead).length,5);assert.equal(effects.length,4);
+c.spreadFireFromBrokenBlock(b,21000,'fire');assert.equal(effects.length,4);
+// No diagonal, gap, hazard, or unbreakable can receive fire.
+stage=2;fresh();b=block(1,1,1);block(2,2);block(3,1);block(1,2).hazard=true;block(2,1).unbreakable=true;c.igniteBlock(b,1000);c.updateBurningBlocks(2200);assert.equal(effects.length,0);
+fresh();b=block(1,1,6);c.igniteBlock(b,1000,9);c.updateBurningBlocks(5000);assert.equal(b.hp,3);assert.equal(hits.length,3);assert(hits.every(h=>h.cause==='fireUltimate'));
+// Passive I does not spread even when a burning block dies.
+stage=1;fresh();b=block(1,1,1);block(2,1,1);c.igniteBlock(b,1000);c.updateBurningBlocks(20000);assert.equal(effects.length,0);assert.equal(c.run.blocks.filter(b=>b.dead).length,1);
 // Two additional targets are distinct and can never return to the source.
 stage=1;fresh();for(let row=0;row<5;row++)for(let col=0;col<5;col++)block(row,col,8);
 const touched=c.run.blocks.find(b=>b.row===1&&b.col===2),other=c.run.blocks.find(b=>b.row===1&&b.col===3);
@@ -39,4 +42,4 @@ fresh();b=block(1,1);const neighbour=block(2,1);assert.equal(c.dischargeFromImpa
 for(stage=1;stage<=3;stage++){fresh();b=block(1,2);for(let row=3;row<10;row++)block(row,row%5);assert.equal(c.scatterSnowShards(b,1000),2);assert.equal(effects.length,2);assert(effects.every(e=>e[0]==='snowShard'&&e[3].transformKind==='snow'));}
 assert(source.includes('dischargeFromImpact(block, ELECTRIC_CHAIN_LENGTH, timestamp)'));
 assert(source.includes('const ELECTRIC_CHAIN_LENGTH = 2;'));
-console.log('Elemental balance: three 1.2s fire ticks, no reset, delayed ownership, adjacent-only single transfer, no gap bridging, exactly two additional lightning targets, one chain per collision, two frost shards and stage-independent base passed');
+console.log('Elemental balance: three 1.2s fire ticks, no reset, delayed ownership, adjacent-only single transfer, no gap bridging, exactly two additional lightning targets, one chain per collision, two frost shards and progressive fire I/II/III passed');

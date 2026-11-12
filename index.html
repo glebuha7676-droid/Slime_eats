@@ -19,7 +19,7 @@
   <link rel="preload" as="image" href="assets/ui/slime/slime-eye-expressions-v1.webp?v=20261008-optimized-v1" />
   <link rel="preload" as="image" href="assets/ui/slime/slime-mouth-expressions-v1.webp?v=20261008-optimized-v1" />
   <link rel="stylesheet" href="loading.css?v=1" />
-  <link rel="stylesheet" href="styles.css?v=90" />
+  <link rel="stylesheet" href="styles.css?v=run-buttons-1" />
   <link rel="stylesheet" href="home-layout.css?v=627" />
   <link rel="stylesheet" href="home-mode-fix.css?v=130" />
   <link rel="stylesheet" href="home-visual-refresh.css?v=56" />
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="tutorial.css?v=700" />
   <link rel="stylesheet" href="ui-activity.css?v=700" />
   <link rel="stylesheet" href="mutation-progression.css?v=3" />
-  <link rel="stylesheet" href="lab-ui-polish.css?v=18" />
+  <link rel="stylesheet" href="lab-ui-polish.css?v=admin-infection-1" />
   <link rel="stylesheet" href="mutation-workspace.css?v=9" />
   <link rel="stylesheet" href="psionic-wave.css?v=2" />
   <link rel="stylesheet" href="home-soft-ui.css?v=8" />
@@ -45,17 +45,26 @@
   <link rel="stylesheet" href="rewards.css?v=684" />
   <link rel="stylesheet" href="home-buttons-soft.css?v=627" />
   <link rel="stylesheet" href="laboratory-metal.css?v=627" />
-  <link rel="stylesheet" href="game-buttons-clean.css?v=627" />
+  <link rel="stylesheet" href="game-buttons-clean.css?v=admin-infection-1" />
   <link rel="stylesheet" href="home-console.css?v=675" />
   <link rel="stylesheet" href="laboratory-redesign.css?v=650" />
-  <link rel="stylesheet" href="synth-cabinet.css?v=678" />
+  <link rel="stylesheet" href="synth-cabinet.css?v=synth-flow-4" />
   <link rel="stylesheet" href="wardrobe.css?v=700" />
-  <link rel="preload" as="image" href="assets/ui/home-modular/generated-v8/room-extended-floor.webp" />
-  <link rel="preload" as="image" href="assets/ui/home-modular/live/console-top.webp" />
-  <link rel="preload" as="image" href="assets/ui/home-modular/live/console-middle.webp" />
-  <link rel="preload" as="image" href="assets/ui/home-modular/live/console-bottom.webp" />
+  <link rel="stylesheet" href="home-planets-shell.css?v=selector-round-2" />
+  <link rel="stylesheet" href="planet-carousel.css?v=anomaly-planet-57-size" />
+  <link rel="stylesheet" href="core-encounter.css?v=fire-core-2" />
+  <link rel="stylesheet" href="anomaly-energy.css?v=run-buttons-1" />
+  <link rel="stylesheet" href="portal-window.css?v=portals-4" />
+  <link rel="stylesheet" href="anomaly-currency.css?v=wallet-light-1" />
+  <link rel="stylesheet" href="run-ability.css?v=run-buttons-touch-3" />
+  <link rel="stylesheet" href="core-preview.css?v=admin-infection-1" />
+  <link rel="stylesheet" href="admin-settings.css?v=admin-infection-1" />
+  <link rel="preload" as="image" href="assets/ui/home-planets/generated-v1/laboratory-soft-v2.webp" />
+  <link rel="preload" as="image" href="assets/ui/home-planets/generated-v1/console-soft-v3.webp" />
+  <link rel="preload" as="image" href="assets/ui/home-modular/generated-v3/play-active.webp" />
+  <link rel="preload" as="image" href="assets/ui/home-modular/generated-v3/play-inactive.webp" />
 </head>
-<body>
+<body class="home-shell-empty home-shell-live">
   <section id="bootScreen" class="boot-screen" role="progressbar" aria-label="Загрузка игры" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
     <div class="boot-scene">
       <div class="boot-title"><strong>СЛАЙМ</strong><span>КОПАЙ ГЛУБЖЕ</span></div>
@@ -66,11 +75,11 @@
       </div>
     </div>
   </section>
-  <script src="js/core/boot-manifest.js?v=700"></script>
-  <script src="js/core/boot-loader.js?v=3"></script>
+  <script src="js/core/boot-manifest.js?v=anomaly-veins-6"></script>
+  <script src="js/core/boot-loader.js?v=planets-1"></script>
   <div id="phoneViewport" class="phone-viewport">
   <div id="app" class="app">
-    <header class="topbar world-summary" aria-label="Уровень и колбы исследования">
+    <header class="topbar world-summary" aria-label="Уровень и осколки Аномалии">
       <div class="world-summary-head">
         <div class="world-identity">
           <span class="world-emblem" aria-hidden="true"><img id="worldIcon" src="assets/ui/world-icons/world-1.webp?v=20261008-optimized-v1" alt=""></span>
@@ -86,9 +95,9 @@
           <span class="player-level-badge"><img id="slimeProgressEmblem" class="currency-icon" src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"></span>
           <div class="player-level-content"><div class="slime-progress-heading"><strong id="slimeProgressName">Огонь</strong><span>СТАДИЯ <b id="coinsLabel">I</b></span></div><div class="player-level-track"><i id="playerLevelProgress"></i><small id="playerLevelExperience">Задание для развития</small></div></div>
         </div>
-        <div class="research-wallet" aria-label="Колбы исследования: 0">
+        <div class="research-wallet" aria-label="Осколки Аномалии: 0">
           <span class="research-wallet-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="">
+            <img src="assets/ui/anomaly-veins-v4/currency.webp?v=20261022-v700" alt="">
             <b id="researchUnitsLabel">0</b>
           </span>
         </div>
@@ -261,50 +270,48 @@
         <div class="shaft" id="shaft">
           <canvas id="physicsCanvas" aria-label="Слайм падает через блоки"></canvas>
           <div class="run-top-hud" aria-label="Состояние забега">
-            <div class="shaft-health" aria-label="У слайма три сердца">
-              <span class="shaft-health-title" aria-hidden="true">ЖИЗНИ</span>
-              <div class="run-hearts" role="img" aria-label="3 из 3 сердец">
-                <span class="run-heart" data-heart="0" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=20261008-optimized-v1" alt=""></span>
-                <span class="run-heart" data-heart="1" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=20261008-optimized-v1" alt=""></span>
-                <span class="run-heart" data-heart="2" aria-hidden="true"><img src="assets/ui/heart-jelly.webp?v=20261008-optimized-v1" alt=""></span>
-              </div>
-              <span class="shaft-health-count"><b id="runHeartCount">3</b>/3</span>
-            </div>
-            <div class="run-route card compact" aria-label="Прогресс падения до портала">
-              <div class="run-route-labels" aria-hidden="true">
-                <span>0 М</span>
-                <b id="depthLabel">0 М</b>
-                <strong id="routeTargetLabel">500 М</strong>
-              </div>
-              <div class="run-route-track">
-                <span id="routeProgress" class="run-route-progress"></span>
-                <span id="routeBestMarker" class="run-route-best" aria-hidden="true"><small id="routeBestLabel">РЕКОРД 0 М</small><i></i></span>
-                <span id="routeSlimeMarker" class="run-route-slime" aria-hidden="true"><img src="assets/ui/slime.webp?v=20261008-optimized-v1" alt=""></span>
-                <span class="run-route-portal" aria-hidden="true"><img id="routePortalIcon" src="assets/ui/portals/world-1.webp?v=20261008-optimized-v1" alt=""></span>
-              </div>
-            </div>
-            <div id="runResearchHud" class="run-research-hud" aria-label="Колбы за забег: 0">
-              <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="" aria-hidden="true">
-              <span><small>КОЛБЫ</small><b id="runResearchScore">0</b></span>
+            <div id="runResearchHud" class="run-research-hud" aria-label="Осколки за забег: 0">
+              <img src="assets/ui/anomaly-veins-v4/currency.webp?v=20261022-v700" alt="" aria-hidden="true">
+              <span><small>ОСКОЛКИ</small><b id="runResearchScore">0</b></span>
               <i id="runResearchGain" aria-hidden="true">+1</i>
             </div>
             <button id="endRunBtn" class="run-exit-btn run-menu-btn" type="button" aria-label="Пауза" aria-haspopup="dialog" aria-controls="runMenuOverlay" aria-expanded="false"><svg class="pause-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/></svg></button>
+            <div id="anomalyEnergy" class="anomaly-energy" role="progressbar" aria-label="Сила слайма" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+              <div class="anomaly-energy-track">
+                <span class="anomaly-energy-fill"><i class="anomaly-energy-drain" aria-hidden="true"></i></span>
+                <span class="anomaly-energy-wave" aria-hidden="true"></span>
+              </div>
+              <img src="assets/ui/anomaly-energy-v1/pickup.webp" alt="">
+              <span class="anomaly-energy-label">СИЛА</span><strong class="anomaly-energy-value">100%</strong><span class="anomaly-energy-delta" aria-hidden="true"></span>
+            </div>
           </div>
+          <div id="runDistanceReadout" class="run-route" aria-label="Расстояние до ядра"><div class="run-distance"><span id="runDistanceCopy">До ядра</span><strong id="runDistanceValue">500</strong><span class="run-distance-unit">м</span></div></div>
+          <div id="abilityReadyCue" class="ability-ready-cue" role="status" aria-live="polite" hidden><img alt="" aria-hidden="true"><span></span><b aria-hidden="true">↓</b></div>
           <div id="runExperienceHud" class="run-experience-hud" data-stage="0" aria-live="off" aria-label="Устаревший счётчик" hidden><span id="runExperienceScore">0</span><small></small><i id="runExperienceGain">+1</i></div>
           <div id="tutorialRunGoal" class="tutorial-run-goal" role="button" tabindex="0" hidden></div>
-          <div id="tutorialSteeringDemo" class="tutorial-steering-demo" aria-hidden="true" hidden><span class="tutorial-stick-demo"><i></i></span><span class="tutorial-control-keys"><kbd>←</kbd><kbd>→</kbd></span></div>
+          <div id="tutorialSteeringDemo" class="tutorial-steering-demo" aria-hidden="true" hidden><span class="tutorial-control-keys"><kbd>←</kbd><kbd>→</kbd></span></div>
           <aside id="tutorialRunHint" class="tutorial-run-hint" role="status" hidden><img src="assets/ui/tutorial/narrator-explain-v1.webp" alt=""><span><strong></strong><p></p></span></aside>
           <div id="impactText" class="impact-text" aria-live="polite"></div>
           <div class="barrier-control" aria-label="Суперспособность" hidden>
             <button id="abilityBtn" class="ability-btn barrier-btn ultimate-control" type="button" aria-label="Активировать суперспособность" disabled>
-              <img class="ability-icon-muted" alt="" aria-hidden="true">
-              <img class="ability-icon-color" alt="" aria-hidden="true">
-              <span id="abilityPercent">0%</span>
+              <img src="assets/ui/run-controls/ultimate.webp" alt="" draggable="false">
+              <span id="abilityPercent" aria-hidden="true" hidden></span>
             </button>
-            <small id="abilityText">СУПЕРСПОСОБНОСТЬ</small>
+            <span class="ability-state" aria-hidden="true">−20% СИЛЫ</span>
           </div>
-          <div class="fall-controls" aria-label="Сенсорное управление траекторией слайма">
-            <div id="touchJoystick" class="touch-joystick" aria-hidden="true"><span aria-hidden="true"></span></div>
+          <div id="fallControls" class="fall-controls" role="group" aria-label="Управление слаймом" hidden>
+            <button id="fallLeftBtn" class="fall-button fall-button-left" type="button" aria-label="Влево" aria-keyshortcuts="ArrowLeft A">
+              <span class="fall-button-face"><img src="assets/ui/run-controls/right.webp" alt="" draggable="false"></span>
+            </button>
+            <button class="fall-button fall-button-attack" type="button" aria-label="Атака">
+              <span class="fall-button-face"><img src="assets/ui/run-controls/attack.webp" alt="" draggable="false"></span>
+            </button>
+            <button class="fall-button fall-button-defense" type="button" aria-label="Защита">
+              <span class="fall-button-face"><img src="assets/ui/run-controls/defense.webp" alt="" draggable="false"></span>
+            </button>
+            <button id="fallRightBtn" class="fall-button" type="button" aria-label="Вправо" aria-keyshortcuts="ArrowRight D">
+              <span class="fall-button-face"><img src="assets/ui/run-controls/right.webp" alt="" draggable="false"></span>
+            </button>
           </div>
           <div id="glitchUltimateOverlay" class="glitch-ultimate-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="glitchChoiceTitle">
             <div class="glitch-ultimate-static" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -327,44 +334,37 @@
 
   <div id="homeRewardFlightLayer" class="home-reward-flight-layer" aria-hidden="true"></div>
 
-  <div id="adminToolsOverlay" class="overlay admin-tools-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminToolsTitle">
-    <section class="modal admin-tools-modal" tabindex="-1">
-      <div class="admin-tools-heading">
-        <span class="admin-tools-gear" aria-hidden="true"><img src="assets/ui/game-menu-gear.webp?v=20261008-optimized-v1" alt=""></span>
-        <div><small>ИНСТРУМЕНТЫ ТЕСТИРОВАНИЯ</small><h2 id="adminToolsTitle">Админ-меню</h2></div>
-        <button id="closeAdminToolsBtn" class="icon-btn admin-tools-close" type="button" aria-label="Закрыть админ-меню">✕</button>
-      </div>
-      <div class="admin-tools-grid">
-        <div class="admin-tool-row admin-world-row">
-          <span><small>ТЕКУЩАЯ ШАХТА</small><b>Переключение</b></span>
-          <div class="admin-world-switch" aria-label="Переключение шахты">
-            <button id="adminPrevWorldBtn" type="button" aria-label="Предыдущая шахта">‹</button>
-            <strong id="adminWorldValue">ШАХТА 1</strong>
-            <button id="adminNextWorldBtn" type="button" aria-label="Следующая шахта">›</button>
-          </div>
+  <div id="adminToolsOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminToolsTitle">
+    <section class="modal admin-settings" tabindex="-1">
+      <header class="admin-settings-heading">
+        <h2 id="adminToolsTitle">Админ-меню</h2>
+        <button id="closeAdminToolsBtn" type="button" aria-label="Закрыть админ-меню">✕</button>
+      </header>
+      <div class="admin-settings-group">
+        <div class="admin-settings-planet">
+          <strong id="adminPlanetName"></strong>
+          <output id="adminPlanetInfection" aria-live="polite"></output>
         </div>
-        <button id="adminUnlockAllBtn" class="admin-unlock-all" type="button" aria-label="Выдать 30 уровень и открыть игровой прогресс" title="Выдать 30 уровень и открыть игровой прогресс">
-          <img src="assets/ui/player-level-star-v2.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>ОТКРЫТЬ ИГРУ</b><small>Уровни и прогресс</small></span><i aria-hidden="true">+</i>
-        </button>
-        <button id="adminInfiniteFlasksBtn" class="admin-infinite-flasks" type="button" aria-pressed="false" aria-label="Включить бесконечные колбы исследования">
-          <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНЫЕ КОЛБЫ</b><small id="adminInfiniteFlasksState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
-        </button>
-        <button id="adminInfiniteUltimateBtn" class="admin-infinite-flasks admin-infinite-ultimate" type="button" aria-pressed="false" aria-label="Включить бесконечную суперспособность">
-          <img src="assets/ui/recipe-categories/emblem-v2-electric.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>БЕСКОНЕЧНАЯ УЛЬТА</b><small id="adminInfiniteUltimateState">ВЫКЛЮЧЕНО</small></span><i aria-hidden="true">∞</i>
-        </button>
-        <section class="admin-mutation-stages" aria-labelledby="adminMutationStagesTitle">
-          <span id="adminMutationStagesTitle"><img id="adminUnlockMutationsIcon" src="assets/ui/recipe-categories/emblem-v4-glitch.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><b>ВСЕ МУТАЦИИ</b></span>
-          <div role="group" aria-label="Открыть все мутации на выбранной стадии">
-            <button id="adminUnlockMutations1Btn" data-admin-mutation-stage="1" type="button" aria-label="Открыть все мутации на стадии 1"><b>I</b><small>СТАДИЯ</small></button>
-            <button id="adminUnlockMutations2Btn" data-admin-mutation-stage="2" type="button" aria-label="Открыть все мутации на стадии 2"><b>II</b><small>СТАДИЯ</small></button>
-            <button id="adminUnlockMutations3Btn" data-admin-mutation-stage="3" type="button" aria-label="Открыть все мутации на стадии 3"><b>III</b><small>СТАДИЯ</small></button>
-          </div>
-        </section>
-        <button id="adminRestartBtn" class="admin-restart-btn" type="button" aria-label="Начать новый набор еды"><img src="assets/ui/admin-reset.webp?v=20261008-optimized-v1" alt="" aria-hidden="true"><span><b>НОВЫЙ ЗАБЕГ</b><small>Обновить набор</small></span></button>
-        <button id="adminResetProgressBtn" class="admin-reset-progress" type="button"><b>СБРОСИТЬ ПРОГРЕСС</b><small>Начать игру сначала</small></button>
-        <button id="tutorialSkipBtn" class="admin-tutorial-skip" type="button" hidden>ПРОПУСТИТЬ ОБУЧЕНИЕ</button>
+        <button id="adminUnlockInfectedBtn" type="button">Открыть заражённые миры</button>
+        <button id="adminLowerInfectionBtn" type="button">Снять стадию заражения</button>
       </div>
-      <div class="admin-editor-links" aria-label="Инструменты"><a href="http://127.0.0.1:8765/tools/generation/index.html">ГЕНЕРАТОР УРОВНЕЙ</a></div>
+      <div class="admin-settings-group">
+        <button id="adminCorePreviewBtn" type="button">Просмотр ударов по ядру</button>
+        <div class="admin-settings-stages" role="group" aria-label="Открыть все мутации на выбранной стадии">
+          <span>Все мутации</span>
+          <button id="adminUnlockMutations1Btn" data-admin-mutation-stage="1" type="button" aria-label="Открыть все мутации на стадии 1">I</button>
+          <button id="adminUnlockMutations2Btn" data-admin-mutation-stage="2" type="button" aria-label="Открыть все мутации на стадии 2">II</button>
+          <button id="adminUnlockMutations3Btn" data-admin-mutation-stage="3" type="button" aria-label="Открыть все мутации на стадии 3">III</button>
+        </div>
+        <button id="adminInfiniteFlasksBtn" type="button" aria-pressed="false">Бесконечные осколки <span id="adminInfiniteFlasksState">Выкл.</span></button>
+        <button id="adminInfiniteUltimateBtn" type="button" aria-pressed="false">Бесконечная ульта <span id="adminInfiniteUltimateState">Выкл.</span></button>
+      </div>
+      <div class="admin-settings-group">
+        <button id="adminUnlockAllBtn" type="button">Открыть весь прогресс</button>
+        <button id="adminResetProgressBtn" type="button">Сбросить прогресс</button>
+        <button id="tutorialSkipBtn" type="button" hidden>Пропустить обучение</button>
+        <a href="http://127.0.0.1:8765/tools/generation/index.html">Генератор уровней</a>
+      </div>
     </section>
   </div>
 
@@ -416,8 +416,8 @@
   </div>
   <button id="tutorialAdminBtn" class="tutorial-admin-access" type="button" aria-label="Админ-меню" hidden><img src="assets/ui/game-menu-gear-grey-v1.webp?v=650" alt=""></button>
   <button id="tutorialPauseBtn" class="tutorial-pause-access" type="button" aria-label="Пауза" hidden><svg class="pause-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.8" fill="#f4fdff" stroke="#075b83" stroke-width="1.5"/></svg></button>
-  <div id="tutorialGift" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Подарок: 10 колб" hidden>
-    <div class="tutorial-dialog-card"><img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 КОЛБ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
+  <div id="tutorialGift" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Подарок: 10 осколков" hidden>
+    <div class="tutorial-dialog-card"><img src="assets/ui/anomaly-veins-v4/currency.webp?v=20261022-v700" alt=""><strong>ПОДАРОК!</strong><b class="tutorial-gift-amount">10 ОСКОЛКОВ</b><button id="tutorialGiftClaimBtn" type="button">ЗАБРАТЬ</button></div>
   </div>
   <div id="tutorialControls" class="tutorial-dialog" role="dialog" aria-modal="true" aria-label="Управление в шахте" hidden>
     <div class="tutorial-dialog-card tutorial-controls-card"><strong>УПРАВЛЕНИЕ</strong><p id="tutorialControlsText"></p><button id="tutorialControlsCloseBtn" class="tutorial-next" type="button" hidden>ДАЛЕЕ</button></div>
@@ -448,11 +448,11 @@
       <div class="result-summary" aria-label="Результат забега">
         <div class="result-stat result-research-stat">
           <span id="resultResearchFlask" class="result-research-flask" aria-hidden="true">
-            <img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="">
+            <img src="assets/ui/anomaly-veins-v4/currency.webp?v=20261022-v700" alt="">
             <b id="resultResearchUnits" hidden>0</b>
           </span>
           <span class="result-research-copy">
-            <small>ВСЕГО<br>КОЛБ</small>
+            <small>ВСЕГО<br>ОСКОЛКОВ</small>
             <b id="resultResearchData">+0</b>
           </span>
           <span id="resultResearchStream" class="result-research-stream" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
@@ -468,7 +468,7 @@
       <section id="resultCompletionBonus" class="result-completion-bonus" aria-label="Бонус за прохождение, включён в итоговую награду" hidden>
         <h3>БОНУС ЗА ПРОХОЖДЕНИЕ</h3>
         <div class="result-completion-values">
-          <span><img src="assets/ui/research-flask-blue-v1.webp?v=20261008-optimized-v1" alt="Колбы"><b id="resultResearchBonus">+25</b></span>
+          <span><img src="assets/ui/anomaly-veins-v4/currency.webp?v=20261022-v700" alt="Осколки"><b id="resultResearchBonus">+25</b></span>
           <span hidden><b id="resultExperienceBonus"></b></span>
         </div>
       </section>
@@ -541,35 +541,44 @@
       window.SlimeSdkScriptReady.catch(error => window.SlimeBootLoader.fail(error));
     }
   </script>
-  <script src="js/config/image-paths.js?v=683"></script>
+  <script src="js/config/image-paths.js?v=anomaly-veins-6"></script>
   <script src="food-catalog.js?v=39"></script>
-  <script src="world-catalog.js?v=683"></script>
+  <script src="world-catalog.js?v=mutation-organic-29"></script>
   <script src="js/generation/generated-data.js?v=1"></script>
   <script src="js/generation/section-catalog.js?v=13"></script>
   <script src="js/generation/section-catalog-v4.js?v=3"></script>
   <script src="js/generation/mine-plans.js?v=3"></script>
-  <script src="js/generation/world1-descent.js?v=8"></script>
-  <script src="js/generation/tutorial-descent.js?v=683"></script>
-  <script src="js/config/gameplay-balance.js?v=3"></script>
+  <script src="js/generation/world1-descent.js?v=anomaly-veins-4"></script>
+  <script src="js/generation/biome-terrain.js?v=terrain-hazards-2"></script>
+  <script src="js/gameplay/thorn-hazards.js?v=hazard-tuning-1"></script>
+  <script src="js/gameplay/bramble-obstacles.js?v=roots-fields-3"></script>
+  <script src="js/gameplay/tech-hazards.js?v=hazard-tuning-1"></script>
+  <script src="js/gameplay/water-hazards.js?v=water-hazards-1"></script>
+  <script src="js/gameplay/ice-hazards.js?v=hazard-tuning-1"></script>
+  <script src="js/gameplay/fungi-hazards.js?v=fungi-status-2"></script>
+  <script src="js/generation/tutorial-descent.js?v=bramble-obstacles-2"></script>
+  <script src="js/config/gameplay-balance.js?v=shared-descent-1"></script>
   <script src="js/config/daily-rewards.js?v=684"></script>
   <script src="js/config/wardrobe.js?v=700"></script>
   <script src="js/config/accessory-fit.js?v=700"></script>
-  <script src="js/config/game-config.js?v=700"></script>
+  <script src="js/config/planet-campaign.js?v=anomaly-core-56"></script>
+  <script src="js/config/game-config.js?v=anomaly-core-56"></script>
   <script src="js/config/experience.js?v=3"></script>
   <script src="js/config/slime-progression.js?v=592"></script>
   <script src="js/config/mutation-mastery.js?v=683"></script>
-  <script src="js/config/ultimate-stages.js?v=700"></script>
+  <script src="js/config/ultimate-stages.js?v=fire-stages-4"></script>
   <script src="js/platform/yandex-platform.js?v=4"></script>
-  <script src="js/core/game-assets.js?v=665"></script>
-  <script src="js/rendering/world-background.js?v=665"></script>
+  <script src="js/core/game-assets.js?v=asteroid-34"></script>
+  <script src="js/rendering/world-background.js?v=no-atmosphere-26"></script>
+  <script src="js/rendering/portal-window.js?v=sky-core-1"></script>
   <script src="js/config/food-ground-bounds.js?v=1"></script>
   <script src="js/rendering/food-grounding.js?v=3"></script>
-  <script src="js/core/audio.js?v=700"></script>
-  <script src="js/ui/animation-activity.js?v=700"></script>
+  <script src="js/core/audio.js?v=veins-hazards-2"></script>
+  <script src="js/ui/animation-activity.js?v=synth-flow-4"></script>
   <script src="js/config/spectral-contours.js?v=2"></script>
   <script src="js/rendering/spectral-glow.js?v=4"></script>
   <script src="js/rendering/spectral-dom-aura.js?v=700"></script>
-  <script src="js/rendering/slime-avatar.js?v=700"></script>
+  <script src="js/rendering/slime-avatar.js?v=fungi-status-2"></script>
   <script src="js/rendering/slime-accessories.js?v=700"></script>
   <script src="js/rendering/menu-mutation-reveal.js?v=6"></script>
   <script src="js/rendering/slime-emotions.js?v=700"></script>
@@ -578,23 +587,46 @@
   <script src="js/rendering/cosmos-orbits.js?v=607"></script>
   <script src="js/rendering/psionic-effects.js?v=613"></script>
   <script src="js/rendering/psionic-ultimate-feedback.js?v=669"></script>
-  <script src="js/rendering/glitch-feedback.js?v=611"></script>
+  <script src="js/rendering/glitch-feedback.js?v=anomaly-core-56"></script>
   <script src="js/rendering/techno-feedback.js?v=2"></script>
-  <script src="js/rendering/phantom-effects.js?v=661"></script>
+  <script src="js/rendering/core-vfx.js?v=core-finisher-4"></script>
+  <script src="js/rendering/phantom-soul-vfx.js?v=phantom-comets-5"></script>
+  <script src="js/rendering/phantom-effects.js?v=phantom-comets-5"></script>
   <script src="js/rendering/mutation-impact-effects.js?v=613"></script>
-  <script src="js/rendering/block-break-feedback.js?v=613"></script>
-  <script src="effects-lab/workbench-effects.js?v=666"></script>
+  <script src="js/rendering/block-break-feedback.js?v=anomaly-core-56"></script>
+  <script src="effects-lab/workbench-effects.js?v=electric-orb-3"></script>
   <script src="effects-lab/block-effects-workbench.js?v=21"></script>
   <script src="js/ui/encyclopedia.js?v=700"></script>
-  <script src="js/abilities/elemental-ultimates.js?v=700"></script>
+  <script src="js/abilities/elemental-ultimates.js?v=fire-stages-4"></script>
   <script src="js/abilities/techno-ultimates.js?v=603"></script>
   <script src="js/abilities/spore-colossus.js?v=605"></script>
   <script src="js/abilities/cosmos-ultimates.js?v=700"></script>
-  <script src="js/ui/home-console.js?v=700"></script>
-  <script src="js/ui/synth-reactor.js?v=700"></script>
-  <script src="js/ui/rewards-panel.js?v=684"></script>
-  <script src="js/ui/wardrobe-panel.js?v=700"></script>
+  <script src="js/ui/planet-carousel.js?v=source-fractures-4"></script>
+  <script src="js/ui/home-console.js?v=portals-3"></script>
+  <script src="js/ui/synth-reactor.js?v=synth-flow-4"></script>
+  <script src="js/ui/rewards-panel.js?v=anomaly-core-56"></script>
+  <script src="js/ui/wardrobe-panel.js?v=anomaly-veins-4"></script>
   <script src="js/ui/tutorial-introduction.js?v=700"></script>
-  <script src="game.js?v=700"></script>
+  <script src="js/gameplay/ultimate-cooldown.js?v=reactive-fall-1"></script>
+  <script src="js/gameplay/anomaly-energy.js?v=reactive-fall-1"></script>
+  <script src="js/gameplay/energy-pickups.js?v=ice-hazards-1"></script>
+  <script src="js/ui/anomaly-energy-hud.js?v=run-buttons-1"></script>
+  <script src="js/ui/run-ability-hud.js?v=run-buttons-1"></script>
+  <script src="js/gameplay/anomaly-evacuation.js?v=core-finisher-5"></script>
+  <script src="js/rendering/fire-core-strike.js?v=core-finisher-4"></script>
+  <script src="js/rendering/electric-core-strike.js?v=core-finisher-4"></script>
+  <script src="js/rendering/frost-core-strike.js?v=core-finisher-5"></script>
+  <script src="js/rendering/cosmos-core-strike.js?v=core-finisher-4"></script>
+  <script src="js/rendering/techno-core-strike.js?v=core-finisher-6"></script>
+  <script src="js/gameplay/phantom-core-wave.js?v=core-finisher-6"></script>
+  <script src="js/rendering/phantom-core-strike.js?v=core-finisher-6"></script>
+  <script src="js/rendering/psionic-core-strike.js?v=core-finisher-6"></script>
+  <script src="js/rendering/glitch-core-strike.js?v=sky-core-1"></script>
+  <script src="js/rendering/spores-core-strike.js?v=core-finisher-5"></script>
+  <script src="js/rendering/core-fractures.js?v=core-fractures-4"></script>
+  <script src="js/rendering/core-purification.js?v=hostile-cores-27"></script>
+  <script src="js/gameplay/core-encounter.js?v=core-framing-29"></script>
+  <script src="js/ui/core-preview.js?v=core-finisher-2"></script>
+  <script src="game.js?v=run-buttons-touch-3"></script>
 </body>
 </html>

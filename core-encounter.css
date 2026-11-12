@@ -1,0 +1,10 @@
+/* The automatic strike keeps the existing pause control; no tapping minigame. */
+.shaft.core-encounter-active{touch-action:none;cursor:default}
+.shaft.core-encounter-active :is(.barrier-control,.fall-controls,#tutorialRunGoal,#tutorialRunHint){display:none!important}
+.shaft.core-encounter-active #physicsCanvas{touch-action:none}
+#dropScreen .shaft.core-encounter-active .run-top-hud .run-route-labels{grid-template-columns:minmax(0,1fr) auto!important;gap:3px!important}
+#dropScreen .shaft.core-encounter-active .run-top-hud .run-route-labels>span{display:none!important}
+#dropScreen .shaft.core-encounter-active .run-top-hud .run-route-labels>b{min-width:0!important;padding:0!important;justify-self:start!important}
+.core-encounter-accessible{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;pointer-events:none}
+
+html body #dropScreen #shaft.core-encounter-active #runDistanceReadout{opacity:0!important}

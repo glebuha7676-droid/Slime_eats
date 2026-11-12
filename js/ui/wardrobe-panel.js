@@ -8,7 +8,7 @@
     const scrollPositions={accessories:0,emotions:0};
     const last=getSave().wardrobe.lastPrize;
     if(last){category=last.category;viewId=last.id;}
-    const flask='<img src="assets/ui/research-flask-blue-v1.webp" alt="" aria-hidden="true">';
+    const flask='<img src="assets/ui/anomaly-veins-v4/currency.webp?v=20261022-v700" alt="" aria-hidden="true">';
     root.innerHTML=`<section class="wardrobe" aria-label="Гардероб слайма">
       <div class="wardrobe-tabs" role="tablist" aria-label="Коллекция"><button type="button" role="tab" id="wardrobeAccessoriesTab" data-category="accessories">АКСЕССУАРЫ</button><button type="button" role="tab" id="wardrobeEmotionsTab" data-category="emotions">ЭМОЦИИ</button></div>
       <div class="wardrobe-scene"><img class="wardrobe-room" src="assets/ui/wardrobe/room-pedestal-v3.webp?v=687" alt=""><button type="button" id="wardrobePet" aria-label="Слайм в комнате примерки"><canvas width="720" height="480"></canvas></button><span class="wardrobe-preview-note">ГАРДЕРОБ</span>
@@ -68,11 +68,11 @@
       updateScrollCue();
       $('#wardrobeSynthTitle').textContent=category==='accessories'?'Синтез аксессуара':'Синтез эмоции';
       const missing=Math.max(0,cost-save.researchUnits);
-      $('#wardrobeSynthHint').textContent=busy?'Создаём новый предмет…':!pool.length?'Все предметы уже открыты':missing?`Не хватает ${missing} колб`:'Новый предмет без повторов';
+      $('#wardrobeSynthHint').textContent=busy?'Создаём новый предмет…':!pool.length?'Все предметы уже открыты':missing?`Не хватает ${missing} осколков`:'Новый предмет без повторов';
       $('.wardrobe-synth-footnote').textContent=!pool.length?'Коллекция собрана':category==='accessories'?'Случайный аксессуар из закрытых':'Случайная эмоция из закрытых';
       const button=$('#wardrobeSynthesize');button.disabled=busy||!pool.length||missing>0;
       button.querySelector('span').textContent=busy?'СИНТЕЗ…':pool.length?'СИНТЕЗИРОВАТЬ':'ОТКРЫТО';
-      button.setAttribute('aria-label',busy?'Идёт синтез':!pool.length?'Коллекция собрана':`Синтезировать ${category==='accessories'?'аксессуар':'эмоцию'} за ${cost} колб`);
+      button.setAttribute('aria-label',busy?'Идёт синтез':!pool.length?'Коллекция собрана':`Синтезировать ${category==='accessories'?'аксессуар':'эмоцию'} за ${cost} осколков`);
       button.querySelector('.wardrobe-price').hidden=!pool.length||busy;
       button.querySelector('b').textContent=cost;
       appliance.classList.toggle('is-complete',!pool.length);
@@ -83,7 +83,7 @@
       if(busy)return;
       const before=structuredClone(getSave().wardrobe);
       const result=model.purchase(getSave(),category);
-      if(!result.ok){message(result.reason==='balance'?'Собирай колбы в шахте.':result.reason==='complete'?'Коллекция уже собрана!':'Попробуй ещё раз.');refresh();return}
+      if(!result.ok){message(result.reason==='balance'?'Собирай осколки в шахте.':result.reason==='complete'?'Коллекция уже собрана!':'Попробуй ещё раз.');refresh();return}
       // Ownership and payment are one save operation, before the decorative reveal.
       commit();onChange();busy=true;displayInventory=before;synthStarted=performance.now();message('');sound('synth');
       prizeImage=null;if(result.item.image){prizeImage=new Image();prizeImage.src=window.SlimeGameAssets.versionedAsset(result.item.image);}

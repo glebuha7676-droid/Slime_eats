@@ -28,6 +28,7 @@ for(const asset of manifest.window.SlimeBootManifest.assets) assert.ok(fs.exists
 assert.ok(!manifest.window.SlimeBootManifest.assets.some(a=>a.url.includes('ЕДА/Новая')),'Original high-resolution foods are excluded from startup');
 let paints=0, pauses=0;
 const frameContext={run:{ended:false,paused:false},document:{hidden:false},platformSuspended:false,windowSuspended:false,
+  performance:{now:()=>0},
   autoResumeRunAfterVisibility:false,requestAnimationFrame:()=>1,updateTutorialRun:()=>true,
   renderCanvas:()=>paints++,pauseRun:()=>{pauses++;return true;}};
 vm.runInNewContext(take('gameFrame'),frameContext);

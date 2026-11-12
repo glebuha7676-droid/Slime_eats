@@ -100,11 +100,8 @@
       ctx.fillStyle='#052d4a';ctx.beginPath();ctx.ellipse(3,1,textWidth/2+18,18,0,0,Math.PI*2);ctx.fill();
       ctx.lineWidth=4;ctx.strokeStyle='#031b34';ctx.strokeText(`+${e.value}`,-5,0);
       ctx.fillStyle='#ecffff';ctx.fillText(`+${e.value}`,-5,0);
-      // A tiny flask identifies the reward without loading an extra bitmap.
-      ctx.translate(dx,0);ctx.fillStyle='#21cfff';ctx.strokeStyle='#e4ffff';ctx.lineWidth=1.8;
-      ctx.beginPath();ctx.moveTo(-3,-11);ctx.lineTo(3,-11);ctx.lineTo(3,-5);
-      ctx.bezierCurveTo(12,3,9,10,0,10);ctx.bezierCurveTo(-9,10,-12,3,-3,-5);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.beginPath();ctx.moveTo(-4,-11);ctx.lineTo(4,-11);ctx.moveTo(-5,1);ctx.lineTo(4,1);ctx.stroke();
+      const currency = window.SlimeGameAssets?.projectSprite('assets/ui/anomaly-core-v56/currency.webp');
+      if (currency?.complete && currency.naturalWidth) ctx.drawImage(currency, dx - 12, -12, 24, 24);
       return;
     }
     window.SlimeMutationImpacts?.burst(ctx,'rock',0,0,e.radius*2,t,true);
