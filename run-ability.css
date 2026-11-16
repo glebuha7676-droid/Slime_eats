@@ -22,6 +22,17 @@
 
 #dropScreen #shaft :is(.fall-controls, .barrier-control)[hidden] { display: none; }
 #dropScreen #shaft .fall-button-defense { grid-column: 4; }
+#dropScreen #shaft .infinity-swap { grid-column: 4; }
+#dropScreen #shaft #infinitySwapBtn[hidden],
+#dropScreen #shaft #fallControls[data-infinity] .fall-button-defense,
+#dropScreen #shaft .fall-controls[data-infinity] .fall-attack-default,
+#dropScreen #shaft .fall-controls:not([data-infinity]) .infinity-control-orb { display: none; }
+#dropScreen #shaft #fallRightBtn { grid-column: 5; }
+#dropScreen #shaft #fallControls:is([data-fire], [data-frost], [data-electric]) .fall-button-defense,
+#dropScreen #shaft .fall-controls:is([data-fire], [data-frost], [data-electric]) .fall-attack-default,
+#dropScreen #shaft .fall-controls:not([data-fire]) .fall-attack-fire,
+#dropScreen #shaft .fall-controls:not([data-frost]) .fall-attack-frost,
+#dropScreen #shaft .fall-controls:not([data-electric]) .fall-attack-electric { display: none; }
 
 #dropScreen #shaft :is(.fall-button, #abilityBtn) {
   position: relative;
@@ -91,6 +102,100 @@
 }
 
 #dropScreen #shaft .fall-button-left img { transform: scaleX(-1); }
+
+#dropScreen #shaft .fall-controls[data-fire] .fall-button-attack {
+  --button-rim: #ffe1aee8;
+  --button-top: #ffce8ee0;
+  --button-mid: #da8b5ad4;
+  --button-bottom: #9f4b44cf;
+  --button-pressed: #b35133;
+}
+
+#dropScreen #shaft .fall-controls[data-frost] .fall-button-attack {
+  --button-rim: #c6f5ffe8;
+  --button-top: #a9efffe4;
+  --button-mid: #60accfe0;
+  --button-bottom: #3e659cca;
+  --button-pressed: #397bb1;
+}
+
+#dropScreen #shaft .fall-controls[data-frost] #fireballCooldown:not([hidden]) {
+  background: #163f65;
+  color: #e4faff;
+}
+
+#dropScreen #shaft .fall-controls[data-electric] .fall-button-attack {
+  --button-rim: #ffeab1e8;
+  --button-top: #ffdf86e0;
+  --button-mid: #b08be2dc;
+  --button-bottom: #554da5ca;
+  --button-pressed: #7554bd;
+}
+
+#dropScreen #shaft .fall-controls[data-electric] #fireballCooldown:not([hidden]) {
+  background: #3d366c;
+  color: #fff6d2;
+}
+
+#dropScreen #shaft .fall-controls[data-infinity] :is(.fall-button-attack, .infinity-swap) {
+  --button-rim: #b5eeffdf;
+  --button-top: #92dafaef;
+  --button-mid: #418bd7e3;
+  --button-bottom: #344e9ddc;
+  --button-pressed: #367dc2;
+}
+#dropScreen #shaft .fall-controls[data-infinity='red'] .fall-button-attack {
+  --button-rim: #ffced3ed;
+  --button-top: #ffaaa5ed;
+  --button-mid: #d96579e3;
+  --button-bottom: #9d3d66dc;
+  --button-pressed: #ad4d68;
+}
+.infinity-control-orb {
+  display: block;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid #133673;
+  background: radial-gradient(circle at 33% 28%, white, #a6f2ff 21%, #29a8ff 49%, #284aae 72%, #82dfff 100%);
+  box-shadow: 0 0 8px #4ccaffad, inset 0 0 4px #fff;
+}
+#dropScreen #shaft .infinity-swap .infinity-control-orb { width: 39%; transform: translateY(-13%); }
+[data-infinity='red'] .fall-button-attack .infinity-control-orb,
+[data-infinity='blue'] .infinity-swap .infinity-control-orb {
+  background: radial-gradient(circle at 33% 28%, white, #ffd5c0 21%, #ff4369 49%, #8d195a 72%, #ff8c9f 100%);
+  border-color: #651840;
+  box-shadow: 0 0 8px #ff5678ad, inset 0 0 4px #fff;
+}
+.infinity-swap-arrow {
+  position: absolute;
+  bottom: 5%;
+  color: #fff;
+  text-shadow: 0 1px 3px #1b3568;
+  font: 900 clamp(13px, 4vw, 21px)/1 var(--run-button-font);
+}
+#dropScreen #shaft #abilityBtn[data-infinity] .infinity-ultimate-orb {
+  display: block;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 33% 28%, white, #ead2ff 22%, #bb64ff 49%, #4f2399 72%, #e6afff 100%);
+  box-shadow: 0 0 8px #ca78ffb8;
+}
+#dropScreen #shaft #abilityBtn[data-infinity] > img,
+#dropScreen #shaft #abilityBtn:not([data-infinity]) .infinity-ultimate-orb { display: none; }
+
+#dropScreen #shaft .fall-button-attack[data-recharging] img { opacity: .52; }
+#dropScreen #shaft #fireballCooldown:not([hidden]) {
+  position: absolute;
+  inset: auto 5px 4px auto;
+  min-width: 19px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: #632a25;
+  color: #fff6d9;
+  font: 900 14px/1 var(--run-button-font);
+}
 
 #dropScreen #shaft .fall-button:is([data-pressed], :active) .fall-button-face,
 #dropScreen #shaft .barrier-control #abilityBtn:active:not(:disabled) {

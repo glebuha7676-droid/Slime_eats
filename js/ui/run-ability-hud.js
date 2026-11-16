@@ -10,15 +10,15 @@
     cue.addEventListener('animationend',event=>{if(event.target===cue)cue.hidden=true;});
     button.addEventListener('pointerdown',()=>{if(!button.disabled)cue.hidden=true;});
   }
-  function render(run,{ready=false,active=false,cooldownMs=0,enoughStrength=true,visible=true,source=''}={}){
+  function render(run,{ready=false,active=false,cooldownMs=0,enoughStrength=true,visible=true,depthCharge=false,freeCast=false,source=''}={}){
     mount();
     if(owner!==run){owner=run;announced=false;wasReady=false;cue.hidden=true;void cue.offsetWidth;button.classList.remove('ability-became-ready');}
     const blocked=!!(run.coreEncounter||run.evacuation||run.ended||run.mechSuit||run.ultimateIntro);
     ready=visible&&ready&&!blocked;
     control.dataset.state=ready?'ready':active?'active':cooldownMs?'cooldown':'unavailable';
     control.dataset.paused=String(Boolean(run.paused));cue.dataset.paused=control.dataset.paused;
-    state.hidden=!ready&&(active||cooldownMs>0||enoughStrength);
-    text(state,ready?'−20% СИЛЫ':'НУЖНО 20%');
+    state.hidden=freeCast || (depthCharge ? active : !ready&&(active||cooldownMs>0||enoughStrength));
+    text(state,depthCharge ? ready ? 'ФЕНИКС ГОТОВ' : 'ЗАРЯД ЗА СПУСК' : ready?'−20% СИЛЫ':'НУЖНО 20%');
     if(ready&&!wasReady){
       button.classList.remove('ability-became-ready');void button.offsetWidth;button.classList.add('ability-became-ready');
     }

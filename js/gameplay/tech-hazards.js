@@ -220,7 +220,7 @@
     }
     c.restore();
   }
-  const api=Object.freeze({preload,init,update,drawBlock,draw,drawAffected,beamRanges,slowFactor});
+  const api=Object.freeze({FIELD_ROWS,preload,init,update,drawBlock,draw,drawAffected,beamRanges,slowFactor});
   if(typeof window!=='undefined')window.SlimeTechHazards=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();

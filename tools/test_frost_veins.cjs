@@ -3,18 +3,20 @@ const source=fs.readFileSync('game.js','utf8');
 const take=name=>{const a=source.indexOf(`  function ${name}(`),b=source.indexOf('\n  function ',a+20);assert(a>=0&&b>a,name);return source.slice(a,b);};
 const draws=[], sprite=id=>({id,complete:true,naturalWidth:64});
 const context={performance:{now:()=>2000},clamp:(n,a,b)=>Math.max(a,Math.min(b,n)),
- FLASK_VALUES:{1:1,2:3,3:5},run:{worldId:1,world:{},effects:{},particles:[],specialEffects:[]},
+ FLASK_VALUES:{1:1,2:3,3:5},run:{worldId:1,world:{},embeddedVeins:true,effects:{},particles:[],specialEffects:[]},
  ctx:{drawImage:(s,...rect)=>draws.push({id:s.id,rect}),save(){},restore(){},globalAlpha:1},
  WORLD_SPRITES:{1:{stone:sprite('stone'),'stone-reinforced':sprite('reinforced'),'ground-weak':sprite('weak'),
   'ground-weak-liquid':sprite('vein1'),'stone-liquid':sprite('vein3'),'stone-reinforced-liquid':sprite('vein5')}},
  ensureWorldSprites:()=>({'snow-packed':sprite('snow'),snowflake:sprite('snowflake')}),
  contentBlock:()=>null,projectSprite:()=>null,frostFreezable:()=>true,shareGlitchHit(){},
- markFrostTransformation(){},createDebris(){},drawSpecialBlockAura(){},drawCrackStage(){},
+ markFrostTransformation(){},createDebris(){},drawSpecialBlockAura(){},drawCrackStage(){},recordMutationAction(){},
+ fireCharringProgress:()=>0,
  awardRunExperience(){},awardFlaskData:n=>{context.reward+=n;},sound(){},effectDensity:()=>1,
+ recordMutationAction(){},takeDecorativeParticles:n=>n,appendTransientEffect(){},VIEW_H:840,
  isMobileDevice:()=>false,trimParticles(){},reward:0,
  window:{SlimeMutationImpacts:{freezeBlock(){}},SlimeBlockBreakFeedback:{emitEssence:()=>({particles:[],impact:{type:'essenceCollect'}})}}};
 vm.createContext(context);
-vm.runInContext(['turnBlockToSnow','turnBlockToSnowflake','drawWorldSprite','registerBrokenBlock'].map(take).join('\n'),context);
+vm.runInContext(['turnBlockToSnow','turnBlockToSnowflake','worldBlockArtwork','worldBlockSpriteRect','drawWorldSprite','registerBrokenBlock'].map(take).join('\n'),context);
 context.WORLD_SPRITES[2]={...context.WORLD_SPRITES[1],'ice-reinforced':sprite('ice-strong')};
 for(const world of [1,2]) for(const [tier,value] of [[1,1],[2,3],[3,5]]) for(const transform of ['turnBlockToSnow','turnBlockToSnowflake']){
  context.run.worldId=world;

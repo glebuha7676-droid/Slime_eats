@@ -1,12 +1,12 @@
 (() => {
   'use strict';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const center = b => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 });
-  const mix = (a, b, t) => a + (b - a) * t;
-  const TAU = Math.PI * 2;
   const cache = new Map();
-  const SNOW = 'assets/vfx/frost-snowball-v2.webp';
-  const FLAKE = 'assets/vfx/frost-storm-flake-v1-lossless.webp';
+  const FIRE_FLASH_SIZE = 3;
+  const FIRE_FLASH_WINDUP_MS = 290;
+  const FIRE_FLASH_DURATION_MS = 425;
+  const ELECTRIC_DASH_MS = 285;
+  const ELECTRIC_DASH_TRAIL_MS = 185;
 
   // One small raster per colour, shared by all particles. No live canvas blur filters.
   function glow(colour) {
@@ -14,9 +14,7 @@
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 128;
     const c = canvas.getContext('2d'), g = c.createRadialGradient(64, 64, 0, 64, 64, 64);
     const colours = {
-      fire: ['255,255,218', '255,198,49', '255,78,8'],
-      frost: ['255,255,255', '173,248,255', '59,168,255'],
-      electric: ['255,255,255', '202,230,255', '105,103,255']
+      fire: ['255,255,218', '255,198,49', '255,78,8']
     }[colour];
     g.addColorStop(0, `rgba(${colours[0]},1)`);
     g.addColorStop(.14, `rgba(${colours[0]},.96)`);
@@ -25,327 +23,179 @@
     g.addColorStop(1, `rgba(${colours[2]},0)`);
     c.fillStyle = g; c.fillRect(0, 0, 128, 128); cache.set(colour, canvas); return canvas;
   }
-  function sprite(source) { return window.SlimeGameAssets.projectSprite(source); }
-  function snowDust() {
-    if(cache.has('snowDust'))return cache.get('snowDust');
-    const image=document.createElement('canvas');image.width=image.height=64;
-    const c=image.getContext('2d'),g=c.createRadialGradient(32,32,0,32,32,30);
-    g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(.45,'rgba(228,242,255,.58)');g.addColorStop(1,'rgba(228,242,255,0)');
-    c.fillStyle=g;c.fillRect(0,0,64,64);cache.set('snowDust',image);return image;
-  }
-  function lightningBall() {
-    if(cache.has('ball'))return cache.get('ball');
-    const image=document.createElement('canvas');image.width=image.height=128;
-    const c=image.getContext('2d'),g=c.createRadialGradient(52,46,3,64,64,62);
-    g.addColorStop(0,'#ffffff');g.addColorStop(.2,'#e0ffff');g.addColorStop(.5,'#79ceff');
-    g.addColorStop(.76,'#6860e9');g.addColorStop(.86,'#c1d9ff');g.addColorStop(1,'rgba(124,139,255,0)');
-    c.fillStyle=g;c.fillRect(0,0,128,128);cache.set('ball',image);return image;
-  }
   function light(c, colour, x, y, size, alpha = 1, stretch = 1) {
     if (alpha <= 0 || size <= 0) return;
     c.globalAlpha = alpha; c.drawImage(glow(colour), x - size / 2, y - size * stretch / 2, size, size * stretch);
   }
-  function area(run, s, x, y, radius, at, ice) {
-    for (const b of s.blocksNearY(y, radius + run.cellSize)) {
-      if (!(ice ? s.frostFreezable(b) : s.elementalDamageable(b))) continue;
-      // Circle against the actual block rectangle includes blocks touching the flash edge.
-      const dx = x - clamp(x, b.x, b.x + b.w), dy = y - clamp(y, b.y, b.y + b.h);
-      if (dx * dx + dy * dy <= radius * radius) {
-        if (ice) s.turnBlockToSnow(b, at, true); else s.igniteBlock(b, at, run.elementalAuraId);
-      }
-    }
+  function startFireFlash(run, at, lowPower = false) {
+    run.fireFlash = { startedAt: at, lit: false, lowPower };
   }
-  function bolt(from, to, at, seed = 0) { return { from, to, at, seed }; }
-  function updateFireWave(run,e,at,s){
-    const cell=run.cellSize,p=run.ultimateProfile;
-    const front=mix(e.y,e.endY,clamp((at-e.startedAt)/p.growMs,0,1));
-    for(const b of s.blocksNearY((e.y+e.endY)*.5,(e.endY-e.y)*.5+cell)){
-      if(!s.elementalDamageable(b)||e.hitAt.has(b))continue;
-      if(b.row<e.startRow||b.row>e.endRow||b.col<e.startCol||b.col>=e.startCol+p.width||b.y+b.h*.5>front+1e-5)continue;
-      e.hitAt.set(b,at);s.igniteBlock(b,at,run.elementalAuraId);
-    }
+
+  function fireCastLight(run, at) {
+    const flash = run.fireFlash;
+    if (!flash) return null;
+    const age = at - flash.startedAt;
+    const released = flash.lit && age >= FIRE_FLASH_WINDUP_MS;
+    const releaseAge = released ? age - FIRE_FLASH_WINDUP_MS : 0;
+    const charge = clamp(age / 120, 0, 1);
+    const glow = released ? (1 - clamp(releaseAge / 280, 0, 1)) ** 1.4 : 1 - (1 - charge) ** 2.2;
+    const spread = clamp(releaseAge / 152, 0, 1);
+    const flare = released ? (1 - spread) ** 1.75 : 0;
+    return glow > 0 ? { glow, flare, spread } : null;
   }
-  function updateDischarge(run,e,at,s){
-    const p=run.ultimateProfile,reach=run.cellSize*p.reachCells;
-    const front=reach*clamp((at-e.startedAt)/p.growMs,0,1);
-    for(const target of e.dischargeTargets){
-      if(target.distance>front+1e-5||e.hitAt.has(target.block))continue;
-      e.hitAt.set(target.block,at);
-      if(!s.elementalDamageable(target.block))continue;
-      s.damageBlockByElement(target.block,1,'electricStorm',at);
-      e.bursts.push({...center(target.block),at});
-    }
-  }
-  function start(run, type, at, x, y, s) {
-    const p = run.ultimateProfile;
-    if (!p || p.stage >= 3 || !['fire', 'frost', 'electric'].includes(type)) return false;
-    const cell = run.cellSize;
-    const e = run.stagedUltimate = {
-      kind: p.kind, type, startedAt: at, lastAt: at, x, y, originY: y,
-      lastY: y, endY: y + (p.rows || 0) * cell, bolts: [], bursts: [], trail: [], nextStrikeAt: at,
-      hitAt: new Map()
-    };
-    if (p.kind === 'fireball' || p.kind === 'fireWave') {
-      // Whole grid lanes, clamped at walls: exactly 2×4 or 4×6, regardless of frame rate.
-      e.startCol=clamp(Math.round((x-run.gridOffsetX)/cell-p.width*.5),0,run.columns-p.width);
-      e.startRow=Math.max(0,Math.floor((y-run.blockRowOrigin)/cell-.5)+1);
-      e.endRow=e.startRow+p.rows-1;
-      e.endY=run.blockRowOrigin+(e.endRow+.5)*cell;
-      e.targetX=run.gridOffsetX+(e.startCol+p.width*.5)*cell;
-      if(typeof document!=='undefined')p.kind==='fireball'?fireballFrames():fireWaveFrames();
-      updateFireWave(run,e,at,s);
-    }
-    if (p.kind === 'frostFlash') area(run, s, x, y, cell * 1.85, at, true);
-    if (p.kind === 'snowball') {
-      sprite(SNOW);
-      e.col = clamp(Math.floor((x - run.gridOffsetX) / cell), 1, run.columns - 2);
-      e.x = run.gridOffsetX + (e.col + .5) * cell;
-      e.frozenRows = new Set();
-    }
-    if (p.kind === 'discharge') {
-      const reach = p.reachCells * cell;
-      e.bolts = [[0,-1], [1,0], [0,1], [-1,0]].map(([dx,dy], i) => ({...bolt({ x,y }, { x:x+dx*reach, y:y+dy*reach }, at, i),growMs:p.growMs}));
-      e.dischargeTargets=[];
-      for (const b of s.blocksNearY(y, reach + cell)) {
-        if (!s.elementalDamageable(b)) continue;
-        const q = center(b), dx = Math.abs(q.x-x), dy = Math.abs(q.y-y);
-        if ((dx < cell*.48 && dy <= reach+1e-5) || (dy < cell*.48 && dx <= reach+1e-5)) e.dischargeTargets.push({block:b,distance:Math.max(dx,dy)});
-      }
-      updateDischarge(run,e,at,s);
-    }
-    return true;
-  }
-  function update(run, at, s) {
-    const e = run.stagedUltimate;
-    if (!e) return;
-    const p = run.ultimateProfile, cell = run.cellSize, elapsed = at - e.startedAt;
-    e.bursts = e.bursts.filter(b => at - b.at < (e.kind === 'discharge' ? 220 : 600));
-    e.bolts = e.bolts.filter(b => at - b.at < (e.kind === 'discharge' ? 600 : 190));
-    if (e.kind === 'fireball' || e.kind === 'fireWave') {
-      updateFireWave(run,e,at,s);
-    } else if (e.kind === 'discharge') {
-      updateDischarge(run,e,at,s);
-    } else if (e.kind === 'snowball' || e.kind === 'ballLightning') {
-      const t = clamp(elapsed / p.travelMs, 0, 1);
-      e.y = mix(e.originY, e.endY, t);
-      if (e.kind === 'snowball') {
-        // Sweep all crossed rows even on a slow frame; exactly three columns, seven rows / 50 m.
-        for (const b of s.blocksNearY((e.lastY+e.y)/2, (e.y-e.lastY)/2+cell)) {
-          const q = center(b);
-          if (q.y <= e.originY || q.y > e.endY || q.y > e.y || Math.abs(b.col-e.col)>1 || e.frozenRows.has(b.row)) continue;
-          if (s.frostFreezable(b)) s.turnBlockToSnow(b, at, true);
+
+  function updateFireFlash(run, at, services) {
+    const flash = run.fireFlash;
+    const ignitionAt = flash.startedAt + FIRE_FLASH_WINDUP_MS;
+    if (!flash.lit && at >= ignitionAt) {
+      const cell = run.cellSize;
+      const { x, y } = run.slime;
+      const width = Math.min(FIRE_FLASH_SIZE, run.columns);
+      const col = Math.floor((x - run.gridOffsetX) / cell);
+      const firstCol = clamp(col - 1, 0, run.columns - width);
+      const slimeRow = Math.floor((y - run.blockRowOrigin) / cell + 1e-8);
+      const firstRow = slimeRow + 2;
+      flash.x = run.gridOffsetX + (firstCol + width / 2) * cell;
+      flash.y = run.blockRowOrigin + (firstRow + FIRE_FLASH_SIZE / 2) * cell;
+      flash.lit = true;
+      services.onFireFlash?.();
+      for (let row = firstRow; row < firstRow + FIRE_FLASH_SIZE; row += 1) {
+        for (const block of run.blocksByRow.get(row) || []) {
+          if (block.col >= firstCol && block.col < firstCol + width) {
+            services.igniteBlock(block, ignitionAt);
+          }
         }
-        const first = Math.floor((e.originY-run.blockRowOrigin-cell*.5)/cell)+1;
-        const last = Math.floor((e.y-run.blockRowOrigin-cell*.5)/cell);
-        for (let row=first;row<=last;row++) e.frozenRows.add(row);
-      } else if (at >= e.nextStrikeAt && elapsed <= p.travelMs) {
-        // One pulse per update, never an accumulated burst after a stall.
-        e.nextStrikeAt = at + p.strikeIntervalMs;
-        const candidates = s.blocksNearY(e.y, cell*2.15).filter(b => {
-          if (!s.elementalDamageable(b) || at-(e.hitAt.get(b) ?? -Infinity)<(p.targetCooldownMs||650)) return false;
-          const q = center(b); return Math.hypot(q.x-e.x,q.y-e.y)<=cell*2.15;
-        }).sort((a,b)=> {
-          const ac=center(a),bc=center(b);
-          return Math.hypot(ac.x-e.x,ac.y-e.y)-Math.hypot(bc.x-e.x,bc.y-e.y);
-        });
-        candidates.slice(0,2).forEach((b,i)=> {
-          e.bolts.push({...bolt({x:e.x,y:e.y},center(b),at,i+elapsed),power:1.25});
-          e.hitAt.set(b,at); s.damageBlockByElement(b,p.damage||1,'electricStorm',at);
-        });
       }
-      e.lastY=e.y;
-      if (at-e.lastAt>=24 && t<1) { e.trail.push({x:e.x,y:e.y,at}); if(e.trail.length>8)e.trail.shift(); }
     }
-    if(at-e.lastAt>=24)e.lastAt=at;
-    if (elapsed >= p.durationMs) run.stagedUltimate = null;
+    if (at - ignitionAt >= FIRE_FLASH_DURATION_MS) run.fireFlash = null;
   }
+
+  function startElectricDash(run, at, horizontal, width, lowPower = false) {
+    const { x, y, radius } = run.slime;
+    const distance = run.cellSize * 3;
+    const dx = clamp(horizontal * Math.SQRT1_2 * distance, radius - x, width - radius - x) / distance;
+    run.electricDash = { elapsed: 0, spent: 0, dx, dy: Math.sqrt(1 - dx * dx), distance, lowPower,
+      trail: [{ x, y, at }], endedAt: null };
+  }
+
+  function driveElectricDash(run, dt) {
+    const { slime, electricDash: dash } = run;
+    dash.elapsed = Math.min(ELECTRIC_DASH_MS, dash.elapsed + dt * 1000);
+    const t = dash.elapsed / ELECTRIC_DASH_MS;
+    const distance = dash.distance * (t + Math.sin(t * Math.PI) * .20);
+    const speed = (distance - dash.spent) / dt;
+    dash.spent = distance;
+    slime.vx = dash.dx * speed;
+    slime.vy = dash.dy * speed;
+    return t >= 1;
+  }
+
+  function sampleElectricDash(run, at) {
+    const { trail } = run.electricDash;
+    if (at - trail.at(-1).at < 15) return;
+    const { x, y } = run.slime;
+    trail.push({ x, y, at });
+    if (trail.length > 13) trail.shift();
+  }
+
+  function update(run, at, services) {
+    if (run.fireFlash) updateFireFlash(run, at, services);
+    if (run.electricDash?.endedAt != null && at - run.electricDash.endedAt >= ELECTRIC_DASH_TRAIL_MS) run.electricDash = null;
+  }
+
   function shiftClock(run, delta) {
-    const e = run.stagedUltimate; if(!e)return;
-    for(const key of ['startedAt','lastAt','nextStrikeAt'])e[key]+=delta;
-    for(const item of [...e.bolts,...e.bursts,...e.trail])if(item.at!==undefined)item.at+=delta;
-    for(const [b,at]of e.hitAt)e.hitAt.set(b,at+delta);
-  }
-  function drawBolt(c, b, camera, at, cell, life) {
-    const alpha=clamp(1-Math.max(0,at-b.at-(b.growMs||0))/(life-(b.growMs||0)),0,1); if(!alpha)return;
-    const dx=b.to.x-b.from.x,dy=b.to.y-b.from.y,len=Math.hypot(dx,dy)||1;
-    const segments=Math.max(3,Math.ceil(len/(cell*.23)));
-    if(!b.path){
-      b.path=[];
-      for(let i=0;i<=segments;i++){
-        const t=i/segments,offset=i===0||i===segments?0:Math.sin(i*9.73+b.seed)*cell*.12;
-        b.path.push([b.from.x+dx*t-dy/len*offset,b.from.y+dy*t+dx/len*offset]);
-      }
-    }
-    const progress=b.growMs?clamp((at-b.at)/b.growMs,0,1):1;
-    if(progress<=0)return;
-    const last=progress*segments,whole=Math.floor(last);
-    const path=()=>{
-      c.beginPath();c.moveTo(b.path[0][0],b.path[0][1]-camera);
-      for(let i=1;i<=whole;i++)c.lineTo(b.path[i][0],b.path[i][1]-camera);
-      if(whole<segments){const a=b.path[whole],z=b.path[whole+1],t=last-whole;c.lineTo(mix(a[0],z[0],t),mix(a[1],z[1],t)-camera);}
-    };
-    c.lineJoin=c.lineCap='round';
-    for(const [width,colour,a]of [[12,'#8878ff',.16],[5,'#76beff',.65],[1.7,'#f7ffff',1]]){
-      c.strokeStyle=colour;c.globalAlpha=alpha*a;c.lineWidth=width*(b.power||1);path();c.stroke();
-    }
-    if(b.growMs&&progress<1)light(c,'electric',b.from.x+dx*progress,b.from.y+dy*progress-camera,cell*.7,alpha);
-  }
-  function transferFlame(){
-    if(cache.has('transferFlame'))return cache.get('transferFlame');
-    const image=document.createElement('canvas');image.width=image.height=96;
-    const c=image.getContext('2d');c.translate(48,63);
-    c.drawImage(glow('fire'),-46,-63,92,92);
-    // Paint once into a shared raster. Live effects only transform and blend it.
-    const flame=(scale,colour)=>{
-      c.save();c.scale(scale,scale);c.fillStyle=colour;c.beginPath();c.moveTo(0,17);
-      c.bezierCurveTo(-27,15,-25,-12,-12,-24);c.bezierCurveTo(-7,-13,-5,-31,3,-47);
-      c.bezierCurveTo(7,-29,27,-21,23,0);c.bezierCurveTo(20,14,9,18,0,17);c.fill();c.restore();
-    };
-    flame(1,'#ff6b12');flame(.72,'#ffd33d');flame(.42,'#fff8d4');
-    cache.set('transferFlame',image);return image;
-  }
-  function drawFireTransfer(c,e,camera,cell,lowPower=false){
-    const age=(e.maxLife-e.life)*1000,travel=e.travelMs||220,t=clamp(age/travel,0,1);
-    const controlX=(e.fromX+e.x)/2,controlY=(e.fromY+e.y)/2-cell*.22;
-    const point=t=>({x:(1-t)**2*e.fromX+2*(1-t)*t*controlX+t*t*e.x,
-      y:(1-t)**2*e.fromY+2*(1-t)*t*controlY+t*t*e.y});
-    c.save();c.globalCompositeOperation='lighter';
-    if(t<1){
-      const tail=lowPower?3:5;
-      for(let i=tail;i>0;i--){const q=point(Math.max(0,t-i*.075));light(c,'fire',q.x,q.y-camera,cell*(.17+(tail-i)*.045),(.1+(tail-i)*.045)*Math.min(1,t*5));}
-      const q=point(t);light(c,'fire',q.x,q.y-camera,cell*.85,.8);
-      c.globalCompositeOperation='source-over';c.globalAlpha=1;c.translate(q.x,q.y-camera);
-      c.rotate(Math.atan2((1-t)*(controlY-e.fromY)+t*(e.y-controlY),(1-t)*(controlX-e.fromX)+t*(e.x-controlX))+Math.PI/2);
-      const size=cell*.58;c.drawImage(transferFlame(),-size/2,-size*.66,size,size);
-    }else{
-      const fade=clamp(1-(age-travel)/300,0,1);
-      light(c,'fire',e.x,e.y-camera,cell*(1.3+(1-fade)*.5),fade*fade*.95);
-      for(let i=0;i<(lowPower?3:5);i++){
-        const a=i*TAU/5-.5,r=cell*(.12+(1-fade)*.42);
-        light(c,'fire',e.x+Math.cos(a)*r,e.y-camera+Math.sin(a)*r,cell*.16*fade,fade*.75);
-      }
-    }
-    c.restore();
-  }
-  function drawFlash(c,e,run,at) {
-    const t=clamp((at-e.startedAt)/(e.kind==='frostFlash'?850:800),0,1),cell=run.cellSize;
-    const fade=Math.pow(1-t,1.8),size=cell*(1.1+4.7*Math.sqrt(t)),y=e.y-run.cameraY;
-    c.globalCompositeOperation='lighter';
-    light(c,e.type,e.x,y,size,fade*.95);
-    light(c,e.type,e.x,y,size*1.2,fade*.5,.55);
-    for(let i=0;i<12;i++){
-      const a=i*TAU/12+.12*Math.sin(i*3),r=cell*1.85*Math.sin(t*Math.PI*.5);
-      light(c,e.type,e.x+Math.cos(a)*r,y+Math.sin(a)*r,cell*(.55+.35*Math.sin(i*7))*fade,fade*.75,e.type==='fire'?1.8:1);
-    }
-    if(e.type==='frost'){
-      const image=sprite(FLAKE);c.globalCompositeOperation='source-over';
-      if(image.complete&&image.naturalWidth)for(let i=0;i<8;i++){
-        const a=i*TAU/8,r=cell*1.85*Math.sqrt(t),size=cell*.3*(1-t*.5);
-        c.globalAlpha=fade*.85;c.save();c.translate(e.x+Math.cos(a)*r,y+Math.sin(a)*r);c.rotate(a+t);
-        c.drawImage(image,-size/2,-size/2,size,size);c.restore();
-      }
+    if (run.fireFlash) run.fireFlash.startedAt += delta;
+    if (run.electricDash) {
+      if (run.electricDash.endedAt != null) run.electricDash.endedAt += delta;
+      for (const point of run.electricDash.trail) point.at += delta;
     }
   }
-  function drawFireWave(c,e,run,at){
-    const cell=run.cellSize,p=run.ultimateProfile,age=at-e.startedAt;
-    const travel=clamp(age/p.growMs,0,1),t=clamp(age/p.durationMs,0,1);
-    const fade=clamp(age/75,0,1)*(1-clamp((age-p.growMs)/(p.durationMs-p.growMs),0,1))**1.4;
-    const x=mix(e.x,e.targetX,Math.min(1,travel*4)),y=mix(e.y,e.endY,travel)-run.cameraY;
-    const width=cell*p.width,halfWidth=width*.5;
-    const ball=e.kind==='fireball',height=ball?width*1.15:width*.5;
-    if(y+height<-cell||y-height>(run.viewHeight||c.canvas.height)+cell)return;
-    c.globalCompositeOperation='lighter';
-    light(c,'fire',x,y,width*1.6,fade*.65,ball?1:.5);
-    c.globalCompositeOperation='source-over';c.globalAlpha=fade;
-    const frames=ball?fireballFrames():fireWaveFrames(),image=frames[Math.floor(age/34)%frames.length];
-    c.drawImage(image,x-width/2,y-height*.60,width,height);c.globalCompositeOperation='lighter';
-    // Embers follow the projectile; all glows and silhouettes are cached once.
-    for(let j=0;j<(run.lowPower?4:8);j++){
-      const q=(t+j*.173)%1,u=Math.sin(j*4.7),px=x+u*halfWidth*q,py=y-cell*.15-q*cell*.7;
-      light(c,'fire',px,py,cell*.16,fade*(1-q)*.65);
-    }
-  }
-  function fireballFrames(){
-    if(cache.has('fireball'))return cache.get('fireball');
-    const frames=[];
-    for(let frame=0;frame<18;frame++){
-      const image=document.createElement('canvas');image.width=192;image.height=224;
-      const c=image.getContext('2d'),phase=frame/18*TAU;
-      // A single flowing silhouette per layer, without separate outlined lobes.
-      for(const [scale,colour,blur]of [[1,'#ff681a',12],[.82,'#ffc239',7],[.53,'#fff5c5',3]]){
-        c.save();c.translate(96,132);c.scale(scale,scale);c.fillStyle=colour;c.shadowColor='#ff8b26';c.shadowBlur=blur;
-        const flicker=Math.sin(phase)*7,side=Math.sin(phase+1.8)*5;
-        c.beginPath();c.moveTo(0,62);
-        c.bezierCurveTo(-61,62,-82,17,-57,-29);
-        c.bezierCurveTo(-48,-8,-38,-14,-40,-44);
-        c.bezierCurveTo(-43,-70,-22,-86,-16,-108+flicker);
-        c.bezierCurveTo(10,-91,5,-50,22,-35);
-        c.bezierCurveTo(38,-54,41,-66,44,-76+side);
-        c.bezierCurveTo(44,-41,83,-10,63,29);
-        c.bezierCurveTo(51,54,30,64,0,62);
-        c.closePath();c.fill();c.restore();
-      }frames.push(image);
-    }cache.set('fireball',frames);return frames;
-  }
-  function fireWaveFrames(){
-    if(cache.has('fireWave'))return cache.get('fireWave');
-    const frames=[];
-    for(let frame=0;frame<18;frame++){
-      const image=document.createElement('canvas');image.width=256;image.height=128;const x=image.getContext('2d'),points=[],a=frame/18*TAU;
-      for(let i=0;i<=16;i++){const u=i/8-1;points.push([128+u*108,42+22*(1-u*u)+Math.sin(u*9+a)*3]);}
-      for(let i=16;i>=0;i--){const u=i/8-1;points.push([128+u*108,58+32*(1-u*u)+Math.sin(u*12-a)*5]);}
-      const shape=(sx,sy,color,blur)=>{
-        x.save();x.translate(128,65);x.scale(sx,sy);x.translate(-128,-65);x.beginPath();x.moveTo(...points[0]);
-        for(let i=0;i<points.length;i++){
-          const p0=points[(i+points.length-1)%points.length],p1=points[i],p2=points[(i+1)%points.length],p3=points[(i+2)%points.length];
-          x.bezierCurveTo(p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6,p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6,p2[0],p2[1]);
-        }x.closePath();x.fillStyle=color;x.shadowColor='#ff7b16';x.shadowBlur=blur;x.fill();x.restore();
-      };
-      shape(1,1,'#f47b16',10);shape(.94,.78,'#ffc63c',4);shape(.82,.42,'#fff3b4',2);frames.push(image);
-    }cache.set('fireWave',frames);return frames;
-  }
-  function drawSnow(c,e,run,at) {
-    const p=run.ultimateProfile,alpha=clamp((p.durationMs-(at-e.startedAt))/250,0,1);
-    if(!alpha)return;
-    const cell=run.cellSize,r=cell*1.38,x=e.x,y=e.y-run.cameraY;
-    c.globalCompositeOperation='source-over';
-    e.trail.forEach((q,i)=>{
-      const age=clamp((at-q.at)/360,0,1),size=r*(.32+age*.4);
-      c.globalAlpha=alpha*(1-age)*.65;
-      c.drawImage(snowDust(),q.x+(i%2?-.45:.45)*r-size/2,q.y-run.cameraY-r*.55-size/2,size,size);
-    });
-    c.save();c.translate(x,y);c.rotate((e.y-e.originY)/r);c.globalAlpha=alpha;
-    const image=sprite(SNOW);if(image.complete&&image.naturalWidth)c.drawImage(image,-r,-r,r*2,r*2);
-    c.restore();
-  }
-  function draw(c,run,at) {
-    const e=run.stagedUltimate;if(!e)return;
-    const cell=run.cellSize,camera=run.cameraY,elapsed=at-e.startedAt;
+
+  function drawFireFlash(c, flash, run, at, reduced) {
+    const age = Math.max(0, at - flash.startedAt - FIRE_FLASH_WINDUP_MS);
+    const cell = run.cellSize;
+    const x = flash.x;
+    const y = flash.y - run.cameraY;
+    if (y < -cell * 3 || y > run.viewHeight + cell * 3) return;
+    const time = clamp(age / 145, 0, 1);
+    const expansion = 1 - (1 - time) ** 3;
+    const glowDown = (1 - clamp(age / 178, 0, 1)) ** 2;
+    const fade = (1 - clamp((age - 26) / (FIRE_FLASH_DURATION_MS - 26), 0, 1)) ** 2;
     c.save();
-    if(e.kind==='fireball'||e.kind==='fireWave')drawFireWave(c,e,run,at);
-    if(e.kind==='frostFlash')drawFlash(c,e,run,at);
-    if(e.kind==='snowball')drawSnow(c,e,run,at);
-    if(e.kind==='ballLightning'){
-      const alpha=clamp((run.ultimateProfile.durationMs-elapsed)/350,0,1),x=e.x,y=e.y-camera;
-      c.globalCompositeOperation='lighter';
-      e.trail.forEach((q,i)=>light(c,'electric',q.x,q.y-camera,cell*.9,alpha*(i+1)/8*.25));
-      light(c,'electric',x,y,cell*1.9,alpha*.9);
-      c.globalCompositeOperation='source-over';c.globalAlpha=alpha;
-      c.drawImage(lightningBall(),x-cell*.46,y-cell*.46,cell*.92,cell*.92);
-      c.globalCompositeOperation='lighter';
-      // Short orbiting arcs belong to the ball, distinct from the aimed strikes.
-      for(let i=0;i<3;i++){
-        const a=elapsed/270+i*TAU/3;
-        drawBolt(c,bolt({x:x+Math.cos(a)*cell*.28,y:e.y+Math.sin(a)*cell*.28},{x:x+Math.cos(a+.8)*cell*.5,y:e.y+Math.sin(a+.8)*cell*.5},at,i),camera,at,cell,190);
+    c.globalCompositeOperation = 'lighter';
+    light(c, 'fire', x, y, cell * (1.32 + expansion * 2.75), glowDown, .94);
+    if (time > 0) {
+      const arms = flash.lowPower ? 7 : 11;
+      for (let i = 0; i < arms; i += 1) {
+        const angle = i * Math.PI * 2 / arms + .45;
+        const size = cell * (.55 + (i * .619 % 1) * .78);
+        const distance = cell * expansion * (1.10 + (i * .382 % 1) * .58);
+        c.save();
+        c.translate(x + Math.cos(angle) * distance, y + Math.sin(angle) * distance);
+        c.rotate(angle);
+        light(c, 'fire', 0, 0, size * 1.65, fade * .66, .82);
+        c.globalCompositeOperation = 'source-over';
+        c.globalAlpha = fade * .92;
+        const tongue = c.createLinearGradient(-size * .62, 0, size * .66, 0);
+        tongue.addColorStop(0, '#ff641400');
+        tongue.addColorStop(.36, '#ff9d3ad8');
+        tongue.addColorStop(.68, '#ffe28bbd');
+        tongue.addColorStop(1, '#ffa13700');
+        c.fillStyle = tongue;
+        c.beginPath();
+        c.moveTo(-size * .7, 0);
+        c.bezierCurveTo(-size * .37, -size * .32, size * .25, -size * .30, size * .68, -size * .45);
+        c.bezierCurveTo(size * .38, size * .22, -size * .12, size * .33, -size * .7, 0);
+        c.fill();
+        c.restore();
       }
     }
-    c.globalCompositeOperation='lighter';
-    if(e.kind==='discharge'){
-      light(c,'electric',e.x,e.y-camera,cell*(1.4+elapsed/450),Math.max(0,1-elapsed/500));
-      for(const burst of e.bursts)light(c,'electric',burst.x,burst.y-camera,cell*.85,Math.max(0,1-(at-burst.at)/220)*.7);
+    if (!reduced) {
+      for (let i = 0; i < (flash.lowPower ? 12 : 24); i += 1) {
+        const life = clamp(age / (180 + i % 7 * 35), 0, 1);
+        const angle = i * 2.39996 + .45;
+        const distance = cell * (.60 + (i * .618 % 1) * 1.68) * (1 - (1 - life) ** 2.2);
+        const px = x + Math.cos(angle) * distance;
+        const py = y + Math.sin(angle) * distance - cell * life * life * .19;
+        const alpha = Math.sin(life * Math.PI);
+        light(c, 'fire', px, py, 7 + i % 4 * 3.2, alpha * .94, 1.25);
+      }
     }
-    for(const b of e.bolts)drawBolt(c,b,camera,at,cell,e.kind==='discharge'?600:190);
     c.restore();
   }
-  window.SlimeElementalUltimates=Object.freeze({start,update,draw,drawFireTransfer,shiftClock});
+
+  function drawElectricDash(c, run, at, reduced) {
+    const { electricDash: dash, slime, cameraY } = run;
+    const effects = window.SlimeMutationImpacts;
+    if (dash.endedAt == null) effects.halo(c, 'electric', slime.x, slime.y - cameraY, slime.radius * 4.3, .80);
+    if (reduced) return;
+    const tail = dash.trail.filter(point => at - point.at < ELECTRIC_DASH_TRAIL_MS);
+    const head = dash.endedAt == null ? slime : tail.at(-1);
+    if (!head) return;
+    for (const [i, point] of tail.entries()) {
+      const t = clamp((at - point.at) / ELECTRIC_DASH_TRAIL_MS, 0, 1);
+      const fade = (1 - t) ** 1.4;
+      effects.halo(c, 'electric', point.x, point.y - cameraY, slime.radius * (2.8 - t * 1.5), fade * .59, 1.25);
+      if (dash.lowPower && i % 2) continue;
+      const side = i % 2 ? -1 : 1;
+      const spread = slime.radius * (.52 + t * .9) * side;
+      const px = point.x + dash.dy * spread - dash.dx * t * 23;
+      const py = point.y - cameraY - dash.dx * spread - dash.dy * t * 23;
+      effects.electricDischarge(c, px, py, px - dash.dx * 19, py - dash.dy * 19, 1.1, 4.1, point.x + i, fade * .86);
+      effects.halo(c, 'electric', px, py, 9, fade * .65);
+    }
+    const anchor = tail[0];
+    if (anchor) {
+      const opacity = dash.endedAt == null ? .87 : .87 * clamp(1 - (at - dash.endedAt) / 120, 0, 1);
+      effects.electricDischarge(c, anchor.x, anchor.y - cameraY, head.x, head.y - cameraY, 2.1, 10,
+        Math.floor(at / 57), opacity);
+    }
+  }
+
+  function draw(c, run, at, reduced = false) {
+    if (run.fireFlash?.lit) drawFireFlash(c, run.fireFlash, run, at, reduced);
+  }
+  window.SlimeElementalUltimates = Object.freeze({
+    startFireFlash, fireCastLight, startElectricDash, driveElectricDash, sampleElectricDash, drawElectricDash, update, draw, shiftClock
+  });
 })();

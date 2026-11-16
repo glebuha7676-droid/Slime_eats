@@ -4,6 +4,7 @@
   const defaultColors = window.SlimeGameConfig?.SKINS?.[0]?.colors || ['#e9ff9c', '#67d348', '#2fa345'];
   const referenceBodyImage = new Image();
   const formBodySources = Object.freeze({
+    infinity: 'assets/ui/slime/infinity/body-v2.webp',
     frost: 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1',
     cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.webp?v=1',
     electric: 'assets/ui/slime/forms/slime-body-electric-v1.webp?v=1',
@@ -41,6 +42,8 @@
   const tintedCheekLayers = new Map();
   const referenceEyeSocketsImage = new Image();
   const referencePupilsImage = new Image();
+  const infinityPupilImage = new Image();
+  let infinityPupils = null;
   const referenceCheeksImage = new Image();
   const referenceEyeExpressionsImage = new Image();
   const referenceMouthExpressionsImage = new Image();
@@ -184,6 +187,7 @@
     if (appearanceLoads.has(key)) return appearanceLoads.get(key);
     const tasks = [];
     if (formBodySources[options.bodyVariant]) tasks.push(loadImage(formBodyImages[options.bodyVariant], formBodySources[options.bodyVariant]));
+    if (options.bodyVariant === 'infinity') tasks.push(loadImage(infinityPupilImage, 'assets/ui/slime/infinity/pupil.webp'));
     const groups = [
       [options.fireEyes, fireEyeBaseImage, firePupilImage],
       [options.electricEyes, electricEyeBaseImage, electricPupilImage],
@@ -203,6 +207,10 @@
   const bodyLayers = new Map();
 
   function referenceBodyRect(radius, image) {
+    if (image === formBodyImages.infinity) {
+      const size = radius * 2.53;
+      return [-size / 2, -size * .60, size, size];
+    }
     const glitchUltra = image === formBodyImages.glitchUltra;
     const phantomUltra = image === formBodyImages.phantomUltra;
     const bodySize = radius * 2.36 * (glitchUltra ? .886 : phantomUltra ? 1.12 : 1);
@@ -268,6 +276,28 @@
     context.globalCompositeOperation = 'source-over';
     if (tintedPupilLayers.size >= 10) tintedPupilLayers.delete(tintedPupilLayers.keys().next().value);
     tintedPupilLayers.set(tint, canvas);
+    return canvas;
+  }
+
+  function infinityPupilLayer() {
+    if (infinityPupils) return infinityPupils;
+    if (!infinityPupilImage.complete || !infinityPupilImage.naturalWidth) return referencePupilsImage;
+    const canvas = document.createElement('canvas');
+    canvas.width = referencePupilsImage.naturalWidth;
+    canvas.height = referencePupilsImage.naturalHeight;
+    const context = canvas.getContext('2d');
+    // Keep the original pupil silhouettes and use the generated iris as their texture.
+    context.drawImage(referencePupilsImage, 0, 0);
+    context.globalCompositeOperation = 'source-in';
+    context.fillStyle = '#073e9c';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalCompositeOperation = 'source-atop';
+    const irisCrop = [9, 7, 237, 242];
+    context.drawImage(infinityPupilImage, ...irisCrop, 136, 217, 99, 109);
+    context.translate(375, 0);
+    context.scale(-1, 1);
+    context.drawImage(infinityPupilImage, ...irisCrop, 0, 217, 98, 109);
+    infinityPupils = canvas;
     return canvas;
   }
 
@@ -425,7 +455,7 @@
     useReferenceFace = false, irisTint = '', cheekFilter = '', mouthStyle = '', nanoEyeOpenness = null,
     nanoEyeCount = 0, psionicsEyes = false, phantomEyes = false, sporesEyes = false,
     fireEyes = false, electricEyes = false, frostEyes = false, cosmosEyes = false, glitchEyes = false,
-    glitchFaceLevel = 0, hideEyes = false, hideMouth = false, eyeMagnification = 1, hiddenEyeSide = 0, eyeClosure = 0
+    glitchFaceLevel = 0, infinityEyes = false, hideEyes = false, hideMouth = false, eyeMagnification = 1, hiddenEyeSide = 0, eyeClosure = 0
   }) {
     const referenceEyeScale = .74;
     const drawReferenceFaceLayer = (image, offsetX = 0, offsetY = 0, scale = referenceEyeScale) => {
@@ -698,8 +728,8 @@
           }
         } else {
           drawReferenceFaceLayer(referenceEyeSocketsImage);
+          const normalPupils = infinityEyes ? infinityPupilLayer() : tintedPupilLayer(irisTint);
           if (glitchLeftActive || glitchRightActive) {
-            const normalPupils = tintedPupilLayer(irisTint);
             for (const side of [-1, 1]) {
               if (drawGlitchSymbol(side)) continue;
               targetCtx.save();
@@ -710,7 +740,7 @@
               targetCtx.restore();
             }
           } else {
-            drawReferenceFaceLayer(tintedPupilLayer(irisTint), gazeX * radius * .034, gazeY * radius * .034);
+            drawReferenceFaceLayer(normalPupils, gazeX * radius * .034, gazeY * radius * .034);
           }
         }
       } else {
@@ -1286,7 +1316,7 @@
         useReferenceFace, irisTint, cheekFilter, mouthStyle, nanoEyeOpenness,
         nanoEyeCount: bodyVariant === 'technoUltra' || nanoEyeOpenness != null ? 1 : 0,
         psionicsEyes, phantomEyes, sporesEyes, fireEyes, electricEyes, frostEyes, cosmosEyes, glitchEyes,
-        glitchFaceLevel,hideEyes:window.SlimeAccessories?.coversEyes(accessory),hideMouth:window.SlimeAccessories?.coversMouth(accessory),
+        glitchFaceLevel,infinityEyes:bodyVariant==='infinity',hideEyes:window.SlimeAccessories?.coversEyes(accessory),hideMouth:window.SlimeAccessories?.coversMouth(accessory),
         eyeMagnification:window.SlimeAccessories?.info(accessory)?.magnification || 1,
         hiddenEyeSide:window.SlimeAccessories?.info(accessory)?.hiddenEyeSide || 0
       });

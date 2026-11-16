@@ -265,11 +265,13 @@
       }
     }
     if (mutation?.emblemStyle) image.setAttribute('style',mutation.emblemStyle);
+    else image.removeAttribute('style');
     selector.setAttribute('aria-label', `${state.stage ? mutation.name + '. ' : ''}Сменить мутацию`);
     $('homeFoodHeading').textContent = state.fed ? 'ГОТОВО' : state.stage ? 'СЪЕШЬ' : 'СИНТЕЗ';
-    const info = $('homeMutationInfo'), task = state.task;
+    const info = $('homeMutationInfo'), reward = !!mutation?.reward;
+    const task = reward ? {max:true,target:100} : state.task;
     info.style.setProperty('--console-mutation-color', mutation?.color || '#51d9e7');
-    info.disabled = state.busy;
+    info.disabled = state.busy || reward;
     info.querySelector('.console-mutation-name').textContent = state.stage ? mutation.name : 'МУТАЦИЯ';
     info.classList.toggle('is-long-name', (mutation?.name.length || 0) > 6);
     info.querySelector('.console-stage').textContent = state.stage ? roman(state.stage) : '—';
@@ -282,13 +284,14 @@
     info.querySelector('.console-task-counter').textContent = !state.stage ? 'В лабораторию' : task.max ? 'III / III' : `${Math.min(task.current, task.target)} / ${task.target}`;
     const ready = !!(state.stage && task?.ready && !task.max);
     info.classList.toggle('is-ready', ready);
-    for (const element of info.querySelectorAll('.console-task-kicker,.console-task-label,.console-task-track,.console-task-counter')) element.hidden = ready;
+    for (const element of info.querySelectorAll('.console-task-kicker,.console-task-label,.console-task-track,.console-task-counter')) element.hidden = ready || reward;
     info.querySelector('.console-evolution-callout').hidden = !ready;
     info.querySelector('.console-evolution-stage').textContent = ready ? `${roman(task.targetStage)} СТАДИЯ` : '';
-    info.setAttribute('aria-label', ready
+    info.setAttribute('aria-label', reward ? `${mutation.name}, ${roman(state.stage)} стадия` : ready
       ? `${mutation.name}. Можно развить до ${roman(task.targetStage)} стадии. Открыть мутацию в лаборатории`
       : `${state.stage ? mutation.name : 'Мутации'}. ${info.querySelector('.console-task-label').textContent}. Посмотреть развитие`);
     const grid = $('homeMonitorPicker').querySelector('.console-mutation-grid');
+    if (!state.mutations.some(item => item.reward)) grid.querySelector('[data-home-mutation="infinity"]')?.remove();
     for (const m of state.mutations) {
       let button = grid.querySelector(`[data-home-mutation="${m.id}"]`);
       if (!button) { button = document.createElement('button'); button.type = 'button'; button.dataset.homeMutation = m.id; button.innerHTML = '<img alt=""><span aria-hidden="true">?</span>'; grid.append(button); }

@@ -8,6 +8,26 @@ assert(desktop.particles.length>9&&mobile.particles.length>5,'more fragments on 
 assert(desktop.particles.some(p=>p.shape==='spark')&&desktop.particles.some(p=>p.shape==='shard'));
 for(const p of desktop.particles)assert(p.life>0&&p.life<.7&&Number.isFinite(p.vx+p.vy));
 assert(fx.emit(block,{color:'#637b87',count:999,strong:true,density:1}).particles.length<=24);
+const ash=fx.emitAsh(block,8);
+assert.equal(ash.impact.type,'blockAsh');
+assert.equal(ash.particles.length,8);
+assert(ash.particles.every(p=>['ash','ashEmber','coalChip'].includes(p.shape)));
+assert(ash.particles.some(p=>p.shape==='coalChip'));
+assert(ash.particles.some(p=>p.shape==='ash')&&ash.particles.some(p=>p.shape==='ashEmber'));
+const fast=fx.emitRockContact(block,32,120,{nx:0,ny:-1},8,2);
+assert.equal(fast.impact.type,'rockSpeedImpact');
+assert(fast.particles.every(p=>p.shape==='spark'&&p.vy<0));
+assert(fast.particles.some(p=>p.vx<0)&&fast.particles.some(p=>p.vx>0));
+const contact=fx.emitRockContact(block,32,120,{nx:0,ny:-1},4);
+assert.equal(contact.impact.type,'rockContact');
+assert(contact.impact.radius<fast.impact.radius && contact.impact.life<fast.impact.life);
+assert(contact.particles.some(p=>p.shape==='shard'));
+const reinforcedContact=fx.emitRockContact(block,32,120,{nx:0,ny:-1},8,0,{strong:true});
+const turretContact=fx.emitRockContact(block,32,120,{nx:0,ny:-1},8,0,{metal:true});
+assert(reinforcedContact.impact.radius>contact.impact.radius);
+assert(turretContact.impact.metal && turretContact.particles.every(p=>p.shape==='spark'));
+const heavy=fx.emitRockContact(block,32,120,{nx:0,ny:-1},8,3);
+assert(heavy.impact.heavy && heavy.impact.radius>fast.impact.radius);
 const run={cameraY:0,particles:[],specialEffects:[],shake:0,world:{}};
 Object.assign(context,{run,VIEW_H:750,materialColor:()=> '#637b87',effectDensity:()=>.56,
  isMobileDevice:()=>true,trimParticles:n=>{const cap=Math.round(n*.58);if(run.particles.length>cap)run.particles.splice(0,run.particles.length-cap);}});

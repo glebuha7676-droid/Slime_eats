@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="home-soft-ui.css?v=8" />
   <link rel="stylesheet" href="lab-synth-soft.css?v=15" />
   <link rel="stylesheet" href="slime-progression.css?v=685" />
-  <link rel="stylesheet" href="rewards.css?v=684" />
+  <link rel="stylesheet" href="rewards.css?v=infinity-2" />
   <link rel="stylesheet" href="home-buttons-soft.css?v=627" />
   <link rel="stylesheet" href="laboratory-metal.css?v=627" />
   <link rel="stylesheet" href="game-buttons-clean.css?v=admin-infection-1" />
@@ -56,7 +56,7 @@
   <link rel="stylesheet" href="anomaly-energy.css?v=run-buttons-1" />
   <link rel="stylesheet" href="portal-window.css?v=portals-4" />
   <link rel="stylesheet" href="anomaly-currency.css?v=wallet-light-1" />
-  <link rel="stylesheet" href="run-ability.css?v=run-buttons-touch-3" />
+  <link rel="stylesheet" href="run-ability.css?v=infinity-2" />
   <link rel="stylesheet" href="core-preview.css?v=admin-infection-1" />
   <link rel="stylesheet" href="admin-settings.css?v=admin-infection-1" />
   <link rel="preload" as="image" href="assets/ui/home-planets/generated-v1/laboratory-soft-v2.webp" />
@@ -75,7 +75,7 @@
       </div>
     </div>
   </section>
-  <script src="js/core/boot-manifest.js?v=anomaly-veins-6"></script>
+  <script src="js/core/boot-manifest.js?v=mother-asteroid-new-core-1"></script>
   <script src="js/core/boot-loader.js?v=pages-fast-start-1"></script>
   <div id="phoneViewport" class="phone-viewport">
   <div id="app" class="app">
@@ -295,6 +295,7 @@
           <div class="barrier-control" aria-label="Суперспособность" hidden>
             <button id="abilityBtn" class="ability-btn barrier-btn ultimate-control" type="button" aria-label="Активировать суперспособность" disabled>
               <img src="assets/ui/run-controls/ultimate.webp" alt="" draggable="false">
+              <span class="infinity-ultimate-orb" aria-hidden="true"></span>
               <span id="abilityPercent" aria-hidden="true" hidden></span>
             </button>
             <span class="ability-state" aria-hidden="true">−20% СИЛЫ</span>
@@ -303,11 +304,21 @@
             <button id="fallLeftBtn" class="fall-button fall-button-left" type="button" aria-label="Влево" aria-keyshortcuts="ArrowLeft A">
               <span class="fall-button-face"><img src="assets/ui/run-controls/right.webp" alt="" draggable="false"></span>
             </button>
-            <button class="fall-button fall-button-attack" type="button" aria-label="Атака">
-              <span class="fall-button-face"><img src="assets/ui/run-controls/attack.webp" alt="" draggable="false"></span>
+            <button id="fallAttackBtn" class="fall-button fall-button-attack" type="button" aria-label="Атака">
+              <span class="fall-button-face">
+                <img class="fall-attack-default" src="assets/ui/run-controls/attack.webp" alt="" draggable="false">
+                <img class="fall-attack-fire" src="assets/ui/recipe-categories/emblem-v2-fire.webp" alt="" draggable="false">
+                <img class="fall-attack-frost" src="assets/ui/recipe-categories/emblem-v2-frost.webp" alt="" draggable="false">
+                <img class="fall-attack-electric" src="assets/ui/recipe-categories/emblem-v2-electric.webp" alt="" draggable="false">
+                <span class="infinity-control-orb" aria-hidden="true"></span>
+                <span id="fireballCooldown" aria-hidden="true" hidden></span>
+              </span>
             </button>
             <button class="fall-button fall-button-defense" type="button" aria-label="Защита">
               <span class="fall-button-face"><img src="assets/ui/run-controls/defense.webp" alt="" draggable="false"></span>
+            </button>
+            <button id="infinitySwapBtn" class="fall-button infinity-swap" type="button" aria-keyshortcuts="Q" aria-label="Переключить сферу" hidden>
+              <span class="fall-button-face"><span class="infinity-control-orb" aria-hidden="true"></span><span class="infinity-swap-arrow" aria-hidden="true">↔</span></span>
             </button>
             <button id="fallRightBtn" class="fall-button" type="button" aria-label="Вправо" aria-keyshortcuts="ArrowRight D">
               <span class="fall-button-face"><img src="assets/ui/run-controls/right.webp" alt="" draggable="false"></span>
@@ -357,7 +368,7 @@
           <button id="adminUnlockMutations3Btn" data-admin-mutation-stage="3" type="button" aria-label="Открыть все мутации на стадии 3">III</button>
         </div>
         <button id="adminInfiniteFlasksBtn" type="button" aria-pressed="false">Бесконечные осколки <span id="adminInfiniteFlasksState">Выкл.</span></button>
-        <button id="adminInfiniteUltimateBtn" type="button" aria-pressed="false">Бесконечная ульта <span id="adminInfiniteUltimateState">Выкл.</span></button>
+        <button id="adminInfiniteUltimateBtn" type="button" aria-pressed="false">Бесконечные способности и ульты <span id="adminInfiniteUltimateState">Выкл.</span></button>
       </div>
       <div class="admin-settings-group">
         <button id="adminUnlockAllBtn" type="button">Открыть весь прогресс</button>
@@ -541,7 +552,7 @@
       window.SlimeSdkScriptReady.catch(error => window.SlimeBootLoader.fail(error));
     }
   </script>
-  <script src="js/config/image-paths.js?v=anomaly-veins-6"></script>
+  <script src="js/config/image-paths.js?v=mother-asteroid-new-core-1"></script>
   <script src="food-catalog.js?v=39"></script>
   <script src="world-catalog.js?v=mutation-organic-29"></script>
   <script src="js/generation/generated-data.js?v=1"></script>
@@ -552,33 +563,34 @@
   <script src="js/generation/biome-terrain.js?v=terrain-hazards-2"></script>
   <script src="js/gameplay/thorn-hazards.js?v=hazard-tuning-1"></script>
   <script src="js/gameplay/bramble-obstacles.js?v=roots-fields-3"></script>
-  <script src="js/gameplay/tech-hazards.js?v=hazard-tuning-1"></script>
-  <script src="js/gameplay/water-hazards.js?v=water-hazards-1"></script>
+  <script src="js/gameplay/tech-hazards.js?v=infinity-shield-1"></script>
+  <script src="js/gameplay/water-hazards.js?v=infinity-shield-1"></script>
   <script src="js/gameplay/ice-hazards.js?v=hazard-tuning-1"></script>
   <script src="js/gameplay/fungi-hazards.js?v=fungi-status-2"></script>
   <script src="js/generation/tutorial-descent.js?v=bramble-obstacles-2"></script>
   <script src="js/config/gameplay-balance.js?v=shared-descent-1"></script>
-  <script src="js/config/daily-rewards.js?v=684"></script>
-  <script src="js/config/wardrobe.js?v=700"></script>
-  <script src="js/config/accessory-fit.js?v=700"></script>
+  <script src="js/config/daily-rewards.js?v=infinity-2"></script>
+  <script src="js/config/wardrobe.js?v=infinity-2"></script>
+  <script src="js/config/accessory-fit.js?v=infinity-2"></script>
   <script src="js/config/planet-campaign.js?v=anomaly-core-56"></script>
   <script src="js/config/game-config.js?v=anomaly-core-56"></script>
   <script src="js/config/experience.js?v=3"></script>
   <script src="js/config/slime-progression.js?v=592"></script>
   <script src="js/config/mutation-mastery.js?v=683"></script>
-  <script src="js/config/ultimate-stages.js?v=fire-stages-4"></script>
+  <script src="js/config/ultimate-stages.js?v=fire-flash-windup-1"></script>
   <script src="js/platform/yandex-platform.js?v=4"></script>
   <script src="js/core/game-assets.js?v=asteroid-34"></script>
   <script src="js/rendering/world-background.js?v=no-atmosphere-26"></script>
   <script src="js/rendering/portal-window.js?v=sky-core-1"></script>
   <script src="js/config/food-ground-bounds.js?v=1"></script>
   <script src="js/rendering/food-grounding.js?v=3"></script>
-  <script src="js/core/audio.js?v=veins-hazards-2"></script>
+  <script src="js/core/audio.js?v=phoenix-stable-audio-1"></script>
   <script src="js/ui/animation-activity.js?v=synth-flow-4"></script>
   <script src="js/config/spectral-contours.js?v=2"></script>
   <script src="js/rendering/spectral-glow.js?v=4"></script>
   <script src="js/rendering/spectral-dom-aura.js?v=700"></script>
-  <script src="js/rendering/slime-avatar.js?v=fungi-status-2"></script>
+  <script src="js/abilities/infinity.js?v=ultimate-audio-1"></script>
+  <script src="js/rendering/slime-avatar.js?v=infinity-pupils-1"></script>
   <script src="js/rendering/slime-accessories.js?v=700"></script>
   <script src="js/rendering/menu-mutation-reveal.js?v=6"></script>
   <script src="js/rendering/slime-emotions.js?v=700"></script>
@@ -592,26 +604,26 @@
   <script src="js/rendering/core-vfx.js?v=core-finisher-4"></script>
   <script src="js/rendering/phantom-soul-vfx.js?v=phantom-comets-5"></script>
   <script src="js/rendering/phantom-effects.js?v=phantom-comets-5"></script>
-  <script src="js/rendering/mutation-impact-effects.js?v=613"></script>
-  <script src="js/rendering/block-break-feedback.js?v=anomaly-core-56"></script>
+  <script src="js/rendering/mutation-impact-effects.js?v=electric-flight-1"></script>
+  <script src="js/rendering/block-break-feedback.js?v=frost-area-fire-ash-1"></script>
   <script src="effects-lab/workbench-effects.js?v=electric-orb-3"></script>
   <script src="effects-lab/block-effects-workbench.js?v=21"></script>
   <script src="js/ui/encyclopedia.js?v=700"></script>
-  <script src="js/abilities/elemental-ultimates.js?v=fire-stages-4"></script>
+  <script src="js/abilities/elemental-ultimates.js?v=fire-cast-feedback-1"></script>
   <script src="js/abilities/techno-ultimates.js?v=603"></script>
   <script src="js/abilities/spore-colossus.js?v=605"></script>
   <script src="js/abilities/cosmos-ultimates.js?v=700"></script>
   <script src="js/ui/planet-carousel.js?v=source-fractures-4"></script>
-  <script src="js/ui/home-console.js?v=portals-3"></script>
+  <script src="js/ui/home-console.js?v=infinity-2"></script>
   <script src="js/ui/synth-reactor.js?v=synth-flow-4"></script>
-  <script src="js/ui/rewards-panel.js?v=anomaly-core-56"></script>
+  <script src="js/ui/rewards-panel.js?v=infinity-2"></script>
   <script src="js/ui/wardrobe-panel.js?v=anomaly-veins-4"></script>
   <script src="js/ui/tutorial-introduction.js?v=700"></script>
   <script src="js/gameplay/ultimate-cooldown.js?v=reactive-fall-1"></script>
   <script src="js/gameplay/anomaly-energy.js?v=reactive-fall-1"></script>
   <script src="js/gameplay/energy-pickups.js?v=ice-hazards-1"></script>
   <script src="js/ui/anomaly-energy-hud.js?v=run-buttons-1"></script>
-  <script src="js/ui/run-ability-hud.js?v=run-buttons-1"></script>
+  <script src="js/ui/run-ability-hud.js?v=admin-free-abilities-1"></script>
   <script src="js/gameplay/anomaly-evacuation.js?v=core-finisher-5"></script>
   <script src="js/rendering/fire-core-strike.js?v=core-finisher-4"></script>
   <script src="js/rendering/electric-core-strike.js?v=core-finisher-4"></script>
@@ -625,8 +637,8 @@
   <script src="js/rendering/spores-core-strike.js?v=core-finisher-5"></script>
   <script src="js/rendering/core-fractures.js?v=core-fractures-4"></script>
   <script src="js/rendering/core-purification.js?v=hostile-cores-27"></script>
-  <script src="js/gameplay/core-encounter.js?v=core-framing-29"></script>
+  <script src="js/gameplay/core-encounter.js?v=infinity-1"></script>
   <script src="js/ui/core-preview.js?v=core-finisher-2"></script>
-  <script src="game.js?v=run-buttons-touch-4"></script>
+  <script src="game.js?v=phoenix-stable-audio-1"></script>
 </body>
 </html>

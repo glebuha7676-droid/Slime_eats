@@ -9,6 +9,7 @@ vm.runInNewContext(fs.readFileSync(require.resolve('../js/abilities/cosmos-ultim
 const U=moduleContext.window.SlimeUltimateStages;
 function take(name){const a=source.indexOf(`  function ${name}(`);let b=source.indexOf('\n  function ',a+20);const async=source.indexOf('\n  async function ',a+20);if(async>=0&&async<b)b=async;assert.ok(a>=0&&b>a,name);return source.slice(a,b);}
 const c={window:{SlimePsionicFeedback:{preload:()=>Promise.resolve()},SlimeIceHazards:{locked:()=>false}},Math,Set,
+ playUltimateCue(name){c.lastUltimateCue=name},
  performance:{now:()=>1000},adminInfiniteUltimate:false,ULTIMATE_COOLDOWN:require('../js/gameplay/ultimate-cooldown.js'),
  ENERGY:require('../js/gameplay/anomaly-energy.js'),
  ELEMENTAL_ULTIMATES:moduleContext.window.SlimeElementalUltimates,
@@ -18,18 +19,42 @@ const c={window:{SlimePsionicFeedback:{preload:()=>Promise.resolve()},SlimeIceHa
  technoUltimateServices:{blocksNearY:()=>[],elementalDamageable:()=>false},
  stagedUltimateServices:{blocksNearY:()=>[],frostFreezable:()=>false,elementalDamageable:()=>false},
  ELEMENTAL_ABILITY_DURATION_MS:{fire:2000,frost:6000,electric:4600,cosmos:5500,nano:10000,telekinesis:2500,cloning:5800,phantom:2800,glitch:1800},
- ELECTRIC_STORM_STRIKES:5,ELECTRIC_STORM_BRANCH_LENGTH:4,PHOENIX_FIRE_ROWS:14,COSMOS_ULTIMATE_CHARGE_MS:920,COSMOS_ULTIMATE_ROWS:20,COSMOS_ULTIMATE_FADE_START_MS:4000,
+ PHOENIX_FIRE_ROWS:14,COSMOS_ULTIMATE_CHARGE_MS:920,COSMOS_ULTIMATE_ROWS:20,COSMOS_ULTIMATE_FADE_START_MS:4000,
  MECH_LAND_MS:600,MECH_ACTIVE_MS:10000,CLONE_ULTIMATE_BURST_MS:540,GLITCH_TITLE_MS:800,
  PHANTOM_MARK_INTERVAL_MS:5000,PHANTOM_PORTAL_INTERVAL_MS:10000,
  TELEKINESIS_PRESS_DISTANCE_CELLS:11.2,TELEKINESIS_PRESS_COLLIDE_MS:1280,
  clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),sound(){},feedback(){},updateRunUI(){},impact(){},startFrostStorm(){},startGlitchChoice(){},findGlitchDisarmTarget:()=>({}),startGlitchDisarm(){c.run.glitchDisarm={}},startTelekinesisPress(){},startPsionicBarrier(t){c.run.psionicBarrier={startedAt:t,until:t+c.run.ultimateProfile.durationMs}},elementalLevel:()=>2,startTelekinesisCycle(){c.run.telekinesisCycle={mode:'ultimate',projectiles:Array(c.run.ultimateProfile.blockCount).fill(null)}},startPhantomSalvo(){c.run.phantomSalvoFlights=Array(8).fill({})},startPhantomExpress(){},startPhantomPhase(){c.run.phantomPhase={kind:c.run.ultimateProfile.kind}},ensurePhantomExpressSprites(){},ensureSporeSprites(){},materializePhantom(){},
  playAbilityActivation(stage){c.tapStage=stage},startUltimateIntro(type){c.run.ultimateIntro={type};c.intros++},
 };vm.createContext(c);
-vm.runInContext(['canActivateElementalAbility','activateElementalAbility','commitElementalAbility'].map(take).join('\n'),c);
+vm.runInContext(['canActivateElementalAbility','phoenixCharge','activateElementalAbility','commitElementalAbility','startRunUltimateCue'].map(take).join('\n'),c);
 const fresh=(id,stage)=>({ultimateStage:stage,ultimateProfile:U.get(id,stage),elementalAbilityType:id,energy:100,ultimateReadyAt:0,elementalAuraId:0,
  slime:{x:180,y:700,radius:20,vx:30,vy:100},cellSize:60,columns:6,gridOffsetX:0,blockRowOrigin:190,rowCount:100,world:{targetDepth:500},portalY:7000,damageInvulnerableUntil:0,shake:0,blocksByRow:new Map()});
 for(const id of Object.keys(U.profiles)) for(const stage of [1,2,3]){
  c.run=fresh(id,stage);c.intros=0;c.tapStage=0;
+ if(id==='fire'){
+   assert.equal(c.activateElementalAbility(1000),false);
+   c.run.maxDepth=167;
+   if(stage<3){assert.equal(c.activateElementalAbility(1000),false);continue;}
+   assert(c.activateElementalAbility(1000));
+   assert.equal(c.lastUltimateCue,'phoenixSummon');
+   assert.equal(c.intros,0,'Phoenix opens with its moving shadow');
+   assert.equal(c.run.energy,100);
+   assert.equal(c.phoenixCharge(c.run),0);
+   assert.equal(c.run.phoenixUltimate.rows,8);
+   assert.equal(c.activateElementalAbility(1001),false);
+   continue;
+ }
+ if(id==='frost'||id==='electric'){
+   if(stage<3){assert.equal(c.activateElementalAbility(1000),false);continue;}
+   assert(c.activateElementalAbility(1000));
+   assert.equal(c.intros,0,'The ultimate charges in the mine');
+   assert.equal(c.run.energy,80);
+   assert.equal(c.run.elementalAbilityActive,id);
+   if(id==='frost')assert.equal(c.run.ultimateProfile.rows,8);
+   else assert.equal(c.run.electricStorm.strikeLimit,6);
+   assert.equal(c.activateElementalAbility(1001),false);
+   continue;
+ }
  assert.equal(c.activateElementalAbility(1000),true);
  assert.equal(c.run.energy,80);assert.equal(c.run.ultimateReadyAt,11000);
  if(stage<3){assert.equal(c.intros,0,'Lower grades never run the flying button intro');assert.equal(c.tapStage,stage);assert.equal(c.run.elementalAbilityActive,id,'First and second grades commit immediately');}
@@ -37,9 +62,6 @@ for(const id of Object.keys(U.profiles)) for(const stage of [1,2,3]){
  const p=U.get(id,stage);
  if(id==='cosmos'&&stage<3){assert.equal(c.run.cosmosStagedUltimate.kind,p.kind);assert.equal(c.run.cosmosUltimate,null);}
  if(id==='cosmos'&&stage===3)assert.equal(c.run.cosmosUltimate.endY,700+p.meters/500*100*60);
- if(['fire','frost','electric'].includes(id)&&stage<3)assert.equal(c.run.stagedUltimate.kind,p.kind);
- if(id==='electric'&&stage===3){assert.equal(c.run.electricStorm.strikeLimit,p.strikes);assert.equal(c.run.electricStorm.branchLength,p.branchLength)}
- if(id==='fire'&&stage===3)assert.equal(c.run.phoenixUltimate.rows,p.rows);
  if(id==='nano'&&stage<3)assert.equal(c.run.technoUltimate.kind,p.kind);
  if(id==='nano'&&stage===3)assert.equal(c.run.mechSuit.expireAt-c.run.mechSuit.landAt,p.mechMs);
  if(id==='telekinesis'&&stage===1)assert.equal(c.run.psionicBarrier.until-1000,3000);
@@ -60,7 +82,7 @@ for(const stage of [1,2,3]){
  assert.equal(e.centerX,(e.startCol+p.trainWidth/2)*60);
  if(stage===3){c.run=fresh('telekinesis',stage);c.startTelekinesisPress(1000,700);assert.equal(c.run.telekinesisPress.bottomY-c.run.telekinesisPress.topY,U.get('telekinesis',stage).pressRows*60);}
 }
-assert.equal(U.get('fire',3).rows,10);assert.equal(U.get('frost',3).durationMs,6000);assert.equal(U.get('electric',3).strikes,5);assert.equal(U.get('cosmos',3).meters,60);assert.equal(U.get('nano',3).mechMs,10000);assert.equal(U.get('phantom',3).trainWidth,4);assert.equal(U.get('phantom',3).trainRows,12);assert.equal(U.get('cloning',3).jumpCount,5);assert.equal(U.get('glitch',3).rewriteRows,10);
+assert.equal(U.get('fire',3).rows,8);assert.equal(U.get('frost',3).rows,8);assert.equal(U.get('electric',3).strikes,6);assert.equal(U.get('cosmos',3).meters,60);assert.equal(U.get('nano',3).mechMs,10000);assert.equal(U.get('phantom',3).trainWidth,4);assert.equal(U.get('phantom',3).trainRows,12);assert.equal(U.get('cloning',3).jumpCount,5);assert.equal(U.get('glitch',3).rewriteRows,10);
 Object.assign(c,{glitchSlimeCell:()=>({row:8,col:3}),glitchDeletableBlock:b=>!b.dead,glitchEligibleBlock:b=>!b.dead&&!b.hazard});
 vm.runInContext(take('executeGlitchBug'),c);
 for(const stage of [2,3])for(const kind of ['delete','hack','infect','change']){
@@ -73,4 +95,4 @@ for(const stage of [2,3])for(const kind of ['delete','hack','infect','change']){
  if(kind==='infect')assert.ok(c.run.glitchSpreadQueue.flatMap(item=>item.blocks).every(b=>Math.max(Math.abs(b.row-8),Math.abs(b.col-3))<=p.infectRadius));
  if(kind==='change'){assert.equal(c.run.glitchChange.rows,p.rewriteRows);assert.equal(c.run.blocks.filter(b=>b.glitchRewriteUntil).length,p.rewriteRows*6);}
 }
-console.log('27 ultimate grades: charge consumption, immediate I/II, full III intro, real range/duration/count limits and unchanged maximum powers passed');
+console.log('Ultimate stages: fire III unlock and depth charge, charge consumption for other forms, intros and range/duration limits passed');

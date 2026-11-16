@@ -1,5 +1,15 @@
 // Face-relative accessory fitting; eyelashes are drawn by code.
 window.SlimeAccessoryFit=Object.freeze({
+  "infinityGlasses": {
+    "image": "assets/ui/wardrobe/accessories/infinity-glasses.webp",
+    "pixelWidth": 512,
+    "pixelHeight": 220,
+    "anchorX": 256,
+    "anchorY": 110,
+    "targetY": 0.0231437,
+    "width": 1.32,
+    "coversEyes": true
+  },
   "round": {
     "image": "assets/ui/wardrobe/accessories/round-v2.webp",
     "pixelWidth": 768,

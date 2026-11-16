@@ -3,20 +3,23 @@
   const rules=window.SlimeDailyRewards;
   function markup({model,tab,asset}){
     const s=rules.status(model),flask=asset('assets/ui/anomaly-core-v56/currency.webp'),gift=asset('assets/ui/gift.webp');
+    const emblem=asset(window.SlimeInfinity.EMBLEM);
+    const infinityDay=s.day===7;
     const days=rules.DAILY.map((amount,i)=>{
       const received=i<model.dailyClaimed&&!(s.dailyAvailable&&model.dailyClaimed===7);
       const current=i===s.day-1;
-      return `<div class="reward-day ${received?'is-received':''} ${current?'is-today':''} ${i===6?'is-final':''}" aria-label="День ${i+1}: ${amount} осколков${received?', получено':current?', следующий подарок':''}"><small>ДЕНЬ ${i+1}</small><img src="${i===6?gift:flask}" alt=""><b>${amount}</b><span>${received?'Получено':current?s.dailyAvailable?'Сегодня':'Получено':i===6?'Большой подарок':''}</span></div>`;
+      const final=i===6;
+      return `<div class="reward-day ${received?'is-received':''} ${current?'is-today':''} ${final?'is-final':''}" aria-label="День ${i+1}: ${amount} осколков${final?', слайм Бесконечность':''}${received?', получено':current?', следующий подарок':''}"><small>ДЕНЬ ${i+1}</small><img src="${final?emblem:flask}" alt=""><b>${amount}</b><span>${final&&!model.infinityUnlocked?'Слайм ∞':received?'Получено':current?s.dailyAvailable?'Сегодня':'Получено':''}</span></div>`;
     }).join('');
     return `<section class="rewards-hub" aria-label="Ежедневные подарки и колесо">
       <div class="rewards-tabs" role="tablist" aria-label="Подарки"><button id="rewardDailyTab" role="tab" aria-controls="rewardDailyPane" aria-selected="${tab==='daily'}" tabindex="${tab==='daily'?0:-1}" data-rewards-tab="daily">ПОДАРКИ <i data-daily-dot ${s.dailyAvailable?'':'hidden'}></i></button><button id="rewardWheelTab" role="tab" aria-controls="rewardWheelPane" aria-selected="${tab==='wheel'}" tabindex="${tab==='wheel'?0:-1}" data-rewards-tab="wheel">КОЛЕСО <i data-wheel-dot ${s.freeAvailable?'':'hidden'}></i></button></div>
       <div class="rewards-pane" id="rewardDailyPane" role="tabpanel" aria-labelledby="rewardDailyTab" ${tab==='daily'?'':'hidden'}>
-        <div class="daily-feature"><img src="${gift}" alt=""><div><small id="dailyDayCaption">ДЕНЬ ${s.day} ИЗ 7</small><h3 id="dailyTitle">${s.dailyAvailable?'Твой подарок!':'Подарок получен'}</h3><div class="daily-amount"><img src="${flask}" alt="Осколки"><b id="dailyAmount">+${s.amount}</b></div></div></div>
+        <div class="daily-feature">${infinityDay?'<canvas id="rewardInfinityAvatar" width="192" height="192" aria-hidden="true"></canvas>':`<img src="${gift}" alt="">`}<div><small id="dailyDayCaption">ДЕНЬ ${s.day} ИЗ 7</small><h3 id="dailyTitle">${infinityDay?'Бесконечность':s.dailyAvailable?'Твой подарок!':'Подарок получен'}</h3><div class="daily-amount"><img src="${flask}" alt="Осколки"><b id="dailyAmount">+${s.amount}</b></div></div></div>
         <p class="rewards-intro">Собери все 7 подарков.<br>Пропустишь день — прогресс останется.</p>
         <div class="reward-week">${days}</div>
         <button id="dailyClaimBtn" class="reward-action" type="button" ${s.dailyAvailable?'':'disabled'}>${s.dailyAvailable?`ЗАБРАТЬ ${s.amount} ОСКОЛКОВ`:'ПОЛУЧЕНО'}</button>
         <p id="dailyTimer" class="reward-timer"></p>
-        <p class="reward-footnote">После седьмого подарка начнётся новый круг.</p>
+        ${model.infinityUnlocked?`<button id="rewardInfinityBtn" class="reward-infinity-select" type="button" aria-pressed="${model.infinityEquipped}"><img src="${emblem}" alt=""><span>${model.infinityEquipped?'Бесконечность выбрана':'Выбрать Бесконечность'}</span></button>`:'<p class="reward-footnote">На 7-й день откроется слайм Бесконечность.</p>'}
       </div>
       <div class="rewards-pane" id="rewardWheelPane" role="tabpanel" aria-labelledby="rewardWheelTab" ${tab==='wheel'?'':'hidden'}>
         <div class="wheel-heading"><h3>Крути и забирай!</h3><p>Один бесплатный запуск каждый день</p></div>
@@ -53,7 +56,7 @@
     const daily=q('#dailyClaimBtn');
     daily.disabled=!s.dailyAvailable&&!s.freeAvailable;
     daily.classList.toggle('is-secondary',!s.dailyAvailable&&s.freeAvailable);
-    daily.textContent=s.dailyAvailable?`ЗАБРАТЬ ${s.amount} ОСКОЛКОВ`:s.freeAvailable?'К БЕСПЛАТНОМУ КОЛЕСУ →':'ПОЛУЧЕНО';
+    daily.textContent=s.dailyAvailable?(s.day===7&&!model.infinityUnlocked?'ЗАБРАТЬ СЛАЙМА И ОСКОЛКИ':`ЗАБРАТЬ ${s.amount} ОСКОЛКОВ`):s.freeAvailable?'К БЕСПЛАТНОМУ КОЛЕСУ →':'ПОЛУЧЕНО';
     q('#dailyTimer').textContent=s.dailyAvailable?'Бесплатно. Без рекламы.':`Следующий подарок через ${rules.formatWait(s.dailyWait)}`;
     const button=q('#wheelSpinBtn');button.disabled=!!pending||busy||(!s.freeAvailable&&!s.adAvailable);
     button.classList.toggle('is-video',!s.freeAvailable);

@@ -11,50 +11,108 @@ const services={
  turnBlockToSnow:b=>{b.elementalSnow=true;b.hp=1;hits.push(b)},
  damageBlockByElement:(b,n)=>{b.hp-=n;if(b.hp<=0)b.dead=true;hits.push(b)}
 };
-function fresh(id,stage){hits=[];r={ultimateProfile:U.get(id,stage),cellSize:60,columns:6,gridOffsetX:0,blockRowOrigin:0,elementalAuraId:1,slime:{x:210,y:150,radius:24},blocks:[]};
+function fresh(id,stage){hits=[];r={ultimateProfile:U.get(id,stage),cellSize:60,columns:6,gridOffsetX:0,blockRowOrigin:0,elementalAuraId:1,slime:{x:210,y:150,radius:24,vx:0,vy:120},blocks:[]};
  for(let row=0;row<20;row++)for(let col=0;col<6;col++)r.blocks.push({row,col,x:col*60,y:row*60,w:60,h:60,hp:4,flaskTier:3,flaskValue:5});
- E.start(r,id,1000,210,150,services);return r.stagedUltimate;
+ return r;
 }
-// Frost remains radial; fire sweeps an exact forward rectangle with no rear damage.
-let flash=fresh('frost',1);assert(hits.length>8&&hits.length<36);assert(hits.some(b=>b.row<2)&&hits.some(b=>b.row>2));assert(hits.every(b=>b.flaskValue===5&&b.flaskTier===3));E.update(r,1851,services);assert.equal(r.stagedUltimate,null);
-flash=fresh('fire',1);assert.equal(hits.length,0);E.update(r,1200,services);const near=hits.length;assert(near>0);assert(hits.every(b=>b.y+b.h/2>150));
-E.update(r,1650,services);assert(hits.length>near);const waveHits=hits.length;assert.equal(waveHits,8);assert.equal(new Set(hits).size,waveHits);assert(hits.every(b=>b.row>=3&&b.row<=6));
-E.update(r,1800,services);assert.equal(hits.length,waveHits);E.update(r,1851,services);assert.equal(r.stagedUltimate,null);
-let e=fresh('fire',2);assert.equal(e.kind,'fireWave');assert.equal(hits.length,0);
-E.update(r,1900,services);assert.equal(hits.length,24,'Four columns × six rows');
-assert.equal(new Set(hits.map(b=>b.col)).size,4);assert.equal(new Set(hits.map(b=>b.row)).size,6);
-for(const stage of [1,2])for(const x of [1,30,180,330,359]){
- fresh('fire',stage);r.slime.x=x;E.start(r,'fire',1000,x,150,services);
- E.update(r,1000+r.ultimateProfile.growMs,services);
- assert.equal(hits.length,r.ultimateProfile.width*r.ultimateProfile.rows,'A wall never crops the attack footprint');
- assert.equal(new Set(hits).size,hits.length,'Each block is ignited once');
+function indexTiles() {
+  r.blocksByRow = new Map();
+  for (const b of r.blocks) r.blocksByRow.set(b.row,[...(r.blocksByRow.get(b.row)||[]),b]);
 }
-fresh('fire',2);E.update(r,1250,services);const beforePause=hits.length;E.shiftClock(r,10000);E.update(r,11250,services);assert.equal(hits.length,beforePause);E.update(r,11900,services);assert.equal(hits.length,24);
-e=fresh('frost',2);E.update(r,2250,services);
-const frozen=r.blocks.filter(b=>b.elementalSnow);
-assert.equal(frozen.length,21,'Seven rows, exactly three columns');
-assert.deepEqual([...new Set(frozen.map(b=>b.col))],[2,3,4]);
-assert.deepEqual([...new Set(frozen.map(b=>b.row))],[3,4,5,6,7,8,9]);
-assert(frozen.every(b=>b.flaskTier===3&&b.flaskValue===5));
-assert.equal(e.y-e.originY,420,'50m = 7 cells');
-// Frame rate independence: a swept update equals many small updates.
-fresh('frost',2);for(let at=1000;at<=2250;at+=50)E.update(r,at,services);assert.equal(r.blocks.filter(b=>b.elementalSnow).length,21);
-// Lane clamps at both boundaries, never extending beyond the mine.
-for(const x of [1,359]){fresh('frost',2);r.slime.x=x;E.start(r,'frost',1000,x,150,services);E.update(r,2250,services);assert.equal(r.blocks.filter(b=>b.elementalSnow).length,21);}
-e=fresh('electric',1);assert.equal(e.bolts.length,4);assert.equal(hits.length,1,'Only the centre is hit at activation');
-const far=r.blocks.find(b=>b.col===3&&b.row===6);assert.equal(far.hp,4);
-E.update(r,1065,services);assert(hits.length>1);assert.equal(far.hp,4,'The outer block waits for the growing front');
-E.update(r,1259,services);assert.equal(far.hp,4);E.update(r,1260,services);assert.equal(far.hp,3,'Front reaches exactly four cells after 260ms');
-assert(hits.every(b=>b.col===3||b.row===2),'Cross has no diagonal damage');assert.equal(new Set(hits).size,hits.length,'Centre and ray intersections never deal repeated damage');
-const crossCount=hits.length;E.update(r,1500,services);assert.equal(hits.length,crossCount);
-fresh('electric',1);E.update(r,1260,services);assert.equal(hits.length,crossCount,'A slow frame still crosses every target once');
-e=fresh('electric',1);E.update(r,1065,services);const nearHits=hits.length;E.shiftClock(r,10000);E.update(r,11065,services);assert.equal(hits.length,nearHits);E.update(r,11260,services);assert.equal(hits.length,crossCount,'Pause preserves the moving front');
-e=fresh('electric',2);for(let at=1000;at<=3400;at+=16)E.update(r,at,services);
-assert(hits.length>=18&&hits.length<=24,'Frequent bounded pulses; two targets per pulse');assert(e.bolts.length<=2);assert(e.trail.length<=8);
-assert(e.hitAt.size<=24);assert.equal(r.ultimateProfile.damage,2);assert.equal(r.ultimateProfile.strikeIntervalMs,220);assert(hits.every(b=>(4-b.hp)%2===0),'Every discharge deals two damage');assert(e.y<=e.endY);
-// A stalled frame never fires an accumulated barrage.
-fresh('electric',2);E.update(r,1000,services);const before=hits.length;E.update(r,3000,services);assert(hits.length-before<=2);
-e=fresh('electric',2);E.update(r,1350,services);const y=e.y;E.shiftClock(r,10000);E.update(r,11350,services);assert.equal(e.y,y,'Pause preserves travel');assert.equal(hits.length,2,'Pause preserves strike cadence');
-E.update(r,13801,services);assert.equal(r.stagedUltimate,null);
-for(const id of ['fire','frost','electric']){fresh(id,3);assert.equal(r.stagedUltimate,undefined,'III still belongs to existing ultimate code');for(let stage=1;stage<=3;stage++){assert(U.get(id,stage).name);assert.equal(U.get(id,stage).description,undefined);}}
-console.log('Elemental ultimates: exact 2×4 / 4×6 fire sweeps, wall clamps, pause, frost and electric behavior passed');
+function fireFlashCells(x, y, delay) {
+  fresh('fire', 2);
+  indexTiles();
+  E.startFireFlash(r, 1000);
+  r.slime.x = x;
+  r.slime.y = y;
+  E.update(r, 1289, services);
+  assert.equal(hits.length, 0);
+  assert.equal(E.fireCastLight(r,1000),null);
+  assert(E.fireCastLight(r,1095).glow>.9);
+  assert(E.fireCastLight(r,1289).glow>.9);
+  E.update(r, 1000 + delay, services);
+  E.update(r, 1405, services);
+  assert(E.fireCastLight(r,1405).glow>.4);
+  assert.equal(E.fireCastLight(r,1570),null);
+  assert.equal(new Set(hits).size, hits.length);
+  const result = hits.map(b => [b.row, b.col, b.fireDamageAt]);
+  E.update(r, 1715, services);
+  assert.equal(r.fireFlash, null);
+  return result;
+}
+const area = (row,col) => Array.from({length:9},(_,i)=>[row+Math.floor(i/3),col+i%3]);
+const centered = fireFlashCells(210, 222, 290);
+assert.deepEqual(centered, area(5,2).map(cell=>[...cell,2290]));
+assert.deepEqual(fireFlashCells(210, 222, 405), centered, 'A delayed frame preserves the ignition time');
+assert.deepEqual(fireFlashCells(1, 222, 290).map(([row,col])=>[row,col]),area(5,0));
+assert.deepEqual(fireFlashCells(355, 222, 290).map(([row,col])=>[row,col]),area(5,3));
+for (const y of [181,208,239]) {
+  assert.deepEqual(fireFlashCells(210, y, 290), centered, 'One full row stays clear at every height inside a tile');
+}
+assert.equal(fireFlashCells(210, -300, 290).length,0);
+fresh('fire', 2);
+indexTiles();
+E.startFireFlash(r, 1000);
+r.slime.x=150;
+r.slime.y=222;
+E.shiftClock(r, 10000);
+E.update(r, 11289, services);
+assert.equal(hits.length,0);
+E.update(r, 11290, services);
+assert.equal(hits.length,9);
+assert.equal(r.fireFlash.x,150);
+assert.equal(r.fireFlash.y,390);
+
+const source = fs.readFileSync('game.js','utf8');
+const frost = { clamp:(x,a,b)=>Math.max(a,Math.min(b,x)), lerp:(a,b,t)=>a+(b-a)*t,
+  feedback(){}, turnBlockToSnow(block, at){hits.push([block.row,block.col,at]);} };
+const frostLogic = ['firstFrostRow','startFrostFlake','updateFrostFlake'].map(name =>
+  source.match(new RegExp('  function '+name+'[(][\\s\\S]*?(?=\\n  function )'))[0]);
+vm.runInNewContext(source.match(/  const FROST_FLAKE_[A-Z_]+ = [^;]+;/g).concat(frostLogic).join('\n'), frost);
+function frostPath(x, y, vx, step) {
+  fresh('frost',1);
+  r.slime.vx = vx;
+  indexTiles();
+  frost.run = r;
+  frost.startFrostFlake(x,y,1000);
+  assert.equal(r.frostFlake.toY-y,300);
+  for (let elapsed = step; elapsed < 520; elapsed += step) frost.updateFrostFlake(1000+elapsed);
+  frost.updateFrostFlake(1520);
+  assert(hits.length===10 && r.frostFlake.burst);
+  const frozen = [...hits];
+  frost.updateFrostFlake(1980);
+  assert.equal(r.frostFlake,null);
+  assert.deepEqual(hits,frozen);
+  return frozen;
+}
+const trail = frostPath(180, 145, 0, 16);
+assert.deepEqual(frostPath(180,145,0,520),trail);
+assert.deepEqual([...new Set(trail.map(([row])=>row))],[2,3,4,5,6]);
+for (const [x, vx, pair] of [[8,0,[0,1]],[210,-40,[2,3]],[210,0,[3,4]],[353,0,[4,5]]]) {
+  assert.deepEqual([...new Set(frostPath(x,150,vx,30).map(([,col])=>col))],pair);
+}
+
+for (const [x, direction, dt] of [[180, 0, 1 / 60], [180, -1, 1 / 120], [180, 1, .034], [26, -1, .034]]) {
+  fresh('electric', 1);
+  r.slime.x = x;
+  const y = r.slime.y;
+  E.startElectricDash(r, 2000, direction, 360);
+  let ended = false, steps = 0;
+  while (!ended && steps++ < 50) {
+    ended = E.driveElectricDash(r, dt);
+    r.slime.x += r.slime.vx * dt;
+    r.slime.y += r.slime.vy * dt;
+    E.sampleElectricDash(r, 2000 + steps * dt * 1000);
+  }
+  assert(ended);
+  assert(Math.abs(Math.hypot(r.slime.x - x, r.slime.y - y) - 180) < 1e-6);
+  assert.equal(Math.sign(r.slime.x - x), direction);
+  assert(r.slime.x >= r.slime.radius - 1e-6 && r.slime.x <= 360 - r.slime.radius);
+  assert(r.electricDash.trail.length > 2 && r.electricDash.trail.length <= 13);
+  r.electricDash.endedAt = 2300;
+  E.shiftClock(r, 1000);
+  assert.equal(r.electricDash.endedAt, 3300);
+  E.update(r, 3485, services);
+  assert.equal(r.electricDash, null);
+}
+console.log('Elemental attacks: a centered 3x3 fire flash, five-row frost trail and three-cell dash across diagonal, wall and frame-rate cases passed');

@@ -5,6 +5,7 @@
   // Increase this value whenever sound files are replaced under the same names.
   // The query string prevents phones and GitHub Pages from keeping stale audio.
   const SOUND_ASSET_VERSION = window.SlimeGameConfig.ASSET_REVISION;
+  const ULTIMATE_ASSET_VERSION = 'ultimate-audio-1';
   const SOUND_ASSETS = {
     tap: { file: 'button.ogg', volume: .34, size: 3 },
     eatBite: { file: 'eat-bite.ogg', volume: .42, size: 2 },
@@ -20,16 +21,76 @@
     fail: { file: 'fail.ogg', volume: .35, size: 1 },
     win: { file: 'win.ogg', volume: .38, size: 1 }
   };
+  const ULTIMATE_ASSETS = {
+    infinityCharge: 'infinity-charge',
+    infinityFusion: 'infinity-fusion',
+    infinityLaunch: 'infinity-launch',
+    infinityTail: 'infinity-tail',
+    phoenixSummon: 'phoenix-summon',
+    phoenixFlight: 'phoenix-flight'
+  };
+  const PHOENIX_CUES = new Set(['phoenixSummon', 'phoenixFlight']);
 
   function createAudioSystem({ isEnabled = () => true } = {}) {
     let audioContext = null;
     let mealTimers = [];
+    const phoenixTracks = new Map();
     const soundPools = new Map();
+
+    function getAudioContext() {
+      const Context = window.AudioContext || window.webkitAudioContext;
+      if (!Context) return null;
+      audioContext ||= new Context();
+      return audioContext;
+    }
+
+    function preloadUltimateAudio() {
+      if (!isEnabled() || document.hidden || typeof Audio === 'undefined') return false;
+      for (const name of Object.keys(ULTIMATE_ASSETS)) getSoundPool(name);
+      if (location.protocol !== 'file:') {
+        for (const name of PHOENIX_CUES) preloadPhoenixTrack(name);
+      }
+      return true;
+    }
+
+    function preloadPhoenixTrack(name) {
+      if (phoenixTracks.has(name)) return;
+      const [audio] = getSoundPool(name);
+      // A local Blob can seek after a pause even if the preview server ignores byte ranges.
+      const track = { url: '' };
+      phoenixTracks.set(name, track);
+      fetch(audio.src).then(response => {
+        if (!response.ok) throw new Error('Phoenix audio unavailable');
+        return response.blob();
+      }).then(blob => {
+        track.url = URL.createObjectURL(blob);
+        if (audio.paused && audio.currentTime === 0) {
+          audio.preload = 'auto';
+          audio.src = track.url;
+        }
+      }).catch(() => { phoenixTracks.delete(name); });
+    }
+
+    function playUltimateCue(name, latenessMs = 0, { resume = false } = {}) {
+      if (!ULTIMATE_ASSETS[name] || !isEnabled() || document.hidden) return;
+      const audio = getSoundPool(name)?.[0];
+      if (!audio) return;
+      const offset = Math.max(0, latenessMs) / 1000;
+      if (Number.isFinite(audio.duration) && offset >= audio.duration) return;
+      audio.pause();
+      const localUrl = phoenixTracks.get(name)?.url;
+      if (localUrl && audio.src !== localUrl) {
+        audio.src = localUrl;
+      }
+      const continuing = resume && Math.abs(audio.currentTime - offset) < .06;
+      if (!continuing) audio.currentTime = offset;
+      audio.play()?.catch(() => {});
+    }
 
     function fallbackSound(kind = 'tap') {
       if (!isEnabled() || document.hidden) return;
       try {
-        audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (!getAudioContext()) return;
         if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
@@ -59,12 +120,14 @@
     }
 
     function getSoundPool(kind) {
-      const config = SOUND_ASSETS[kind];
-      if (!config || typeof Audio === 'undefined') return null;
       if (soundPools.has(kind)) return soundPools.get(kind);
+      const ultimate = ULTIMATE_ASSETS[kind];
+      const config = ultimate ? { file: `ultimates/${ultimate}.wav`, volume: 1, size: 1 } : SOUND_ASSETS[kind];
+      if (!config || typeof Audio === 'undefined') return null;
+      const version = ultimate ? ULTIMATE_ASSET_VERSION : SOUND_ASSET_VERSION;
       const pool = Array.from({ length: config.size }, () => {
-        const audio = new Audio(new URL(`${SOUND_ROOT}${config.file}?v=${SOUND_ASSET_VERSION}`, document.baseURI).href);
-        audio.preload = 'auto';
+        const audio = new Audio(new URL(`${SOUND_ROOT}${config.file}?v=${version}`, document.baseURI).href);
+        audio.preload = PHOENIX_CUES.has(kind) && location.protocol !== 'file:' ? 'none' : 'auto';
         audio.volume = config.volume;
         return audio;
       });
@@ -101,17 +164,24 @@
       playSoundAsset(kind);
     }
 
+    function stopUltimateAudio() {
+      for (const name of Object.keys(ULTIMATE_ASSETS)) {
+        const audio = soundPools.get(name)?.[0];
+        audio?.pause();
+      }
+    }
+
     function stopAllSounds() {
       mealTimers.forEach(clearTimeout);
       mealTimers = [];
-      soundPools.forEach(pool => pool.forEach(audio => {
+      soundPools.forEach((pool, kind) => pool.forEach(audio => {
         audio.pause();
-        audio.currentTime = 0;
+        if (!ULTIMATE_ASSETS[kind]) audio.currentTime = 0;
       }));
       if (audioContext?.state === 'running') audioContext.suspend().catch(() => {});
     }
 
-    return Object.freeze({ sound, stopAllSounds });
+    return Object.freeze({ sound, stopAllSounds, preloadUltimateAudio, playUltimateCue, stopUltimateAudio });
   }
 
   window.SlimeAudio = Object.freeze({ createAudioSystem });

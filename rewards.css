@@ -25,6 +25,10 @@ html body #panelOverlay .rewards-modal .panel-content{padding:0!important;flex:1
 .daily-feature>img{width:88px;height:88px;object-fit:contain;filter:drop-shadow(0 4px 0 #0c30494d)}
 .daily-feature>div{min-width:0}.daily-feature small{color:#b8dbe4;font-size:11px;letter-spacing:.7px;font-weight:900}.daily-feature h3{margin:5px 0 3px;font-size:22px;line-height:1.1;color:#fff;font-weight:1000}
 .daily-amount{display:flex;align-items:center;gap:5px}.daily-amount img{height:37px;width:32px;object-fit:contain}.daily-amount b{font-size:34px;line-height:1.1;font-weight:1000;color:#ffe29a}
+.reward-infinity-select{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;width:100%;border:1px solid #7cd2ef;border-radius:12px;background:#225372;color:#e5f7ff;font:900 13px/1.15 'Slime Nunito',Nunito,sans-serif;cursor:pointer}
+.rewards-hub .reward-infinity-select[aria-pressed='true']{background:#346c8c;color:#f1fcff;border-color:#bcecfb}.reward-infinity-select img{width:25px;height:25px}.reward-infinity-select:focus-visible{outline:3px solid #ffe08a;outline-offset:2px}
+.daily-feature canvas{width:88px;height:88px;object-fit:contain;flex:none}
+@container reward-window (max-height:690px){.daily-feature canvas{width:65px;height:65px}}
 .rewards-intro{margin:1px 0 0;text-align:center;color:#d0e8ee;font-size:14px;line-height:1.35;font-weight:700}
 .reward-week{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(95px,1fr));flex:1 0 200px;max-height:300px;gap:8px;margin:5px 0}
 .reward-day{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:95px;padding:7px 3px 5px;border:2px solid #54869a;border-radius:13px;background:#173e54;box-shadow:inset 0 1px #447086;color:#c5e5eb}

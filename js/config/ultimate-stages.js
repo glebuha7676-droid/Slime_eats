@@ -1,16 +1,17 @@
 (() => {
   'use strict';
-  // Fire develops one forward attack; other families retain their existing stages.
+  // Fire unlocks its ultimate at stage III.
   const rows = (values, make) => Object.freeze(values.map((value, i) => Object.freeze({ stage: i + 1, ...make(value, i) })));
   const profiles = Object.freeze({
-    fire: rows(['Огненный шар', 'Огненная волна', 'Полёт феникса'], (name, i) => ({
-      name, kind: ['fireball', 'fireWave', 'phoenix'][i],
-      width: [2, 4, 6][i], rows: [4, 6, 10][i],
-      durationMs: [850, 1140, 2200][i],
-      ...(i < 2 ? { growMs: [650, 900][i] } : { arrivalMs: 400, travelMs: 1600 })
-    })),
-    frost: rows(['Морозная вспышка', 'Снежный ком', 'Вьюга'], (name, i) => ({ name, kind: ['frostFlash', 'snowball', 'blizzard'][i], durationMs: [850, 1600, 6000][i], ...(i === 1 ? { meters: 50, rows: 7, width: 3, travelMs: 1250 } : {}) })),
-    electric: rows(['Разряд', 'Шаровая молния', 'Громовержец'], (name, i) => ({ name, kind: ['discharge', 'ballLightning', 'thunderstorm'][i], durationMs: [700, 2800, 4600][i], ...(i === 0 ? { reachCells: 4, growMs: 260 } : {}), ...(i === 1 ? { meters: 50, rows: 7, travelMs: 2450, strikeIntervalMs: 220, damage:2, targetCooldownMs:440 } : {}), ...(i === 2 ? { strikes: 5, branchLength: 4 } : {}) })),
+    fire: rows(['Огненная вспышка', 'Усиленный поджог', 'Полёт феникса'], (name, i) => i < 2
+      ? { name }
+      : { name, kind: 'phoenix', rows: 8, durationMs: 2510, arrivalMs: 880, travelMs: 870 }),
+    frost: rows(['Снежинка', 'Снежный проход', 'Метель'], (name, i) => i < 2
+      ? { name }
+      : { name, kind: 'blizzard', rows: 8, chargeMs: 890, durationMs: 2850 }),
+    electric: rows(['Электрорывок', 'Цепной разряд', 'Громовержец'], (name, i) => i < 2
+      ? { name }
+      : { name, kind: 'thunderstorm', strikes: 6, chargeMs: 960, durationMs: 4765 }),
     cosmos: rows(['Большая планета','Звездопад','Кометный прорыв'], (name,i) => ({name,kind:['planetBoost','starfall','comet'][i],durationMs:[5000,5000,5500][i],...(i===0?{planetScale:1.85,damage:2}:i===1?{starCount:16,starIntervalMs:220,damage:2}:{meters:60})})),
     nano: rows(['Минный залп', 'Турель', 'Титан'], (name,i) => ({name,kind:['mineSalvo','turret','titan'][i],durationMs:[2000,6200,10000][i],...(i===0?{mineCount:5}:i===1?{landMs:700,activeMs:5000,shotIntervalMs:200}:{mechMs:10000})})),
     telekinesis: rows(['Псионический барьер','Псионический шторм','Псионический пресс'],(name,i)=>({name,kind:['psionicBarrier','psionicStorm','psionicPress'][i],durationMs:[3000,4000,2500][i],...(i===1?{blockCount:8,orbitMs:1450,staggerMs:185}:i===2?{pressRows:80*7/50}:{})})),
@@ -28,9 +29,9 @@
         deleteRadius: Math.min(2, i + 1), deleteCap: [16, 28, 40][i], durationMs: 1800 })
   });
   const summaries = Object.freeze({
-    fire: ['Огненный шар поджигает путь: 2 блока в ширину, 4 ряда вниз.', 'Огненная волна поджигает путь: 4 блока в ширину, 6 рядов вниз.', 'Феникс подлетает к слайму и поджигает 10 рядов на всю ширину шахты.'],
-    frost: ['Замораживает блоки вокруг слайма.', 'Катит снежный ком, замораживая блоки на пути.', 'Вызывает вьюгу и замораживает блоки впереди.'],
-    electric: ['Бьёт молниями в четыре стороны.', 'Выпускает шар. Частые разряды наносят по 2 урона.', 'Вызывает мощные удары молний по шахте.'],
+    fire: ['После короткой подготовки вспышка поджигает квадрат 3×3 через один ряд под слаймом.', 'Обычные блоки сгорают полностью. Прочный блок получает 1 урон за поджог.', 'Феникс поджигает 8 рядов на всю ширину шахты.'],
+    frost: ['Снежинка прокладывает проход на 5 рядов вперёд и замораживает до двух блоков в каждом ряду.', 'Снежные блоки пролетаются без потери разгона.', 'Метель замораживает 8 рядов на всю ширину шахты.'],
+    electric: ['Рывок на 3 клетки сквозь породу. Удерживай стрелку, чтобы рвануть по диагонали. В точке остановки все блоки под слаймом разрушаются. Пять разрядов наносят по 1 урону вокруг.', 'Пассивный разряд может перескочить на ещё один соседний блок.', 'Шесть молний бьют по участкам 3×3. Центральный блок разрушается, остальные получают 2 урона.'],
     cosmos: ['На время увеличивает планету и её урон.', 'Вызывает 16 звёзд. Каждая наносит 2 урона.', 'Пролетает сквозь блоки космической кометой.'],
     nano: ['Раскидывает 5 мин по блокам внизу.', 'Ставит турель: она быстро разбивает блоки внизу.', 'Садится в робота с двумя мощными бластерами.'],
     telekinesis: ['Защищает слайма и взрывает колючки при касании.', 'Поднимает 8 блоков и бросает их вниз.', 'Сжимает и разрушает большой участок шахты.'],
@@ -40,7 +41,7 @@
   });
   const previewImages = Object.freeze({
     fire: [null, null, 'assets/ui/laboratory-refined/phoenix-feather.webp'],
-    frost: [null, 'assets/vfx/frost-snowball-v2.webp', 'assets/vfx/frost-storm-flake-v1-lossless.webp'],
+    frost: ['assets/vfx/frost-storm-flake-v1-lossless.webp', null, 'assets/vfx/frost-storm-flake-v1-lossless.webp'],
     cosmos: [null, 'assets/vfx/cosmos-falling-star-v1.webp', null],
     nano: [null, 'assets/vfx/techno-turret-head-v1.webp', null],
     cloning: ['assets/vfx/spores-mini-mushroom-v1-lossless.webp', 'assets/vfx/spores-pod-v5.webp', 'assets/vfx/spores-giant-mushroom-v2.webp'],

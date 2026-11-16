@@ -46,12 +46,78 @@
       c.save();c.translate(a.x,a.y-camera);c.rotate(Math.atan2(dy,dx));c.globalAlpha=fade*(.86+.14*Math.sin(elapsed/18+i));if(t>0)c.drawImage(art,0,0,256*t,64,0,-height/2,len*t,height);c.restore();halo(c,'electric',a.x+dx*t,a.y+dy*t-camera,cell*.62,fade*.6);
     }
   }
-  function electricHit(c,b,sy,at){
-    const age=at-b.electricFlashStartedAt,t=clamp(age/620,0,1);if(age<0||t>=1)return;
-    const x=b.x+b.w/2,y=sy+b.h/2,fade=(1-t)**1.3;
-    c.save();c.beginPath();c.rect(b.x+1,sy+1,b.w-2,b.h-2);c.clip();halo(c,'electric',x,y,b.w*1.2,fade*.36);
-    for(let i=0;i<2;i++){c.save();c.translate(x,y);c.rotate((i?-.8:.8)+Math.sin(Math.floor(age/70)+b.col)*.1);c.globalAlpha=fade*.85;
-      c.drawImage(ribbon(b.col+i),-b.w*.48,-b.h*.13,b.w*.96,b.h*.26);c.restore();}c.restore();
+  function electricDischarge(c, x, y, toX, toY, width, sway, seed, opacity = 1) {
+    const dx = toX - x, dy = toY - y, length = Math.hypot(dx, dy);
+    if (length < 1 || opacity <= 0) return;
+    const segments = clamp(Math.ceil(length / 15), 3, 33);
+    c.save();
+    c.globalCompositeOperation = 'lighter';
+    c.globalAlpha *= opacity;
+    c.lineJoin = c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(x, y);
+    for (let i = 1; i < segments; i += 1) {
+      const f = i / segments;
+      const offset = (Math.sin(i * i * 1.63 + seed) * .63 + Math.sin(f * 24 + seed * .67) * .37)
+        * sway * Math.sin(f * Math.PI) ** .5;
+      c.lineTo(x + dx * f - dy / length * offset, y + dy * f + dx / length * offset);
+    }
+    c.lineTo(toX, toY);
+    for (const [size, color] of [[6.4, '#5a52eb1f'], [3.2, '#448aff55'], [1.5, '#81e6ffc0'], [1, '#f4ffff']]) {
+      c.lineWidth = width * size;
+      c.strokeStyle = color;
+      c.stroke();
+    }
+    c.restore();
+  }
+  function electricShock(c, x, y, w, h, age, power, seed, reduced = false) {
+    const t = age / 400;
+    if (t < 0 || t >= 1) return;
+    const fade = (1 - clamp((age - 65) / 335, 0, 1)) ** 1.85;
+    const flash = 1 - clamp(age / 82, 0, 1);
+    const flicker = reduced ? 1 : .81 + .19 * Math.cos(age / 24);
+    const side = Math.sin(seed * 17.21) > 0 ? 1 : -1;
+    const px = u => x + u * w * side;
+    const py = v => y + v * h;
+    halo(c, 'electric', x, y, w * 1.52, fade * power * (.28 + flash * .16), .92);
+    c.save();
+    c.beginPath();
+    c.roundRect(px(0) - w * .48, py(-.48), w * .96, h * .96, w * .115);
+    c.globalAlpha = fade * (reduced ? .69 : .82);
+    c.fillStyle = '#061435';
+    c.fill();
+    c.lineWidth = Math.max(1.3, w * .042);
+    c.strokeStyle = '#77ceff';
+    c.stroke();
+    c.clip();
+    halo(c, 'electric', x, y, w * 1.17, fade * (.23 + flash * .28));
+    c.globalAlpha = fade * .48;
+    c.beginPath();
+    c.roundRect(x - w * .40, y - h * .40, w * .80, h * .80, w * .09);
+    c.strokeStyle = '#77c6ff';
+    c.lineWidth = 1;
+    c.stroke();
+    const joints = [[-.41, .31, -.09, .06], [-.09, .06, .14, -.12], [.14, -.12, .43, -.39],
+      [-.09, .06, -.29, -.35], [.14, -.12, .40, .30]];
+    c.globalAlpha = 1;
+    for (let i = 0; i < joints.length; i += 1) {
+      const [u, v, endU, endV] = joints[i];
+      electricDischarge(c, px(u), py(v), px(endU), py(endV), (i < 3 ? 1.46 : .91) * (1 + flash * .36),
+        w * .10, seed + i * 8.9 + (reduced ? 0 : Math.floor(age / 66) * .65), fade * flicker * (i < 3 ? 1 : .78));
+    }
+    halo(c, 'electric', px(.14), py(-.12), w * .44, fade * (.32 + flash * .35));
+    c.restore();
+    if (reduced) return;
+    for (let i = 0; i < 3; i += 1) {
+      const angle = seed + i * 2.39996;
+      const px = x + Math.cos(angle) * w * (.37 + t * .38);
+      const py = y + Math.sin(angle) * h * (.36 + t * .36);
+      halo(c, 'electric', px, py, 6 + i * 2, fade * power * .63);
+    }
+  }
+  function electricHit(c, b, sy, at, reduced) {
+    electricShock(c, b.x + b.w / 2, sy + b.h / 2, b.w, b.h,
+      at - b.electricFlashStartedAt, b.electricShockPower || 1, b.col * 1.7 + b.row * .4, reduced);
   }
   function frostShard(c,e,camera,cell){
     const t=clamp(1-e.life/e.maxLife,0,1),art=flake(),flight=1-(1-t)**1.48;
@@ -75,5 +141,5 @@
     const t=clamp((at-b.at)/420,0,1);burst(c,'cosmos',b.x,b.y-camera,cell*1.7,t,low);if(!image.complete||!image.naturalWidth)return;c.save();
     for(let i=0;i<(low?3:6);i++){const a=i*TAU/(low?3:6)+b.index,d=cell*(.12+t*.85),w=cell*(.16-.09*t);c.save();c.translate(b.x+Math.cos(a)*d,b.y-camera+Math.sin(a)*d);c.rotate(a+t*3);c.globalAlpha=(1-t)**1.2;c.drawImage(image,-w/2,-w/2,w,w);c.restore();}c.restore();
   }
-  window.SlimeMutationImpacts=Object.freeze({halo,burst,frostTouch,freezeBlock,electricChain,electricHit,frostShard,spores,starTrail,starImpact});
+  window.SlimeMutationImpacts=Object.freeze({halo,burst,frostTouch,freezeBlock,electricChain,electricDischarge,electricShock,electricHit,frostShard,spores,starTrail,starImpact});
 })();

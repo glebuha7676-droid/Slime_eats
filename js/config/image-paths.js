@@ -252,7 +252,8 @@
   for (const folder of ['mutation-wrap-v21', 'mutation-flowers-v19', 'anomaly-fluid-v2', 'mutation-blooms-v16', 'mutation-readable-v22']) {
     terrainRefresh[`assets/ui/${folder}/jar.webp`] = anomalyCurrency;
   }
-  const infectedMotherAsteroid = `${anomalyArt}/planet-compact-v57.webp`;
+  const infectedMotherAsteroid = 'assets/ui/planets/mother-asteroid-new-core-v1/source-100.webp';
+  terrainRefresh[`${anomalyArt}/planet-compact-v57.webp`] = infectedMotherAsteroid;
   terrainRefresh['assets/ui/planets/mutation-flora-v1/source-100.webp'] = infectedMotherAsteroid;
   terrainRefresh['assets/ui/planets/mother-substrate-v33/source-100.webp'] = infectedMotherAsteroid;
   for(const stage of [100,75,50,25,0]) {

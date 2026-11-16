@@ -10,13 +10,13 @@ function take(name) {
 // inaccessible, reproducing the first boot rather than merely a later reload.
 const normalize=take('normalizeSave');
 assert.ok(!normalize.includes('levelTargetDepth('),'Saved progress must use permanent world lengths, not transient tutorial state');
-const fire=new Map([[0,{dead:false,fireDamageAt:100,fireUltimateAuraId:0}],[1,{dead:true,fireDamageAt:100}],[2,{dead:false,fireDamageAt:300}]]);
+const fire=new Map([[0,{dead:false,fireDamageAt:100}],[1,{dead:true,fireDamageAt:100}],[2,{dead:false,fireDamageAt:300}]]);
 let hits=0;
 const c={run:{ended:false,burningBlocks:new Set(fire.values()),phoenixWaves:[],electricStormBolts:[],electricStormHits:[]},performance:{now:()=>200},
   finishMechSuit(){},updateShieldLifetime(){},finishUltimateRecharge(){},updateFrostStorm(){},updateNanoDrones(){},updatePhantomCompanions(){},updateTelekinesisPress(){},updateTelekinesis(){},updateCloningUltimate(){},updateSpores(){},damageBlockByElement:()=>hits++};
 Object.assign(c,{ELEMENTAL_ULTIMATES:{update(){}},TECHNO_ULTIMATES:{update(){}},SPORE_COLOSSUS:{update(){}},COSMOS_ULTIMATES:{update(){}},stagedUltimateServices:{},technoUltimateServices:{},sporeColossusServices:{},cosmosUltimateServices:{},updatePsionicBarrier(){}});
 Object.defineProperty(c.run,'blocks',{get(){throw new Error('No full terrain scan is permitted each frame');}});
-vm.runInNewContext(take('updateBurningBlocks')+'\n'+take('updateElementalEffects'),c);
+vm.runInNewContext(['updateBurningBlocks','updateFrostFlake','updateElementalEffects'].map(take).join('\n'),c);
 c.updateElementalEffects(200);assert.equal(hits,1);assert.equal(c.run.burningBlocks.size,1);
 c.updateElementalEffects(400);assert.equal(hits,2);assert.equal(c.run.burningBlocks.size,0);
 const award=take('awardFlaskData');

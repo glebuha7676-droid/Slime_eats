@@ -63,7 +63,8 @@
         if(h.state==='strike'){
           if(!hooks.immune&&h.age>=.18&&h.age<.38&&Math.hypot(s.x-h.targetX,s.y-h.targetY)<s.radius+cell*.35&&!run.waterGrab){
             hooks.hurt?.(h.targetX,h.targetY);
-            if(!run.evacuation){run.waterGrab={source:b,x:h.targetX,y:h.targetY,fromX:s.x,fromY:s.y,age:0};h.state='hold';h.age=0;}
+            if(hooks.deflected?.()){h.state='retract';h.age=0;}
+            else if(!run.evacuation){run.waterGrab={source:b,x:h.targetX,y:h.targetY,fromX:s.x,fromY:s.y,age:0};h.state='hold';h.age=0;}
           }else if(h.age>=.46){h.state='retract';h.age=0;}
         }
         if(h.state==='retract'&&h.age>=.45){h.state='cooldown';h.age=0;}

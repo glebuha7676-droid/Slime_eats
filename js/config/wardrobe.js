@@ -9,7 +9,8 @@
     {id:'aviator',name:'Очки пилота',image:'assets/ui/wardrobe/accessories/aviator-v2.webp'},
     {id:'pixel',name:'Пиксельные очки',image:'assets/ui/wardrobe/accessories/pixel-v1.webp'},
     {id:'pirate',name:'Повязка пирата',image:'assets/ui/wardrobe/accessories/pirate-v3.webp'},
-    {id:'lashes',name:'Ресницы',image:'assets/ui/wardrobe/accessories/lashes-code-v694.png'}
+    {id:'lashes',name:'Ресницы',image:'assets/ui/wardrobe/accessories/lashes-code-v694.png'},
+    {id:'infinityGlasses',name:'Очки Бесконечности',image:'assets/ui/wardrobe/accessories/infinity-glasses.webp'}
   ]);
   const emotions = Object.freeze([
     {id:'laugh',name:'Тык-тык',description:'Палец тыкает с разных сторон. Слайм удивляется!',image:'assets/ui/tutorial-pointer-v3-lossless.webp'},

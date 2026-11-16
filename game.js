@@ -7,10 +7,11 @@
   const PROGRESSION = window.SlimeProgression;
   const ULTIMATE_STAGES = window.SlimeUltimateStages;
   const ELEMENTAL_ULTIMATES = window.SlimeElementalUltimates;
+  const INFINITY = window.SlimeInfinity;
   const TECHNO_ULTIMATES = window.SlimeTechnoUltimates;
   const SPORE_COLOSSUS = window.SlimeSporeColossus;
   const COSMOS_ULTIMATES = window.SlimeCosmosUltimates;
-  if (!CONFIG || !ASSETS || !EXPERIENCE || !PROGRESSION || !window.SlimeMutationMastery || !ULTIMATE_STAGES || !ELEMENTAL_ULTIMATES || !TECHNO_ULTIMATES || !SPORE_COLOSSUS || !COSMOS_ULTIMATES || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
+  if (!CONFIG || !ASSETS || !EXPERIENCE || !PROGRESSION || !window.SlimeMutationMastery || !ULTIMATE_STAGES || !ELEMENTAL_ULTIMATES || !INFINITY || !TECHNO_ULTIMATES || !SPORE_COLOSSUS || !COSMOS_ULTIMATES || !window.SlimeAudio || !window.SlimeAvatarRenderer) {
     throw new Error('Game modules must be loaded before game.js');
   }
 
@@ -64,8 +65,12 @@
   } = ASSETS;
   const { drawSlimeAvatar } = window.SlimeAvatarRenderer;
   const stagedUltimateServices = Object.freeze({
-    blocksNearY, elementalDamageable, frostFreezable,
-    igniteBlock, turnBlockToSnow, damageBlockByElement
+    igniteBlock,
+    onFireFlash() {
+      run.shake = Math.max(run.shake, 4);
+      sound('hit');
+      feedback([12, 19, 8]);
+    }
   });
   const technoUltimateServices = Object.freeze({
     blocksNearY, elementalDamageable, nanoEyePosition, damageBlockByElement,
@@ -82,10 +87,20 @@
   const FREEZE_ZONE_CHARGE_MS = 1000;
   const FREEZE_ZONE_DURATION_MS = 3000;
   const PHANTOM_MARK_INTERVAL_MS = 3500;
-  const FIRE_BURN_HITS = 2;
-  const FIRE_BURN_INTERVAL_MS = 1200;
-  const FIRE_TRANSFER_MS = 220;
-  const ELECTRIC_CHAIN_LENGTH = 2;
+  const FIRE_BURN_INTERVAL_MS = Object.freeze([410, 245]);
+  const FIRE_FRAGILE_BURN_MS = 245;
+  const FIRE_FINAL_BURN_MS = 640;
+  const ACTIVE_ATTACK_COOLDOWN_MS = 6000;
+  const FROST_FLAKE_TRAVEL_MS = 520;
+  const FROST_FLAKE_BURST_MS = 460;
+  const FROST_FLAKE_CELLS = 5;
+  const FROST_FLAKE_WIDTH = 1.5;
+  const FROST_STORM_ROW_MS = 165;
+  const FROST_STORM_CELL_MS = 12;
+  const FALL_MOMENTUM = Object.freeze({
+    min: .60, max: 1.6, step: .2, gainPerSecond: .48,
+    brakeSeconds: .055, fullSpeedAt: .34, airBeforeBoost: .67
+  });
   const ELECTRIC_IMPACT_WINDOW_MS = 72;
   const PHANTOM_PORTAL_INTERVAL_MS = 10000;
   const PHANTOM_DURATION_MS = 3000;
@@ -112,21 +127,21 @@
     cloning: 5800,
     glitch: 1800,
     mass: 4000,
-    mobility: 5000
+    mobility: 5000,
+    infinity: 2840
   });
   const ULTIMATE_INTRO_MS = 820;
-  const PHOENIX_FIRE_ROWS = 10;
+  const PHOENIX_FIRE_ROWS = 8;
   const COSMOS_ULTIMATE_CHARGE_MS = 920;
   const COSMOS_ULTIMATE_RAMP_MS = 270;
   const COSMOS_ULTIMATE_FADE_START_MS = 4000;
   const COSMOS_ULTIMATE_ROWS = 20;
-  const ELECTRIC_STORM_STRIKES = 5;
-  const ELECTRIC_STORM_BRANCH_LENGTH = 4;
+  const ELECTRIC_STORM_CADENCE_MS = 655;
+  const ELECTRIC_STORM_WARNING_MS = 370;
+  const ELECTRIC_STORM_BOLT_MS = 59;
   const ELECTRIC_STORM_EXIT_MS = 720;
   const phoenixUltimateSprite = new Image();
   phoenixUltimateSprite.src = versionedAsset('assets/vfx/fire-phoenix-ultimate-v1-lossless.webp');
-  const electricStormCloudSprite = new Image();
-  electricStormCloudSprite.src = versionedAsset('assets/vfx/electric-storm-cloud-v2-lossless.webp');
   const technoMechSprite = new Image();
   technoMechSprite.src = versionedAsset('assets/vfx/techno-mech-suit-v2.webp');
   const frostStormFlakeSprite = new Image();
@@ -199,6 +214,7 @@
     shaft: $('#shaft'), canvas: $('#physicsCanvas'), impactText: $('#impactText'),
     glitchUltimateOverlay: $('#glitchUltimateOverlay'), glitchChoiceAnnouncement: $('#glitchChoiceAnnouncement'),
     fallControls: $('#fallControls'), fallLeftBtn: $('#fallLeftBtn'), fallRightBtn: $('#fallRightBtn'),
+    fallAttackBtn: $('#fallAttackBtn'), infinitySwapBtn: $('#infinitySwapBtn'), fireballCooldown: $('#fireballCooldown'),
     abilityBtn: $('#abilityBtn'), abilityPercent: $('#abilityPercent'), endRunBtn: $('#endRunBtn'),
     runMenuOverlay: $('#runMenuOverlay'), resumeRunBtn: $('#resumeRunBtn'), restartRunBtn: $('#restartRunBtn'),
     finishRunBtn: $('#finishRunBtn'), toggleRunSoundBtn: $('#toggleRunSoundBtn'), runSoundIcon: $('#runSoundIcon'), runSoundLabel: $('#runSoundLabel'),
@@ -267,9 +283,9 @@
     { id: 'glitch', name: 'ГЛИТЧ', image: 'assets/ui/recipe-categories/emblem-v4-glitch.webp' }
   ]);
   const MUTATION_DETAILS = Object.freeze({
-    fire: { stage1: 'I · Поджигает блок при касании.', stage2: 'II · Сгоревший блок поджигает одного соседа по кресту. Без цепочки.', stage3: 'III · Огонь горит, пока не разрушит блок.' },
-    electric: { stage1: 'Бьёт цепной молнией.', stage2: 'Разряд задевает до 3 блоков.' },
-    frost: { stage1: 'Превращает блоки в снег.', stage2: 'При разрушении вылетают 2 осколка.' },
+    fire: { stage1: 'I · Хрупкие блоки сгорают почти сразу.', stage2: 'II · Целый обычный блок сгорает за два тика.', stage3: 'III · Феникс поджигает 8 рядов на всю ширину шахты.' },
+    electric: { stage1: 'При ударе молния бьёт один соседний блок сбоку или впереди.', stage2: 'Добавляет одну ветку к каждому разряду.' },
+    frost: { stage1: 'При касании превращает обычную и прочную породу в снег. Снег сохраняет разгон.', stage2: 'Снежинка прокладывает снежный проход на 5 клеток вперёд.' },
     cosmos: { stage1: 'Планета кружится рядом.', stage2: 'При касании бьёт блоки.' },
     nano: { stage1: 'Дрон стреляет вниз.', stage2: 'Луч сразу разбивает целый блок.' },
     telekinesis: { stage1: 'Вырывает блок и бросает вниз.', stage2: 'Попадание бьёт блоки рядом.' },
@@ -278,7 +294,7 @@
     glitch: { stage1: 'Заражает блоки впереди.', stage2: 'Удар по одному передаётся остальным.' }
   });
   const MUTATION_REVEAL_DESCRIPTIONS = Object.freeze({
-    fire: 'Поджигает блоки и распространяет огонь.',
+    fire: 'Быстро выжигает мягкую породу и ослабляет прочную.',
     electric: 'Копит заряд и поражает блоки разрядом.',
     frost: 'Охлаждает блоки и смягчает удары.',
     cosmos: 'Планеты кружатся вокруг слайма и бьют блоки.',
@@ -348,6 +364,7 @@
   const menuTapEmotion=window.SlimeTapEmotions.create();
   const menuPetpet = window.MenuPetpet.create({ reducedMotion: matchMedia('(prefers-reduced-motion:reduce)').matches });
   const SAVE_BACKUP_KEY = `${SAVE_KEY}_backup`;
+  const ADMIN_INFINITE_ABILITIES_KEY = `${SAVE_KEY}_admin_infinite_abilities`;
   const SAVE_SYNC_DELAY = 5000;
   let saveStorage = null;
   let yandexPlatform = null;
@@ -372,7 +389,7 @@
   const ONBOARDING_QUESTS = new Set(['','unlock-frost','try-frost','play-frost','evolve-slime']);
   let save = loadSave();
   save.rewards=window.SlimeDailyRewards.normalize(save.rewards,save);
-  const { sound, stopAllSounds } = window.SlimeAudio.createAudioSystem({
+  const { sound, stopAllSounds, preloadUltimateAudio, playUltimateCue, stopUltimateAudio } = window.SlimeAudio.createAudioSystem({
     isEnabled: () => save.sound && !platformSuspended && !windowSuspended && !adInFlight
   });
   let toastTimer = null;
@@ -863,7 +880,8 @@
     const hint = !suspended && run && !run.ended && !run.paused ? run.tutorialHint : null;
     const worldTarget = tutorialMemoState?.focus && positionTutorialWorldTarget(tutorialMemoState.focus);
     const intro=window.SlimeTutorialIntro;
-    const instruction = intro?.active ? intro.instruction : hint?.kind === 'ability' ? ['#abilityBtn',''] : !suspended && worldTarget ? ['#tutorialWorldTarget', ''] : !suspended && tutorialMemoState?.kind === 'development' ? ['#homeMutationInfo', ''] : tutorialMemoState?.kind === 'ability' && !suspended ? ['#abilityBtn', ''] : active && !suspended && !tutorialMemoState && !hint ? tutorialTarget() : null;
+    const abilityTarget = run?.elementalAbilityType === 'fire' ? '#fallAttackBtn' : '#abilityBtn';
+    const instruction = intro?.active ? intro.instruction : hint?.kind === 'ability' ? [abilityTarget,''] : !suspended && worldTarget ? ['#tutorialWorldTarget', ''] : !suspended && tutorialMemoState?.kind === 'development' ? ['#homeMutationInfo', ''] : tutorialMemoState?.kind === 'ability' && !suspended ? [abilityTarget, ''] : active && !suspended && !tutorialMemoState && !hint ? tutorialTarget() : null;
     els.tutorialPointer.hidden = Boolean(worldTarget) || (Boolean(tutorialMemoState) && tutorialMemoState.kind !== 'ability');
     if(intro?.active)els.tutorialPointer.hidden=!intro.pointerVisible;
     els.tutorialCaption.hidden = Boolean(tutorialMemoState || hint || intro?.active);
@@ -1204,7 +1222,7 @@
 
   function showTutorialStage() {
     if (save.onboarding.stageSeen) return;
-    showOnboardingMemo('Огонь стал сильнее!', '<p><b>Новая форма</b> и сильнее <b>суперсила</b>!</p><p class="tutorial-memo-small">Выполняй задания, чтобы развивать мутации дальше.</p>', () => {
+    showOnboardingMemo('Огонь стал сильнее!', '<p><b>Огонь горит быстрее.</b> Обычные блоки сгорают дотла.</p><p class="tutorial-memo-small">На III форме откроется феникс.</p>', () => {
       save.onboarding.stageSeen = true; persist({refreshUI:false});
     }, {kind:'evolution'});
   }
@@ -1276,7 +1294,8 @@
       const width=Math.min(330,canvas.width-24);
       goal.style.width=`${width}px`;goal.style.left=`${canvas.left+(canvas.width-width)/2}px`;
       const height=goal.offsetHeight,safeTop=hud.bottom+12;
-      const ability=els.abilityBtn.getBoundingClientRect(),bottom=Math.min(canvas.bottom-15,ability.top-12);
+      const ability=(els.abilityBtn.parentElement.hidden ? els.fallAttackBtn : els.abilityBtn).getBoundingClientRect();
+      const bottom=Math.min(canvas.bottom-15,ability.height ? ability.top-12 : canvas.bottom-20);
       const candidates=[previous?.mode===mode?previous.top:null,safeTop,hero.bottom+18,hero.top-height-18,bottom-height].filter(Number.isFinite);
       const clear=candidates.find(top=>top>=safeTop&&top+height<=bottom&&(top+height<=hero.top||top>=hero.bottom));
       goal.style.top=`${Math.max(safeTop,Math.min(bottom-height,clear??hero.bottom+18))}px`;
@@ -1312,7 +1331,7 @@
     card.style.width = `${width}px`;
     card.style.left = `${Math.max(12,shaft.left+(shaft.width-width)/2)}px`;
     const height = card.offsetHeight;
-    const ability = els.abilityBtn.getBoundingClientRect();
+    const ability = (els.abilityBtn.parentElement.hidden ? els.fallAttackBtn : els.abilityBtn).getBoundingClientRect();
     const safeBottom = Math.min(innerHeight-12,ability.height ? ability.top-14 : shaft.bottom-20);
     const target = hint.focus && !hint.focus.dead ? tutorialWorldBounds(hint.focus) : null;
     const scale=shaft.height/VIEW_H, slimeY=shaft.top+(run.slime.y-run.cameraY)*scale;
@@ -1356,8 +1375,12 @@
         learned('fireLearned');learned('developmentSeen');run.tutorialFireExplainedAt=lessonTime;revealTutorialRunGoal();
       }
       if(controlReady&&!flags.abilityLearned&&flags.fireLearned&&!busy&&lessonTime>=25000&&lessonTime>(run.tutorialGoalExpandedUntil||0)+6000){
-        if(canActivateElementalAbility(timestamp)&&!run.tutorialAbilityPrompted){run.tutorialAbilityPrompted=true;
-          setTutorialRunHint('ability','Суперсила готова','Нажми кнопку внизу. Приём тратит 20% Силы и снова доступен через 10 секунд.',{duration:5000});}
+        const fire = run.elementalAbilityType === 'fire';
+        if ((fire ? canCastActiveAttack(timestamp) : canActivateElementalAbility(timestamp)) && !run.tutorialAbilityPrompted) {
+          run.tutorialAbilityPrompted = true;
+          setTutorialRunHint('ability', fire ? 'Огненная вспышка' : 'Суперсила готова',
+            fire ? 'Нажми кнопку с огнём, чтобы поджечь блоки под собой.' : 'Нажми кнопку внизу. Приём тратит 20% Силы и снова доступен через 10 секунд.', {duration:5000});
+        }
       }
     }else if(!busy){
       const ahead=b=>b.y>run.slime.y+run.slime.radius&&tutorialObjectVisible(b);
@@ -1486,6 +1509,11 @@
     }
     yandexPlatform = platform;
     saveStorage = platform?.storage || browserStorage();
+    try {
+      adminInfiniteUltimate = (browserStorage() || saveStorage)?.getItem(ADMIN_INFINITE_ABILITIES_KEY) === '1';
+    } catch (error) {
+      console.warn('Admin ability preference load failed:', error);
+    }
 
     const localCandidate = chooseNewestSave([
       ...readSaveCandidates(saveStorage),
@@ -2678,7 +2706,6 @@
     save = structuredClone(defaultSave);
     carouselWorldId = null;
     adminInfiniteResearch = false;
-    adminInfiniteUltimate = false;
     syncAdminInfiniteFlasksUI();
     syncAdminInfiniteUltimateUI();
     saveUpdatedAt = Date.now();
@@ -2695,6 +2722,7 @@
 
   function unlockEverythingFromAdmin() {
     save.researchUnits = Math.max(save.researchUnits, 9999);
+    save.rewards = window.SlimeDailyRewards.unlockInfinity(save.rewards);
     save.researchProgress = 0;
     save.world = 1;
     carouselWorldId = save.world;
@@ -2726,6 +2754,7 @@
 
   function unlockMutationsFromAdmin(requestedStage = 3) {
     const stage = clamp(Math.floor(Number(requestedStage) || 1), 1, 3);
+    save.rewards = window.SlimeDailyRewards.unlockInfinity(save.rewards);
     save.unlockedMutations = allMutations().map(mutation => mutation.id);
     save.mutationLevels = Object.fromEntries(save.unlockedMutations.map(id => [id, stage]));
     save.mutationExperience = PROGRESSION.migrateExperience(save.mutationExperience, save.unlockedMutations, save.mutationLevels);
@@ -2767,17 +2796,22 @@
   function syncAdminInfiniteUltimateUI() {
     els.adminInfiniteUltimateBtn?.classList.toggle('active', adminInfiniteUltimate);
     els.adminInfiniteUltimateBtn?.setAttribute('aria-pressed', String(adminInfiniteUltimate));
-    els.adminInfiniteUltimateBtn?.setAttribute('aria-label', `${adminInfiniteUltimate ? 'Выключить' : 'Включить'} бесконечную суперспособность`);
+    els.adminInfiniteUltimateBtn?.setAttribute('aria-label', `${adminInfiniteUltimate ? 'Выключить' : 'Включить'} бесконечные способности и ульты`);
     if (els.adminInfiniteUltimateState) els.adminInfiniteUltimateState.textContent = adminInfiniteUltimate ? 'Вкл.' : 'Выкл.';
   }
 
   function toggleAdminInfiniteUltimate() {
     adminInfiniteUltimate = !adminInfiniteUltimate;
+    try {
+      (browserStorage() || saveStorage)?.setItem(ADMIN_INFINITE_ABILITIES_KEY, adminInfiniteUltimate ? '1' : '0');
+    } catch (error) {
+      console.warn('Admin ability preference save failed:', error);
+    }
     syncAdminInfiniteUltimateUI();
     if (run) updateRunUI();
     sound('tap');
     feedback(adminInfiniteUltimate ? [5, 9, 5] : 5);
-    showToast(adminInfiniteUltimate ? 'Бесконечная ульта включена' : 'Бесконечная ульта выключена');
+    showToast(adminInfiniteUltimate ? 'Бесконечные способности включены' : 'Бесконечные способности выключены');
   }
 
   function foodAvailableInWorld(food) {
@@ -2811,7 +2845,7 @@
 
   function selectedUltimateStage(id) {
     const unlocked = mutationLevel(id);
-    if (id === 'fire') return unlocked || 1;
+    if (id === 'fire' || id === 'frost' || id === 'electric') return unlocked || 1;
     return unlocked ? clamp(Math.floor(Number(save.mutationUltimateStages?.[id]) || unlocked), 1, unlocked) : 1;
   }
 
@@ -2833,7 +2867,7 @@
   }
 
   function recordMutationAction(id, entity) {
-    if (!run || run.ended || run.mutationId !== id || !entity || entity.masteryCredited) return;
+    if (!run || run.ended || run.infinity || run.mutationId !== id || !entity || entity.masteryCredited) return;
     entity.masteryCredited = true;
     run.masteryGain = (run.masteryGain || 0) + 1;
   }
@@ -3315,13 +3349,16 @@
     const worldId = currentWorld().id;
     window.SlimePortalWindow.syncHome(worldId, worldInfectionStage(worldId));
     const selected = selectedSlimeMutationId();
+    const infinity = save.rewards.infinityEquipped;
     const stage = save.activeMutationPool?.includes(selected) ? mutationLevel(selected) : 0;
+    const mutations = allMutations().map(mutation => ({id: mutation.id, name: mutation.name, color: FORM_INDEX.find(form => form.id === mutation.id)?.color, image: versionedAsset(mutation.image), emblemStyle: conveyorEmblemStyle(mutationFoodFamily(mutation.id)), available: save.unlockedMutations.includes(mutation.id)}));
+    if (save.rewards.infinityUnlocked) mutations.push({id:'infinity',name:'БЕСКОНЕЧНОСТЬ',color:'#75dafd',image:versionedAsset(INFINITY.EMBLEM),available:true,reward:true});
     window.SlimeHomeConsole.render({
-      selected, stage, fed: !!session?.foods?.length,
+      selected: infinity ? 'infinity' : selected, stage: infinity ? session?.foods?.[0]?.stage || stage || 1 : stage, fed: !!session?.foods?.length,
       busy: !!(session?.offerTransition || session?.rerollPending || adInFlight || menuSlimeIsBusy()),
-      mutations: allMutations().map(mutation => ({id: mutation.id, name: mutation.name, color: FORM_INDEX.find(form => form.id === mutation.id)?.color, image: versionedAsset(mutation.image), emblemStyle: conveyorEmblemStyle(mutationFoodFamily(mutation.id)), available: save.unlockedMutations.includes(mutation.id)})),
+      mutations,
       task: stage ? slimeDevelopment(selected, Math.min(3, stage + 1)) : null,
-      onSelect: selectHomeMutation, onDetails: openHomeMutationDetails, onFeed: chooseFood
+      onSelect: selectFromHomePicker, onDetails: openHomeMutationDetails, onFeed: chooseFood
     });
     window.SlimePlanetCarousel?.render({
       campaign: save.planetCampaign,
@@ -3337,6 +3374,21 @@
         persist({ refreshUI: false });
       }
     });
+  }
+
+  function selectFromHomePicker(id) {
+    if (id === 'infinity') {
+      if (!save.rewards.infinityUnlocked || save.rewards.infinityEquipped) return;
+      save.rewards.infinityEquipped = true;
+      sound('tap');
+      persist();
+      return;
+    }
+    if (save.rewards.infinityEquipped && save.unlockedMutations.includes(id)) {
+      save.rewards.infinityEquipped = false;
+      persist();
+    }
+    return selectHomeMutation(id);
   }
 
   function selectHomePlanet(id) {
@@ -3822,23 +3874,24 @@
   function shiftRunClock(delta) {
     if (!run || delta <= 0) return;
     ELEMENTAL_ULTIMATES.shiftClock(run, delta);
+    INFINITY.shiftClock(run.infinity, delta);
     COSMOS_ULTIMATES.shiftClock(run, delta);
     const timestampKeys = [
       'geyserLaunchGraceUntil', 'hurtFlashUntil', 'healGlowUntil', 'freezeUntil',
       'lastFrozenImpactAt', 'emotionUntil', 'damageInvulnerableUntil', 'bounceGraceUntil',
-      'breakImpactAt', 'electricImpactAt',
+      'breakImpactAt', 'rockContactAt', 'rockFeedbackAt', 'electricImpactAt',
       'lastTrailSampleAt', 'lastUiUpdateAt',
       'hurtSlowUntil', 'lastHeartLossAt', 'jellyEnteredAt', 'lastJellyBubbleAt', 'freezeZoneEnteredAt',
       'mechExitZoneGraceUntil',
-      'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil',
+      'elementalAbilityUntil', 'elementalAbilityNextTickAt', 'fireFlashReadyAt', 'frostFlakeReadyAt', 'electricDashReadyAt', 'goldRushUntil', 'launchEntryStartedAt', 'launchEntryUntil',
       'cosmosCometIgnitedAt', 'cosmosOrbitSoundAt'
     ];
     for (const key of timestampKeys) if (run[key] > 0) run[key] += delta;
     if (run.tutorialDodge) { run.tutorialDodge.startedAt += delta; if (run.tutorialDodge.acceptedAt) run.tutorialDodge.acceptedAt += delta; }
     if (run.ultimateIntro) run.ultimateIntro.startedAt += delta;
     if (run.phoenixUltimate) run.phoenixUltimate.startedAt += delta;
+    if (run.ultimateAudioCue) run.ultimateAudioCue.startedAt += delta;
     window.SlimeBrambleObstacles.shiftClock(run,delta);
-    for (const effect of run.specialEffects || []) if (effect.type === 'fireTransfer' && Number.isFinite(effect.startedAt)) effect.startedAt += delta;
     if (run.cosmosUltimate) {
       for (const key of ['startedAt', 'chargeUntil', 'fadeStartedAt', 'launchUntil', 'fadeUntil', 'lastSampleAt', 'ignitedAt', 'finishedAt', 'invulnerableBefore']) {
         if (run.cosmosUltimate[key] > 0) run.cosmosUltimate[key] += delta;
@@ -3846,11 +3899,10 @@
       for (const sample of run.cosmosUltimate.trail) sample.at += delta;
     }
     if (run.cosmosOrbitHitUntil) run.cosmosOrbitHitUntil = run.cosmosOrbitHitUntil.map(at => at > 0 ? at + delta : 0);
-    for (const wave of run.phoenixWaves || []) wave.startedAt += delta;
     if (run.electricStorm) {
       run.electricStorm.startedAt += delta;
       run.electricStorm.nextStrikeAt += delta;
-      if (run.electricStorm.flashUntil > 0) run.electricStorm.flashUntil += delta;
+      if (run.electricStorm.impactAt != null) run.electricStorm.impactAt += delta;
       if (run.electricStorm.endedAt > 0) run.electricStorm.endedAt += delta;
     }
     for (const bolt of run.electricStormBolts || []) { bolt.startedAt += delta; bolt.until += delta; }
@@ -3916,12 +3968,8 @@
       pod.expiresAt += delta;
       if (pod.autoDetonateAt > 0) pod.autoDetonateAt += delta;
     }
-    if (run.frostStorm) {
-      run.frostStorm.startedAt += delta;
-      run.frostStorm.endAt += delta;
-      run.frostStorm.nextFlakeAt += delta;
-      for (const flake of run.frostStorm.flakes) flake.startedAt += delta;
-    }
+    if (run.frostStorm) run.frostStorm.startedAt += delta;
+    if (run.frostFlake) run.frostFlake.startedAt += delta;
     for (const burst of run.sporeBursts || []) burst.startedAt += delta;
     if (run.miniSlimes) for (const mini of run.miniSlimes) {
       for (const key of ['bornAt', 'lastSporeAt', 'ignoreSourceUntil', 'ignoreBlockUntil']) {
@@ -3939,7 +3987,8 @@
       }
     }
     for (const block of run.blocks || []) {
-      for (const key of ['fireIgnitedAt', 'fireDamageAt', 'fireFlashUntil', 'electricFlashStartedAt', 'electricFlashUntil', 'frostFlashUntil', 'frostTransformStartedAt', 'frostReservedUntil', 'goldFlashUntil', 'snowballGhostUntil']) {
+      if (block.rockBreakPose) block.rockBreakPose.at += delta;
+      for (const key of ['visualCrackAt', 'visualCrackChangedAt', 'fireIgnitedAt', 'fireDamageAt', 'fireFlashUntil', 'electricFlashStartedAt', 'electricFlashUntil', 'frostFlashUntil', 'frostTransformStartedAt', 'frostReservedUntil', 'goldFlashUntil', 'snowballGhostUntil']) {
         if (block[key] > 0) block[key] += delta;
       }
     }
@@ -3960,6 +4009,7 @@
     if (run.tutorialPhase) { positionTutorialRunHint(); queueTutorialRender(); }
     flushRunResearchAwards(run);
     run.pausedAt = performance.now();
+    stopUltimateAudio();
     cancelAnimationFrame(run.animationId);
     run.animationId = 0;
     run.lastTime = 0;
@@ -3971,13 +4021,18 @@
 
   function resumeRun() {
     if (!run || run.ended || !run.paused || run.portalTransitioning || document.hidden || platformSuspended || windowSuspended) return false;
-    const pausedFor = Math.max(0, performance.now() - (run.pausedAt || performance.now()));
+    const now = performance.now();
+    const pausedFor = Math.max(0, now - (run.pausedAt || now));
     shiftRunClock(pausedFor);
     if (run.ultimateReadyAt > 0) run.ultimateReadyAt += pausedFor;
     run.paused = false;
     run.pausedAt = 0;
     run.tutorialLessonAt = performance.now();
     run.lastTime = 0;
+    if (run.ultimateAudioCue) {
+      const { name, startedAt } = run.ultimateAudioCue;
+      playUltimateCue(name, now - startedAt, {resume:true});
+    }
     updateRunUI();
     run.animationId = requestAnimationFrame(gameFrame);
     yandexPlatform?.gameplay.start();
@@ -4014,7 +4069,10 @@
     if (!save.sound) stopAllSounds();
     persist();
     updateRunSoundControl();
-    if (save.sound) sound('tap');
+    if (save.sound) {
+      preloadUltimateAudio();
+      sound('tap');
+    }
     feedback(5);
   }
 
@@ -4084,7 +4142,10 @@
     const gridOffsetX = 0;
     const categoryVisuals = menuCategoryLevels();
     const mutationId = mutationIdForFamily(foodRecipeFamily(session.foods[0]));
-    const elementalAbilityType = mutationId;
+    const infinityStage = !tutorialPhase && save.rewards.infinityEquipped
+      ? clamp(session.foods[0]?.stage || mutationLevel(mutationId) || 1, 1, 3) : 0;
+    const elementalAbilityType = infinityStage ? 'infinity' : mutationId;
+    if (infinityStage) window.SlimeAvatarRenderer.preloadAppearance({bodyVariant:'infinity'});
     const slimeRadius = massRadiusForLevel(categoryVisuals.mass, cellSize);
     const startLane = tutorialPhase ? 3 : fromPortal
       ? Math.floor(columns / 2)
@@ -4132,8 +4193,11 @@
         radius: slimeRadius,
         wobble: 0
       },
-      categoryVisuals, mutationId, passiveLevels: { [mutationId]: mutationId==='fire'?mutationLevel('fire'):2 },
-      ultimateStage: selectedUltimateStage(mutationId), ultimateProfile: ULTIMATE_STAGES.get(mutationId, selectedUltimateStage(mutationId)),
+      categoryVisuals, mutationId, passiveLevels: infinityStage ? {} : {
+        [mutationId]: mutationId === 'fire' || mutationId === 'electric' ? mutationLevel(mutationId) : 2
+      },
+      infinity: infinityStage ? INFINITY.create(infinityStage, launchEntryStartedAt) : null,
+      ultimateStage: infinityStage || selectedUltimateStage(mutationId), ultimateProfile: infinityStage ? null : ULTIMATE_STAGES.get(mutationId, selectedUltimateStage(mutationId)),
       nanoNextShotAt: [launchEntryStartedAt + NANO_SHOT_INTERVAL_MS],
       nanoShots: [],
       nanoNextMineAt: launchEntryStartedAt + 5000,
@@ -4190,6 +4254,12 @@
       viewWidth: VIEW_W,
       elementalAbilityType,
       ultimateReadyAt: 0,
+      fireFlashReadyAt: 0,
+      frostFlakeReadyAt: 0,
+      frostFlake: null,
+      electricDashReadyAt: 0,
+      electricDash: null,
+      phoenixChargedFromDepth: 0,
       elementalAbilityActive: '',
       stagedUltimate: null,
       technoUltimate: null,
@@ -4198,7 +4268,6 @@
       elementalAuraId: 0,
       ultimateIntro: null,
       phoenixUltimate: null,
-      phoenixWaves: [],
       electricStorm: null,
       electricStormBolts: [],
       electricStormHits: [],
@@ -4309,7 +4378,7 @@
       lastTrailSampleAt: 0
     };
     ENERGY.init(run);
-    run.strengthEmblem=allMutations().find(m=>m.id===run.mutationId)?.image || '';
+    run.strengthEmblem=run.infinity ? INFINITY.EMBLEM : allMutations().find(m=>m.id===run.mutationId)?.image || '';
     EVAC.preload();
     run.blocks = generateBlockField(run);
     run.energyPickups = window.SlimeEnergyPickups.build(run);
@@ -4544,7 +4613,8 @@
 
   function applyFungiPoison(x,y,timestamp){
     if(!run||run.ended||run.evacuation||run.coreEncounter||waterHazardImmune(timestamp)||timestamp<run.damageInvulnerableUntil)return false;
-    if(run.barrier>0){hurtFromTechHazard(x,y,timestamp);return false;}
+    if (INFINITY.protectsDuringUltimate(run.infinity, timestamp)) return false;
+    if(run.barrier>0||run.infinity?.shield){hurtFromTechHazard(x,y,timestamp);return false;}
     if(!window.SlimeFungiHazards.poison(run))return false;
     run.damageInvulnerableUntil=timestamp+800;
     run.emotion='hurt';run.emotionUntil=timestamp+450;
@@ -4553,6 +4623,11 @@
 
   function drainFungiPoison(amount,timestamp){
     if(!run||run.ended||run.evacuation)return;
+    if (INFINITY.protectsDuringUltimate(run.infinity, timestamp)) return;
+    if (triggerInfinityShield({nx:0,ny:-1,penetration:0}, timestamp)) {
+      run.fungiStatus.poison = 0;
+      return;
+    }
     const spent=-ENERGY.change(run,-amount,'hazard',timestamp);
     run.energyStats.poisonSpent=(run.energyStats.poisonSpent||0)+spent;
     updateRunUI();
@@ -4561,6 +4636,87 @@
 
   function updateMovingHazards(timestamp,dt=0) {
     window.SlimeThornHazards.update(run,dt);
+  }
+
+  function triggerInfinityShield(collision, timestamp) {
+    const nx = collision.nx;
+    const ny = collision.ny || (nx ? 0 : -1);
+    if (!INFINITY.absorb(run.infinity, timestamp, nx, ny)) return false;
+    const slime = run.slime;
+    run.infinity.shieldBurst = { x: slime.x, y: slime.y };
+    const separation = collision.penetration + 4;
+    slime.x = clamp(slime.x + nx * separation, slime.radius, VIEW_W - slime.radius);
+    slime.y += ny * separation;
+    applyBlockBounce(slime, { nx, ny }, { hazard: true, timestamp, steeringEnabled: false });
+    slime.vx += nx * 76;
+    slime.vy += ny * 76;
+    resetFallMomentum(run);
+    run.flightDistance = 0;
+    run.damageInvulnerableUntil = timestamp + 700;
+    run.shake = Math.max(run.shake, menuReducedMotion ? 1.5 : 5);
+    sound('shieldPop');
+    feedback([9, 16, 19]);
+    updateRunUI();
+    return true;
+  }
+
+  function deflectNearbyInfinityThreat(timestamp) {
+    if (!run.infinity?.shield || run.barrier > 0 || run.portalEntry || timestamp < run.damageInvulnerableUntil) return false;
+    if (INFINITY.protectsDuringUltimate(run.infinity, timestamp)) return false;
+    const slime = run.slime;
+    const cell = run.cellSize;
+    const margin = cell * .12;
+    const awake = block => !block.dead && !block.glitchNeutralized && !block.frozen && !block.elementalSnow && !block.elementalSnowflake;
+    let near = null;
+    const consider = hit => {
+      if (hit && hit.penetration > (near?.penetration ?? 0)
+        && (hit.penetration > margin || slime.vx * hit.nx + slime.vy * hit.ny < 0)) near = hit;
+    };
+    for (const block of blocksNearY(slime.y, slime.radius + margin)) {
+      if (awake(block) && (block.hazard || block.ice || block.tech || block.water || block.fungi)) {
+        consider(circleRectCollision(slime, block, slime.radius + margin));
+      }
+    }
+    const fieldEdge = (block, halfRows) => {
+      const dy = slime.y - block.y - block.h / 2;
+      const gap = Math.abs(dy) - halfRows * cell;
+      if (gap >= -margin && gap < slime.radius + margin) {
+        consider({nx:0, ny:Math.sign(dy), penetration:slime.radius + margin - gap});
+      }
+    };
+    const technology = window.SlimeTechHazards;
+    for (const block of run.techHazards || []) {
+      if (!awake(block)) continue;
+      if (block.tech.kind === 'slowCore') fieldEdge(block, technology.FIELD_ROWS);
+      if (block.tech.kind === 'laser' && block.tech.state === 'active') {
+        const y = block.y + block.h / 2 - cell * .12;
+        if (Math.abs(slime.y - y) > slime.radius + cell * .24 + margin) continue;
+        for (const [left, right] of technology.beamRanges(run, block)) {
+          consider(circleRectCollision(slime, { x:left, y, w:right-left, h:cell*.24 }, slime.radius + margin));
+        }
+      }
+    }
+    for (const block of run.fungiHazards || []) {
+      if (block.fungi.kind === 'toadstool' && awake(block)) fieldEdge(block, window.SlimeFungiHazards.CONFIG.cloudRows / 2);
+    }
+    let projectile = null;
+    let source = null;
+    for (const shots of [run.techShots, run.fungiShots]) {
+      for (const shot of shots || []) {
+        const dx = slime.x - shot.x;
+        const dy = slime.y - shot.y;
+        const distance = Math.hypot(dx, dy);
+        const penetration = slime.radius + shot.r + margin - distance;
+        const closing = dx * (slime.vx - shot.vx) + dy * (slime.vy - shot.vy) < 0;
+        if (penetration <= (near?.penetration ?? 0) || (!closing && penetration <= margin)) continue;
+        near = { nx: dx / (distance || 1), ny: dy / (distance || 1), penetration };
+        projectile = shot;
+        source = shots;
+      }
+    }
+    if (!near || !triggerInfinityShield(near, timestamp)) return false;
+    if (projectile) source.splice(source.indexOf(projectile), 1);
+    return true;
   }
 
   function generateBlockField(runState) {
@@ -5060,6 +5216,7 @@
       run.lastTime = timestamp;
       executeGlitchBug(choice.kind, timestamp);
     }
+    if (renderInfinityHitStop(timestamp)) return;
     if (!run.lastTime) run.lastTime = timestamp;
     const elapsed = Math.max(0, (timestamp - run.lastTime) / 1000);
     const hazardDt = Math.min(.1, elapsed);
@@ -5072,6 +5229,13 @@
     const simulationScale = (timestamp < (run.hurtSlowUntil || 0) ? .58 : 1)
       * run.tutorialControlPace * cloningTimeScale(timestamp) * pressSlow;
     const simulationDt = dt * simulationScale;
+    INFINITY.update(run, timestamp, infinityAttackServices);
+    if (run.ended) return;
+    if (run.evacuation) {
+      renderCanvas(timestamp);
+      run.animationId = requestAnimationFrame(gameFrame);
+      return;
+    }
     updateMovingHazards(timestamp,simulationDt);
     window.SlimeTechHazards.update(run,simulationDt,{
       hurt:(x,y)=>hurtFromTechHazard(x,y,timestamp),
@@ -5085,20 +5249,25 @@
     },hazardDt);
     window.SlimeWaterHazards.update(run,simulationDt,fallSteeringVector(),{
       hurt:(x,y)=>hurtFromWaterHazard(x,y,timestamp),immune:waterHazardImmune(timestamp),
+      deflected:()=>Boolean(run.infinity?.shieldStopUntil),
       mine:block=>detonateWaterMine(block,timestamp)
     });
     window.SlimeIceHazards.update(run,simulationDt,{hurt:(x,y)=>hurtFromIceHazard(x,y,timestamp)},hazardDt);
     window.SlimeFungiHazards.update(run,simulationDt,{
       poison:(x,y)=>applyFungiPoison(x,y,timestamp),drain:amount=>drainFungiPoison(amount,timestamp)
     },hazardDt);
+    if (renderInfinityHitStop(timestamp)) return;
     run.tutorialElapsed = (run.tutorialElapsed || 0) + simulationDt * 1000;
 
-    const speed = Math.hypot(run.slime.vx, run.slime.vy);
+    const verticalSpeed = run.slime.vy * (run.slime.vy > 0 ? Math.max(1, run.fallSpeedScale || 1) : 1);
+    const speed = Math.max(Math.hypot(run.slime.vx, verticalSpeed),
+      run.electricDash?.endedAt === null ? run.cellSize * 18 : 0);
     // Fast launches and low-FPS frames must never move the slime far enough
     // to skip a block between two collision checks.
     const safeTravel = Math.max(5, Math.min(run.slime.radius * .24, run.cellSize * .14));
     const substeps = clamp(Math.ceil(speed * simulationDt / safeTravel), 1, 12);
-    if (simulationDt > 0) for (let i = 0; i < substeps && !run.ended && !run.evacuation; i += 1) updatePhysics(simulationDt / substeps, timestamp);
+    if (simulationDt > 0) for (let i = 0; i < substeps && !run.ended && !run.evacuation && !run.infinity?.shieldStopUntil; i += 1) updatePhysics(simulationDt / substeps, timestamp);
+    if (renderInfinityHitStop(timestamp)) return;
     if (run.ended) return;
     if (run.coreEncounter || run.evacuation) {
       renderCanvas(timestamp);
@@ -5121,6 +5290,18 @@
       updateRunUI();
     }
     if (!run.ended && !run.paused && !run.portalTransitioning) run.animationId = requestAnimationFrame(gameFrame);
+  }
+
+  function renderInfinityHitStop(timestamp) {
+    const end = run.infinity?.shieldStopUntil;
+    if (!end || run.ended || run.evacuation) return false;
+    const previous = run.lastTime || timestamp;
+    const holding = INFINITY.holdShieldFrame(run.infinity, timestamp, previous);
+    run.lastTime = Math.max(previous, Math.min(timestamp, end));
+    if (!holding) return false;
+    renderCanvas(timestamp);
+    run.animationId = requestAnimationFrame(gameFrame);
+    return true;
   }
 
   function isSlimeFrozen(timestamp = performance.now()) {
@@ -5804,7 +5985,7 @@
       if (block.flaskTier) block.flaskValue = block.flaskValue || FLASK_VALUES[block.flaskTier] || 0;
       block.topGrass = false;
       block.frozen = block.frozenOre = block.elementalSnow = block.elementalSnowflake = block.elementalGolden = false;
-      block.fireDamageAt = block.fireUltimateAuraId = 0;
+      block.fireDamageAt = block.fireFlashUntil = 0;
       block.sporePod = null;
       block.motion = null;
       block.x = (run.gridOffsetX || 0) + block.col * run.cellSize;
@@ -5928,11 +6109,53 @@
     if (run.glitchChange && timestamp >= run.glitchChange.at) rewriteGlitchSection(timestamp);
   }
 
+  function resetFallMomentum(currentRun) {
+    currentRun.fallFreeSeconds = 0;
+    currentRun.fallImpactSpeed = 1;
+    currentRun.fallImpactTarget = 1;
+    currentRun.fallSpeedScale = 1;
+  }
+
+  function availableFallMomentum(currentRun) {
+    const speed = currentRun.fallSpeedScale ?? 1;
+    const stillBraking = (currentRun.fallFreeSeconds ?? Infinity) < FALL_MOMENTUM.brakeSeconds;
+    return stillBraking ? Math.min(speed, currentRun.fallImpactTarget ?? 1) : speed;
+  }
+
+  function spendFallMomentum(currentRun, hits, instant = false) {
+    const remaining = availableFallMomentum(currentRun) - hits * FALL_MOMENTUM.step;
+    currentRun.fallImpactSpeed = currentRun.fallSpeedScale ?? 1;
+    currentRun.fallImpactTarget = Math.max(FALL_MOMENTUM.min, remaining);
+    if (instant) currentRun.fallSpeedScale = currentRun.fallImpactSpeed = currentRun.fallImpactTarget;
+    currentRun.fallFreeSeconds = 0;
+  }
+
+  function advanceFallMomentum(currentRun, dt) {
+    const { brakeSeconds, fullSpeedAt, gainPerSecond, max, airBeforeBoost } = FALL_MOMENTUM;
+    const target = currentRun.fallImpactTarget ?? 1;
+    const seconds = Math.min(airBeforeBoost + (max - 1) / gainPerSecond, (currentRun.fallFreeSeconds ?? 0) + dt);
+    currentRun.fallFreeSeconds = seconds;
+    let speed = target;
+    if (seconds < brakeSeconds) {
+      const t = seconds / brakeSeconds;
+      speed = lerp(currentRun.fallImpactSpeed ?? 1, target, t * t * (3 - 2 * t));
+    } else if (target > 1) {
+      speed = Math.min(max, target + Math.max(0, seconds - airBeforeBoost) * gainPerSecond);
+    } else if (seconds >= fullSpeedAt) {
+      speed = Math.min(max, 1 + Math.max(0, seconds - airBeforeBoost) * gainPerSecond);
+    } else if (target < 1) {
+      const t = (seconds - brakeSeconds) / (fullSpeedAt - brakeSeconds);
+      speed = lerp(target, 1, t * t * (3 - 2 * t));
+    }
+    currentRun.fallSpeedScale = speed;
+    return speed;
+  }
+
   function updatePhysics(dt, timestamp) {
     const s = run.slime;
     if (run.evacuation) return;
     if (run.coreEncounter) return;
-    if(window.SlimeIceHazards.hold(run,dt))return;
+    if(window.SlimeIceHazards.hold(run,dt)){finishElectricDash(timestamp,true);resetFallMomentum(run);return;}
     if (run.coreArena && s.y >= run.coreArena.triggerY
         && (CORE.strikeKind(run)
           || run.coreArena.surfaceY - run.cameraY <= VIEW_H - 24 || s.y >= run.coreArena.surfaceY - 350)) {
@@ -5943,12 +6166,15 @@
       updatePortalEntry(dt, timestamp);
       return;
     }
-    if(run.waterGrab)return;
+    if(run.waterGrab){finishElectricDash(timestamp,true);resetFallMomentum(run);return;}
     if (run.geyserCapture) {
+      finishElectricDash(timestamp, true);
+      resetFallMomentum(run);
       updateGeyserCapture(dt, timestamp);
       return;
     }
     if (run.mechSuit?.phase === 'descending') {
+      resetFallMomentum(run);
       s.vx = 0;
       s.vy = 0;
       if (timestamp < run.mechSuit.landAt) return;
@@ -5962,10 +6188,11 @@
       sound('epic');
       feedback([12, 18, 10]);
     }
-    if (updateCosmosUltimateMotion(dt, timestamp)) return;
+    if (updateCosmosUltimateMotion(dt, timestamp)) { resetFallMomentum(run); return; }
     const ghost = updatePhantomCycle(timestamp);
     const drillActive = !ghost && !mechSuitActive() && speedDrillActive(timestamp);
     const frozen = !ghost && !drillActive && !mechSuitActive() && isSlimeFrozen(timestamp);
+    const electricFlight = run.electricDash?.endedAt === null;
     updateSpeedPassive(dt, timestamp);
     const gravityDirection = 1;
     const honeyAtStart = mechSlowZoneImmune(timestamp) ? null : honeyZoneForSlime(s);
@@ -5985,7 +6212,10 @@
         : freezeWaterDrag ? 118 : honeyDrag ? 132 : jellyDrag ? 165
           : normalFallSpeedLimit()*techSlow;
     const terminalSpeed = baseTerminalSpeed * (mechSuitActive() ? .9 : 1);
-    if (ghost) {
+    let dashComplete = false;
+    if (electricFlight) {
+      dashComplete = ELEMENTAL_ULTIMATES.driveElectricDash(run, dt);
+    } else if (ghost) {
       const steering = fallSteeringVector();
       s.vx = lerp(s.vx, steering.x * 145, 1 - Math.exp(-5.2 * dt));
       s.vy = clamp(s.vy + (worldGravity * .16 + steering.y * 360) * dt, -155, 205);
@@ -6009,21 +6239,51 @@
       applyFallSteering(s, dt, timestamp, techSlow);
       if (s.vy > terminalSpeed) s.vy = lerp(s.vy, terminalSpeed, 1 - Math.exp(-6 * dt));
     }
-    if (!mechSuitActive() && !ghost && !drillActive && honeyDrag && !frozen) {
+    if (!electricFlight && !mechSuitActive() && !ghost && !drillActive && honeyDrag && !frozen) {
       s.vx *= Math.pow(.32, dt);
       s.vy *= Math.pow(.085, dt);
-    } else if (!mechSuitActive() && !ghost && !drillActive && freezeWaterDrag && !frozen) {
+    } else if (!electricFlight && !mechSuitActive() && !ghost && !drillActive && freezeWaterDrag && !frozen) {
       s.vx *= Math.pow(.48, dt);
       s.vy = lerp(s.vy, 86, clamp(dt * 3.8, 0, 1));
     }
-    if(!ghost&&!drillActive&&!mechSuitActive())window.SlimeWaterHazards.applyForces(run,dt,fallSteeringVector());
+    if(!electricFlight&&!ghost&&!drillActive&&!mechSuitActive())window.SlimeWaterHazards.applyForces(run,dt,fallSteeringVector());
     if(run.phantomExpress){
       const expressAge=timestamp-run.phantomExpress.startedAt;
       s.vy=clamp(s.vy,-40,expressAge<640?24:125);
       s.vx*=Math.exp(-2*dt);
     }
+    const phoenix = run.phoenixUltimate;
+    const storm = run.frostStorm;
+    const thunder = run.electricStorm;
+    const charge = phoenix || storm || thunder;
+    const chargeMs = phoenix ? phoenix.arrivalMs : charge?.chargeMs;
+    const summonAge = charge ? timestamp - charge.startedAt : 0;
+    const charging = charge && !charge.endedAt && summonAge >= 0 && summonAge < chargeMs;
+    if (charging) {
+      const release = thunder ? 0 : smoothFireVisual((summonAge / chargeMs - .78) / .22);
+      const brake = 1 - Math.exp(-dt * 24 * (1 - release));
+      s.vy = lerp(s.vy, 16, brake);
+      s.vx *= Math.exp(-dt * 9 * (1 - release));
+    }
+    const thunderHold = thunder && !thunder.endedAt && summonAge >= chargeMs;
+    if (thunderHold) {
+      const fallTarget = thunder.strikes >= thunder.strikeLimit ? 105 : 54;
+      s.vy = lerp(s.vy, Math.min(s.vy, fallTarget), 1 - Math.exp(-dt * 18));
+    }
+    const infinityCharge = INFINITY.chargeStrength(run.infinity, timestamp);
+    if (infinityCharge) {
+      const brake = 1 - Math.exp(-dt * 32 * infinityCharge);
+      s.vy = lerp(s.vy, 12, brake);
+      s.vx = lerp(s.vx, 0, brake);
+    }
     s.x += s.vx * dt;
-    s.y += s.vy * dt;
+    const freeDescent = s.vy > 0 && !launchArrivalActive && !ghost && !drillActive && !mechSuitActive()
+      && !frozen && !honeyDrag && !jellyDrag && !freezeWaterDrag && techSlow >= 1 && !run.phantomExpress
+      && !charging && !thunderHold && !infinityCharge && !electricFlight && timestamp >= (run.hurtSlowUntil || 0);
+    if (!freeDescent) resetFallMomentum(run);
+    const fallSpeed = freeDescent ? s.vy * advanceFallMomentum(run, dt) : s.vy;
+    s.y += fallSpeed * dt;
+    if (deflectNearbyInfinityThreat(timestamp)) return;
     if (ghost && run.phantomPhase) {
       markPhantomPath(previousX, previousY, s.x, s.y, timestamp);
       const trail = run.phantomPhase.trail;
@@ -6035,13 +6295,13 @@
       updateJellyState(s, timestamp, previousX, previousY);
       updateFreezeZoneState(s, timestamp);
     }
-    s.wobble += dt * (4 + Math.abs(s.vy) / 180);
+    s.wobble += dt * (4 + Math.abs(fallSpeed) / 180);
 
     const wallRadius = mechSuitActive() ? run.cellSize * MECH_VISUAL_CELLS * .49 : s.radius;
     if (s.x - wallRadius < 0) {
       s.x = wallRadius;
       if (mechSuitActive()) s.vx = 0;
-      else if (drillActive) s.vx = Math.max(0, s.vx);
+      else if (drillActive || electricFlight) s.vx = Math.max(0, s.vx);
       else {
         s.vx = clamp(Math.abs(s.vx) * .18, 30, 42);
         run.wallPushSide = -1;
@@ -6051,14 +6311,14 @@
     if (s.x + wallRadius > VIEW_W) {
       s.x = VIEW_W - wallRadius;
       if (mechSuitActive()) s.vx = 0;
-      else if (drillActive) s.vx = Math.min(0, s.vx);
+      else if (drillActive || electricFlight) s.vx = Math.min(0, s.vx);
       else {
         s.vx = -clamp(Math.abs(s.vx) * .18, 30, 42);
         run.wallPushSide = 1;
         run.wallReleaseX = s.x - 10;
       }
     }
-    if (!launchArrivalActive && drillActive && s.y - s.radius < 4) {
+    if (!launchArrivalActive && (drillActive || electricFlight) && s.y - s.radius < 4) {
       s.y = s.radius + 4;
       s.vy = Math.max(0, s.vy);
     }
@@ -6084,6 +6344,7 @@
       const collisionReach = mechHull ? run.cellSize * MECH_VISUAL_CELLS * .5 : s.radius;
       const collisions = blocksNearY(s.y, collisionReach)
         .filter(block => !block.dead && timestamp >= (block.snowballGhostUntil || 0)
+          && !(electricFlight && electricDashPhasesThrough(block))
           && block.y + block.h > s.y - collisionReach - 3 && block.y < s.y + collisionReach + 3
           && block.x + block.w > s.x - collisionReach - 3 && block.x < s.x + collisionReach + 3)
         // Hazards use a slightly forgiving hit radius: near-misses should look
@@ -6106,6 +6367,10 @@
         if (block.dead) continue;
         const normalSpeed = s.vx * collision.nx + s.vy * collision.ny;
         const movingOutOfBlock = normalSpeed >= -1;
+        if (block.elementalSnow) {
+          if (!movingOutOfBlock) resolveBlockHit(block, collision, timestamp);
+          continue;
+        }
         const cooldown = run.hitCooldowns.get(block.id) || 0;
         if (timestamp - cooldown < 72
           || (timestamp < run.bounceGraceUntil && movingOutOfBlock) || (timestamp < run.geyserLaunchGraceUntil && movingOutOfBlock)) {
@@ -6116,15 +6381,22 @@
         run.hitCooldowns.set(block.id, timestamp);
         const bounced = resolveBlockHit(block, collision, timestamp);
         if (run.ended) return;
-        if (releaseSlimeFromPatrol(block, collision, timestamp)) break;
-        if (bounced) break;
+        const released = releaseSlimeFromPatrol(block, collision, timestamp);
+        if (released || bounced) {
+          if (electricFlight) finishElectricDash(timestamp, true);
+          break;
+        }
       }
       s.x = clamp(s.x, wallRadius, VIEW_W - wallRadius);
+    }
+    if (electricFlight) {
+      ELEMENTAL_ULTIMATES.sampleElectricDash(run, timestamp);
+      if (dashComplete) finishElectricDash(timestamp);
     }
 
     updateFlasks(timestamp);
 
-    applyPortalAttraction(dt);
+    if (!electricFlight) applyPortalAttraction(dt);
     const portal = getPortalGeometry();
     if (slimeTouchesPortal(s, portal) || s.y - s.radius > portal.bottom + 70) {
       beginPortalEntry(timestamp, portal);
@@ -6137,8 +6409,19 @@
       const cameraEase = 1 - Math.pow(1 - cameraProgress, 3);
       run.cameraY = lerp(-68, 0, cameraEase);
     } else {
-      const targetCamera = clamp(s.y - 158, 0, run.portalY - VIEW_H + 105);
-      run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * 4.25, 0, 1));
+      const summonFraming = charging && phoenix
+        ? smoothFireVisual(summonAge / 270) * (1 - .28 * smoothFireVisual((summonAge / phoenix.arrivalMs - .80) / .20))
+        : 0;
+      const normalCameraY = s.y - 158;
+      const frostCamera = storm ? frostStormCamera(storm, timestamp, normalCameraY) : null;
+      const thunderCamera = thunder && !menuReducedMotion ? electricStormCamera(thunder, timestamp) : null;
+      const thunderY = thunderCamera ? lerp(normalCameraY - VIEW_H * .065,
+        Math.max(normalCameraY - VIEW_H * .065, thunderCamera.point.y - VIEW_H * .59), thunderCamera.focus) : normalCameraY;
+      const targetCamera = clamp((frostCamera?.y ?? lerp(normalCameraY, thunderY, thunderCamera?.charge ?? 0))
+        - VIEW_H * .20 * summonFraming + (menuReducedMotion ? 0 : INFINITY.cameraLead(run.infinity, timestamp)), 0, run.portalY - VIEW_H + 105);
+      const dashFollow = electricFlight && !menuReducedMotion ? 16 : 4.25;
+      run.cameraY = lerp(run.cameraY, targetCamera, clamp(dt * (dashFollow + summonFraming * 3
+        + (frostCamera?.weight ?? 0) * 2.4 + (thunderCamera?.focus ?? 0) * 3.7), 0, 1));
     }
 
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt * 20);
@@ -6151,7 +6434,7 @@
 
     const speedNow = Math.hypot(s.vx, s.vy);
     if (s.vy * gravityDirection < 185) resetMassPierce();
-    if (!run.inJellyZoneId && speedNow < 34 && s.y > 180) run.lowMotionTime += dt;
+    if (!charging && !thunderHold && !electricFlight && !run.inJellyZoneId && speedNow < 34 && s.y > 180) run.lowMotionTime += dt;
     else run.lowMotionTime = 0;
     if (run.lowMotionTime > 1.0) {
       s.vy += 145 * gravityDirection;
@@ -6565,6 +6848,18 @@
     return BALANCE.maxFallSpeedBase + (run?.worldId || 1) * BALANCE.maxFallSpeedPerWorld;
   }
 
+  function descentSpeedRatio(currentRun, normalSpeed) {
+    const scale = currentRun.fallSpeedScale ?? 1;
+    return Math.min(scale, currentRun.slime.vy * scale / normalSpeed);
+  }
+
+  function ramDamageForRock(block, currentRun, normalSpeed) {
+    if (block.hazard || block.special || block.unbreakable) return 0;
+    const available = Math.min(availableFallMomentum(currentRun), descentSpeedRatio(currentRun, normalSpeed));
+    const hits = Math.floor((available - 1 + 1e-8) / FALL_MOMENTUM.step);
+    return Math.max(0, Math.min(3, hits, Math.ceil(block.hp)));
+  }
+
   function coreEncounterStatus(message) {
     let status = document.getElementById('coreEncounterStatus');
     if (!status) {
@@ -6589,10 +6884,14 @@
   function beginCoreEncounter() {
     if (!run?.coreArena || run.coreEncounter || run.ended) return;
     if (run.energy <= 0) { endRun(false, 'Сила закончилась'); return; }
+    finishRunUltimateAudio();
     clearFallSteering(); hideGlitchChoice();
     run.glitchChoice = null; run.ultimateIntro = null;
-    for (const key of ['mechSuit','frostStorm','stagedUltimate','technoUltimate','telekinesisPress','sporePop','cloneUltimate','cosmosUltimate','cosmosStagedUltimate','geyserCapture','psionicBarrier']) run[key] = null;
+    for (const key of ['mechSuit','frostStorm','frostFlake','electricDash','electricStorm','stagedUltimate','fireFlash','phoenixUltimate','technoUltimate','telekinesisPress','sporePop','cloneUltimate','cosmosUltimate','cosmosStagedUltimate','geyserCapture','psionicBarrier']) run[key] = null;
+    run.electricStormBolts.length = 0;
+    run.electricStormHits.length = 0;
     run.elementalAbilityActive = ''; run.elementalAbilityUntil = 0;
+    if (run.infinity) run.infinity.cast = null;
     run.slime.radius = run.baseSlimeRadius || run.slime.radius;
     run.freezeUntil = 0; run.hurtFlashUntil = 0; run.shieldPop = null; run.barrier = 0;
     run.emotion = 'focused'; run.emotionUntil = performance.now() + 60000;
@@ -6618,10 +6917,14 @@
 
   function beginAnomalyEvacuation(completed=false,reason='Аномальная сила закончилась. Слайм эвакуирован.') {
     if(!run||run.ended||run.evacuation)return false;
+    finishRunUltimateAudio();
     clearFallSteering();hideGlitchChoice();clearRunImpactFeedback();
     run.glitchChoice=null;run.ultimateIntro=null;
-    for(const key of ['mechSuit','frostStorm','stagedUltimate','technoUltimate','telekinesisPress','sporePop','cloneUltimate','cosmosUltimate','cosmosStagedUltimate','geyserCapture','psionicBarrier'])run[key]=null;
+    for(const key of ['mechSuit','frostStorm','frostFlake','electricDash','electricStorm','stagedUltimate','fireFlash','phoenixUltimate','technoUltimate','telekinesisPress','sporePop','cloneUltimate','cosmosUltimate','cosmosStagedUltimate','geyserCapture','psionicBarrier'])run[key]=null;
+    run.electricStormBolts.length = 0;
+    run.electricStormHits.length = 0;
     run.elementalAbilityActive='';run.elementalAbilityUntil=0;run.barrier=0;
+    if (run.infinity) run.infinity.cast = null;
     run.freezeUntil=0;run.hurtFlashUntil=0;run.healGlowUntil=0;
     run.launchEntryUntil=0;run.portalEntry=null;
     run.emotion='surprised';run.emotionUntil=performance.now()+10000;
@@ -6682,6 +6985,7 @@
 
   function beginPortalEntry(timestamp, portal = getPortalGeometry()) {
     if (run.portalEntry || run.ended) return;
+    finishElectricDash(timestamp, true);
     hideGlitchChoice();
     run.glitchChoice = null;
     const targetX = portal.type === 'circle' ? portal.x : portal.centerX;
@@ -6834,7 +7138,7 @@
     return true;
   }
 
-  function applyBlockBounce(slime, collision, { hazard, timestamp, isolated = false, steeringEnabled = true }) {
+  function applyBlockBounce(slime, collision, { hazard, timestamp, isolated = false, steeringEnabled = true, rock = false }) {
     const nx = collision.nx;
     const ny = collision.ny;
     const incomingNormal = slime.vx * nx + slime.vy * ny;
@@ -6848,7 +7152,7 @@
       : lerp(BALANCE.bounceMin, BALANCE.bounceMax, regularCurve);
     const mobilityLevel = elementalLevel('mobility');
     const pressure = steeringEnabled && mobilityLevel >= 1 ? run.speedPressure || 0 : 0;
-    const downwardBounceScale = ny < -.45 ? 1 - pressure * .25 : 1;
+    const downwardBounceScale = ny < -.45 ? (1 - pressure * .25) * (rock ? .73 : 1) : 1;
     const normalSpeed = baseNormalSpeed * downwardBounceScale;
     const tangentKeep = hazard ? .32 : .50;
     let tangentX = (slime.vx - incomingNormal * nx) * tangentKeep;
@@ -6878,8 +7182,8 @@
     const restoreReduction = mobilityLevel >= 2 ? 24 : mobilityLevel >= 1 ? 12 : 0;
     if (!isolated) {
       run.bounceGraceUntil = timestamp + BALANCE.bounceGraceMs + (hazard ? 70 : 20);
-      run.bounceControlLockUntil = timestamp + Math.max(24, 36 - lockReduction);
-      run.bounceControlRestoreUntil = timestamp + Math.max(88, 120 - restoreReduction);
+      run.bounceControlLockUntil = timestamp + (rock ? 22 : Math.max(24, 36 - lockReduction));
+      run.bounceControlRestoreUntil = timestamp + (rock ? 88 : Math.max(88, 120 - restoreReduction));
     }
   }
 
@@ -6932,6 +7236,13 @@
     if(run.evacuation)return false;
     if(block.techAttack&&(mechSuitActive()||psionicBarrierActive(timestamp)||(run.cosmosUltimate&&!run.cosmosUltimate.finishedAt&&timestamp<run.cosmosUltimate.fadeUntil)))return false;
     const slime = run.slime;
+    if (INFINITY.protectsDuringUltimate(run.infinity, timestamp)) {
+      if (block.techAttack) return false;
+      slime.x += collision.nx * (collision.penetration + 4);
+      slime.y += collision.ny * (collision.penetration + 4);
+      applyBlockBounce(slime, collision, { hazard: true, timestamp, steeringEnabled: false });
+      return true;
+    }
     if (run.psionicBarrier && psionicBarrierActive(timestamp)) { explodePsionicHazard(block, timestamp); return false; }
     const mech = mechSuitActive() ? run.mechSuit : null;
     if (mech || (run.cosmosUltimate && !run.cosmosUltimate.finishedAt && timestamp < run.cosmosUltimate.fadeUntil)) {
@@ -6980,6 +7291,7 @@
       updateRunUI();
       return true;
     }
+    if (triggerInfinityShield(collision, timestamp)) return true;
 
     const iceEnergyBefore=run.energy;
     ENERGY.hazard(run, timestamp);
@@ -7910,7 +8222,7 @@
       elementalDamageable(block)
       && !block.hazard
       && !block.special
-      && block.tier !== 'ore'
+      && !block.bramble
       && !block.frozenOre
     );
   }
@@ -7952,13 +8264,12 @@
     if (!run?.specialEffects) return;
     const life = type === 'electricArc' ? .42
       : type === 'firePulse' ? .5
-        : type === 'fireTransfer' ? .52
         : type === 'frostTouch' ? .38
           : type === 'snowShard' ? .72
             : type === 'snowballKnockback' ? .62
           : type === 'coinArc' ? .72
             : .58;
-    appendTransientEffect({ type, x, y, life, maxLife: life, ...extra }, 36, type === 'fireTransfer' ? 6 : 0);
+    appendTransientEffect({ type, x, y, life, maxLife: life, ...extra }, 36);
   }
 
   function markFrostTransformation(block, timestamp, kind, quiet = false) {
@@ -7984,7 +8295,7 @@
     block.hp = 1;
     block.frostFlashUntil = timestamp + 520;
     markFrostTransformation(block, timestamp, 'snow', quiet);
-    createDebris(block, 2, false);
+    if (!quiet) createDebris(block, 2, false);
     return true;
   }
 
@@ -8004,65 +8315,6 @@
     return true;
   }
 
-  function frostTargetAvailable(block, timestamp = performance.now()) {
-    return frostFreezable(block)
-      && !block.elementalSnow
-      && !block.elementalSnowflake
-      && timestamp >= (block.frostReservedUntil || 0);
-  }
-
-  function gridDistance(a, b) {
-    return Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col));
-  }
-
-  function chooseSpacedFrostTargets(candidates, count, source = null) {
-    const selected = [];
-    const tryDistance = minimum => {
-      for (const block of candidates) {
-        if (selected.length >= count) break;
-        if (selected.includes(block)) continue;
-        if (source && gridDistance(block, source) < 2) continue;
-        if (selected.every(other => gridDistance(block, other) >= minimum)) selected.push(block);
-      }
-    };
-    tryDistance(3);
-    if (selected.length < count) tryDistance(2);
-    return selected;
-  }
-
-  function reserveFrostProjectileTarget(block, timestamp, duration, delay = 0) {
-    block.frostReservedUntil = timestamp + (duration + delay + .3) * 1000;
-  }
-
-  function snowTargetScore(block, source, preferVisible = true) {
-    const center = blockCenter(block);
-    const downward = clamp((block.row - source.row) / 8, -1, 1);
-    const visible = center.y >= run.cameraY - run.cellSize && center.y <= run.cameraY + VIEW_H + run.cellSize;
-    return Math.random() * 1.8 + Math.max(0, downward) * 2.5 + (downward >= 0 ? 1.4 : 0) + (preferVisible && visible ? .8 : 0);
-  }
-
-  function scatterSnowShards(source, timestamp = performance.now()) {
-    if (elementalLevel('frost') < 1 || Math.random() >= .35) return 0;
-    const count = 2;
-    const maxY = run.cameraY + VIEW_H + run.cellSize * 4;
-    const ranked = run.blocks
-      .filter(block => frostTargetAvailable(block, timestamp) && block.row >= source.row + 2 && blockCenter(block).y <= maxY)
-      .map(block => ({ block, score: snowTargetScore(block, source, true) }))
-      .sort((a, b) => b.score - a.score)
-      .map(item => item.block);
-    const candidates = chooseSpacedFrostTargets(ranked, count, source);
-    const from = blockCenter(source);
-    for (const block of candidates) {
-      const to = blockCenter(block);
-      const delay = candidates.indexOf(block) * .055;
-      reserveFrostProjectileTarget(block, timestamp, .72, delay);
-      pushElementalEffect('snowShard', from.x, from.y, {
-        toX: to.x, toY: to.y, targetBlockId: block.id, transformKind: 'snow', delay
-      });
-    }
-    return candidates.length;
-  }
-
   function detonateSnowflakeBlock(source, timestamp = performance.now()) {
     let transformed = 0;
     for (const block of nearbyGridBlocks(source, frostFreezable)) {
@@ -8076,147 +8328,190 @@
 
   function startFrostStorm(timestamp) {
     ensureWorldSprites(2);
+    const { chargeMs, rows } = run.ultimateProfile;
     run.frostStorm = {
-      startedAt: timestamp,
-      endAt: timestamp + (run.ultimateProfile?.durationMs || ELEMENTAL_ABILITY_DURATION_MS.frost),
-      nextFlakeAt: timestamp + 130,
-      lastTargetX: -VIEW_W,
-      flakes: []
+      startedAt: timestamp, chargeMs, rows, duration: run.elementalAbilityDurationMs,
+      originX: run.slime.x, originY: run.slime.y, nextCell: 0
+    };
+    run.emotion = 'focused';
+    run.emotionUntil = timestamp + chargeMs;
+  }
+
+  function firstFrostRow(y) {
+    return Math.max(0, Math.floor((y - run.blockRowOrigin - run.cellSize * .5) / run.cellSize) + 1);
+  }
+
+  function frostStormFrontY(storm, sweep) {
+    const cell = run.cellSize;
+    const rowTime = Math.max(FROST_STORM_ROW_MS, run.columns * FROST_STORM_CELL_MS);
+    const firstY = run.blockRowOrigin + (storm.firstRow + .5) * cell;
+    const row = clamp(sweep / rowTime, 0, storm.rows - 1);
+    return firstY + row * cell;
+  }
+
+  function frostStormCamera(storm, timestamp, normalY = run.slime.y - 158) {
+    if (!storm || menuReducedMotion || run.coreEncounter || run.evacuation || run.portalEntry) {
+      return { y: normalY, weight: 0, zoom: 1 };
+    }
+    const age = timestamp - storm.startedAt;
+    const sweep = Math.max(0, age - storm.chargeMs);
+    const enter = smoothFireVisual(age / 365);
+    const leave = smoothFireVisual((age - storm.duration + 730) / 730);
+    const weight = enter * (1 - leave);
+    const follow = storm.firstRow === undefined ? 0 : smoothFireVisual(sweep / 470);
+    const castY = normalY - VIEW_H * .105;
+    const trackY = follow > 0 ? clamp(frostStormFrontY(storm, sweep) - VIEW_H * .53, castY, normalY + 48) : castY;
+    return {
+      y: lerp(normalY, lerp(castY, trackY, follow), weight),
+      weight,
+      zoom: 1 + weight * lerp(.095, .025, smoothFireVisual(sweep / 520))
     };
   }
 
-  function launchFrostStormFlake(storm, timestamp) {
-    if (storm.flakes.length >= 12) return false;
-    const minY = Math.max(run.cameraY + 85, run.slime.y + run.cellSize * .45);
-    const maxY = run.cameraY + VIEW_H - 18;
-    if (minY >= maxY) return false;
-    const candidates = blocksNearY((minY + maxY) / 2, (maxY - minY) / 2)
-      .filter(block => frostTargetAvailable(block, timestamp)
-        && blockCenter(block).y >= minY && blockCenter(block).y <= maxY);
-    if (!candidates.length) return false;
-    let target = null;
-    let best = -Infinity;
-    for (const block of candidates) {
-      const center = blockCenter(block);
-      const spread = clamp(Math.abs(center.x - storm.lastTargetX) / (run.cellSize * 3), 0, 1);
-      const depth = clamp((center.y - run.slime.y) / (run.cellSize * 7), 0, 1);
-      const score = Math.random() * 2 + spread * 1.8 + depth * .7;
-      if (score > best) { best = score; target = block; }
+  function startFrostFlake(x, y, timestamp) {
+    const cell = run.cellSize;
+    const xInCells = (x - run.gridOffsetX) / cell;
+    // Keep the 1.5-cell hitbox inside reach of a second tile even against a wall.
+    const inset = 1 - FROST_FLAKE_WIDTH / 2 + .001;
+    const hitX = clamp(xInCells, inset, run.columns - inset);
+    const col = Math.floor(hitX);
+    const centreOffset = hitX - col - .5;
+    const goLeft = Math.abs(centreOffset) < 1e-6 ? run.slime.vx < 0 : centreOffset < 0;
+    const neighbour = goLeft ? col - 1 : col + 1;
+    const leftCol = clamp(Math.min(col, neighbour), 0, run.columns - 2);
+    const firstRow = firstFrostRow(y);
+    run.frostFlake = { x: run.gridOffsetX + hitX * cell, y, toY: y + FROST_FLAKE_CELLS * cell, startedAt: timestamp,
+      firstRow, nextRow: firstRow, leftCol, burst: false };
+  }
+
+  function updateFrostFlake(timestamp) {
+    const flake = run.frostFlake;
+    if (!flake) return;
+    const age = timestamp - flake.startedAt;
+    const burstAge = age - FROST_FLAKE_TRAVEL_MS;
+    const cell = run.cellSize;
+    const frontY = lerp(flake.y, flake.toY, clamp(age / FROST_FLAKE_TRAVEL_MS, 0, 1));
+    const reachedRow = Math.min(flake.firstRow + FROST_FLAKE_CELLS - 1, Math.floor((frontY - run.blockRowOrigin) / cell - .5));
+    for (; flake.nextRow <= reachedRow; flake.nextRow += 1) {
+      const enteredY = run.blockRowOrigin + (flake.nextRow + .5) * cell;
+      const enteredAt = flake.startedAt + (enteredY - flake.y) / (flake.toY - flake.y) * FROST_FLAKE_TRAVEL_MS;
+      for (const block of run.blocksByRow.get(flake.nextRow) || []) {
+        if (block.col === flake.leftCol || block.col === flake.leftCol + 1) turnBlockToSnow(block, enteredAt, true);
+      }
     }
-    const center = blockCenter(target);
-    const fromY = run.cameraY - rand(18, 42);
-    const duration = clamp((center.y - fromY) * 1.55, 620, 1160);
-    target.frostReservedUntil = timestamp + duration + 250;
-    storm.lastTargetX = center.x;
-    storm.flakes.push({
-      target, startedAt: timestamp, duration,
-      fromX: clamp(center.x + rand(-48, 48), 9, VIEW_W - 9), fromY,
-      toX: center.x, toY: center.y,
-      sway: rand(7, 21) * (Math.random() < .5 ? -1 : 1),
-      phase: rand(0, Math.PI * 2), size: rand(7, 10.5)
-    });
-    return true;
+    if (burstAge >= 0 && !flake.burst) {
+      flake.burst = true;
+      feedback([6, 13, 6]);
+    }
+    if (burstAge >= FROST_FLAKE_BURST_MS) run.frostFlake = null;
   }
 
   function updateFrostStorm(timestamp) {
-    const storm = run?.frostStorm;
+    const storm = run.frostStorm;
     if (!storm) return;
-    if (timestamp < storm.endAt - 650 && timestamp >= storm.nextFlakeAt) {
-      launchFrostStormFlake(storm, timestamp);
-      const progress = clamp((timestamp - storm.startedAt) / (storm.endAt - storm.startedAt), 0, 1);
-      const cadence = progress < .12 || progress > .82 ? rand(180, 250) : rand(120, 185);
-      storm.nextFlakeAt = timestamp + cadence;
+    const elapsed = timestamp - storm.startedAt;
+    if (elapsed < storm.chargeMs) return;
+    if (storm.firstRow === undefined) {
+      storm.originX = run.slime.x;
+      storm.originY = run.slime.y;
+      storm.firstRow = firstFrostRow(storm.originY);
+      feedback([8, 18, 8]);
     }
-    storm.flakes = storm.flakes.filter(flake => {
-      if (timestamp - flake.startedAt < flake.duration) return true;
-      flake.target.frostReservedUntil = 0;
-      if (!flake.target.dead) turnBlockToSnow(flake.target, timestamp, true);
-      return false;
-    });
-    if (timestamp >= storm.endAt && !storm.flakes.length) run.frostStorm = null;
+    const age = elapsed - storm.chargeMs;
+    const rowTime = Math.max(FROST_STORM_ROW_MS, run.columns * FROST_STORM_CELL_MS);
+    while (storm.nextCell < storm.rows * run.columns) {
+      const row = Math.floor(storm.nextCell / run.columns);
+      const offset = storm.nextCell % run.columns;
+      const freezeAt = row * rowTime + offset * FROST_STORM_CELL_MS;
+      if (age < freezeAt) break;
+      const col = row % 2 ? run.columns - 1 - offset : offset;
+      const block = run.blocksByRow.get(storm.firstRow + row)?.find(block => block.col === col);
+      if (block && turnBlockToSnow(block, timestamp, true)) {
+        block.frostTransformStartedAt = storm.startedAt + storm.chargeMs + freezeAt;
+        block.frostTransformDuration = 660;
+      }
+      storm.nextCell += 1;
+    }
+    if (elapsed >= storm.duration) run.frostStorm = null;
   }
 
-  function igniteBlock(block, timestamp = performance.now(), auraId = 0, spreadLeft = null) {
-    if (!elementalDamageable(block)) return false;
-    if (auraId && block.lastFireAuraId === auraId) return false;
-    if (auraId) block.lastFireAuraId = auraId;
-    if (block.fireDamageAt > 0) return false;
-    shareGlitchHit(block, 0, timestamp, 'fire');
+  function igniteBlock(block, timestamp = performance.now(), fromPhoenix = false) {
+    if (!elementalDamageable(block) || block.fireDamageAt > 0) return false;
     recordMutationAction('fire', block);
     block.fireIgnitedAt = timestamp;
-    block.firePersistent = elementalLevel('fire')>=3;
-    block.fireTicksLeft = block.firePersistent?Math.max(FIRE_BURN_HITS,Math.ceil(block.hp)):FIRE_BURN_HITS;
-    block.fireSpreadLeft = spreadLeft==null?(elementalLevel('fire')>=2?1:0):Math.max(0,spreadLeft);
-    block.fireSpreadDone = false;
-    block.fireDamageAt = timestamp + FIRE_BURN_INTERVAL_MS;
+    const upgradedFire = elementalLevel('fire') >= 2;
+    const normalRock = (block.tier === 'hard' || block.tier === 'ore')
+      && !block.hazard && !block.special && !block.ice && !block.bramble;
+    block.fireBurnsThrough = upgradedFire && normalRock;
+    block.fireIntervalMs = FIRE_BURN_INTERVAL_MS[upgradedFire ? 1 : 0];
+    const fragile = !block.hazard && !block.special && (block.tier === 'dense' || block.tier === 'soft') && block.hp <= 1;
+    block.fireDamageAt = timestamp + (fragile ? FIRE_FRAGILE_BURN_MS : block.fireIntervalMs);
+    const ticks = block.fireBurnsThrough ? Math.ceil(block.hp) : 1;
+    const remainingBurn = ticks > 1 ? (ticks - 2) * block.fireIntervalMs + FIRE_FINAL_BURN_MS : 0;
+    block.fireFlashUntil = block.fireDamageAt + remainingBurn + 190;
     (run.burningBlocks ||= new Set()).add(block);
-    block.fireFlashUntil = timestamp + block.fireTicksLeft * FIRE_BURN_INTERVAL_MS + 330;
-    block.fireUltimateAuraId = auraId || 0;
+    block.fireFromPhoenix = fromPhoenix;
     return true;
   }
 
   function phoenixFlight(phoenix, timestamp) {
     const age = Math.max(0, timestamp - phoenix.startedAt);
-    const arrival = clamp(age / phoenix.arrivalMs, 0, 1);
-    const eased = 1 - (1 - arrival) ** 3;
-    const travel = clamp((age - phoenix.arrivalMs) / phoenix.travelMs, 0, 1);
-    const middleX = run.gridOffsetX + run.columns * run.cellSize * .5;
-    const lastY = run.blockRowOrigin + (phoenix.endRow + .5) * run.cellSize;
+    const summon = clamp(age / phoenix.arrivalMs, 0, 1);
+    const passAge = age - phoenix.arrivalMs;
+    const travel = clamp(passAge / phoenix.travelMs, 0, 1);
+    const exit = clamp((passAge - phoenix.travelMs) / (phoenix.duration - phoenix.arrivalMs - phoenix.travelMs), 0, 1);
+    const launchY = phoenix.launchY ?? run.slime.y;
+    const reveal = smoothFireVisual((summon - .43) / .51);
+    const gatherY = launchY - run.cellSize * 1.1;
+    let y = lerp(gatherY + run.cellSize * .39, launchY, smoothFireVisual((summon - .56) / .44));
+    if (phoenix.launchY !== undefined) {
+      const exitY = Math.max(phoenix.endY + run.cellSize * 3, run.cameraY + VIEW_H + VIEW_W * 1.45);
+      y = lerp(launchY, phoenix.endY, travel * (.85 + .15 * travel))
+        + (exitY - phoenix.endY) * exit * (.48 + .52 * exit);
+    }
     return {
-      travel, arriving: age < phoenix.arrivalMs,
-      x: arrival < 1 ? phoenix.fromX + (phoenix.x - phoenix.fromX) * eased : phoenix.x + (middleX - phoenix.x) * Math.min(1, travel * 4),
-      y: arrival < 1 ? phoenix.originY - run.cellSize * 2.2 * (1 - eased) : phoenix.originY + (lastY - phoenix.originY) * travel,
-      scale: .24 + .76 * eased,
-      alpha: Math.min(clamp(age / 90, 0, 1), clamp((phoenix.duration - age) / 200, 0, 1))
+      age, summon, passAge, y, gatherY, x: run.gridOffsetX + run.columns * run.cellSize * .5,
+      scale: lerp(.29, .94, smoothFireVisual((summon - .52) / .48)), reveal
     };
   }
 
   function updatePhoenixUltimate(timestamp) {
     const phoenix = run.phoenixUltimate;
     if (!phoenix) return;
-    const flight = phoenixFlight(phoenix, timestamp);
-    if (flight.arriving) return;
+    const age = timestamp - phoenix.startedAt;
+    if (age < phoenix.arrivalMs) return;
+    if (phoenix.launchY === undefined) {
+      phoenix.launchY = run.slime.y;
+      const startRow = Math.max(0, Math.ceil((phoenix.launchY - run.blockRowOrigin) / run.cellSize));
+      phoenix.endRow = startRow + phoenix.rows - 1;
+      phoenix.endY = run.blockRowOrigin + (phoenix.endRow + .55) * run.cellSize;
+      phoenix.nextRow = startRow;
+      startRunUltimateCue('phoenixFlight', timestamp, age - phoenix.arrivalMs);
+      feedback(8);
+    }
+    const headY = phoenixFlight(phoenix, timestamp).y;
     const lastReachedRow = Math.min(phoenix.endRow,
-      Math.floor((flight.y - run.blockRowOrigin - run.cellSize * .5 + .00001) / run.cellSize));
-    for (let row = phoenix.lastRow + 1; row <= lastReachedRow; row += 1) {
-      for (const block of run.blocksByRow?.get(row) || []) igniteBlock(block, timestamp, phoenix.auraId);
-      run.phoenixWaves.push({ y: run.blockRowOrigin + (row + .5) * run.cellSize, startedAt: timestamp });
-      phoenix.lastRow = row;
+      Math.floor((headY - run.blockRowOrigin - run.cellSize * .5) / run.cellSize));
+    for (let row = phoenix.nextRow; row <= lastReachedRow; row += 1) {
+      for (const block of run.blocksByRow?.get(row) || []) {
+        if (block.y >= phoenix.launchY) igniteBlock(block, timestamp, true);
+      }
+      phoenix.nextRow = row + 1;
     }
-    if (lastReachedRow >= phoenix.startRow) run.shake = Math.max(run.shake, 2.8);
-    if (timestamp - phoenix.startedAt >= phoenix.duration) run.phoenixUltimate = null;
-  }
-
-  function spreadFireFrom(source, timestamp) {
-    if (elementalLevel('fire') < 2 || !source.fireSpreadLeft || source.fireSpreadDone) return;
-    source.fireSpreadDone=true;
-    const candidates = nearbyGridBlocks(source, elementalDamageable)
-      .filter(block => Math.abs(block.row - source.row) + Math.abs(block.col - source.col) === 1
-        && !(block.fireDamageAt > 0))
-      .map(block => ({ block, score: (block.row > source.row ? 2 : block.row === source.row ? 1 : 0) + Math.random() * .5 }))
-      .sort((a, b) => b.score - a.score);
-    for(const {block:target} of candidates){
-      if (!igniteBlock(target, timestamp + FIRE_TRANSFER_MS, source.fireUltimateAuraId || 0, source.fireSpreadLeft-1)) continue;
-      const from=blockCenter(source),to=blockCenter(target);
-      pushElementalEffect('fireTransfer',to.x,to.y,{fromX:from.x,fromY:from.y,travelMs:FIRE_TRANSFER_MS,startedAt:timestamp});
-      break;
-    }
-  }
-
-  function spreadFireFromBrokenBlock(block, timestamp, cause = '') {
-    if (cause !== 'fire' && cause !== 'fireUltimate') return;
-    spreadFireFrom(block, timestamp);
+    if (age >= phoenix.duration) run.phoenixUltimate = null;
   }
 
   function updateBurningBlocks(timestamp) {
     for (const block of run.burningBlocks || []) {
       if (block.dead || !block.fireDamageAt) { run.burningBlocks.delete(block); continue; }
-      // I/II leave a fresh 3-HP rock damaged; III keeps burning until it breaks.
       while (!block.dead && block.fireDamageAt > 0 && timestamp >= block.fireDamageAt) {
-        block.fireTicksLeft = Math.max(0, (block.fireTicksLeft || 1) - 1);
-        block.fireDamageAt = block.fireTicksLeft || block.firePersistent ? block.fireDamageAt + FIRE_BURN_INTERVAL_MS : 0;
-        damageBlockByElement(block, 1, block.fireUltimateAuraId ? 'fireUltimate' : 'fire', timestamp);
-        if(block.firePersistent&&!block.dead){block.fireTicksLeft=Math.max(1,Math.ceil(block.hp));block.fireFlashUntil=Math.max(block.fireFlashUntil,block.fireDamageAt+330);}
+        const tickAt = block.fireDamageAt;
+        block.fireDamageAt = 0;
+        damageBlockByElement(block, 1, block.fireFromPhoenix ? 'fireUltimate' : 'fire', timestamp);
+        if (block.fireBurnsThrough && elementalDamageable(block)) {
+          block.fireDamageAt = tickAt + (block.hp <= 1 ? FIRE_FINAL_BURN_MS : block.fireIntervalMs);
+          block.fireFlashUntil = Math.max(block.fireFlashUntil, block.fireDamageAt + 190);
+        }
       }
       if (block.dead || !block.fireDamageAt) run.burningBlocks.delete(block);
     }
@@ -8231,16 +8526,23 @@
     if (block.sporePod && cause !== 'sporeExplosion') detonateSporePod(block.sporePod, timestamp);
     if (block.dead) return false;
     const phantomBlast = cause === 'phantomBurst' || cause === 'phantomUltimateBurst';
-    const damage = Math.max(0, block.phantomMarked && amount > 0 && !phantomBlast ? Math.max(2,amount) : amount);
+    const fireTick = cause === 'fire' || cause === 'fireUltimate';
+    const damage = Math.max(0, block.phantomMarked && amount > 0 && !phantomBlast && !fireTick ? Math.max(2,amount) : amount);
     if (cause !== 'glitchEcho') shareGlitchHit(block, damage, timestamp);
     block.hp = Math.max(0, block.hp - damage);
     if (cause === 'electric' || cause === 'electricStorm') {
       recordMutationAction('electric', block);
       block.electricFlashStartedAt = timestamp;
-      block.electricFlashUntil = timestamp + 620;
+      block.electricFlashUntil = timestamp + 400;
+      block.electricShockPower = cause === 'electricStorm' ? 1.45 : 1;
+      if (block.hp === 0) {
+        const { x, y } = blockCenter(block);
+        pushElementalEffect('electricShock', x, y, { width: block.w, height: block.h,
+          seed: block.col * 1.7 + block.row * .4, power: block.electricShockPower, life: .40, maxLife: .40 });
+      }
     }
     if (block.hp > 0) {
-      createDebris(block, 2, false);
+      if (!fireTick) createDebris(block, 2, false);
       return false;
     }
     block.hp = 0;
@@ -8248,72 +8550,92 @@
     return Boolean(block.dead);
   }
 
-  function electricChainTargets(first, count, excluded = null) {
-    if (!first || count <= 0) return [];
-    const targets = [first];
-    const visited = new Set([first.id]);
-    if (excluded) visited.add(excluded.id);
-    let current = first;
-    while (targets.length < count) {
-      const preferSideStep = targets.length % 4 === 3 && Math.random() < .72;
-      const score = block => {
-        const rowStep = block.row - current.row;
-        const columnStep = Math.abs(block.col - current.col);
-        const direction = preferSideStep
-          ? (rowStep === 0 ? 95 : rowStep > 0 ? 62 : -55)
-          : (rowStep > 0 ? 112 : rowStep === 0 ? 38 : -68);
-        return direction - columnStep * 6 + block.row * 1.8 + rand(-13, 13);
-      };
-      const candidates = nearbyGridBlocks(current, elementalDamageable)
-        .filter(block => !visited.has(block.id))
-        .sort((a, b) => score(b) - score(a));
-      if (!candidates.length) break;
-      current = candidates[0];
-      visited.add(current.id);
-      targets.push(current);
+  function pickElectricNeighbour(source, excluded = null, minRow = -Infinity) {
+    const candidates = nearbyGridBlocks(source, block =>
+      block !== excluded && block.row >= minRow && elementalDamageable(block));
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  function electricArc(from, to, timestamp, { grow = 38, life = 205, power = 1 } = {}) {
+    run.electricStormBolts.push({ from, to, startedAt: timestamp, until: timestamp + life,
+      grow, power, seed: Math.random() * 10000, trunk: false });
+  }
+
+  function electricDashPhasesThrough(block) {
+    return !block.hazard && !block.special && !block.sporePod && elementalDamageable(block);
+  }
+
+  function strikeElectricBlock(origin, primary, timestamp, excluded = null, minRow = -Infinity) {
+    const branch = elementalLevel('electric') >= 2 ? pickElectricNeighbour(primary, excluded, minRow) : null;
+    const point = blockCenter(primary);
+    electricArc(origin, point, timestamp);
+    run.electricStormHits.push({ block: primary, at: timestamp + 35, damage: 1 });
+    if (!branch) return 1;
+    electricArc(point, blockCenter(branch), timestamp + 33);
+    run.electricStormHits.push({ block: branch, at: timestamp + 71, damage: 1 });
+    return 2;
+  }
+
+  function finishElectricDash(timestamp, interrupted = false) {
+    const dash = run.electricDash;
+    if (!dash || dash.endedAt != null) return;
+    dash.endedAt = timestamp;
+    const { x, y, radius } = run.slime;
+    const origin = { x, y };
+    if (!interrupted) {
+      run.slime.vx *= .24;
+      run.slime.vy = Math.min(run.slime.vy, normalFallSpeedLimit() * .55);
     }
-    return targets;
+    const reach = run.cellSize * 1.18;
+    const rayCount = 5;
+    const turn = Math.PI * 2;
+    const angleStep = turn / rayCount;
+    const rotation = Math.random() * turn;
+    const targets = Array(rayCount).fill(null);
+    const nearby = blocksNearY(y, Math.max(reach, radius));
+    for (const block of nearby) {
+      if (elementalDamageable(block) && circleRectCollision(origin, block, radius)) {
+        damageBlockByElement(block, block.hp, 'electric', timestamp);
+      }
+    }
+    for (const block of nearby) {
+      if (!elementalDamageable(block)) continue;
+      const point = blockCenter(block);
+      const distance = Math.hypot(point.x - origin.x, point.y - origin.y);
+      if (distance > reach) continue;
+      const angle = (Math.atan2(point.y - y, point.x - x) - rotation + turn * 2) % turn;
+      const ray = Math.round(angle / angleStep) % rayCount;
+      if (!targets[ray] || distance < targets[ray].distance) targets[ray] = { block, point, distance };
+    }
+    for (const [i, target] of targets.entries()) {
+      const angle = rotation + i * angleStep + rand(-.19, .19);
+      const length = target?.distance ?? reach * rand(.66, 1.05);
+      const point = target?.point ?? { x: x + Math.cos(angle) * length, y: y + Math.sin(angle) * length };
+      const grow = 38 + length / reach * 54;
+      electricArc(origin, point, timestamp, { grow, life: grow + 170, power: target ? 1.65 : 1.21 });
+      if (target) run.electricStormHits.push({ block: target.block, at: timestamp + grow, damage: 1 });
+    }
+    pushElementalEffect('electricDashBurst', x, y, { life: .31, maxLife: .31 });
+    run.shake = Math.max(run.shake, 5.4);
+    sound('hitHard');
+    feedback([12, 15, 8]);
   }
 
-  function strikeElectricChain(first, count, origin, timestamp = performance.now(), excluded = null) {
-    const targets = electricChainTargets(first, count, excluded);
-    if (!targets.length) return 0;
-    const points = [origin, ...targets.map(blockCenter)];
-    targets.forEach((block, index) => {
-      damageBlockByElement(block, 1, 'electric', timestamp);
-      block.electricFlashStartedAt = timestamp + index * 80;
-      block.electricFlashUntil = block.electricFlashStartedAt + 620;
-    });
-    const life = .68 + targets.length * .155;
-    pushElementalEffect('electricArc', origin.x, origin.y, {
-      points, seed: Math.random() * 1000, life, maxLife: life
-    });
-    return targets.length;
-  }
-
-  function chooseElectricStormTarget(storm) {
-    const low = run.slime.y + run.cellSize * .85;
-    const high = Math.min(run.slime.y + run.cellSize * 6.2, run.cameraY + VIEW_H - 34);
-    const desiredY = run.slime.y + run.cellSize * (2.4 + storm.strikes % 3 * .65);
-    const desiredX = VIEW_W * [ .34, .68, .48, .72, .3 ][storm.strikes];
-    const available = run.blocks.filter(block => {
-      if (!elementalDamageable(block) || storm.usedTargets.has(block.id)) return false;
-      const y = block.y + block.h / 2;
-      return y >= low && y <= high;
-    });
-    const fallback = available.length ? available : run.blocks.filter(block =>
-      elementalDamageable(block) && !storm.usedTargets.has(block.id)
-      && block.y + block.h / 2 > low && block.y + block.h / 2 < low + run.cellSize * 10);
-    return fallback.map(block => {
-      const center = blockCenter(block);
-      const openSides = [[-1, 0], [1, 0], [0, -1], [0, 1]].filter(([dx, dy]) =>
-        run.blocksByRow?.get(block.row + dy)?.some(neighbor =>
-          neighbor.col === block.col + dx && elementalDamageable(neighbor))).length;
-      return { block, score: Math.abs(center.y - desiredY) * .8
-        + Math.abs(center.x - desiredX) * .55
-        + Math.abs(block.col - 2.5) * run.cellSize * .28
-        + (4 - openSides) * run.cellSize * 1.15 + rand(-16, 16) };
-    }).sort((a, b) => a.score - b.score)[0]?.block || null;
+  function electricStormZone(storm, index) {
+    const { cellSize, columns, gridOffsetX, blockRowOrigin } = run;
+    const left = (index % 2 === 0) === storm.leftFirst;
+    const col = left ? 1 : columns - 2;
+    // Two offset zones per band keep all six impacts inside ten rows.
+    const row = storm.firstRow + 1 + Math.floor(index / 2) * 3 + index % 2;
+    const blocks = [];
+    for (let r = row - 1; r <= row + 1; r += 1) {
+      for (const block of run.blocksByRow.get(r) || []) {
+        if (Math.abs(block.col - col) <= 1 && elementalDamageable(block)) blocks.push(block);
+      }
+    }
+    const point = { x: gridOffsetX + (col + .5) * cellSize, y: blockRowOrigin + (row + .5) * cellSize };
+    const center = blocks.find(block => block.col === col && block.row === row);
+    return { point, blocks, center, row, col };
   }
 
   function spawnElectricIncineration(block) {
@@ -8336,77 +8658,80 @@
     trimParticles(180);
   }
 
-  function launchElectricStormStrike(storm, timestamp) {
-    const target = chooseElectricStormTarget(storm);
-    const targetPoint = target ? blockCenter(target) : {
-      x: VIEW_W * [ .34, .68, .48, .72, .3 ][storm.strikes],
-      y: Math.min(run.cameraY + VIEW_H - 35, run.slime.y + run.cellSize * 3)
-    };
-    if (target) storm.usedTargets.add(target.id);
-    const cloudX = clamp(targetPoint.x * .68 + VIEW_W * .16, VIEW_W * .17, VIEW_W * .83);
+  function launchElectricStormStrike(storm, zone, timestamp) {
+    const { point, blocks, center } = zone;
+    const impactAt = timestamp + ELECTRIC_STORM_BOLT_MS;
+    storm.impactAt = impactAt;
+    storm.impactPoint = point;
+    storm.impactPending = true;
     run.electricStormBolts.push({
-      from: { x: cloudX, y: 68 }, to: targetPoint, fromScreen: true,
-      startedAt: timestamp, until: timestamp + 520, seed: Math.random() * 10000,
-      trunk: true
+      from: { x: point.x, y: -32 }, to: point, fromScreen: true,
+      startedAt: timestamp, until: timestamp + 326, grow: ELECTRIC_STORM_BOLT_MS,
+      seed: Math.random() * 10000, trunk: true, power: 3.8
     });
-    storm.flashUntil = timestamp + 220;
-    run.shake = Math.max(run.shake, 8);
-    sound('hitHard');
-    feedback([13, 27, 13]);
-    if (!target) return;
-
-    // The struck block is incinerated as the four chains spread from its position.
-    target.electricFlashStartedAt = timestamp + 135;
-    target.electricFlashUntil = timestamp + 680;
-    run.electricStormHits.push({ block: target, at: timestamp + 155, incinerate: true });
-    const visited = new Set([target.id]);
-    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-    for (const [dx, dy] of directions) {
-      let current = target;
-      for (let step = 0; step < (storm.branchLength || ELECTRIC_STORM_BRANCH_LENGTH); step += 1) {
-        const candidates = nearbyGridBlocks(current, elementalDamageable)
-          .filter(block => !visited.has(block.id));
-        const forward = candidates.filter(block =>
-          (block.col - current.col) * dx + (block.row - current.row) * dy > 0);
-        const pool = forward.length ? forward : step ? candidates : [];
-        const next = pool.map(block => {
-          const column = block.col - current.col;
-          const row = block.row - current.row;
-          return { block, score: (column * dx + row * dy) * 22
-            - Math.abs(column * dy - row * dx) * 8 + rand(-10, 10) };
-        }).sort((a, b) => b.score - a.score)[0]?.block;
-        if (!next) break;
-        visited.add(next.id);
-        const startedAt = timestamp + 145 + step * 92;
-        run.electricStormBolts.push({
-          from: blockCenter(current), to: blockCenter(next),
-          startedAt, until: startedAt + 420, seed: Math.random() * 10000,
-          trunk: false
-        });
-        run.electricStormHits.push({ block: next, at: startedAt + 95 });
-        current = next;
-      }
+    if (center) run.electricStormHits.push({ block: center, at: impactAt, storm: true, center: true });
+    for (const block of blocks) {
+      if (block === center) continue;
+      const to = blockCenter(block);
+      const distance = Math.hypot(to.x - point.x, to.y - point.y) / run.cellSize;
+      const travel = 36 + distance * 28;
+      electricArc(point, to, impactAt + 10, { grow: travel, life: 200 + travel, power: 1.37 });
+      run.electricStormHits.push({ block, at: impactAt + 10 + travel, storm: true, damage: 2 });
     }
   }
 
   function updateElectricStorm(timestamp) {
     const storm = run.electricStorm;
-    if (!storm || storm.endedAt || storm.strikes >= (storm.strikeLimit || ELECTRIC_STORM_STRIKES) || timestamp < storm.nextStrikeAt) return;
-    launchElectricStormStrike(storm, timestamp);
+    if (!storm || storm.endedAt) return;
+    if (storm.impactPending && timestamp >= storm.impactAt) {
+      storm.impactPending = false;
+      sound('hitHard');
+      feedback([17, 21, 13]);
+    }
+    if (storm.strikes >= storm.strikeLimit) return;
+    if (!storm.warning && timestamp >= storm.nextStrikeAt - ELECTRIC_STORM_WARNING_MS) {
+      storm.warning = electricStormZone(storm, storm.strikes);
+    }
+    if (timestamp < storm.nextStrikeAt) return;
+    launchElectricStormStrike(storm, storm.warning, timestamp);
     storm.strikes += 1;
-    storm.nextStrikeAt = timestamp + 700;
-    run.elementalAbilityUntil = Math.max(run.elementalAbilityUntil, timestamp + 850);
+    storm.warning = null;
+    storm.nextStrikeAt = timestamp + ELECTRIC_STORM_CADENCE_MS;
+    const remaining = storm.strikeLimit - storm.strikes;
+    run.elementalAbilityUntil = Math.max(run.elementalAbilityUntil, timestamp + remaining * ELECTRIC_STORM_CADENCE_MS + 530);
   }
 
-  function dischargeFromImpact(source, count, timestamp) {
+  function electricStormCharge(storm, timestamp) {
+    const rise = smoothFireVisual((timestamp - storm.startedAt) / (storm.chargeMs * .83));
+    return storm.endedAt ? rise * (1 - smoothFireVisual((timestamp - storm.endedAt) / 540)) : rise;
+  }
+
+  function electricStormCamera(storm, timestamp) {
+    const charge = electricStormCharge(storm, timestamp);
+    const age = timestamp - (storm.impactAt ?? -Infinity);
+    const warning = storm.warning ? electricStormWarning(storm, timestamp) : 0;
+    const followImpact = storm.impactPoint && age < ELECTRIC_STORM_CADENCE_MS
+      ? 1 - smoothFireVisual((age - 110) / 505) : 0;
+    const warningPoint = storm.warning?.point;
+    const point = warningPoint && storm.impactPoint && followImpact > 0
+      ? {
+        x: lerp(storm.impactPoint.x, warningPoint.x, warning / (warning + followImpact)),
+        y: lerp(storm.impactPoint.y, warningPoint.y, warning / (warning + followImpact))
+      }
+      : warningPoint || (followImpact > 0 ? storm.impactPoint : run.slime);
+    return { point, focus: Math.max(warning, followImpact), charge };
+  }
+
+  function electricStormWarning(storm, timestamp) {
+    return smoothFireVisual(1 + (timestamp - storm.nextStrikeAt) / ELECTRIC_STORM_WARNING_MS);
+  }
+
+  function dischargeFromImpact(source, timestamp) {
     if (!elementalDamageable(source) || timestamp - (run.electricImpactAt ?? -Infinity) < ELECTRIC_IMPACT_WINDOW_MS) return 0;
+    const primary = pickElectricNeighbour(source, null, source.row);
+    if (!primary) return 0;
     run.electricImpactAt = timestamp;
-    const candidates = nearbyGridBlocks(source, elementalDamageable).sort((a, b) => {
-      const score = block => (block.row > source.row ? 80 : block.row === source.row ? 24 : -45) + block.row * 1.4 + rand(-18, 18);
-      return score(b) - score(a);
-    });
-    const first = candidates[0];
-    return first ? strikeElectricChain(first, count, blockCenter(source), timestamp, source) : 0;
+    return strikeElectricBlock(blockCenter(source), primary, timestamp, source, source.row);
   }
 
   function updateElementalEffects(timestamp = performance.now()) {
@@ -8415,19 +8740,16 @@
     if (run.mechSuit?.phase === 'active' && timestamp >= run.mechSuit.expireAt) finishMechSuit(timestamp);
     updateShieldLifetime(timestamp);
 
-    run.phoenixWaves = (run.phoenixWaves || []).filter(wave => timestamp - wave.startedAt < 490);
     if (run.electricStorm?.endedAt && timestamp - run.electricStorm.endedAt >= ELECTRIC_STORM_EXIT_MS) {
       run.electricStorm = null;
     }
     run.electricStormBolts = (run.electricStormBolts || []).filter(bolt => timestamp < bolt.until);
     run.electricStormHits = (run.electricStormHits || []).filter(hit => {
       if (timestamp < hit.at) return true;
-      if (hit.incinerate) {
-        if (elementalDamageable(hit.block)) {
-          spawnElectricIncineration(hit.block);
-          damageBlockByElement(hit.block, Math.max(1, hit.block.hp), 'electricStorm', timestamp);
-        }
-      } else damageBlockByElement(hit.block, 1, 'electricStorm', timestamp);
+      if (!elementalDamageable(hit.block)) return false;
+      const damage = hit.center ? hit.block.hp : hit.damage;
+      if (hit.center) spawnElectricIncineration(hit.block);
+      damageBlockByElement(hit.block, damage, hit.storm ? 'electricStorm' : 'electric', timestamp);
       return false;
     });
 
@@ -8445,6 +8767,7 @@
     updateSpores(timestamp);
 
     updateBurningBlocks(timestamp);
+    updateFrostFlake(timestamp);
 
     const active = run.elementalAbilityActive;
     if (!active) return;
@@ -8496,10 +8819,10 @@
   }
 
   function applyBreakResistance(block, timestamp) {
+    if (block.elementalSnow) return;
     const snowflake = Boolean(block.elementalSnowflake);
-    const snow = Boolean(block.elementalSnow);
     const fragile = block.tier === 'dense' || block.tier === 'soft';
-    const factor = snowflake ? BALANCE.snowflakeBreakDrag : snow ? BALANCE.snowBreakDrag
+    const factor = snowflake ? BALANCE.snowflakeBreakDrag
       : fragile ? (block.tier === 'soft' ? BALANCE.weakBreakDrag : BALANCE.fragileBreakDrag)
         : BALANCE.denseBreakDrag * (BLOCK_TIERS[block.tier]?.drag || .95);
     // Touching two neighboring blocks is one impact, not two full speed losses.
@@ -8511,6 +8834,20 @@
       run.breakImpactFactor = factor;
     } else if (!sameImpact) run.breakImpactFactor = factor;
     if (!sameImpact) run.breakImpactAt = timestamp;
+  }
+
+  function pressThroughRock(block, collision, timestamp, hpBefore, falling) {
+    const fragile = block.tier === 'soft' || block.tier === 'dense';
+    block.rockBreakPose = {
+      at: timestamp, duration: fragile ? 60 : 83,
+      nx: collision.nx, ny: collision.ny, hpRatio: hpBefore / block.maxHp
+    };
+    if (!falling) return;
+    // Cap the actual downward velocity immediately. Dense pockets take longer
+    // to push through, but a second tile cannot multiply the velocity loss.
+    const speedLimit = Math.max(.7 * run.slime.vy, normalFallSpeedLimit() * (fragile ? .85 : .69));
+    run.slime.vy = Math.min(run.slime.vy, speedLimit);
+    spendFallMomentum(run, 1);
   }
 
   function resolveBlockHit(block,collision,timestamp=performance.now()){
@@ -8537,7 +8874,7 @@
     const fireLevel = elementalLevel('fire');
     const electricLevel = elementalLevel('electric');
     if (fireLevel >= 1) igniteBlock(block, timestamp);
-    if (electricLevel >= 1) dischargeFromImpact(block, ELECTRIC_CHAIN_LENGTH, timestamp);
+    if (electricLevel >= 1 && run.electricDash?.endedAt !== null) dischargeFromImpact(block, timestamp);
     if (block.dead) {
       if (!drillActive) applyBreakResistance(block, timestamp);
       return false;
@@ -8578,15 +8915,16 @@
     const frozenSlime = isSlimeFrozen(timestamp);
     const gravityDirection = 1;
     const isFalling = s.vy * gravityDirection > 0;
-    const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy));
+    const impactSpeed = Math.max(70, Math.hypot(s.vx, s.vy * (isFalling ? run.fallSpeedScale ?? 1 : 1)));
     const unbreakable = Boolean(block.unbreakable);
     let damage = block.phantomMarked ? 2 : 1;
-    prepareMassPierce(impactSpeed, isFalling);
-    const frostLevel = elementalLevel('frost');
-    if (frostLevel >= 1 && frostFreezable(block) && !block.elementalSnow && !block.elementalSnowflake && block.hp > 1) {
-      turnBlockToSnow(block, timestamp);
-      damage = 0;
+    if (block.elementalSnow) {
+      destroyBlock(block, 'snowPass', timestamp);
+      return false;
     }
+    prepareMassPierce(impactSpeed, isFalling);
+    const frostContact = elementalLevel('frost') >= 1 && ['hard', 'ore', 'reinforced'].includes(block.tier)
+      && !block.elementalSnowflake && frostFreezable(block);
     const goldLevel = elementalLevel('gold');
     const goldenBeforeHit = blockIsGolden(block, timestamp);
     let goldTransformed = false;
@@ -8608,8 +8946,24 @@
     if (speedBurstPiercing) damage = hpBefore;
     const drillPiercing = drillActive && !unbreakable;
     if (drillPiercing) damage = hpBefore;
+    const piercing = geyserPiercing || massPiercing || speedBurstPiercing || drillPiercing;
+    const rockContact = !block.hazard && !block.special && !piercing && !frozenSlime;
+    const ramDamage = rockContact ? ramDamageForRock(block, run, normalFallSpeedLimit()) : 0;
+    if (rockContact) {
+      run.rockContactAt = timestamp;
+      const breaking = !frostContact && damage >= hpBefore && !unbreakable;
+      const weight = clamp((impactSpeed - 95) / 265, 0, 1);
+      run.rockContactPower = ramDamage >= 3 ? 1 : ramDamage ? .77 : (breaking ? .46 : .50) + weight * .30;
+      run.rockContactBroken = breaking || (!frostContact && ramDamage >= hpBefore);
+      run.rockContactSide = Math.abs(collision.nx) > Math.abs(collision.ny);
+    }
+    if (ramDamage) {
+      damage = Math.max(damage, ramDamage);
+      createRockContactEffect(block, collision, ramDamage);
+      spendFallMomentum(run, ramDamage, !frostContact && damage >= hpBefore);
+    }
     shareGlitchHit(block, damage, timestamp);
-    const destroysImmediately = !unbreakable && (breaksOnTouch || geyserPiercing || massPiercing || speedBurstPiercing || drillPiercing || damage >= hpBefore);
+    const destroysImmediately = !frostContact && !unbreakable && (breaksOnTouch || piercing || damage >= hpBefore);
     if (!frozenSlime) {run.healthFlash=1;run.healthFlashTime=.22;}
     run.shake = Math.max(run.shake, clamp(impactSpeed / 165, 1.0, destroysImmediately ? 3.8 : 5.8));
     if (!frozenSlime) {
@@ -8618,11 +8972,17 @@
     }
 
     if (destroysImmediately) {
+      const pressBreak = rockContact && !ramDamage && !block.elementalSnow && !block.elementalSnowflake;
+      const slowThroughBreak = hpBefore <= 1 && isFalling && !piercing && !block.special && !block.hazard
+        && !block.elementalSnow && !block.elementalSnowflake;
+      if (pressBreak) pressThroughRock(block, collision, timestamp, hpBefore, isFalling);
       block.hp = 0;
       destroyBlock(block, 'impact', timestamp);
       if (geyserPiercing) run.geyserBreaksLeft = Math.max(0, run.geyserBreaksLeft - 1);
       const speedBurstBlocksLeft = speedBurstPiercing ? consumeSpeedBurstBlock(timestamp) : -1;
-      if (!drillPiercing && !speedBurstPiercing) {
+      if (slowThroughBreak && !pressBreak && !ramDamage) {
+        spendFallMomentum(run, 1);
+      } else if (!pressBreak && !ramDamage && !drillPiercing && !speedBurstPiercing) {
         if (massPiercing) {
           s.vy = s.vy > 0 ? Math.max(310, s.vy * .94) : s.vy * .94;
           s.vx *= .95;
@@ -8632,28 +8992,51 @@
       run.flightDistance *= keep;
 
       if (speedBurstPiercing) impact(speedBurstBlocksLeft > 0 ? `БУР-РЫВОК · ЕЩЁ ${speedBurstBlocksLeft}` : 'БУР-РЫВОК');
-      else if (!block.special) impact('ПРОБОЙ');
-      sound(block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
+      else if (!block.special) impact(ramDamage ? 'ТАРАН' : 'ПРОБОЙ');
+      sound(ramDamage ? 'hitHard' : block.special === 'coin' || block.tier === 'ore' ? 'coin' : 'break');
+      if (ramDamage) {
+        run.shake = Math.max(run.shake, menuReducedMotion ? 2 : 3.8 + ramDamage * 1.3);
+        if (ramDamage === 3) feedback([9, 14, 8]);
+      } else if (pressBreak && hpBefore && timestamp - (run.rockFeedbackAt ?? -Infinity) >= 115) {
+        run.rockFeedbackAt = timestamp;
+        feedback(block.maxHp <= 1 ? 4 : 8);
+      }
       if (run.energy <= 0) endRun(false, 'Сила закончилась');
       return false;
     }
 
     preserveCombo(timestamp);
     if (!unbreakable) block.hp = Math.max(.05, block.hp - damage);
+    const sustainedHit = damage > 0;
+    if (sustainedHit) {
+      block.visualCrackAt = timestamp;
+      block.rockImpactNormalX = collision.nx;
+      block.rockImpactNormalY = collision.ny;
+      block.rockImpactPower = clamp((impactSpeed - 80) / 425, .42, 1);
+      if (!ramDamage) createRockContactEffect(block, collision);
+      if (timestamp - (run.rockFeedbackAt ?? -Infinity) >= 115) {
+        run.rockFeedbackAt = timestamp;
+        feedback(block.maxHp >= 3 ? 11 : 7);
+      }
+    }
     if (frozenSlime) {
       slideFrozenSlime(block, collision, timestamp);
       createDebris(block, 3, false);
+      if (frostContact) turnBlockToSnow(block, timestamp);
       return true;
     }
     run.maxFlight = Math.max(run.maxFlight, run.flightDistance);
     s.x += collision.nx * (collision.penetration + (unbreakable ? 6 : 4));
     s.y += collision.ny * (collision.penetration + (unbreakable ? 6 : 4));
-    applyBlockBounce(s, collision, { hazard: unbreakable, timestamp });
+    applyBlockBounce(s, collision, { hazard: unbreakable, timestamp, rock: rockContact && !unbreakable });
     run.flightDistance = 0;
 
+    const frozeOnContact = frostContact && turnBlockToSnow(block, timestamp);
     const hitsLeft = Math.max(1, Math.ceil(block.hp));
     const hitsLabel = hitsLeft === 1 ? 'ЕЩЁ 1 УДАР' : `ЕЩЁ ${hitsLeft} УДАРА`;
-    impact(goldTransformed
+    impact(frozeOnContact
+      ? 'БЛОК ЗАМОРОЖЕН'
+      : goldTransformed
       ? 'БЛОК СТАЛ ЗОЛОТЫМ · ЕЩЁ 1 УДАР'
       : block.special === 'spring'
       ? 'ПРУЖИНА'
@@ -8663,7 +9046,7 @@
           ? 'БЛОК НЕ ПОДДАЁТСЯ'
           : `БЛОК ТРЕСНУЛ · ${hitsLabel}`);
     sound(block.special === 'spring' ? 'bounce' : block.hazard || block.special === 'boss' ? 'hitHard' : 'hit');
-    createDebris(block, 3, false);
+    if (!sustainedHit) createDebris(block, 3, false);
     if (run.energy <= 0) endRun(false, 'Сила закончилась');
     return true;
   }
@@ -8672,7 +9055,6 @@
     if (!block || block.dead || block.pandoraOpened) return false;
     block.pandoraOpened = true;
     block.dead = true;
-    spreadFireFromBrokenBlock(block, timestamp);
     const choices = ['meteor', 'bomb', 'heal']
       .filter(type => type !== 'heal' || run.energy < run.maxEnergy);
     const effect = choices[Math.floor(Math.random() * choices.length)] || 'meteor';
@@ -8776,7 +9158,7 @@
     const glitchRemoval = cause === 'glitchDelete' || (block.glitchNeutralized && (cause === 'glitchNeutralize' || cause === 'glitchHack'));
     // Only explicit ultimate removal or disarmed contact can bypass spike protection.
     if (block.hazard && !block.tech && !block.breakableHazard && !glitchRemoval && cause !== 'cosmosUltimate' && cause !== 'mech' && cause !== 'phantomExpress' && cause !== 'psionicBarrier'
-      && cause !== 'telekinesisPress') return false;
+      && cause !== 'telekinesisPress' && cause !== 'infinityPurple') return false;
     if (block.sporePod) {
       if (cause === 'sporeExplosion') {
         recordMutationAction('cloning', block.sporePod);
@@ -8791,13 +9173,11 @@
     }
     if (glitchRemoval && block.hazard) recordMutationAction('glitch', block);
     const wasGolden = blockIsGolden(block, timestamp);
-    const wasSnow = Boolean(block.elementalSnow);
     const wasSnowflake = Boolean(block.elementalSnowflake);
     const glitchBreak = block.glitchInfected || block.glitchHitUntil > timestamp || cause === 'glitchEcho';
     block.dead = true;
     run.phantomMarkedBlocks?.delete(block);
     run.blocksDestroyed+=window.SlimeBrambleObstacles.collapse(run,block,timestamp);
-    if (cause !== 'telekinesisPress') spreadFireFromBrokenBlock(block, timestamp, cause);
     run.glitchInfectedBlocks?.delete(block);
     block.glitchInfected = false;
     run.blocksDestroyed += 1;
@@ -8812,7 +9192,15 @@
       if (block.special === 'boss') impact('СТРАЖ НЕДР ПОБЕЖДЁН!');
       return true;
     }
-    if (glitchBreak || cause === 'glitchDelete' || cause === 'glitchNeutralize' || cause === 'glitchHack') createGlitchDebris(block, timestamp, !glitchBreak && cause !== 'glitchDelete');
+    if (cause === 'infinityRed') {
+      const center = run.infinity.cast?.x ?? run.slime.x;
+      createDebris(block, 5, true, block.x + block.w / 2 < center ? -190 : 190);
+    } else if (cause === 'infinityBlue' || cause === 'infinityPurple') {
+      createDebris(block, 3, false);
+    } else if (cause === 'fire' || cause === 'fireUltimate') {
+      createBurnedBlockAsh(block, timestamp);
+    } else if (glitchBreak || cause === 'glitchDelete' || cause === 'glitchNeutralize' || cause === 'glitchHack') createGlitchDebris(block, timestamp, !glitchBreak && cause !== 'glitchDelete');
+    else if (cause === 'snowPass') createDebris(block, 5, false);
     else if (cause !== 'telekinesisLift' && cause !== 'electricStorm' && cause !== 'nanoDisintegrate') createDebris(block, block.special === 'geyser' ? 0 : ['sporeGiant','telekinesisStorm','psionicBarrier'].includes(cause) ? 3 : cause === 'mech' ? 5 : block.special === 'bomb' ? 8 : 9, true);
 
     if (block.special === 'coin') {
@@ -8835,7 +9223,6 @@
     }
 
     if (wasSnowflake) detonateSnowflakeBlock(block, timestamp);
-    else if (wasSnow) scatterSnowShards(block, timestamp);
 
     if (wasGolden && elementalLevel('gold') >= 2 && Math.random() < .35) {
       throwGoldCoin(block, timestamp);
@@ -9008,7 +9395,6 @@
     for (const block of run.blocks) {
       if (block.dead || block.unbreakable || block.hazard || Math.abs(block.row - row) > 1 || Math.abs(block.col - col) > 1) continue;
       block.dead = true;
-      spreadFireFromBrokenBlock(block, timestamp);
       run.blocksDestroyed += 1;
       registerBrokenBlock(block);
       run.coins += block.coins * .6 * run.coinMultiplier;
@@ -9085,7 +9471,6 @@
           continue;
         }
         block.dead = true;
-        spreadFireFromBrokenBlock(block, timestamp);
         run.blocksDestroyed += 1;
         registerBrokenBlock(block);
         run.coins += block.coins * rewardScale * run.coinMultiplier;
@@ -9106,7 +9491,6 @@
       if (block.dead || block === source || block.unbreakable || block.hazard) continue;
       if (Math.abs(block.row - source.row) > radiusCells || Math.abs(block.col - source.col) > radiusCells) continue;
       block.dead = true;
-      spreadFireFromBrokenBlock(block, timestamp);
       run.blocksDestroyed += 1;
       registerBrokenBlock(block);
       run.coins += block.coins * rewardScale * run.coinMultiplier;
@@ -9145,16 +9529,46 @@
     return { destroyed, blasts };
   }
 
-  function createDebris(block, count, strong) {
+  function createBurnedBlockAsh(block, timestamp) {
+    if (block.y + block.h < run.cameraY - 90 || block.y > run.cameraY + VIEW_H + 90) return;
+    const lowDetail = isLowPowerDevice() || menuReducedMotion || graphicsBudget < .75;
+    const count = takeDecorativeParticles(lowDetail ? 8 : 14);
+    const ash = window.SlimeBlockBreakFeedback.emitAsh(block, count, burnedBlockFace(block, block.y, timestamp));
+    run.particles.push(...ash.particles);
+    appendTransientEffect(ash.impact, 36, lowDetail ? 7 : 12);
+  }
+
+  function createRockContactEffect(block, collision, ramDamage = 0) {
+    const { nx, ny } = collision;
+    const x = Math.abs(nx) > Math.abs(ny) ? block.x + (nx > 0 ? block.w : 0) : clamp(run.slime.x, block.x, block.x + block.w);
+    const y = Math.abs(ny) >= Math.abs(nx) ? block.y + (ny > 0 ? block.h : 0) : clamp(run.slime.y, block.y, block.y + block.h);
+    const strong = block.tier === 'reinforced' || block.maxHp >= 3;
+    const count = takeDecorativeParticles(ramDamage ? scaledEffectCount(11 + 3 * ramDamage, 8) : scaledEffectCount(strong ? 10 : 8, 5));
+    const metal = Boolean(block.tech);
+    const color = materialColor(block.material, run.world);
+    const contact = window.SlimeBlockBreakFeedback.emitRockContact(block, x, y, collision, count, ramDamage, {
+      strong, metal, color, power: block.rockImpactPower
+    });
+    run.particles.push(...contact.particles);
+    appendTransientEffect(contact.impact, 36, ramDamage ? 5 : 7);
+  }
+
+  function createDebris(block, count, strong, pushX = 0) {
     if (!count || block.y + block.h < run.cameraY - 90 || block.y > run.cameraY + VIEW_H + 90) return;
     const color = block.elementalSnow||block.elementalSnowflake ? '#bdefff'
       : run.worldId===1 && !block.special && !block.hazard
-        ? block.tier==='reinforced'?'#505561':block.tier==='hard'?'#96a4ad':block.topGrass?'#78a844':'#df811f'
+        ? block.tier==='reinforced'?'#764b9a':block.tier==='hard'||block.tier==='ore'?'#b39bd7':'#8bc74f'
         : materialColor(block.material, run.world, 0);
     const density = effectDensity();
     const desired = Math.min(24, Math.max(strong ? 6 : 2, Math.round(count * (strong ? 2.1 : 1.25) * density)));
     const maxParticles = takeDecorativeParticles(desired);
     const feedback = window.SlimeBlockBreakFeedback.emit(block, {color,count,strong,density,maxParticles});
+    if (pushX) for (const particle of feedback.particles) particle.vx += pushX;
+    if (strong && block.rockBreakPose) {
+      const delay = block.rockBreakPose.duration / 1000;
+      for (const particle of feedback.particles) particle.delay = delay;
+      if (feedback.impact) feedback.impact.delay = delay;
+    }
     run.particles.push(...feedback.particles);
     if (feedback.impact) {
       // Keep burst flashes bounded separately from gameplay effects.
@@ -9191,6 +9605,7 @@
   function updateParticles(dt) {
     if (!run) return;
     for (const p of run.particles) {
+      if (p.delay > 0) { p.delay = Math.max(0, p.delay - dt); continue; }
       if (p.kind === 'portal' && p.suction) {
         const previousX = p.x;
         const previousY = p.y;
@@ -9291,9 +9706,7 @@
         effect.delay = Math.max(0, effect.delay - dt);
         continue;
       }
-      if (effect.type === 'fireTransfer' && Number.isFinite(effect.startedAt)) {
-        effect.life = Math.max(0, effect.maxLife - (timestamp - effect.startedAt) / 1000);
-      } else effect.life -= dt;
+      effect.life -= dt;
       if (effect.life > 0 || effect.resolved || !effect.targetBlockId) continue;
       effect.resolved = true;
       const target = run.blocks.find(block => block.id === effect.targetBlockId);
@@ -9307,8 +9720,7 @@
     run.specialEffects.length = alive;
   }
 
-  function playAbilityActivation(stage) {
-    const button = els.abilityBtn;
+  function playAbilityActivation(stage, button = els.abilityBtn) {
     if (!button?.animate || menuReducedMotion) return;
     const medium = stage === 2;
     button.animate([
@@ -9317,7 +9729,9 @@
       { transform: 'translateY(0) scale(1)', filter: `brightness(${medium ? 1.35 : 1.1})`, offset: .65 },
       { transform: 'translateY(0) scale(1)', filter: 'brightness(1)' }
     ], { duration: medium ? 360 : 190, easing: 'ease-out' });
-    const icon = button.querySelector('img');
+    const attackIcon = run.elementalAbilityType === 'frost' ? '.fall-attack-frost'
+      : run.elementalAbilityType === 'electric' ? '.fall-attack-electric' : '.fall-attack-fire';
+    const icon = button.querySelector(attackIcon) || button.querySelector('img');
     icon?.animate([
       { opacity: 1, clipPath: 'inset(0)', filter: 'brightness(1)' },
       { opacity: 1, clipPath: 'inset(0)', filter: `brightness(${medium ? 2 : 1.35}) drop-shadow(0 0 ${medium ? 12 : 4}px #b9ffff)`, offset: .25 },
@@ -9332,6 +9746,7 @@
   });
 
   function runAbilityEmblem(type) {
+    if (type === 'infinity') return versionedAsset(INFINITY.EMBLEM);
     return versionedAsset(RECIPE_FAMILY_ICONS[type === 'frost' ? 'ice' : type] || LEGACY_ABILITY_EMBLEMS[type] || RECIPE_FAMILY_ICONS.fire);
   }
 
@@ -9357,13 +9772,116 @@
     if (!type || !ELEMENTAL_ABILITY_DURATION_MS[type] || run.ended || run.paused || run.coreEncounter
       || run.evacuation || run.portalEntry || run.portalTransitioning || run.ultimateIntro
       || run.glitchChoice || run.mechSuit || window.SlimeIceHazards.locked(run)) return false;
+    if (type === 'fire') return run.ultimateStage === 3 && !run.elementalAbilityActive
+      && !run.fireFlash && (adminInfiniteUltimate || phoenixCharge(run) >= 1);
+    if (type === 'frost' && (run.ultimateStage < 3 || run.frostFlake || run.frostStorm)) return false;
+    if (type === 'electric' && (run.ultimateStage < 3 || run.electricDash?.endedAt === null || run.electricStorm)) return false;
+    if (type === 'infinity' && (run.infinity.stage < 3 || run.infinity.cast || run.infinity.shieldStopUntil > timestamp)) return false;
     return adminInfiniteUltimate || (!run.elementalAbilityActive
       && ULTIMATE_COOLDOWN.remaining(run, timestamp) === 0 && run.energy >= ULTIMATE_COOLDOWN.CONFIG.strengthCost);
+  }
+
+  function phoenixCharge(currentRun) {
+    const depth = currentRun.maxDepth - (currentRun.phoenixChargedFromDepth || 0);
+    return clamp(depth / (currentRun.world.targetDepth / 3), 0, 1);
+  }
+
+  function activeAttackReadyAt(currentRun) {
+    if (adminInfiniteUltimate) return 0;
+    switch (currentRun?.elementalAbilityType) {
+      case 'fire': return currentRun.fireFlashReadyAt || 0;
+      case 'electric': return currentRun.electricDashReadyAt || 0;
+      case 'frost': return currentRun.frostFlakeReadyAt || 0;
+      case 'infinity': return currentRun.infinity.readyAt;
+      default: return 0;
+    }
+  }
+
+  function canCastActiveAttack(timestamp) {
+    const type = run?.elementalAbilityType;
+    if (!fallControlsAvailable() || run.ultimateIntro || timestamp < activeAttackReadyAt(run) || window.SlimeIceHazards.locked(run)) return false;
+    if (type === 'fire') return !run.fireFlash && !run.phoenixUltimate;
+    if (type === 'electric') return !run.electricDash && !run.electricStorm && !run.geyserCapture && !run.waterGrab;
+    if (type === 'infinity') return !run.infinity.cast && timestamp >= run.infinity.shieldStopUntil;
+    return type === 'frost' && !run.frostFlake && !run.frostStorm;
+  }
+
+  function activateActiveAttack(timestamp = performance.now()) {
+    if (!canCastActiveAttack(timestamp)) return false;
+    const { x, y, radius } = run.slime;
+    if (run.elementalAbilityType === 'infinity') {
+      if (!INFINITY.start(run, run.infinity.mode, timestamp, infinityAttackServices.canBreak, {ignoreCooldown:adminInfiniteUltimate})) return false;
+      run.infinity.readyAt = timestamp + ACTIVE_ATTACK_COOLDOWN_MS;
+    } else if (run.elementalAbilityType === 'fire') {
+      ELEMENTAL_ULTIMATES.startFireFlash(run, timestamp, isLowPowerDevice());
+      run.fireFlashReadyAt = timestamp + ACTIVE_ATTACK_COOLDOWN_MS;
+      run.emotion = 'focused';
+      run.emotionUntil = timestamp + 360;
+    } else if (run.elementalAbilityType === 'electric') {
+      ELEMENTAL_ULTIMATES.startElectricDash(run, timestamp, fallSteeringVector().x, VIEW_W, isLowPowerDevice());
+      resetFallMomentum(run);
+      run.electricDashReadyAt = timestamp + ACTIVE_ATTACK_COOLDOWN_MS;
+      run.emotion = 'focused';
+      run.emotionUntil = timestamp + 310;
+      run.shake = Math.max(run.shake, 3.3);
+      feedback(10);
+    } else {
+      ensureWorldSprites(2);
+      startFrostFlake(x, y + radius * .7, timestamp);
+      run.frostFlakeReadyAt = timestamp + ACTIVE_ATTACK_COOLDOWN_MS;
+      run.emotion = 'focused';
+      run.emotionUntil = timestamp + 240;
+    }
+    playAbilityActivation(1, els.fallAttackBtn);
+    sound('tap');
+    if (run.elementalAbilityType === 'fire') feedback(6);
+    learnRunAbility();
+    updateRunUI();
+    return true;
+  }
+
+  const infinityAttackServices = {
+    canBreak: (block, kind) => !block.dead && (kind === 'purple' || elementalDamageable(block)),
+    destroy(block, cause, at) {
+      block.hp = 0;
+      destroyBlock(block, cause, at);
+    },
+    cue: startRunUltimateCue,
+    impact(kind, final, timestamp, latenessMs) {
+      const big = kind === 'purple';
+      run.shake = Math.max(run.shake, menuReducedMotion ? 1.5 : big ? (final ? 6 : 3) : 5);
+      if (big) startRunUltimateCue(final ? 'infinityTail' : 'infinityLaunch', timestamp, latenessMs);
+      else sound('hitHard');
+      if (!final) feedback(big ? [15, 22, 28] : [7, 15]);
+    }
+  };
+
+  function startRunUltimateCue(name, timestamp, latenessMs = 0) {
+    run.ultimateAudioCue = { name, startedAt: timestamp - latenessMs };
+    playUltimateCue(name, latenessMs);
+  }
+
+  function finishRunUltimateAudio() {
+    if (!run.ultimateAudioCue) return;
+    run.ultimateAudioCue = null;
+    stopUltimateAudio();
+  }
+
+  function swapInfinityAttack() {
+    if (!fallControlsAvailable() || !INFINITY.swap(run.infinity)) return false;
+    sound('tap');
+    syncFallControls();
+    return true;
   }
 
   function activateElementalAbility(timestamp = performance.now()) {
     if (!canActivateElementalAbility(timestamp)) return false;
     const type = run.elementalAbilityType;
+    if (type === 'fire') {
+      run.phoenixChargedFromDepth = run.maxDepth;
+      commitElementalAbility(type, timestamp, run.slime.x, run.slime.y);
+      return true;
+    }
     if (type === 'glitch' && run.ultimateProfile?.kind === 'glitchDisarm' && !findGlitchDisarmTarget()) {
       impact('НЕТ КОЛЮЧЕК ВПЕРЕДИ');
       return false;
@@ -9375,6 +9893,18 @@
         endRun(false, 'Сила закончилась');
         return true;
       }
+    }
+    if (type === 'infinity') {
+      INFINITY.start(run, 'purple', timestamp, infinityAttackServices.canBreak);
+      playAbilityActivation(3);
+      startRunUltimateCue('infinityCharge', timestamp);
+      updateRunUI();
+      return true;
+    }
+    if (type === 'frost' || type === 'electric') {
+      commitElementalAbility(type, timestamp, run.slime.x, run.slime.y);
+      sound('epic');
+      return true;
     }
     const stage = run.ultimateStage || run.ultimateProfile?.stage || 3;
     if (stage >= 3) startUltimateIntro(type, timestamp);
@@ -9395,11 +9925,6 @@
     run.elementalAbilityNextTickAt = timestamp;
     run.elementalAuraId += 1;
 
-    if (['fire', 'frost', 'electric'].includes(type) && ELEMENTAL_ULTIMATES.start(run, type, timestamp, originX, originY, stagedUltimateServices)) {
-      impact(profile.name.toUpperCase());
-      updateRunUI();
-      return true;
-    }
     if (type === 'cosmos' && COSMOS_ULTIMATES.start(run, timestamp)) {
       run.cosmosUltimate = null;
       run.elementalAbilityNextTickAt = run.elementalAbilityUntil;
@@ -9418,22 +9943,22 @@
       impact('ВЬЮГА');
     } else if (type === 'electric') {
       run.electricStorm = {
-        startedAt: timestamp, nextStrikeAt: timestamp + 580,
-        strikeLimit: profile.strikes || ELECTRIC_STORM_STRIKES, branchLength: profile.branchLength || ELECTRIC_STORM_BRANCH_LENGTH,
-        strikes: 0, usedTargets: new Set(), flashUntil: 0, endedAt: 0
+        startedAt: timestamp, chargeMs: profile.chargeMs, nextStrikeAt: timestamp + profile.chargeMs,
+        strikeLimit: profile.strikes, strikes: 0, warning: null, endedAt: 0,
+        firstRow: Math.max(0, Math.floor((originY + run.slime.radius - run.blockRowOrigin) / run.cellSize) + 1),
+        leftFirst: originX < run.gridOffsetX + run.columns * run.cellSize / 2
       };
+      run.emotion = 'focused';
+      run.emotionUntil = timestamp + profile.chargeMs;
       impact('ГРОМОВЕРЖЕЦ');
     } else if (type === 'fire') {
-      const startRow = Math.max(0, Math.floor((originY - run.blockRowOrigin - run.cellSize * .5) / run.cellSize) + 1);
-      const endRow = startRow + (profile.rows || PHOENIX_FIRE_ROWS) - 1;
       run.phoenixUltimate = {
         startedAt: timestamp, duration, rows: profile.rows || PHOENIX_FIRE_ROWS,
-        arrivalMs: profile.arrivalMs || 400, travelMs: profile.travelMs || 1600,
-        fromX: originX < run.gridOffsetX + run.columns * run.cellSize * .5
-          ? run.gridOffsetX + (run.columns + 1) * run.cellSize : run.gridOffsetX - run.cellSize,
-        startRow, endRow, lastRow: startRow - 1,
-        originY, x: originX, auraId: run.elementalAuraId
+        arrivalMs: profile.arrivalMs, travelMs: profile.travelMs
       };
+      startRunUltimateCue('phoenixSummon', timestamp);
+      run.emotion = 'focused';
+      run.emotionUntil = timestamp + profile.arrivalMs;
       impact('ФЕНИКС');
     } else if (type === 'cosmos') {
       const chargeUntil = timestamp + COSMOS_ULTIMATE_CHARGE_MS;
@@ -9546,6 +10071,10 @@
 
   function activateAbility() {
     if (!activateElementalAbility()) return;
+    learnRunAbility();
+  }
+
+  function learnRunAbility() {
     if (run.tutorialPhase && !save.onboarding.abilityLearned) {
       save.onboarding.abilityLearned = true;
       persist({refreshUI:false,captureDraft:false});
@@ -9592,9 +10121,12 @@
 
     const now = run.pausedAt || performance.now();
     window.SlimeAnomalyEnergyHud.render(run);
-    const elementalActive = run.elementalAbilityActive && now < run.elementalAbilityUntil;
+    const elementalActive = run.infinity?.cast?.kind === 'purple' || (run.elementalAbilityActive && now < run.elementalAbilityUntil);
     els.abilityBtn.dataset.ultimateStage = String(run.ultimateStage || run.ultimateProfile?.stage || 3);
-    const showElemental = Boolean(run.elementalAbilityType);
+    const isFire = run.elementalAbilityType === 'fire';
+    const showElemental = Boolean(run.elementalAbilityType)
+      && (!['fire', 'frost', 'electric', 'infinity'].includes(run.elementalAbilityType) || run.ultimateStage === 3);
+    els.abilityBtn.toggleAttribute('data-infinity', !!run.infinity);
     els.abilityBtn.parentElement.hidden = !showElemental;
     if (showElemental) {
       const type = run.elementalAbilityType;
@@ -9602,6 +10134,7 @@
         frost: ULTIMATE_STAGES.get('frost', run.ultimateStage).name.toUpperCase(),
         electric: ULTIMATE_STAGES.get('electric', run.ultimateStage).name.toUpperCase(),
         fire: ULTIMATE_STAGES.get('fire', run.ultimateStage).name.toUpperCase(),
+        infinity: 'ФИОЛЕТОВАЯ СФЕРА',
         cosmos: 'КОМЕТНЫЙ ПРОРЫВ',
         nano: ULTIMATE_STAGES.get('nano', run.ultimateStage).name.toUpperCase(),
         telekinesis: 'ПСИОНИЧЕСКИЙ ПРЕСС',
@@ -9613,10 +10146,12 @@
         glitch: 'ГЛИТЧ'
       };
       const ready = canActivateElementalAbility(now);
-      const cooldownMs = adminInfiniteUltimate ? 0 : ULTIMATE_COOLDOWN.remaining(run, now);
-      const cooldownLabel = cooldownMs > 0 ? `${Math.ceil(cooldownMs / 1000)} с` : '';
-      const enoughStrength = adminInfiniteUltimate || run.energy >= ULTIMATE_COOLDOWN.CONFIG.strengthCost;
-      const percent = 100 * (1 - cooldownMs / ULTIMATE_COOLDOWN.CONFIG.durationMs);
+      const cooldownMs = isFire || adminInfiniteUltimate ? 0 : ULTIMATE_COOLDOWN.remaining(run, now);
+      const enoughStrength = isFire || adminInfiniteUltimate || run.energy >= ULTIMATE_COOLDOWN.CONFIG.strengthCost;
+      const percent = isFire ? (adminInfiniteUltimate ? 100 : Math.floor(100 * phoenixCharge(run)))
+        : 100 * (1 - cooldownMs / ULTIMATE_COOLDOWN.CONFIG.durationMs);
+      const cooldownLabel = cooldownMs > 0 ? `${Math.ceil(cooldownMs / 1000)} с`
+        : isFire && percent < 100 && !elementalActive && !run.ultimateIntro ? `${percent}%` : '';
       if (els.abilityPercent.textContent !== cooldownLabel) els.abilityPercent.textContent = cooldownLabel;
       els.abilityPercent.hidden = !cooldownLabel;
       els.abilityBtn.style.setProperty('--ability', `${enoughStrength || cooldownMs ? percent : 0}%`);
@@ -9625,8 +10160,9 @@
       els.abilityBtn.classList.toggle('is-ready', ready);
       const active = Boolean(elementalActive || run.ultimateIntro) && !adminInfiniteUltimate;
       els.abilityBtn.classList.toggle('is-active', active);
-      window.SlimeRunAbilityHud.render(run, { ready, active, cooldownMs, enoughStrength, source: runAbilityEmblem(type) });
-      const status = ready ? adminInfiniteUltimate ? 'готово' : '20% Силы'
+      window.SlimeRunAbilityHud.render(run, { ready, active, cooldownMs, enoughStrength, depthCharge: isFire, freeCast:adminInfiniteUltimate, source: runAbilityEmblem(type) });
+      const status = isFire ? ready ? 'готово' : active ? 'действует' : `заряд ${percent}%`
+        : ready ? adminInfiniteUltimate ? 'готово' : '20% Силы'
         : cooldownLabel ? `перезарядка ${cooldownLabel}`
           : active ? 'действует' : enoughStrength ? 'ожидание' : 'нужно 20% Силы';
       els.abilityBtn.setAttribute('aria-label', `${labels[type]} · ${status}`);
@@ -9638,50 +10174,168 @@
     window.SlimeRunAbilityHud.render(run,{visible:false});
   }
 
+  function drawFrostFront(x, y, width, age, alpha) {
+    if (alpha <= 0 || y < -130 || y > VIEW_H + 130) return;
+    const effects = window.SlimeMutationImpacts;
+    const low = menuReducedMotion || isLowPowerDevice();
+    const cell = run.cellSize;
+    const depth = cell * 1.48;
+    for (let i = -3; i <= 3; i += 1) {
+      const spread = i / 3;
+      const px = x + width * spread * .41;
+      const py = y - depth * (.23 + spread * spread * .24);
+      effects.halo(ctx, 'frost', px, py, width * .36, alpha * .57, .78);
+    }
+    ctx.save();
+    const mist = ctx.createLinearGradient(0, y - depth, 0, y + depth * .22);
+    mist.addColorStop(0, '#74cffa00');
+    mist.addColorStop(.48, '#8cdcff56');
+    mist.addColorStop(.78, '#d5f7ffa4');
+    mist.addColorStop(1, '#f0ffff00');
+    ctx.fillStyle = mist;
+    ctx.globalAlpha = alpha * .88;
+    ctx.beginPath();
+    ctx.moveTo(x - width * .52, y - depth * .38);
+    ctx.bezierCurveTo(x - width * .37, y - depth * .72, x - width * .18, y - depth * .88, x, y - depth);
+    ctx.bezierCurveTo(x + width * .18, y - depth * .88, x + width * .37, y - depth * .72, x + width * .52, y - depth * .38);
+    ctx.bezierCurveTo(x + width * .28, y + depth * .23, x - width * .28, y + depth * .23, x - width * .52, y - depth * .38);
+    ctx.fill();
+    ctx.lineCap = 'round';
+    for (let i = 0; i < (low ? 14 : 36); i += 1) {
+      const t = (age * (menuReducedMotion ? .001 : .003) + i * .618) % 1;
+      const span = (i * .414 % 1) * 2 - 1;
+      const px = x + span * width * (.23 + t * .30);
+      const py = y - depth * (1.04 - .99 * t + span * span * .20);
+      const size = 2.7 + i % 4 * 1.25;
+      ctx.globalAlpha = Math.sin(t * Math.PI) * alpha * .82;
+      ctx.strokeStyle = i % 3 ? '#d8f8ff' : '#ffffff';
+      ctx.lineWidth = 1 + i % 3 * .6;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + size * span * .7, py + size * 2.6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawFrostFlake(timestamp) {
+    const flake = run.frostFlake;
+    if (!flake) return;
+    const age = Math.max(0, timestamp - flake.startedAt);
+    const cell = run.cellSize;
+    const sprite = frostStormFlakeSprite;
+    const hasSprite = sprite.complete && sprite.naturalWidth;
+    const low = menuReducedMotion || isLowPowerDevice();
+    const light = window.SlimeMutationImpacts;
+    const { x } = flake;
+
+    if (age < FROST_FLAKE_TRAVEL_MS) {
+      const travel = age / FROST_FLAKE_TRAVEL_MS;
+      const y = lerp(flake.y, flake.toY, travel) - run.cameraY;
+      const size = cell * lerp(.60, FROST_FLAKE_WIDTH * .80, smoothFireVisual(travel * 6));
+      for (let i = 0; i < (low ? 8 : 17); i += 1) {
+        const t = (age * .004 + i * .618) % 1;
+        const trail = Math.min(travel * FROST_FLAKE_CELLS, t * 1.48);
+        const px = x + ((i * .414 % 1) * 2 - 1) * cell * .44 * t;
+        const py = y - trail * cell;
+        light.halo(ctx, 'frost', px, py, 8 + (i % 4) * 5, (1 - t) * .78, 1.42);
+      }
+      light.halo(ctx, 'frost', x, y, size * 1.76, .91);
+      if (!hasSprite) return;
+      ctx.save();
+      ctx.translate(x, y);
+      if (!menuReducedMotion) ctx.rotate(age * .0017);
+      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+      ctx.restore();
+      return;
+    }
+
+    const t = clamp((age - FROST_FLAKE_TRAVEL_MS) / FROST_FLAKE_BURST_MS, 0, 1);
+    const progress = 1 - (1 - t) ** 3;
+    const fade = (1 - t) ** 1.6;
+    const y = flake.toY - run.cameraY;
+    light.halo(ctx, 'frost', x, y, cell * (.85 + progress * .85), fade * .94);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(run.gridOffsetX, -100, run.columns * cell, VIEW_H + 200);
+    ctx.clip();
+    for (let i = 0; i < (low ? 10 : 20); i += 1) {
+      const angle = i * 2.39996;
+      const distance = cell * progress * (.21 + (i * .618 % 1) * .71);
+      const px = x + Math.cos(angle) * distance;
+      const py = y + Math.sin(angle) * distance;
+      const size = cell * (.047 + i % 4 * .018) * (1 - t * .43);
+      ctx.globalAlpha = fade * (.65 + i % 3 * .14);
+      ctx.fillStyle = i % 3 ? '#b9edff' : '#f1feff';
+      ctx.beginPath();
+      ctx.moveTo(px, py - size * 1.6); ctx.lineTo(px + size, py);
+      ctx.lineTo(px, py + size * 1.3); ctx.lineTo(px - size * .68, py); ctx.fill();
+      if (hasSprite && i % 7 === 0) ctx.drawImage(sprite, px - size * 1.7, py - size * 1.7, size * 3.4, size * 3.4);
+    }
+    ctx.restore();
+  }
+
   function drawFrostStormScene(timestamp) {
     const storm = run.frostStorm;
-    if (!storm || !frostStormFlakeSprite.complete || !frostStormFlakeSprite.naturalWidth) return;
+    if (!storm) return;
     const age = timestamp - storm.startedAt;
-    const intensity = clamp(age / 450, 0, 1) * clamp((storm.endAt - timestamp) / 650, 0, 1);
-    if (intensity > 0) {
+    const charge = clamp(age / storm.chargeMs, 0, 1);
+    const sweep = Math.max(0, age - storm.chargeMs);
+    const fade = 1 - smoothFireVisual((age - storm.duration + 490) / 490);
+    const intensity = smoothFireVisual(age / 440) * fade;
+    const cell = run.cellSize;
+    const low = menuReducedMotion || isLowPowerDevice();
+    const effects = window.SlimeMutationImpacts;
+    const x = charge < 1 ? run.slime.x : storm.originX;
+    const y = (charge < 1 ? run.slime.y : storm.originY) - run.cameraY;
+    const aura = smoothFireVisual(charge) * (1 - smoothFireVisual(sweep / 410));
+    ctx.save();
+    ctx.fillStyle = '#65baff';
+    ctx.globalAlpha = intensity * (menuReducedMotion ? .06 : .13);
+    ctx.fillRect(-12, -12, VIEW_W + 24, VIEW_H + 24);
+    ctx.restore();
+    effects.halo(ctx, 'frost', x, y, cell * lerp(1.55, 4.65, charge), aura * .73, .79);
+    effects.halo(ctx, 'frost', x, y + cell * .24, cell * lerp(.68, 2.04, charge), aura * .95, .72);
+    if (aura > .01) {
       ctx.save();
-      ctx.globalAlpha = intensity * .16;
-      ctx.fillStyle = '#8acaff';
-      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-      // A handful of sideways gusts gives the storm a direction without a full-screen particle field.
-      ctx.lineWidth = 1.3;
-      for (let index = 0; index < 9; index += 1) {
-        const cycle = age / (760 + index * 43) + index * .17;
-        const progress = cycle - Math.floor(cycle);
-        const x = progress * (VIEW_W + 110) - 80;
-        const y = 35 + index * (VIEW_H - 70) / 9 + Math.sin(age / 440 + index * 2) * 11;
-        ctx.globalAlpha = intensity * (.17 + index % 3 * .07);
-        ctx.strokeStyle = index % 3 ? '#c9f3ff' : '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(x - 24, y + 5);
-        ctx.lineTo(x + 28, y - 6);
-        ctx.stroke();
-      }
-      for (let index = 0; index < 6; index += 1) {
-        const cycle = age / (2350 + index * 175) + index * .23;
-        const progress = cycle - Math.floor(cycle);
-        const x = (index * 91 + progress * 105 + age * .065) % (VIEW_W + 36) - 18;
-        const y = progress * (VIEW_H + 48) - 24;
-        const size = 9 + index % 3 * 2;
-        ctx.globalAlpha = intensity * (.24 + index % 3 * .07);
-        ctx.drawImage(frostStormFlakeSprite, x - size / 2, y - size / 2, size, size);
+      for (let i = 0; i < (low ? 17 : 34); i += 1) {
+        const start = (i * .618 % 1) * .54;
+        const t = clamp((charge - start) / .49, 0, 1);
+        if (t <= 0 || t >= 1) continue;
+        const horizontal = ((i * .382 % 1) * 2 - 1) * cell * 3.6;
+        const vertical = ((i * .713 % 1) * 2 - 1) * cell * 2.25;
+        const pull = 1 - t * t;
+        const px = x + horizontal * pull;
+        const py = y + cell * .22 + vertical * pull;
+        const opacity = aura * Math.sin(t * Math.PI) * .97;
+        const size = 2.2 + i % 4 * 1.5;
+        effects.halo(ctx, 'frost', px, py, size * 5, opacity * .70);
+        ctx.globalAlpha = opacity;
+        if (i % 3 === 0 && frostStormFlakeSprite.complete && frostStormFlakeSprite.naturalWidth) {
+          ctx.drawImage(frostStormFlakeSprite, px - size, py - size, size * 2, size * 2);
+        } else {
+          ctx.fillStyle = '#eafaff';
+          ctx.fillRect(px - size * .24, py - size * .24, size * .48, size * .48);
+        }
       }
       ctx.restore();
     }
-    for (const flake of storm.flakes) {
-      const progress = clamp((timestamp - flake.startedAt) / flake.duration, 0, 1);
-      const fall = Math.pow(progress, 1.28);
-      const x = lerp(flake.fromX, flake.toX, progress)
-        + Math.sin(progress * 9 + flake.phase) * flake.sway * Math.sin(progress * Math.PI);
-      const y = lerp(flake.fromY, flake.toY, fall) - run.cameraY;
-      if (y < -35 || y > VIEW_H + 30) continue;
-      const size = flake.size * 2.7;
-      ctx.drawImage(frostStormFlakeSprite, x - size / 2, y - size / 2, size, size);
+    if (storm.firstRow === undefined) return;
+    const rowTime = Math.max(FROST_STORM_ROW_MS, run.columns * FROST_STORM_CELL_MS);
+    const burst = smoothFireVisual(sweep / 130);
+    const waveSpread = smoothFireVisual(sweep / 360);
+    const width = run.columns * cell * lerp(.46, 1.14, waveSpread);
+    const windAlpha = burst * fade * (1 - smoothFireVisual((sweep - (storm.rows - 1) * rowTime) / 490));
+    const frontY = frostStormFrontY(storm, sweep) - run.cameraY;
+    const waveX = lerp(x, VIEW_W / 2, waveSpread);
+    effects.halo(ctx, 'frost', waveX, frontY - cell * .9, width * 1.42, windAlpha * .49, .60);
+    drawFrostFront(waveX, frontY, width, age, windAlpha);
+    for (let i = 0; i < (low ? 5 : 10); i += 1) {
+      const t = (sweep * .00175 + i * .618) % 1;
+      const span = (i * .382 % 1) * 2 - 1;
+      const px = waveX + span * width * (.43 + t * .08);
+      const py = frontY - (1 - t) * cell * (2.3 + i % 3 * .46);
+      effects.halo(ctx, 'frost', px, py, cell * (1.8 + i % 3 * .49), windAlpha * Math.sin(t * Math.PI) * .30, .63);
     }
   }
 
@@ -9690,11 +10344,74 @@
     const world = run.world;
     const cosmosShake=((run.coreEncounter?.cosmos||run.coreEncounter?.hit)&&!run.evacuation)||PURIFICATION.active(run);
     const shakeClock=run.coreEncounter?.elapsed||0;
-    const shakeX = run.shake ? cosmosShake ? Math.sin(shakeClock*.061)*run.shake : rand(-run.shake, run.shake) : 0;
-    const shakeY = run.shake ? cosmosShake ? Math.sin(shakeClock*.083+.7)*run.shake*.45 : rand(-run.shake * .5, run.shake * .5) : 0;
+    let shakeX = run.shake ? cosmosShake ? Math.sin(shakeClock*.061)*run.shake : rand(-run.shake, run.shake) : 0;
+    let shakeY = run.shake ? cosmosShake ? Math.sin(shakeClock*.083+.7)*run.shake*.45 : rand(-run.shake * .5, run.shake * .5) : 0;
+    if (run.phoenixUltimate && !menuReducedMotion) {
+      const phoenix = run.phoenixUltimate;
+      const pass = (timestamp - phoenix.startedAt - phoenix.arrivalMs + 65) / 490;
+      if (pass > 0 && pass < 1) {
+        const gust = Math.sin(pass * Math.PI) ** 2 * (1 - pass * .45);
+        shakeX += Math.sin(pass * Math.PI * 6) * gust * 5.4;
+        shakeY += Math.sin(pass * Math.PI * 4 + .6) * gust * 3.8;
+      }
+    }
+    if (run.frostStorm && !menuReducedMotion) {
+      const storm = run.frostStorm;
+      const t = (timestamp - storm.startedAt - storm.chargeMs) / 365;
+      if (t > 0 && t < 1) {
+        const gust = Math.sin(t * Math.PI) * (1 - t);
+        shakeX += Math.sin(t * 20) * gust * 4.4;
+        shakeY += Math.sin(t * 14) * gust * 2.3;
+      }
+    }
+    const thunder = run.electricStorm;
+    const stormImpactAge = thunder?.impactAt == null ? -1 : timestamp - thunder.impactAt;
+    const thunderCamera = thunder && !menuReducedMotion ? electricStormCamera(thunder, timestamp) : null;
+    const thunderCharge = thunderCamera?.charge ?? 0;
+    if (thunderCharge && thunder.strikes === 0) {
+      const t = (timestamp - thunder.startedAt) / 1000;
+      shakeX += Math.sin(t * 67) * thunderCharge ** 2 * 2.3;
+      shakeY += Math.sin(t * 52) * thunderCharge ** 2 * 1.6;
+    }
+    if (!menuReducedMotion && stormImpactAge >= 0 && stormImpactAge < 305) {
+      const t = stormImpactAge / 305;
+      const damping = (1 - t) ** 2;
+      shakeX += Math.sin(t * 22) * damping * 12;
+      shakeY += Math.sin(t * 27 + .7) * damping * 14;
+    }
+    const infinityShake = !menuReducedMotion && INFINITY.cameraShake(run.infinity, timestamp);
+    if (infinityShake) {
+      shakeX += infinityShake.x;
+      shakeY += infinityShake.y;
+    }
     ctx.save();
     ctx.clearRect(0, 0, VIEW_W, VIEW_H);
     ctx.translate(shakeX, shakeY);
+    const infinityZoom = menuReducedMotion ? 1 : INFINITY.zoom(run.infinity, timestamp);
+    if (infinityZoom > 1) {
+      const focusX = run.slime.x;
+      const focusY = Math.max(90, run.slime.y - run.cameraY - 22);
+      ctx.translate(focusX * (1 - infinityZoom), focusY * (1 - infinityZoom));
+      ctx.scale(infinityZoom, infinityZoom);
+    }
+    if (run.frostStorm) {
+      const { zoom } = frostStormCamera(run.frostStorm, timestamp);
+      if (zoom > 1) {
+        const focusX = clamp(run.slime.x, VIEW_W * .13, VIEW_W * .87);
+        const focusY = clamp(run.slime.y - run.cameraY, 100, VIEW_H * .45);
+        ctx.translate(focusX * (1 - zoom), focusY * (1 - zoom));
+        ctx.scale(zoom, zoom);
+      }
+    }
+    if (thunderCharge) {
+      const { point, focus } = thunderCamera;
+      const impactZoom = stormImpactAge < 0 ? 0 : Math.exp(-stormImpactAge / 108) * .024;
+      const zoom = 1 + thunderCharge * (.031 + focus * .038) + impactZoom;
+      const focusX = clamp(lerp(run.slime.x, point.x, focus), VIEW_W * .16, VIEW_W * .84);
+      const focusY = clamp(lerp(run.slime.y, point.y, focus) - run.cameraY, 100, VIEW_H * .8);
+      ctx.translate(focusX * (1 - zoom), focusY * (1 - zoom));
+      ctx.scale(zoom, zoom);
+    }
     window.SlimeFungiHazards.applyCamera(ctx,run,VIEW_W,VIEW_H,menuReducedMotion);
     CORE.applyCinematic(ctx,run);
     PURIFICATION.applyCamera(ctx,run);
@@ -9748,9 +10465,15 @@
     const pressScale=Math.max(.035,1-pressSqueeze*.965);
     for (let row = firstVisibleRow; row <= lastVisibleRow; row += 1) {
       for (const block of run.blocksByRow?.get(row) || []) {
-        if (block.dead || (block.chase&&!block.frozen&&!block.elementalSnow&&!block.elementalSnowflake)) continue;
         const sy = block.y - run.cameraY;
         if (sy < -60 || sy > VIEW_H + 60) continue;
+        if (block.dead) {
+          if (block.rockBreakPose) drawRockUnderPressure(block, sy, timestamp);
+          continue;
+        }
+        if (block.chase&&!block.frozen&&!block.elementalSnow&&!block.elementalSnowflake) continue;
+        const infinityPull = !menuReducedMotion && INFINITY.pullPose(run.infinity, block, timestamp);
+        if (infinityPull) continue;
         const movingWithPress = pressMoving && activePress.targetSet.has(block);
         if (movingWithPress) {
           const centerX = block.x + block.w / 2;
@@ -9764,7 +10487,23 @@
           ctx.save();ctx.translate(Math.sin(timestamp / 23 + block.row * 7 + block.col) * force,
             Math.cos(timestamp / 29 + block.col * 3) * force * .55);
         }
+        const hitAge = timestamp - (block.visualCrackAt ?? -Infinity);
+        const absorbsHit = !menuReducedMotion && hitAge >= 0 && hitAge < 210;
+        if (absorbsHit) {
+          const nx = block.rockImpactNormalX;
+          const ny = block.rockImpactNormalY;
+          const force = (.65 + block.rockImpactPower * .35) * (block.maxHp >= 3 ? 1.22 : 1);
+          const compression = Math.exp(-hitAge / 55) * Math.cos(hitAge / 19) * force;
+          const x = block.x + block.w / 2;
+          const y = sy + block.h / 2;
+          ctx.save();
+          ctx.translate(x - nx * compression * 3.8, y - ny * compression * 3.8);
+          ctx.scale(1 + compression * (Math.abs(ny) * .018 - Math.abs(nx) * .045),
+            1 + compression * (Math.abs(nx) * .018 - Math.abs(ny) * .045));
+          ctx.translate(-x, -y);
+        }
         drawBlock(block, sy, timestamp);
+        if (absorbsHit) ctx.restore();
         if(run.tutorialHint?.focus===block&&!block.dead&&!run.paused){
           ctx.save();ctx.globalAlpha=1;ctx.shadowBlur=0;
           roundedRect(ctx,block.x+1.5,sy+1.5,block.w-3,block.h-3,7);
@@ -9786,6 +10525,23 @@
     // A thin shared grid keeps every tile aligned without blending their art.
     drawBlockTransitions(visibleBlocks);
     window.SlimeBrambleObstacles.draw(ctx,run,timestamp);
+    if (!menuReducedMotion && run.infinity?.cast?.kind === 'blue') {
+      for (const block of run.infinity.cast.pull) {
+        if (block.dead) continue;
+        const pose = INFINITY.pullPose(run.infinity, block, timestamp);
+        if (!pose) continue;
+        const sy = block.y - run.cameraY;
+        const x = block.x + block.w / 2;
+        const y = sy + block.h / 2;
+        ctx.save();
+        ctx.translate(x + pose.x, y + pose.y);
+        ctx.rotate(pose.spin);
+        ctx.scale(pose.scale, pose.scale);
+        ctx.translate(-x, -y);
+        drawBlock(block, sy, timestamp);
+        ctx.restore();
+      }
+    }
     for(const block of run.movingHazards||[]){
       if(!block.chase||block.dead||block.frozen||block.elementalSnow||block.elementalSnowflake)continue;
       const sy=block.y-run.cameraY;if(sy<-80||sy>VIEW_H+80)continue;
@@ -9825,6 +10581,7 @@
 
     const sporeParticleSprite = ASSETS.projectSprite('assets/vfx/spores-giant-seed-v1.webp');
     for (const p of run.particles) {
+      if (p.delay > 0) continue;
       const sy = p.y - run.cameraY;
       if (sy < -30 || sy > VIEW_H + 30) continue;
       ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
@@ -9895,11 +10652,18 @@
     }
     ctx.globalAlpha = 1;
 
+    drawPhoenixUltimate(timestamp, shakeX, shakeY);
+    drawFrostFlake(timestamp);
+    drawFallSpeedLines(timestamp);
     drawSelectedTrail(timestamp);
     drawCosmosUltimateTrail(timestamp);
     drawCloningCharge(timestamp);
     drawPhantomCompanions(timestamp,false);
+    drawElectricStormBackdrop(timestamp);
+    ELEMENTAL_ULTIMATES.draw(ctx, run, timestamp, menuReducedMotion);
+    INFINITY.draw(ctx, run, timestamp, menuReducedMotion || isLowPowerDevice(), true);
     drawSlime(timestamp);
+    INFINITY.draw(ctx, run, timestamp, menuReducedMotion || isLowPowerDevice(), false);
     window.SlimeWaterHazards.draw(ctx,run,true,menuReducedMotion);
     window.SlimeIceHazards.drawStatus(ctx,run,menuReducedMotion);
     drawLaunchEntryPortal(world,timestamp,'front');
@@ -9911,9 +10675,7 @@
     drawJellyZones(timestamp, true);
     drawFreezeZones(timestamp, true);
     drawSpecialEffects(true);
-    drawPhoenixUltimate(timestamp);
-    drawElectricStormScene(timestamp);
-    ELEMENTAL_ULTIMATES.draw(ctx, run, timestamp);
+    for (const bolt of run.electricStormBolts) drawElectricStormBolt(bolt, timestamp);
     COSMOS_ULTIMATES.draw(ctx, run, timestamp, isLowPowerDevice());
     TECHNO_ULTIMATES.draw(ctx, run, timestamp);
     drawGlitchScreenEffect(timestamp);
@@ -9927,139 +10689,271 @@
     if (elapsed < 0 || timestamp >= bolt.until) return;
     const fromY = bolt.fromScreen ? bolt.from.y : bolt.from.y - run.cameraY;
     const toY = bolt.to.y - run.cameraY;
-    const reveal = clamp(elapsed / (bolt.trunk ? 155 : 110), 0, 1);
-    const endX = lerp(bolt.from.x, bolt.to.x, reveal);
-    const endY = lerp(fromY, toY, reveal);
-    const dx = endX - bolt.from.x;
-    const dy = endY - fromY;
-    const distance = Math.max(1, Math.hypot(dx, dy));
-    const segments = Math.max(3, Math.ceil(distance / (bolt.trunk ? 24 : 18)));
-    const wobble = bolt.trunk ? 12 : 5.5;
-    const flicker = Math.floor(timestamp / 54);
-    const points = [];
-    for (let index = 0; index <= segments; index += 1) {
-      const fraction = index / segments;
-      const noise = Math.sin((bolt.seed + index * 47 + flicker * 19) * 12.9898) * 43758.5453;
-      const jitter = (noise - Math.floor(noise) - .5) * 2 * wobble * Math.sin(fraction * Math.PI);
-      points.push({
-        x: bolt.from.x + dx * fraction - dy / distance * jitter,
-        y: fromY + dy * fraction + dx / distance * jitter
-      });
+    const reveal = clamp(elapsed / bolt.grow, 0, 1);
+    const dx = (bolt.to.x - bolt.from.x) * reveal;
+    const dy = (toY - fromY) * reveal;
+    const power = bolt.power || 1;
+    const flicker = bolt.seed + (menuReducedMotion ? 0 : Math.floor(elapsed / 79) * .76);
+    const alpha = Math.min(1, reveal * 3) * clamp((bolt.until - timestamp) / (bolt.trunk ? 235 : 144), 0, 1) ** 1.4;
+    const effects = window.SlimeMutationImpacts;
+    const low = menuReducedMotion || isLowPowerDevice();
+    const x = bolt.from.x;
+    const stretch = bolt.trunk ? 21 : clamp(Math.hypot(dx, dy) * .13, 5, 15);
+    if (bolt.trunk) {
+      const nodes = low ? 3 : 5;
+      for (let i = 1; i < nodes; i += 1) {
+        const p = i / nodes;
+        effects.halo(ctx, 'electric', x + dx * p, fromY + dy * p, 73 + p * 34, alpha * .32, 2);
+      }
     }
-    const alpha = clamp(elapsed / 40, 0, 1) * clamp((bolt.until - timestamp) / 190, 0, 1);
+    effects.electricDischarge(ctx, x, fromY, x + dx, fromY + dy, 1.14 * power, stretch, flicker, alpha);
+    if (!low && bolt.trunk) {
+      effects.electricDischarge(ctx, x, fromY, x + dx, fromY + dy, 1.65, stretch * 1.85, flicker + 19, alpha * .68);
+    }
+    if (bolt.trunk && reveal === 1) {
+      const impact = clamp((elapsed - bolt.grow) / 282, 0, 1);
+      effects.burst(ctx, 'electric', bolt.to.x, toY, run.cellSize * 2.35, impact, low);
+      effects.halo(ctx, 'electric', bolt.to.x, toY, run.cellSize * 3.35, (1 - impact) ** 2 * .69, .64);
+    } else if (!bolt.trunk && reveal === 1) {
+      effects.halo(ctx, 'electric', bolt.to.x, toY, 20 * power, alpha * .62);
+    }
+  }
+
+  function drawElectricWarning(zone, timestamp, power) {
+    if (power <= 0) return;
+    const { x, y: depth } = zone.point;
+    const y = depth - run.cameraY;
+    const size = run.cellSize;
+    if (y < -size || y > VIEW_H + size) return;
+    const effects = window.SlimeMutationImpacts;
+    const time = menuReducedMotion ? 0 : timestamp;
+    const flash = smoothFireVisual((power - .78) / .22);
+    const pulse = .94 + .06 * Math.sin(time / 53);
+    effects.halo(ctx, 'electric', x, y, size * (1.02 + flash * 1.04), (.24 * power + .61 * flash) * pulse);
+    ctx.save();
+    ctx.translate(x, y);
+    const glyphSize = size * (1.17 + flash * .09);
+    ctx.scale(glyphSize, glyphSize);
+    ctx.beginPath();
+    ctx.moveTo(.10, -.34);
+    ctx.lineTo(-.21, .044);
+    ctx.lineTo(-.025, .044);
+    ctx.lineTo(-.105, .34);
+    ctx.lineTo(.22, -.077);
+    ctx.lineTo(.03, -.077);
+    ctx.closePath();
+    ctx.globalAlpha = power * (.47 + flash * .26);
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#123762';
+    ctx.lineWidth = .044;
+    ctx.stroke();
+    const fill = ctx.createLinearGradient(0, -.34, 0, .34);
+    fill.addColorStop(0, '#ffffff');
+    fill.addColorStop(.42, '#b8f4ff');
+    fill.addColorStop(1, '#64bbff');
+    ctx.fillStyle = fill;
+    ctx.globalAlpha = (.32 * power + .68 * flash) * pulse;
+    ctx.fill();
+    ctx.restore();
+    const leak = smoothFireVisual((power - .47) / .53);
+    for (let i = 0; i < 3; i += 1) {
+      const angle = i * 2.39996 + time / 410;
+      effects.electricDischarge(ctx, x, y, x + Math.cos(angle) * size * .57, y + Math.sin(angle) * size * .57,
+        .91, 5.5, i * 9.7 + Math.floor(time / 90), leak * pulse * .66);
+    }
+  }
+
+  function drawElectricStormBackdrop(timestamp) {
+    const storm = run.electricStorm;
+    if (!storm) return;
+    const age = timestamp - storm.startedAt;
+    const fade = storm.endedAt ? 1 - smoothFireVisual((timestamp - storm.endedAt) / ELECTRIC_STORM_EXIT_MS) : 1;
+    const darkness = smoothFireVisual(age / 790) * fade;
+    const sinceImpact = storm.impactAt == null ? -1 : timestamp - storm.impactAt;
+    const flash = sinceImpact < 0 ? 0 : (1 - clamp(sinceImpact / 175, 0, 1)) ** 2;
+    ctx.save();
+    const shade = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+    shade.addColorStop(0, '#03071eef');
+    shade.addColorStop(.46, '#070c28bf');
+    shade.addColorStop(1, '#111a3caa');
+    ctx.globalAlpha = darkness * .83;
+    ctx.fillStyle = shade;
+    ctx.fillRect(-35, -35, VIEW_W + 70, VIEW_H + 70);
+    ctx.globalAlpha = flash * (menuReducedMotion ? .05 : .31);
+    ctx.fillStyle = '#b2deff';
+    ctx.fillRect(-35, -35, VIEW_W + 70, VIEW_H + 70);
+    ctx.restore();
+
+    if (storm.warning) {
+      const elapsed = timestamp - storm.nextStrikeAt + ELECTRIC_STORM_WARNING_MS;
+      const appearing = smoothFireVisual(elapsed / (ELECTRIC_STORM_WARNING_MS - 100));
+      drawElectricWarning(storm.warning, timestamp, appearing * .78 + .12 * electricStormWarning(storm, timestamp));
+    } else if (storm.impactPoint && sinceImpact >= -ELECTRIC_STORM_BOLT_MS && sinceImpact < 0) {
+      drawElectricWarning({ point: storm.impactPoint }, timestamp,
+        .90 + .10 * smoothFireVisual(1 + sinceImpact / ELECTRIC_STORM_BOLT_MS));
+    }
+  }
+
+  function drawElectricStormEyes(target, state, power, timestamp) {
+    const radius = state.radius;
+    const effects = window.SlimeMutationImpacts;
+    const x = radius * .326;
+    const y = radius * .0205;
+    target.save();
+    for (const side of [-1, 1]) {
+      const px = x * side;
+      effects.halo(target, 'electric', px, y, radius * 1.19, power * .81, .73);
+      effects.halo(target, 'electric', px, y, radius * .72, power * .92);
+      target.fillStyle = '#f7ffff';
+      target.globalAlpha = power;
+      target.beginPath();
+      target.ellipse(px, y, radius * .177, radius * .224, side * .13, 0, Math.PI * 2);
+      target.fill();
+      const tick = menuReducedMotion ? 0 : Math.floor(timestamp / 78);
+      effects.electricDischarge(target, px + side * radius * .14, y,
+        px + side * radius * .79, y - radius * (.21 + Math.sin(tick + side) * .12),
+        radius * .048, radius * .18, tick + side * 7, power * .92);
+    }
+    target.restore();
+  }
+
+  function drawElectricStormAura(x, y, radius, power, timestamp) {
+    const effects = window.SlimeMutationImpacts;
+    const low = menuReducedMotion || isLowPowerDevice();
+    const time = menuReducedMotion ? 0 : timestamp / 1000;
+    const pulse = .88 + .12 * Math.sin(time * 14);
+    const reach = radius * (.84 + .37 * power);
+    effects.halo(ctx, 'electric', x, y, reach * 5.5, power * .7, 1.08);
+    effects.halo(ctx, 'electric', x, y, reach * 3.12, power * pulse * .84);
+    for (let i = 0; i < (low ? 5 : 9); i += 1) {
+      const flow = (time * (1.08 + (i % 3) * .23) + i * .618) % 1;
+      const angle = i * 2.39996 + Math.sin(time * 3.1 + i) * .41;
+      const dx = Math.cos(angle) * reach;
+      const dy = Math.sin(angle) * reach * .91;
+      const distance = 1.18 + flow * .97;
+      const px = x + dx * distance, py = y + dy * distance;
+      const shine = power * Math.sin(flow * Math.PI);
+      effects.electricDischarge(ctx, x + dx * .4, y + dy * .4, px, py,
+        radius * (.034 + (i % 4) * .012), radius * .25, i * 9.3 + Math.floor(time * 13), shine);
+      effects.halo(ctx, 'electric', px, py, 8 + (i % 3) * 2, shine * .86);
+    }
+  }
+
+  function drawPhoenixSummon(flight, lowEffects) {
+    const { x, summon } = flight;
+    const y = flight.gatherY - run.cameraY;
+    const cell = run.cellSize;
+    const light = window.SlimeMutationImpacts;
+    const gather = smoothFireVisual(summon / .18);
+    const flare = Math.sin(Math.PI * smoothFireVisual(summon));
+    const fade = 1 - smoothFireVisual((summon - .69) / .31);
+    const count = lowEffects ? 27 : 48;
+    const drift = menuReducedMotion ? .48 : 1;
+    ctx.save();
+    for (let i = 0; i < count; i += 1) {
+      const start = (i * .618033 % 1) * .43;
+      const t = clamp((summon - start) / .54, 0, 1);
+      if (t <= 0 || t >= 1) continue;
+      const angle = i * 2.39996 + t * drift * 2.5;
+      const radius = VIEW_W * (.17 + (i * .368 % 1) * .26) * (1 - t * .84);
+      const px = x + Math.cos(angle) * radius;
+      const py = y + Math.sin(angle) * radius * .54 + cell * (.76 - t);
+      const opacity = Math.sin(t * Math.PI) * gather * fade;
+      const size = (1.6 + i % 5 * .52) * (1 - t * .42);
+      ctx.globalAlpha = opacity * .88;
+      ctx.fillStyle = i % 3 ? '#342536' : '#796875';
+      ctx.beginPath();
+      ctx.moveTo(px - size * 1.3, py + size * .48);
+      ctx.lineTo(px - size * .5, py - size);
+      ctx.lineTo(px + size, py - size * .46);
+      ctx.lineTo(px + size * .52, py + size * .72);
+      ctx.fill();
+      if (i % 4 === 0) light.halo(ctx, 'fire', px, py, size * 6.5, opacity * .84);
+    }
+    for (let i = 0; i < (lowEffects ? 5 : 9); i += 1) {
+      const t = (summon * 1.55 + i * .618) % 1;
+      const px = lerp(run.slime.x, x, t) + Math.sin(i * 4.3 + t * 5) * cell * .48 * Math.sin(t * Math.PI);
+      const py = lerp(run.slime.y - run.cameraY - cell * .16, y, t);
+      light.halo(ctx, 'fire', px, py, 12 + i % 4 * 5, Math.sin(t * Math.PI) * gather * fade * .90, 1.25);
+    }
+    const bright = flare * (menuReducedMotion ? .57 : 1);
+    light.halo(ctx, 'fire', x, y - cell * .16, cell * (3 + flare * 1.8), bright * .63, .84);
+    light.halo(ctx, 'fire', x, y - cell * .14, cell * (.8 + flare * 1.1), bright * .72, .95);
+    ctx.restore();
+  }
+
+  function drawPhoenixGust(flight, lowEffects) {
+    const t = flight.passAge / 610;
+    if (t <= 0 || t >= 1) return;
+    const pulse = Math.sin(Math.PI * t) * (1 - t * .62);
+    const light = window.SlimeMutationImpacts;
+    const y = lerp(flight.gatherY - run.cameraY, flight.y - run.cameraY + VIEW_H * .3, t);
+    light.halo(ctx, 'fire', flight.x, y, VIEW_W * 2.35, pulse * (menuReducedMotion ? .23 : .53), .57);
+    if (menuReducedMotion) return;
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
+    const edgeGlow = ctx.createLinearGradient(0, 0, VIEW_W, 0);
+    edgeGlow.addColorStop(0, '#fc782baa');
+    edgeGlow.addColorStop(.27, '#ff90470b');
+    edgeGlow.addColorStop(.73, '#ff90470b');
+    edgeGlow.addColorStop(1, '#fc782baa');
+    ctx.globalAlpha = pulse * .85;
+    ctx.fillStyle = edgeGlow;
+    ctx.fillRect(-12, -12, VIEW_W + 24, VIEW_H + 24);
     ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    for (const [width, color, shadow] of [
-      [bolt.trunk ? 18 : 10, '#168dff', 24],
-      [bolt.trunk ? 8 : 4.5, '#3edbff', 13],
-      [bolt.trunk ? 3.2 : 2.1, '#fffdda', 6]
-    ]) {
-      ctx.globalAlpha = alpha;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = width;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = isLowPowerDevice() ? shadow * .45 : shadow;
+    for (let i = 0; i < (lowEffects ? 8 : 14); i += 1) {
+      const side = i % 2 ? 1 : -1;
+      const inset = 12 + i * .618 % 1 * 70;
+      const px = side < 0 ? inset : VIEW_W - inset;
+      const py = (i * .414 % 1) * VIEW_H - 96 + t * VIEW_H * .38;
+      const length = 27 + i % 5 * 13;
+      ctx.strokeStyle = i % 3 ? '#ff9e52' : '#fff0be';
+      ctx.lineWidth = i % 3 ? 1.8 : 2.6;
+      ctx.globalAlpha = pulse * (.28 + i % 3 * .1);
       ctx.beginPath();
-      points.forEach((point, index) => index ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+      ctx.moveTo(px - side * 10, py - length);
+      ctx.quadraticCurveTo(px, py - length * .55, px + side * 17, py);
       ctx.stroke();
-    }
-    if (bolt.trunk && elapsed > 90) {
-      const bloom = ctx.createRadialGradient(bolt.to.x, toY, 1, bolt.to.x, toY, 41);
-      bloom.addColorStop(0, 'rgba(255,255,235,.9)');
-      bloom.addColorStop(.24, 'rgba(98,232,255,.62)');
-      bloom.addColorStop(1, 'rgba(20,117,255,0)');
-      ctx.globalAlpha = alpha * .9;
-      ctx.fillStyle = bloom;
-      ctx.beginPath(); ctx.arc(bolt.to.x, toY, 41, 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
   }
 
-  function drawElectricStormScene(timestamp) {
-    const storm = run.electricStorm;
-    if (storm) {
-      const gathering = clamp((timestamp - storm.startedAt) / 580, 0, 1);
-      const assemble = 1 - Math.pow(1 - gathering, 3);
-      const exit = storm.endedAt ? clamp((timestamp - storm.endedAt) / ELECTRIC_STORM_EXIT_MS, 0, 1) : 0;
-      const disperse = 1 - Math.pow(1 - exit, 2);
-      const cloudBlend = assemble * (1 - disperse);
-      ctx.save();
-      ctx.fillStyle = `rgba(3,8,34,${(.12 + assemble * .15) * (1 - exit)})`;
-      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-      const charging = !storm.endedAt && storm.strikes < (storm.strikeLimit || ELECTRIC_STORM_STRIKES)
-        ? clamp(1 - (storm.nextStrikeAt - timestamp) / 260, 0, 1) : 0;
-      const strikeFlash = clamp((storm.flashUntil - timestamp) / 220, 0, 1);
-      const cloudGlow = Math.max(charging * .86, strikeFlash);
-      if (cloudGlow > 0) {
-        const glowX = [...run.electricStormBolts].reverse().find(bolt => bolt.trunk && timestamp >= bolt.startedAt && timestamp < bolt.until)?.from.x || VIEW_W / 2;
-        const glowY = 62;
-        const glowRadius = Math.max(VIEW_W * .73, 260);
-        const chargeLight = ctx.createRadialGradient(glowX, glowY, 0, glowX, glowY, glowRadius);
-        chargeLight.addColorStop(0, `rgba(218,251,255,${cloudGlow * .3})`);
-        chargeLight.addColorStop(.23, `rgba(101,206,255,${cloudGlow * .19})`);
-        chargeLight.addColorStop(.58, `rgba(38,130,244,${cloudGlow * .07})`);
-        chargeLight.addColorStop(1, 'rgba(23,94,210,0)');
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = chargeLight;
-        ctx.beginPath(); ctx.arc(glowX, glowY, glowRadius, 0, Math.PI * 2); ctx.fill();
-        ctx.globalCompositeOperation = 'source-over';
-      }
-      if (timestamp < storm.flashUntil) {
-        ctx.fillStyle = `rgba(167,227,255,${clamp((storm.flashUntil - timestamp) / 220, 0, 1) * .25})`;
-        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-      }
-      if (electricStormCloudSprite.complete && electricStormCloudSprite.naturalWidth) {
-        const width = VIEW_W * .75;
-        const height = width * electricStormCloudSprite.naturalHeight / electricStormCloudSprite.naturalWidth;
-        const y = -height * .42 + assemble * 8 - disperse * 10 + Math.sin(timestamp / 380) * 3;
-        const leftX = lerp(-width * .53, VIEW_W * .29, cloudBlend) + Math.sin(timestamp / 510) * 3;
-        const rightX = lerp(VIEW_W + width * .53, VIEW_W * .71, cloudBlend) - Math.sin(timestamp / 470) * 3;
-        ctx.globalAlpha = .96 * (1 - exit);
-        ctx.shadowColor = cloudGlow ? '#8ddaff' : '#242a35';
-        ctx.shadowBlur = isLowPowerDevice() ? 0 : 4 + cloudGlow * 12;
-        ctx.drawImage(electricStormCloudSprite, leftX - width / 2, y, width, height);
-        ctx.translate(rightX, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(electricStormCloudSprite, -width / 2, y + 4, width, height);
-      }
-      ctx.restore();
-    }
-    for (const bolt of run.electricStormBolts || []) drawElectricStormBolt(bolt, timestamp);
-  }
-
-  function drawPhoenixUltimate(timestamp) {
-    for (const wave of run.phoenixWaves || []) {
-      const age = clamp((timestamp - wave.startedAt) / 490, 0, 1);
-      const y = wave.y - run.cameraY;
-      if (y < -45 || y > VIEW_H + 45) continue;
-      ctx.save();
-      ctx.globalAlpha = (1 - age) * .78;
-      ctx.globalCompositeOperation = 'screen';
-      const heat = ctx.createLinearGradient(0, y - 25, 0, y + 25);
-      heat.addColorStop(0, 'rgba(255,64,12,0)');
-      heat.addColorStop(.45, 'rgba(255,114,19,.32)');
-      heat.addColorStop(.5, 'rgba(255,245,147,.92)');
-      heat.addColorStop(.55, 'rgba(255,114,19,.32)');
-      heat.addColorStop(1, 'rgba(255,64,12,0)');
-      ctx.fillStyle = heat;
-      ctx.fillRect(0, y - 25, VIEW_W, 50);
-      ctx.restore();
-    }
+  function drawPhoenixUltimate(timestamp, cameraShakeX, cameraShakeY) {
     const phoenix = run.phoenixUltimate;
-    if (!phoenix || !phoenixUltimateSprite.complete || !phoenixUltimateSprite.naturalWidth) return;
+    const sprite = phoenixUltimateSprite;
+    if (!phoenix) return;
     const flight = phoenixFlight(phoenix, timestamp);
-    const width = run.cellSize * run.columns * 1.04 * flight.scale;
-    const height = width * phoenixUltimateSprite.naturalHeight / phoenixUltimateSprite.naturalWidth;
+    const lowEffects = isLowPowerDevice() || menuReducedMotion;
+    if (flight.summon < 1) drawPhoenixSummon(flight, lowEffects);
+    else drawPhoenixGust(flight, lowEffects);
+    if (!sprite.complete || !sprite.naturalWidth) return;
+    const shaftWidth = run.cellSize * run.columns;
+    const aspect = sprite.naturalHeight / sprite.naturalWidth;
+    const { x, reveal } = flight;
     const headY = flight.y - run.cameraY;
-    const x = flight.x;
-    if (headY < -height * .15 || headY > VIEW_H + height) return;
+    const width = shaftWidth * flight.scale;
+    const height = width * aspect;
+    if (reveal <= 0 || headY < -run.cellSize || headY - height * 1.12 > VIEW_H) return;
+    const drawX = -width / 2;
+    const drawY = -height * .975;
     ctx.save();
-    ctx.globalAlpha = flight.alpha;
-    ctx.shadowColor = '#ff781a';
-    ctx.shadowBlur = isLowPowerDevice() ? 8 : 18;
-    ctx.drawImage(phoenixUltimateSprite, x - width / 2, headY - height * .93, width, height);
+    // Keep the bird steady while its passing gust shakes the mine.
+    ctx.translate(x - cameraShakeX, headY - cameraShakeY);
+    const effects = window.SlimeMutationImpacts;
+    effects.halo(ctx, 'fire', 0, -height * .45, width * 1.15, reveal * .56, .88);
+    effects.halo(ctx, 'fire', 0, -height * .16, width * .48, reveal * .33, 1.35);
+    const emberCount = lowEffects ? 12 : 24;
+    for (let i = 0; i < emberCount; i += 1) {
+      const t = ((flight.age + i * 53) % 490) / 490;
+      const side = i % 2 ? 1 : -1;
+      const wing = .12 + (i * .618 % 1) * .36;
+      const emberX = width * side * wing * (1 + t * .34) + Math.sin(i + t * 6) * t * 11;
+      const emberY = -height * (.18 + t * .72 + wing * .38);
+      const spark = (8 + i % 4 * 3) * (1 - .60 * t) * (.7 + flight.scale * .3);
+      effects.halo(ctx, 'fire', emberX, emberY, spark, reveal * Math.sin(t * Math.PI) * .95, 1.55);
+    }
+    ctx.globalAlpha = reveal;
+    ctx.drawImage(sprite, drawX, drawY, width, height);
     ctx.restore();
   }
 
@@ -10090,6 +10984,39 @@
     } else {
       ctx.fillStyle = intro.color;
       ctx.beginPath(); ctx.arc(0, 0, size * .42, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawFallSpeedLines(timestamp) {
+    const slime = run.slime;
+    const speed = descentSpeedRatio(run, normalFallSpeedLimit());
+    if (speed <= 1.0001 || menuReducedMotion || run.portalEntry || run.coreEncounter || run.evacuation) return;
+    const intensity = .27 + .73 * clamp((speed - 1) / (FALL_MOMENTUM.max - 1), 0, 1) ** .68;
+    const count = isLowPowerDevice() ? 10 : 14;
+    const y = slime.y - run.cameraY;
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (let i = 0; i < count; i += 1) {
+      const phase = (timestamp * .0044 + i * .618) % 1;
+      const length = 16 + intensity * (29 + (i % 3) * 12);
+      const side = i % 2 === 0 ? -1 : 1;
+      const spread = (Math.floor(i / 2) % 7) / 6;
+      const x = slime.x + side * (slime.radius * (.76 + spread * .63) + 4) - slime.vx * phase * .082;
+      const head = y + slime.radius * 1.4 - phase * (108 + intensity * 52);
+      const alpha = Math.sin(phase * Math.PI) * intensity * (.46 + (i % 3) * .19);
+      const width = 1.4 + (i % 3) * .65;
+      ctx.beginPath();
+      ctx.moveTo(x, head);
+      ctx.lineTo(x - slime.vx * length / 720, head - length);
+      ctx.strokeStyle = '#6ad9ff';
+      ctx.globalAlpha = alpha * .36;
+      ctx.lineWidth = width + 3;
+      ctx.stroke();
+      ctx.strokeStyle = '#effcff';
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = width;
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -10435,10 +11362,10 @@
       const progress = 1 - clamp(effect.life / effect.maxLife, 0, 1);
       const alpha = Math.pow(1 - progress, .94);
       const y = effect.y - run.cameraY;
-      if (['blockBreak','essenceCollect','frostTouch','frostPulse','firePulse','fireTransfer','freeze','cryo','heal','bomb'].includes(effect.type)
+      if (['blockBreak','blockAsh','rockSpeedImpact','rockContact','essenceCollect','frostTouch','frostPulse','firePulse','freeze','cryo','heal','bomb','electricShock','electricDashBurst'].includes(effect.type)
           && (y < -200 || y > VIEW_H + 200)) continue;
       ctx.save();
-      if (effect.type === 'blockBreak' || effect.type==='essenceCollect') {
+      if (['blockBreak','blockAsh','rockSpeedImpact','rockContact','essenceCollect'].includes(effect.type)) {
         window.SlimeBlockBreakFeedback.drawImpact(ctx,effect,run.cameraY);
       } else if (effect.type === 'snowballKnockback') {
         const travel = effect.maxLife * progress;
@@ -10456,12 +11383,16 @@
         window.SlimeMutationImpacts.frostTouch(ctx,effect,run.cameraY,run.cellSize,isLowPowerDevice());
       } else if (effect.type === 'snowShard') {
         window.SlimeMutationImpacts.frostShard(ctx,effect,run.cameraY,run.cellSize);
+      } else if (effect.type === 'electricShock') {
+        window.SlimeMutationImpacts.electricShock(ctx, effect.x, y, effect.width, effect.height,
+          (effect.maxLife - effect.life) * 1000, effect.power, effect.seed, menuReducedMotion);
+      } else if (effect.type === 'electricDashBurst') {
+        window.SlimeMutationImpacts.burst(ctx, 'electric', effect.x, y, run.cellSize * 2.25,
+          progress, menuReducedMotion || isLowPowerDevice());
       } else if (effect.type === 'electricArc') {
         window.SlimeMutationImpacts.electricChain(ctx,effect,run.cameraY,run.cellSize);
       } else if (effect.type === 'frostPulse') {
         window.SlimeMutationImpacts.frostTouch(ctx,effect,run.cameraY,run.cellSize,isLowPowerDevice());
-      } else if (effect.type === 'fireTransfer') {
-        ELEMENTAL_ULTIMATES.drawFireTransfer(ctx, effect, run.cameraY, run.cellSize, isLowPowerDevice());
       } else if (effect.type === 'firePulse') {
         window.SlimeMutationImpacts.burst(ctx,'fire',effect.x,y,run.cellSize*2.4,progress,isLowPowerDevice());
       } else if (effect.type === 'coinArc') {
@@ -11094,12 +12025,31 @@
     for(const burst of run.phantomBursts)window.SlimePhantomEffects.burst(ctx,burst,run.cameraY,run.cellSize,timestamp);
   }
 
-  function drawBlock(block, sy, timestamp) {
-    const hpRatio = clamp(block.hp / block.maxHp, 0, 1);
+  function drawRockUnderPressure(block, sy, timestamp) {
+    const pose = block.rockBreakPose;
+    const age = timestamp - pose.at;
+    if (age < 0 || age >= pose.duration) return;
+    const t = menuReducedMotion ? 0 : 1 - (1 - age / pose.duration) ** 2;
+    const x = block.x + block.w * .5, y = sy + block.h * .5;
+    const sideways = Math.abs(pose.nx) > Math.abs(pose.ny);
+    ctx.save();
+    ctx.translate(x - pose.nx * block.w * .10 * t, y - pose.ny * block.h * .10 * t);
+    ctx.scale(1 - t * (sideways ? .21 : .04), 1 - t * (sideways ? .04 : .24));
+    ctx.translate(-x, -y);
+    drawBlock(block, sy, timestamp, pose.hpRatio);
+    ctx.restore();
+  }
+
+  function drawBlock(block, sy, timestamp, hpRatio = clamp(block.hp / block.maxHp, 0, 1)) {
     const color = materialColor(block.material, run.world, hpRatio);
     const special = block.special;
     const tier = block.tier || 'dense';
     ctx.save();
+    const shockAge = timestamp - (block.electricFlashStartedAt ?? -Infinity);
+    if (!menuReducedMotion && shockAge >= 0 && shockAge < 255) {
+      const force = Math.exp(-shockAge / 86) * (block.electricShockPower || 1);
+      ctx.translate(Math.sin(shockAge / 6.5) * force * 4.35, Math.sin(shockAge / 9.2) * force * 2.45);
+    }
 
     if(block.fungi&&window.SlimeFungiHazards.drawBlock(ctx,run,block,sy,menuReducedMotion||graphicsBudget<.8||isLowPowerDevice())){drawBlockElementalOverlay(block,sy,timestamp);ctx.restore();return;}
     if(block.ice&&window.SlimeIceHazards.drawBlock(ctx,run,block,sy)){drawBlockElementalOverlay(block,sy,timestamp);ctx.restore();return;}
@@ -11273,6 +12223,19 @@
     else elementalBlockSpriteCtx.clearRect(0, 0, pixels, pixels);
   }
 
+  function burnedBlockFace(block, sy, timestamp, visual = worldBlockArtwork(block, timestamp)) {
+    if (!visual?.sprite?.complete || !visual.sprite.naturalWidth) return null;
+    const {x, y, width, height} = worldBlockSpriteRect(block, sy, visual);
+    return {sprite: visual.sprite, x, y, width, height};
+  }
+
+  function fireCharringProgress(block, timestamp) {
+    const remaining = block.fireDamageAt - timestamp;
+    if (block.hp > 1 || !(remaining > 0)) return 0;
+    const span = Math.min(FIRE_FINAL_BURN_MS, Math.max(1, block.fireDamageAt - block.fireIgnitedAt));
+    return 1 - clamp(remaining / span, 0, 1);
+  }
+
   function drawBlockElementalOverlay(block, sy, timestamp) {
     window.SlimeBrambleObstacles.drawBlock(ctx,run,block,sy,timestamp,menuReducedMotion);
     const x = block.x;
@@ -11320,17 +12283,18 @@
 
     if (timestamp < Math.max(block.fireDamageAt || 0, block.fireFlashUntil || 0)) {
       const age = Math.max(0, timestamp - (block.fireIgnitedAt || timestamp - 180));
-      const ignite = smoothFireVisual(age / 170);
-      const release = smoothFireVisual(((block.fireFlashUntil || timestamp) - timestamp) / 330);
+      const ignite = smoothFireVisual(age / 51);
+      const release = smoothFireVisual(((block.fireFlashUntil || timestamp) - timestamp) / 190);
+      const char = fireCharringProgress(block, timestamp);
       prepareElementalBlockCanvas(w);
       window.BlockEffectDraft.drawBurningBlock(elementalBlockCtx, 0, 0, w, timestamp, block.id);
-      ctx.globalAlpha = ignite * release;
+      ctx.globalAlpha = ignite * release * (1 - char * .68);
       ctx.drawImage(elementalBlockCanvas, 0, 0, w, w, x, sy, w, h);
       ctx.globalAlpha = 1;
     }
 
     if (timestamp >= (block.electricFlashStartedAt || 0) && timestamp < (block.electricFlashUntil || 0)) {
-      window.SlimeMutationImpacts.electricHit(ctx,block,sy,timestamp);
+      window.SlimeMutationImpacts.electricHit(ctx,block,sy,timestamp,menuReducedMotion);
     }
     ctx.restore();
   }
@@ -11348,7 +12312,7 @@
     if (block.visualCrackStage !== stage) {
       const previous = block.visualCrackStage;
       block.visualCrackStage = stage;
-      block.visualCrackChangedAt = previous === undefined || previous > stage ? timestamp - 280 : timestamp;
+      block.visualCrackChangedAt = block.visualCrackAt ?? (previous === undefined || previous > stage ? timestamp - 280 : timestamp);
     }
     if (!stage || !window.BlockEffectDraft?.drawCrackedBlock) return false;
     window.BlockEffectDraft.drawCrackedBlock(ctx, block.x, sy, block.w, stage,
@@ -11414,8 +12378,8 @@
     ctx.restore();
   }
 
-  function drawWorldSprite(block, sy, hpRatio, timestamp = performance.now()) {
-    if (block.special === 'boss') return false;
+  function worldBlockArtwork(block, timestamp) {
+    if (block.special === 'boss') return null;
     let spriteName;
     const frostTransformed = block.elementalSnow || block.elementalSnowflake;
     const frostProgress = frostTransformed && block.frostTransformStartedAt
@@ -11487,20 +12451,29 @@
     const sprite = pandoraSprite?.complete && pandoraSprite.naturalWidth
       ? pandoraSprite
       : customSprite?.complete && customSprite.naturalWidth ? customSprite : sprites?.[spriteName];
-    if (!sprite?.complete || !sprite.naturalWidth) return false;
+    return {sprite, spriteName, artwork, customSprite, frostIsPrimary, frostTransformed, frostProgress,
+      firstWorldSpikeEnemy, liquidVeinName};
+  }
 
-    // Continuous terrain meets edge-to-edge; floating enemies keep their gap.
-    const gutter = [1,6].includes(run.worldId) && !firstWorldSpikeEnemy ? 0 : .5;
-    // Damage is communicated only by the crack overlay. The underlying artwork
-    // remains fully opaque and keeps its original colour at every health value.
-    ctx.globalAlpha = 1;
+  function worldBlockSpriteRect(block, sy, visual) {
+    const {firstWorldSpikeEnemy, artwork, customSprite} = visual;
+    const gutter = [1, 6].includes(run.worldId) && !firstWorldSpikeEnemy ? 0 : .5;
     const scale = firstWorldSpikeEnemy ? .92 : customSprite ? (artwork.scale || 1) : 1;
     const width = Math.max(1, block.w * scale - gutter * 2);
     const height = Math.max(1, block.h * scale - gutter * 2);
     const offsetX = customSprite ? block.w * (artwork.x || 0) / 100 : 0;
     const offsetY = customSprite ? block.h * (artwork.y || 0) / 100 : 0;
-    const drawX = block.x + (block.w - width) / 2 + offsetX;
-    const drawY = sy + (block.h - height) / 2 + offsetY;
+    return {gutter, width, height, offsetX, offsetY, x: block.x + (block.w - width) / 2 + offsetX,
+      y: sy + (block.h - height) / 2 + offsetY};
+  }
+
+  function drawWorldSprite(block, sy, hpRatio, timestamp = performance.now()) {
+    const visual = worldBlockArtwork(block, timestamp);
+    if (!visual?.sprite?.complete || !visual.sprite.naturalWidth) return false;
+    const {sprite, spriteName, customSprite, frostIsPrimary, frostTransformed, frostProgress,
+      firstWorldSpikeEnemy, liquidVeinName} = visual;
+    const {gutter, width, height, offsetX, offsetY, x: drawX, y: drawY} = worldBlockSpriteRect(block, sy, visual);
+    ctx.globalAlpha = 1;
     if (firstWorldSpikeEnemy) {
       if(run.worldId===1&&(block.motion||block.chase)&&window.SlimeThornHazards.draw(ctx,block,sy,width,timestamp,menuReducedMotion))return true;
       const hover = Math.sin(timestamp / 430 + block.id * .7) * 1.35;
@@ -11513,6 +12486,7 @@
       ctx.restore();
       return true;
     }
+    let char = fireCharringProgress(block, timestamp);
     if (['bomb', 'spring', 'cryo', 'jelly', 'pandora', 'geyser', 'meteor'].includes(block.special)) {
       const time = performance.now();
       const phase = time / (block.special === 'bomb' ? 160 : block.special === 'spring' ? 260 : 300) + block.id;
@@ -11550,7 +12524,9 @@
         ctx.filter = `hue-rotate(${Math.sin(time / 520 + block.id) * 22}deg) saturate(1.12)`;
       } else ctx.scale(pulse, pulse);
       ctx.drawImage(sprite, -width / 2, -height / 2, width, height);
+      if (char > 0) window.SlimeBlockBreakFeedback.drawChar(ctx, {sprite, x: -width / 2, y: -height / 2, width, height}, char);
       ctx.restore();
+      char = 0;
     } else {
       if(run.worldId===6&&!block.hazard&&!block.special&&!customSprite&&!frostIsPrimary){
         // Asteroid sprites have rounded transparent corners. Back their entire
@@ -11585,6 +12561,7 @@
     }
     drawSpecialBlockAura(block, sy);
     drawCrackStage(block, sy, hpRatio, timestamp);
+    if (char > 0) window.SlimeBlockBreakFeedback.drawChar(ctx, {sprite, x: drawX, y: drawY, width, height}, char);
 
     return true;
   }
@@ -12432,7 +13409,9 @@
     const petPose = window.MenuPetpet.sample(menuPetpet, timestamp);
     if (!petPose.active) els.slime.classList.remove('petting');
     menuSlimeCtx.clearRect(0, 0, 260, 260);
-    const categoryVisual = updateMenuCategoryVisuals(timestamp);
+    const menuVisual = updateMenuCategoryVisuals(timestamp);
+    const infinity = save.rewards.infinityEquipped && !menuMutationReveal && !tutorialActive();
+    const categoryVisual = infinity ? {mass:menuVisual.mass} : menuVisual;
     const tapPose=window.SlimeTapEmotions.sample(menuTapEmotion,timestamp);
     const emotion = tapPose.active&&!menuSlimeIsBusy({ignoreModal:true})?tapPose.emotion:menuSlimeEmotion();
     const emotionTime = emotion === 'chewing' && menuChewStartedAt
@@ -12469,7 +13448,8 @@
           if(!p.front)window.SlimePhantomEffects.spirit(menuSlimeCtx,p,radius*.5,i,timestamp,Math.min(1,categoryVisual.phantom));
         }
       }
-      drawElementalSlimeAvatar(menuSlimeCtx, menuAvatarOptions, categoryVisual, timestamp);
+      if (infinity) drawInfinityAvatar(menuSlimeCtx, menuAvatarOptions);
+      else drawElementalSlimeAvatar(menuSlimeCtx, menuAvatarOptions, categoryVisual, timestamp);
       menuSlimeCtx.restore();
     }
     const nanoCount = showAvatar ? Math.min(1, Math.round(categoryVisual.nano)) : 0;
@@ -12517,8 +13497,9 @@
       target.scale(mask.width / 260, mask.height / 260);
       const motion = categoryVisual.telekinesis >= 3
         ? window.MutationEffectDraft.psionicsMotion(timestamp, radius).offset : 0;
-      drawSlimeAvatar(target, { ...menuAvatarOptions, y: slimeY + motion, hideFace: true,
-        bodyVariant: elementalBodyVariant(categoryVisual) });
+      const silhouette = {...menuAvatarOptions, y:slimeY+motion, hideFace:true};
+      if (infinity) drawInfinityAvatar(target, silhouette);
+      else drawSlimeAvatar(target, {...silhouette, bodyVariant:elementalBodyVariant(categoryVisual)});
       return mask;
     }
   }
@@ -13425,6 +14406,11 @@
     }
   }
 
+  function drawInfinityAvatar(target, pose) {
+    drawSlimeAvatar(target, {...pose, skin:'classic', appearance:'cute-v2', bodyVariant:'infinity',
+      colors:SKINS[0].colors, faceColor:'#092d53', faceOffsetY:-pose.radius*.075, aura:''});
+  }
+
   function drawSlime(timestamp) {
     if(run.evacuation){
       const e=run.evacuation,s=run.slime;
@@ -13434,12 +14420,15 @@
         accessory:save.wardrobe?.accessory||'none',skin:'classic',appearance:'cute-v2',bodyVariant:'',colors:SKINS[0].colors,
         gazeX:e.side?e.side*.65:0,gazeY:0,
         scaleX:e.scale*e.scaleX,scaleY:e.scale*e.scaleY,rotation:e.rotation,alpha:e.alpha,timestamp};
+      if (run.infinity) { drawInfinityAvatar(ctx, options); return; }
       if(e.neutral<.999)drawElementalSlimeAvatar(ctx,{...options,alpha:e.alpha*(1-e.neutral)},run.categoryVisuals,timestamp);
       if(e.neutral>.001)drawSlimeAvatar(ctx,{...options,alpha:e.alpha*e.neutral});
       return;
     }
     if (run.coreEncounter?.slimeScale < .01) return;
     const s = run.slime;
+    if (run.electricDash) ELEMENTAL_ULTIMATES.drawElectricDash(ctx, run, timestamp, menuReducedMotion);
+    const dashPose = run.electricDash?.endedAt === null && !menuReducedMotion ? run.electricDash : null;
     let screenY = s.y - run.cameraY;
     const ghost = !run.coreEncounter && phantomActive(timestamp) && !run.portalEntry;
     const selected = skinById(save.selectedSkin);
@@ -13469,10 +14458,18 @@
     const speed = Math.hypot(s.vx, s.vy);
     const corePose=CORE.preparationPose(run);
     const cosmosPose=run.coreEncounter?.cosmos?run.coreEncounter:null;
-    const stretch = corePose.preparing ? 0 : cosmosPose?.bodyStretch ?? clamp(s.vy / 900, -.22, .3);
-    const bounceSquash = corePose.preparing ? 0 : clamp(Math.sin(s.wobble) * .025 + Math.abs(s.vx) / 1700, 0, .12);
-    const scaleX = frozen ? 1 : 1 - stretch * .42 + bounceSquash;
-    const scaleY = frozen ? 1 : 1 + stretch - bounceSquash * .55;
+    const fallingScale = s.vy > 0 ? run.fallSpeedScale ?? 1 : 1;
+    const stretch = dashPose || corePose.preparing ? 0 : cosmosPose?.bodyStretch ?? clamp(s.vy * fallingScale / 1000, -.20, .33);
+    const bounceSquash = dashPose || corePose.preparing ? 0 : clamp(Math.sin(s.wobble) * .025 + Math.abs(s.vx) / 1700, 0, .12);
+    const contactAge = timestamp - (run.rockContactAt ?? -Infinity);
+    const contact = !corePose.preparing && !run.coreEncounter && !run.portalEntry && contactAge >= 0
+      ? (1 - clamp(contactAge / 145, 0, 1)) ** 2 * (run.rockContactPower || 0) : 0;
+    const release = contactAge > 24 && contactAge < 140 && run.rockContactBroken && !run.coreEncounter && !run.portalEntry
+      ? Math.sin(Math.PI * (contactAge - 24) / 116) * (run.rockContactPower || 0) * .15 : 0;
+    const contactSquashX = contact * (run.rockContactSide ? -.18 : .16) - release * .56;
+    const contactSquashY = contact * (run.rockContactSide ? .13 : -.29) + release;
+    const scaleX = frozen ? 1 : 1 - stretch * .42 + bounceSquash + contactSquashX;
+    const scaleY = frozen ? 1 : 1 + stretch - bounceSquash * .55 + contactSquashY;
     const cloneCast = run.sporePop || run.cloneUltimate;
     const cloneChargeMs = run.sporePop ? run.ultimateProfile.chargeMs : CLONE_ULTIMATE_BURST_MS;
     const cloneChargeAge = cloneCast ? timestamp - cloneCast.startedAt : 0;
@@ -13559,6 +14556,24 @@
       ctx.restore();
     }
 
+    const storm = run.electricStorm;
+    const stormCharge = storm ? electricStormCharge(storm, timestamp) : 0;
+    if (stormCharge > .01) drawElectricStormAura(s.x, screenY, radius, stormCharge, timestamp);
+    const castLight = ELEMENTAL_ULTIMATES.fireCastLight(run, timestamp);
+    if (castLight) {
+      const effects = window.SlimeMutationImpacts;
+      effects.halo(ctx, 'fire', s.x, screenY, radius * (4.9 + castLight.flare * 1.25), castLight.glow);
+      effects.halo(ctx, 'fire', s.x, screenY + radius * .12, radius * 3.5, castLight.glow * .77);
+      if (!menuReducedMotion && castLight.flare > 0) {
+        for (let i = 0; i < 5; i += 1) {
+          const angle = i * Math.PI * 2 / 5 + .34;
+          const distance = radius * (1.15 + castLight.spread * 1.95);
+          effects.halo(ctx, 'fire', s.x + Math.cos(angle) * distance, screenY + Math.sin(angle) * distance,
+            radius * (.55 + i % 2 * .16), castLight.flare * (.66 + i % 2 * .16));
+        }
+      }
+    }
+    const fireRecoil = menuReducedMotion ? 0 : (castLight?.flare ?? 0);
     const avatarOptions = {
       x: s.x,
       y: screenY,
@@ -13569,6 +14584,8 @@
       accessory:save.wardrobe?.accessory || 'none',
       skin: selected.id,
       poisoned,
+      afterLayer: stormCharge > .01 ? (target, state) => drawElectricStormEyes(target, state, stormCharge, timestamp) : undefined,
+      suppressElectricAccents: stormCharge > .01,
       bodyFilter: iceLocked ? 'grayscale(.85) sepia(.52) hue-rotate(156deg) saturate(1.95) brightness(1.23)' : '',
       colors: poisoned || iceLocked ? selected.colors : legacyFrozen
         ? ['#ecfdff', '#69cef2', '#287caf']
@@ -13577,9 +14594,9 @@
           : selected.colors,
       phantomActive: ghost,
       preservePhantomBody: true,
-      scaleX: scaleX * (1 + hitSquash * .16 + (run.coreEncounter?.impactSquash || 0)) * (1 - cloneCharge * .16 + cloneRelease * .19) * portalScale * launchScale * (run.coreEncounter?.slimeScale ?? 1),
-      scaleY: scaleY * (1 - hitSquash * .19 - (run.coreEncounter?.impactSquash || 0) * .75) * (1 + cloneCharge * .13 - cloneRelease * .12) * portalScale * launchScale * (run.coreEncounter?.slimeScale ?? 1),
-      rotation: (cosmosPose?.bodyTilt ?? (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24))) + portalProgress * 1.8,
+      scaleX: scaleX * (1 + hitSquash * .16 + (run.coreEncounter?.impactSquash || 0)) * (1 - cloneCharge * .16 + cloneRelease * .19) * portalScale * launchScale * (run.coreEncounter?.slimeScale ?? 1) * (dashPose ? .92 : 1) * (1 + fireRecoil * .09),
+      scaleY: scaleY * (1 - hitSquash * .19 - (run.coreEncounter?.impactSquash || 0) * .75) * (1 + cloneCharge * .13 - cloneRelease * .12) * portalScale * launchScale * (run.coreEncounter?.slimeScale ?? 1) * (dashPose ? 1.19 : 1) * (1 - fireRecoil * .10),
+      rotation: (dashPose ? -dashPose.dx * .59 : cosmosPose?.bodyTilt ?? (frozen ? clamp(s.vx / 1600, -.09, .09) : clamp(s.vx / 850, -.24, .24))) + portalProgress * 1.8,
       alpha: (run.portalEntry ? Math.pow(1 - vanishProgress, .72) : 1) * launchAlpha * (run.coreEncounter?.slimeAlpha ?? 1),
       timestamp
     };
@@ -13612,17 +14629,24 @@
     avatarOptions.phantomActive=ghost;
     avatarOptions.ghostTint=ghost;
     if (run.coreEncounter) {
+      if (run.infinity) { drawInfinityAvatar(ctx, avatarOptions); return; }
       if(run.coreEncounter.hit&&!run.coreEncounter.cinematic)drawSlimeAvatar(ctx,{...avatarOptions,skin:'classic',appearance:'cute-v2',bodyVariant:'',colors:SKINS[0].colors});
       else drawElementalSlimeAvatar(ctx, {...avatarOptions,suppressElectricAccents:!!run.coreEncounter.electric}, elementalVisuals, timestamp);
       return;
     }
     drawRunCosmosOrbits(timestamp, false);
     if (!frozen || run.cosmosUltimate) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, false);
+    if (!run.portalEntry && !launchActive) INFINITY.drawShield(ctx, run.infinity, s.x, screenY, radius, timestamp, menuReducedMotion, true);
     if (iceLocked) window.SlimeIceHazards.drawSlimeIce(ctx,run,s.x,screenY,radius,{reduced:menuReducedMotion});
     if (run.mechSuit?.phase === 'active') drawMechSuit(timestamp, avatarOptions);
     else {
-      drawElementalSlimeAvatar(ctx, avatarOptions, elementalVisuals, timestamp);
+      if (run.infinity) drawInfinityAvatar(ctx, avatarOptions);
+      else drawElementalSlimeAvatar(ctx, avatarOptions, elementalVisuals, timestamp);
       if (run.mechSuit) drawMechSuit(timestamp, avatarOptions);
+    }
+    if (castLight) {
+      window.SlimeMutationImpacts.halo(ctx, 'fire', s.x, screenY + radius * .38, radius * (2.04 + castLight.flare * .35),
+        castLight.glow * (.37 + castLight.flare * .23), .67);
     }
     drawRunCosmosOrbits(timestamp, true);
     if (!frozen || run.cosmosUltimate) drawCosmosCometVisual(timestamp, s.x, screenY, fireRadius, true);
@@ -13632,6 +14656,7 @@
       window.DominantShield.bubble(ctx, s.x, screenY, radius, shieldDominant(),
         timestamp, timestamp - (run.barrierStartedAt || 0));
     }
+    if (!run.portalEntry && !launchActive) INFINITY.drawShield(ctx, run.infinity, s.x, screenY, radius, timestamp, menuReducedMotion, false, run.cameraY);
     if (!run.portalEntry && run.psionicBarrier && psionicBarrierActive(timestamp))window.SlimePsionicEffects.bubble(ctx,run,timestamp,psionicBarrierRadius());
     if (run.shieldPop) {
       if (timestamp - run.shieldPop.at < 520) window.DominantShield.pop(ctx, run.shieldPop, timestamp, run.cameraY);
@@ -13749,7 +14774,10 @@
     run.mechExplosion = null;
     run.mechExitZoneGraceUntil = 0;
     run.frostStorm = null;
+    run.frostFlake = null;
     run.stagedUltimate = null;
+    run.fireFlash = null;
+    run.burningBlocks?.clear();
     run.technoUltimate = null;
     run.giantMushroom = null;
     run.sporePop = null;
@@ -13779,7 +14807,7 @@
     run.specialEffects = [];
     run.ultimateIntro = null;
     run.phoenixUltimate = null;
-    run.phoenixWaves = [];
+    run.electricDash = null;
     run.electricStorm = null;
     run.electricStormBolts = [];
     run.electricStormHits = [];
@@ -13814,6 +14842,7 @@
     run.glitchChange = null;
     hideGlitchChoice();
     run.hitCooldowns.clear();
+    resetFallMomentum(run);
     run.electricImpactAt = -Infinity;
     run.geyserCapture = null;
     run.slime.x = run.startX;
@@ -14086,6 +15115,7 @@
 
   function endRun(completed, reason, {skipEvacuation=false}={}) {
     if (!run || run.ended) return;
+    finishRunUltimateAudio();
     if (run.corePreview) {
       run.ended = true;
       run.portalTransitioning = false;
@@ -14554,6 +15584,7 @@
       ? MUTATION_DETAILS[selectedMutation.id] || { stage1: 'Открывает базовый эффект мутации.', stage2: 'Усиливает эффект после второй порции.' }
       : { stage1: 'Синтезируй мутацию, чтобы узнать её эффект.', stage2: 'Сначала открой эмблему в реакторе.' };
     const selectedLevel = selectedAvailable ? mutationLevel(selectedMutation.id) : 0;
+    const fixedUltimateStage = ['fire', 'frost', 'electric'].includes(selectedMutation.id);
     const activeUltimateStage = selectedUltimateStage(selectedMutation.id);
     const ultimate = FORM_INDEX.find(form => form.id === selectedMutation.id);
     const previewStage = previousMutationId === selectedMutation.id && previousMutationLevel === selectedLevel && previousPreviewStage >= 1 && previousPreviewStage <= 3 ? previousPreviewStage : activeUltimateStage;
@@ -14589,7 +15620,7 @@
     const task = slimeDevelopment(selectedMutation.id, taskStage);
     const taskDescription = task.label.replace('блоки', `${task.target} блоков`).replace('споры', `${task.target} спор`).replace('колючки', `${task.target} ${task.target === 3 ? 'колючки' : 'колючек'}`);
     const headerTaskMarkup = () => `<div class="slime-header-task ${task.max ? 'is-complete' : ''}" role="progressbar" aria-label="${task.max ? 'Все стадии открыты' : `${task.label}, для стадии ${['I','II','III'][taskStage - 1]}`}" aria-valuemin="0" aria-valuemax="${task.max ? 1 : task.target}" aria-valuenow="${task.max ? 1 : Math.min(task.current, task.target)}">
-      <span class="slime-task-kicker">${task.max ? 'Все стадии открыты' : `До ${['I','II','III'][taskStage - 1]} стадии`}</span><strong>${task.max ? (selectedMutation.id === 'fire' ? 'Максимальная сила огня' : 'Выбери любую стадию') : taskDescription}</strong><span class="slime-task-meter"><i style="width:${task.max ? 100 : task.percent}%"></i></span><b>${task.max ? 'III / III' : `${Math.min(task.current, task.target)}<small> / ${task.target}</small>`}</b>
+      <span class="slime-task-kicker">${task.max ? 'Все стадии открыты' : `До ${['I','II','III'][taskStage - 1]} стадии`}</span><strong>${task.max ? (fixedUltimateStage ? 'Максимальная сила мутации' : 'Выбери любую стадию') : taskDescription}</strong><span class="slime-task-meter"><i style="width:${task.max ? 100 : task.percent}%"></i></span><b>${task.max ? 'III / III' : `${Math.min(task.current, task.target)}<small> / ${task.target}</small>`}</b>
     </div>`;
     const stageTrack = [1, 2, 3].map(stage => {
       const owned = stage <= selectedLevel;
@@ -14598,7 +15629,7 @@
       const bounds = dish && window.SlimeFoodGroundBounds?.[dish.id];
       const foodFit = bounds ? `data-thumbnail-fit="true" style="--lab-food-width:min(calc(94cqw * ${bounds[0] / (bounds[4] - bounds[2])}),calc(94cqh * ${bounds[0] / (bounds[5] - bounds[3])}));--lab-food-height:min(calc(94cqw * ${bounds[1] / (bounds[4] - bounds[2])}),calc(94cqh * ${bounds[1] / (bounds[5] - bounds[3])}));--lab-food-x:${-50 * (bounds[2] + bounds[4]) / bounds[0]}%;--lab-food-y:${-50 * (bounds[3] + bounds[5]) / bounds[1]}%"` : '';
       return `<article class="slime-development-card ${owned ? 'is-owned' : 'is-locked'} ${stage === activeUltimateStage ? 'is-owned-stage' : ''} ${ready ? 'is-ready' : ''} ${stage === previewStage ? 'is-current' : ''}" data-development-stage="${stage}">
-        <button id="mutationStage${stage}" class="slime-stage-preview" type="button" role="tab" data-preview-stage="${stage}" aria-selected="${stage === previewStage}" aria-controls="slimeUltimateDetails" tabindex="${stage === previewStage ? 0 : -1}" aria-label="Стадия ${stage}${stage === activeUltimateStage ? '. Активная' : owned ? (selectedMutation.id === 'fire' ? '. Посмотреть усиление' : '. Нажми, чтобы выбрать ультимейт') : ready ? '. Можно открыть' : '. Пока закрыта, посмотреть ультимейт'}">
+        <button id="mutationStage${stage}" class="slime-stage-preview" type="button" role="tab" data-preview-stage="${stage}" aria-selected="${stage === previewStage}" aria-controls="slimeUltimateDetails" tabindex="${stage === previewStage ? 0 : -1}" aria-label="Стадия ${stage}${stage === activeUltimateStage ? '. Активная' : owned ? (fixedUltimateStage ? '. Посмотреть усиление' : '. Нажми, чтобы выбрать ультимейт') : ready ? '. Можно открыть' : '. Пока закрыта, посмотреть ультимейт'}">
           <b class="slime-stage-caption">СТАДИЯ <em>${['I','II','III'][stage - 1]}</em></b>
           <span class="slime-evolution-food" ${foodFit} aria-hidden="true">${dish ? foodArtMarkup(dish, 'food-mini-model') : ''}${!owned && !ready ? `<img class="slime-stage-lock" src="${versionedAsset('assets/ui/lock.webp')}" alt="">` : ''}</span>
           <span class="slime-stage-status">${stage === activeUltimateStage ? 'Активная' : owned ? 'Открыта' : !ready ? 'Закрыта' : ''}</span>
@@ -14697,7 +15728,7 @@
     const stageButtons = [...els.panelContent.querySelectorAll('[data-preview-stage]')];
     const selectPreviewStage = button => {
       const stage = Number(button.dataset.previewStage);
-      if (selectedMutation.id !== 'fire' && stage <= selectedLevel && selectedUltimateStage(selectedMutation.id) !== stage) {
+      if (!fixedUltimateStage && stage <= selectedLevel && selectedUltimateStage(selectedMutation.id) !== stage) {
         save.mutationUltimateStages = { ...(save.mutationUltimateStages || {}), [selectedMutation.id]: stage };
         persist({ refreshUI: false });
       }
@@ -14708,7 +15739,7 @@
         const card = tab.closest('.slime-development-card');
         const active = tabStage === activeStage;
         tab.setAttribute('aria-selected', String(selected));
-        tab.setAttribute('aria-label', `Стадия ${tabStage}${active ? '. Активная' : tabStage <= selectedLevel ? (selectedMutation.id === 'fire' ? '. Посмотреть усиление' : '. Нажми, чтобы выбрать ультимейт') : card.classList.contains('is-ready') ? '. Можно открыть' : '. Пока закрыта, посмотреть ультимейт'}`);
+        tab.setAttribute('aria-label', `Стадия ${tabStage}${active ? '. Активная' : tabStage <= selectedLevel ? (fixedUltimateStage ? '. Посмотреть усиление' : '. Нажми, чтобы выбрать ультимейт') : card.classList.contains('is-ready') ? '. Можно открыть' : '. Пока закрыта, посмотреть ультимейт'}`);
         tab.tabIndex = selected ? 0 : -1;
         card.classList.toggle('is-current', selected);
         card.classList.toggle('is-owned-stage', active);
@@ -15419,6 +16450,10 @@
       root:els.panelContent,title:els.panelTitle,getSave:()=>save,
       commit:()=>persist({refreshUI:false}),onChange:()=>updatePersistentUI(),sound,formatBalance:formatCompactNumber,
       drawAvatar:(target,options,timestamp)=>{
+        if (save.rewards.infinityEquipped) {
+          drawInfinityAvatar(target,{...options,accessory:options.accessory ?? save.wardrobe?.accessory,timestamp});
+          return;
+        }
         const selected=skinById(save.selectedSkin);
         drawElementalSlimeAvatar(target,{...options,accessory:options.accessory ?? save.wardrobe?.accessory,skin:selected.id,colors:selected.colors},menuCategoryLevels(),timestamp);
       }
@@ -15601,6 +16636,11 @@
     els.panelTitle.innerHTML=`<span>Подарки</span><span class="rewards-balance"><img src="${versionedAsset('assets/ui/anomaly-core-v56/currency.webp')}" alt="Осколки"><b>${formatCompactNumber(save.researchUnits)}</b></span>`;
     els.panelContent.innerHTML=window.SlimeRewardsPanel.markup({model:save.rewards,tab:rewardsTab,asset:versionedAsset});
     const root=els.panelContent.querySelector('.rewards-hub');
+    const infinityPortrait = root.querySelector('#rewardInfinityAvatar');
+    if (infinityPortrait) window.SlimeAvatarRenderer.preloadAppearance({bodyVariant:'infinity'}).then(() => {
+      if (!infinityPortrait.isConnected) return;
+      drawInfinityAvatar(infinityPortrait.getContext('2d'),{x:96,y:111,radius:72,emotion:'joy'});
+    });
     const switchTab=tab=>{
       rewardsTab=tab;
       root.querySelectorAll('[data-rewards-tab]').forEach(b=>{const selected=b.dataset.rewardsTab===tab;b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1});
@@ -15615,6 +16655,16 @@
       const state=window.SlimeDailyRewards.status(save.rewards);
       if(!state.dailyAvailable&&state.freeAvailable){switchTab('wheel');return}
       claimDaily();
+    });
+    const infinityButton = $('#rewardInfinityBtn');
+    infinityButton?.addEventListener('click', () => {
+      if (!save.rewards.infinityUnlocked) return;
+      const equipped = !save.rewards.infinityEquipped;
+      save.rewards.infinityEquipped = equipped;
+      infinityButton.setAttribute('aria-pressed', String(equipped));
+      infinityButton.querySelector('span').textContent = equipped ? 'Бесконечность выбрана' : 'Выбрать Бесконечность';
+      persist();
+      sound('tap');
     });
     $('#wheelSpinBtn').addEventListener('click',spinWheel);
     window.SlimeRewardsPanel.drawWheel($('#rewardWheelDisc'),versionedAsset);
@@ -15925,11 +16975,47 @@
     els.fallControls.hidden = !available;
     els.fallLeftBtn.toggleAttribute('data-pressed', available && fallDirectionHeld('left'));
     els.fallRightBtn.toggleAttribute('data-pressed', available && fallDirectionHeld('right'));
+    const fire = run?.elementalAbilityType === 'fire';
+    const frost = run?.elementalAbilityType === 'frost';
+    const electric = run?.elementalAbilityType === 'electric';
+    const infinity = run?.elementalAbilityType === 'infinity' ? run.infinity : null;
+    const hasAttack = fire || frost || electric || !!infinity;
+    els.fallControls.toggleAttribute('data-fire', fire);
+    els.fallControls.toggleAttribute('data-frost', frost);
+    els.fallControls.toggleAttribute('data-electric', electric);
+    if (infinity) els.fallControls.dataset.infinity = infinity.mode;
+    else delete els.fallControls.dataset.infinity;
+    els.infinitySwapBtn.hidden = !infinity || infinity.stage < 2;
+    if (infinity) {
+      els.infinitySwapBtn.disabled = !!infinity.cast;
+      els.infinitySwapBtn.setAttribute('aria-label', infinity.mode === 'blue' ? 'Выбрать красную сферу' : 'Выбрать синюю сферу');
+    }
+    const now = run?.pausedAt || performance.now();
+    const remaining = Math.max(0, Math.ceil((activeAttackReadyAt(run) - now) / 1000));
+    els.fallAttackBtn.toggleAttribute('data-recharging', remaining > 0);
+    els.fireballCooldown.hidden = !remaining;
+    if (remaining && els.fireballCooldown.textContent !== String(remaining)) els.fireballCooldown.textContent = remaining;
+    const attackLabel = fire ? 'Огненная вспышка' : frost ? 'Снежинка' : electric ? 'Электрорывок'
+      : infinity ? infinity.mode === 'blue' ? 'Синяя сфера' : 'Красная сфера' : 'Атака';
+    const label = remaining ? `${attackLabel} · перезарядка ${remaining} с` : attackLabel;
+    if (els.fallAttackBtn.getAttribute('aria-label') !== label) els.fallAttackBtn.setAttribute('aria-label', label);
+    const disabled = hasAttack && !canCastActiveAttack(now);
+    if (els.fallAttackBtn.disabled !== disabled) els.fallAttackBtn.disabled = disabled;
+    if (hasAttack !== els.fallAttackBtn.hasAttribute('aria-keyshortcuts')) {
+      if (hasAttack) els.fallAttackBtn.setAttribute('aria-keyshortcuts', 'F');
+      else els.fallAttackBtn.removeAttribute('aria-keyshortcuts');
+    }
   }
 
   function bindFallButton(button, direction = '') {
     button.addEventListener('pointerdown', event => {
       if (event.button !== 0 || !fallControlsAvailable() || run.steer.pointers.has(button)) return;
+      if (button === els.fallAttackBtn && event.pointerType !== 'mouse' && run.elementalAbilityType === 'electric') {
+        // A second finger can trigger the dash while the first holds a direction.
+        event.preventDefault();
+        activateActiveAttack();
+        return;
+      }
       button.setPointerCapture(event.pointerId);
       run.steer.pointers.set(button, event.pointerId);
       button.setAttribute('data-pressed', '');
@@ -15979,6 +17065,13 @@
   }
 
   function bindEvents() {
+    const prepareUltimateAudio = () => {
+      if (!preloadUltimateAudio()) return;
+      document.removeEventListener('pointerup', prepareUltimateAudio, true);
+      document.removeEventListener('keydown', prepareUltimateAudio, true);
+    };
+    document.addEventListener('pointerup', prepareUltimateAudio, true);
+    document.addEventListener('keydown', prepareUltimateAudio, true);
     const clearKeyboardFocus = () => { delete document.documentElement.dataset.keyboardNavigation; };
     document.addEventListener('keydown', event => {
       if (event.key === 'Tab') document.documentElement.dataset.keyboardNavigation = 'true';
@@ -16064,7 +17157,11 @@
     els.abilityBtn.addEventListener('click', activateAbility);
     bindFallButton(els.fallLeftBtn, 'left');
     bindFallButton(els.fallRightBtn, 'right');
-    $$('#fallControls .fall-button-attack, #fallControls .fall-button-defense').forEach(button => bindFallButton(button));
+    bindFallButton(els.fallAttackBtn);
+    bindFallButton($('#fallControls .fall-button-defense'));
+    bindFallButton(els.infinitySwapBtn);
+    els.infinitySwapBtn.addEventListener('click', swapInfinityAttack);
+    els.fallAttackBtn.addEventListener('click', () => activateActiveAttack());
     els.glitchUltimateOverlay?.addEventListener('click', event => {
       const option = event.target.closest?.('[data-glitch-bug]');
       if (option) selectGlitchBug(option.dataset.glitchBug);
@@ -16152,6 +17249,14 @@
       const steerCode = event.code || event.key;
       if(run?.coreEncounter?.cinematic&&!run.paused&&['Space','Enter'].includes(steerCode)){event.preventDefault();if(!event.repeat)CORE.requestStrike(run);return;}
       if (setKeyboardSteering(steerCode, true)) {
+        event.preventDefault();
+        return;
+      }
+      if (steerCode === 'KeyF' && !event.repeat && activateActiveAttack()) {
+        event.preventDefault();
+        return;
+      }
+      if (steerCode === 'KeyQ' && !event.repeat && swapInfinityAttack()) {
         event.preventDefault();
         return;
       }
@@ -16289,6 +17394,18 @@
         run.ultimateStage = run.elementalAbilityType ? run.categoryVisuals[run.elementalAbilityType] : 1;
         run.ultimateProfile = ULTIMATE_STAGES.get(run.elementalAbilityType, run.ultimateStage);
         run.ultimateReadyAt = 0;
+        run.fireFlash = null;
+        run.fireFlashReadyAt = 0;
+        run.frostFlake = null;
+        run.frostFlakeReadyAt = 0;
+        run.frostStorm = null;
+        run.electricDash = null;
+        run.electricDashReadyAt = 0;
+        run.electricStorm = null;
+        run.electricStormBolts = [];
+        run.electricStormHits = [];
+        run.phoenixUltimate = null;
+        run.phoenixChargedFromDepth = 0;
         run.electricImpactAt = -Infinity;
         run.elementalAbilityActive = '';
         run.stagedUltimate = null;
