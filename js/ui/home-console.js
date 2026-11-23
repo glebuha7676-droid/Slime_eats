@@ -225,7 +225,8 @@
         native($('homeSynthesisFx'), 59, 77, 390, 256);
         // Register the face to the opening in the master, not a visual nudge.
         native($('conveyorDispensers'), 544, 99, 192, 192);
-        native($('homeMutationInfo'), 788, 44, 317, 300);
+        const compact = w < 280;
+        native($('homeMutationInfo'), compact ? 770 : 788, 44, compact ? 357 : 317, 300);
         place($('homeMonitorPicker'), edge + 20 * scale, start + 12 * scale, 1136 * scale,
           Math.min(h - start - 12 * scale - 8, Math.max(144, 362 * scale)));
         native($('homeFoodHeading'), 0, 0, 1, 1);

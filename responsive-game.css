@@ -160,6 +160,10 @@ body.home-shell-live #homeMonitorPicker .console-mutation-grid { overflow: auto;
   body.home-shell-live .console-mutation-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
   .planet-cleared-status b { font-size: 12px; }
 }
+@container game-frame (max-width: 279px) {
+  #homeMutationInfo .console-stage-row { font-size: 9px; }
+  #homeMutationInfo .console-stage-row img { width: 15px; }
+}
 @media (max-height: 560px) {
   html body #panelOverlay .wardrobe-modal .panel-content,
   html body #panelOverlay .panel-content:has(.lab-refit) { overflow-y: auto !important; overscroll-behavior: contain; }
