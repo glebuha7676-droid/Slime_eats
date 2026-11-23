@@ -45,8 +45,8 @@
     if(e.phase==='afterglow')return peak*.25*(1-smooth(e.phaseTime/380));
     return strength(e);
   }
-  function prepare(){
-    if(halo)return;
+  function* buildFrames(){
+
     breach=canvas(384,160);const bc=breach.getContext('2d');
     bc.shadowColor='#12364c';bc.shadowBlur=10;
     polygon(bc,[[12,105],[53,67],[102,83],[143,54],[197,74],[249,53],[306,75],[372,104],[338,141],[262,152],[186,141],[89,151],[26,131]],'#133e5bd9');
@@ -66,8 +66,10 @@
     flake=canvas(64,64);const x=flake.getContext('2d');x.drawImage(halo,0,0,64,64);x.translate(32,32);x.strokeStyle='#f5ffff';x.lineWidth=1.8;x.lineCap='round';x.shadowColor='#7bdeff';x.shadowBlur=6;
     for(let i=0;i<6;i++){x.save();x.rotate(i*TAU/6);x.beginPath();x.moveTo(0,0);x.lineTo(0,-16);x.moveTo(0,-10);x.lineTo(-4,-6);x.moveTo(0,-10);x.lineTo(4,-6);x.stroke();x.restore();}
     for(let i=0;i<5;i++)spikes.push(ice(i));
-    for(let i=0;i<FRAMES;i++)auras.push(auraFrame(i/FRAMES*TAU));mix=canvas(256,256);mixCtx=mix.getContext('2d');
+    for(let i=0;i<FRAMES;i++){auras.push(auraFrame(i/FRAMES*TAU));yield;}
+    mix=canvas(256,256);mixCtx=mix.getContext('2d');
   }
+  const {prepare,prewarm}=VFX.stagedPreparation(buildFrames);
   const stamp=VFX.stamp;
   function spike(c,x,y,w,h,angle,alpha,variant){
     if(alpha<=.002||h<1||!VFX.visible(x+Math.sin(angle)*h*.45,y-Math.cos(angle)*h*.45,w,h,angle))return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(angle);c.drawImage(spikes[variant%5],-w*.5,-h*.95,w,h);c.restore();
@@ -153,5 +155,5 @@
       stamp(c,i%7===0?flake:snowDust,x,y,w*(i%7===0?2.5:1),w*(i%7===0?2.5:1.8),Math.sin(q*Math.PI)*p*(.35+seed*.35),-.8+t/9000);
     }
   }
-  window.SlimeFrostCoreStrike=Object.freeze({prepare,draw,backdrop});
+  window.SlimeFrostCoreStrike=Object.freeze({prepare,prewarm,draw,backdrop});
 })();

@@ -39,7 +39,39 @@
     const a=run.coreArena,r=a.radius||418,dx=Math.max(-r+.01,Math.min(r-.01,x-a.x));
     return (a.centerY??a.surfaceY+r)-run.cameraY-Math.sqrt(r*r-dx*dx)+depth;
   }
-  const api=Object.freeze({visible,stamp,blend,clock,onScreen,coreSurfaceY});
+  function stagedPreparation(build) {
+    let work, finished=false, pending=false;
+    function step(args) {
+      work ??= build(...args);
+      finished=work.next().done;
+    }
+    function prepare(...args) {
+      while(!finished)step(args);
+    }
+    function prewarm(...args) {
+      if(finished||pending)return;
+      pending=true;
+      function slice(deadline) {
+        if(!finished&&typeof document!=='undefined'&&document.hidden){
+          document.addEventListener('visibilitychange',schedule,{once:true});
+          return;
+        }
+        if(!finished){
+          const until=performance.now()+3;
+          do step(args); while(!finished&&performance.now()<until&&deadline?.timeRemaining()>2);
+        }
+        if(finished)pending=false;
+        else schedule();
+      }
+      function schedule(){
+        if(typeof requestIdleCallback==='function')requestIdleCallback(slice,{timeout:240});
+        else setTimeout(slice,24);
+      }
+      schedule();
+    }
+    return {prepare,prewarm};
+  }
+  const api=Object.freeze({visible,stamp,blend,clock,onScreen,coreSurfaceY,stagedPreparation});
   if(typeof window!=='undefined')window.SlimeCoreVfx=api;
   if(typeof module!=='undefined')module.exports=api;
 })();

@@ -96,16 +96,17 @@
     const fade=x.createLinearGradient(0,0,0,CROWN.h);fade.addColorStop(0,'#fff0');fade.addColorStop(.12,'#fff');fade.addColorStop(.64,'#fff');fade.addColorStop(1,'#fff0');
     x.globalCompositeOperation='destination-in';x.fillStyle=fade;x.fillRect(0,0,CROWN.w,CROWN.h);return c;
   }
-  function prepare(){
-    if(halo)return;
+  function* buildFrames(){
+
     vignette=radial(256,[[0,'#06162500'],[.46,'#06162500'],[1,'#061625df']]);
     halo=radial(128,[[0,'#ffe85780'],[.28,'#ffb62a59'],[.65,'#ff7b0c24'],[1,'#ff7b0c00']]);
     hot=radial(128,[[0,'#fffbd2ed'],[.18,'#fff8aec4'],[.4,'#ffdc2870'],[.7,'#ff7b0c24'],[1,'#ff7b0c00']]);
     ember=canvas(24,40);const x=ember.getContext('2d');x.drawImage(halo,0,4,24,32);x.fillStyle='#ffac1c';x.beginPath();x.ellipse(12,20,2.5,5,-.2,0,TAU);x.fill();x.fillStyle='#fff8ae';x.beginPath();x.ellipse(12,19,1.2,3,-.2,0,TAU);x.fill();
     whiteEmber=radial(32,[[0,'#fffff5'],[.16,'#ffffe7ef'],[.36,'#ffe59b92'],[.7,'#ff9d1920'],[1,'#ff7b0c00']]);
-    for(let i=0;i<FRAMES;i++){const a=i/FRAMES*TAU,[back,front]=mantleFrame(a);mantles.push(back);fronts.push(front);streams.push(streamFrame(a));crowns.push(crownFrame(a));}
+    for(let i=0;i<FRAMES;i++){const a=i/FRAMES*TAU,[back,front]=mantleFrame(a);mantles.push(back);fronts.push(front);streams.push(streamFrame(a));crowns.push(crownFrame(a));yield;}
     for(const frames of [mantles,fronts,streams,crowns]){frames.blend=canvas(frames[0].width,frames[0].height);frames.ctx=frames.blend.getContext('2d');}
   }
+  const {prepare,prewarm}=VFX.stagedPreparation(buildFrames);
   const stamp=(c,image,x,y,w,h,angle=0,alpha=1)=>VFX.stamp(c,image,x,y,w,h,alpha,angle);
   function animated(c,frames,time,x,y,w,h,alpha){
     if(alpha<=.002||!VFX.visible(x,y,w,h))return;
@@ -165,5 +166,5 @@
     const amount=e.phase==='release'?.38:['approach','overdrive','armed'].includes(e.phase)?e.transfer*.21:e.phase==='burn'?.21*(1-clamp(e.phaseTime/160)):0;
     if(amount>.001){c.save();c.globalAlpha=amount;c.drawImage(vignette,0,0,440,840);c.restore();}
   }
-  window.SlimeFireCoreStrike=Object.freeze({prepare,draw,backdrop});
+  window.SlimeFireCoreStrike=Object.freeze({prepare,prewarm,draw,backdrop});
 })();

@@ -10,7 +10,7 @@ const nodes=new Map();
 const node=id=>{if(!nodes.has(id))nodes.set(id,{classList:classes,style:{},textContent:'',getAttribute(){return ''},replaceChildren(){}});return nodes.get(id)};
 const context={PROGRESSION:moduleContext.window.SlimeProgression,save:{selectedMutation:'fire',researchUnits:125,mutationMastery:{fire:300,frost:10}},homeRewardFlight:null,playerExperiencePresentation:null,menuReducedMotion:true,adminInfiniteResearch:false,
  slimeDevelopment:(id,view,value)=>moduleContext.window.SlimeMutationMastery.state(id,1,value,view),slimeTaskCount:()=>context.save.mutationMastery[context.save.selectedMutation],mutationLevel:()=>1,selectedSlimeMutationId:()=>context.save.selectedMutation,slimeExperience:()=>context.save.mutationMastery[context.save.selectedMutation],mutationById:id=>({id,name:id,image:`${id}.webp`}),versionedAsset:x=>x,formatCompactNumber:String,
- document:{body:{dataset:{screen:'home'}},getElementById:node},clearTimeout(){},cancelAnimationFrame(){},
+ document:{body:{dataset:{screen:'home'}},getElementById:node},clearTimeout(){},cancelAnimationFrame(){},renderHomeConsole(){},
  els:{coinsLabel:{closest:()=>wallet},playerLevelProgress:{style:{},parentElement:wallet},playerLevelExperience:{},researchUnitsLabel:{closest:()=>wallet}}
 };
 vm.createContext(context);vm.runInContext(logic,context);

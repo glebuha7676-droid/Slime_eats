@@ -128,5 +128,130 @@
     }
     ctx.restore();
   }
-  window.SlimePsionicFeedback=Object.freeze({preload,sprite,pressPose,press,grip,ribbon,burst,caster,cacheStats:()=>({edgeFrames:edgeFrames.length,gradientTextures:Number(Boolean(washTexture))+Number(Boolean(columnTexture))})});
+  function field(ctx, x, y, radius, age, strength, front, reduced) {
+    if (strength <= 0) return;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalAlpha *= strength;
+    const phase = age / (reduced ? 1650 : 560);
+    if (!front) {
+      sprite(ctx, 'mote', 0, 0, radius * 3, radius * 2.8, .28);
+      const surface = ctx.createLinearGradient(0, -radius, 0, radius);
+      surface.addColorStop(0, 'rgba(203,183,255,.31)');
+      surface.addColorStop(.48, 'rgba(79,36,171,.16)');
+      surface.addColorStop(1, 'rgba(75,224,255,.34)');
+      ctx.fillStyle = surface;
+      ctx.beginPath(); ctx.ellipse(0, 0, radius, radius * .9, 0, 0, TAU); ctx.fill();
+    }
+    ctx.lineCap = 'round';
+    ctx.lineWidth = front ? 2.1 : 1.4;
+    const rim = ctx.createLinearGradient(-radius,-radius,radius,radius);
+    rim.addColorStop(0,'rgba(183,154,255,.13)');
+    rim.addColorStop(.38,front ? '#efffff' : '#b69eff');
+    rim.addColorStop(.66,front ? '#72e6ff' : '#85b6f5');
+    rim.addColorStop(1,'rgba(125,191,255,.16)');
+    ctx.strokeStyle = rim;
+    const turn = phase + (front ? 0 : Math.PI);
+    ctx.beginPath(); ctx.ellipse(0, 0, radius, radius * .9, 0, turn, turn + Math.PI * 1.18); ctx.stroke();
+    ctx.lineWidth = 1.35;
+    ctx.strokeStyle = rim;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, radius * 1.11, radius * .44, front ? -.29 : .46, -phase, -phase + 2.7);
+    ctx.stroke();
+    for (let i = 0; i < (reduced ? 3 : 6); i++) {
+      const angle = phase * (i % 2 ? -.68 : .84) + i * 2.399;
+      const r = radius * (.83 + (i % 3) * .12);
+      if ((Math.sin(angle) > 0) !== front) continue;
+      const px = Math.cos(angle) * r, py = Math.sin(angle) * r * .76;
+      ctx.fillStyle = i % 2 ? '#e9ccff' : '#b7fbff';
+      const s = i % 3 === 0 ? 3.1 : 1.9;
+      ctx.beginPath(); ctx.moveTo(px, py - s); ctx.lineTo(px + s * .55, py);
+      ctx.lineTo(px, py + s); ctx.lineTo(px - s * .55, py); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function castTrail(ctx, points, camera, width, alpha = 1) {
+    if (points.length < 2 || alpha <= 0) return;
+    const tail = points[0], head = points.at(-1);
+    if (Math.hypot(head.x - tail.x, head.y - tail.y) < 1) return;
+    const g = ctx.createLinearGradient(tail.x, tail.y - camera, head.x, head.y - camera);
+    g.addColorStop(0, 'rgba(133,77,254,0)');
+    g.addColorStop(.44, 'rgba(159,105,255,.48)');
+    g.addColorStop(.77, 'rgba(121,228,255,.83)');
+    g.addColorStop(1, '#efffff');
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    ctx.lineJoin = ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(tail.x, tail.y - camera);
+    for (let i = 1; i < points.length-1; i++) {
+      const p = points[i], next = points[i+1];
+      ctx.quadraticCurveTo(p.x,p.y-camera,(p.x+next.x)*.5,(p.y+next.y)*.5-camera);
+    }
+    ctx.lineTo(head.x,head.y-camera);
+    ctx.strokeStyle = g;
+    ctx.lineWidth = width;
+    ctx.globalAlpha *= .5;
+    ctx.stroke();
+    ctx.globalAlpha *= 2;
+    ctx.lineWidth = Math.max(1.2, width * .18);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function castImpact(ctx, effect, camera, cell, age, reduced) {
+    if (age < 0 || age >= 450) return;
+    const t = age / 450, fade = 1 - t;
+    const { x, y, power } = effect;
+    const radius = cell * power * (.16 + (1 - fade ** 3) * .77);
+    sprite(ctx, 'mote', x, y - camera, cell * 2.7 * power, cell * 2.3 * power, fade ** 5 * .76);
+    ctx.save();
+    ctx.translate(x, y - camera);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 2; i++) {
+      ctx.globalAlpha = fade ** 2 * (i ? .66 : .94);
+      ctx.strokeStyle = i ? '#ad93ff' : '#95f4ff';
+      ctx.lineWidth = (i ? 2.3 : 3.4) * fade + .55;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, radius * (i ? .76 : 1), radius * (i ? .63 : .84), -.26, i * 2.8, i * 2.8 + 4.9);
+      ctx.stroke();
+    }
+    for (let i = 0; i < (reduced ? 5 : 11); i++) {
+      const angle = i * 2.399;
+      const travel = radius * (.78 + i % 4 * .13);
+      const tip = (.04 + (i % 3) * .035) * cell * fade;
+      ctx.globalAlpha = fade * .86;
+      ctx.strokeStyle = i % 2 ? '#e3c6ff' : '#c1fcff';
+      ctx.lineWidth = 1 + fade * 1.4;
+      ctx.beginPath(); ctx.moveTo(Math.cos(angle) * travel, Math.sin(angle) * travel);
+      ctx.lineTo(Math.cos(angle) * (travel + tip), Math.sin(angle) * (travel + tip)); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function shard(ctx, x, y, size, spin, color, alpha) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(spin);
+    ctx.globalAlpha *= alpha;
+    const rock = ctx.createLinearGradient(-size*.27,-size*.55,size*.16,size*.48);
+    rock.addColorStop(0,'#defaff');
+    rock.addColorStop(.28,color);
+    rock.addColorStop(.72,color);
+    rock.addColorStop(1,'#3b2f67');
+    ctx.fillStyle = rock;
+    ctx.beginPath();
+    ctx.moveTo(-size*.6,size*.21); ctx.lineTo(-size*.35,-size*.31);
+    ctx.lineTo(size*.31,-size*.55); ctx.lineTo(size*.72,-size*.21);
+    ctx.lineTo(size*.15,size*.45); ctx.lineTo(-size*.28,size*.49); ctx.closePath(); ctx.fill();
+    const facet = ctx.createLinearGradient(-size*.5,-size*.24,size*.66,-size*.12);
+    facet.addColorStop(0,'rgba(200,226,255,.15)');
+    facet.addColorStop(1,'rgba(233,248,255,.89)');
+    ctx.beginPath(); ctx.moveTo(-size*.35,-size*.31); ctx.lineTo(size*.31,-size*.55);
+    ctx.lineTo(size*.72,-size*.21); ctx.lineTo(size*.03,size*.03); ctx.closePath();
+    ctx.fillStyle = facet; ctx.fill();
+    ctx.restore();
+  }
+
+  window.SlimePsionicFeedback=Object.freeze({preload,sprite,pressPose,press,grip,ribbon,burst,caster,field,castTrail,castImpact,shard,cacheStats:()=>({edgeFrames:edgeFrames.length,gradientTextures:Number(Boolean(washTexture))+Number(Boolean(columnTexture))})});
 })();

@@ -32,7 +32,10 @@
     ['glitchCore', 'Глитч-морковка', 'Новая/Глитч/03-glitch-carrot-lossless.webp', 'glitch', 'glitch', 3],
     ['fuseCoals', 'Фитильные угольки', 'Огненная/Съедобные угольки.webp', 'blast', 'explosion', 1],
     ['volcanicShake', 'Вулканический коктейль', 'Огненная/Вулканический напиток.webp', 'blast', 'explosion', 2],
-    ['chocolateBoom', 'Шоколадный бум', 'Сладости/Шоколадный бум.webp', 'blast', 'explosion', 3]
+    ['chocolateBoom', 'Шоколадный бум', 'Сладости/Шоколадный бум.webp', 'blast', 'explosion', 3],
+    ['infinityDaifuku', 'Дайфуку с дзундой', 'assets/food/infinity-daifuku.webp', 'infinity', null, 1],
+    ['infinityDaifukuDuo', 'Двойной дайфуку', 'assets/food/infinity-daifuku-duo.webp', 'infinity', null, 2],
+    ['infinityDaifukuTrio', 'Лавандовый дайфуку', 'assets/food/infinity-daifuku-trio.webp', 'infinity', null, 3]
   ];
 
   window.SLIME_FOOD_CATALOG = foods.map(([id, name, relativePath, recipeFamily, requiresMutation, stage]) => ({

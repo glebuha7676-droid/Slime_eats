@@ -545,7 +545,7 @@
     ctx.restore();
   }
 
-  const api = Object.freeze({ EMBLEM, create, swap, refreshShield, protectsDuringUltimate, absorb, holdShieldFrame, start, update, shiftClock, chargeStrength, zoom, cameraLead, cameraShake, pullPose, draw, drawShield });
+  const api = Object.freeze({ EMBLEM, create, swap, refreshShield, protectsDuringUltimate, absorb, holdShieldFrame, start, update, shiftClock, chargeStrength, zoom, cameraLead, cameraShake, pullPose, draw, drawShield, drawEnergyOrb: orb, drawEnergyWake: drawWake });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.SlimeInfinity = api;
 })();

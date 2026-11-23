@@ -18,9 +18,9 @@ const c={window:{SlimePsionicFeedback:{preload:()=>Promise.resolve()},SlimeIceHa
  COSMOS_ULTIMATES:moduleContext.window.SlimeCosmosUltimates,
  technoUltimateServices:{blocksNearY:()=>[],elementalDamageable:()=>false},
  stagedUltimateServices:{blocksNearY:()=>[],frostFreezable:()=>false,elementalDamageable:()=>false},
- ELEMENTAL_ABILITY_DURATION_MS:{fire:2000,frost:6000,electric:4600,cosmos:5500,nano:10000,telekinesis:2500,cloning:5800,phantom:2800,glitch:1800},
+ ELEMENTAL_ABILITY_DURATION_MS:{fire:2000,frost:6000,electric:4600,cosmos:5500,nano:5000,telekinesis:2500,cloning:5800,phantom:2800,glitch:1800},
  PHOENIX_FIRE_ROWS:14,COSMOS_ULTIMATE_CHARGE_MS:920,COSMOS_ULTIMATE_ROWS:20,COSMOS_ULTIMATE_FADE_START_MS:4000,
- MECH_LAND_MS:600,MECH_ACTIVE_MS:10000,CLONE_ULTIMATE_BURST_MS:540,GLITCH_TITLE_MS:800,
+ MECH_LAND_MS:600,MECH_ACTIVE_MS:5000,CLONE_ULTIMATE_BURST_MS:540,GLITCH_TITLE_MS:800,
  PHANTOM_MARK_INTERVAL_MS:5000,PHANTOM_PORTAL_INTERVAL_MS:10000,
  TELEKINESIS_PRESS_DISTANCE_CELLS:11.2,TELEKINESIS_PRESS_COLLIDE_MS:1280,
  clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),sound(){},feedback(){},updateRunUI(){},impact(){},startFrostStorm(){},startGlitchChoice(){},findGlitchDisarmTarget:()=>({}),startGlitchDisarm(){c.run.glitchDisarm={}},startTelekinesisPress(){},startPsionicBarrier(t){c.run.psionicBarrier={startedAt:t,until:t+c.run.ultimateProfile.durationMs}},elementalLevel:()=>2,startTelekinesisCycle(){c.run.telekinesisCycle={mode:'ultimate',projectiles:Array(c.run.ultimateProfile.blockCount).fill(null)}},startPhantomSalvo(){c.run.phantomSalvoFlights=Array(8).fill({})},startPhantomExpress(){},startPhantomPhase(){c.run.phantomPhase={kind:c.run.ultimateProfile.kind}},ensurePhantomExpressSprites(){},ensureSporeSprites(){},materializePhantom(){},
@@ -44,6 +44,7 @@ for(const id of Object.keys(U.profiles)) for(const stage of [1,2,3]){
    assert.equal(c.activateElementalAbility(1001),false);
    continue;
  }
+ if((id==='nano'||id==='telekinesis')&&stage<3){assert.equal(c.activateElementalAbility(1000),false);continue;}
  if(id==='frost'||id==='electric'){
    if(stage<3){assert.equal(c.activateElementalAbility(1000),false);continue;}
    assert(c.activateElementalAbility(1000));
@@ -62,10 +63,7 @@ for(const id of Object.keys(U.profiles)) for(const stage of [1,2,3]){
  const p=U.get(id,stage);
  if(id==='cosmos'&&stage<3){assert.equal(c.run.cosmosStagedUltimate.kind,p.kind);assert.equal(c.run.cosmosUltimate,null);}
  if(id==='cosmos'&&stage===3)assert.equal(c.run.cosmosUltimate.endY,700+p.meters/500*100*60);
- if(id==='nano'&&stage<3)assert.equal(c.run.technoUltimate.kind,p.kind);
  if(id==='nano'&&stage===3)assert.equal(c.run.mechSuit.expireAt-c.run.mechSuit.landAt,p.mechMs);
- if(id==='telekinesis'&&stage===1)assert.equal(c.run.psionicBarrier.until-1000,3000);
- if(id==='telekinesis'&&stage===2)assert.equal(c.run.telekinesisCycle.projectiles.length,8);
  if(id==='phantom'&&stage===1)assert.equal(c.run.phantomSalvoFlights.length,8);
  if(id==='glitch'&&stage===1)assert(c.run.glitchDisarm);
  if(id==='cloning'&&stage===1){assert(c.run.sporePop);assert.equal(c.run.cloneUltimate,null);}
@@ -82,7 +80,7 @@ for(const stage of [1,2,3]){
  assert.equal(e.centerX,(e.startCol+p.trainWidth/2)*60);
  if(stage===3){c.run=fresh('telekinesis',stage);c.startTelekinesisPress(1000,700);assert.equal(c.run.telekinesisPress.bottomY-c.run.telekinesisPress.topY,U.get('telekinesis',stage).pressRows*60);}
 }
-assert.equal(U.get('fire',3).rows,8);assert.equal(U.get('frost',3).rows,8);assert.equal(U.get('electric',3).strikes,6);assert.equal(U.get('cosmos',3).meters,60);assert.equal(U.get('nano',3).mechMs,10000);assert.equal(U.get('phantom',3).trainWidth,4);assert.equal(U.get('phantom',3).trainRows,12);assert.equal(U.get('cloning',3).jumpCount,5);assert.equal(U.get('glitch',3).rewriteRows,10);
+assert.equal(U.get('fire',3).rows,8);assert.equal(U.get('frost',3).rows,8);assert.equal(U.get('electric',3).strikes,6);assert.equal(U.get('cosmos',3).meters,60);assert.equal(U.get('nano',3).mechMs,5000);assert.equal(U.get('phantom',3).trainWidth,4);assert.equal(U.get('phantom',3).trainRows,12);assert.equal(U.get('cloning',3).jumpCount,5);assert.equal(U.get('glitch',3).rewriteRows,10);
 Object.assign(c,{glitchSlimeCell:()=>({row:8,col:3}),glitchDeletableBlock:b=>!b.dead,glitchEligibleBlock:b=>!b.dead&&!b.hazard});
 vm.runInContext(take('executeGlitchBug'),c);
 for(const stage of [2,3])for(const kind of ['delete','hack','infect','change']){

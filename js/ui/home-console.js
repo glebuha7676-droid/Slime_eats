@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const illustratedShell = document.body.classList.contains('home-shell-empty');
   const emptyShell = illustratedShell && !document.body.classList.contains('home-shell-live');
-  let state, frame = 0, pickerOpen = false;
+  let state, frame = 0, pickerOpen = false, layoutKey, foodLight;
   const roman = n => ['I', 'II', 'III'][Math.max(0, Math.min(2, n - 1))];
   document.body.classList.add('home-console');
   function schedule() { if (!frame) frame = requestAnimationFrame(() => { frame = 0; layout(); }); }
@@ -12,20 +12,26 @@
     if (!element?.offsetParent) return;
     const app = $('app').getBoundingClientRect(), parent = element.offsetParent.getBoundingClientRect();
     for (const [key, value] of Object.entries({left: app.left + x - parent.left, top: app.top + y - parent.top, width, height})) {
-      element.style.setProperty(key, `${value}px`, 'important');
+      const pixels = `${value}px`;
+      if (element.style.getPropertyValue(key) !== pixels) element.style.setProperty(key, pixels, 'important');
     }
   }
   function fitFood() {
+    const tray = $('foodChoices');
+    const trayWidth = tray.clientWidth;
+    const trayHeight = tray.clientHeight;
     for (const button of document.querySelectorAll('#foodChoices .conveyor-food-pick')) {
+      button.disabled = !!state.busy;
       const image = button.querySelector('.food-model');
       const bounds = window.SlimeFoodGroundBounds?.[button.dataset.foodId];
       if (!image || !bounds) continue;
       const [width, height, left, top, right, bottom] = bounds;
-      button.disabled = !!state.busy;
-      const scale = Math.min(button.clientWidth / (right - left), button.clientHeight / (bottom - top));
+      const scale = Math.min(trayWidth / (right - left), trayHeight / (bottom - top));
       for (const [key, value] of Object.entries({width: width * scale, height: height * scale,
-        left: button.clientWidth / 2 - (left + right) / 2 * scale, top: button.clientHeight - bottom * scale})) {
-        image.style.setProperty(`--console-food-${key}`, `${value}px`);
+        left: trayWidth / 2 - (left + right) / 2 * scale, top: trayHeight - bottom * scale})) {
+        const property = `--console-food-${key}`;
+        const pixels = `${value}px`;
+        if (image.style.getPropertyValue(property) !== pixels) image.style.setProperty(property, pixels);
       }
     }
   }
@@ -55,64 +61,173 @@
     fit(group.querySelector('.mutation-trio-electric'), [640,640,30,26,608,596], .50,.55,.40,.40);
     fit($('wardrobeBtn').querySelector('img'), [256,256,14,22,246,218], .50,.45,.64,.60);
   }
-  async function animateFood(phase) {
-    if (emptyShell) return;
-    layout();
-    const content = document.querySelector('#foodChoices .console-food-content');
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (phase === 'out' && !content) return;
+  function prepareFoodLight() {
+    const light = window.SlimeLabLight;
+    if (light && !foodLight) {
+      foodLight = { rays: light.beamTexture(.34, .91, .05), halo: light.lightTexture() };
+    }
+  }
+
+  async function flashFood(replace = () => {}, onBeam) {
     const fx = $('homeSynthesisFx');
-    let animation;
-    if (phase === 'in') {
-      if (content) content.style.opacity = '0';
-      await Promise.all([...(content?.querySelectorAll('img') || [])].map(image => image.decode().catch(() => {})));
-      fx.classList.toggle('is-active', !reduced);
+    const light = window.SlimeLabLight;
+    if (emptyShell || !fx || !light || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      replace();
+      return;
     }
-    try {
-      if (content?.animate) {
-        const frames = phase === 'out'
-          ? [{opacity:1,filter:'none',clipPath:'inset(0 0 0 0)'},{opacity:.55,filter:'brightness(1.25) blur(1px)',clipPath:'inset(0 0 48% 0)',offset:.55},{opacity:0,filter:'blur(2px)',clipPath:'inset(0 0 100% 0)'}]
-          : [{opacity:0,filter:'brightness(1.35)',clipPath:'inset(100% 0 0 0)'},{opacity:.95,filter:'brightness(1.15)',clipPath:'inset(45% 0 0 0)',offset:.55},{opacity:1,filter:'none',clipPath:'inset(0 0 0 0)'}];
-        animation = content.animate(frames, {duration:reduced ? 70 : phase === 'out' ? 260 : 680, delay:phase === 'in' && !reduced ? 80 : 0, easing:phase === 'in' ? 'linear' : 'ease-in',fill:'both'});
-        await animation.finished.catch(() => {});
+    layout();
+    const context = fx.getContext('2d');
+    const { width, height } = fx.getBoundingClientRect();
+    if (!context || !width || !height) {
+      replace();
+      return;
+    }
+    prepareFoodLight();
+    const { smooth, beam } = light;
+    const { rays, halo } = foodLight;
+    const density = Math.min(devicePixelRatio || 1, 1.5);
+    fx.width = Math.ceil(width * density);
+    fx.height = Math.ceil(height * density);
+    context.setTransform(density, 0, 0, density, 0, 0);
+    const center = width * .5;
+    const focus = height * .53;
+    const peak = .305;
+    const duration = .76;
+
+    function glow(x, y, radiusX, radiusY, opacity) {
+      if (opacity < .005) return;
+      context.globalAlpha = opacity;
+      context.drawImage(halo, x - radiusX, y - radiusY, radiusX * 2, radiusY * 2);
+    }
+
+    await new Promise((resolve, reject) => {
+      let started;
+      let nextPaint = 0;
+      let swapped = false;
+      function swap() {
+        try {
+          replace();
+          return true;
+        } catch (error) {
+          context.clearRect(0, 0, width, height);
+          reject(error);
+          return false;
+        }
       }
-    } finally {
-      if (content) content.style.removeProperty('opacity');
-      animation?.cancel();
-      fx.classList.remove('is-active');
-    }
+      function frameAt(now) {
+        started ??= now;
+        const t = (now - started) / 1000;
+        if (t < duration && now + 1 < nextPaint) {
+          requestAnimationFrame(frameAt);
+          return;
+        }
+        nextPaint = Math.max(now, nextPaint) + 1000 / 60;
+        context.clearRect(0, 0, width, height);
+        if (t >= duration || document.body.dataset.screen !== 'home') {
+          if (!swapped && !swap()) return;
+          resolve();
+          return;
+        }
+        const surge = 1 - smooth(peak, .48, t);
+        const burst = smooth(.192, peak, t) * (1 - smooth(peak + .055, .48, t));
+        const ripple = smooth(peak, .70, t);
+        for (const direction of [-1, 1]) {
+          const x = center + direction * width * .45;
+          for (const socket of [.27, .53]) {
+            const y = height * socket;
+            const offset = socket > .5 ? .042 : 0;
+            const charge = smooth(.01 + offset, .17 + offset, t) * surge;
+            const targetX = center - direction * width * .10;
+            if (charge > .005) {
+              if (onBeam) {
+                onBeam();
+                onBeam = undefined;
+              }
+              beam(context, rays, x, y, targetX, focus, height * .41, charge * .68);
+              glow(x, y, width * .074, height * .16, charge * .90);
+            }
+            const travel = smooth(.045 + offset, peak, t);
+            const packet = charge * Math.sin(Math.PI * travel);
+            glow(x + (targetX - x) * travel, y + (focus - y) * travel,
+              width * .082, height * .075, packet);
+          }
+        }
+        glow(center, focus, width * (.42 + ripple * .15), height * (.45 + ripple * .17), burst);
+        glow(center, focus, width * .31, height * .38, burst * .94);
+        glow(center, height * .89, width * .40, height * .14, Math.max(smooth(.08, .2, t) * surge * .45, burst * .9));
+        if (ripple > 0 && ripple < 1) {
+          context.globalAlpha = (1 - ripple) * .68;
+          context.strokeStyle = '#b9faff';
+          context.lineWidth = 1.25;
+          context.beginPath();
+          context.ellipse(center, height * .88, width * (.09 + ripple * .31), height * (.028 + ripple * .055), 0, 0, Math.PI * 2);
+          context.stroke();
+        }
+        const scatter = smooth(.21, peak + .02, t) * (1 - smooth(.42, duration, t));
+        if (scatter > .005) {
+          for (let i = 0; i < 22; i++) {
+            const angle = i * 2.39996 + .4;
+            const distance = .075 + ripple * (.19 + (i % 4) * .053);
+            const radius = 1.45 + i % 4 * .58;
+            glow(center + Math.cos(angle) * width * distance, focus + Math.sin(angle) * height * distance,
+              radius * (1.4 - ripple * .35), radius, scatter * (.45 + (i % 3) * .24));
+          }
+        }
+        context.globalAlpha = 1;
+        if (!swapped && t >= peak) {
+          swapped = true;
+          if (!swap()) return;
+        }
+        requestAnimationFrame(frameAt);
+      }
+      requestAnimationFrame(frameAt);
+    });
   }
   function layout() {
     if (!state || document.body.dataset.screen !== 'home') return;
     const app = $('app').getBoundingClientRect(), w = app.width, h = app.height, u = w / 455;
     if (!w || !h) return;
+    const geometry = `${app.left}:${app.top}:${w}:${h}:${pickerOpen}`;
+    if (geometry === layoutKey) {
+      fitFood();
+      return;
+    }
+    layoutKey = geometry;
     if (illustratedShell) {
       // Both masters share one width scale; do not squash the round socket.
       const edge = -2, width = w + 4, scale = width / 1176;
       const topHeight = 600 * scale, bottomHeight = 400 * scale;
-      const start = Math.min(w * .75, h - topHeight - bottomHeight - 24);
-      const bottom = h + 4, height = bottom - start;
+      const bottom = h + 4;
+      const minPlanetPanel = Math.max(96, Math.min(124, w * .31));
+      const start = Math.max(0, Math.min(w * .75, bottom - 677 * scale - minPlanetPanel, bottom - topHeight - bottomHeight - 8));
+      const height = bottom - start;
+      // Give the planet panel the missing vertical space before shrinking the controls.
+      const roomWidth = Math.min(w, start / .75);
+      const roomLeft = (w - roomWidth) / 2;
+      $('homeRoomBackdrop').style.setProperty('--console-room-width', `${roomWidth}px`);
       place($('homeConsoleBody'), edge, start, width, height);
       place($('homeConsoleTop'), edge, start, width, topHeight);
       place($('homeConsoleMiddle'), edge, start + topHeight, width, height - topHeight - bottomHeight);
       place($('homeConsoleBottom'), edge, bottom - bottomHeight, width, bottomHeight);
-      place($('slimeStage'), 0, 0, w, h * .40);
-      place($('slime'), w * .13, w * .11, w * .74, w * .74);
+      place($('slimeStage'), 0, 0, w, start);
+      place($('slime'), roomLeft + roomWidth * .13, roomWidth * .11, roomWidth * .74, roomWidth * .74);
       // Inner opening in laboratory-soft-v2 (907px wide); the ring is already painted.
-      place($('launchPortal'), w * 296 / 907, w * 192 / 907, w * 312 / 907, w * 314 / 907);
-      const tool = w * .225;
-      place(document.querySelector('.mutation-lab-button'), w * .018, w * .225, tool, tool);
-      place($('wardrobeBtn'), w - tool - w * .018, w * .225, tool, tool);
+      place($('launchPortal'), roomLeft + roomWidth * 296 / 907, roomWidth * 192 / 907, roomWidth * 312 / 907, roomWidth * 314 / 907);
+      const tool = Math.max(44, roomWidth * .225);
+      const toolY = Math.max(50, roomWidth * .225);
+      place(document.querySelector('.mutation-lab-button'), w * .018, toolY, tool, tool);
+      place($('wardrobeBtn'), w - tool - w * .018, toolY, tool, tool);
       $('homeScreen').style.setProperty('--console-unit', `${u}px`);
       fitMenuIcons(tool);
       if (!emptyShell) {
         const native = (element, x, y, width, height) => place(element, edge + x * scale, start + y * scale, width * scale, height * scale);
         native($('foodChoices'), 100, 92, 310, 234);
-        native($('homeSynthesisFx'), 80, 70, 350, 260);
+        native($('homeSynthesisFx'), 59, 77, 390, 256);
         // Register the face to the opening in the master, not a visual nudge.
         native($('conveyorDispensers'), 544, 99, 192, 192);
-        native($('homeMutationInfo'), 788, 51, 317, 285);
-        place($('homeMonitorPicker'), edge + 20 * scale, start + 12 * scale, 1136 * scale, Math.max(144, 362 * scale));
+        native($('homeMutationInfo'), 788, 44, 317, 300);
+        place($('homeMonitorPicker'), edge + 20 * scale, start + 12 * scale, 1136 * scale,
+          Math.min(h - start - 12 * scale - 8, Math.max(144, 362 * scale)));
         native($('homeFoodHeading'), 0, 0, 1, 1);
         const playWidth = width * 880 / 1176;
         const playHeight = playWidth * 229 / 960;
@@ -168,7 +283,8 @@
     device($('abyssModeV2'), 389, y(183), 42, 27 * u);
     fitFood();
   }
-  function setPicker(open, restoreFocus = false) {
+  function setPicker(open, restoreFocus = false, audible = false) {
+    if (audible && open !== pickerOpen) state.onPickerToggle?.(open);
     pickerOpen = open;
     $('homeMonitorPicker').hidden = !open;
     $('homeMutationInfo').hidden = open;
@@ -201,21 +317,31 @@
     slimeHit.className = 'console-slime-hit'; slimeHit.setAttribute('aria-hidden', 'true');
     $('slime').append(slimeHit);
     const heading = document.createElement('div'); heading.id = 'homeFoodHeading'; $('conveyor').append(heading);
-    const synthesis = document.createElement('div'); synthesis.id = 'homeSynthesisFx'; synthesis.setAttribute('aria-hidden','true');
-    synthesis.innerHTML = '<svg class="console-scanner-field" viewBox="0 0 140 82" preserveAspectRatio="none"><defs><linearGradient id="consoleScanLeft"><stop stop-color="#c2ffff" stop-opacity=".48"/><stop offset="1" stop-color="#c2ffff" stop-opacity=".04"/></linearGradient><linearGradient id="consoleScanRight" x1="1" x2="0"><stop stop-color="#c2ffff" stop-opacity=".48"/><stop offset="1" stop-color="#c2ffff" stop-opacity=".04"/></linearGradient></defs><path d="M0 15 L70 0 V82 L0 35 Z" fill="url(#consoleScanLeft)"/><path d="M140 15 L70 0 V82 L140 35 Z" fill="url(#consoleScanRight)"/></svg><i class="console-scanner-flash left"></i><i class="console-scanner-flash right"></i><i class="console-scan-line"></i>';
+    const synthesis = document.createElement('canvas');
+    synthesis.id = 'homeSynthesisFx';
+    synthesis.setAttribute('aria-hidden', 'true');
     $('conveyor').append(synthesis);
-    $('conveyorDispensers').innerHTML = '<button id="homeMutationSelector" type="button" aria-label="Сменить мутацию" aria-controls="homeMonitorPicker" aria-expanded="false"><span class="console-selector-face"><img alt=""></span><span class="console-empty-medal" aria-hidden="true">+</span><b>СМЕНИТЬ</b></button><span id="homeMutationStage" class="console-selector-stage"><img alt=""></span>';
-    const info = document.createElement('button'); info.id = 'homeMutationInfo'; info.type = 'button';
-    info.innerHTML = '<span class="console-mutation-heading"><b class="console-mutation-name"></b><span class="console-stage"></span></span><span class="console-task-kicker"></span><span class="console-task-label"></span><span class="console-task-track" role="progressbar"><i></i></span><b class="console-task-counter"></b><span class="console-evolution-callout" hidden><span class="console-evolution-stage"></span><strong class="console-evolution-title">ГОТОВО<br>К РАЗВИТИЮ</strong><span class="console-evolution-action">РАЗВИТЬ <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 5l7 7-7 7"/></svg></span></span></span>';
+    if (window.requestIdleCallback) requestIdleCallback(prepareFoodLight);
+    else setTimeout(prepareFoodLight, 160);
+    $('conveyorDispensers').innerHTML = '<button id="homeMutationSelector" type="button" aria-label="Сменить мутацию" aria-controls="homeMonitorPicker" aria-expanded="false"><span class="console-selector-face"><img alt=""></span><span class="console-empty-medal" aria-hidden="true">+</span><b>СМЕНИТЬ</b></button>';
+    const info = document.createElement('button');
+    info.id = 'homeMutationInfo';
+    info.type = 'button';
+    info.innerHTML = `<b class="console-mutation-name"></b>
+      <span id="homeMutationStage" class="console-stage-row"><img alt=""><span></span></span>
+      <span class="lab-progress console-xp" role="progressbar" aria-label="Опыт мутации" aria-valuemin="0">
+        <span class="lab-progress-track"><i></i></span><span class="lab-progress-icon" aria-hidden="true"><img src="assets/ui/lab-v3/xp.webp" alt=""></span><b></b>
+      </span>
+      <span class="console-mutation-action" hidden><span class="console-mutation-action-label"></span></span>`;
     $('conveyor').append(info);
     const picker = document.createElement('section'); picker.id = 'homeMonitorPicker'; picker.hidden = true;
     picker.setAttribute('aria-label', 'Выбор мутации');
     picker.innerHTML = '<div class="console-picker-heading"><b>ВЫБЕРИ МУТАЦИЮ</b><button type="button" aria-label="Закрыть выбор мутации">×</button></div><div class="console-mutation-grid" role="group" aria-label="Мутации"></div>';
     $('conveyor').append(picker);
-    picker.querySelector('.console-picker-heading button').addEventListener('click', () => setPicker(false, true));
-    $('homeMutationSelector').addEventListener('click', () => !state.busy && setPicker(!pickerOpen));
+    picker.querySelector('.console-picker-heading button').addEventListener('click', () => setPicker(false, true, true));
+    $('homeMutationSelector').addEventListener('click', () => !state.busy && setPicker(!pickerOpen, false, true));
     document.addEventListener('pointerdown', event => { if (pickerOpen && !picker.contains(event.target) && !$('conveyorDispensers').contains(event.target)) setPicker(false); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape' && pickerOpen) { event.preventDefault(); setPicker(false, true); } });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && pickerOpen) { event.preventDefault(); setPicker(false, true, true); } });
     picker.querySelector('.console-mutation-grid').addEventListener('click', event => {
       const button = event.target.closest('[data-home-mutation]'); if (!button || state.busy) return;
       const mutation = state.mutations.find(item => item.id === button.dataset.homeMutation);
@@ -245,9 +371,10 @@
     stageBadge.hidden = !state.stage;
     if (state.stage) {
       const stageImage = stageBadge.querySelector('img');
-      const stageSource = ['assets/ui/home-planets/stages-round-v2/stage-i.webp','assets/ui/home-planets/stages-round-v2/stage-ii.webp','assets/ui/home-planets/stages-round-v2/stage-iii.webp'][Math.max(0, Math.min(2, state.stage - 1))];
+      const stageSource = state.stageBadge;
       if (stageImage.getAttribute('src') !== stageSource) stageImage.src = stageSource;
-      stageImage.alt = `${roman(state.stage)} стадия мутации`;
+      stageImage.alt = `${roman(state.stage)} стадия`;
+      stageBadge.querySelector('span').textContent = ['Базовая', 'Усиленная', 'Абсолютная'][state.stage - 1];
     }
     selector.querySelector('.console-selector-face').hidden = !state.stage;
     selector.querySelector('.console-empty-medal').hidden = !!state.stage;
@@ -268,28 +395,30 @@
     else image.removeAttribute('style');
     selector.setAttribute('aria-label', `${state.stage ? mutation.name + '. ' : ''}Сменить мутацию`);
     $('homeFoodHeading').textContent = state.fed ? 'ГОТОВО' : state.stage ? 'СЪЕШЬ' : 'СИНТЕЗ';
-    const info = $('homeMutationInfo'), reward = !!mutation?.reward;
-    const task = reward ? {max:true,target:100} : state.task;
-    info.style.setProperty('--console-mutation-color', mutation?.color || '#51d9e7');
-    info.disabled = state.busy || reward;
-    info.querySelector('.console-mutation-name').textContent = state.stage ? mutation.name : 'МУТАЦИЯ';
-    info.classList.toggle('is-long-name', (mutation?.name.length || 0) > 6);
-    info.querySelector('.console-stage').textContent = state.stage ? roman(state.stage) : '—';
-    info.querySelector('.console-task-kicker').textContent = !state.stage ? 'ЛАБОРАТОРИЯ' : task.max ? 'РАЗВИТИЕ' : `ДО ${roman(task.targetStage)} СТАДИИ`;
-    info.querySelector('.console-task-label').textContent = !state.stage ? 'Открой первую мутацию' : task.max ? 'Все стадии открыты' : task.label;
-    const percent = !state.stage ? 0 : task.max ? 100 : task.percent;
-    info.querySelector('.console-task-track i').style.width = `${percent}%`;
-    const track = info.querySelector('.console-task-track');
-    track.setAttribute('aria-label', 'Развитие мутации'); track.setAttribute('aria-valuemin', '0'); track.setAttribute('aria-valuemax', String(task?.target || 100)); track.setAttribute('aria-valuenow', String(!state.stage ? 0 : task.max ? task.target : Math.min(task.current, task.target)));
-    info.querySelector('.console-task-counter').textContent = !state.stage ? 'В лабораторию' : task.max ? 'III / III' : `${Math.min(task.current, task.target)} / ${task.target}`;
+    const info = $('homeMutationInfo');
+    const task = state.task;
+    info.disabled = state.busy;
+    const name = state.stage ? mutation.name[0] + mutation.name.slice(1).toLocaleLowerCase('ru') : 'Мутация';
+    info.querySelector('.console-mutation-name').textContent = name;
+    info.classList.toggle('is-long-name', name.length > 8);
     const ready = !!(state.stage && task?.ready && !task.max);
     info.classList.toggle('is-ready', ready);
-    for (const element of info.querySelectorAll('.console-task-kicker,.console-task-label,.console-task-track,.console-task-counter')) element.hidden = ready || reward;
-    info.querySelector('.console-evolution-callout').hidden = !ready;
-    info.querySelector('.console-evolution-stage').textContent = ready ? `${roman(task.targetStage)} СТАДИЯ` : '';
-    info.setAttribute('aria-label', reward ? `${mutation.name}, ${roman(state.stage)} стадия` : ready
-      ? `${mutation.name}. Можно развить до ${roman(task.targetStage)} стадии. Открыть мутацию в лаборатории`
-      : `${state.stage ? mutation.name : 'Мутации'}. ${info.querySelector('.console-task-label').textContent}. Посмотреть развитие`);
+    const track = info.querySelector('.console-xp');
+    track.hidden = !state.stage || ready;
+    if (!track.hidden && task) {
+      const current = Math.min(task.current, task.target);
+      track.querySelector('i').style.width = `${task.max ? 100 : task.percent}%`;
+      track.querySelector('b').textContent = task.max ? 'Максимум' : `${current} / ${task.target}`;
+      track.setAttribute('aria-valuemax', String(task.target));
+      track.setAttribute('aria-valuenow', String(task.max ? task.target : current));
+    }
+    const action = info.querySelector('.console-mutation-action');
+    action.hidden = !ready && !!state.stage;
+    action.querySelector('.console-mutation-action-label').textContent = ready ? 'Развить' : 'В лабораторию';
+    const stageLabel = state.stage ? `, ${roman(state.stage)} стадия` : '';
+    const xpLabel = !track.hidden && task ? `. Опыт: ${track.querySelector('b').textContent}` : '';
+    const actionLabel = ready ? 'Развить в лаборатории' : 'Открыть лабораторию';
+    info.setAttribute('aria-label', `${name}${stageLabel}${xpLabel}. ${actionLabel}`);
     const grid = $('homeMonitorPicker').querySelector('.console-mutation-grid');
     if (!state.mutations.some(item => item.reward)) grid.querySelector('[data-home-mutation="infinity"]')?.remove();
     for (const m of state.mutations) {
@@ -303,5 +432,5 @@
     }
     schedule();
   }
-  window.SlimeHomeConsole = Object.freeze({emptyShell, tutorialSuspended:illustratedShell, render, layout, schedule, prepareFoodDrag, disintegrateFood:() => animateFood('out'), synthesizeFood:() => animateFood('in')});
+  window.SlimeHomeConsole = Object.freeze({emptyShell, tutorialSuspended:illustratedShell, render, layout, schedule, fitFood, prepareFoodDrag, flashFood});
 })();

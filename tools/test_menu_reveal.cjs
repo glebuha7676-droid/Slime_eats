@@ -4,7 +4,7 @@ const gradient = {addColorStop(){}};
 function canvas() {
   const result = {width:520,height:520};
   result.getContext=()=>({canvas:result,drawImage(){},clearRect(){},fillRect(){},
-    save(){},restore(){},translate(){},scale(){},createRadialGradient:()=>gradient});
+    save(){},restore(){},translate(){},scale(){},beginPath(){},arc(){},fill(){},createRadialGradient:()=>gradient});
   return result;
 }
 global.document={createElement:canvas};
@@ -25,6 +25,12 @@ assert.equal(animation.finished,true,'Loading must release the transformation');
 const reduced=reveal.create(target.canvas,{now:0,ultra:true,reducedMotion:true});
 assert.equal(reduced.duration,160);
 reveal.draw(target,reduced,160);assert.equal(reduced.finished,true);
+const quick=reveal.create(target.canvas,{now:0,quick:true,ultra:false,reducedMotion:false});
+assert.equal(quick.duration,355);
+quick.assetsReady=false;
+assert.equal(reveal.needsCurrent(quick,500),false);
+quick.assetsReady=true;
+reveal.draw(target,quick,quick.startedAt+quick.duration);assert.equal(quick.finished,true);
 const taintedDocument=global.document;global.document={createElement(){const c=canvas(),original=c.getContext;c.getContext=()=>({...original(),getImageData(){throw new Error('SecurityError');}});return c;}};
 assert.doesNotThrow(()=>reveal.create(canvas(),{now:0,ultra:true,reducedMotion:false}),'file:// must not read pixels');
 global.document=taintedDocument;

@@ -32,8 +32,8 @@
     for(let i=0;i<4;i++){const f=(a/TAU+i/4)%1;x.save();x.globalAlpha=Math.sin(f*Math.PI)*.55;x.translate(centre(f)+Math.sin(i*3)*8,10+f*294);x.scale(4,18+f*8);const g=x.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,'#fff');g.addColorStop(1,'#fff0');x.fillStyle=g;x.fillRect(-1,-1,2,2);x.restore();}
     return c;
   }
-  function prepare(){
-    if(halo)return;cannon=sprite(GUN);drone=sprite(DRONE);
+  function* buildFrames(){
+    cannon=sprite(GUN);drone=sprite(DRONE);
     plasmaCore=canvas(64,320);const pc=plasmaCore.getContext('2d'),core=pc.createLinearGradient(0,0,64,0);
     for(const [at,color]of [[0,'#ff335900'],[.18,'#ff547b65'],[.36,'#ffbdc4d9'],[.46,'#fff7f1'],[.54,'#ffffff'],[.64,'#ffbdc4d9'],[.82,'#ff547b65'],[1,'#ff335900']])core.addColorStop(at,color);
     pc.fillStyle=core;pc.beginPath();pc.moveTo(26,0);pc.bezierCurveTo(26,50,0,85,0,128);pc.lineTo(0,320);pc.lineTo(64,320);pc.lineTo(64,128);pc.bezierCurveTo(64,85,38,50,38,0);pc.closePath();pc.fill();const ends=pc.createLinearGradient(0,0,0,320);ends.addColorStop(0,'#fff0');ends.addColorStop(.035,'#fff');ends.addColorStop(.965,'#fff');ends.addColorStop(1,'#fff0');pc.globalCompositeOperation='destination-in';pc.fillStyle=ends;pc.fillRect(0,0,64,320);
@@ -42,8 +42,10 @@
     mist=radial(128,[[0,'#e7c2c07d'],[.4,'#cf7f8650'],[1,'#71394400']]);ring=radial(128,[[0,'#ff2b5100'],[.43,'#ff2b5100'],[.64,'#ffa1a42d'],[.70,'#ffe5dab5'],[.77,'#ff355b4f'],[1,'#ff355b00']]);vignette=radial(128,[[0,'#200f2100'],[.46,'#200f2100'],[1,'#200f21df']]);
     ember=canvas(24,32);let x=ember.getContext('2d');x.drawImage(halo,0,0,24,32);x.fillStyle='#ffe7d8';x.beginPath();x.ellipse(12,16,1.2,3,-.15,0,TAU);x.fill();
     dataMote=canvas(24,24);x=dataMote.getContext('2d');x.drawImage(halo,0,0,24,24);x.fillStyle='#ffd4cc';x.shadowColor='#ff2e56';x.shadowBlur=4;x.beginPath();x.roundRect(9,9,6,6,1.5);x.fill();
-    for(let i=0;i<FRAMES;i++){auras.push(auraFrame(i/FRAMES*TAU));beams.push(beamFrame(i/FRAMES*TAU));}mixAura=canvas(256,256);mixBeam=canvas(144,320);
+    for(let i=0;i<FRAMES;i++){auras.push(auraFrame(i/FRAMES*TAU));beams.push(beamFrame(i/FRAMES*TAU));yield;}
+    mixAura=canvas(256,256);mixBeam=canvas(144,320);
   }
+  const {prepare,prewarm}=VFX.stagedPreparation(buildFrames);
   const stamp=VFX.stamp;
   function animated(c,frames,mix,time,x,y,w,h,alpha){if(alpha<=.002||!VFX.visible(x,y,w,h))return;VFX.blend(frames,mix,time,FRAMES);stamp(c,mix,x,y,w,h,alpha);}
   function geometry(run){
@@ -117,5 +119,5 @@
   }
   function backdrop(c,run){const e=run.coreEncounter;if(!e?.techno||run.evacuation||!VFX.onScreen(run))return;prepare();const a=e.phase==='release'?.38:['approach','overdrive','armed'].includes(e.phase)?e.transfer*.21:e.phase==='burn'?.16*(1-clamp(e.phaseTime/180)):0;if(a>.001){c.save();c.globalAlpha=a;c.drawImage(vignette,0,0,440,840);c.restore();}}
   const ready=()=>!!(cannon?.complete&&cannon.naturalWidth&&droneArt);
-  window.SlimeTechnoCoreStrike=Object.freeze({GUN,DRONE,prepare,ready,geometry,dronePose,draw,backdrop});
+  window.SlimeTechnoCoreStrike=Object.freeze({GUN,DRONE,prepare,prewarm,ready,geometry,dronePose,draw,backdrop});
 })();

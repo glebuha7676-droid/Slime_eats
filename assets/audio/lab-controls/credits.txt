@@ -1,0 +1,9 @@
+Filtered and layered from Kenney Interface Sounds click_001 (CC0), https://kenney.nl/assets/interface-sounds ; air_pump by loganzsound (CC0), https://freesound.org/people/loganzsound/sounds/774227/ ; Slime stretching and squeezing by greenlinker (CC0), https://freesound.org/people/greenlinker/sounds/794270/ via project jelly-pop adaptation.
+
+panel-open.wav, panel-close.wav, lab-click.wav, lab-select.wav, and meal-flash.wav
+were mixed from Kenney Interface Sounds (CC0): https://kenney.nl/assets/interface-sounds
+meal-beam.wav also uses laserSmall_002 and forceField_001 from Kenney Sci-fi Sounds
+(CC0): https://kenney.nl/assets/sci-fi-sounds
+Menu mix (panel-lift, panel-seat, pad-press, screen-swipe, light-burst, reactor-start, reactor-field, evolution-charge, form-reveal, portal-unfold, portal-pass): processed CC0 Kenney Interface Sounds and Sci-fi Sounds from the links above, layered with original filtered air transients.
+Synthesis and evolution rewards and slime eating (synthesis-reward, evolution-reward, slime-munch, slime-gulp): edited CC0 Kenney Interface Sounds plucks/drops and Sci-fi Sounds field/slime samples, with filtered air transients.
+synthesis-success.wav: new reward mix from CC0 Kenney Interface Sounds plucks/drop and Sci-fi Sounds force field with original shaped air.

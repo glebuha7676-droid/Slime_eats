@@ -65,7 +65,7 @@ assert.equal(r.fireFlash.y,390);
 
 const source = fs.readFileSync('game.js','utf8');
 const frost = { clamp:(x,a,b)=>Math.max(a,Math.min(b,x)), lerp:(a,b,t)=>a+(b-a)*t,
-  feedback(){}, turnBlockToSnow(block, at){hits.push([block.row,block.col,at]);} };
+  feedback(){}, sound(){}, turnBlockToSnow(block, at){hits.push([block.row,block.col,at]);} };
 const frostLogic = ['firstFrostRow','startFrostFlake','updateFrostFlake'].map(name =>
   source.match(new RegExp('  function '+name+'[(][\\s\\S]*?(?=\\n  function )'))[0]);
 vm.runInNewContext(source.match(/  const FROST_FLAKE_[A-Z_]+ = [^;]+;/g).concat(frostLogic).join('\n'), frost);

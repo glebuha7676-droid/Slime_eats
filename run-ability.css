@@ -28,11 +28,13 @@
 #dropScreen #shaft .fall-controls[data-infinity] .fall-attack-default,
 #dropScreen #shaft .fall-controls:not([data-infinity]) .infinity-control-orb { display: none; }
 #dropScreen #shaft #fallRightBtn { grid-column: 5; }
-#dropScreen #shaft #fallControls:is([data-fire], [data-frost], [data-electric]) .fall-button-defense,
-#dropScreen #shaft .fall-controls:is([data-fire], [data-frost], [data-electric]) .fall-attack-default,
+#dropScreen #shaft #fallControls:is([data-fire], [data-frost], [data-electric], [data-psionic], [data-nano]) .fall-button-defense,
+#dropScreen #shaft .fall-controls:is([data-fire], [data-frost], [data-electric], [data-psionic], [data-nano]) .fall-attack-default,
+#dropScreen #shaft .fall-controls:not([data-psionic]) .fall-attack-psionic,
 #dropScreen #shaft .fall-controls:not([data-fire]) .fall-attack-fire,
 #dropScreen #shaft .fall-controls:not([data-frost]) .fall-attack-frost,
-#dropScreen #shaft .fall-controls:not([data-electric]) .fall-attack-electric { display: none; }
+#dropScreen #shaft .fall-controls:not([data-electric]) .fall-attack-electric,
+#dropScreen #shaft .fall-controls:not([data-nano]) .fall-attack-nano { display: none; }
 
 #dropScreen #shaft :is(.fall-button, #abilityBtn) {
   position: relative;
@@ -111,6 +113,7 @@
   --button-pressed: #b35133;
 }
 
+#dropScreen #shaft .fall-controls[data-psionic] .fall-button-attack,
 #dropScreen #shaft .fall-controls[data-frost] .fall-button-attack {
   --button-rim: #c6f5ffe8;
   --button-top: #a9efffe4;

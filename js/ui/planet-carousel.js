@@ -65,9 +65,12 @@
     stage.style.setProperty('--planet-size',`${Math.min(height*1.12,width*.68)}px`);
     for(const button of cards.values())button.style.setProperty('--planet-shift',`${Number(button.dataset.slot||0)*width*.36}px`);
   }
-  function updateHealth(hp,ghost=hp){
+  function updateHealth(hp,ghost=hp,ghostOpacity=1){
     const planet=model.get(state.campaign.selected),unlocked=model.isUnlocked(state.campaign,planet.id),shown=Math.max(0,Math.min(100,hp));
-    root.dataset.tone=model.tone(shown);root.dataset.sourceAlive=String(planet.id==='source'&&shown>0);root.style.setProperty('--source-pressure',String(1-shown/100));root.querySelector('.planet-core-value small').textContent=planet.id==='source'?'ОЧАГ':'ЯДРО';clearedStatus.querySelector('b').textContent=planet.id==='source'?'Очаг уничтожен':'Планета очищена';count.textContent=`${Math.round(shown)}%`;fill.style.width=`${shown}%`;trail.style.width=`${Math.max(shown,ghost)}%`;
+    root.dataset.tone=model.tone(shown);root.dataset.sourceAlive=String(planet.id==='source'&&shown>0);root.querySelector('.planet-core-value small').textContent=planet.id==='source'?'ОЧАГ':'ЯДРО';clearedStatus.querySelector('b').textContent=planet.id==='source'?'Очаг уничтожен':'Планета очищена';count.textContent=`${Math.round(shown)}%`;fill.style.width=`${shown}%`;
+    trail.style.left=`${shown}%`;
+    trail.style.width=`${Math.max(0,ghost-shown)}%`;
+    trail.style.opacity=ghostOpacity;
     const cleared=unlocked&&!!planet.frames&&shown===0&&!active;
     clearedStatus.hidden=!cleared;health.hidden=!unlocked||!planet.frames||cleared;root.querySelector('.planet-locked-info').hidden=unlocked&&!!planet.frames;
     const index=model.ids.indexOf(planet.id),previous=model.planets[index-1];
@@ -96,7 +99,7 @@
     const planet=model.get(selected),hp=visualHp.get(selected)??state.campaign.cores[selected];
     title.textContent=planet.name;number.textContent=`${index+1} из ${model.ids.length}`;
     subtitle.textContent=active?.restoring?(active.event.to===0?'ПЛАНЕТА ОЧИЩЕНА!':'АНОМАЛИЯ ОТСТУПАЕТ'):!model.isUnlocked(state.campaign,selected)?'ПЛАНЕТА ЗАКРЫТА':hp===0?'':planet.theme;
-    updateHealth(active?.displayHp??hp,active?.ghostHp??hp);layout();
+    updateHealth(active?.displayHp??hp,active?.ghostHp??hp,active?.ghostOpacity);layout();
     // Only the current planet and its visible neighbors need their pictures now.
     for(const offset of [-1,0,1]){const p=model.planets[(index+offset+model.planets.length)%model.planets.length];preload(p.frames?.[frameStage(p,visualHp.get(p.id)??state.campaign.cores[p.id])]);}
   }
@@ -104,7 +107,7 @@
   function wake(){if(active&&!frame&&visible())frame=requestAnimationFrame(tick);}
   function begin(event){
     const token=++serial;active={event,token,elapsed:0,last:0,imageReady:false};
-    root.classList.remove('is-returning','is-cleansing');notice.classList.remove('is-visible');
+    root.classList.remove('is-returning','is-cleansing','is-struck');notice.classList.remove('is-visible');
     visualHp.set(event.planetId,event.from);updateScene();state.onBusy?.(true);
     const planet=model.get(event.planetId),source=planet.frames?.[frameStage(planet,event.to)];
     const finishPreparation=()=>{if(active?.token!==token)return;active.imageReady=true;wake();};
@@ -115,7 +118,7 @@
     const planet=model.get(done.event.planetId),button=cards.get(planet.id);visualHp.set(planet.id,done.event.to);
     const image=button.querySelector('.planet-image'),next=button.querySelector('.planet-image-next');if(planet.frames)image.src=asset(planet.frames[frameStage(planet,done.event.to)]);
     button.style.setProperty('--planet-restore','0');button.classList.remove('is-impacting','is-restoring');next.removeAttribute('src');notice.textContent='';
-    root.classList.remove('is-returning','is-cleansing');notice.classList.remove('is-visible');
+    root.classList.remove('is-returning','is-cleansing','is-struck');notice.classList.remove('is-visible');
     state.onAcknowledge?.(done.event.id);active=null;state.onBusy?.(false);updateScene();
   }
   function tick(at){
@@ -123,25 +126,49 @@
     if(!visible()){active.last=0;return;}
     const a=active;a.elapsed+=a.last?Math.min(50,at-a.last):0;a.last=at;
     const reducedScale=reduced.matches?.3:1,e=a.event,planet=model.get(e.planetId),button=cards.get(e.planetId);
-    let t=a.elapsed/reducedScale;
-    const hitAt=120,barEnd=1250,restoreAt=1450,restoreEnd=2400,changed=frameStage(planet,e.from)!==frameStage(planet,e.to),end=changed?2850:1850;
-    // Show damage immediately; a slow stage texture must not hold up the feedback.
-    if(changed&&!a.imageReady&&t>restoreAt){a.elapsed=restoreAt*reducedScale;t=restoreAt;}
+    const t=a.elapsed/reducedScale;
+    const hitAt=190,traceStart=hitAt+540,traceEnd=hitAt+1540,dropMs=142;
+    const changed=frameStage(planet,e.from)!==frameStage(planet,e.to);
     if(!a.intro){a.intro=true;root.classList.add('is-returning');}
-    if(t>=hitAt&&!a.hit){a.hit=true;button.classList.add('is-impacting');notice.textContent=`−${e.damage}%`;notice.classList.remove('is-visible');void notice.offsetWidth;notice.classList.add('is-visible');}
-    const progress=ease((t-hitAt)/(barEnd-hitAt)),ghost=ease((t-hitAt-180)/(barEnd-hitAt));
-    a.displayHp=e.from+(e.to-e.from)*progress;a.ghostHp=e.from+(e.to-e.from)*ghost;
-    updateHealth(a.displayHp,a.ghostHp);
-    if(changed&&a.imageReady&&t>=restoreAt){
-      if(!a.restoring){a.restoring=true;root.classList.add('is-cleansing');button.classList.add('is-restoring');button.querySelector('.planet-image-next').src=asset(planet.frames[frameStage(planet,e.to)]);subtitle.textContent=e.to===0?(planet.id==='source'?'ОЧАГ УНИЧТОЖЕН!':'ПЛАНЕТА ОЧИЩЕНА!'):'АНОМАЛИЯ ОТСТУПАЕТ';}
-      button.style.setProperty('--planet-restore',String(ease((t-restoreAt)/(restoreEnd-restoreAt))));
+    if(t>=hitAt&&!a.hit){
+      a.hit=true;
+      root.classList.add('is-struck');
+      button.classList.add('is-impacting');
+      notice.textContent=`−${e.damage}%`;
+      notice.classList.add('is-visible');
+      state.onRewardImpact?.(e,button.querySelector('.planet-sphere'));
     }
-    if(t>=end){finish();return;}wake();
+    const drop=1-Math.pow(1-Math.max(0,Math.min(1,(t-hitAt)/dropMs)),3);
+    const trace=ease((t-traceStart)/(traceEnd-traceStart));
+    a.displayHp=e.from+(e.to-e.from)*drop;
+    a.ghostHp=e.from+(e.to-e.from)*trace;
+    a.ghostOpacity=1-.56*trace;
+    updateHealth(a.displayHp,a.ghostHp,a.ghostOpacity);
+    if(a.hit&&!a.rewardFinished){
+      const flightProgress=Math.min(1,(t-hitAt)/(traceEnd-hitAt));
+      state.onRewardProgress?.(e,flightProgress);
+      a.rewardFinished=flightProgress===1;
+    }
+    if(changed&&a.imageReady&&t>=hitAt+660){
+      if(!a.restoring){
+        a.restoring=true;
+        a.restoreStarted=t;
+        root.classList.add('is-cleansing');
+        button.classList.add('is-restoring');
+        button.querySelector('.planet-image-next').src=asset(planet.frames[frameStage(planet,e.to)]);
+        subtitle.textContent=e.to===0?(planet.id==='source'?'ОЧАГ УНИЧТОЖЕН!':'ПЛАНЕТА ОЧИЩЕНА!'):'АНОМАЛИЯ ОТСТУПАЕТ';
+      }
+      button.style.setProperty('--planet-restore',String(ease((t-a.restoreStarted)/760)));
+    }
+    const end=changed?(a.restoring?a.restoreStarted+920:Infinity):traceEnd+100;
+    if(t>=Math.max(traceEnd+100,end)){finish();return;}wake();
   }
   function render(next){
     state=next;mount(document.getElementById('homeScreen'));
     if(active&&!state.campaign.pending.some(e=>e.id===active.event.id)){
-      cancelAnimationFrame(frame);frame=0;active=null;serial++;state.onBusy?.(false);notice.textContent='';root.classList.remove('is-returning','is-cleansing');notice.classList.remove('is-visible');
+      const cancelled=active.event;
+      cancelAnimationFrame(frame);frame=0;active=null;serial++;state.onBusy?.(false);notice.textContent='';root.classList.remove('is-returning','is-cleansing','is-struck');notice.classList.remove('is-visible');
+      state.onRewardProgress?.(cancelled,1);
     }
     for(const planet of model.planets){if(active?.event.planetId===planet.id)continue;const pending=state.campaign.pending.find(e=>e.planetId===planet.id);visualHp.set(planet.id,pending?.from??state.campaign.cores[planet.id]);}
     updateScene();

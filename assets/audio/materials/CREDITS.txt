@@ -1,0 +1,8 @@
+Edited, layered, filtered and retimed from Minetest Game default sounds. Source and original recording links: https://github.com/luanti-org/minetest_game/blob/master/mods/default/README.md
+Benboncan: dig_cracky (CC BY 3.0); AGFX: water steps (CC BY 3.0); Mito551: gravel and glass footsteps (CC BY-SA 3.0); Ryding: snow, blukotek: snappy, Sheyvan: choppy, lolamadeus: gravel_dug (CC0). Additional layers from project mine-world1-v2 and ui-696. Adaptations using Mito551 material licensed CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/ . CC BY 3.0: https://creativecommons.org/licenses/by/3.0/
+
+Cookie Crunch.wav by ross_sinc, CC0: https://freesound.org/people/ross_sinc/sounds/444786/ . Biscuit transients excerpted and mixed.
+
+Material contact edition: dropping rocks, IWANPlays https://freesound.org/people/IWANPlays/sounds/567250/ ; breaking_concrete, zatar https://freesound.org/people/zatar/sounds/755522/ . CC0. Trimmed, filtered, layered and level matched.
+
+Heavy rock (heavy, hit-heavy): Smash rock (Version 1), JacquesLabuschagne242028, https://freesound.org/people/JacquesLabuschagne242028/sounds/765844/ (CC BY 4.0 https://creativecommons.org/licenses/by/4.0/); dropping rocks, IWANPlays https://freesound.org/people/IWANPlays/sounds/567250/ (CC0). Ash (ash, hit-ash): Cornflour Snow, DaleT92 https://freesound.org/people/DaleT92/sounds/244103/ and gravel, lolamadeus https://freesound.org/people/lolamadeus/sounds/179341/ (both CC0). Edited, filtered, mixed and level matched.

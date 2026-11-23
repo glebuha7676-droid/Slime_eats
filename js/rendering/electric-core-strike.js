@@ -35,16 +35,17 @@
     }
     return c;
   }
-  function prepare(){
-    if(halo)return;
+  function* buildFrames(){
+
     // Same blue / violet / white colours as the existing electric bolts and impacts.
     halo=radial(128,[[0,'#e8ffffa0'],[.24,'#a9e7ff6e'],[.58,'#797af136'],[1,'#6555ed00']]);
     hot=radial(128,[[0,'#ffffff'],[.13,'#e0ffffec'],[.38,'#8edbff91'],[.68,'#7772f42c'],[1,'#7772f400']]);
     vignette=radial(128,[[0,'#0b123500'],[.46,'#0b123500'],[1,'#0b1235df']]);
     spark=canvas(24,32);const x=spark.getContext('2d');x.drawImage(halo,0,0,24,32);x.fillStyle='#efffff';x.beginPath();x.ellipse(12,16,2,3.4,-.2,0,TAU);x.fill();
-    for(let i=0;i<COUNT;i++)auras.push(auraFrame(i/COUNT*TAU));
+    for(let i=0;i<COUNT;i++){auras.push(auraFrame(i/COUNT*TAU));yield;}
     mix=canvas(ORB_SIZE,ORB_SIZE);mixCtx=mix.getContext('2d');
   }
+  const {prepare,prewarm}=VFX.stagedPreparation(buildFrames);
   const stamp=VFX.stamp;
   function globe(c,time,x,y,radius,alpha){
     if(alpha<=.002||!VFX.visible(x,y,radius*5,radius*5))return;
@@ -143,5 +144,5 @@
     const alpha=e.phase==='release'?.35:['approach','overdrive','armed'].includes(e.phase)?e.transfer*.21:e.phase==='burn'?.17*(1-clamp(e.phaseTime/160)):0;
     if(alpha>.001){c.save();c.globalAlpha=alpha;c.drawImage(vignette,0,0,440,840);c.restore();}
   }
-  window.SlimeElectricCoreStrike=Object.freeze({prepare,draw,backdrop});
+  window.SlimeElectricCoreStrike=Object.freeze({prepare,prewarm,draw,backdrop});
 })();

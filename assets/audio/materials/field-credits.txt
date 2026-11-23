@@ -1,0 +1,28 @@
+Field recordings cropped, resampled, filtered, enveloped, mixed and level adjusted. Preview WAV derivatives.
+InspectorJ — https://freesound.org/people/InspectorJ/sounds/333818/ — CC BY 4.0
+JacquesLabuschagne242028 — https://freesound.org/people/JacquesLabuschagne242028/sounds/765844/ — CC BY 4.0
+greenlinker — https://freesound.org/people/greenlinker/sounds/794270/ — CC0
+IWANPlays — https://freesound.org/people/IWANPlays/sounds/567250/ — CC0
+Finnssound — https://freesound.org/people/Finnssound/sounds/660866/ — CC0
+KoimeMatsuchiya — https://freesound.org/people/KoimeMatsuchiya/sounds/872227/ — CC0
+Rvgerxini — https://freesound.org/people/Rvgerxini/sounds/682990/ — CC0
+AardsReal — https://freesound.org/people/AardsReal/sounds/842173/ — CC0
+Ryding — https://freesound.org/people/Ryding/sounds/94337/ — CC0
+lolamadeus — https://freesound.org/people/lolamadeus/sounds/179341/ — CC0
+blukotek — https://freesound.org/people/blukotek/sounds/251660/ — CC0
+Mito551 — default_glass_footstep.ogg, CC BY-SA 3.0; candy clips and mixed.wav containing them distributed under CC BY-SA 3.0. Source: https://github.com/luanti-org/minetest_game/blob/master/mods/default/README.md
+https://creativecommons.org/licenses/by-sa/3.0/
+https://creativecommons.org/licenses/by/4.0/
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Glass layer in revised-five.wav and revised-four.wav: same Mito551 CC BY-SA 3.0 terms as candy. Ore pickup sounds adapted from the project mine-world1-v2/crystal.wav.
+
+Gold revision: Anvil Hit 1, michorvath, CC0 https://freesound.org/people/michorvath/sounds/270589/ . Filtered, retimed and damped.
+
+Cloud: air_pump, loganzsound, https://freesound.org/people/loganzsound/sounds/774227/ (CC0). Gold fracture: breaking_concrete, zatar, https://freesound.org/people/zatar/sounds/755522/ (CC0); damped anvil fragment as credited above. Edited, filtered and enveloped.
+
+Snow (updated): DaleT92, Cornflour Snow, CC0, https://freesound.org/people/DaleT92/sounds/244103/ . Release textures cropped, filtered and enveloped. Heavy rock and gold use credited stone takes; gold also uses the credited anvil.
+
+Snow v7: Ryding snow footsteps (CC0, source above). Gold v7 blends credited heavy rock, anvil and adapted candy layers; gold and compilations containing gold under CC BY-SA 3.0.
+
+Heavy rock v8: JacquesLabuschagne242028 (CC BY 4.0) and IWANPlays (CC0), credited above. Ash: DaleT92 cornflour (CC0) spectral texture and lolamadeus gravel (CC0) micro-grains.

@@ -28,16 +28,18 @@
       rocks.set(path,{body,edge,fragments});
     };image.src=window.SlimeGameAssets?.versionedAsset(path)||path;
   }
-  function prepare(worldId){
-    loadRock(ROCK);
-    loadRock(rockPath(worldId));
-    if(halo)return;
+  function* buildFrames(){
     halo=radial(128,[[0,'#effcffa8'],[.23,'#66eaff79'],[.58,'#05b0ff39'],[1,'#0067f000']]);hot=radial(128,[[0,'#fff'],[.15,'#ddfcfff2'],[.38,'#12cfff9d'],[.72,'#0088ff2b'],[1,'#0088ff00']]);
     ring=radial(128,[[0,'#12cfff00'],[.43,'#12cfff00'],[.64,'#12cfff32'],[.7,'#e6fcffbf'],[.77,'#12cfff5c'],[1,'#0088ff00']]);vignette=radial(128,[[0,'#071d3300'],[.46,'#071d3300'],[1,'#071d33df']]);
     dust=radial(128,[[0,'#d6e7ed9c'],[.30,'#9ab9ca62'],[.66,'#739bac2e'],[1,'#63869700']]);
     mote=canvas(24,32);let c=mote.getContext('2d');c.drawImage(halo,0,0,24,32);c.fillStyle='#effcff';c.beginPath();c.ellipse(12,16,1.2,2.8,0,0,TAU);c.fill();
-    for(let i=0;i<FRAMES;i++)auras.push(auraFrame(i/FRAMES*TAU));mix=canvas(256,256);
+    for(let i=0;i<FRAMES;i++){auras.push(auraFrame(i/FRAMES*TAU));yield;}
+    mix=canvas(256,256);
   }
+  const frames=VFX.stagedPreparation(buildFrames);
+  function loadRocks(worldId){loadRock(ROCK);loadRock(rockPath(worldId));}
+  function prepare(worldId){loadRocks(worldId);frames.prepare();}
+  function prewarm(worldId){loadRocks(worldId);frames.prewarm();}
   const stamp=VFX.stamp;
   function charge(c,run,e,t,front){
     const s=run.slime,y=s.y-run.cameraY,p=clamp(e.aura,0,e.finisher?1.5:1);if(p<=.002)return;
@@ -119,5 +121,5 @@
   }
   function backdrop(c,run){const e=run.coreEncounter;if(!e?.psionic||run.evacuation||!VFX.onScreen(run))return;prepare();const a=e.phase==='release'?.38:['approach','overdrive','armed'].includes(e.phase)?e.transfer*.21:e.phase==='burn'?.18*(1-clamp(e.phaseTime/360)):0;if(a>.001){c.save();c.globalAlpha=a;c.drawImage(vignette,0,0,440,840);c.restore();}}
   const ready=worldId=>!!rocks.get(rockPath(worldId));
-  window.SlimePsionicCoreStrike=Object.freeze({ROCK,prepare,ready,draw,backdrop});
+  window.SlimePsionicCoreStrike=Object.freeze({ROCK,prepare,prewarm,ready,draw,backdrop});
 })();

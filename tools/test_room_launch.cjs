@@ -7,6 +7,7 @@ const end = source.indexOf('    const baseWorld = currentWorld();', start);
 const prefix = source.slice(start,end);
 let busy=true;
 const context={window:{SlimeBalance:{load:()=>({})}},GAME_BALANCE:{},
+  corePreviewMode:false,selectedPlanetCanLaunch:()=>true,carouselWorld:()=>({}),currentWorld:()=>({}),
   stomachCanLaunch:()=>true,menuSlimeIsBusy:()=>busy,showToast:()=>{},feedback:()=>{},sound:()=>{},
   save:{gameCompleted:true},beginRoomLaunch:()=>{},};
 vm.createContext(context);

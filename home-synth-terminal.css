@@ -370,6 +370,8 @@ html body #homeScreen .form-index-button .form-index-silhouette i{font-size:32px
   pointer-events:none;
   will-change:transform,opacity;
 }
+.home-reward-experience{filter:drop-shadow(0 2px 2px #632e45a3)}
+.home-reward-flask{filter:drop-shadow(0 2px 2px #261849bc)}
 .home-reward-trophy{width:34px;height:34px}
 html body[data-screen="home"] .research-wallet.is-receiving .research-wallet-flask>b{
   font-variant-numeric:tabular-nums;

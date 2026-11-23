@@ -1,0 +1,173 @@
+/* A single safe viewport supplies the room, the mine and their overlays. */
+:root {
+  --visible-game-height: 100vh;
+  --screen-top: env(safe-area-inset-top, 0px);
+  --screen-right: env(safe-area-inset-right, 0px);
+  --screen-bottom: env(safe-area-inset-bottom, 0px);
+  --screen-left: env(safe-area-inset-left, 0px);
+  --safe-game-height: calc(var(--visible-game-height) - var(--screen-top) - var(--screen-bottom));
+}
+@supports (height: 100dvh) {
+  :root { --visible-game-height: 100dvh; }
+}
+
+html body,
+html body[data-screen] {
+  box-sizing: border-box;
+  width: 100% !important;
+  height: var(--visible-game-height) !important;
+  min-height: 0 !important;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  margin: 0;
+  padding: var(--screen-top) var(--screen-right) var(--screen-bottom) var(--screen-left) !important;
+  overflow: clip !important;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html body #phoneViewport {
+  --safe-top: 0px;
+  --safe-right: 0px;
+  --safe-bottom: 0px;
+  --safe-left: 0px;
+  width: min(100%, 500px, max(200px, calc(var(--safe-game-height) * .66))) !important;
+  height: var(--safe-game-height);
+  margin: 0 auto;
+  aspect-ratio: auto;
+  border: 0;
+  overflow: clip !important;
+  container: game-frame / size;
+}
+html body .phone-viewport > .overlay { position: absolute !important; inset: 0 !important; }
+html body .phone-viewport > .toast { position: absolute; }
+
+@media (min-width: 700px) and (hover: hover) and (pointer: fine) {
+  html body #phoneViewport {
+    height: min(832px, calc(var(--safe-game-height) - 20px));
+    width: auto !important;
+    max-width: calc(100% - 20px) !important;
+    aspect-ratio: 9 / 16;
+    border: 5px solid #303c4a;
+    border-radius: 32px;
+  }
+  html[data-yandex-games="true"] body .phone-viewport {
+    height: min(var(--safe-game-height), calc(100vw * 16 / 9));
+    border-radius: 0;
+  }
+}
+@media (min-width: 700px) and (pointer: coarse) {
+  html body #phoneViewport { border-radius: 15px; }
+}
+@media (orientation: landscape) and (pointer: coarse) {
+  html body[data-screen] { background: #102c40; }
+}
+
+html body[data-screen="drop"] #phoneViewport { background: #173a50; }
+html body[data-screen="drop"] .phone-viewport > .app,
+html body[data-screen="drop"] .phone-viewport .game-shell {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+html body[data-screen="drop"] #app #dropScreen.active {
+  display: grid !important;
+  place-items: center;
+}
+html body[data-screen="drop"] #app #dropScreen #shaft {
+  width: min(100%, calc(var(--app-height, 100vh) * 440 / 840)) !important;
+  width: min(100%, calc(100cqh * 440 / 840)) !important;
+  height: auto !important;
+  height: min(100%, calc(100cqw * 840 / 440)) !important;
+  min-height: 0 !important;
+  aspect-ratio: 440 / 840;
+  container: game-shaft / size;
+  --run-button-size: clamp(43px, 19cqw, 90px);
+  --run-thumb-gap: clamp(12px, 5cqw, 28px);
+}
+html body[data-screen="drop"] #app #shaft #abilityBtn {
+  width: clamp(44px, 15vw, 64px);
+  width: clamp(44px, 15cqw, 64px);
+}
+@supports not (width: 1cqw) {
+  html body[data-screen="drop"] #app #dropScreen #shaft {
+    --run-button-size: clamp(43px, 19vw, 90px);
+    --run-thumb-gap: clamp(12px, 5vw, 28px);
+  }
+}
+@container game-frame (max-height: 470px) {
+  html body[data-screen="drop"] #app #dropScreen #shaft {
+    --run-button-size: clamp(42px, 15cqw, 53px);
+    --run-button-bottom: 8px;
+  }
+}
+@container game-shaft (max-width: 280px) {
+  html body #dropScreen #shaft .run-top-hud {
+    left: 4px;
+    right: 4px;
+    grid-template-columns: minmax(0,1fr) 48px 44px;
+    gap: 3px;
+    padding-inline: 3px !important;
+  }
+  html body #dropScreen #shaft .run-top-hud .run-research-hud {
+    width: 100% !important;
+    grid-template-columns: 19px minmax(0,1fr) !important;
+  }
+  html body #dropScreen #shaft .run-top-hud .run-research-hud img { width: 19px !important; }
+  html body #dropScreen #shaft .run-top-hud .run-menu-btn { width: 44px !important; min-width: 44px !important; }
+  .anomaly-energy>img { display: none; }
+  .anomaly-energy-track, .anomaly-energy-label { left: 5px; }
+  .anomaly-energy-value { font-size: 18px; }
+}
+@container game-shaft (max-width: 215px) {
+  html body #dropScreen #shaft .fall-controls {
+    width: calc(100% - 10px);
+    grid-template-columns: minmax(44px, 1fr) repeat(2, minmax(0, .85fr)) minmax(44px, 1fr);
+    gap: 4px;
+    align-items: end;
+  }
+  html body #dropScreen #shaft :is(.fall-button-defense, .infinity-swap) { grid-column: 3; }
+  html body #dropScreen #shaft #fallRightBtn { grid-column: 4; }
+}
+html body.home-console.home-shell-live[data-screen="home"] #app #homeScreen #worldStartBtn {
+  font-size: max(14px, calc(var(--console-unit) * 30)) !important;
+}
+body.home-shell-live #homeMonitorPicker .console-mutation-grid { overflow: auto; overscroll-behavior: contain; }
+@container game-frame (max-width: 300px) {
+  html body.home-console[data-screen="home"] #app .topbar.world-summary { padding-inline: 6px !important; }
+  html body.home-console[data-screen="home"] #app .world-summary-head { gap: 4px !important; }
+  html body.home-console[data-screen="home"] #app .world-summary .research-wallet {
+    flex: 0 1 106px !important;
+    width: 106px !important;
+    min-width: 80px !important;
+  }
+  html body.home-console[data-screen="home"] #app .world-summary :is(.header-rewards-btn, .header-admin-btn) {
+    flex: 0 0 44px !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+  html body.home-console.home-shell-live[data-screen="home"] #app #homeScreen #homePlanetsPanel {
+    grid-template-rows: minmax(0,1fr) 32px;
+  }
+  .planet-caption, .home-planets-panel.is-compact .planet-caption { bottom: 38px; }
+  .planet-title { font-size: 12px; }
+  .planet-number { font-size: 8px; }
+  body.home-shell-live .console-mutation-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .planet-cleared-status b { font-size: 12px; }
+}
+@media (max-height: 560px) {
+  html body #panelOverlay .wardrobe-modal .panel-content,
+  html body #panelOverlay .panel-content:has(.lab-refit) { overflow-y: auto !important; overscroll-behavior: contain; }
+  html body #panelOverlay .wardrobe-modal .wardrobe { min-height: 450px; }
+  html body #panelOverlay .mutation-lab-v2.lab-refit { min-height: 560px !important; }
+  html body .phone-viewport > :is(#runMenuOverlay,#resultOverlay,#gameCompleteOverlay) .modal {
+    max-height: calc(100cqh - 12px) !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}

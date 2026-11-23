@@ -1,0 +1,2 @@
+dry-chip.wav: adapted from default_dig_cracky.1.ogg (Minetest Game), Benboncan, https://freesound.org/people/Benboncan/sounds/71823/ . Trimmed, filtered, speed and level adjusted. CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+soft-press.wav: adapted from project ui-696/uiSelect.wav, based on Kenney Interface Sounds (CC0), https://kenney.nl/assets/interface-sounds . Filtered and retimed.

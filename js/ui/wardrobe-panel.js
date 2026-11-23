@@ -10,13 +10,13 @@
     if(last){category=last.category;viewId=last.id;}
     const flask='<img src="assets/ui/anomaly-veins-v4/currency.webp?v=20261022-v700" alt="" aria-hidden="true">';
     root.innerHTML=`<section class="wardrobe" aria-label="Гардероб слайма">
-      <div class="wardrobe-tabs" role="tablist" aria-label="Коллекция"><button type="button" role="tab" id="wardrobeAccessoriesTab" data-category="accessories">АКСЕССУАРЫ</button><button type="button" role="tab" id="wardrobeEmotionsTab" data-category="emotions">ЭМОЦИИ</button></div>
+      <div class="wardrobe-tabs" role="tablist" aria-label="Коллекция"><button type="button" role="tab" id="wardrobeAccessoriesTab" data-category="accessories">Аксессуары</button><button type="button" role="tab" id="wardrobeEmotionsTab" data-category="emotions">Эмоции</button></div>
       <div class="wardrobe-scene"><img class="wardrobe-room" src="assets/ui/wardrobe/room-pedestal-v3.webp?v=687" alt=""><button type="button" id="wardrobePet" aria-label="Слайм в комнате примерки"><canvas width="720" height="480"></canvas></button><span class="wardrobe-preview-note">ГАРДЕРОБ</span>
       <div class="wardrobe-item-info"><div><h3 id="wardrobeItemName"></h3><p id="wardrobeItemHint"></p></div><span id="wardrobeWornStatus" hidden>НАДЕТО</span><button type="button" id="wardrobeEquip"></button></div></div>
       <section class="wardrobe-collection" role="tabpanel"><header><h3 id="wardrobeCollectionTitle"></h3><span id="wardrobeCount"></span></header><div class="wardrobe-grid-scroll" tabindex="0" role="group" aria-label="Коллекция, прокрути для просмотра"><div class="wardrobe-grid"></div></div><span class="wardrobe-scroll-cue" aria-hidden="true"></span></section>
       <section class="wardrobe-synthesis" aria-label="Синтез нового предмета"><div class="wardrobe-appliance"><img src="assets/ui/wardrobe/cosmetic-cylinder-v1.webp?v=690" alt="Компактный синтезатор с камерой выдачи" draggable="false"><canvas class="wardrobe-synth-fx" aria-hidden="true"></canvas><span class="wardrobe-output" aria-hidden="true">?</span></div><div class="wardrobe-synth-controls"><header><h3 id="wardrobeSynthTitle"></h3><p id="wardrobeSynthHint"></p><p id="wardrobeMessage" class="wardrobe-message" role="status" aria-live="polite" hidden></p></header><button type="button" id="wardrobeSynthesize"><span></span><span class="wardrobe-price">${flask}<b></b></span></button><p class="wardrobe-synth-footnote">Случайный предмет из закрытых</p></div></section>
     </section>`;
-    title.innerHTML=`<span>Гардероб</span><span class="wardrobe-balance">${flask}<b></b></span>`;
+    title.innerHTML=`<span class="lab-title-plaque">Гардероб</span><span class="wardrobe-balance mutation-panel-balance">${flask}<b></b></span>`;
     const $=selector=>root.querySelector(selector),scene=$('.wardrobe-scene'),canvas=$('#wardrobePet canvas'),ctx=canvas.getContext('2d');
     const appliance=$('.wardrobe-appliance'),fx=$('.wardrobe-synth-fx'),fxCtx=fx.getContext('2d');
     const scroller=$('.wardrobe-grid-scroll');
@@ -96,14 +96,14 @@
     }
     function handle(event) {
       const button=event.target.closest('button');if(!button||button.disabled)return;
-      if(button.dataset.category){category=button.dataset.category;viewId='';message('');refresh();sound('tap')}
-      else if(button.dataset.item){viewId=button.dataset.item;message('');refresh();sound('tap')}
+      if(button.dataset.category){category=button.dataset.category;viewId='';message('');refresh();sound('uiTab')}
+      else if(button.dataset.item){viewId=button.dataset.item;message('');refresh();sound('uiTab')}
       else if(button.id==='wardrobePet'){const id=category==='emotions'&&getSave().wardrobe.emotions.includes(item().id)&&!item().comingSoon?item().id:getSave().wardrobe.emotion;window.SlimeTapEmotions.trigger(tapEmotion,id,performance.now());sound('happy')}
       else if(button.id==='wardrobeSynthesize')synthesize();
       else if(button.id==='wardrobeEquip'){
         const save=getSave();if(!save.wardrobe[category].includes(item().id))return;
         save.wardrobe[category==='accessories'?'accessory':'emotion']=category==='accessories'&&equipped()===viewId?'none':viewId;
-        save.wardrobe.lastPrize=null;commit();onChange();refresh();sound('tap');
+        save.wardrobe.lastPrize=null;commit();onChange();refresh();sound('uiPress');
       }
     }
     function drawSynthesis(now) {
