@@ -11,7 +11,8 @@
     phantom: { label: 'Взорви блоки', unit: 'взрывов', goals: [30, 120] },
     glitch: { label: 'Обезвредь колючки', unit: 'обезвреживаний', goals: [3, 12] },
     telekinesis: { label: 'Вырви блоки', unit: 'вырванных блоков', goals: [20, 80] },
-    infinity: { label: 'Разрушь блоки сферами', unit: 'разрушений', goals: [50, 200] }
+    infinity: { label: 'Разрушь блоки сферами', unit: 'разрушений', goals: [50, 200] },
+    anomaly: { label: 'Примени способности', unit: 'применений', goals: [20, 60] }
   });
   const count = value => Number.isFinite(Number(value)) ? Math.max(0, Math.floor(Number(value))) : 0;
   function state(id, ownedStage, value, viewedStage = Math.min(3, ownedStage + 1)) {

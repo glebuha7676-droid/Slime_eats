@@ -14,11 +14,16 @@
   function laserTint(ctx, block, y, timestamp) {
     if (!(block.nanoLaserUntil > timestamp)) return;
     const progress=clamp((timestamp-block.nanoLaserStartedAt)/Math.max(1,block.nanoLaserUntil-block.nanoLaserStartedAt));
-    ctx.save(); ctx.fillStyle=`rgba(255,25,58,${.25+progress*.55})`;
-    ctx.fillRect(block.x+1,y+1,block.w-2,block.h-2);
-    ctx.strokeStyle='#ffb4b4'; ctx.lineWidth=1.5;
-    const scan=y+progress*block.h;
-    ctx.beginPath();ctx.moveTo(block.x+2,scan);ctx.lineTo(block.x+block.w-2,scan);ctx.stroke();ctx.restore();
+    const x = Math.max(block.x + 3, Math.min(block.x + block.w - 3, block.nanoLaserX ?? block.x + block.w / 2));
+    const spot = ctx.createRadialGradient(x, y + 4, 1, x, y + 5, block.w * .49);
+    spot.addColorStop(0, '#cefcffb5');
+    spot.addColorStop(.31, '#43cfff73');
+    spot.addColorStop(1, '#1686ec00');
+    ctx.save();
+    ctx.globalAlpha *= (1 - progress) ** 1.45;
+    ctx.fillStyle = spot;
+    ctx.fillRect(block.x + 1, y + 1, block.w - 2, block.h - 2);
+    ctx.restore();
   }
   function disintegration(ctx, effect, cameraY, timestamp) {
     const t=clamp((timestamp-effect.at)/460), size=effect.w/6;
@@ -28,7 +33,7 @@
       const seed=(row*31+col*17)%13, delay=seed*.009;
       const p=clamp((t-delay)/(1-delay)), shrink=Math.max(0,1-p*1.4);
       ctx.globalAlpha=(1-p)*.95;
-      ctx.fillStyle=seed%3===0?'#ffede2':seed%3===1?'#ff344e':'#a61030';
+      ctx.fillStyle=seed%3===0?'#e7fcff':seed%3===1?'#4bd6ff':'#1570d2';
       const x=effect.x+(col+.5)*size+(col-2.5)*p*size*1.5;
       const y=effect.y-cameraY+(row+.5)*effect.h/6-p*p*effect.h*.8;
       ctx.fillRect(x-size*shrink/2,y-size*shrink/2,size*shrink*.9,size*shrink*.9);
@@ -39,16 +44,16 @@
     ctx.save();ctx.lineCap='round';
     for(let i=0;i<4;i++){
       const t=Math.max(0,progress-i*.035), a=minePoint(mine,t), b=minePoint(mine,Math.max(0,t-.035));
-      ctx.globalAlpha=(1-i/4)*.7;ctx.strokeStyle=i?'#ff394e':'#ffe9bb';ctx.lineWidth=size*(.19-i*.025);
+      ctx.globalAlpha=(1-i/4)*.7;ctx.strokeStyle=i?'#35b5ff':'#d9fbff';ctx.lineWidth=size*(.19-i*.025);
       ctx.beginPath();ctx.moveTo(a.x,a.y-cameraY);ctx.lineTo(b.x,b.y-cameraY);ctx.stroke();
     }ctx.restore();
   }
   function mineBlast(ctx,effect,cameraY,timestamp){
     const t=clamp((timestamp-effect.at)/430);if(t>=1)return;
     ctx.save();ctx.globalAlpha=(1-t)*(1-t);
-    ctx.strokeStyle='#ff4356';ctx.lineWidth=5*(1-t)+1;
+    ctx.strokeStyle='#49cbff';ctx.lineWidth=5*(1-t)+1;
     ctx.beginPath();ctx.arc(effect.x,effect.y-cameraY,effect.size*(.15+t*.95),0,Math.PI*2);ctx.stroke();
-    ctx.strokeStyle='#fff2c2';ctx.lineWidth=2;
+    ctx.strokeStyle='#e2fbff';ctx.lineWidth=2;
     ctx.beginPath();ctx.arc(effect.x,effect.y-cameraY,effect.size*(.08+t*.6),0,Math.PI*2);ctx.stroke();
     for(let i=0;i<8;i++){
       const a=i*Math.PI/4, r=effect.size*(.2+t*.8);

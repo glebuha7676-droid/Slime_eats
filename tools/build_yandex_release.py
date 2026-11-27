@@ -26,6 +26,8 @@ html = (ROOT / 'index.html').read_text(encoding='utf-8')
 VERSION = re.search(r'<script src="game\.js\?v=([A-Za-z0-9._-]+)"', html).group(1)
 css_files = re.findall(r'<link rel="stylesheet" href="([^"?]+)[^"]*"\s*/>', html)
 css = '\n'.join((ROOT / file).read_text(encoding='utf-8') for file in css_files)
+# Standalone styles are served from css/, while the bundle is served from the root.
+css = re.sub(r'''(url\(\s*['"]?)\.\./(?=(?:assets|effects-lab/assets)/)''', r'\1', css)
 css = re.sub(r'/\*.*?\*/', '', transform(css), flags=re.S)
 css = re.sub(r'\s+', ' ', css)
 html = re.sub(r'<link rel="stylesheet" href="[^"?]+[^"]*"\s*/>', '', html)

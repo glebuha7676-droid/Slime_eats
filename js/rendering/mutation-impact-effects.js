@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),cache=new Map(),TAU=Math.PI*2;
-  const colours={frost:['#ffffff','#9cefff','#279ee9'],ghost:['#effff7','#65efcc','#389ab7'],fire:['#fff9ce','#ffad36','#ef4926'],electric:['#ffffff','#92dbff','#7469ef'],spore:['#faffd4','#b6ed6e','#4da975'],cosmos:['#fffef1','#ffe69b','#a395ed'],rock:['#fffbe8','#e5d8af','#aaa7a0']};
+  const colours={frost:['#ffffff','#9cefff','#279ee9'],ghost:['#effff7','#65efcc','#389ab7'],fire:['#fff9ce','#ffad36','#ef4926'],electric:['#ffffff','#92dbff','#7469ef'],spore:['#faffd4','#b6ed6e','#4da975'],cosmos:['#fffef1','#ffe69b','#a395ed'],rock:['#fffbe8','#e5d8af','#aaa7a0'],anomaly:['#fbecff','#b676ff','#7733d5']};
   function glow(kind='rock'){
     if(cache.has(kind))return cache.get(kind);
     const image=document.createElement('canvas');image.width=image.height=128;
@@ -125,12 +125,85 @@
     const q=point(flight);for(let i=3;i>0;i--){const p=point(Math.max(0,flight-i*.045));halo(c,'frost',p.x,p.y,cell*.19,(1-t)*(.35-i*.07));}
     if(art.complete&&art.naturalWidth){const size=cell*.2;c.save();c.translate(q.x,q.y);c.rotate(t*Math.PI*4);c.globalAlpha=(1-t)**.65;c.drawImage(art,-size/2,-size/2,size,size);c.restore();}
   }
-  function spores(c,b,camera,cell,at,low=false){
-    const t=clamp((at-b.startedAt)/700,0,1);if(t>=1)return;
-    const x=b.x,y=b.y-camera,fade=(1-t)**1.4,spread=1-(1-t)**3,cloud=window.SlimeGameAssets.projectSprite('assets/vfx/spores-impact-cloud-v1.webp');
-    halo(c,'spore',x,y,cell*(1+spread*2.3),fade*.7);c.save();
-    if(cloud.complete&&cloud.naturalWidth)for(let i=0;i<(low?3:5);i++){const a=i*TAU/(low?3:5)+.3,d=cell*spread*(.65+(i%2)*.25),w=cell*(1.5+t*.9),h=w*cloud.naturalHeight/cloud.naturalWidth;c.save();c.translate(x+Math.cos(a)*d,y+Math.sin(a)*d);c.rotate(a+Math.PI/2);c.globalAlpha=fade*(i%2?.65:.85);c.drawImage(cloud,-w/2,-h/2,w,h);c.restore();}
-    const puff=glow('spore');for(let i=0;i<(low?5:10);i++){const a=i*2.4,d=cell*(.3+spread*(.7+i%3*.13)),w=cell*(.08+i%3*.025);c.globalAlpha=fade*.9;c.drawImage(puff,x+Math.cos(a)*d-w/2,y+Math.sin(a)*d-t*cell*.15-w/2,w,w);}c.restore();halo(c,'spore',x,y,cell*.9,clamp(1-t/.2,0,1)*.85);
+  function sporeMist() {
+    if (cache.has('sporeMist')) return cache.get('sporeMist');
+    const image = document.createElement('canvas');
+    image.width = image.height = 128;
+    const c = image.getContext('2d');
+    const gradient = c.createRadialGradient(64, 64, 0, 64, 64, 62);
+    gradient.addColorStop(0, '#f1ffc2f5');
+    gradient.addColorStop(.28, '#ddf6a4e6');
+    gradient.addColorStop(.56, '#a8d972b8');
+    gradient.addColorStop(.80, '#79ae4d3a');
+    gradient.addColorStop(1, '#6c9d4300');
+    c.fillStyle = gradient;
+    c.fillRect(0, 0, 128, 128);
+    cache.set('sporeMist', image);
+    return image;
+  }
+
+  function spores(c, burst, camera, cell, at, low = false, front = false) {
+    const cast = burst.kind === 'cast';
+    const puff = burst.kind === 'puff';
+    const duration = puff ? 340 : burst.kind === 'break' ? 520 : 680;
+    const age = at - burst.startedAt;
+    if (age < 0 || age >= duration || (front && (!cast || age > 265))) return;
+    const tier = burst.tier ?? 1;
+    const size = cell * (burst.scale ?? 1);
+    const x = burst.x;
+    const y = burst.y - camera;
+    const t = age / duration;
+    const spread = 1 - (1 - t) ** 3;
+    const fade = (1 - t) ** 1.5;
+    const radius = size * (.49 + spread * 1.31);
+    const flash = (1 - clamp(age / (85 + tier * 23), 0, 1)) ** 2;
+    const mist = sporeMist();
+    c.save();
+
+    if (front) {
+      const veil = (1 - age / 265) ** 1.6 * (.34 + tier * .07);
+      const width = radius * (1.34 + spread * .36);
+      const alpha = c.globalAlpha;
+      c.globalAlpha = alpha * veil * .57;
+      c.drawImage(mist, x - width * .70, y - width * .13, width * .78, width * .65);
+      c.drawImage(mist, x - width * .05, y - width * .07, width * .75, width * .56);
+      c.globalAlpha = alpha * veil;
+      c.drawImage(mist, x - width * .52, y - width * .12, width * 1.04, width * .67);
+      c.restore();
+      return;
+    }
+
+    // Keep the cloud filled while the edge rolls outward. All stamps fade to
+    // transparent before their bounds, so overlaps leave no cut lines.
+    const alpha = c.globalAlpha;
+    c.globalAlpha = alpha * fade * (puff ? .55 : .78);
+    c.drawImage(mist, x - radius, y - radius * .88, 2 * radius, 1.76 * radius);
+    const count = puff ? 3 : low ? 5 : 6 + tier * 2;
+    const seed = (x * .081 + burst.y * .029) % TAU;
+    for (let i = 0; i < count; i += 1) {
+      const angle = seed + i * 2.4 + spread * Math.sin(i * 1.9) * .24;
+      const travel = radius * (.27 + (i * .37 % 1) * .56) * (.38 + spread * .62);
+      const width = radius * (.66 + (i * .29 % 1) * .70);
+      const px = x + Math.cos(angle) * travel;
+      const py = y + Math.sin(angle) * travel * .78 - spread * radius * .13;
+      c.globalAlpha = alpha * fade * (1 - t * .34) * (.26 + (i % 3) * .065);
+      c.drawImage(mist, px - width * .5, py - width * .40, width, width * .80);
+    }
+    c.globalAlpha = alpha * fade * .42;
+    c.drawImage(mist, x - radius * .62, y - radius * .53, radius * 1.24, radius * 1.06);
+    c.restore();
+    if (puff) return;
+    halo(c, 'spore', x, y, radius * 1.9, fade * (.26 + tier * .065), .86);
+    if (cast && tier > 1) {
+      const edgeLight = Math.sin(Math.PI * t) * fade * (.3 + tier * .09);
+      for (let i = 0; i < (low ? 2 : tier + 1); i += 1) {
+        const angle = seed + i * 2.4;
+        const drift = radius * (.38 + .28 * spread + .08 * (i % 2));
+        halo(c, 'spore', x + Math.cos(angle) * drift, y + Math.sin(angle) * drift * .74,
+          radius * (.68 + .15 * (i % 3)), edgeLight, .80);
+      }
+    }
+    halo(c, 'spore', x, y, size * (1.08 + spread * .74), flash * (.5 + tier * .12), .94);
   }
   function starTrail(c,image,star,at,point,camera,cell,low=false){
     const q=point(star,at),prev=point(star,Math.max(star.launchAt,at-110)),dx=q.x-prev.x,dy=q.y-prev.y;

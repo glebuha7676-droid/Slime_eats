@@ -11,7 +11,7 @@
     FOOD_ART_OFFSETS,
     WORLD_SPRITE_NAMES
   } = config;
-  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch', 'infinity']);
+  const recipeFamilies = new Set(['fire', 'ice', 'electric', 'cosmos', 'nano', 'telekinesis', 'cloning', 'phantom', 'glitch', 'infinity', 'anomaly']);
   const worldSprites = {};
   const projectSprites = {};
   const thumbnailFitCache = new Map();
@@ -133,7 +133,8 @@
   function foodImageSource(food) {
     const customImage = String(food.image || '').trim();
     const isEmbeddedImage = /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(customImage);
-    const isProjectAsset = /^assets\/(?:ЕДА|food|runtime|ui\/recipe-categories)\/[\p{L}\p{N} _()./-]+\.(?:png|jpe?g|webp|gif)$/iu.test(customImage);
+    const isProjectAsset = customImage === 'assets/ui/lab-refit/synthesis-core-v1.webp'
+      || /^assets\/(?:ЕДА|food|runtime|ui\/recipe-categories)\/[\p{L}\p{N} _()./-]+\.(?:png|jpe?g|webp|gif)$/iu.test(customImage);
     if (isEmbeddedImage) return customImage;
     return versionedAsset(isProjectAsset ? customImage : `${FOOD_ASSET_ROOT}${food.id}.webp`);
   }

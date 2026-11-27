@@ -5,6 +5,9 @@
   const referenceBodyImage = new Image();
   const formBodySources = Object.freeze({
     infinity: 'assets/ui/slime/infinity/body-v2.webp',
+    anomalyBase: 'assets/ui/slime/anomaly/body-1.webp',
+    anomalyEvolved: 'assets/ui/slime/anomaly/body-2.webp',
+    anomalyAbsolute: 'assets/ui/slime/anomaly/body-3.webp',
     frost: 'assets/ui/slime/forms/slime-body-frost-v1.webp?v=1',
     cosmos: 'assets/ui/slime/forms/slime-body-cosmos-v1.webp?v=1',
     electric: 'assets/ui/slime/forms/slime-body-electric-v1.webp?v=1',
@@ -18,9 +21,9 @@
     frostUltra: 'effects-lab/assets/frost-ultra-body-v1.webp',
     cosmosUltra: 'effects-lab/assets/cosmos-ultra-body-v2-lossless.webp',
     cosmosPetrifying: 'assets/ui/slime/forms/slime-body-cosmos-petrifying-v2.webp?v=2',
-    technoUltra: 'effects-lab/assets/techno-ultra-body-v2-lossless.webp',
-    technoImplants: 'assets/ui/slime/forms/slime-body-techno-implants-v1.webp?v=1',
-    technoUpgraded: 'assets/ui/slime/forms/slime-body-techno-upgraded-v2.webp?v=2',
+    technoUltra: 'assets/ui/techno-v3/slime-3.webp',
+    technoImplants: 'assets/ui/techno-v3/slime-1.webp',
+    technoUpgraded: 'assets/ui/techno-v3/slime-2.webp',
     psionicsBudding: 'assets/ui/slime/forms/slime-body-psionics-budding-v1.webp?v=1',
     psionicsCrowned: 'assets/ui/slime/forms/slime-body-psionics-crowned-v2.webp?v=2',
     psionicsUltra: 'assets/ui/slime/forms/slime-body-psionics-ultra-v2.webp?v=2',
@@ -43,6 +46,8 @@
   const referenceEyeSocketsImage = new Image();
   const referencePupilsImage = new Image();
   const infinityPupilImage = new Image();
+  const anomalyEyeBaseImage = new Image();
+  const anomalyPupilsImage = new Image();
   let infinityPupils = null;
   const referenceCheeksImage = new Image();
   const referenceEyeExpressionsImage = new Image();
@@ -133,6 +138,8 @@
   referenceMouthExpressionsImage.src = window.SlimeGameAssets.versionedAsset('assets/ui/slime/slime-mouth-expressions-v1.webp?v=1');
   // Decode only the face/body currently in use, not every unlock at startup.
   const deferredImages = new Map([
+    [anomalyEyeBaseImage, 'assets/ui/slime/anomaly/eye-base.webp'],
+    [anomalyPupilsImage, 'assets/ui/slime/anomaly/pupils.webp'],
     [electricEyeBaseImage, 'effects-lab/assets/electric-eye-base-v1-lossless.webp'],
     [electricPupilImage, 'effects-lab/assets/electric-pupil-v1-lossless.webp'],
     [fireEyeBaseImage, 'effects-lab/assets/fire-eye-base-v1-lossless.webp'],
@@ -141,8 +148,8 @@
     [frostPupilImage, 'effects-lab/assets/frost-pupil-v1-lossless.webp'],
     [cosmosEyeBaseImage, 'effects-lab/assets/cosmos-eye-base-v1-lossless.webp'],
     [cosmosPupilImage, 'effects-lab/assets/cosmos-pupil-v1-lossless.webp'],
-    [nanoCyborgEyeBaseImage, 'effects-lab/assets/nano-eye-base-v12.webp'],
-    [nanoCyborgPupilImage, 'effects-lab/assets/nano-eye-pupil-v12.webp'],
+    [nanoCyborgEyeBaseImage, 'assets/ui/techno-v3/eye-socket.webp'],
+    [nanoCyborgPupilImage, 'assets/ui/techno-v3/eye-pupil.webp'],
     [psionicsEyeBaseImage, 'effects-lab/assets/psionics-eye-base-v2-lossless.webp'],
     [psionicsPupilImage, 'effects-lab/assets/psionics-pupil-v2-lossless.webp'],
     [phantomPupilsImage, 'effects-lab/assets/phantom-pupils-v3-lossless.webp'],
@@ -189,6 +196,7 @@
     if (formBodySources[options.bodyVariant]) tasks.push(loadImage(formBodyImages[options.bodyVariant], formBodySources[options.bodyVariant]));
     if (options.bodyVariant === 'infinity') tasks.push(loadImage(infinityPupilImage, 'assets/ui/slime/infinity/pupil.webp'));
     const groups = [
+      [options.bodyVariant === 'anomalyAbsolute', anomalyEyeBaseImage, anomalyPupilsImage],
       [options.fireEyes, fireEyeBaseImage, firePupilImage],
       [options.electricEyes, electricEyeBaseImage, electricPupilImage],
       [options.frostEyes, frostEyeBaseImage, frostPupilImage],
@@ -205,6 +213,7 @@
     return result;
   }
   const bodyLayers = new Map();
+  let bodyBlendLayer;
 
   function referenceBodyRect(radius, image) {
     if (image === formBodyImages.infinity) {
@@ -234,9 +243,8 @@
 
   function drawReferenceBody(targetCtx, radius, tint = '', image = referenceBodyImage, filter = '') {
     const [bodyLeft, bodyTop, bodyWidth, bodyHeight] = referenceBodyRect(radius, image);
-    const raster=image;
     if (!tint && !filter) {
-      targetCtx.drawImage(raster, bodyLeft, bodyTop, bodyWidth, bodyHeight);
+      targetCtx.drawImage(image, bodyLeft, bodyTop, bodyWidth, bodyHeight);
       return;
     }
     const key = `${image.src}|${tint}|${filter}`;
@@ -246,7 +254,7 @@
       layer.width = layer.height = 512;
       const context = layer.getContext('2d');
       context.filter = filter || 'none';
-      context.drawImage(raster, 0, 0, 512, 512);
+      context.drawImage(image, 0, 0, 512, 512);
       context.filter = 'none';
       if (tint) {
         context.globalCompositeOperation = 'source-atop';
@@ -258,6 +266,42 @@
       bodyLayers.set(key, layer);
     }
     targetCtx.drawImage(layer, bodyLeft, bodyTop, bodyWidth, bodyHeight);
+  }
+
+  function drawBlendedReferenceBody(targetCtx, radius, base, blend, { amount, retract }, filter) {
+    if (amount >= 1) {
+      drawReferenceBody(targetCtx, radius, '', blend, filter);
+      return;
+    }
+    const layerRadius = 160;
+    const [baseLeft, baseTop, baseWidth, baseHeight] = referenceBodyRect(layerRadius, base);
+    const [blendLeft, blendTop, blendWidth, blendHeight] = referenceBodyRect(layerRadius, blend);
+    const left = Math.floor(Math.min(baseLeft, blendLeft)) - 1;
+    const top = Math.floor(Math.min(baseTop, blendTop)) - 1;
+    const width = Math.ceil(Math.max(baseLeft + baseWidth, blendLeft + blendWidth)) - left + 1;
+    const blendBottom = blendTop + blendHeight;
+    const height = Math.ceil(Math.max(baseTop + baseHeight, blendBottom)) - top + 1;
+    if (!bodyBlendLayer) bodyBlendLayer = document.createElement('canvas');
+    if (bodyBlendLayer.width < width) bodyBlendLayer.width = width;
+    if (bodyBlendLayer.height < height) bodyBlendLayer.height = height;
+    const layer = bodyBlendLayer.getContext('2d');
+    layer.clearRect(0, 0, width, height);
+    layer.save();
+    layer.translate(-left, -top);
+    layer.globalAlpha = 1 - amount;
+    drawReferenceBody(layer, layerRadius, '', base, filter);
+    layer.globalCompositeOperation = 'lighter';
+    layer.globalAlpha = amount;
+    if (retract) {
+      const contraction = 1 - amount;
+      layer.translate(0, blendBottom);
+      layer.scale(1 - contraction * .10, 1 - contraction * .35);
+      layer.translate(0, -blendBottom);
+    }
+    drawReferenceBody(layer, layerRadius, '', blend, filter);
+    layer.restore();
+    const scale = radius / layerRadius;
+    targetCtx.drawImage(bodyBlendLayer, 0, 0, width, height, left * scale, top * scale, width * scale, height * scale);
   }
 
   function tintedPupilLayer(tint) {
@@ -455,7 +499,7 @@
     useReferenceFace = false, irisTint = '', cheekFilter = '', mouthStyle = '', nanoEyeOpenness = null,
     nanoEyeCount = 0, psionicsEyes = false, phantomEyes = false, sporesEyes = false,
     fireEyes = false, electricEyes = false, frostEyes = false, cosmosEyes = false, glitchEyes = false,
-    glitchFaceLevel = 0, infinityEyes = false, hideEyes = false, hideMouth = false, eyeMagnification = 1, hiddenEyeSide = 0, eyeClosure = 0
+    glitchFaceLevel = 0, infinityEyes = false, anomalyEyes = false, hideEyes = false, hideMouth = false, eyeMagnification = 1, hiddenEyeSide = 0, eyeClosure = 0
   }) {
     const referenceEyeScale = .74;
     const drawReferenceFaceLayer = (image, offsetX = 0, offsetY = 0, scale = referenceEyeScale) => {
@@ -726,6 +770,9 @@
               (py - 256) * referencePixel + gazeY * radius * .034,
               pw * referencePixel, ph * referencePixel);
           }
+        } else if (anomalyEyes && anomalyEyeBaseImage.naturalWidth && anomalyPupilsImage.naturalWidth) {
+          drawReferenceFaceLayer(anomalyEyeBaseImage);
+          drawReferenceFaceLayer(anomalyPupilsImage, gazeX * radius * .034, gazeY * radius * .034);
         } else {
           drawReferenceFaceLayer(referenceEyeSocketsImage);
           const normalPupils = infinityEyes ? infinityPupilLayer() : tintedPupilLayer(irisTint);
@@ -949,7 +996,7 @@
     bodyHighlight = true, outlineColor = '#26334a', faceColor = null,
     faceScaleX = 1, faceScaleY = 1, faceOffsetY = 0, ghostAura = 0,
     appearance = 'classic', bodyTint = '', bodyFilter = '', poisoned = false,
-    bodyVariant = '', irisTint = '', cheekFilter = '', mouthStyle = '', hideFace = false,
+    bodyVariant = '', bodyBlend = null, irisTint = '', cheekFilter = '', mouthStyle = '', hideFace = false,
     nanoEyeOpenness = null, psionicsEyes = false, phantomEyes = false, sporesEyes = false,
     fireEyes = false, electricEyes = false, frostEyes = false, cosmosEyes = false, glitchEyes = false,
     glitchFaceLevel = 0
@@ -1046,6 +1093,7 @@
       psionicsEyes, phantomEyes, sporesEyes, nanoEyeOpenness, glitchEyes, glitchFaceLevel });
     const variantBodyImage = formBodyReady[bodyVariant] ? formBodyImages[bodyVariant] : null;
     const activeBodyImage = variantBodyImage || referenceBodyImage;
+    const blendImage = bodyBlend?.amount > 0 && formBodyReady[bodyBlend.variant] ? formBodyImages[bodyBlend.variant] : null;
     const useReferenceBody = cuteV2
       && skinId === 'classic'
       && usesDefaultPalette
@@ -1125,7 +1173,9 @@
       targetCtx.fill(); targetCtx.stroke();
     }
 
-    if (useReferenceBody && bodyVariant === 'cosmosUltra') {
+    if (useReferenceBody && blendImage && blendImage !== activeBodyImage) {
+      drawBlendedReferenceBody(targetCtx, radius, activeBodyImage, blendImage, bodyBlend, bodyFilter);
+    } else if (useReferenceBody && bodyVariant === 'cosmosUltra') {
       targetCtx.save();
       targetCtx.translate(0, -radius * .018);
       targetCtx.scale(.94, .94);
@@ -1316,7 +1366,8 @@
         useReferenceFace, irisTint, cheekFilter, mouthStyle, nanoEyeOpenness,
         nanoEyeCount: bodyVariant === 'technoUltra' || nanoEyeOpenness != null ? 1 : 0,
         psionicsEyes, phantomEyes, sporesEyes, fireEyes, electricEyes, frostEyes, cosmosEyes, glitchEyes,
-        glitchFaceLevel,infinityEyes:bodyVariant==='infinity',hideEyes:window.SlimeAccessories?.coversEyes(accessory),hideMouth:window.SlimeAccessories?.coversMouth(accessory),
+        glitchFaceLevel, infinityEyes: bodyVariant === 'infinity', anomalyEyes: bodyVariant === 'anomalyAbsolute',
+        hideEyes: window.SlimeAccessories?.coversEyes(accessory), hideMouth: window.SlimeAccessories?.coversMouth(accessory),
         eyeMagnification:window.SlimeAccessories?.info(accessory)?.magnification || 1,
         hiddenEyeSide:window.SlimeAccessories?.info(accessory)?.hiddenEyeSide || 0
       });

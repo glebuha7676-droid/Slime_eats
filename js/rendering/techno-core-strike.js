@@ -2,7 +2,8 @@
 (() => {
   'use strict';
   const VFX=window.SlimeCoreVfx;
-  const GUN='assets/vfx/techno-core-v1/plasma-cannon.webp',DRONE='effects-lab/assets/techno-mini-drone-red-v2-lossless.webp';
+  const GUN='assets/vfx/techno-core-v1/plasma-cannon-blue-v2.webp',DRONE='assets/ui/techno-v3/drone.webp';
+  const CANNON_ART = Object.freeze({ aspect: 520 / 556, width: 144, muzzleV: .935, reactorV: .316 });
   const TAU=Math.PI*2,FRAMES=16,auras=[],beams=[];
   // Staggered compact orbit: no aligned columns, and the face and strike prompt stay clear.
   const DOCKS=[[49,7],[-44,-28],[19,-51],[-18,48],[64,-31],[-61,20],[41,48],[-79,-47],[77,43],[-37,-76],[54,-78],[-82,61],[92,-7],[-6,-99],[11,82]];
@@ -24,10 +25,10 @@
     const centre=f=>72+Math.sin(f*10-a)*1.3+Math.sin(f*23+a*2)*.6;
     const width=f=>3+24*smooth(f/.37)+Math.sin(f*21-a*2)*Math.min(1,f/.37)*1.5;
     const trace=scale=>{x.beginPath();for(let i=0;i<=40;i++){const f=i/40,px=centre(f)-width(f)*scale,y=9+f*294;if(i===0)x.moveTo(px,y);else x.lineTo(px,y);}x.quadraticCurveTo(centre(1),319,centre(1)+width(1)*scale,303);for(let i=39;i>=0;i--){const f=i/40;x.lineTo(centre(f)+width(f)*scale,9+f*294);}x.closePath();x.fill();};
-    const red=x.createLinearGradient(0,0,144,0);for(const [p,col]of [[0,'#b80c2b00'],[.15,'#db123f'],[.40,'#ff3e5b'],[.60,'#ff3e5b'],[.85,'#db123f'],[1,'#b80c2b00']])red.addColorStop(p,col);
-    x.shadowColor='#ff234c';x.shadowBlur=20;x.fillStyle=red;trace(1.12);x.shadowBlur=5;
-    const plasma=x.createLinearGradient(0,0,144,0);plasma.addColorStop(0,'#ff365a');plasma.addColorStop(.38,'#ff949b');plasma.addColorStop(.53,'#ffe2d3');plasma.addColorStop(.72,'#ff8293');plasma.addColorStop(1,'#f51b4e');x.fillStyle=plasma;trace(.64);x.shadowBlur=0;
-    x.fillStyle='#fff8eb';trace(.38);
+    const jacket=x.createLinearGradient(0,0,144,0);for(const [p,col]of [[0,'#155bd300'],[.15,'#1760dc'],[.40,'#369fff'],[.60,'#369fff'],[.85,'#1760dc'],[1,'#155bd300']])jacket.addColorStop(p,col);
+    x.shadowColor='#2187ff';x.shadowBlur=20;x.fillStyle=jacket;trace(1.12);x.shadowBlur=5;
+    const plasma=x.createLinearGradient(0,0,144,0);plasma.addColorStop(0,'#258eff');plasma.addColorStop(.38,'#78e9ff');plasma.addColorStop(.53,'#d7fbff');plasma.addColorStop(.72,'#70e5ff');plasma.addColorStop(1,'#258eff');x.fillStyle=plasma;trace(.64);x.shadowBlur=0;
+    x.fillStyle='#eefcff';trace(.38);
     x.globalCompositeOperation='lighter';x.globalAlpha=.60;x.fillStyle='#fff';trace(.16);x.globalAlpha=1;x.globalCompositeOperation='source-over';
     for(let i=0;i<4;i++){const f=(a/TAU+i/4)%1;x.save();x.globalAlpha=Math.sin(f*Math.PI)*.55;x.translate(centre(f)+Math.sin(i*3)*8,10+f*294);x.scale(4,18+f*8);const g=x.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0,'#fff');g.addColorStop(1,'#fff0');x.fillStyle=g;x.fillRect(-1,-1,2,2);x.restore();}
     return c;
@@ -35,13 +36,19 @@
   function* buildFrames(){
     cannon=sprite(GUN);drone=sprite(DRONE);
     plasmaCore=canvas(64,320);const pc=plasmaCore.getContext('2d'),core=pc.createLinearGradient(0,0,64,0);
-    for(const [at,color]of [[0,'#ff335900'],[.18,'#ff547b65'],[.36,'#ffbdc4d9'],[.46,'#fff7f1'],[.54,'#ffffff'],[.64,'#ffbdc4d9'],[.82,'#ff547b65'],[1,'#ff335900']])core.addColorStop(at,color);
+    for(const [at,color]of [[0,'#2589ff00'],[.18,'#4bbcff65'],[.36,'#9ef0ffd9'],[.46,'#e9fbff'],[.54,'#ffffff'],[.64,'#9ef0ffd9'],[.82,'#4bbcff65'],[1,'#2589ff00']])core.addColorStop(at,color);
     pc.fillStyle=core;pc.beginPath();pc.moveTo(26,0);pc.bezierCurveTo(26,50,0,85,0,128);pc.lineTo(0,320);pc.lineTo(64,320);pc.lineTo(64,128);pc.bezierCurveTo(64,85,38,50,38,0);pc.closePath();pc.fill();const ends=pc.createLinearGradient(0,0,0,320);ends.addColorStop(0,'#fff0');ends.addColorStop(.035,'#fff');ends.addColorStop(.965,'#fff');ends.addColorStop(1,'#fff0');pc.globalCompositeOperation='destination-in';pc.fillStyle=ends;pc.fillRect(0,0,64,320);
-    drone.onload=()=>{droneArt=canvas(128,128);const x=droneArt.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(drone,drone.naturalWidth*277/1254,drone.naturalHeight*268/1254,drone.naturalWidth*695/1254,drone.naturalHeight*688/1254,5,5,118,118);};
-    halo=radial(128,[[0,'#fff1e6a6'],[.24,'#ff747b76'],[.6,'#ed174331'],[1,'#b7082e00']]);hot=radial(128,[[0,'#fff9eb'],[.16,'#ffe8dedf'],[.40,'#ff344d9c'],[.72,'#f11d4625'],[1,'#f11d4600']]);
-    mist=radial(128,[[0,'#e7c2c07d'],[.4,'#cf7f8650'],[1,'#71394400']]);ring=radial(128,[[0,'#ff2b5100'],[.43,'#ff2b5100'],[.64,'#ffa1a42d'],[.70,'#ffe5dab5'],[.77,'#ff355b4f'],[1,'#ff355b00']]);vignette=radial(128,[[0,'#200f2100'],[.46,'#200f2100'],[1,'#200f21df']]);
-    ember=canvas(24,32);let x=ember.getContext('2d');x.drawImage(halo,0,0,24,32);x.fillStyle='#ffe7d8';x.beginPath();x.ellipse(12,16,1.2,3,-.15,0,TAU);x.fill();
-    dataMote=canvas(24,24);x=dataMote.getContext('2d');x.drawImage(halo,0,0,24,24);x.fillStyle='#ffd4cc';x.shadowColor='#ff2e56';x.shadowBlur=4;x.beginPath();x.roundRect(9,9,6,6,1.5);x.fill();
+    drone.onload=()=>{
+      const height=118*drone.naturalHeight/drone.naturalWidth;
+      droneArt=canvas(128,128);
+      const x=droneArt.getContext('2d');
+      x.imageSmoothingQuality='high';
+      x.drawImage(drone,5,(128-height)/2,118,height);
+    };
+    halo=radial(128,[[0,'#dbf7ffa6'],[.24,'#69dfff76'],[.6,'#257fff31'],[1,'#1253c900']]);hot=radial(128,[[0,'#f5fcff'],[.16,'#d5faffdf'],[.40,'#4cd8ff9c'],[.72,'#2985f925'],[1,'#2985f900']]);
+    mist=radial(128,[[0,'#c5ebff7d'],[.4,'#70b7e450'],[1,'#324b7800']]);ring=radial(128,[[0,'#379dff00'],[.43,'#379dff00'],[.64,'#7de1ff2d'],[.70,'#d8fbffb5'],[.77,'#439fff4f'],[1,'#439fff00']]);vignette=radial(128,[[0,'#07163000'],[.46,'#07163000'],[1,'#071630df']]);
+    ember=canvas(24,32);let x=ember.getContext('2d');x.drawImage(halo,0,0,24,32);x.fillStyle='#def9ff';x.beginPath();x.ellipse(12,16,1.2,3,-.15,0,TAU);x.fill();
+    dataMote=canvas(24,24);x=dataMote.getContext('2d');x.drawImage(halo,0,0,24,24);x.fillStyle='#abf2ff';x.shadowColor='#31a5ff';x.shadowBlur=4;x.beginPath();x.roundRect(9,9,6,6,1.5);x.fill();
     for(let i=0;i<FRAMES;i++){auras.push(auraFrame(i/FRAMES*TAU));beams.push(beamFrame(i/FRAMES*TAU));yield;}
     mixAura=canvas(256,256);mixBeam=canvas(144,320);
   }
@@ -49,9 +56,12 @@
   const stamp=VFX.stamp;
   function animated(c,frames,mix,time,x,y,w,h,alpha){if(alpha<=.002||!VFX.visible(x,y,w,h))return;VFX.blend(frames,mix,time,FRAMES);stamp(c,mix,x,y,w,h,alpha);}
   function geometry(run){
-    const e=run.coreEncounter,p=e.power,h=168,w=h*497/592;
-    const recoil=e.phase==='burn'?(4+8*p)*Math.sin(clamp(e.phaseTime/220)*Math.PI)*Math.exp(-e.phaseTime/280):0,y=run.slime.y-run.cameraY+118-recoil;
-    return {x:run.slime.x,y,w,h,recoil,muzzleY:y+h*.343,reactorY:y-h*.21};
+    const e = run.coreEncounter, p = e.power, w = CANNON_ART.width, h = w / CANNON_ART.aspect;
+    const recoil = e.phase === 'burn' ? (4 + 8 * p) * Math.sin(clamp(e.phaseTime / 220) * Math.PI) * Math.exp(-e.phaseTime / 280) : 0;
+    const muzzleY = run.slime.y - run.cameraY + 176 - recoil;
+    // Keep the beam at the nozzle and route the drones to the square reactor.
+    const top = muzzleY - h * CANNON_ART.muzzleV;
+    return { x: run.slime.x, y: top + h / 2, w, h, recoil, muzzleY, reactorY: top + h * CANNON_ART.reactorV };
   }
   function dronePose(run,index,g=geometry(run)){
     const e=run.coreEncounter,[offsetX,offsetY]=DOCKS[index],side=Math.sign(offsetX),t=VFX.clock(e),q=index===0?1:index>=7?clamp((t-(e.overdriveStart||2850)-(index-7)*45)/430):clamp((t-260-index*135)/720),u=smooth(q),cool=e.phase==='afterglow'?1-smooth(e.phaseTime/450):1;
@@ -72,7 +82,7 @@
         stamp(c,hot,d.x,d.y,13,13,d.alpha*d.feed*(.38+.09*Math.sin(t/125+i)));
         for(let j=0;j<(e.lowPower||e.reduced?1:3);j++){
           const receiver=g;
-          const q=(t/(710+i%3*90)+i*.173+j/3)%1,n=1-q,targetX=receiver.x+d.side*receiver.w*.30,targetY=receiver.reactorY+(i%3-1)*10;
+          const q=(t/(710+i%3*90)+i*.173+j/3)%1,n=1-q,targetX=receiver.x+d.side*receiver.w*.20,targetY=receiver.reactorY+(i%3-1)*10;
           const px=n*n*d.x+2*n*q*(lerp(d.x,targetX,.5)+d.side*12)+q*q*targetX,py=n*n*d.y+2*n*q*(lerp(d.y,targetY,.5)-22)+q*q*targetY;
           const size=7+e.power*2;stamp(c,dataMote,px,py,size,size,Math.sin(q*Math.PI)*d.alpha*d.feed*(e.phase==='burn'?1:.64+.32*e.power));
         }

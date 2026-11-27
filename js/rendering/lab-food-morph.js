@@ -143,10 +143,11 @@
     pixels.fill(255);
     let previous = -1;
     function paint(blend, revealed) {
-      if (!before || !after) {
-        const stage = Number(revealed);
-        if (stage === previous) return;
-        previous = stage;
+      if (!before || !after || blend === 0 || blend === 1) {
+        const stage = Number(!before || !after ? revealed : blend === 1);
+        const frame = `dish-${stage}`;
+        if (frame === previous) return;
+        previous = frame;
         const dish = aligned[stage];
         display.clearRect(0, 0, canvas.width, canvas.height);
         display.drawImage(dish.image, dish.x, dish.y, dish.width, dish.height);
@@ -165,16 +166,20 @@
       }
       display.putImageData(output, 0, 0);
     }
-    return { canvas, paint, dishes, marginX: margin / extentX, marginY: margin / extentY };
+    return { canvas, paint, dishes, box };
   }
 
   function play(tray, outgoing, incoming, { isActive, onReveal }) {
     const canvas = tray.querySelector('.lab-evolution-visual');
     const context = canvas?.getContext('2d');
-    let morph = prepare(tray, outgoing, incoming);
-    if (!context || !morph) return Promise.resolve();
-
+    if (!context) return Promise.resolve();
+    tray.classList.add('is-evolution-frozen');
     const initialOffset = parseFloat(getComputedStyle(outgoing.parentElement).translate.split(' ')[1]) || 0;
+    let morph = prepare(tray, outgoing, incoming);
+    if (!morph) {
+      tray.classList.remove('is-evolution-frozen');
+      return Promise.resolve();
+    }
     const halo = lightTexture();
     const projectorBeam = beamTexture(.46, .93, .06);
     const lenses = [...tray.querySelectorAll('.lab-evolution-lens')];
@@ -249,7 +254,7 @@
       const hot = smooth(.12, .38, time) * (1 - smooth(REVEAL, 1.9, time));
       const incomingColor = smooth(REVEAL, 1.73, time);
       const coloredDish = time < REVEAL ? before : after;
-      const colorAmount = time < REVEAL ? 1 - smooth(.12, .39, time) : incomingColor;
+      const colorAmount = time < REVEAL ? 1 - smooth(.24, .39, time) : incomingColor;
       if (colorAmount > 0) {
         context.globalAlpha = colorAmount;
         context.drawImage(coloredDish.image, coloredDish.x, coloredDish.y, coloredDish.width, coloredDish.height);
@@ -258,15 +263,15 @@
         morph.paint(blend, time >= REVEAL);
         const silhouetteWidth = interpolate(before.visible.width, after.visible.width, blend);
         const silhouetteHeight = interpolate(before.visible.height, after.visible.height, blend);
-        const padX = silhouetteWidth * morph.marginX;
-        const padY = silhouetteHeight * morph.marginY;
+        const sx = silhouetteWidth / morph.box.width;
+        const sy = silhouetteHeight / morph.box.height;
         context.globalAlpha = hot;
         context.shadowColor = '#69d9ff';
         context.shadowBlur = 10 * density;
         context.drawImage(morph.canvas,
-          interpolate(before.visible.x, after.visible.x, blend) - padX,
-          interpolate(before.visible.y, after.visible.y, blend) - padY,
-          silhouetteWidth + padX * 2, silhouetteHeight + padY * 2);
+          interpolate(before.visible.x, after.visible.x, blend) - morph.box.left * sx,
+          interpolate(before.visible.y, after.visible.y, blend) - morph.box.top * sy,
+          morph.canvas.width * sx, morph.canvas.height * sy);
       }
       context.restore();
 
@@ -304,15 +309,21 @@
       context.globalAlpha = 1;
     }
 
-    tray.classList.add('is-evolving');
     layout();
-    if (geometry) draw(0);
+    if (!geometry) {
+      observer.disconnect();
+      tray.classList.remove('is-evolution-frozen');
+      return Promise.resolve();
+    }
+    draw(0);
+    tray.classList.add('is-evolving');
     return new Promise(resolve => {
       let time = 0;
       let previous;
       let revealed = false;
       function finish() {
         observer.disconnect();
+        tray.classList.remove('is-evolution-frozen');
         resolve();
       }
       function tick(timestamp) {

@@ -4,16 +4,13 @@ const { chromium } = require('playwright');
 const source = fs.readFileSync('game.js','utf8');
 const hook = `window.__drillQA={
  prepare(stage){if(run)cancelAnimationFrame(run.animationId);run=null;els.resultOverlay.classList.add('hidden');els.panelOverlay.classList.add('hidden');tutorialMemoState=null;syncInteractionLayers();clearMenuSlimeInteraction();clearMenuMutationPresentation();
- save=normalizeSave({schemaVersion:29,unlockedMutations:FORM_INDEX.map(f=>f.id),mutationLevels:{nano:stage},activeMutationPool:['nano'],selectedMutation:'nano',researchUnits:400,tutorialStep:'done',onboarding:{enabled:false},sound:false});save.tutorialStep='done';save.onboarding.enabled=false;session=null;newDraft();session.foods=[foodForMutation('nano')];session.offer=[null,null,null];recalcStats();syncMenuCategoryVisuals({instant:true});renderDraft();startDrop();cancelAnimationFrame(run.animationId);
+ save=normalizeSave({schemaVersion:29,unlockedMutations:FORM_INDEX.map(f=>f.id),mutationLevels:{nano:stage},mutationUltimateStages:{nano:1},activeMutationPool:['nano'],selectedMutation:'nano',researchUnits:400,tutorialStep:'done',onboarding:{enabled:false},sound:false});save.tutorialStep='done';save.onboarding.enabled=false;session=null;newDraft();session.foods=[foodForMutation('nano')];session.offer=[null,null,null];recalcStats();syncMenuCategoryVisuals({instant:true});renderDraft();startDrop();cancelAnimationFrame(run.animationId);
  const cell=run.cellSize,template=run.blocks.find(b=>!b.hazard&&!b.special&&!b.unbreakable);run.blocks=[];
  for(let row=0;row<24;row++)for(let col=0;col<6;col++)run.blocks.push({...template,id:'qa-'+row+'-'+col,row,col,x:run.gridOffsetX+col*cell+2,y:run.blockRowOrigin+row*cell+2,w:cell-4,h:cell-4,tier:'hard',hp:4,maxHp:4,flaskTier:0,flaskValue:0,dead:false,elementalSnow:false,elementalSnowflake:false,fireDamageAt:0,electricFlashUntil:0});
  indexRunBlocks();run.launchEntryUntil=0;run.launchEntryStartedAt=0;run.portalEntry=null;run.slime.x=run.gridOffsetX+3.5*cell;run.slime.y=run.blockRowOrigin+2.5*cell;run.slime.vx=run.slime.vy=0;run.cameraY=run.slime.y-200;
  run.nanoNextShotAt=performance.now()+100000;run.elementalAbilityCharges=1;run.ultimateCharge=65;updateRunUI();renderCanvas(performance.now());this.elapsed=0;this.start=performance.now();},
   prep(stage){
     this.prepare(stage);
-    run.passiveLevels.nano=stage;
-    run.ultimateStage=stage;
-    run.ultimateProfile=ULTIMATE_STAGES.get('nano',stage);
     adminInfiniteUltimate=true;
 
     run.portalTransitioning=false;
@@ -34,12 +31,22 @@ const hook = `window.__drillQA={
     return this.state();
   },
   passive(){run.nanoNextShotAt=this.start+1000;},
+  enableAudio(){save.sound=true; window.__technoShotAudio=[];},
+  spaceForMech() {
+    const cell=run.cellSize;
+    run.blocks=run.blocks.filter(block=>block.row>=2);
+    indexRunBlocks();
+    run.slime.x=run.gridOffsetX+4*cell;
+    run.slime.y=run.blockRowOrigin+2*cell-cell*1.67;
+    run.cameraY=run.slime.y-205;
+  },
   state() {
     return { burst:run.nanoBurst?.remaining, phase:run.mechSuit?.phase,
       timer:run.mechSuit && run.mechSuit.expireAt-run.mechSuit.landAt,
       up:run.slime.vy<0, x:run.slime.x, y:run.slime.y, radius:run.slime.radius,
-      explosion:!!run.mechExplosion,
+      stage:run.ultimateStage, leaving:!!run.mechDeparture,
       launch:run.nanoLastShotAt, hp:run.blocks.filter(b=>b.col===3&&b.row>=2&&b.row<=5).map(b=>b.hp),
+      loaded:run.mechSuit?.loaded, contact:run.mechSuit?.contacts.size,
       dead:run.blocks.filter(b=>b.dead).map(b=>[b.row,b.col])};
   },
   alignAttack(){this.start=run.nanoBurst.nextAt;},
@@ -56,6 +63,14 @@ const hook = `window.__drillQA={
  try{
  const p=await browser.newPage({viewport:{width:390,height:844}});
  const errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.addInitScript(()=>{
+   window.__technoShotAudio=[];
+   const play=HTMLMediaElement.prototype.play;
+   HTMLMediaElement.prototype.play=function(...args){
+     if (/techno-(?:pierce-)?shot\.wav/.test(this.src)) window.__technoShotAudio.push(this.src);
+     return play.apply(this,args);
+   };
+ });
  await p.route('**/game.js*',r=>r.fulfill({contentType:'application/javascript',body:source.replace('  init().catch(error => {',hook+'  init().catch(error => {')}));
  await p.goto(process.env.SLIME_TEST_URL || 'http://127.0.0.1:8765/?test=techno-drill');
  await p.waitForFunction(()=>window.__drillQA&&document.documentElement.classList.contains('app-ready'),null,{timeout:30000});
@@ -73,49 +88,65 @@ const hook = `window.__drillQA={
  assert.equal((await advance(1995)).launch,first);
  assert.equal((await advance(2000)).launch-first,1000);
  await prep(2);
+ assert.equal((await state()).stage,2);
+ await p.evaluate(()=>__drillQA.enableAudio());
  await p.locator('#fallAttackBtn').click({force:true});
  assert.equal((await state()).burst,6);
  await p.evaluate(()=>__drillQA.alignAttack());
- assert.deepEqual((await advance(95)).hp,[2,0,4,4]);
- assert.deepEqual((await advance(200)).hp,[1,0,3,4]);
- assert.equal((await advance(510)).burst,1);
- assert.equal((await advance(530)).burst,undefined);
+ assert.deepEqual((await advance(95)).hp,[2,1,4,4]);
+ await advance(120);
+ await p.screenshot({path:'tmp/techno-laser-piercing.png',animations:'disabled'});
+ assert.deepEqual((await advance(155)).hp,[2,0,4,4]);
+ assert.deepEqual((await advance(515)).hp,[1,0,3,4]);
+ assert.equal((await advance(1255)).burst,1);
+ assert.equal((await advance(1300)).burst,undefined);
+ const cueLog=await p.evaluate(()=>window.__technoShotAudio);
+ assert.equal(cueLog.length,6);
+ assert(cueLog.every(url=>url.includes('techno-pierce-shot.wav')));
  await prep(3);
+ assert.equal((await state()).stage,3,'Older saves that selected stage I still unlock the mech at stage III');
+ assert(await p.locator('#abilityBtn').isVisible());
+ const assembly=await p.evaluate(()=>SlimeTechnoUltimates.MECH_ASSEMBLY_MS);
+ await p.evaluate(()=>__drillQA.spaceForMech());
  const before=await state();
  await p.locator('#abilityBtn').click({force:true});
  await p.evaluate(()=>__drillQA.mech());
  fs.mkdirSync('tmp',{recursive:true});
- assert.equal((await advance(660,true)).phase,'descending');
- await p.screenshot({path:'tmp/techno-drill-assembly.png'});
- const landed=await advance(920,true);
- assert.equal(landed.phase,'active'); assert.equal(landed.timer,5000);
+ assert.equal((await advance(assembly-300,true)).phase,'descending');
+ await p.screenshot({path:'tmp/techno-drill-assembly.png',animations:'disabled'});
+ const landed=await advance(assembly,true);
+ assert.equal(landed.phase,'active'); assert.equal(landed.timer,6000);
  assert.equal(landed.radius,before.radius);
  assert.equal(landed.dead.length,0);
- const bit=await advance(985,true);
- assert.equal(bit.hp[0],1);
- assert.deepEqual(bit.dead,[[3,3]]);
- const cleared=await advance(1090,true);
- assert.equal(cleared.dead.length,4);
+ const approach=await advance(assembly+120,true);
+ assert.equal(approach.contact,0);
+ const bit=await advance(assembly+390,true);
+ assert(bit.hp[0]<3, 'Damage starts when the bit has reached the rock');
+ assert(bit.dead.every(([row,col])=>row>=2&&(col===3||col===4)));
+ assert(await p.locator('#physicsCanvas').isVisible());
  await p.keyboard.down('ArrowUp');
  await p.keyboard.down('ArrowLeft');
- const moved=await advance(1420,true);
+ const moved=await advance(assembly+770,true);
  assert(moved.y>landed.y&&moved.x<landed.x&&!moved.up);
  await p.keyboard.up('ArrowUp');
  await p.keyboard.up('ArrowLeft');
- await p.screenshot({path:'tmp/techno-drill-mobile.png'});
- assert.equal((await advance(5915,true)).phase,'active');
- const exit=await advance(5925,true);
+ await p.screenshot({path:'tmp/techno-drill-mobile.png',animations:'disabled'});
+ const expires=assembly+landed.timer;
+ assert.equal((await advance(expires-5,true)).phase,'active');
+ const exit=await advance(expires+5,true);
  assert.equal(exit.phase,undefined);
- assert(exit.explosion && !exit.up);
- assert((await advance(6050,true)).y > exit.y);
- await p.screenshot({path:'tmp/techno-drill-exit.png'});
+ assert(exit.leaving && !exit.up);
+ assert((await advance(expires+330,true)).y > exit.y);
+ await p.screenshot({path:'tmp/techno-drill-exit.png',animations:'disabled'});
+ assert.equal((await advance(expires+820,true)).leaving,false);
  await prep(3);
+ await p.evaluate(()=>__drillQA.spaceForMech());
  await p.locator('#abilityBtn').click({force:true});
  await p.evaluate(()=>__drillQA.live());
  await p.waitForFunction(()=>__drillQA.state().phase==='active');
  const liveY=(await state()).y;
  await p.waitForFunction(y=>__drillQA.state().y>y,liveY);
  assert.deepEqual(errors,[]);
- console.log('Techno in browser: 1 s passive, exactly 6 shots, live penetration, 2×2 footprint, 5 s, down-only steering, no exceptions.');
+ console.log('Techno in browser: saved stage III, six audible shots, sequential piercing, six seconds drilling and departure.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

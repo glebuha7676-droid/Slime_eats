@@ -68,6 +68,8 @@
     frostBurst: { file: 'abilities/snowflake-split.wav', volume: .64, size: 1 },
     electricDash: { file: 'abilities/arc-dash.wav', volume: .65, size: 1 },
     electricDischarge: { file: 'abilities/arc-break.wav', volume: .64, size: 1 },
+    technoShot: { file: 'abilities/techno-shot.wav', volume: .48, size: 2 },
+    technoPierceShot: { file: 'abilities/techno-pierce-shot.wav', volume: .55, size: 2 },
     happy: { file: 'happy.ogg', volume: .36, size: 2 },
     reroll: { file: 'reroll.ogg', volume: .32, size: 2 },
     bounce: { file: 'bounce.ogg', volume: .36, size: 2 },
@@ -276,6 +278,8 @@
       preloadInterfaceAudio();
       preloadMineAudio();
       for (const name of ACTIVE_ABILITY_CUES) getSoundPool(name);
+      getSoundPool('technoShot');
+      getSoundPool('technoPierceShot');
       for (const name of Object.keys(ULTIMATE_ASSETS)) getSoundPool(name);
       if (location.protocol !== 'file:') {
         for (const name of SEEKABLE_ULTIMATE_CUES) preloadUltimateTrack(name);

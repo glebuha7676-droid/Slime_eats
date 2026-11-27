@@ -15,6 +15,7 @@
     const mainBeam = beamTexture(.20, .96);
     const sideBeam = beamTexture(.39, .93, .07);
     const lenses = [...tray.querySelectorAll('.lab-chamber-node'), tray.querySelector('.lab-synthesis-nozzle')];
+    const reactor = tray.closest('.lab-synthesis-machine')?.querySelector('.lab-core-reactor');
     const effects = tray.querySelector('.lab-food-effects');
     const sprite = document.createElement('canvas');
     const buffer = document.createElement('canvas');
@@ -53,8 +54,14 @@
       const bounds = window.SlimeFoodGroundBounds?.[dish.closest('.lab-tray-food').dataset.foodId];
       const visibleTop = bounds ? bounds[3] / bounds[1] : 0;
       const visibleBottom = bounds ? bounds[5] / bounds[1] : 1;
+      const reactorRect = reactor?.getBoundingClientRect();
+      const core = reactorRect && {
+        x: (reactorRect.left + reactorRect.width / 2 - frame.left) * sx,
+        y: (reactorRect.top + reactorRect.height / 2 - frame.top) * sy,
+        radius: reactorRect.width * sx * .47
+      };
       geometry = {
-        width, height, density, dishWidth, dishHeight, visibleTop, visibleBottom, emitters,
+        width, height, density, dishWidth, dishHeight, visibleTop, visibleBottom, emitters, core,
         dishX: (rect.left - frame.left) * sx, dishY: (rect.top - frame.top) * sy,
         plate: height - .265 * width
       };
@@ -64,12 +71,14 @@
     function draw(time) {
       if (needsLayout) layout();
       if (!geometry) return;
-      const { width, height, density, plate, dishWidth, dishHeight, dishX, dishY, visibleTop, visibleBottom, emitters } = geometry;
+      const { width, height, density, plate, dishWidth, dishHeight, dishX, dishY, visibleTop, visibleBottom, emitters, core } = geometry;
       const center = width / 2;
       const meeting = Math.max(width * .56, plate - width * .17);
       const charge = smooth(.03, .88, time);
       const release = smooth(REVEAL - .06, REVEAL + .30, time);
-      const power = charge * (1 - release) * (.86 + .14 * Math.sin(time * (8 + 4 * time)));
+      const drawCycle = time * (8 + 4 * time);
+      const power = charge * (1 - release) * (.86 + .14 * Math.sin(drawCycle - .8));
+      const coreCharge = smooth(0, .57, time) * (1 - release) * (.65 + .35 * Math.sin(drawCycle));
       const sidePower = smooth(.18, .91, time) * (1 - release);
       const burst = smooth(2.00, REVEAL, time) * (1 - smooth(REVEAL + .08, 2.58, time));
       const orbit = smooth(.38, .92, time) * (1 - smooth(1.82, REVEAL, time));
@@ -81,6 +90,26 @@
         context.globalAlpha = opacity;
         context.drawImage(halo, x - radiusX, y - radiusY, radiusX * 2, radiusY * 2);
       };
+      if (core) {
+        reactor.style.setProperty('--core-charge', coreCharge.toFixed(3));
+        if (coreCharge > .015) {
+          // The reactor's light converges at the intake side of the glass.
+          context.save();
+          context.beginPath();
+          context.arc(core.x, core.y, core.radius, 0, 2 * Math.PI);
+          context.clip();
+          const intakeX = core.x + core.radius * .62;
+          glow(intakeX, core.y, core.radius * .58, core.radius * .46, coreCharge * .8);
+          for (let index = 0; index < 5; index += 1) {
+            const progress = (time * 1.85 + index * .21) % 1;
+            const x = core.x + core.radius * (-.64 + 1.26 * progress);
+            const y = core.y + core.radius * ((index - 2) * .27 * (1 - progress) + .09 * Math.sin(progress * 6.3));
+            const size = core.radius * (.14 + .06 * (index % 2));
+            glow(x, y, size * 1.6, size, coreCharge * Math.sin(Math.PI * progress));
+          }
+          context.restore();
+        }
+      }
       const [leftLens, rightLens, nozzle] = emitters;
       lenses[0].style.opacity = sidePower * (.85 + .15 * Math.sin(time * 10));
       lenses[1].style.opacity = sidePower * (.85 + .15 * Math.sin(time * 10 + Math.PI));
@@ -154,6 +183,7 @@
         observer.disconnect();
         context.clearRect(0, 0, canvas.width / (geometry?.density || 1), canvas.height / (geometry?.density || 1));
         lenses.forEach(lens => lens.style.removeProperty('opacity'));
+        reactor?.style.removeProperty('--core-charge');
         effects?.style.removeProperty('opacity');
         resolve();
       };

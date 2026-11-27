@@ -6,7 +6,7 @@
   const sources = new Map();
   const loads = new WeakMap();
   assets.nanoDrone = new Image();
-  sources.set(assets.nanoDrone, 'effects-lab/assets/techno-drone-red-v1.webp');
+  sources.set(assets.nanoDrone, 'assets/ui/techno-v3/drone.webp');
   assets.volcanoRock = new Image();
   sources.set(assets.volcanoRock, 'assets/vfx/fire-volcano-rock-v1.webp');
   const glitchPixelCanvas = document.createElement('canvas');
@@ -475,9 +475,10 @@
     const droneY = y - radius * .72 + Math.sin(timestamp / 410) * radius * .035;
     const size = radius * .70;
     ctx.save();
-    ctx.shadowColor = '#ff3153';
+    ctx.shadowColor = '#38baff';
     ctx.shadowBlur = radius * .16;
-    ctx.drawImage(assets.nanoDrone, droneX - size / 2, droneY - size / 2, size, size);
+    const height = size * assets.nanoDrone.naturalHeight / assets.nanoDrone.naturalWidth;
+    ctx.drawImage(assets.nanoDrone, droneX - size / 2, droneY - height / 2, size, height);
     ctx.restore();
   }
 

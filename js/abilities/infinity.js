@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const EMBLEM = 'assets/ui/slime/infinity/emblem.webp';
+  const EMBLEM = 'assets/ui/slime/infinity/emblem-three-spheres-v2.webp';
   const SHIELD_MS = 8000;
   const SHIELD_HIT_STOP_MS = 105;
   const SHOTS = Object.freeze({
@@ -16,8 +16,8 @@
   const lerp = (a, b, t) => a + (b - a) * t;
   const smooth = n => { const t = unit(n); return t * t * (3 - 2 * t); };
 
-  function create(stage, at) {
-    return { stage, mode: 'blue', shield: true, nextShieldAt: at + SHIELD_MS, shieldLitAt: at, shieldHitAt: -Infinity,
+  function create(stage, at, { shield = true } = {}) {
+    return { stage, mode: 'blue', shield, nextShieldAt: shield ? at + SHIELD_MS : Infinity, shieldLitAt: at, shieldHitAt: -Infinity,
       shieldStopUntil: 0, readyAt: 0, cast: null };
   }
 

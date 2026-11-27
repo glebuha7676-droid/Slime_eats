@@ -23,7 +23,7 @@ for (const world of context.window.SlimeWorldCatalog.defaults().worlds) {
 }
 const walk = dir => fs.readdirSync(path.join(root, dir), {withFileTypes:true}).flatMap(e => e.isDirectory() ? walk(`${dir}/${e.name}`) : [`${dir}/${e.name}`]);
 const files = [...walk('assets'), ...walk('effects-lab/assets')];
-const dynamicFolders = ['assets/audio/', 'assets/backgrounds/', 'assets/collectibles/flasks/', 'assets/ui/world-icons/', 'assets/ui/portals/', 'assets/ui/icons/', 'assets/ui/combo/', 'assets/ui/lab-v3/', 'assets/vfx/geyser-compact/', 'assets/world2/', 'assets/world3/', 'assets/world4/'];
+const dynamicFolders = ['assets/audio/', 'assets/backgrounds/', 'assets/collectibles/flasks/', 'assets/ui/world-icons/', 'assets/ui/portals/', 'assets/ui/icons/', 'assets/ui/combo/', 'assets/ui/lab-v3/emblems/', 'assets/vfx/geyser-compact/', 'assets/world2/', 'assets/world3/', 'assets/world4/'];
 const dynamicSprites = /^assets\/(hazards\/(bramble|fungi|techno|water)-v1|vfx\/hostile-cores-v27)\/[^/]+\.webp$/;
 const included = files.filter(file => {
   if (/^assets\/audio\/ui-69[56]\//.test(file)) return false; // Reverted audio experiments stay out of the game build.

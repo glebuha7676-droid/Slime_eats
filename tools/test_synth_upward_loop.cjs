@@ -1,0 +1,30 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+const source=fs.readFileSync('game.js','utf8'),hook=fs.readFileSync('tools/test_synth_cabinet_675.cjs','utf8').match(/const hook=`([\s\S]*?)`;/)[1];
+(async()=>{const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});try{
+ const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/game.js*',r=>r.fulfill({contentType:'application/javascript',body:source.replace('  init().catch(error => {',()=>hook+'  init().catch(error => {')}));
+ await page.goto('http://127.0.0.1:8766/?v=synth-upward-loop');await page.waitForFunction(()=>window.__synthQA&&document.documentElement.classList.contains('app-ready'),null,{timeout:90000});
+ const result=await page.evaluate(async()=>{
+  const image=new Image();image.src='assets/ui/anomaly-fluid-v2/flow-strip-v3.webp';await image.decode();
+  const api=window.SlimeSynthReactor,loop=api.prepareLoopTexture(image),g=loop.getContext('2d');
+  const first=g.getImageData(0,0,loop.width,1).data,last=g.getImageData(0,loop.height-1,loop.width,1).data;
+  let seamMax=0;for(let i=0;i<first.length;i++)seamMax=Math.max(seamMax,Math.abs(first[i]-last[i]));
+  const frame=offset=>{const c=document.createElement('canvas');c.width=256;c.height=320;api.paintLoop(c.getContext('2d'),loop,0,0,256,320,offset);return c.getContext('2d').getImageData(0,0,256,320).data};
+  const before=frame(loop.height-.125),after=frame(.125);let wrapMean=0,wrapMax=0;
+  for(let i=0;i<before.length;i++){const d=Math.abs(before[i]-after[i]);wrapMean+=d;wrapMax=Math.max(wrapMax,d);}wrapMean/=before.length;
+  const zero=frame(0),up=frame(1);let upwardError=0;
+  for(let y=0;y<300;y++)for(let x=16;x<240;x++)for(let c=0;c<4;c++)upwardError=Math.max(upwardError,Math.abs(up[(y*256+x)*4+c]-zero[((y+1)*256+x)*4+c]));
+  return {seamMax,wrapMean,wrapMax,upwardError,png:loop.toDataURL().split(',')[1]};
+ });
+ assert(result.seamMax<=1,'Joining rows must match, including alpha');
+ assert(result.wrapMean<1,'Wrapping the long texture must not flash');
+ assert(result.upwardError<=1,'Positive travel must move existing pixels upward');
+ await page.evaluate(()=>__synthQA.open('half'));await page.waitForFunction(()=>{const d=document.querySelector('.synth-reactor-canvas')?.dataset;return d?.texture==='ready'&&d?.fill==='0.500'});
+ const idle=await page.locator('.synth-reactor-canvas').evaluate(e=>e.toDataURL());await page.waitForTimeout(600);
+ assert.notEqual(await page.locator('.synth-reactor-canvas').evaluate(e=>e.toDataURL()),idle,'The filled, idle reactor remains alive');
+ assert.equal(await page.locator('.synth-reactor-canvas').getAttribute('data-phase'),'idle');
+ assert.deepEqual(errors,[]);
+ fs.mkdirSync('output/synth-glass-v3',{recursive:true});fs.writeFileSync('output/synth-glass-v3/loop-texture.png',Buffer.from(result.png,'base64'));delete result.png;
+ fs.writeFileSync('output/synth-glass-v3/loop-checks.json',JSON.stringify({...result,idleMotion:true,errors},null,2));console.log(JSON.stringify(result));
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

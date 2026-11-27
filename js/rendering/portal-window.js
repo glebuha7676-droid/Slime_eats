@@ -205,13 +205,11 @@
       const c=home.canvas,front=home.front;
       const back=home.backCtx,fx=home.frontCtx;
       const power=capturing?smooth(p/.45)*(1-smooth((p-.83)/.24)):0;
-      const mix=capturing?smooth((p-.055)/.27):0;
       const options={width:c.width,height:c.height,timestamp:home.clock,
         world:home.world,stage:home.backgroundStage,open:smooth(home.open),reduced,power,fillAperture:true};
       back.clearRect(0,0,c.width,c.height);
       fx.clearRect(0,0,front.width,front.height);
-      if(mix<1)draw(back,{...options,x:c.width/2,y:c.height/2,scene:'lab',layer:'back'});
-      if(mix>0)draw(back,{...options,x:c.width/2,y:c.height/2,scene:'mine',alpha:mix,layer:'back'});
+      draw(back,{...options,x:c.width/2,y:c.height/2,scene:'mine',layer:'back'});
       if(capturing){
         const swallow=smooth((p-.72)/.23);
         if(swallow>.005)draw(fx,{...options,x:front.width/2,y:front.height/2,scene:'mine',layer:'back',alpha:swallow*.78});
@@ -239,7 +237,6 @@
   function warmHomeDeparture(){
     if(!home)return;
     textures();
-    snapshot('lab',home.world,0);
     snapshot('mine',home.world,home.backgroundStage);
   }
   function wake(){

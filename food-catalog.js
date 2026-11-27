@@ -15,9 +15,9 @@
     ['antiGravityBun', 'Планетные конфеты', 'Новая/Космос/01-planet-candy-lossless.webp', 'cosmos', 'cosmos', 1],
     ['cometCola', 'Звёздные конфеты', 'Новая/Космос/02-star-candy-lossless.webp', 'cosmos', 'cosmos', 2],
     ['pocketGalaxy', 'Галактическое желе', 'Новая/Космос/03-galaxy-jelly-lossless.webp', 'cosmos', 'cosmos', 3],
-    ['nanoChip', 'Механическая закуска', 'Новая/Техно/01-mechanical-snack-lossless.webp', 'nano', 'nano', 1],
-    ['nanoCore', 'Техносуп', 'Новая/Техно/02-circuit-soup-lossless.webp', 'nano', 'nano', 2],
-    ['nanoModule', 'Технодесерт', 'Новая/Техно/03-tech-dessert-lossless.webp', 'nano', 'nano', 3],
+    ['nanoChip', 'Механическая закуска', 'assets/food/techno-v3/mechanical-snack.webp', 'nano', 'nano', 1],
+    ['nanoCore', 'Техносуп', 'assets/food/techno-v3/circuit-soup.webp', 'nano', 'nano', 2],
+    ['nanoModule', 'Технодесерт', 'assets/food/techno-v3/tech-dessert.webp', 'nano', 'nano', 3],
     ['telekinesisStone', 'Псионические кристаллы', 'Новая/Псионика/01-crystal-sweets-lossless.webp', 'telekinesis', 'telekinesis', 1],
     ['telekinesisShard', 'Пси-пончик', 'Новая/Псионика/02-psionic-donut-lossless.webp', 'telekinesis', 'telekinesis', 2],
     ['telekinesisCore', 'Псионический эликсир', 'Новая/Псионика/03-psionic-potion-lossless.webp', 'telekinesis', 'telekinesis', 3],
@@ -35,7 +35,8 @@
     ['chocolateBoom', 'Шоколадный бум', 'Сладости/Шоколадный бум.webp', 'blast', 'explosion', 3],
     ['infinityDaifuku', 'Дайфуку с дзундой', 'assets/food/infinity-daifuku.webp', 'infinity', null, 1],
     ['infinityDaifukuDuo', 'Двойной дайфуку', 'assets/food/infinity-daifuku-duo.webp', 'infinity', null, 2],
-    ['infinityDaifukuTrio', 'Лавандовый дайфуку', 'assets/food/infinity-daifuku-trio.webp', 'infinity', null, 3]
+    ['infinityDaifukuTrio', 'Лавандовый дайфуку', 'assets/food/infinity-daifuku-trio.webp', 'infinity', null, 3],
+    ...[1, 2, 3].map(stage => [`anomalyCore${stage}`, 'Сгусток Аномалии', 'assets/ui/lab-refit/synthesis-core-v1.webp', 'anomaly', 'anomaly', stage])
   ];
 
   window.SLIME_FOOD_CATALOG = foods.map(([id, name, relativePath, recipeFamily, requiresMutation, stage]) => ({
